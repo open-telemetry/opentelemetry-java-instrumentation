@@ -18,7 +18,6 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-@SuppressWarnings("deprecation")
 public final class SemconvExceptionSignal {
 
   private static final String CONFIG_PROPERTY = "otel.semconv.exception.signal.preview";
@@ -75,7 +74,9 @@ public final class SemconvExceptionSignal {
     if (value != null) {
       return value;
     }
-    return ConfigPropertiesUtil.getString(CONFIG_PROPERTY);
+    // Library instrumentation tests configure this mode using JVM system properties, so a direct
+    // system-property fallback is needed.
+    return SystemProperty.getString(CONFIG_PROPERTY);
   }
 
   private static DeclarativeConfigProperties getGeneralInstrumentationConfig(

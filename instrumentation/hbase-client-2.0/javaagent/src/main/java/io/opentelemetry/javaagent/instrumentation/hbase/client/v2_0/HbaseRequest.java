@@ -17,8 +17,9 @@ public abstract class HbaseRequest {
       @Nullable TableName tableName,
       @Nullable String user,
       @Nullable String host,
-      @Nullable Integer port) {
-    return new AutoValue_HbaseRequest(operation, tableName, user, host, port);
+      @Nullable Integer port,
+      @Nullable Long operationBatchSize) {
+    return new AutoValue_HbaseRequest(operation, tableName, user, host, port, operationBatchSize);
   }
 
   @Nullable
@@ -35,4 +36,7 @@ public abstract class HbaseRequest {
 
   @Nullable
   public abstract Integer getPort();
+
+  @Nullable
+  public abstract Long getOperationBatchSize();
 }
