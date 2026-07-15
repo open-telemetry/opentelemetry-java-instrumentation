@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/open-telemetry/weaver/v0.24.2/schemas/semconv.schema.json
 
 groups:
-  - id: registry.tomcat
+  - id: attributes.tomcat
     type: attribute_group
     brief: Tomcat attributes
     attributes:
