@@ -27,6 +27,7 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.ApiVersions;
+import org.apache.kafka.clients.Metadata;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -105,6 +106,7 @@ class KafkaProducerInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("apiVersions") ApiVersions apiVersions,
         @Advice.FieldValue("clientId") String clientId,
         @Advice.FieldValue("producerConfig") ProducerConfig producerConfig,
+        @Advice.FieldValue("metadata") Metadata kafkaProducerMetadata,
         @Advice.Argument(0) ProducerRecord<?, ?> originalRecord,
         @Advice.Argument(1) @Nullable Callback originalCallback) {
       ProducerRecord<?, ?> record = originalRecord;
@@ -121,7 +123,8 @@ class KafkaProducerInstrumentation implements TypeInstrumentation {
               record,
               clientId,
               bootstrapServers,
-              PRODUCER_SPAN_CONTEXT_PROPAGATION_ENABLED && canPropagateHeaders);
+              PRODUCER_SPAN_CONTEXT_PROPAGATION_ENABLED && canPropagateHeaders,
+              kafkaProducerMetadata);
       AdviceScope adviceScope = AdviceScope.start(request);
       if (adviceScope == null) {
         return new Object[] {null, record, callback};

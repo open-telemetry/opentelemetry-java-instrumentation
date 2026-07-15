@@ -12,5 +12,12 @@
       "typeReachable": "org.apache.kafka.clients.consumer.LegacyKafkaConsumer"
     },
     "allDeclaredFields": true
+  },
+  {
+    "name": "org.apache.kafka.clients.producer.KafkaProducer",
+    "condition": {
+      "typeReachable": "org.apache.kafka.clients.producer.KafkaProducer"
+    },
+    "allDeclaredFields": true
   }
 ]

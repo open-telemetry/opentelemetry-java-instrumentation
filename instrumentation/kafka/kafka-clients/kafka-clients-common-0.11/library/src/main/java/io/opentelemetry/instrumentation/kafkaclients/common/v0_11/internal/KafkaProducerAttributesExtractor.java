@@ -14,6 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
+import org.apache.kafka.clients.Metadata;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 final class KafkaProducerAttributesExtractor
@@ -66,6 +67,16 @@ final class KafkaProducerAttributesExtractor
       }
       if (emitOldMessagingSemconv()) {
         attributes.put(MESSAGING_KAFKA_MESSAGE_OFFSET, recordMetadata.offset());
+      }
+    }
+    // Retry cluster id after broker ack: metadata.fetch() is guaranteed to be populated by now.
+    if (request.getClusterId() == null) {
+      Metadata kafkaMetadata = request.getKafkaMetadata();
+      if (kafkaMetadata != null) {
+        String clusterId = KafkaUtil.clusterIdFromMetadata(kafkaMetadata);
+        if (clusterId != null) {
+          attributes.put(KafkaClusterId.ATTRIBUTE_KEY, clusterId);
+        }
       }
     }
   }

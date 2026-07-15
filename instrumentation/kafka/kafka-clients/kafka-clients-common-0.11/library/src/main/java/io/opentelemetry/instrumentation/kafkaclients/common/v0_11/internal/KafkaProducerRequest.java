@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 import java.util.Iterator;
 import java.util.Map;
 import javax.annotation.Nullable;
+import org.apache.kafka.clients.Metadata;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.Metric;
@@ -24,10 +25,18 @@ public final class KafkaProducerRequest {
   @Nullable private final String bootstrapServers;
   private final boolean spanContextPropagated;
   @Nullable private final String clusterId;
+  @Nullable private final Metadata kafkaMetadata;
 
   public static KafkaProducerRequest create(
       ProducerRecord<?, ?> record, Producer<?, ?> producer, @Nullable String bootstrapServers) {
-    return new KafkaProducerRequest(record, extractClientId(producer), bootstrapServers, true, null);
+    Metadata metadata = KafkaUtil.extractProducerMetadata(producer);
+    return new KafkaProducerRequest(
+        record,
+        extractClientId(producer),
+        bootstrapServers,
+        true,
+        KafkaUtil.clusterIdFromMetadata(metadata),
+        metadata);
   }
 
   public static KafkaProducerRequest create(
@@ -35,13 +44,19 @@ public final class KafkaProducerRequest {
       Producer<?, ?> producer,
       @Nullable String bootstrapServers,
       boolean spanContextPropagated) {
+    Metadata metadata = KafkaUtil.extractProducerMetadata(producer);
     return new KafkaProducerRequest(
-        record, extractClientId(producer), bootstrapServers, spanContextPropagated, null);
+        record,
+        extractClientId(producer),
+        bootstrapServers,
+        spanContextPropagated,
+        KafkaUtil.clusterIdFromMetadata(metadata),
+        metadata);
   }
 
   public static KafkaProducerRequest create(
       ProducerRecord<?, ?> record, @Nullable String clientId, @Nullable String bootstrapServers) {
-    return new KafkaProducerRequest(record, clientId, bootstrapServers, true, null);
+    return new KafkaProducerRequest(record, clientId, bootstrapServers, true, null, null);
   }
 
   public static KafkaProducerRequest create(
@@ -50,7 +65,7 @@ public final class KafkaProducerRequest {
       @Nullable String bootstrapServers,
       boolean spanContextPropagated) {
     return new KafkaProducerRequest(
-        record, clientId, bootstrapServers, spanContextPropagated, null);
+        record, clientId, bootstrapServers, spanContextPropagated, null, null);
   }
 
   public static KafkaProducerRequest create(
@@ -58,7 +73,7 @@ public final class KafkaProducerRequest {
       @Nullable String clientId,
       @Nullable String bootstrapServers,
       @Nullable String clusterId) {
-    return new KafkaProducerRequest(record, clientId, bootstrapServers, true, clusterId);
+    return new KafkaProducerRequest(record, clientId, bootstrapServers, true, clusterId, null);
   }
 
   public static KafkaProducerRequest create(
@@ -68,7 +83,37 @@ public final class KafkaProducerRequest {
       boolean spanContextPropagated,
       @Nullable String clusterId) {
     return new KafkaProducerRequest(
-        record, clientId, bootstrapServers, spanContextPropagated, clusterId);
+        record, clientId, bootstrapServers, spanContextPropagated, clusterId, null);
+  }
+
+  /** Used by javaagent path — receives the producer's {@code Metadata} from a field read. */
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      @Nullable Metadata kafkaMetadata) {
+    return new KafkaProducerRequest(
+        record,
+        clientId,
+        bootstrapServers,
+        true,
+        KafkaUtil.clusterIdFromMetadata(kafkaMetadata),
+        kafkaMetadata);
+  }
+
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      boolean spanContextPropagated,
+      @Nullable Metadata kafkaMetadata) {
+    return new KafkaProducerRequest(
+        record,
+        clientId,
+        bootstrapServers,
+        spanContextPropagated,
+        KafkaUtil.clusterIdFromMetadata(kafkaMetadata),
+        kafkaMetadata);
   }
 
   private KafkaProducerRequest(
@@ -76,12 +121,14 @@ public final class KafkaProducerRequest {
       @Nullable String clientId,
       @Nullable String bootstrapServers,
       boolean spanContextPropagated,
-      @Nullable String clusterId) {
+      @Nullable String clusterId,
+      @Nullable Metadata kafkaMetadata) {
     this.record = record;
     this.clientId = clientId;
     this.bootstrapServers = bootstrapServers;
     this.spanContextPropagated = spanContextPropagated;
     this.clusterId = clusterId;
+    this.kafkaMetadata = kafkaMetadata;
   }
 
   public ProducerRecord<?, ?> getRecord() {
@@ -105,6 +152,11 @@ public final class KafkaProducerRequest {
   @Nullable
   public String getClusterId() {
     return clusterId;
+  }
+
+  @Nullable
+  public Metadata getKafkaMetadata() {
+    return kafkaMetadata;
   }
 
   @Nullable
