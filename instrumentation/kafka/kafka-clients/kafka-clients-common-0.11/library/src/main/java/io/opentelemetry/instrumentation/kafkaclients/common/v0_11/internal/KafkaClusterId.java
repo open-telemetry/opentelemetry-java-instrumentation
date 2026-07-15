@@ -26,8 +26,9 @@ final class KafkaClusterId {
    */
   static final KafkaClusterId UNAVAILABLE = new KafkaClusterId(null);
 
-  // Final on the Kafka client, so this reference never changes. Cluster id is read fresh each span
-  // via Metadata.fetch(), so it stays current even after a cluster replacement at the same brokers.
+  // The Metadata field is final in KafkaProducer/KafkaConsumer, so this cached reference never
+  // goes stale. Cluster id is read fresh each span via Metadata.fetch() rather than cached as a
+  // String, so it stays current even after a cluster replacement at the same broker addresses.
   @Nullable final Metadata metadata;
 
   private KafkaClusterId(@Nullable Metadata metadata) {
