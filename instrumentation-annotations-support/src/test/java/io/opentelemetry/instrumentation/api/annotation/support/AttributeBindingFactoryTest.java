@@ -113,7 +113,8 @@ class AttributeBindingFactoryTest {
 
   @ParameterizedTest
   @MethodSource("bindingCases")
-  <T> void createAttributeBinding(Type type, Object value, AttributeKey<T> expectedKey, T expectedValue) {
+  <T> void createAttributeBinding(
+      Type type, Object value, AttributeKey<T> expectedKey, T expectedValue) {
     AttributeBindingFactory.createBinding("key", type).apply(setter, value);
     verify(setter).put(expectedKey, expectedValue);
   }
