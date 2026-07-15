@@ -95,7 +95,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put("java.jmx.target.system", "otel.jmx.target.system");
   }
 
-  final ConfigProperties configProperties;
+  private final ConfigProperties configProperties;
   private final List<String> path;
   private final Map<String, String> mappings;
   private final String accessRoot;
