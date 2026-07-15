@@ -83,6 +83,8 @@ jobs:
         with:
           client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
 
       - name: Find or create metadata update branch
         if: steps.diffcheck.outputs.has_diff == 'true'

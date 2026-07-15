@@ -69,7 +69,7 @@ dependencies {
   implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.5.0")
   implementation("org.sonatype.gradle.plugins:scan-gradle-plugin:3.1.6")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:2.0.1")
-  implementation("org.spdx:spdx-gradle-plugin:0.11.0")
+  implementation("org.spdx:spdx-gradle-plugin:0.12.0")
   // When updating, also update dependencyManagement/build.gradle.kts
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.18.11")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
