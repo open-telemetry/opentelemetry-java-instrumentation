@@ -37,12 +37,12 @@ public final class OpenTelemetryInstaller {
             .build();
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
     ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
-    boolean declarativeConfigUsed = configProperties == null;
 
-    if (!declarativeConfigUsed) {
+    if (configProperties != null) {
       ConfigProperties nonNullConfigProperties = requireNonNull(configProperties);
       // Provide a fake declarative configuration based on config properties
-      // so that declarative configuration API can be used everywhere
+      // so that declarative configuration API can be used everywhere. In declarative-config mode
+      // there is no ConfigProperties instance to bridge here, so preserve the SDK as-is.
       sdk =
           new ExtendedOpenTelemetrySdkWrapper(
               sdk, ConfigPropertiesBackedConfigProvider.create(nonNullConfigProperties));
