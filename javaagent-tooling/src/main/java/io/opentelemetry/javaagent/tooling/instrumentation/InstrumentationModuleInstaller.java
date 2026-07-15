@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
@@ -103,8 +104,8 @@ public final class InstrumentationModuleInstaller {
   }
 
   private boolean useIndy(InstrumentationModule instrumentationModule) {
-    // currently needs to be enabled with a flag
-    if (!AgentDistributionConfig.get().isIndyEnabled()) {
+    // enabled for v3 preview, otherwise opt-in
+    if (!AgentCommonConfig.get().isV3Preview() && !AgentDistributionConfig.get().isIndyEnabled()) {
       return false;
     }
     // first check whether user has specified how the helper classes should be handled

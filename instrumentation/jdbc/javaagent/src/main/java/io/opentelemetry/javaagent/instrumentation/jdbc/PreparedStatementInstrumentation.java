@@ -21,13 +21,8 @@ import io.opentelemetry.instrumentation.jdbc.internal.JdbcData;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.net.URL;
-import java.sql.Date;
 import java.sql.PreparedStatement;
-import java.sql.RowId;
 import java.sql.Statement;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.util.Calendar;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -168,22 +163,8 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      String str = null;
-
-      if (value instanceof Boolean
-          // Byte, Short, Int, Long, Float, Double, BigDecimal
-          || value instanceof Number
-          || value instanceof String
-          || value instanceof Date
-          || value instanceof Time
-          || value instanceof Timestamp
-          || value instanceof URL
-          || value instanceof RowId) {
-        str = value.toString();
-      }
-
-      if (str != null) {
-        JdbcData.addParameter(statement, Integer.toString(index - 1), str);
+      if (value != null) {
+        JdbcData.addParameter(statement, Integer.toString(index - 1), value.toString());
       }
     }
   }
@@ -207,22 +188,8 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      String str = null;
-
-      if (value instanceof Boolean
-          // Byte, Short, Int, Long, Float, Double, BigDecimal
-          || value instanceof Number
-          || value instanceof String
-          || value instanceof Date
-          || value instanceof Time
-          || value instanceof Timestamp
-          || value instanceof URL
-          || value instanceof RowId) {
-        str = value.toString();
-      }
-
-      if (str != null) {
-        JdbcData.addParameter(statement, Integer.toString(index - 1), str);
+      if (value != null) {
+        JdbcData.addParameter(statement, Integer.toString(index - 1), value.toString());
       }
     }
   }
@@ -246,14 +213,8 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      String str = null;
-
-      if (value instanceof Date || value instanceof Time || value instanceof Timestamp) {
-        str = value.toString();
-      }
-
-      if (str != null) {
-        JdbcData.addParameter(statement, Integer.toString(index - 1), str);
+      if (value != null) {
+        JdbcData.addParameter(statement, Integer.toString(index - 1), value.toString());
       }
     }
   }

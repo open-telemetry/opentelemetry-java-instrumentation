@@ -44,6 +44,7 @@ jobs:
         with:
           client-id: ${{ vars.OTELBOT_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          permission-pull-requests: write
 
       - name: create pr with repo changes
         env:
@@ -61,3 +62,13 @@ jobs:
             --head otelbot/cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }} \
             --title 'Release updates for Cloudfoundry Repo' \
             --body '[Created by Github action]'
+
+  workflow-notification:
+    permissions:
+      issues: write
+    needs:
+      - update-cloudfoundry-index-yml
+    if: always()
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@62d5939b47144252763c5ff9fffe8c20d76cd806 # v0.4.0
+    with:
+      success: ${{ needs.update-cloudfoundry-index-yml.result == 'success' }}

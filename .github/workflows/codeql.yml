@@ -56,7 +56,8 @@ jobs:
           # and so it uses more parallelism which uses more memory
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx8g /" gradle.properties
 
-      - name: Set up Gradle
+      # This workflow analyzes release branches but does not build or publish release artifacts.
+      - name: Set up Gradle # zizmor: ignore[cache-poisoning]
         if: matrix.language == 'java'
         uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
@@ -83,3 +84,13 @@ jobs:
         uses: github/codeql-action/analyze@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
         with:
           category: "/language:${{matrix.language}}"
+
+  workflow-notification:
+    permissions:
+      issues: write
+    needs:
+      - analyze
+    if: always() && github.event_name == 'schedule'
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@62d5939b47144252763c5ff9fffe8c20d76cd806 # v0.4.0
+    with:
+      success: ${{ needs.analyze.result == 'success' }}
