@@ -4,9 +4,7 @@ on:
     types: [created]
 
 permissions:
-  contents: read
-  issues: write
-  pull-requests: write
+  pull-requests: write # zizmor: ignore[excessive-permissions]
 
 jobs:
   auto-label:
