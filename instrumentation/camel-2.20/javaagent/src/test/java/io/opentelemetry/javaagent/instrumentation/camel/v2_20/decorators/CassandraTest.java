@@ -57,7 +57,9 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
 
   @Container
   private static final CassandraContainer cassandra =
-      new CassandraContainer("cassandra:3.11.2").withExposedPorts(9042);
+      new CassandraContainer("cassandra:3.11.2")
+          .withEnv("MAX_HEAP_SIZE", "128M")
+          .withExposedPorts(9042);
 
   private static String host;
 

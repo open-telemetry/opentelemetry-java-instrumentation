@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule.HelperClassStrategy;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -113,8 +114,8 @@ public final class InstrumentationModuleInstaller {
         // fallthrough to the next check
     }
 
-    // currently needs to be enabled with a flag
-    if (!AgentDistributionConfig.get().isIndyEnabled()) {
+    // enabled for v3 preview, otherwise opt-in
+    if (!AgentCommonConfig.get().isV3Preview() && !AgentDistributionConfig.get().isIndyEnabled()) {
       return false;
     }
     // check whether muzzle has collected information about the advice classes

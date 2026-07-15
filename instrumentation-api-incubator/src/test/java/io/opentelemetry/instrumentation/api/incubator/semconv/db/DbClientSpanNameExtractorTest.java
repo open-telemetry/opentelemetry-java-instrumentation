@@ -35,6 +35,7 @@ class DbClientSpanNameExtractorTest {
     lenient()
         .when(sqlAttributesGetter.getSqlDialect(any()))
         .thenReturn(DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    lenient().when(sqlAttributesGetter.getDbOperationBatchSize(any())).thenReturn(null);
   }
 
   @Test
@@ -267,6 +268,30 @@ class DbClientSpanNameExtractorTest {
   }
 
   @Test
+  void shouldExtractFullSpanNameForSingleQueryEmptyBatch() {
+    // given
+    DbRequest dbRequest = new DbRequest();
+
+    when(sqlAttributesGetter.getRawQueryTexts(dbRequest))
+        .thenReturn(singleton("INSERT INTO table VALUES(?)"));
+    if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
+      when(sqlAttributesGetter.getDbName(dbRequest)).thenReturn("database");
+    }
+    if (emitStableDatabaseSemconv()) {
+      when(sqlAttributesGetter.getDbOperationBatchSize(dbRequest)).thenReturn(0L);
+    }
+
+    SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
+
+    // when
+    String spanName = underTest.extract(dbRequest);
+
+    // then
+    assertThat(spanName)
+        .isEqualTo(emitStableDatabaseSemconv() ? "BATCH INSERT table" : "INSERT database.table");
+  }
+
+  @Test
   void shouldFallBackToNamespaceForEmptySqlQuery() {
     // given
     DbRequest dbRequest = new DbRequest();
@@ -286,6 +311,28 @@ class DbClientSpanNameExtractorTest {
 
     // then
     assertThat(spanName).isEqualTo("mydb");
+  }
+
+  @Test
+  void shouldExtractBatchSpanNameForEmptySqlQueryBatch() {
+    // given
+    DbRequest dbRequest = new DbRequest();
+
+    when(sqlAttributesGetter.getRawQueryTexts(dbRequest)).thenReturn(emptyList());
+    if (emitStableDatabaseSemconv()) {
+      when(sqlAttributesGetter.getDbOperationBatchSize(dbRequest)).thenReturn(0L);
+    }
+    if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
+      when(sqlAttributesGetter.getDbName(dbRequest)).thenReturn("mydb");
+    }
+
+    SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
+
+    // when
+    String spanName = underTest.extract(dbRequest);
+
+    // then
+    assertThat(spanName).isEqualTo(emitStableDatabaseSemconv() ? "BATCH" : "mydb");
   }
 
   @Test
@@ -333,6 +380,30 @@ class DbClientSpanNameExtractorTest {
 
     // then
     assertThat(spanName).isEqualTo("mydb");
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // testing deprecated method
+  void shouldExtractBatchSpanNameForEmptySqlQueryBatchInMigration() {
+    // given
+    DbRequest dbRequest = new DbRequest();
+
+    when(sqlAttributesGetter.getRawQueryTexts(dbRequest)).thenReturn(emptyList());
+    if (emitStableDatabaseSemconv()) {
+      when(sqlAttributesGetter.getDbOperationBatchSize(dbRequest)).thenReturn(0L);
+    }
+    if (emitOldDatabaseSemconv() && !emitStableDatabaseSemconv()) {
+      when(sqlAttributesGetter.getDbName(dbRequest)).thenReturn("mydb");
+    }
+
+    SpanNameExtractor<DbRequest> underTest =
+        DbClientSpanNameExtractor.createWithGenericOldSpanName(sqlAttributesGetter);
+
+    // when
+    String spanName = underTest.extract(dbRequest);
+
+    // then
+    assertThat(spanName).isEqualTo(emitStableDatabaseSemconv() ? "BATCH" : "mydb");
   }
 
   static class DbRequest {}
