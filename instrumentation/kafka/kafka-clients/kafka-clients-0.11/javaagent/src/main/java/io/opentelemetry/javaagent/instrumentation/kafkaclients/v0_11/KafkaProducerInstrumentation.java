@@ -115,11 +115,7 @@ class KafkaProducerInstrumentation implements TypeInstrumentation {
           KafkaUtil.extractBootstrapServers(
               producerConfig.getList(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
       KafkaProducerRequest request =
-          KafkaProducerRequest.create(
-              record,
-              clientId,
-              bootstrapServers,
-              KafkaUtil.clusterIdFromMetadata(kafkaProducerMetadata));
+          KafkaProducerRequest.create(record, clientId, bootstrapServers, kafkaProducerMetadata);
       AdviceScope adviceScope = AdviceScope.start(request);
       if (adviceScope == null) {
         return new Object[] {null, record, callback};

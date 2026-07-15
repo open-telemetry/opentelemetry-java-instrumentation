@@ -96,7 +96,9 @@ public abstract class AbstractReactorKafkaTest {
     // Trigger metadata fetch so cluster id is available before the first send. Without this,
     // KafkaUtil.clusterIdFromMetadata returns null on the very first send because the broker has
     // not yet responded with a metadata message containing the cluster resource.
-    sender.doOnProducer(producer -> producer.partitionsFor("testTopic")).block(Duration.ofSeconds(5));
+    sender
+        .doOnProducer(producer -> producer.partitionsFor("testTopic"))
+        .block(Duration.ofSeconds(5));
     receiver = KafkaReceiver.create(receiverOptions());
   }
 
