@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
@@ -16,9 +17,11 @@ import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.metrics.data.PointData;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -357,6 +360,38 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     List<MetricData> metrics = testing().metrics();
     Set<String> metricNames = metrics.stream().map(MetricData::getName).collect(toSet());
     assertThat(metricNames).containsAll(expectedMetricNames);
+
+    // All data points for a given metric must carry the same set of attribute keys, with the
+    // exception of messaging.kafka.cluster.id which may be absent on points emitted before
+    // onUpdate() fires (lazy metadata fetch on first broker contact).
+    assertThat(metrics)
+        .allSatisfy(
+            metricData -> {
+              Set<String> expectedKeys =
+                  metricData.getData().getPoints().stream()
+                      .findFirst()
+                      .map(
+                          point ->
+                              point.getAttributes().asMap().keySet().stream()
+                                  .map(AttributeKey::getKey)
+                                  .filter(
+                                      k ->
+                                          !k.equals(
+                                              KafkaClusterId.ATTRIBUTE_KEY.getKey()))
+                                  .collect(toSet()))
+                      .orElse(emptySet());
+              assertThat(metricData.getData().getPoints())
+                  .extracting(PointData::getAttributes)
+                  .extracting(
+                      attributes ->
+                          attributes.asMap().keySet().stream()
+                              .map(AttributeKey::getKey)
+                              .filter(
+                                  k -> !k.equals(KafkaClusterId.ATTRIBUTE_KEY.getKey()))
+                              .collect(toSet()))
+                  .allSatisfy(
+                      attributeKeys -> assertThat(attributeKeys).isEqualTo(expectedKeys));
+            });
 
     // Print mapping table
     printMappingTable();
