@@ -94,6 +94,14 @@ public abstract class AbstractVertxKafkaTest {
     cleanup.deferAfterAll(() -> closeVertx(vertx));
     kafkaProducer = KafkaProducer.create(vertx, producerProps());
     cleanup.deferAfterAll(() -> closeKafkaProducer(kafkaProducer));
+    // Trigger metadata fetch so cluster id is available before the first send.
+    CountDownLatch primed = new CountDownLatch(1);
+    kafkaProducer.partitionsFor("testSingleTopic", ar -> primed.countDown());
+    try {
+      primed.await(10, SECONDS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
     kafkaConsumer = KafkaConsumer.create(vertx, consumerProps());
     cleanup.deferAfterAll(() -> closeKafkaConsumer(kafkaConsumer));
   }
