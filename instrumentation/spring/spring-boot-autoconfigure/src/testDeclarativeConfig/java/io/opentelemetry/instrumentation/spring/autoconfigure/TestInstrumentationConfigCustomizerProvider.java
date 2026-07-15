@@ -13,9 +13,9 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.Exper
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalLanguageSpecificInstrumentationPropertyModel;
 
 /**
- * Adds {@code instrumentation/development.java.foo.customizer_key} at SDK-build time, so tests
- * can verify that the {@code configProvider} bean reflects customizations applied to the
- * declarative model rather than the raw, pre-customization model.
+ * Adds {@code instrumentation/development.java.foo.customizer_key} at SDK-build time, so tests can
+ * verify that the {@code configProvider} bean reflects customizations applied to the declarative
+ * model rather than the raw, pre-customization model.
  */
 public class TestInstrumentationConfigCustomizerProvider
     implements DeclarativeConfigurationCustomizerProvider {

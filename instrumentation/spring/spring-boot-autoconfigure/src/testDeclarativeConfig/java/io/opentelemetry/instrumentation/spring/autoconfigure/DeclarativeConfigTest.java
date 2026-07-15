@@ -66,7 +66,8 @@ class DeclarativeConfigTest {
 
   @Test
   @DisplayName(
-      "when Application Context DOES NOT contain OpenTelemetry bean should initialize openTelemetry")
+      "when Application Context DOES NOT contain OpenTelemetry bean should initialize"
+          + " openTelemetry")
   void initializeProvidersAndOpenTelemetry() {
     this.contextRunner.run(
         context -> {
@@ -107,8 +108,7 @@ class DeclarativeConfigTest {
                           assertThat(fooConfig.getString("string_key")).isEqualTo("string_value");
                           assertThat(
                                   fooConfig.getString(
-                                      TestInstrumentationConfigCustomizerProvider
-                                          .CUSTOMIZER_KEY))
+                                      TestInstrumentationConfigCustomizerProvider.CUSTOMIZER_KEY))
                               .isEqualTo(
                                   TestInstrumentationConfigCustomizerProvider.CUSTOMIZED_VALUE);
                         }));
