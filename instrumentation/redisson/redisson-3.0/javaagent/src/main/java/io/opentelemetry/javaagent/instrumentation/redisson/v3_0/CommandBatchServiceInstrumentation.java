@@ -41,6 +41,7 @@ class CommandBatchServiceInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("async").and(returns(isSubTypeOf(CompletionStage.class))),
         getClass().getName() + "$CaptureWithReturnAdvice");
+    transformer.applyAdviceToMethod(named("discardAsync"), getClass().getName() + "$DiscardAdvice");
     transformer.applyAdviceToMethod(named("executeAsync"), getClass().getName() + "$ExecuteAdvice");
   }
 
@@ -101,6 +102,14 @@ class CommandBatchServiceInstrumentation implements TypeInstrumentation {
         scope.close();
         RedissonBatchContext.markFuture(promise);
       }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class DiscardAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This CommandBatchService service) {
+      RedissonBatchAdviceScope.discard(service);
     }
   }
 

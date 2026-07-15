@@ -36,8 +36,7 @@ class RedissonBatchState {
       return;
     }
     if ("DISCARD".equals(command.getName())) {
-      finished = true;
-      clear();
+      discard();
       return;
     }
     commandNames.add(command.getName());
@@ -69,6 +68,11 @@ class RedissonBatchState {
     RedissonBatchRequest request = RedissonBatchRequest.create(commandNames, queryTexts);
     clear();
     return request;
+  }
+
+  synchronized void discard() {
+    finished = true;
+    clear();
   }
 
   private void clear() {

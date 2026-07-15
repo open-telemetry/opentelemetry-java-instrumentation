@@ -594,6 +594,29 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
+  void inMemoryAtomicBatchDiscard() throws ReflectiveOperationException {
+    assumeStableAtomicBatchSupport();
+    try {
+      RBatch.class.getMethod("discard");
+    } catch (NoSuchMethodException ignored) {
+      Assumptions.abort();
+    }
+
+    RBatch batch =
+        redisson.createBatch(
+            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.IN_MEMORY_ATOMIC));
+    batch.getBucket("batch1").setAsync("v1");
+    batch.getClass().getMethod("discard").invoke(batch);
+
+    assertThat(catchThrowable(batch::execute)).isNotNull();
+    redisson.getBucket("after-discard").get();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET " + address).hasKind(CLIENT).hasNoParent()));
+  }
+
+  @Test
   void atomicBatchTruncatesQueryText() {
     assumeStableAtomicBatchSupport();
     String bucketName = "bucket" + String.join("", nCopies(15_000, "a"));

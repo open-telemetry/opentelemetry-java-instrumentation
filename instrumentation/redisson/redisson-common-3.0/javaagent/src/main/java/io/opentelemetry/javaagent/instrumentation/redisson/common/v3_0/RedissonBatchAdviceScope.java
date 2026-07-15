@@ -74,6 +74,13 @@ public class RedissonBatchAdviceScope {
     }
   }
 
+  public static void discard(CommandBatchService service) {
+    RedissonBatchState state = BATCH_STATE_FIELD.get(service);
+    if (state != null) {
+      state.discard();
+    }
+  }
+
   @Nullable
   public static RedissonBatchAdviceScope start(
       CommandBatchService service,
