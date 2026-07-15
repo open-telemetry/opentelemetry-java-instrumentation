@@ -19,6 +19,12 @@ In addition to Google Java Style formatting, spotless applies
 [custom static importing rules](../../conventions/src/main/kotlin/io/opentelemetry/instrumentation/gradle/StaticImportFormatter.kt)
 (e.g. rewriting `Objects.requireNonNull` to a static import).
 
+Markdown files are formatted and linted separately through flint:
+
+```bash
+mise run lint:fix
+```
+
 #### Pre-commit hook
 
 To completely delegate code style formatting to the machine,
