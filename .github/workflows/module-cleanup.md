@@ -76,10 +76,10 @@ tools:
 # costs nothing at runtime.
 
 safe-outputs:
-  # Threat detection requires the AWF agent sandbox, which we disable
-  # because of https://github.com/github/gh-aw/issues/31241. The placeholder
-  # safe-job below carries no untrusted output, so threat detection is unnecessary.
+  # The placeholder safe-job below carries no untrusted output, so threat detection is unnecessary.
   threat-detection: false
+  noop:
+    report-as-issue: false
   jobs:
     suppress_default_create_issue:
       runs-on: ubuntu-latest

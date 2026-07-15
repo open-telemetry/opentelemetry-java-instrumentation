@@ -63,6 +63,8 @@ tools:
 # `[pr-review]` issue instead of the intended findings artifact.
 safe-outputs:
   threat-detection: false
+  noop:
+    report-as-issue: false
   jobs:
     suppress_default_create_issue:
       runs-on: ubuntu-latest

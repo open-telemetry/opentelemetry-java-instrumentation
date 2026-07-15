@@ -41,9 +41,6 @@ jobs:
             .github/aw/actions-lock.json
             .github/workflows/*.lock.yml
           )
-          if [[ -f .github/workflows/agentics-maintenance.yml ]]; then
-            files+=(.github/workflows/agentics-maintenance.yml)
-          fi
           git add -N -- "${files[@]}"
           git diff --binary -- "${files[@]}" > gh-aw-lockfiles.patch
 
@@ -73,7 +70,6 @@ jobs:
           while IFS= read -r path; do
             case "$path" in
               .github/aw/actions-lock.json |
-              .github/workflows/agentics-maintenance.yml |
               .github/workflows/*.lock.yml) ;;
               *)
                 echo "Unexpected path in generated patch: $path" >&2
