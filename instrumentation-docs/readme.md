@@ -167,17 +167,55 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
     conforms to. (See [telemetry schema docs](https://opentelemetry.io/docs/specs/otel/schemas/#schema-url))
   - attributes: The instrumentation scope’s optional attributes provide additional information
     about the scope.
-- configuration settings
-  - List of settings that are available for the instrumentation module
-  - Each setting has a name (flat property format), optional declarative_name (YAML path format), description, type, default value, and optional examples
-  - `name` is optional for declarative-only settings that have no flat property (they must provide a `declarative_name`)
-  - Structured-list settings additionally carry `declarative_type: structured_list` and a `declarative_schema` describing the per-item object shape
-- metrics
-  - List of metrics that the instrumentation module collects, including the metric name, description, type, and attributes.
-  - Separate lists for the metrics emitted by default vs via configuration options.
+- configuration_refs
+  - List of configuration definition ids the instrumentation module exposes.
+  - Each id resolves to an entry in the top-level `definitions.configurations` catalog (see below).
+- metrics (referenced via `metric_refs`)
+  - Each telemetry `when` block lists `metric_refs`: the ids of metric definitions the module emits.
+  - Each id resolves to an entry in the top-level `definitions.metrics` catalog.
+  - Separate `when` blocks distinguish metrics emitted by default vs via configuration options.
 - spans
-  - List of spans kinds the instrumentation module generates, including the attributes and their types.
-  - Separate lists for the spans emitted by default vs via configuration options.
+  - List of span kinds the instrumentation module generates, including the attributes and their types.
+  - Emitted inline under each telemetry `when` block (spans are not yet part of the definitions catalog).
+  - Separate `when` blocks distinguish spans emitted by default vs via configuration options.
+
+### Definitions catalog
+
+To avoid inlining the same metric or configuration block into every instrumentation entry, common
+definitions are collected once into a top-level `definitions` section and referenced by id:
+
+```yaml
+definitions:
+  configurations:
+    http.known-methods:          # id, reused as the configuration_refs value
+      name: otel.instrumentation.http.known-methods
+      declarative_name: java.common.http.known_methods
+      description: ...
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+  metrics:
+    http.client.request.duration-1a2b3c4d:   # <metric name>-<short content hash>
+      name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes: [...]
+libraries:
+- name: java-http-client
+  configuration_refs:
+  - http.known-methods
+  telemetry:
+  - when: default
+    metric_refs:
+    - http.client.request.duration-1a2b3c4d
+```
+
+Configuration ids are the curated ids from the shared registry (see below) for shared options, or the
+config `name` for module-specific options. Metric ids are `<metric name>-<short content hash>`; the
+hash disambiguates metrics that share a name but have different attribute sets. Any consumer of
+`instrumentation-list.yaml` must resolve `configuration_refs` / `metric_refs` against `definitions`
+before reading the underlying config/metric content.
 
 ## Methodology
 
@@ -201,9 +239,14 @@ disabled_by_default: true                         # Defaults to `false`
 classification: internal                          # instrumentation classification: library | internal | custom
 library_link: https://...                         # URL to the library or framework's main website or documentation
 configurations:
-  - name: otel.instrumentation.common.db.query-sanitization.enabled
-    declarative_name: java.common.db.query_sanitization.enabled    # Optional: YAML config path
-    description: Enables query sanitization for database queries.
+  # Reference a shared definition instead of hand-copying a common config block. The id must exist
+  # in instrumentation-docs/src/main/resources/shared-config-definitions.yaml (an unknown ref fails
+  # the build). See "Shared configuration definitions" below.
+  - ref: common.db.query-sanitization.enabled
+  # Module-specific configs are still defined inline:
+  - name: otel.instrumentation.my-module.enabled
+    declarative_name: java.my_module.enabled    # Optional: YAML config path
+    description: Enables the my-module feature.
     type: boolean               # boolean | string | list | map (the flat form)
     default: true
     examples:                   # Optional: Example values for this configuration
@@ -247,6 +290,28 @@ additional_telemetry:                             # Manually document telemetry 
           - name: "span.attribute"
             type: "STRING"
 ```
+
+### Shared configuration definitions
+
+Many instrumentations expose the same configuration options (for example `http.known-methods` or
+`common.peer-service-mapping`). Instead of hand-copying an identical block into every `metadata.yaml`,
+these are defined once in
+[`src/main/resources/shared-config-definitions.yaml`](src/main/resources/shared-config-definitions.yaml)
+under a stable id, and each module references them:
+
+```yaml
+configurations:
+  - ref: http.known-methods
+  - ref: common.peer-service-mapping
+```
+
+At metadata-parse time (`SharedConfigurationRegistry`) each `ref` is expanded into the full
+configuration option; an unknown id fails the build. The same ids are reused as the keys in the
+generated `definitions.configurations` catalog, so editing a description in the registry once updates
+every module that references it.
+
+To add a new shared option, add an entry to `shared-config-definitions.yaml` and reference it by id.
+To change an option for a single module only, define it inline instead of using a `ref`.
 
 ### Gradle File Derived Information
 
