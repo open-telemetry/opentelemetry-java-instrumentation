@@ -100,21 +100,7 @@ public abstract class AbstractVertxKafkaTest {
       kafkaProducer.partitionsFor("testSingleTopic", ar -> primed.countDown());
       primed.await(10, SECONDS);
     } catch (NoSuchMethodError ignored) {
-      // Vert.x 5 removed the Handler-based overload; fall back to the Future-based one.
-      try {
-        Object future =
-            kafkaProducer
-                .getClass()
-                .getMethod("partitionsFor", String.class)
-                .invoke(kafkaProducer, "testSingleTopic");
-        future
-            .getClass()
-            .getMethod("onComplete", Handler.class)
-            .invoke(future, (Handler<AsyncResult<?>>) ar -> primed.countDown());
-        primed.await(10, SECONDS);
-      } catch (Exception e) {
-        // best-effort; cluster.id may be absent on the first send
-      }
+      // Vert.x 5 removed the Handler-based overload; priming is skipped (best-effort).
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
