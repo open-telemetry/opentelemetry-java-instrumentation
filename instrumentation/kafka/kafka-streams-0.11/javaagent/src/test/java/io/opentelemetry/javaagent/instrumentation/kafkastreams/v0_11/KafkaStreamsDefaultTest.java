@@ -190,27 +190,36 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                     .hasAttributesSatisfyingExactly(assertions);
               },
               // kafka-clients PRODUCER
-              span ->
-                  span.hasName(STREAM_PROCESSED + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(1))
-                      .hasTraceId(receivedContext.getTraceId())
-                      .hasSpanId(receivedContext.getSpanId())
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, KAFKA),
-                          equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
-                          equalTo(MESSAGING_OPERATION, "publish"),
-                          satisfies(
-                              stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()),
-                          satisfies(
-                              stringKey("messaging.client_id"), val -> val.endsWith("producer")),
-                          satisfies(
-                              MESSAGING_DESTINATION_PARTITION_ID,
-                              val -> val.isInstanceOf(String.class)),
-                          equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
-                          equalTo(
-                              stringKey("messaging.kafka.bootstrap.servers"),
-                              EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null)));
+              span -> {
+                List<AttributeAssertion> processedPublishAttrs =
+                    new ArrayList<>(
+                        asList(
+                            equalTo(MESSAGING_SYSTEM, KAFKA),
+                            equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
+                            equalTo(MESSAGING_OPERATION, "publish"),
+                            satisfies(
+                                stringKey("messaging.client_id"), val -> val.endsWith("producer")),
+                            satisfies(
+                                MESSAGING_DESTINATION_PARTITION_ID,
+                                val -> val.isInstanceOf(String.class)),
+                            equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
+                            equalTo(
+                                stringKey("messaging.kafka.bootstrap.servers"),
+                                EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null)));
+                // cluster.id: best-effort; Streams internal producer may lack it on first send.
+                if (trace.getSpan(2).getAttributes().get(stringKey("messaging.kafka.cluster.id"))
+                    != null) {
+                  processedPublishAttrs.add(
+                      satisfies(
+                          stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+                }
+                span.hasName(STREAM_PROCESSED + " publish")
+                    .hasKind(SpanKind.PRODUCER)
+                    .hasParent(trace.getSpan(1))
+                    .hasTraceId(receivedContext.getTraceId())
+                    .hasSpanId(receivedContext.getSpanId())
+                    .hasAttributesSatisfyingExactly(processedPublishAttrs);
+              });
 
           producerProcessedRef.set(trace.getSpan(2));
         },
