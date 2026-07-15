@@ -33,6 +33,14 @@ class DeclarativeConfigTest {
     }
   }
 
+  @TestConfiguration
+  static class InstrumentationConfigCustomizerConfiguration {
+    @Bean
+    TestInstrumentationConfigCustomizerProvider testInstrumentationConfigCustomizerProvider() {
+      return new TestInstrumentationConfigCustomizerProvider();
+    }
+  }
+
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
@@ -76,6 +84,34 @@ class DeclarativeConfigTest {
                   });
           assertThat(context).getBean("configProvider", ConfigProvider.class).isNotNull();
         });
+  }
+
+  @Test
+  @DisplayName(
+      "configProvider bean should reflect DeclarativeConfigurationCustomizerProvider changes"
+          + " applied during SDK creation, not just the raw pre-customization model")
+  void configProviderReflectsModelCustomizer() {
+    this.contextRunner
+        .withUserConfiguration(InstrumentationConfigCustomizerConfiguration.class)
+        .run(
+            context ->
+                assertThat(context)
+                    .getBean("configProvider", ConfigProvider.class)
+                    .satisfies(
+                        configProvider -> {
+                          DeclarativeConfigProperties fooConfig =
+                              configProvider
+                                  .getInstrumentationConfig()
+                                  .getStructured("java")
+                                  .getStructured("foo");
+                          assertThat(fooConfig.getString("string_key")).isEqualTo("string_value");
+                          assertThat(
+                                  fooConfig.getString(
+                                      TestInstrumentationConfigCustomizerProvider
+                                          .CUSTOMIZER_KEY))
+                              .isEqualTo(
+                                  TestInstrumentationConfigCustomizerProvider.CUSTOMIZED_VALUE);
+                        }));
   }
 
   @Test
