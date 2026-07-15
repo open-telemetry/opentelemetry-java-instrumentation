@@ -124,7 +124,7 @@ class KafkaProducerInstrumentation implements TypeInstrumentation {
               clientId,
               bootstrapServers,
               PRODUCER_SPAN_CONTEXT_PROPAGATION_ENABLED && canPropagateHeaders,
-              kafkaProducerMetadata);
+              KafkaUtil.clusterIdFromMetadata(kafkaProducerMetadata));
       AdviceScope adviceScope = AdviceScope.start(request);
       if (adviceScope == null) {
         return new Object[] {null, record, callback};

@@ -278,7 +278,7 @@ public final class KafkaUtil {
   }
 
   @Nullable
-  static String clusterIdFromMetadata(@Nullable Metadata metadata) {
+  public static String clusterIdFromMetadata(@Nullable Metadata metadata) {
     if (metadata == null) {
       return null;
     }
