@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.docs;
 import static org.assertj.core.api.Assertions.fail;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedDeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.DeclarativeSchema;
@@ -118,8 +118,7 @@ class DeclarativeConfigValidationTest {
     DefaultConfigProperties configProperties = DefaultConfigProperties.createFromMap(properties);
 
     DeclarativeConfigProperties declarativeConfig =
-        ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
-            configProperties);
+        ConfigPropertiesBackedConfigProvider.create(configProperties).getInstrumentationConfig();
 
     Object retrievedValue =
         navigateAndGetValue(declarativeConfig, declarativePath, type, structuredList);

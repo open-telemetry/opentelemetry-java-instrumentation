@@ -408,7 +408,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
               .getInstrumentationConfig("common");
     }
 
-    @SuppressWarnings("deprecation") // using deprecated config property
     String result =
         commonConfig.getString(
             "span_suppression_strategy/development",
