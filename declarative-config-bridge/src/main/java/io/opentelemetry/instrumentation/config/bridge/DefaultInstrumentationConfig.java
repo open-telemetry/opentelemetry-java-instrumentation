@@ -34,8 +34,9 @@ import java.util.Map;
  * autoConfiguration.addPropertiesSupplier(defaults::toConfigProperties);
  * }</pre>
  *
- * <p>For declarative-config model integration, call {@link #applyToModel(OpenTelemetryConfigurationModel)}
- * or use {@link DefaultInstrumentationConfigApplier} when a static helper is more convenient.
+ * <p>For declarative-config model integration, call {@link
+ * #applyToModel(OpenTelemetryConfigurationModel)} or use {@link
+ * DefaultInstrumentationConfigApplier} when a static helper is more convenient.
  */
 public final class DefaultInstrumentationConfig {
 
