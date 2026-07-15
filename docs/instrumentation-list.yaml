@@ -6192,6 +6192,20 @@ libraries:
         type: STRING
       - name: rpc.system
         type: STRING
+- name: hbase-client-1.4
+  display_name: HBase Client
+  description: |
+    This instrumentation enables database client spans and database client metrics for the Apache HBase client.
+  semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
+  library_link: https://hbase.apache.org/
+  source_path: instrumentation/hbase/hbase-client-1.4
+  scope:
+    name: io.opentelemetry.hbase-client-1.4
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.apache.hbase:hbase-client:[1.4.0, 2.0.0)
 - name: hbase-client-2.0
   display_name: HBase Client
   description: |
@@ -6200,7 +6214,7 @@ libraries:
   - DATABASE_CLIENT_SPANS
   - DATABASE_CLIENT_METRICS
   library_link: https://hbase.apache.org/
-  source_path: instrumentation/hbase-client-2.0
+  source_path: instrumentation/hbase/hbase-client-2.0
   scope:
     name: io.opentelemetry.hbase-client-2.0
   has_javaagent: true
