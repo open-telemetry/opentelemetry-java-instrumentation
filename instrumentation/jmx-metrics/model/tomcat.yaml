@@ -1,6 +1,28 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/open-telemetry/weaver/v0.24.2/schemas/semconv.schema.json
 
 groups:
+  - id: registry.tomcat
+    type: attribute_group
+    brief: Tomcat attributes
+    attributes:
+      - id: tomcat.context
+        type: string
+        stability: development
+        brief: Web application context path
+        examples:
+          - "/myapp"
+      - id: tomcat.request.processor.name
+        type: string
+        stability: development
+        brief: Name of the Tomcat request processor.
+        examples:
+          - "http-nio-8080"
+      - id: tomcat.thread.pool.name
+        type: string
+        stability: development
+        brief: Name of the Tomcat thread pool.
+        examples:
+          - "http-nio-8080"
 
   - id: metric.tomcat.session.active.count
     metric_name: tomcat.session.active.count
@@ -10,12 +32,7 @@ groups:
     unit: "{session}"
     instrument: updowncounter
     attributes:
-      - id: tomcat.context
-        type: string
-        stability: development
-        brief: Web application context path
-        examples:
-          - "/myapp"
+      - ref: tomcat.context
 
   - id: metric.tomcat.session.active.limit
     metric_name: tomcat.session.active.limit
@@ -35,12 +52,7 @@ groups:
     unit: "{error}"
     instrument: counter
     attributes:
-      - id: tomcat.request.processor.name
-        type: string
-        stability: development
-        brief: Name of the Tomcat request processor.
-        examples:
-          - "http-nio-8080"
+      - ref: tomcat.request.processor.name
 
   - id: metric.tomcat.request.count
     metric_name: tomcat.request.count
@@ -80,12 +92,7 @@ groups:
     unit: "{thread}"
     instrument: updowncounter
     attributes:
-      - id: tomcat.thread.pool.name
-        type: string
-        stability: development
-        brief: Name of the Tomcat thread pool.
-        examples:
-          - "http-nio-8080"
+      - ref: tomcat.thread.pool.name
 
   - id: metric.tomcat.network.io
     metric_name: tomcat.network.io
