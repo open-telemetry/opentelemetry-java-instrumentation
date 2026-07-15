@@ -181,6 +181,12 @@ public class OpenTelemetryAutoConfiguration {
        * OpenTelemetrySdkConfig.PropertiesConfig#configProvider(AutoConfiguredOpenTelemetrySdk)},
        * this derives the provider from the constructed {@link OpenTelemetry} so that it reflects
        * declarative model customizers applied during SDK creation.
+       *
+       * <p>This mirrors how the SDK itself builds its {@code ConfigProvider}: <a
+       * href="https://github.com/open-telemetry/opentelemetry-java/blob/83f947f97fb0961178072b413c07a3689488ef34/sdk-extensions/declarative-config/src/main/java/io/opentelemetry/sdk/autoconfigure/declarativeconfig/OpenTelemetryConfigurationFactory.java#L45">OpenTelemetryConfigurationFactory#create</a>
+       * converts the (already-customized) model to properties and hands the resulting {@code
+       * ConfigProvider} to the SDK builder, so the built {@link OpenTelemetry} is the only place
+       * where the post-customization config is available.
        */
       @Bean
       ConfigProvider configProvider(OpenTelemetry openTelemetry) {
