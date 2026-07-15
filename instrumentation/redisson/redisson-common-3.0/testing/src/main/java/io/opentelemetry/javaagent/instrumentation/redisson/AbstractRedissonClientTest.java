@@ -513,6 +513,40 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
+  void batchChangedToAtomicAfterCommandsQueued() {
+    assumeStableAtomicBatchSupport();
+    BatchOptions options = BatchOptions.defaults();
+    RBatch batch = redisson.createBatch(options);
+    batch.getBucket("batch1").setAsync("v1");
+    batch.getBucket("batch2").setAsync("v2");
+    options.executionMode(BatchOptions.ExecutionMode.IN_MEMORY_ATOMIC);
+    batch.execute();
+    assertStableAtomicBatch("MULTI SET", 2L, "SET batch1 ?; SET batch2 ?");
+  }
+
+  @Test
+  @Tag(TEST_SINGLE_CONNECTION)
+  void batchChangedFromAtomicAfterCommandsQueued() {
+    assumeStableAtomicBatchSupport();
+    BatchOptions options =
+        BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.IN_MEMORY_ATOMIC);
+    RBatch batch = redisson.createBatch(options);
+    batch.getBucket("batch1").setAsync("v1");
+    batch.getBucket("batch2").setAsync("v2");
+    options.executionMode(BatchOptions.ExecutionMode.IN_MEMORY);
+    batch.execute();
+    redisson.getBucket("after-pipeline").get();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("PIPELINE SET " + address).hasKind(CLIENT).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET " + address).hasKind(CLIENT).hasNoParent()));
+  }
+
+  @Test
   void atomicBatchBeforeRedisson372() {
     assumeBatchBeforeRedisson372();
 

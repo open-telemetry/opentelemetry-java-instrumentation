@@ -75,18 +75,18 @@ public final class RedissonBatchContext {
     }
     Context context =
         Context.current()
-            .with(KEY, false)
+            .with(KEY, true)
             .with(CAPTURE_KEY, new CommandCapture(state, command, codec, parameters));
     return context.makeCurrent();
   }
 
-  public static void captureCommand(Object batchCommand, int index) {
+  public static void captureCommand(Object batchCommand, Object future, int index) {
     if (!emitStableDatabaseSemconv()) {
       return;
     }
     CommandCapture capture = Context.current().get(CAPTURE_KEY);
     if (capture != null) {
-      capture.capture(batchCommand, index);
+      capture.capture(batchCommand, future, index);
     }
   }
 
@@ -101,6 +101,12 @@ public final class RedissonBatchContext {
   static void markCapturedCommand(Object command) {
     if (command instanceof CommandData) {
       COMMAND_MARKER_FIELD.set((CommandData<?, ?>) command, new RedissonBatchMarker());
+    }
+  }
+
+  static void unmarkCapturedCommand(Object command) {
+    if (command instanceof CommandData) {
+      COMMAND_MARKER_FIELD.set((CommandData<?, ?>) command, null);
     }
   }
 
@@ -148,6 +154,12 @@ public final class RedissonBatchContext {
     }
   }
 
+  static void unmarkFuture(Object future) {
+    if (future instanceof CompletionStage) {
+      FUTURE_MARKER_FIELD.set((CompletionStage<?>) future, null);
+    }
+  }
+
   public static boolean isMarkedFuture(Object future) {
     return future instanceof CompletionStage
         && FUTURE_MARKER_FIELD.get((CompletionStage<?>) future) != null;
@@ -167,8 +179,8 @@ public final class RedissonBatchContext {
       this.parameters = parameters;
     }
 
-    private void capture(Object batchCommand, int index) {
-      state.add(batchCommand, index, command, codec, parameters);
+    private void capture(Object batchCommand, Object future, int index) {
+      state.add(batchCommand, future, index, command, codec, parameters);
     }
   }
 

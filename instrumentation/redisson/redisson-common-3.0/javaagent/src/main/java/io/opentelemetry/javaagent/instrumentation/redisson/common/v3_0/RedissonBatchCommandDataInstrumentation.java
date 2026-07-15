@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.redisson.client.protocol.CommandData;
 
 public class RedissonBatchCommandDataInstrumentation implements TypeInstrumentation {
   @Override
@@ -32,8 +33,11 @@ public class RedissonBatchCommandDataInstrumentation implements TypeInstrumentat
   @SuppressWarnings("unused")
   public static class CaptureAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This Object command, @Advice.Argument(4) int index) {
-      RedissonBatchContext.captureCommand(command, index);
+    public static void onExit(
+        @Advice.This Object command,
+        @Advice.FieldValue(value = "promise", declaringType = CommandData.class) Object future,
+        @Advice.Argument(4) int index) {
+      RedissonBatchContext.captureCommand(command, future, index);
     }
   }
 }

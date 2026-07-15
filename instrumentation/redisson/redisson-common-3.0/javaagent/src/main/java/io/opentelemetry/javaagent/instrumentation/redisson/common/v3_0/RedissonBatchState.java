@@ -36,10 +36,19 @@ class RedissonBatchState {
   private boolean atomic;
 
   public synchronized void add(
-      Object batchCommand, int index, RedisCommand<?> command, Codec codec, Object[] parameters) {
+      Object batchCommand,
+      Object future,
+      int index,
+      RedisCommand<?> command,
+      Codec codec,
+      Object[] parameters) {
     if (finished) {
       if (atomic) {
         RedissonBatchContext.markCapturedCommand(batchCommand);
+        RedissonBatchContext.markFuture(future);
+      } else {
+        RedissonBatchContext.unmarkCapturedCommand(batchCommand);
+        RedissonBatchContext.unmarkFuture(future);
       }
       return;
     }
@@ -47,7 +56,7 @@ class RedissonBatchState {
       discard();
       return;
     }
-    CapturedCommand capturedCommand = new CapturedCommand(batchCommand, command.getName());
+    CapturedCommand capturedCommand = new CapturedCommand(batchCommand, future, command.getName());
     commands.put(index, capturedCommand);
     if (index >= queryTextCutoff) {
       return;
@@ -78,16 +87,18 @@ class RedissonBatchState {
     if (finished) {
       return null;
     }
-    atomic = isAtomic(options);
     finished = true;
-    if (!atomic || commands.isEmpty()) {
+    if (!isAtomic(options) || commands.isEmpty()) {
+      unmarkCommands();
       clear();
       return null;
     }
+    atomic = true;
     List<String> commandNames = new ArrayList<>(commands.size());
     List<String> queryTexts = new ArrayList<>(commands.size());
     for (CapturedCommand command : commands.values()) {
       RedissonBatchContext.markCapturedCommand(command.batchCommand);
+      RedissonBatchContext.markFuture(command.future);
       commandNames.add(command.name);
       if (command.queryText != null) {
         queryTexts.add(command.queryText);
@@ -100,7 +111,16 @@ class RedissonBatchState {
 
   synchronized void discard() {
     finished = true;
+    atomic = false;
+    unmarkCommands();
     clear();
+  }
+
+  private void unmarkCommands() {
+    for (CapturedCommand command : commands.values()) {
+      RedissonBatchContext.unmarkCapturedCommand(command.batchCommand);
+      RedissonBatchContext.unmarkFuture(command.future);
+    }
   }
 
   private void clear() {
@@ -151,11 +171,13 @@ class RedissonBatchState {
 
   private static class CapturedCommand {
     private final Object batchCommand;
+    private final Object future;
     private final String name;
     @Nullable private String queryText;
 
-    private CapturedCommand(Object batchCommand, String name) {
+    private CapturedCommand(Object batchCommand, Object future, String name) {
       this.batchCommand = batchCommand;
+      this.future = future;
       this.name = name;
     }
   }

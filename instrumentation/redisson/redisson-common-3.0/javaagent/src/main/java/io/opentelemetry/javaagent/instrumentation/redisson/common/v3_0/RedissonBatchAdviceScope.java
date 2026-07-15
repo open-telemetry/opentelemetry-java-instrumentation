@@ -40,22 +40,8 @@ public class RedissonBatchAdviceScope {
 
   @Nullable
   public static Scope capture(
-      CommandBatchService service,
-      Object options,
-      RedisCommand<?> command,
-      Codec codec,
-      Object[] parameters) {
-    if (!emitStableDatabaseSemconv() || !RedissonBatchState.isAtomic(options)) {
-      return null;
-    }
-    RedissonBatchState state = BATCH_STATE_FIELD.get(service);
-    if (state == null) {
-      return null;
-    }
-    if (RedissonBatchContext.isActive(currentContext())) {
-      return RedissonBatchContext.startCapture();
-    }
-    return RedissonBatchContext.startCapture(state, command, codec, parameters);
+      CommandBatchService service, RedisCommand<?> command, Codec codec, Object[] parameters) {
+    return captureCandidate(service, command, codec, parameters);
   }
 
   @Nullable

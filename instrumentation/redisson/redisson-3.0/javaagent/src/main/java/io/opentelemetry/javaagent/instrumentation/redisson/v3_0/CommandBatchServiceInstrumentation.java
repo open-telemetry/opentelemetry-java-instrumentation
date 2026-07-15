@@ -16,7 +16,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonBatchAdviceScope;
-import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonBatchContext;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -61,14 +60,8 @@ class CommandBatchServiceInstrumentation implements TypeInstrumentation {
         @Advice.This CommandBatchService service,
         @Advice.Argument(2) Codec codec,
         @Advice.Argument(3) RedisCommand<?> command,
-        @Advice.Argument(4) Object[] parameters,
-        @Advice.Argument(5) Object promise,
-        @Advice.FieldValue("options") Object options) {
-      Scope scope = RedissonBatchAdviceScope.capture(service, options, command, codec, parameters);
-      if (scope != null) {
-        RedissonBatchContext.markFuture(promise);
-      }
-      return scope;
+        @Advice.Argument(4) Object[] parameters) {
+      return RedissonBatchAdviceScope.capture(service, command, codec, parameters);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -87,9 +80,8 @@ class CommandBatchServiceInstrumentation implements TypeInstrumentation {
         @Advice.This CommandBatchService service,
         @Advice.Argument(2) Codec codec,
         @Advice.Argument(3) RedisCommand<?> command,
-        @Advice.Argument(4) Object[] parameters,
-        @Advice.FieldValue("options") Object options) {
-      return RedissonBatchAdviceScope.capture(service, options, command, codec, parameters);
+        @Advice.Argument(4) Object[] parameters) {
+      return RedissonBatchAdviceScope.capture(service, command, codec, parameters);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -97,7 +89,6 @@ class CommandBatchServiceInstrumentation implements TypeInstrumentation {
         @Advice.Return @Nullable CompletionStage<?> promise, @Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
-        RedissonBatchContext.markFuture(promise);
       }
     }
   }
