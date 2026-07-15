@@ -73,16 +73,21 @@ public final class RedissonBatchContext {
     if (!emitStableDatabaseSemconv()) {
       return false;
     }
+    Object channel = connection.getChannel();
+    RedissonBatchMarker connectionMarker = CONNECTION_MARKER_FIELD.get(connection);
+    boolean connectionMarked = connectionMarker != null && connectionMarker.matches(channel);
+    if (connectionMarker != null && !connectionMarked) {
+      CONNECTION_MARKER_FIELD.set(connection, null);
+    }
     if (request.isTransactionCompletion()) {
-      boolean connectionMarked = CONNECTION_MARKER_FIELD.get(connection) != null;
       CONNECTION_MARKER_FIELD.set(connection, null);
       return connectionMarked || request.isMarkedBatchCommand();
     }
     if (request.isMarkedBatchCommand()) {
-      CONNECTION_MARKER_FIELD.set(connection, new RedissonBatchMarker());
+      CONNECTION_MARKER_FIELD.set(connection, new RedissonBatchMarker(channel));
       return true;
     }
-    if (CONNECTION_MARKER_FIELD.get(connection) != null) {
+    if (connectionMarked) {
       return true;
     }
     return false;
