@@ -17,8 +17,8 @@ import java.util.Map;
 
 /**
  * Loads the shared configuration definitions ("globals") from {@code
- * shared-config-definitions.yaml} on the classpath and resolves {@code ref} entries in a module's
- * configuration list into full {@link ConfigurationOption}s.
+ * shared-config-definitions.yaml} and resolves {@code ref} entries in a module's configuration list
+ * into full {@link ConfigurationOption}s.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
@@ -30,7 +30,6 @@ public final class SharedConfigurationRegistry {
   private static final SharedConfigurationRegistry INSTANCE =
       new SharedConfigurationRegistry(load());
 
-  // id -> fully-specified option (with its id assigned)
   private final Map<String, ConfigurationOption> definitions;
 
   SharedConfigurationRegistry(Map<String, ConfigurationOption> definitions) {

@@ -173,8 +173,6 @@ public class YamlHelper {
         Map<String, Object> telemetryEntry = new LinkedHashMap<>();
         telemetryEntry.put("when", group);
 
-        // Metrics are emitted as references into the shared definitions catalog. TreeSet gives
-        // deterministic (sorted, de-duplicated) ref ordering.
         Set<String> metricRefs = new TreeSet<>();
         for (EmittedMetrics.Metric metric : module.getMetrics().getOrDefault(group, emptyList())) {
           metricRefs.add(catalog.metricId(metric));
@@ -261,8 +259,6 @@ public class YamlHelper {
   private static void addConfigurations(
       InstrumentationModule module, Map<String, Object> moduleMap, DefinitionCatalog catalog) {
     if (module.getMetadata() != null && !module.getMetadata().getConfigurations().isEmpty()) {
-      // Configurations are emitted as references into the shared definitions catalog. TreeSet gives
-      // deterministic (sorted, de-duplicated) ref ordering.
       Set<String> configRefs = new TreeSet<>();
       for (ConfigurationOption configuration : module.getMetadata().getConfigurations()) {
         configRefs.add(catalog.configId(configuration));
@@ -381,9 +377,8 @@ public class YamlHelper {
   }
 
   /**
-   * Builds the shared definitions catalog from every module that will be emitted (library + custom;
-   * internal modules are excluded from the output so their definitions would be orphans). Each
-   * unique metric/configuration block is assigned a deterministic id and stored once; modules then
+   * Builds the shared definitions catalog from every module that will be emitted. Each unique
+   * metric/configuration block is assigned a deterministic id and stored once; modules then
    * reference these ids.
    */
   private static DefinitionCatalog buildDefinitionCatalog(List<InstrumentationModule> list) {
@@ -400,8 +395,6 @@ public class YamlHelper {
                 })
             .toList();
 
-    // Metrics: id = <metric name>-<short content hash>. The hash disambiguates the multiple
-    // attribute-set variants that share a metric name.
     for (InstrumentationModule module : emitted) {
       for (List<EmittedMetrics.Metric> metrics : module.getMetrics().values()) {
         for (EmittedMetrics.Metric metric : metrics) {
@@ -418,8 +411,7 @@ public class YamlHelper {
 
     // Configurations: registry-backed configs (resolved from a `ref`) use their curated registry
     // id. Module-specific configs are keyed by their config name, unless two distinct contents
-    // share
-    // a name, in which case a short content hash disambiguates them.
+    // share a name, in which case a short content hash disambiguates them.
     Map<String, Set<String>> nonRegistryNameToCanonicals = new HashMap<>();
     Map<String, Map<String, Object>> canonicalToDef = new LinkedHashMap<>();
     for (InstrumentationModule module : emitted) {
@@ -444,8 +436,7 @@ public class YamlHelper {
         (name, canonicals) -> {
           boolean unique = canonicals.size() == 1;
           for (String canonical : canonicals) {
-            // Skip content already cataloged via a registry ref (an inline copy of a shared
-            // config).
+            // Skip content already cataloged via a registry ref
             if (catalog.configCanonicalToId.containsKey(canonical)) {
               continue;
             }
@@ -499,7 +490,7 @@ public class YamlHelper {
     }
   }
 
-  /** First 8 hex chars of the SHA-256 of the input; deterministic across runs and JVMs. */
+  /** First 8 hex chars of the SHA-256 of the input. */
   private static String shortHash(String input) {
     try {
       byte[] hash = MessageDigest.getInstance("SHA-256").digest(input.getBytes(UTF_8));

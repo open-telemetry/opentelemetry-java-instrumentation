@@ -17,7 +17,7 @@ will enable metric and span collection:
 ```kotlin
 tasks {
   test {
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     ...
   }
 }
@@ -32,18 +32,16 @@ For example, to collect and write metadata for the `otel.semconv-stability.opt-i
 set for an instrumentation:
 
 ```kotlin
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
-
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
   val testStableSemconv by registering(Test::class) {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
 
-    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  test {
-    systemProperty("collectMetadata", collectMetadata)
   }
 
   check {
@@ -170,10 +168,18 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 - configuration_refs
   - List of configuration definition ids the instrumentation module exposes.
   - Each id resolves to an entry in the top-level `definitions.configurations` catalog (see below).
+  - This is the _generated_ representation. In a module's `metadata.yaml` you still author each
+    configuration either inline or as a shared `ref` (see "metadata.yaml file" and "Shared
+    configuration definitions" below); the generator collects both forms into the catalog and emits
+    the ids here.
 - metrics (referenced via `metric_refs`)
   - Each telemetry `when` block lists `metric_refs`: the ids of metric definitions the module emits.
   - Each id resolves to an entry in the top-level `definitions.metrics` catalog.
   - Separate `when` blocks distinguish metrics emitted by default vs via configuration options.
+  - This is the _generated_ representation, produced automatically from collected telemetry (and any
+    inline `additional_telemetry`). Metrics are always authored inline (or auto-collected from
+    tests) — there is no author-time shared metric catalog; the generator does the de-duplication
+    into `definitions.metrics` for you.
 - spans
   - List of span kinds the instrumentation module generates, including the attributes and their types.
   - Emitted inline under each telemetry `when` block (spans are not yet part of the definitions catalog).
