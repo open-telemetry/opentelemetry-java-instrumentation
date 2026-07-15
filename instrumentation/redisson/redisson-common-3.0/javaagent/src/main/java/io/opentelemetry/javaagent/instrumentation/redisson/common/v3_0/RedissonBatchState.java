@@ -13,9 +13,11 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import org.redisson.client.codec.Codec;
 import org.redisson.client.protocol.RedisCommand;
 
@@ -26,7 +28,10 @@ class RedissonBatchState {
       RedisCommandSanitizer.create(
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "redisson"));
 
-  private final List<CapturedCommand> commands = new ArrayList<>();
+  private final TreeMap<Integer, CapturedCommand> commands = new TreeMap<>();
+  private int queryTextLength;
+  private int queryTextCommandCount;
+  private int queryTextCutoff = Integer.MAX_VALUE;
   private boolean finished;
 
   public synchronized void add(
@@ -38,8 +43,31 @@ class RedissonBatchState {
       discard();
       return;
     }
-    commands.add(
-        new CapturedCommand(index, command.getName(), sanitize(command, codec, parameters)));
+    CapturedCommand capturedCommand = new CapturedCommand(command.getName());
+    commands.put(index, capturedCommand);
+    if (index >= queryTextCutoff) {
+      return;
+    }
+
+    capturedCommand.queryText = sanitize(command, codec, parameters);
+    queryTextLength += capturedCommand.queryText.length();
+    if (queryTextCommandCount > 0) {
+      queryTextLength += 2;
+    }
+    queryTextCommandCount++;
+    while (queryTextLength > RedissonBatchRequest.QUERY_TEXT_LIMIT) {
+      Map.Entry<Integer, CapturedCommand> removedEntry = commands.lowerEntry(queryTextCutoff);
+      CapturedCommand removed = removedEntry.getValue();
+      if (removed.queryText != null) {
+        queryTextLength -= removed.queryText.length();
+        queryTextCommandCount--;
+      }
+      if (queryTextCommandCount > 0) {
+        queryTextLength -= 2;
+      }
+      removed.queryText = null;
+      queryTextCutoff = removedEntry.getKey();
+    }
   }
 
   public synchronized RedissonBatchRequest finish(Object options) {
@@ -51,12 +79,13 @@ class RedissonBatchState {
       clear();
       return null;
     }
-    commands.sort(Comparator.comparingInt(command -> command.index));
     List<String> commandNames = new ArrayList<>(commands.size());
     List<String> queryTexts = new ArrayList<>(commands.size());
-    for (CapturedCommand command : commands) {
+    for (CapturedCommand command : commands.values()) {
       commandNames.add(command.name);
-      queryTexts.add(command.queryText);
+      if (command.queryText != null) {
+        queryTexts.add(command.queryText);
+      }
     }
     RedissonBatchRequest request = RedissonBatchRequest.create(commandNames, queryTexts);
     clear();
@@ -115,14 +144,11 @@ class RedissonBatchState {
   }
 
   private static class CapturedCommand {
-    private final int index;
     private final String name;
-    private final String queryText;
+    @Nullable private String queryText;
 
-    private CapturedCommand(int index, String name, String queryText) {
-      this.index = index;
+    private CapturedCommand(String name) {
       this.name = name;
-      this.queryText = queryText;
     }
   }
 }

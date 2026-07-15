@@ -65,6 +65,9 @@ public final class RedissonBatchContext {
   }
 
   public static void captureCommand(int index) {
+    if (!emitStableDatabaseSemconv()) {
+      return;
+    }
     CommandCapture capture = Context.current().get(CAPTURE_KEY);
     if (capture != null) {
       capture.capture(index);
