@@ -40,6 +40,9 @@ engine:
   id: copilot
   model: ${{ needs.dispatch.outputs.model }}
 
+features:
+  dangerously-disable-sandbox-agent: "GPT-5 models require direct access to api.githubcopilot.com"
+
 sandbox:
   agent: false
 

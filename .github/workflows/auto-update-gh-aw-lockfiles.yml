@@ -22,8 +22,9 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Read pinned gh-aw version
-        id: version
+      - name: Regenerate agentic workflow lockfiles
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           version=$(sed -nE 's/.*gh extension install github\/gh-aw --pin (v[0-9]+\.[0-9]+\.[0-9]+).*/\1/p' \
             .github/workflows/build-common.yml)
@@ -31,29 +32,20 @@ jobs:
             echo "Unable to read a single pinned gh-aw version: $version" >&2
             exit 1
           fi
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-
-      - name: Install pinned gh-aw compiler
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.version.outputs.version }}
-        run: gh extension install github/gh-aw --pin "$VERSION"
-
-      - name: Regenerate agentic workflow lockfiles
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.version.outputs.version }}
-        run: >-
-          gh aw compile
-          --action-tag "$VERSION"
-          --approve
-          --no-check-update
+          gh extension install github/gh-aw --pin "$version"
+          gh aw compile --action-tag "$version" --approve --no-check-update
 
       - name: Create generated-files patch
         run: |
-          git diff --binary -- \
-            .github/aw/actions-lock.json \
-            '.github/workflows/*.lock.yml' > gh-aw-lockfiles.patch
+          files=(
+            .github/aw/actions-lock.json
+            .github/workflows/*.lock.yml
+          )
+          if [[ -f .github/workflows/agentics-maintenance.yml ]]; then
+            files+=(.github/workflows/agentics-maintenance.yml)
+          fi
+          git add -N -- "${files[@]}"
+          git diff --binary -- "${files[@]}" > gh-aw-lockfiles.patch
 
       - name: Upload generated-files patch
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -80,7 +72,9 @@ jobs:
           fi
           while IFS= read -r path; do
             case "$path" in
-              .github/aw/actions-lock.json | .github/workflows/*.lock.yml) ;;
+              .github/aw/actions-lock.json |
+              .github/workflows/agentics-maintenance.yml |
+              .github/workflows/*.lock.yml) ;;
               *)
                 echo "Unexpected path in generated patch: $path" >&2
                 exit 1

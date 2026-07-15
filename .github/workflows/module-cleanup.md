@@ -51,6 +51,9 @@ engine:
   id: copilot
   model: ${{ vars.MODULE_CLEANUP_MODEL || 'gpt-5' }}
 
+features:
+  dangerously-disable-sandbox-agent: "GPT-5 models require direct access to api.githubcopilot.com"
+
 # Disable the AWF sandbox so copilot-cli connects directly to
 # api.githubcopilot.com. In sandboxed Copilot workflows, gh-aw enables
 # Copilot BYOK/offline mode but does not set responses wire-API routing
