@@ -9,4 +9,7 @@ sudo rm -rf /usr/share/dotnet
 sudo rm -rf /usr/local/julia*
 sudo rm -rf /usr/share/swift
 sudo rm -rf /usr/local/.ghcup
+# test suites pull many testcontainers images (elasticsearch, kafka connect, etc.) over the
+# course of a single job; prune whatever shipped with the runner image first to make room.
+docker system prune -af --volumes
 df -h
