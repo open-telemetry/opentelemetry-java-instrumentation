@@ -44,22 +44,9 @@ timeout-minutes: 30
 
 environment: protected
 
-# Disable strict mode so we can opt out of the AWF agent sandbox below.
-strict: false
-
 engine:
   id: copilot
   model: ${{ vars.MODULE_CLEANUP_MODEL || 'gpt-5' }}
-
-features:
-  dangerously-disable-sandbox-agent: "GPT-5 models require direct access to api.githubcopilot.com"
-
-# Disable the AWF sandbox so copilot-cli connects directly to
-# api.githubcopilot.com. In sandboxed Copilot workflows, gh-aw enables
-# Copilot BYOK/offline mode but does not set responses wire-API routing
-# for GPT-5-family models yet. See https://github.com/github/gh-aw/issues/31241.
-sandbox:
-  agent: false
 
 network:
   allowed:
