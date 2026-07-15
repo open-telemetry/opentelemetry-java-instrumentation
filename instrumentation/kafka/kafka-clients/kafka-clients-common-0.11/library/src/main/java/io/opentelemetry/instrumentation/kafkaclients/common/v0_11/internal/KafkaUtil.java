@@ -278,7 +278,10 @@ public final class KafkaUtil {
   }
 
   @Nullable
-  private static String clusterIdFromMetadata(Metadata metadata) {
+  static String clusterIdFromMetadata(@Nullable Metadata metadata) {
+    if (metadata == null) {
+      return null;
+    }
     try {
       Cluster cluster = metadata.fetch();
       if (cluster == null) {
@@ -291,6 +294,26 @@ public final class KafkaUtil {
       String id = resource.clusterId();
       return (id != null && !id.isEmpty()) ? id : null;
     } catch (RuntimeException ignored) {
+      return null;
+    }
+  }
+
+  /**
+   * Extracts the {@code Metadata} reference from a {@link KafkaProducer} via reflection. Returns
+   * {@code null} for non-{@link KafkaProducer} implementations or if the field is inaccessible.
+   */
+  @Nullable
+  public static Metadata extractProducerMetadata(@Nullable Producer<?, ?> producer) {
+    if (producer == null || !KafkaProducer.class.isInstance(producer)) {
+      return null;
+    }
+    Field field = metadataField(producer.getClass());
+    if (field == null) {
+      return null;
+    }
+    try {
+      return (Metadata) field.get(producer);
+    } catch (IllegalAccessException | ClassCastException ignored) {
       return null;
     }
   }
