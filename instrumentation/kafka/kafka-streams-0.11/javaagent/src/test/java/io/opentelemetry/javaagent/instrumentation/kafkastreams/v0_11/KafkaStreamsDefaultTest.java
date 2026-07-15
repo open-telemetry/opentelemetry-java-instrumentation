@@ -210,8 +210,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 if (trace.getSpan(2).getAttributes().get(stringKey("messaging.kafka.cluster.id"))
                     != null) {
                   processedPublishAttrs.add(
-                      satisfies(
-                          stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+                      satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
                 }
                 span.hasName(STREAM_PROCESSED + " publish")
                     .hasKind(SpanKind.PRODUCER)
