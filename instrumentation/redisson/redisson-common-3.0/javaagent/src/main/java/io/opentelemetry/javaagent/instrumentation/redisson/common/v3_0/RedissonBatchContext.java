@@ -64,13 +64,26 @@ public final class RedissonBatchContext {
     return context.makeCurrent();
   }
 
-  public static void captureCommand(int index) {
+  @Nullable
+  static Scope startCandidateCapture(
+      RedissonBatchState state, RedisCommand<?> command, Codec codec, Object[] parameters) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    Context context =
+        Context.current()
+            .with(KEY, false)
+            .with(CAPTURE_KEY, new CommandCapture(state, command, codec, parameters));
+    return context.makeCurrent();
+  }
+
+  public static void captureCommand(Object batchCommand, int index) {
     if (!emitStableDatabaseSemconv()) {
       return;
     }
     CommandCapture capture = Context.current().get(CAPTURE_KEY);
     if (capture != null) {
-      capture.capture(index);
+      capture.capture(batchCommand, index);
     }
   }
 
@@ -78,6 +91,12 @@ public final class RedissonBatchContext {
     if (emitStableDatabaseSemconv()
         && command instanceof CommandData
         && isActive(Context.current())) {
+      markCapturedCommand(command);
+    }
+  }
+
+  static void markCapturedCommand(Object command) {
+    if (command instanceof CommandData) {
       COMMAND_MARKER_FIELD.set((CommandData<?, ?>) command, new RedissonBatchMarker());
     }
   }
@@ -145,8 +164,8 @@ public final class RedissonBatchContext {
       this.parameters = parameters;
     }
 
-    private void capture(int index) {
-      state.add(index, command, codec, parameters);
+    private void capture(Object batchCommand, int index) {
+      state.add(batchCommand, index, command, codec, parameters);
     }
   }
 

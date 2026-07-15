@@ -514,22 +514,33 @@ public abstract class AbstractRedissonClientTest {
 
   @Test
   void atomicBatchBeforeRedisson372() {
-    Assumptions.assumeTrue(emitStableDatabaseSemconv());
-    try {
-      RBatch.class.getMethod("atomic");
-      Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
-      Assumptions.abort();
-    } catch (NoSuchMethodException ignored) {
-      Assumptions.abort();
-    } catch (ClassNotFoundException ignored) {
-      // Atomic mode was passed to executeAsync before it became a CommandBatchService field.
-    }
+    assumeBatchBeforeRedisson372();
 
     RBatch batch = createBatch(redisson).atomic();
     batch.getBucket("batch1").setAsync("v1");
     batch.getBucket("batch2").setAsync("v2");
     batch.execute();
     assertStableAtomicBatch("MULTI SET", 2L, "SET batch1 ?; SET batch2 ?");
+  }
+
+  @Test
+  @Tag(TEST_SINGLE_CONNECTION)
+  void batchBeforeRedisson372DoesNotSuppressPipeline() throws ReflectiveOperationException {
+    assumeBatchBeforeRedisson372();
+
+    RBatch batch = createBatch(redisson);
+    batch.getBucket("batch1").setAsync("v1");
+    batch.getBucket("batch2").setAsync("v2");
+    invokeExecute(batch);
+    redisson.getBucket("after-pipeline").get();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("PIPELINE SET " + address).hasKind(CLIENT).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET " + address).hasKind(CLIENT).hasNoParent()));
   }
 
   @Test
@@ -681,6 +692,19 @@ public abstract class AbstractRedissonClientTest {
       Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
     } catch (ClassNotFoundException ignored) {
       Assumptions.abort();
+    }
+  }
+
+  private static void assumeBatchBeforeRedisson372() {
+    Assumptions.assumeTrue(emitStableDatabaseSemconv());
+    try {
+      RBatch.class.getMethod("atomic");
+      Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
+      Assumptions.abort();
+    } catch (NoSuchMethodException ignored) {
+      Assumptions.abort();
+    } catch (ClassNotFoundException ignored) {
+      // Atomic mode was passed to executeAsync before it became a CommandBatchService field.
     }
   }
 

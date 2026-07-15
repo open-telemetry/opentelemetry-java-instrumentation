@@ -32,8 +32,8 @@ public class RedissonBatchCommandDataInstrumentation implements TypeInstrumentat
   @SuppressWarnings("unused")
   public static class CaptureAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Argument(4) int index) {
-      RedissonBatchContext.captureCommand(index);
+    public static void onExit(@Advice.This Object command, @Advice.Argument(4) int index) {
+      RedissonBatchContext.captureCommand(command, index);
     }
   }
 }

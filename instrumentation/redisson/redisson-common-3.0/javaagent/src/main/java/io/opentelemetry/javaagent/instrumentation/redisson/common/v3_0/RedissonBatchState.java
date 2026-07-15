@@ -35,7 +35,7 @@ class RedissonBatchState {
   private boolean finished;
 
   public synchronized void add(
-      int index, RedisCommand<?> command, Codec codec, Object[] parameters) {
+      Object batchCommand, int index, RedisCommand<?> command, Codec codec, Object[] parameters) {
     if (finished) {
       return;
     }
@@ -43,7 +43,7 @@ class RedissonBatchState {
       discard();
       return;
     }
-    CapturedCommand capturedCommand = new CapturedCommand(command.getName());
+    CapturedCommand capturedCommand = new CapturedCommand(batchCommand, command.getName());
     commands.put(index, capturedCommand);
     if (index >= queryTextCutoff) {
       return;
@@ -82,6 +82,7 @@ class RedissonBatchState {
     List<String> commandNames = new ArrayList<>(commands.size());
     List<String> queryTexts = new ArrayList<>(commands.size());
     for (CapturedCommand command : commands.values()) {
+      RedissonBatchContext.markCapturedCommand(command.batchCommand);
       commandNames.add(command.name);
       if (command.queryText != null) {
         queryTexts.add(command.queryText);
@@ -144,10 +145,12 @@ class RedissonBatchState {
   }
 
   private static class CapturedCommand {
+    private final Object batchCommand;
     private final String name;
     @Nullable private String queryText;
 
-    private CapturedCommand(String name) {
+    private CapturedCommand(Object batchCommand, String name) {
+      this.batchCommand = batchCommand;
       this.name = name;
     }
   }

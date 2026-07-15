@@ -71,7 +71,7 @@ public class RedissonBatchAdviceScope {
     if (RedissonBatchContext.isActive(currentContext())) {
       return RedissonBatchContext.startCapture();
     }
-    return RedissonBatchContext.startCapture(state, command, codec, parameters);
+    return RedissonBatchContext.startCandidateCapture(state, command, codec, parameters);
   }
 
   public static void initialize(CommandBatchService service) {
