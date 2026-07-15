@@ -29,7 +29,7 @@ dependencies {
   testImplementation(project(":instrumentation:hbase:hbase-client-common-1.4:testing"))
   testInstrumentation(project(":instrumentation:hbase:hbase-client-2.0:javaagent"))
 
-  latestDepTestLibrary("org.apache.hbase:hbase-client:1.7.+") // see hbase-client-2.0 module
+  latestDepTestLibrary("org.apache.hbase:hbase-client:1.+") // see hbase-client-2.0 module
 }
 
 configurations
@@ -42,7 +42,7 @@ testing {
   suites {
     register<JvmTestSuite>("shadedClientTest") {
       dependencies {
-        implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("1.4.0").orLatest("1.7.+")}")
+        implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("1.4.0").orLatest("1.+")}")
         implementation(project(":instrumentation:hbase:hbase-client-common-1.4:testing"))
       }
     }

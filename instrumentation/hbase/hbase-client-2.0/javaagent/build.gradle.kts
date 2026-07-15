@@ -17,9 +17,9 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:hbase:hbase-client-common-1.4:javaagent"))
-
   library("org.apache.hbase:hbase-client:2.0.0")
+
+  implementation(project(":instrumentation:hbase:hbase-client-common-1.4:javaagent"))
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
