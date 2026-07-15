@@ -374,10 +374,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                           point ->
                               point.getAttributes().asMap().keySet().stream()
                                   .map(AttributeKey::getKey)
-                                  .filter(
-                                      k ->
-                                          !k.equals(
-                                              KafkaClusterId.ATTRIBUTE_KEY.getKey()))
+                                  .filter(k -> !k.equals(KafkaClusterId.ATTRIBUTE_KEY.getKey()))
                                   .collect(toSet()))
                       .orElse(emptySet());
               assertThat(metricData.getData().getPoints())
