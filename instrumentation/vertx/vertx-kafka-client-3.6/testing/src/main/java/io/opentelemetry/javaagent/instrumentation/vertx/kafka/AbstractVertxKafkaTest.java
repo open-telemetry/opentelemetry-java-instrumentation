@@ -95,10 +95,13 @@ public abstract class AbstractVertxKafkaTest {
     kafkaProducer = KafkaProducer.create(vertx, producerProps());
     cleanup.deferAfterAll(() -> closeKafkaProducer(kafkaProducer));
     // Trigger metadata fetch so cluster id is available before the first send.
+    // The Handler-based overload was removed in Vert.x 5; skip priming on that version.
     CountDownLatch primed = new CountDownLatch(1);
-    kafkaProducer.partitionsFor("testSingleTopic", ar -> primed.countDown());
     try {
+      kafkaProducer.partitionsFor("testSingleTopic", ar -> primed.countDown());
       primed.await(10, SECONDS);
+    } catch (NoSuchMethodError ignored) {
+      // Vert.x 5 removed the Handler-based partitionsFor overload; priming is skipped.
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
