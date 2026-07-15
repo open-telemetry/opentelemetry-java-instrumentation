@@ -170,8 +170,9 @@ public abstract class InstrumentationModule implements Ordered {
    * Returns a list of helper classes that will be defined in the class loader of the instrumented
    * library.
    *
-   * <p>This method only takes effect when using {@link HelperClassStrategy#ISOLATED} strategy, with
-   * {@link HelperClassStrategy#INJECTED} strategy all helper classes are already injected into the
+   * <p>This method takes effect when isolated helper loading is selected, either explicitly with
+   * {@link HelperClassStrategy#ISOLATED} or automatically with {@link HelperClassStrategy#DEFAULT}.
+   * With {@link HelperClassStrategy#INJECTED}, all helper classes are already injected into the
    * class loader of the instrumented library.
    */
   public List<String> injectedClassNames() {
@@ -182,12 +183,13 @@ public abstract class InstrumentationModule implements Ordered {
    * Returns a list of instrumentation helper classes that are exposed to the application class
    * loader.
    *
-   * <p>When using {@link HelperClassStrategy#ISOLATED} strategy helper classes are loaded into a
-   * separate class loader. Classes from that class loader aren't visible to the instrumented
-   * application. This method can be used to expose some of the helper classes to the application
-   * class loader, so that they can be loaded through the loadClass method of the application class
-   * loader. This can for example be used to add a SPI implementation that can be loaded via the
-   * ServiceLoader.
+   * <p>When isolated helper loading is selected, either explicitly with {@link
+   * HelperClassStrategy#ISOLATED} or automatically with {@link HelperClassStrategy#DEFAULT}, helper
+   * classes are loaded into a separate class loader. Classes from that class loader aren't visible
+   * to the instrumented application. This method can be used to expose some of the helper classes
+   * to the application class loader, so that they can be loaded through the loadClass method of the
+   * application class loader. This can for example be used to add a SPI implementation that can be
+   * loaded via the ServiceLoader.
    */
   public List<String> exposedClassNames() {
     return emptyList();
