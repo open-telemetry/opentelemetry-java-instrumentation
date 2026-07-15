@@ -349,9 +349,10 @@ public abstract class AbstractRedissonAsyncClientTest {
   @Test
   void atomicBatchCommandCallback() {
     Assumptions.assumeTrue(emitStableDatabaseSemconv());
+    boolean usesRPromise;
     try {
       Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
-      boolean usesRPromise =
+      usesRPromise =
           Arrays.stream(
                   Class.forName("org.redisson.client.protocol.CommandData")
                       .getDeclaredConstructors())
@@ -362,10 +363,14 @@ public abstract class AbstractRedissonAsyncClientTest {
                               .getParameterTypes()[0]
                               .getName()
                               .equals("org.redisson.misc.RPromise"));
-      Assumptions.assumeTrue(usesRPromise);
     } catch (ClassNotFoundException ignored) {
       Assumptions.abort();
+      return;
     }
+    BatchOptions.ExecutionMode executionMode =
+        usesRPromise
+            ? BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC
+            : BatchOptions.ExecutionMode.IN_MEMORY_ATOMIC;
 
     CompletableFuture<String> callbackResult = new CompletableFuture<>();
     CompletionStage<?> result =
@@ -373,9 +378,7 @@ public abstract class AbstractRedissonAsyncClientTest {
             "parent",
             () -> {
               RBatch batch =
-                  redisson.createBatch(
-                      BatchOptions.defaults()
-                          .executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+                  redisson.createBatch(BatchOptions.defaults().executionMode(executionMode));
               RFuture<Void> commandFuture = batch.getBucket("batch1").setAsync("v1");
               commandFuture.whenComplete(
                   (unused, commandError) -> {
