@@ -14,7 +14,7 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Arrays.asList;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.verify;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -39,71 +39,71 @@ class AttributeBindingFactoryTest {
   private static Stream<Arguments> bindingCases() {
     return Stream.of(
         // scalar types
-        arguments("String", String.class, "value", stringKey("key"), "value"),
-        arguments("int primitive", int.class, 1234, longKey("key"), 1234L),
-        arguments("Integer", Integer.class, 1234, longKey("key"), 1234L),
-        arguments("long primitive", long.class, 1234L, longKey("key"), 1234L),
-        arguments("Long", Long.class, 1234L, longKey("key"), 1234L),
-        arguments("float primitive", float.class, 1234.0F, doubleKey("key"), 1234.0),
-        arguments("Float", Float.class, 1234.0F, doubleKey("key"), 1234.0),
-        arguments("double primitive", double.class, 1234.0, doubleKey("key"), 1234.0),
-        arguments("Double", Double.class, 1234.0, doubleKey("key"), 1234.0),
-        arguments("boolean primitive", boolean.class, true, booleanKey("key"), true),
-        arguments("Boolean", Boolean.class, true, booleanKey("key"), true),
+        argumentSet("String", String.class, "value", stringKey("key"), "value"),
+        argumentSet("int primitive", int.class, 1234, longKey("key"), 1234L),
+        argumentSet("Integer", Integer.class, 1234, longKey("key"), 1234L),
+        argumentSet("long primitive", long.class, 1234L, longKey("key"), 1234L),
+        argumentSet("Long", Long.class, 1234L, longKey("key"), 1234L),
+        argumentSet("float primitive", float.class, 1234.0F, doubleKey("key"), 1234.0),
+        argumentSet("Float", Float.class, 1234.0F, doubleKey("key"), 1234.0),
+        argumentSet("double primitive", double.class, 1234.0, doubleKey("key"), 1234.0),
+        argumentSet("Double", Double.class, 1234.0, doubleKey("key"), 1234.0),
+        argumentSet("boolean primitive", boolean.class, true, booleanKey("key"), true),
+        argumentSet("Boolean", Boolean.class, true, booleanKey("key"), true),
         // array types
-        arguments(
+        argumentSet(
             "String[]",
             String[].class,
             new String[] {"x", "y", "z", null},
             stringArrayKey("key"),
             asList("x", "y", "z", null)),
-        arguments(
+        argumentSet(
             "int[]", int[].class, new int[] {1, 2, 3}, longArrayKey("key"), asList(1L, 2L, 3L)),
-        arguments(
+        argumentSet(
             "Integer[]",
             Integer[].class,
             new Integer[] {1, 2, 3},
             longArrayKey("key"),
             asList(1L, 2L, 3L)),
-        arguments(
+        argumentSet(
             "long[]", long[].class, new long[] {1, 2, 3}, longArrayKey("key"), asList(1L, 2L, 3L)),
-        arguments(
+        argumentSet(
             "Long[]",
             Long[].class,
             new Long[] {1L, 2L, 3L},
             longArrayKey("key"),
             asList(1L, 2L, 3L)),
-        arguments(
+        argumentSet(
             "float[]",
             float[].class,
             new float[] {1f, 2f, 3f},
             doubleArrayKey("key"),
             asList(1.0, 2.0, 3.0)),
-        arguments(
+        argumentSet(
             "Float[]",
             Float[].class,
             new Float[] {1f, 2f, 3f},
             doubleArrayKey("key"),
             asList(1.0, 2.0, 3.0)),
-        arguments(
+        argumentSet(
             "double[]",
             double[].class,
             new double[] {1, 2, 3},
             doubleArrayKey("key"),
             asList(1.0, 2.0, 3.0)),
-        arguments(
+        argumentSet(
             "Double[]",
             Double[].class,
             new Double[] {1.0, 2.0, 3.0},
             doubleArrayKey("key"),
             asList(1.0, 2.0, 3.0)),
-        arguments(
+        argumentSet(
             "boolean[]",
             boolean[].class,
             new boolean[] {true, false},
             booleanArrayKey("key"),
             asList(true, false)),
-        arguments(
+        argumentSet(
             "Boolean[]",
             Boolean[].class,
             new Boolean[] {true, false},
@@ -111,10 +111,9 @@ class AttributeBindingFactoryTest {
             asList(true, false)));
   }
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest
   @MethodSource("bindingCases")
-  <T> void createAttributeBinding(
-      String name, Type type, Object value, AttributeKey<T> expectedKey, T expectedValue) {
+  <T> void createAttributeBinding(Type type, Object value, AttributeKey<T> expectedKey, T expectedValue) {
     AttributeBindingFactory.createBinding("key", type).apply(setter, value);
     verify(setter).put(expectedKey, expectedValue);
   }

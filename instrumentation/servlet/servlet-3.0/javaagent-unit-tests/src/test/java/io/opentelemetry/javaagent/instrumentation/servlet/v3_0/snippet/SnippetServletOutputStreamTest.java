@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.TestUtil.readFileAsBytes;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -31,20 +31,20 @@ class SnippetServletOutputStreamTest {
 
   private static Stream<Arguments> wholeBufferInjectionCases() {
     return Stream.of(
-        arguments("ascii head tag", "beforeSnippetInjection.html", "afterSnippetInjection.html"),
-        arguments(
+        argumentSet("ascii head tag", "beforeSnippetInjection.html", "afterSnippetInjection.html"),
+        argumentSet(
             "non-ascii (chinese) body content",
             "beforeSnippetInjectionChinese.html",
             "afterSnippetInjectionChinese.html"),
-        arguments(
+        argumentSet(
             "alternative <head> attribute style",
             "beforeSnippetInjectionWithOtherHeadStyle.html",
             "afterSnippetInjectionWithOtherHeadStyle.html"));
   }
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest
   @MethodSource("wholeBufferInjectionCases")
-  void injectsSnippetForSingleWrite(String name, String beforeResource, String afterResource)
+  void injectsSnippetForSingleWrite(String beforeResource, String afterResource)
       throws IOException {
     String snippet = "\n  <script type=\"text/javascript\"> Test </script>";
     byte[] html = readFileAsBytes(beforeResource);
