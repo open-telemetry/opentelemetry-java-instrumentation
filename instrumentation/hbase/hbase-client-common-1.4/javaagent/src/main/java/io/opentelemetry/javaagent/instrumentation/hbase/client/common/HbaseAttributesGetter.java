@@ -13,7 +13,6 @@ import org.apache.hadoop.hbase.TableName;
 
 final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseRequest, Void> {
 
-  @Nullable
   @Override
   public String getDbSystemName(HbaseRequest hbaseRequest) {
     return DbSystemNameIncubatingValues.HBASE;
@@ -35,8 +34,7 @@ final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseReque
 
   @Nullable
   @Override
-  // Old database semconv still uses db.name, so we must implement the deprecated hook.
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation") // using deprecated semconv
   public String getDbName(HbaseRequest hbaseRequest) {
     TableName tableName = hbaseRequest.getTableName();
     return tableName == null ? null : tableName.getNameAsString();
@@ -44,8 +42,7 @@ final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseReque
 
   @Nullable
   @Override
-  // Old database semconv still uses db.user, so we must implement the deprecated hook.
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation") // using deprecated semconv
   public String getUser(HbaseRequest hbaseRequest) {
     return hbaseRequest.getUser();
   }
