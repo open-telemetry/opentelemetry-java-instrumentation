@@ -51,8 +51,6 @@ public final class KafkaUtil {
   // Cached per-instance; resolved lazily after the first metadata refresh.
   private static final VirtualField<Consumer<?, ?>, KafkaClusterId> consumerClusterIdField =
       VirtualField.find(Consumer.class, KafkaClusterId.class);
-  private static final VirtualField<Producer<?, ?>, KafkaClusterId> producerClusterIdField =
-      VirtualField.find(Producer.class, KafkaClusterId.class);
 
   // ClassValue caches the reflective Field for each holder class. computeValue() runs at most once
   // per class — thread-safe and GC-friendly (entry is released when the ClassLoader is collected).
@@ -202,30 +200,6 @@ public final class KafkaUtil {
       return null;
     }
     return serversConfig.stream().map(Object::toString).collect(joining(","));
-  }
-
-  /**
-   * Reads cluster id from the producer's already-fetched {@code Metadata} — no extra broker
-   * connection; uses existing client security settings.
-   */
-  @Nullable
-  public static String getClusterId(@Nullable Producer<?, ?> producer) {
-    if (producer == null) {
-      return null;
-    }
-    KafkaClusterId cached = producerClusterIdField.get(producer);
-    if (cached != null) {
-      if (cached == KafkaClusterId.UNAVAILABLE) {
-        return null;
-      }
-      return clusterIdFromMetadata(cached.metadata);
-    }
-    // KafkaProducer holds the `metadata` field directly across all supported versions.
-    if (!KafkaProducer.class.isInstance(producer)) {
-      producerClusterIdField.set(producer, KafkaClusterId.UNAVAILABLE);
-      return null;
-    }
-    return resolveAndCache(producer, producerClusterIdField, producer);
   }
 
   /**
