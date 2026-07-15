@@ -577,3 +577,4 @@ sofa-rpc-5.4:library
 sofa-rpc-5.4:library-autoconfigure
 sofa-rpc-5.4:testing
 jedis-2.0:javaagent
+hbase-client-1.4:javaagent
