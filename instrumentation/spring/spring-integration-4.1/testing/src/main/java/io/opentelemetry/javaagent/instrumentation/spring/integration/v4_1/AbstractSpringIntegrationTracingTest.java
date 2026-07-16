@@ -5,7 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.messagingAttributes;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -69,12 +74,9 @@ abstract class AbstractSpringIntegrationTracingTest {
 
   @ParameterizedTest
   @CsvSource(
-      value = {
-        "directChannel,application.directChannel process",
-        "executorChannel,executorChannel process"
-      },
+      value = {"directChannel,application.directChannel", "executorChannel,executorChannel"},
       delimiter = ',')
-  void shouldPropagateContext(String channelName, String interceptorSpanName) {
+  void shouldPropagateContext(String channelName, String destinationName) {
     SubscribableChannel channel =
         applicationContext.getBean(channelName, SubscribableChannel.class);
 
@@ -89,7 +91,13 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasName(interceptorSpanName).hasKind(SpanKind.CONSUMER);
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "process " + destinationName
+                              : destinationName + " process")
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasAttributesSatisfyingExactly(
+                          messagingAttributes("process", destinationName));
                   verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(0));
                 },
                 span -> span.hasName("handler").hasParent(trace.getSpan(0))));
@@ -113,7 +121,13 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasName("application.directChannel2 process").hasKind(SpanKind.CONSUMER);
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "process application.directChannel2"
+                              : "application.directChannel2 process")
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasAttributesSatisfyingExactly(
+                          messagingAttributes("process", "application.directChannel2"));
                   verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(0));
                 },
                 span -> span.hasName("handler").hasParent(trace.getSpan(0))));
@@ -164,7 +178,13 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasName("application.linkedChannel1 process").hasKind(SpanKind.CONSUMER);
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "process application.linkedChannel1"
+                              : "application.linkedChannel1 process")
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasAttributesSatisfyingExactly(
+                          messagingAttributes("process", "application.linkedChannel1"));
                   verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(0));
                 },
                 span -> span.hasName("handler").hasParent(trace.getSpan(0))));
@@ -192,7 +212,18 @@ abstract class AbstractSpringIntegrationTracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasName("application.directChannel process").hasKind(SpanKind.CONSUMER);
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "process application.directChannel"
+                              : "application.directChannel process")
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasAttributesSatisfyingExactly(
+                          messagingAttributes(
+                              "process",
+                              "application.directChannel",
+                              equalTo(
+                                  headerAttributeKey("Test-Message-Header"),
+                                  singletonList("test"))));
                   verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(0));
                 },
                 span -> span.hasName("handler").hasParent(trace.getSpan(0))));
