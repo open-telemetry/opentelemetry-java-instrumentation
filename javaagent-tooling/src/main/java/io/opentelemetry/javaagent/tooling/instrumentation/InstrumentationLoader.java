@@ -16,7 +16,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.tooling.AgentExtension;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import java.lang.instrument.Instrumentation;
 import java.util.logging.Logger;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
@@ -26,14 +25,14 @@ public class InstrumentationLoader implements AgentExtension {
 
   @Override
   public AgentBuilder extend(AgentBuilder agentBuilder, ConfigProperties config) {
-    Instrumentation instrumentation =
-        requireNonNull(
-            InstrumentationHolder.getInstrumentation(), "Instrumentation must not be null");
     ClassLoader extensionsClassLoader =
         requireNonNull(
             Utils.getExtensionsClassLoader(), "Extensions class loader must not be null");
     InstrumentationModuleInstaller instrumentationModuleInstaller =
-        new InstrumentationModuleInstaller(instrumentation, extensionsClassLoader);
+        new InstrumentationModuleInstaller(
+            requireNonNull(
+                InstrumentationHolder.getInstrumentation(), "Instrumentation must not be null"),
+            extensionsClassLoader);
     int numberOfLoadedModules = 0;
     for (InstrumentationModule instrumentationModule :
         loadOrdered(InstrumentationModule.class, extensionsClassLoader)) {
