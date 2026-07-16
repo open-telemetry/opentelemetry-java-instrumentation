@@ -155,9 +155,9 @@ public class OpenTelemetryAutoConfiguration {
        * and {@link
        * io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer#addPropertiesSupplier(Supplier)}.
        *
-       * @deprecated use {@link ConfigProvider} instead
+       * <p>This bean remains supported for non-declarative configuration. The {@link
+       * ConfigProvider} API is incubating and is not a stable replacement for this bean.
        */
-      @Deprecated // to be removed in 3.0
       @Bean
       ConfigProperties otelProperties(
           AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
@@ -268,10 +268,6 @@ public class OpenTelemetryAutoConfiguration {
       return OpenTelemetry.noop();
     }
 
-    /**
-     * @deprecated use {@link ConfigProvider} instead
-     */
-    @Deprecated // to be removed in 3.0
     @Bean
     ConfigProperties otelProperties() {
       return DefaultConfigProperties.createFromMap(emptyMap());
@@ -298,10 +294,6 @@ public class OpenTelemetryAutoConfiguration {
     }
   }
 
-  /**
-   * @deprecated use {@link ConfigProvider} from {@link FallbackConfigProvider} instead
-   */
-  @Deprecated // to be removed in 3.0
   @Configuration
   @ConditionalOnBean(OpenTelemetry.class)
   @ConditionalOnMissingBean({ConfigProperties.class})
