@@ -72,6 +72,9 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
 
   @Override
   public void stop() {
+    if (!this.isRunning()) {
+      throw new IllegalStateException("weaver container already stopped");
+    }
     String uri = "http://" + this.getHost() + ":" + this.getMappedPort(ADMIN_PORT) + "/";
     WebClient client = WebClient.of(uri);
     try (HttpData result = client.post("/stop", new byte[0]).aggregate().join().content()) {
@@ -149,7 +152,16 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
       BiFunction<JsonNode, String, Set<String>> doParse =
           (jsonNode, key) -> {
             Set<String> result = new HashSet<>();
-            jsonNode.get(key).fieldNames().forEachRemaining(result::add);
+            JsonNode node = jsonNode.get(key);
+            node.fieldNames()
+                .forEachRemaining(
+                    name -> {
+                      JsonNode jsonCount = node.get(name);
+                      // only include items that have been reported at least once
+                      if (jsonCount.isInt() && jsonCount.asInt() > 0) {
+                        result.add(name);
+                      }
+                    });
             return result;
           };
 
