@@ -3,47 +3,47 @@ plugins {
 }
 
 otelJava {
-  // HBase 1.4.x test stack is not reliable on JDK 25+.
-  maxJavaVersionForTests.set(JavaVersion.VERSION_24)
+  // HBase 1.0.x does not support Java 9+.
+  maxJavaVersionForTests.set(JavaVersion.VERSION_1_8)
 }
 
 muzzle {
   pass {
     group.set("org.apache.hbase")
     module.set("hbase-client")
-    versions.set("[1.4.0,2.0.0)")
+    versions.set("[1.0.0,1.4.0)")
     assertInverse.set(true)
   }
 }
 
 dependencies {
-  library("org.apache.hbase:hbase-client:1.4.0")
-
   implementation(project(":instrumentation:hbase:hbase-client-common-1.0:javaagent"))
+
+  library("org.apache.hbase:hbase-client:1.0.0")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  compileOnly("org.apache.hbase:hbase-shaded-client:1.4.0")
+  compileOnly("org.apache.hbase:hbase-shaded-client:1.1.0")
 
   testImplementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
-  testInstrumentation(project(":instrumentation:hbase:hbase-client-1.0:javaagent"))
+  testInstrumentation(project(":instrumentation:hbase:hbase-client-1.4:javaagent"))
   testInstrumentation(project(":instrumentation:hbase:hbase-client-2.0:javaagent"))
 
-  latestDepTestLibrary("org.apache.hbase:hbase-client:1.+") // see hbase-client-2.0 module
+  latestDepTestLibrary("org.apache.hbase:hbase-client:1.+") // see hbase-client-1.4 module
 }
 
 configurations
   .matching { it.name == "testRuntimeClasspath" || it.name == "shadedClientTestRuntimeClasspath" }
   .configureEach {
-    resolutionStrategy.force("com.google.guava:guava:19.0")
+    resolutionStrategy.force("com.google.guava:guava:12.0.1")
   }
 
 testing {
   suites {
     register<JvmTestSuite>("shadedClientTest") {
       dependencies {
-        implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("1.4.0").orLatest("1.+")}")
+        implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("1.2.6").orLatest("1.+")}")
         implementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
       }
     }

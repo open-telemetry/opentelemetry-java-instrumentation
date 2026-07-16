@@ -114,6 +114,8 @@ readonly INSTRUMENTATIONS=(
   "grpc-1.6:javaagent:testStableSemconv"
   "grpc-1.6:javaagent:testExperimental"
   "gwt-2.0:javaagent:test"
+  "hbase:hbase-client-1.0:javaagent:test"
+  "hbase:hbase-client-1.0:javaagent:testStableSemconv"
   "hbase:hbase-client-1.4:javaagent:test"
   "hbase:hbase-client-1.4:javaagent:testStableSemconv"
   "hbase:hbase-client-2.0:javaagent:test"
