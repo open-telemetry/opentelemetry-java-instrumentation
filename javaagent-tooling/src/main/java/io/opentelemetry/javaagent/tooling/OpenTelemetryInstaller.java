@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.tooling;
 
 import static java.util.Arrays.asList;
-import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
@@ -39,15 +38,13 @@ public final class OpenTelemetryInstaller {
     ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
 
     if (configProperties != null) {
-      ConfigProperties nonNullConfigProperties = requireNonNull(configProperties);
       // Provide a fake declarative configuration based on config properties
       // so that declarative configuration API can be used everywhere. In declarative-config mode
       // there is no ConfigProperties instance to bridge here, so preserve the SDK as-is.
       sdk =
           new ExtendedOpenTelemetrySdkWrapper(
-              sdk, ConfigPropertiesBackedConfigProvider.create(nonNullConfigProperties));
-      AgentDistributionConfig.set(
-          AgentDistributionConfig.fromConfigProperties(nonNullConfigProperties));
+              sdk, ConfigPropertiesBackedConfigProvider.create(configProperties));
+      AgentDistributionConfig.set(AgentDistributionConfig.fromConfigProperties(configProperties));
     }
 
     setForceFlush(sdk);
