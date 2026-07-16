@@ -12,6 +12,7 @@ import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoolMetrics;
 import java.net.InetSocketAddress;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,6 +34,7 @@ public final class RedissonConnectionPoolMetrics {
       int maxConnections,
       NodeType nodeType,
       IntSupplier availableConnections,
+      Collection<?> idleConnections,
       @Nullable IntSupplier pendingRequests) {
     if (maxConnections <= 0) {
       return;
@@ -46,6 +48,7 @@ public final class RedissonConnectionPoolMetrics {
                 minIdleConnections,
                 maxConnections,
                 availableConnections,
+                idleConnections,
                 pendingRequests));
   }
 
@@ -61,6 +64,7 @@ public final class RedissonConnectionPoolMetrics {
       int minIdleConnections,
       int maxConnections,
       IntSupplier availableConnections,
+      Collection<?> idleConnections,
       @Nullable IntSupplier pendingRequestsSupplier) {
     DbConnectionPoolMetrics metrics =
         DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, poolName);
@@ -78,9 +82,11 @@ public final class RedissonConnectionPoolMetrics {
 
     Runnable callback =
         () -> {
-          int idleConnections = Math.max(0, availableConnections.getAsInt());
-          connections.record(Math.max(0, maxConnections - idleConnections), usedAttributes);
-          connections.record(idleConnections, idleAttributes);
+          int availableConnectionPermits = Math.max(0, availableConnections.getAsInt());
+          int idleConnectionCount = Math.max(0, idleConnections.size());
+          connections.record(
+              Math.max(0, maxConnections - availableConnectionPermits), usedAttributes);
+          connections.record(idleConnectionCount, idleAttributes);
           minIdle.record(minIdleConnections, attributes);
           maxIdle.record(maxConnections, attributes);
           max.record(maxConnections, attributes);

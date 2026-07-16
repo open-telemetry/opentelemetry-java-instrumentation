@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.Collection;
 import java.util.function.IntSupplier;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -54,7 +55,8 @@ class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) int poolMinSize,
         @Advice.Argument(2) int poolMaxSize,
         @Advice.Argument(6) NodeType nodeType,
-        @Advice.FieldValue("freeConnectionsCounter") Object freeConnectionsCounter) {
+        @Advice.FieldValue("freeConnectionsCounter") Object freeConnectionsCounter,
+        @Advice.FieldValue("freeConnections") Collection<?> freeConnections) {
       IntSupplier availableConnections =
           AsyncSemaphoreAccessor.availableConnectionsSupplier(freeConnectionsCounter);
       if (availableConnections == null) {
@@ -67,6 +69,7 @@ class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
           poolMaxSize,
           nodeType,
           availableConnections,
+          freeConnections,
           AsyncSemaphoreAccessor.pendingRequestsSupplier(freeConnectionsCounter));
     }
   }
