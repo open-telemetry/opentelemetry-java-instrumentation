@@ -48,6 +48,20 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.pulsar.experimental-span-attributes=true")
   }
 
+  // The task name follows the existing pattern; it does not indicate that the messaging
+  // conventions are stable.
+  val testStableSemconv = register<Test>("testStableSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("PulsarClientTest.testConsumeNonPartitionedTopic")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
+  }
+
   test {
     filter {
       excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
@@ -60,7 +74,7 @@ tasks {
   }
 
   check {
-    dependsOn(testReceiveSpanDisabled, testExperimental)
+    dependsOn(testReceiveSpanDisabled, testExperimental, testStableSemconv)
   }
 
   if (otelProps.denyUnsafe) {

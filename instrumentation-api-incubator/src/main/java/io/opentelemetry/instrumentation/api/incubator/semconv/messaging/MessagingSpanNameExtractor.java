@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
@@ -21,26 +22,30 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
    * @see MessageOperation used to extract {@code <operation name>}.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      MessagingAttributesGetter<REQUEST, ?> getter, MessageOperation operation) {
-    return new MessagingSpanNameExtractor<>(getter, MessagingOperation.create(operation));
+      MessagingAttributesGetter<REQUEST, ?> getter, MessageOperation messageOperation) {
+    return new MessagingSpanNameExtractor<>(
+        getter, messageOperation, messageOperation.legacyOperationName());
   }
 
   /** Returns a {@link SpanNameExtractor} with a system-specific v1.43 operation name. */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       MessagingAttributesGetter<REQUEST, ?> getter,
-      MessageOperation operation,
+      MessageOperation messageOperation,
       String operationName) {
-    return new MessagingSpanNameExtractor<>(
-        getter, MessagingOperation.create(operation, operationName));
+    return new MessagingSpanNameExtractor<>(getter, messageOperation, operationName);
   }
 
   private final MessagingAttributesGetter<REQUEST, ?> getter;
-  private final MessagingOperation operation;
+  private final MessageOperation messageOperation;
+  private final String operationName;
 
   private MessagingSpanNameExtractor(
-      MessagingAttributesGetter<REQUEST, ?> getter, MessagingOperation operation) {
+      MessagingAttributesGetter<REQUEST, ?> getter,
+      MessageOperation messageOperation,
+      String operationName) {
     this.getter = getter;
-    this.operation = operation;
+    this.messageOperation = requireNonNull(messageOperation, "messageOperation");
+    this.operationName = requireNonNull(operationName, "operationName");
   }
 
   @Override
@@ -52,7 +57,7 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
           && !getter.isAnonymousDestination(request)) {
         destinationName = getter.getDestination(request);
       }
-      return destinationName == null ? operation.name() : operation.name() + " " + destinationName;
+      return destinationName == null ? operationName : operationName + " " + destinationName;
     }
 
     String destinationName =
@@ -63,6 +68,6 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
       destinationName = "unknown";
     }
 
-    return destinationName + " " + operation.operation().operationName();
+    return destinationName + " " + messageOperation.legacyOperationName();
   }
 }

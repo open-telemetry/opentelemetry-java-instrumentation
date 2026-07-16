@@ -32,7 +32,7 @@ class MessagingProcessMetricsTest {
 
   @Test
   @SuppressWarnings("deprecation") // using deprecated semconv
-  void emitsOnlyLatestProcessDuration() {
+  void emitsProcessDurationAccordingToConfiguration() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();

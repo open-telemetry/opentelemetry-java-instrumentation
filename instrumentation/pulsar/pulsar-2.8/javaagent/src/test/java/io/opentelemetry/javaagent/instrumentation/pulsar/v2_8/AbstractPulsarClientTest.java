@@ -67,7 +67,7 @@ abstract class AbstractPulsarClientTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractPulsarClientTest.class);
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.pulsar-2.8";
+  static final String INSTRUMENTATION_NAME = "io.opentelemetry.pulsar-2.8";
 
   private static final DockerImageName DEFAULT_IMAGE_NAME =
       DockerImageName.parse("apachepulsar/pulsar:2.8.0");

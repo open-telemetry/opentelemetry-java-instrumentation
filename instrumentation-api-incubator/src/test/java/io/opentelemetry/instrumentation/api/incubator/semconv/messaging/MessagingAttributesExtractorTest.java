@@ -109,13 +109,12 @@ class MessagingAttributesExtractorTest {
     expectedEntries.add(entry(MESSAGING_MESSAGE_ENVELOPE_SIZE, 120L));
     if (emitOldMessagingSemconv()) {
       expectedEntries.add(entry(stringKey("messaging.client_id"), "43"));
-      expectedEntries.add(entry(MESSAGING_OPERATION, operation.operationName()));
+      expectedEntries.add(entry(MESSAGING_OPERATION, operation.legacyOperationName()));
     }
     if (emitStableMessagingSemconv()) {
       expectedEntries.add(entry(stringKey("messaging.client.id"), "43"));
       expectedEntries.add(entry(MESSAGING_OPERATION_NAME, operationName));
-      expectedEntries.add(
-          entry(MESSAGING_OPERATION_TYPE, MessagingOperation.create(operation).type()));
+      expectedEntries.add(entry(MESSAGING_OPERATION_TYPE, operation.operationType()));
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

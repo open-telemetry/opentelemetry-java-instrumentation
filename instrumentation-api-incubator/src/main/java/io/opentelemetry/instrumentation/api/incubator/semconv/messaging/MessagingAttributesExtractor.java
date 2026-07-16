@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -71,8 +72,9 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
    * with default configuration.
    */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, @Nullable MessageOperation operation) {
-    return builder(getter, operation).build();
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter,
+      @Nullable MessageOperation messageOperation) {
+    return builder(getter, messageOperation).build();
   }
 
   /**
@@ -83,9 +85,9 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
    */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter,
-      MessageOperation operation,
+      MessageOperation messageOperation,
       String operationName) {
-    return builder(getter, operation, operationName).build();
+    return builder(getter, messageOperation, operationName).build();
   }
 
   /**
@@ -93,8 +95,12 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
    * operation} that can be used to configure the messaging attributes extractor.
    */
   public static <REQUEST, RESPONSE> MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, @Nullable MessageOperation operation) {
-    return new MessagingAttributesExtractorBuilder<>(getter, operation);
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter,
+      @Nullable MessageOperation messageOperation) {
+    return new MessagingAttributesExtractorBuilder<>(
+        getter,
+        messageOperation,
+        messageOperation == null ? null : messageOperation.legacyOperationName());
   }
 
   /**
@@ -103,22 +109,27 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
    */
   public static <REQUEST, RESPONSE> MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter,
-      MessageOperation operation,
+      MessageOperation messageOperation,
       String operationName) {
     return new MessagingAttributesExtractorBuilder<>(
-        getter, MessagingOperation.create(operation, operationName));
+        getter,
+        requireNonNull(messageOperation, "messageOperation"),
+        requireNonNull(operationName, "operationName"));
   }
 
   private final MessagingAttributesGetter<REQUEST, RESPONSE> getter;
-  @Nullable private final MessagingOperation operation;
+  @Nullable private final MessageOperation messageOperation;
+  @Nullable private final String operationName;
   private final List<String> capturedHeaders;
 
   MessagingAttributesExtractor(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter,
-      @Nullable MessagingOperation operation,
+      @Nullable MessageOperation messageOperation,
+      @Nullable String operationName,
       List<String> capturedHeaders) {
     this.getter = getter;
-    this.operation = operation;
+    this.messageOperation = messageOperation;
+    this.operationName = operationName;
     this.capturedHeaders = new ArrayList<>(capturedHeaders);
   }
 
@@ -152,13 +163,13 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     if (emitStableMessagingSemconv()) {
       attributes.put(MESSAGING_CLIENT_ID, getter.getClientId(request));
     }
-    if (operation != null) {
+    if (messageOperation != null) {
       if (emitOldMessagingSemconv()) {
-        attributes.put(MESSAGING_OPERATION, operation.operation().operationName());
+        attributes.put(MESSAGING_OPERATION, messageOperation.legacyOperationName());
       }
       if (emitStableMessagingSemconv()) {
-        attributes.put(MESSAGING_OPERATION_NAME, operation.name());
-        attributes.put(MESSAGING_OPERATION_TYPE, operation.type());
+        attributes.put(MESSAGING_OPERATION_NAME, operationName);
+        attributes.put(MESSAGING_OPERATION_TYPE, messageOperation.operationType());
       }
     }
   }
@@ -191,11 +202,11 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   @Override
   @Nullable
   public SpanKey internalGetSpanKey() {
-    if (operation == null) {
+    if (messageOperation == null) {
       return null;
     }
 
-    switch (operation.operation()) {
+    switch (messageOperation) {
       case PUBLISH:
         return SpanKey.PRODUCER;
       case RECEIVE:

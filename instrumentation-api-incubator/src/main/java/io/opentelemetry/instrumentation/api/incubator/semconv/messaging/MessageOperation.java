@@ -21,7 +21,19 @@ public enum MessageOperation {
    * Returns the legacy operation name. The v1.43 operation name defaults to this value unless an
    * instrumentation supplies a system-specific override.
    */
-  String operationName() {
+  String legacyOperationName() {
     return name().toLowerCase(Locale.ROOT);
+  }
+
+  String operationType() {
+    switch (this) {
+      case PUBLISH:
+        return "send";
+      case RECEIVE:
+        return "receive";
+      case PROCESS:
+        return "process";
+    }
+    throw new IllegalStateException("Can't possibly happen");
   }
 }

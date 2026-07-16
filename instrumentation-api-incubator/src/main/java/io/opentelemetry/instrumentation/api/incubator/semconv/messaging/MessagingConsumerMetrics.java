@@ -84,6 +84,9 @@ public final class MessagingConsumerMetrics implements OperationListener {
     if (receiveDurationHistogram != null) {
       receiveDurationHistogram.record(duration, attributes, context);
     }
+    // Metric view attribute advice can only select keys statically. The concrete destination name
+    // must be omitted when a template is available or the destination is temporary or anonymous,
+    // so this conditional requirement must be enforced before recording.
     Attributes filteredAttributes =
         clientOperationDurationHistogram != null || consumedMessagesCounter != null
             ? MessagingMetricsAdvice.filterAttributes(attributes)

@@ -18,18 +18,17 @@ import javax.annotation.Nullable;
 public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   final MessagingAttributesGetter<REQUEST, RESPONSE> getter;
-  @Nullable final MessagingOperation operation;
+  @Nullable final MessageOperation messageOperation;
+  @Nullable final String operationName;
   List<String> capturedHeaders = emptyList();
 
   MessagingAttributesExtractorBuilder(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, @Nullable MessageOperation operation) {
-    this(getter, MessagingOperation.createNullable(operation));
-  }
-
-  MessagingAttributesExtractorBuilder(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, @Nullable MessagingOperation operation) {
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter,
+      @Nullable MessageOperation messageOperation,
+      @Nullable String operationName) {
     this.getter = getter;
-    this.operation = operation;
+    this.messageOperation = messageOperation;
+    this.operationName = operationName;
   }
 
   /**
@@ -53,6 +52,7 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * MessagingAttributesExtractorBuilder}.
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
-    return new MessagingAttributesExtractor<>(getter, operation, capturedHeaders);
+    return new MessagingAttributesExtractor<>(
+        getter, messageOperation, operationName, capturedHeaders);
   }
 }

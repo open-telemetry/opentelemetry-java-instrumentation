@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -13,6 +14,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -62,6 +64,30 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
 
     latch.await(1, MINUTES);
+
+    if (emitStableMessagingSemconv()) {
+      testing.waitAndAssertMetrics(
+          INSTRUMENTATION_NAME,
+          "messaging.process.duration",
+          metrics ->
+              metrics.satisfiesExactly(
+                  metric ->
+                      assertThat(metric)
+                          .hasUnit("s")
+                          .hasDescription("Duration of processing operation.")
+                          .hasHistogramSatisfying(
+                              histogram ->
+                                  histogram.hasPointsSatisfying(
+                                      point ->
+                                          point
+                                              .hasSumGreaterThan(0.0)
+                                              .hasAttributesSatisfyingExactly(
+                                                  equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                  equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                  equalTo(MESSAGING_DESTINATION_NAME, topic))
+                                              .hasBucketBoundaries(DURATION_BUCKETS)))));
+      return;
+    }
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(

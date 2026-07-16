@@ -16,7 +16,7 @@ public final class MessagingSpanKindExtractor {
   /**
    * Returns a span kind extractor following the <a
    * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/messaging/messaging-spans.md#span-kind">v1.43
-   * messaging span kind conventions</a> when latest messaging conventions are enabled.
+   * messaging span kind conventions</a>.
    */
   public static <REQUEST> SpanKindExtractor<REQUEST> create(MessageOperation operation) {
     SpanKind spanKind;
