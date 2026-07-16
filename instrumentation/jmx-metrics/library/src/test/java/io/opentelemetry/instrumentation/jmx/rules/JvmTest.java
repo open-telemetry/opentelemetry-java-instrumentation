@@ -79,15 +79,17 @@ class JvmTest extends TargetSystemTest {
                         "jvm.cpu.time",
                         "jvm.thread.count"),
                     singletonList(
-                        // may not be reported because GC does not have time to run
+                        // metric not reported with JMX as it's an histogram
                         "jvm.gc.duration"))
                 .checkRegisteredAttributes(
                     "jvm.",
                     asList("jvm.buffer.pool.name", "jvm.memory.pool.name", "jvm.memory.type"),
                     asList(
+                        // jvm.gc.duration metric using them is not captured with JMX
                         "jvm.gc.action",
                         "jvm.gc.cause",
                         "jvm.gc.name",
+                        // attributes not available with JMX
                         "jvm.thread.daemon",
                         "jvm.thread.state")));
 
