@@ -1,0 +1,555 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/open-telemetry/weaver/v0.24.2/schemas/semconv.schema.json
+
+groups:
+  - id: attributes.camel
+    type: attribute_group
+    brief: Apache Camel attributes
+    attributes:
+      - id: camel.context
+        type: string
+        stability: development
+        brief: Camel context
+        examples:
+          - "myQueue"
+      - id: camel.route
+        type: string
+        stability: development
+        brief: Camel route
+        examples:
+          - "route1"
+          - "route2"
+      - id: camel.processor
+        type: string
+        stability: development
+        brief: Camel processor
+        examples:
+          - "processor1"
+          - "processor2"
+      - id: camel.destination
+        type: string
+        stability: development
+        brief: camel.destination
+        examples:
+          - "my-destination"
+      - id: camel.threadpool.name
+        type: string
+        stability: development
+        brief: Camel thread pool name
+        examples:
+          - "camel-1"
+
+  # Context Level Metrics
+
+  - id: metric.camel.context.route.started
+    metric_name: camel.context.route.started
+    type: metric
+    stability: development
+    brief: Indicates the number of routes started successfully since context start-up or the last reset operation.
+    unit: "{route}"
+    instrument: updowncounter
+
+  - id: metric.camel.context.route.added
+    metric_name: camel.context.route.added
+    type: metric
+    stability: development
+    brief: Indicates the total number of routes added successfully since context start-up or the last reset operation.
+    unit: "{route}"
+    instrument: counter
+
+  - id: metric.camel.context.exchange.count
+    metric_name: camel.context.exchange.count
+    type: metric
+    stability: development
+    brief: Indicates the total number of exchanges, passed or failed, processed since context start-up or the last reset operation.
+    unit: "{exchange}"
+    instrument: counter
+
+  - id: metric.camel.context.exchange.completed
+    metric_name: camel.context.exchange.completed
+    type: metric
+    stability: development
+    brief: Indicates the total number of exchanges processed successfully since context start-up or the last reset operation.
+    unit: "{exchange}"
+    instrument: counter
+
+  - id: metric.camel.context.exchange.failed.count
+    metric_name: camel.context.exchange.failed.count
+    type: metric
+    stability: development
+    brief: Indicates the total number of exchanges that failed to process since context start-up or the last reset operation.
+    unit: "{exchange}"
+    instrument: counter
+
+  - id: metric.camel.context.exchange.failed.handled
+    metric_name: camel.context.exchange.failed.handled
+    type: metric
+    stability: development
+    brief: Indicates the number of exchanges failed and handled by an ExceptionHandler in the context.
+    unit: "{exchange}"
+    instrument: counter
+
+  - id: metric.camel.context.exchange.inflight
+    metric_name: camel.context.exchange.inflight
+    type: metric
+    stability: development
+    brief: Indicates the number of exchanges currently transiting the context.
+    unit: "{exchange}"
+    instrument: updowncounter
+
+  - id: metric.camel.context.exchange.redelivered.count
+    metric_name: camel.context.exchange.redelivered.count
+    type: metric
+    stability: development
+    brief: Number of exchanges redelivered (internal only)  since context start-up or the last reset operation.
+    unit: "{exchange}"
+    instrument: counter
+
+  - id: metric.camel.context.exchange.redelivered.external
+    metric_name: camel.context.exchange.redelivered.external
+    type: metric
+    stability: development
+    brief: The total number of all external initiated redeliveries (such as from JMS broker) since context start-up or the last reset operation.
+    unit: "{exchange}"
+    instrument: counter
+
+  - id: metric.camel.context.exchange.processing.duration.max
+    metric_name: camel.context.exchange.processing.duration.max
+    type: metric
+    stability: development
+    brief: Indicates the longest time to process an exchange since context start-up or the last reset operation.
+    unit: s
+    instrument: gauge
+
+  - id: metric.camel.context.exchange.processing.duration.mean
+    metric_name: camel.context.exchange.processing.duration.mean
+    type: metric
+    stability: development
+    brief: Indicates the mean processing time for all exchanges processed since context start-up or the last reset operation.
+    unit: s
+    instrument: gauge
+
+  - id: metric.camel.context.exchange.processing.duration.min
+    metric_name: camel.context.exchange.processing.duration.min
+    type: metric
+    stability: development
+    brief: Indicates the shortest time to process an exchange since context start-up or the last reset operation.
+    unit: s
+    instrument: gauge
+
+  - id: metric.camel.context.exchange.processing.duration.last
+    metric_name: camel.context.exchange.processing.duration.last
+    type: metric
+    stability: development
+    brief: Indicates the time it took to process the last exchange.
+    unit: s
+    instrument: gauge
+
+  - id: metric.camel.context.exchange.processing.duration.last_delta
+    metric_name: camel.context.exchange.processing.duration.last_delta
+    type: metric
+    stability: development
+    brief: Indicates the difference of the Processing Time of the last two exchanges transited the context.
+    unit: s
+    instrument: gauge
+
+  - id: metric.camel.context.exchange.processing.duration.sum
+    metric_name: camel.context.exchange.processing.duration.sum
+    type: metric
+    stability: development
+    brief: Indicates the total processing time to process all exchanges since context start-up or the last reset operation.
+    unit: s
+    instrument: counter
+
+  # Route Level Metrics
+
+  - id: metric.camel.route.exchange.count
+    metric_name: camel.route.exchange.count
+    type: metric
+    stability: development
+    brief: Indicates the total number of exchanges, passed or failed, that the route has processed since route start-up or the last reset operation.
+    unit: "{exchange}"
+    instrument: counter
+    attributes:
+      - ref: camel.route
+
+  - id: metric.camel.route.exchange.completed
+    metric_name: camel.route.exchange.completed
+    type: metric
+    stability: development
+    brief: Indicates the total number of exchanges the route has processed successfully since route start-up or the last reset operation.
+    unit: "{exchange}"
+    instrument: counter
+    attributes:
+      - ref: camel.route
+
+  - id: metric.camel.route.exchange.failed.count
+    metric_name: camel.route.exchange.failed.count
+    type: metric
+    stability: development
+    brief: Indicates the total number of exchanges that the route has failed to process since route start-up or the last reset operation.
+    unit: "{exchange}"
+    instrument: counter
+    attributes:
+      - ref: camel.route
+
+  - id: metric.camel.route.exchange.failed.handled
+    metric_name: camel.route.exchange.failed.handled
+    type: metric
+    stability: development
+    brief: Indicates the number of exchanges failed and handled by an ExceptionHandler in the route.
+    unit: "{exchange}"
+    instrument: counter
+    attributes:
+      - ref: camel.route
+
+  - id: metric.camel.route.exchange.inflight
+    metric_name: camel.route.exchange.inflight
+    type: metric
+    stability: development
+    brief: Indicates the number of exchanges currently transiting the route.
+    unit: "{exchange}"
+    instrument: updowncounter
+    attributes:
+      - ref: camel.route
+
+  - id: metric.camel.route.exchange.redelivered.count
+    metric_name: camel.route.exchange.redelivered.count
+    type: metric
+    stability: development
+    brief: Number of exchanges redelivered (internal only)  since route start-up or the last reset operation.
+    unit: "{exchange}"
+    instrument: counter
+    attributes:
+      - ref: camel.route
+
+  - id: metric.camel.route.exchange.redelivered.external
+    metric_name: camel.route.exchange.redelivered.external
+    type: metric
+    stability: development
+    brief: The total number of all external initiated redeliveries (such as from JMS broker) since the route start-up or the last reset operation.
+    unit: "{exchange}"
+    instrument: counter
+    attributes:
+      - ref: camel.route
+
+  - id: metric.camel.route.exchange.processing.duration.max
+    metric_name: camel.route.exchange.processing.duration.max
+    type: metric
+    stability: development
+    brief: Indicates the longest time to process an exchange since the route start-up or the last reset operation.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: camel.route
+
+  - id: metric.camel.route.exchange.processing.duration.mean
+    metric_name: camel.route.exchange.processing.duration.mean
+    type: metric
+    stability: development
+    brief: Indicates the mean processing time for all exchanges processed since the route start-up or the last reset operation.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: camel.route
+
+  - id: metric.camel.route.exchange.processing.duration.min
+    metric_name: camel.route.exchange.processing.duration.min
+    type: metric
+    stability: development
+    brief: Indicates the shortest time to process an exchange since the route start-up or the last reset operation.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: camel.route
+
+  - id: metric.camel.route.exchange.processing.duration.last
+    metric_name: camel.route.exchange.processing.duration.last
+    type: metric
+    stability: development
+    brief: Indicates the time it took the route to process the last exchange.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: camel.route
+
+  - id: metric.camel.route.exchange.processing.duration.last_delta
+    metric_name: camel.route.exchange.processing.duration.last_delta
+    type: metric
+    stability: development
+    brief: Indicates the difference of the Processing Time of the last two exchanges transited the route.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: camel.route
+
+  - id: metric.camel.route.exchange.processing.duration.sum
+    metric_name: camel.route.exchange.processing.duration.sum
+    type: metric
+    stability: development
+    brief: Indicates the total processing time of all exchanges the selected processed since route start-up or the last reset operation.
+    unit: s
+    instrument: counter
+    attributes:
+      - ref: camel.route
+
+  # Processor Level Metrics
+
+  - id: metric.camel.processor.exchange.count
+    metric_name: camel.processor.exchange.count
+    type: metric
+    stability: development
+    brief: Indicates the total number of exchanges, passed or failed, that the selected processor has processed since processor start-up or the last reset operation.
+    unit: "{exchange}"
+    instrument: counter
+    attributes:
+      - ref: camel.route
+      - ref: camel.processor
+      - ref: camel.destination
+
+  - id: metric.camel.processor.exchange.completed
+    metric_name: camel.processor.exchange.completed
+    type: metric
+    stability: development
+    brief: Indicates the total number of exchanges the selected processor has processed successfully since processor start-up or the last reset operation.
+    unit: "{exchange}"
+    instrument: counter
+    attributes:
+      - ref: camel.route
+      - ref: camel.processor
+      - ref: camel.destination
+
+  - id: metric.camel.processor.exchange.failed.count
+    metric_name: camel.processor.exchange.failed.count
+    type: metric
+    stability: development
+    brief: Indicates the total number of exchanges that the selected processor has failed to process since processor start-up or the last reset operation.
+    unit: "{exchange}"
+    instrument: counter
+    attributes:
+      - ref: camel.route
+      - ref: camel.processor
+      - ref: camel.destination
+
+  - id: metric.camel.processor.exchange.failed.handled
+    metric_name: camel.processor.exchange.failed.handled
+    type: metric
+    stability: development
+    brief: Indicates the number of exchanges failed and handled by an ExceptionHandler in the context.
+    unit: "{exchange}"
+    instrument: counter
+    attributes:
+      - ref: camel.route
+      - ref: camel.processor
+      - ref: camel.destination
+
+  - id: metric.camel.processor.exchange.inflight
+    metric_name: camel.processor.exchange.inflight
+    type: metric
+    stability: development
+    brief: Indicates the number of exchanges currently transiting the processor.
+    unit: "{exchange}"
+    instrument: updowncounter
+    attributes:
+      - ref: camel.route
+      - ref: camel.processor
+      - ref: camel.destination
+
+  - id: metric.camel.processor.exchange.redelivered.count
+    metric_name: camel.processor.exchange.redelivered.count
+    type: metric
+    stability: development
+    brief: Number of exchanges redelivered (internal only)  since selected processor start-up or the last reset operation.
+    unit: "{exchange}"
+    instrument: counter
+    attributes:
+      - ref: camel.route
+      - ref: camel.processor
+      - ref: camel.destination
+
+  - id: metric.camel.processor.exchange.redelivered.external
+    metric_name: camel.processor.exchange.redelivered.external
+    type: metric
+    stability: development
+    brief: The total number of all external initiated redeliveries (such as from JMS broker) since processor start-up or the last reset operation.
+    unit: "{exchange}"
+    instrument: counter
+    attributes:
+      - ref: camel.route
+      - ref: camel.processor
+      - ref: camel.destination
+
+
+
+  - id: metric.camel.processor.exchange.processing.duration.max
+    metric_name: camel.processor.exchange.processing.duration.max
+    type: metric
+    stability: development
+    brief: Indicates the longest time to process an exchange since processor start-up or the last reset operation.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: camel.route
+      - ref: camel.processor
+      - ref: camel.destination
+
+
+
+  - id: metric.camel.processor.exchange.processing.duration.mean
+    metric_name: camel.processor.exchange.processing.duration.mean
+    type: metric
+    stability: development
+    brief: Indicates the mean processing time for all exchanges processed since processor start-up or the last reset operation.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: camel.route
+      - ref: camel.processor
+      - ref: camel.destination
+
+
+
+  - id: metric.camel.processor.exchange.processing.duration.min
+    metric_name: camel.processor.exchange.processing.duration.min
+    type: metric
+    stability: development
+    brief: Indicates the shortest time to process an exchange since processor start-up or the last reset operation.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: camel.route
+      - ref: camel.processor
+      - ref: camel.destination
+
+
+
+  - id: metric.camel.processor.exchange.processing.duration.last
+    metric_name: camel.processor.exchange.processing.duration.last
+    type: metric
+    stability: development
+    brief: Indicates the time it took the selected processor to process the last exchange.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: camel.route
+      - ref: camel.processor
+      - ref: camel.destination
+
+
+
+  - id: metric.camel.processor.exchange.processing.duration.last_delta
+    metric_name: camel.processor.exchange.processing.duration.last_delta
+    type: metric
+    stability: development
+    brief: Indicates the difference of the Processing Time of the last two exchanges transited the selected processor.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: camel.route
+      - ref: camel.processor
+      - ref: camel.destination
+
+
+
+  - id: metric.camel.processor.exchange.processing.duration.sum
+    metric_name: camel.processor.exchange.processing.duration.sum
+    type: metric
+    stability: development
+    brief: Indicates the total processing time to process all exchanges since start-up or the last reset operation.
+    unit: s
+    instrument: counter
+    attributes:
+      - ref: camel.route
+      - ref: camel.processor
+      - ref: camel.destination
+
+
+
+  # Thread Pool Metrics
+
+  - id: metric.camel.threadpool.task.count
+    metric_name: camel.threadpool.task.count
+    type: metric
+    stability: development
+    brief: The approximate total number of tasks that have ever been scheduled for execution.
+    unit: "{task}"
+    instrument: counter
+    attributes:
+      - ref: camel.threadpool.name
+      - ref: camel.route
+
+  - id: metric.camel.threadpool.task.active
+    metric_name: camel.threadpool.task.active
+    type: metric
+    stability: development
+    brief: The approximate number of threads that are actively executing tasks.
+    unit: "{thread}"
+    instrument: updowncounter
+    attributes:
+      - ref: camel.threadpool.name
+      - ref: camel.route
+
+  - id: metric.camel.threadpool.task.completed
+    metric_name: camel.threadpool.task.completed
+    type: metric
+    stability: development
+    brief: The approximate total number of tasks that have completed execution. Because the states of tasks and threads may change dynamically during computation, the returned value is only an approximation, but one that does not ever decrease across successive calls.
+    unit: "{task}"
+    instrument: counter
+    attributes:
+      - ref: camel.threadpool.name
+      - ref: camel.route
+
+  - id: metric.camel.threadpool.task.queue.size
+    metric_name: camel.threadpool.task.queue.size
+    type: metric
+    stability: development
+    brief:  The number of Tasks in the Task Queue.
+    unit: "{task}"
+    instrument: updowncounter
+    attributes:
+      - ref: camel.threadpool.name
+      - ref: camel.route
+
+  - id: metric.camel.threadpool.thread.count
+    metric_name: camel.threadpool.thread.count
+    type: metric
+    stability: development
+    brief: The current number of threads in the pool.
+    unit: "{thread}"
+    instrument: updowncounter
+    attributes:
+      - ref: camel.threadpool.name
+      - ref: camel.route
+
+  - id: metric.camel.threadpool.thread.max
+    metric_name: camel.threadpool.thread.max
+    type: metric
+    stability: development
+    brief: The largest number of threads that have ever simultaneously been in the pool.
+    unit: "{thread}"
+    instrument: gauge
+    attributes:
+      - ref: camel.threadpool.name
+      - ref: camel.route
+
+  - id: metric.camel.threadpool.thread.limit.upper
+    metric_name: camel.threadpool.thread.limit.upper
+    type: metric
+    stability: development
+    brief: The maximum possible number of threads in the pool.
+    unit: "{thread}"
+    instrument: updowncounter
+    attributes:
+      - ref: camel.threadpool.name
+      - ref: camel.route
+
+  - id: metric.camel.threadpool.thread.limit.lower
+    metric_name: camel.threadpool.thread.limit.lower
+    type: metric
+    stability: development
+    brief: The number of threads that are always kept in the pool, even if they are idle.
+    unit: "{thread}"
+    instrument: updowncounter
+    attributes:
+      - ref: camel.threadpool.name
+      - ref: camel.route
