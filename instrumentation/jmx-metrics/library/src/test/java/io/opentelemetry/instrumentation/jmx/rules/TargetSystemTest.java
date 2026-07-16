@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeoutException;
@@ -347,6 +348,14 @@ class TargetSystemTest {
         forwardChannel.shutdownNow();
         forwardChannel = null;
       }
+    }
+
+    @Override
+    public CompletableFuture<Void> stop() {
+      if (forwardChannel != null) {
+        forwardChannel.shutdownNow();
+      }
+      return super.stop();
     }
 
     @Override
