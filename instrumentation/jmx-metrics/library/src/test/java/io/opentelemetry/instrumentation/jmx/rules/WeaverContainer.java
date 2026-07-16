@@ -338,15 +338,15 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
     }
 
     @Nullable
-    public String getSignalName() {
+    String getSignalName() {
       return signalName;
     }
 
-    public String getMessage() {
+    String getMessage() {
       return message;
     }
 
-    public String getLevel() {
+    String getLevel() {
       return level;
     }
   }
