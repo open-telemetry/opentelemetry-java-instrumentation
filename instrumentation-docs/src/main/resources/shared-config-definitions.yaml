@@ -57,7 +57,7 @@ configurations:
   http.client.emit-experimental-telemetry:
     name: otel.instrumentation.http.client.emit-experimental-telemetry
     declarative_name: java.common.http.client.emit_experimental_telemetry/development
-    description: "Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics."
+    description: "Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.body.size` and `http.client.response.body.size` metrics."
     type: boolean
     default: false
 
@@ -78,7 +78,7 @@ configurations:
   http.server.emit-experimental-telemetry:
     name: otel.instrumentation.http.server.emit-experimental-telemetry
     declarative_name: java.common.http.server.emit_experimental_telemetry/development
-    description: "Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics."
+    description: "Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.body.size` and `http.server.response.body.size` metrics."
     type: boolean
     default: false
 

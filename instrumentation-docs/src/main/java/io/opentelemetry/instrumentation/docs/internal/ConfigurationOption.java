@@ -30,11 +30,26 @@ public record ConfigurationOption(
   public ConfigurationOption {
     // A reference entry (`- ref: <id>`) in a metadata.yaml carries only the ref id; it is resolved
     // against the shared configuration registry before use, so it skips the field validation that
-    // applies to fully-specified options.
+    // applies to fully-specified options. Because resolve() replaces the entire entry with the
+    // shared definition, any other field set alongside the ref would be silently discarded. Reject
+    // such entries (and a blank ref) so authors cannot publish settings that appear effective but
+    // are ignored.
     if (ref != null) {
-      if (name != null || declarativeName != null || description != null) {
+      if (ref.isBlank()) {
+        throw new IllegalArgumentException("A ref ConfigurationOption must not have a blank ref");
+      }
+      if (name != null
+          || declarativeName != null
+          || description != null
+          || defaultValue != null
+          || type != null
+          || examples != null
+          || declarativeType != null
+          || declarativeSchema != null
+          || id != null) {
         throw new IllegalArgumentException(
-            "A ref ConfigurationOption must not also specify name/declarative_name/description");
+            "A ref ConfigurationOption must not specify any other fields; it carries only the ref"
+                + " id");
       }
     } else {
       requireNonNull(description, "description");

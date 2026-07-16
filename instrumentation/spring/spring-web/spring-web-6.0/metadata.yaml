@@ -6,7 +6,13 @@ features:
   - HTTP_ROUTE
 library_link: https://github.com/spring-projects/spring-framework
 configurations:
-  - ref: http.client.emit-experimental-telemetry
+  - name: otel.instrumentation.http.client.emit-experimental-telemetry
+    declarative_name: java.common.http.client.emit_experimental_telemetry/development
+    description: >
+      Enables the capture of experimental HTTP client telemetry, including URL template
+      as the span name.
+    type: boolean
+    default: false
   - declarative_name: java.common.http.client.url_template_rules
     description: >
       Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only
