@@ -1,7 +1,7 @@
 [tools]
 
 # Linters
-"cargo:https://github.com/grafana/flint" = "rev:4ba41a6"
+"cargo:https://github.com/grafana/flint" = "rev:57a4c9b"
 google-java-format = "1.35.0"
 lychee = "0.24.2"
 rumdl = "0.2.32"
