@@ -1,0 +1,92 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/open-telemetry/weaver/v0.24.2/schemas/semconv.schema.json
+
+groups:
+  - id: attributes.jetty
+    type: attribute_group
+    brief: Jetty attributes
+    attributes:
+      - id: jetty.context
+        type: string
+        stability: development
+        brief: Web application context path
+        examples:
+          - "/myapp"
+
+  - id: metric.jetty.thread.count
+    metric_name: jetty.thread.count
+    stability: development
+    type: metric
+    brief: The current number of threads
+    unit: "{thread}"
+    instrument: updowncounter
+
+  - id: metric.jetty.thread.limit
+    metric_name: jetty.thread.limit
+    stability: development
+    type: metric
+    brief: The configured maximum number of threads in the pool
+    unit: "{thread}"
+    instrument: updowncounter
+
+  - id: metric.jetty.thread.idle.count
+    metric_name: jetty.thread.idle.count
+    stability: development
+    type: metric
+    brief: The current number of idle threads
+    unit: "{thread}"
+    instrument: updowncounter
+
+  - id: metric.jetty.thread.busy.count
+    metric_name: jetty.thread.busy.count
+    stability: development
+    type: metric
+    brief: The current number of busy threads.
+    unit: "{thread}"
+    instrument: updowncounter
+
+  - id: metric.jetty.thread.queue.size
+    metric_name: jetty.thread.queue.size
+    stability: development
+    type: metric
+    brief: The current job queue size
+    unit: "{thread}"
+    instrument: updowncounter
+
+  - id: metric.jetty.session.created.count
+    metric_name: jetty.session.created.count
+    stability: development
+    type: metric
+    brief: The total number of created sessions
+    unit: "{session}"
+    instrument: counter
+    attributes:
+      - ref: jetty.context
+
+  - id: metric.jetty.session.duration.sum
+    metric_name: jetty.session.duration.sum
+    stability: development
+    type: metric
+    brief: The cumulated session duration
+    unit: s
+    instrument: counter
+    attributes:
+      - ref: jetty.context
+
+  - id: metric.jetty.select.count
+    metric_name: jetty.select.count
+    stability: development
+    type: metric
+    brief: The number of select calls.
+    unit: "{operation}"
+    instrument: counter
+
+  - id: metric.jetty.session.count
+    metric_name: jetty.session.count
+    stability: development
+    type: metric
+    brief: Current number of active sessions
+    unit: "{session}"
+    instrument: updowncounter
+    attributes:
+      - ref: jetty.context
+
