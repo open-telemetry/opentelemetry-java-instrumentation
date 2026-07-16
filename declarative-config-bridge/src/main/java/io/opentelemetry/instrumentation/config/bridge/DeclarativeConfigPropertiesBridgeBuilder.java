@@ -22,7 +22,13 @@ import javax.annotation.Nullable;
 /**
  * A builder for {@link DeclarativeConfigPropertiesBridge} that allows adding translations and fixed
  * values for properties.
+ *
+ * @deprecated Use {@link DeclarativeConfigProperties} directly when reading declarative component
+ *     configuration, or use {@link ConfigPropertiesBackedConfigProvider} when exposing a {@link
+ *     io.opentelemetry.api.incubator.config.ConfigProvider} backed by {@link ConfigProperties}.
+ *     This class will be removed in 3.0.
  */
+@Deprecated // will be removed in 3.0
 public class DeclarativeConfigPropertiesBridgeBuilder {
   /**
    * order is important here, so we use LinkedHashMap - see {@link #addMapping(String, String)} for
