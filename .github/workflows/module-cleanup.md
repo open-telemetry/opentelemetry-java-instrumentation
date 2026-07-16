@@ -44,19 +44,9 @@ timeout-minutes: 30
 
 environment: protected
 
-# Disable strict mode so we can opt out of the AWF agent sandbox below.
-strict: false
-
 engine:
   id: copilot
   model: ${{ vars.MODULE_CLEANUP_MODEL || 'gpt-5' }}
-
-# Disable the AWF sandbox so copilot-cli connects directly to
-# api.githubcopilot.com. In sandboxed Copilot workflows, gh-aw enables
-# Copilot BYOK/offline mode but does not set responses wire-API routing
-# for GPT-5-family models yet. See https://github.com/github/gh-aw/issues/31241.
-sandbox:
-  agent: false
 
 network:
   allowed:
@@ -72,24 +62,16 @@ tools:
 # keeps all post-LLM logic in shell where it can run reliably regardless
 # of how the agent session ends.
 #
-# The `safe-outputs.jobs.suppress_default_create_issue` placeholder below
-# exists solely to opt out of gh-aw's default behavior, which auto-injects
-# a `create-issue` safe output whenever no non-builtin safe output is
-# configured (see https://github.github.io/gh-aw/reference/safe-outputs/
-# under "System Types"). Without this opt-out, every successful run posts
-# the agent's narration as a separate `[module-cleanup]` issue, which is
-# noise on top of the batch PR the finalize job already opens.
-#
-# The placeholder safe-job is intentionally never invoked by the agent
-# (see "What you must NOT do" in the persona). gh-aw only emits the job
-# when the corresponding MCP tool is called, so leaving it uninvoked
-# costs nothing at runtime.
+# Results are exported as an artifact and handled by finalize, not published
+# through safe outputs. The custom job prevents gh-aw from auto-injecting its
+# default `create-issue` output and is intentionally never called. `noop` remains
+# available for an explicit summary-only completion, but must not create an issue.
+# Neither configured path mutates repository content, so threat detection is unnecessary.
 
 safe-outputs:
-  # Threat detection requires the AWF agent sandbox, which we disable
-  # because of https://github.com/github/gh-aw/issues/31241. The placeholder
-  # safe-job below carries no untrusted output, so threat detection is unnecessary.
   threat-detection: false
+  noop:
+    report-as-issue: false
   jobs:
     suppress_default_create_issue:
       runs-on: ubuntu-latest

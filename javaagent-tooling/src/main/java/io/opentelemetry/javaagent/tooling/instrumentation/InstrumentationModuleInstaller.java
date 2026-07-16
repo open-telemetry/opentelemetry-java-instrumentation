@@ -59,16 +59,20 @@ public final class InstrumentationModuleInstaller {
       not(isAnnotatedWith(named("javax.decorator.Decorator")));
 
   private final Instrumentation instrumentation;
+  private final ClassLoader extensionsClassLoader;
   private final VirtualFieldImplementationInstallerFactory virtualFieldInstallerFactory =
       VirtualFieldImplementationInstallerFactory.getInstance();
-  private final AdviceInspector adviceInspector =
-      new AdviceInspector(
-          new ClassFileLocator.Compound(
-              ClassFileLocator.ForClassLoader.of(Utils.getAgentClassLoader()),
-              ClassFileLocator.ForClassLoader.of(Utils.getExtensionsClassLoader())));
+  private final AdviceInspector adviceInspector;
 
-  public InstrumentationModuleInstaller(Instrumentation instrumentation) {
+  public InstrumentationModuleInstaller(
+      Instrumentation instrumentation, ClassLoader extensionsClassLoader) {
     this.instrumentation = instrumentation;
+    this.extensionsClassLoader = extensionsClassLoader;
+    this.adviceInspector =
+        new AdviceInspector(
+            new ClassFileLocator.Compound(
+                ClassFileLocator.ForClassLoader.of(Utils.getAgentClassLoader()),
+                ClassFileLocator.ForClassLoader.of(extensionsClassLoader)));
   }
 
   // Need to call deprecated API for backward compatibility with modules that haven't migrated
@@ -238,7 +242,7 @@ public final class InstrumentationModuleInstaller {
             instrumentationModule.instrumentationName(),
             helperClassNames,
             helperResourceBuilder.getResources(),
-            Utils.getExtensionsClassLoader(),
+            extensionsClassLoader,
             instrumentation);
     VirtualFieldImplementationInstaller contextProvider =
         virtualFieldInstallerFactory.create(instrumentationModule);
