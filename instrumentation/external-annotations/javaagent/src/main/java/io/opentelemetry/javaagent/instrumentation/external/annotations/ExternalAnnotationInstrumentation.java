@@ -27,7 +27,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
+import io.opentelemetry.javaagent.tooling.config.internal.MethodsConfigurationParser;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
