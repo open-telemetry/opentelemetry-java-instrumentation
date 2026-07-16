@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.jmx.rules;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
@@ -45,6 +47,38 @@ class ActiveMqTest extends TargetSystemTest {
 
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
+
+    startWeaverValidation(
+        "activemq.yaml",
+        result ->
+            result
+                .checkNothingUnregisteredWithPrefix("activemq.")
+                .checkRegisteredMetrics(
+                    "activemq.",
+                    asList(
+                        "activemq.producer.count",
+                        "activemq.consumer.count",
+                        "activemq.destination.memory.usage",
+                        "activemq.destination.memory.limit",
+                        "activemq.destination.temp.utilization",
+                        "activemq.destination.temp.limit",
+                        "activemq.message.queue.size",
+                        "activemq.message.expired",
+                        "activemq.message.enqueued",
+                        "activemq.message.dequeued",
+                        "activemq.message.enqueue.average_duration",
+                        "activemq.connection.count",
+                        "activemq.memory.utilization",
+                        "activemq.memory.limit",
+                        "activemq.store.utilization",
+                        "activemq.store.limit",
+                        "activemq.temp.utilization",
+                        "activemq.temp.limit"),
+                    emptyList())
+                .checkRegisteredAttributes(
+                    "activemq.",
+                    asList("activemq.destination.type", "activemq.broker.name"),
+                    emptyList()));
 
     startTarget(target);
 
