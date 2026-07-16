@@ -93,10 +93,7 @@ public abstract class InstrumentationModule implements Ordered {
   /**
    * Allows instrumentation modules to disable themselves by default, or to additionally disable
    * themselves on some other condition.
-   *
-   * @deprecated Use {@link #defaultEnabled()} instead. Will be removed in 3.0.
    */
-  @Deprecated // to be removed in 3.0
   public boolean defaultEnabled(ConfigProperties config) {
     return defaultEnabled();
   }

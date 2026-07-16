@@ -29,10 +29,7 @@ public interface BootstrapPackagesConfigurer {
   /**
    * Configure the passed {@code builder} and define which classes should always be loaded by the
    * bootstrap class loader.
-   *
-   * @deprecated Use {@link #configure(BootstrapPackagesBuilder)} instead. Will be removed in 3.0.
    */
-  @Deprecated // to be removed in 3.0
   default void configure(BootstrapPackagesBuilder builder, ConfigProperties config) {
     configure(builder);
   }
