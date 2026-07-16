@@ -5,6 +5,10 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -13,6 +17,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_CLIENT_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_GROUP;
@@ -137,7 +143,8 @@ abstract class AbstractRocketMqClientTest {
     AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
     testing()
         .waitAndAssertSortedTraces(
-            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+            orderByRootSpanKind(
+                SpanKind.INTERNAL, emitStableMessagingSemconv() ? CLIENT : CONSUMER),
             trace -> {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -195,7 +202,8 @@ abstract class AbstractRocketMqClientTest {
     AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
     testing()
         .waitAndAssertSortedTraces(
-            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+            orderByRootSpanKind(
+                SpanKind.INTERNAL, emitStableMessagingSemconv() ? CLIENT : CONSUMER),
             trace -> {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent"),
@@ -249,7 +257,8 @@ abstract class AbstractRocketMqClientTest {
     AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
     testing()
         .waitAndAssertSortedTraces(
-            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+            orderByRootSpanKind(
+                SpanKind.INTERNAL, emitStableMessagingSemconv() ? CLIENT : CONSUMER),
             trace -> {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -304,7 +313,8 @@ abstract class AbstractRocketMqClientTest {
     AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
     testing()
         .waitAndAssertSortedTraces(
-            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+            orderByRootSpanKind(
+                SpanKind.INTERNAL, emitStableMessagingSemconv() ? CLIENT : CONSUMER),
             trace -> {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -359,7 +369,8 @@ abstract class AbstractRocketMqClientTest {
     AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
     testing()
         .waitAndAssertSortedTraces(
-            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+            orderByRootSpanKind(
+                SpanKind.INTERNAL, emitStableMessagingSemconv() ? CLIENT : CONSUMER),
             trace -> {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -418,11 +429,13 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, "publish")));
+                oldOperation("publish"),
+                operationName("publish"),
+                operationType("publish")));
     attributeAssertions.addAll(asList(extraAttributes));
 
     return span.hasKind(SpanKind.PRODUCER)
-        .hasName(topic + " publish")
+        .hasName(emitStableMessagingSemconv() ? "publish " + topic : topic + " publish")
         .hasStatus(StatusData.unset())
         .hasAttributesSatisfyingExactly(attributeAssertions);
   }
@@ -447,11 +460,13 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, "publish")));
+                oldOperation("publish"),
+                operationName("publish"),
+                operationType("publish")));
     attributeAssertions.addAll(asList(extraAttributes));
 
     return span.hasKind(SpanKind.PRODUCER)
-        .hasName(topic + " publish")
+        .hasName(emitStableMessagingSemconv() ? "publish " + topic : topic + " publish")
         .hasStatus(StatusData.unset())
         .hasAttributesSatisfyingExactly(attributeAssertions);
   }
@@ -476,25 +491,29 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, "publish")));
+                oldOperation("publish"),
+                operationName("publish"),
+                operationType("publish")));
     attributeAssertions.addAll(asList(extraAttributes));
 
     return span.hasKind(SpanKind.PRODUCER)
-        .hasName(topic + " publish")
+        .hasName(emitStableMessagingSemconv() ? "publish " + topic : topic + " publish")
         .hasStatus(StatusData.unset())
         .hasAttributesSatisfyingExactly(attributeAssertions);
   }
 
   private static SpanDataAssert assertReceiveSpan(
       SpanDataAssert span, String topic, String consumerGroup) {
-    return span.hasKind(SpanKind.CONSUMER)
-        .hasName(topic + " receive")
+    return span.hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+        .hasName(emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
         .hasStatus(StatusData.unset())
         .hasAttributesSatisfyingExactly(
             equalTo(MESSAGING_ROCKETMQ_CLIENT_GROUP, consumerGroup),
             equalTo(MESSAGING_SYSTEM, "rocketmq"),
             equalTo(MESSAGING_DESTINATION_NAME, topic),
-            equalTo(MESSAGING_OPERATION, "receive"),
+            oldOperation("receive"),
+            operationName("receive"),
+            operationType("receive"),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
   }
 
@@ -518,11 +537,13 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, "process")));
+                oldOperation("process"),
+                operationName("process"),
+                operationType("process")));
     attributeAssertions.addAll(asList(extraAttributes));
 
     return span.hasKind(SpanKind.CONSUMER)
-        .hasName(topic + " process")
+        .hasName(emitStableMessagingSemconv() ? "process " + topic : topic + " process")
         .hasStatus(StatusData.unset())
         // Link to send span.
         .hasLinks(LinkData.create(linkedSpan.getSpanContext()))
@@ -551,11 +572,13 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, "process")));
+                oldOperation("process"),
+                operationName("process"),
+                operationType("process")));
     attributeAssertions.addAll(asList(extraAttributes));
 
     return span.hasKind(SpanKind.CONSUMER)
-        .hasName(topic + " process")
+        .hasName(emitStableMessagingSemconv() ? "process " + topic : topic + " process")
         .hasStatus(StatusData.unset())
         // Link to send span.
         .hasLinks(LinkData.create(linkedSpan.getSpanContext()))
@@ -584,14 +607,29 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MESSAGING_OPERATION, "process")));
+                oldOperation("process"),
+                operationName("process"),
+                operationType("process")));
     attributeAssertions.addAll(asList(extraAttributes));
 
     return span.hasKind(SpanKind.CONSUMER)
-        .hasName(topic + " process")
+        .hasName(emitStableMessagingSemconv() ? "process " + topic : topic + " process")
         .hasStatus(StatusData.unset())
         // Link to send span.
         .hasLinks(LinkData.create(linkedSpan.getSpanContext()))
         .hasAttributesSatisfyingExactly(attributeAssertions);
+  }
+
+  private static AttributeAssertion oldOperation(String operation) {
+    return equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null);
+  }
+
+  private static AttributeAssertion operationName(String operation) {
+    return equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null);
+  }
+
+  private static AttributeAssertion operationType(String operation) {
+    String operationType = operation.equals("publish") ? "send" : operation;
+    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operationType : null);
   }
 }
