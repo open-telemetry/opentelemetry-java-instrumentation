@@ -4,10 +4,10 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.5.3"
     id("com.gradle.plugin-publish") version "2.1.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.3.21"
+    id("org.jetbrains.kotlin.jvm") version "2.4.0"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.1"
-    id("org.graalvm.buildtools.native") version "1.1.3"
+    id("org.graalvm.buildtools.native") version "1.1.4"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
@@ -306,11 +306,13 @@ include(":instrumentation:grpc-1.6:testing")
 include(":instrumentation:guava-10.0:javaagent")
 include(":instrumentation:guava-10.0:library")
 include(":instrumentation:gwt-2.0:javaagent")
+include(":instrumentation:hbase:hbase-client-1.4:javaagent")
+include(":instrumentation:hbase:hbase-client-2.0:javaagent")
+include(":instrumentation:hbase:hbase-client-common-1.4:javaagent")
+include(":instrumentation:hbase:hbase-client-common-1.4:testing")
 include(":instrumentation:helidon-4.3:javaagent")
 include(":instrumentation:helidon-4.3:library")
 include(":instrumentation:helidon-4.3:testing")
-include(":instrumentation:hbase-client-2.0:javaagent")
-include(":instrumentation:hbase-client-2.0:testing")
 include(":instrumentation:hibernate:hibernate-3.3:javaagent")
 include(":instrumentation:hibernate:hibernate-4.0:javaagent")
 include(":instrumentation:hibernate:hibernate-6.0:javaagent")

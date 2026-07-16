@@ -94,7 +94,7 @@ public abstract class InstrumentationModule implements Ordered {
    * Allows instrumentation modules to disable themselves by default, or to additionally disable
    * themselves on some other condition.
    *
-   * @deprecated Use {@link #defaultEnabled()} instead.
+   * @deprecated Use {@link #defaultEnabled()} instead. Will be removed in 3.0.
    */
   @Deprecated // to be removed in 3.0
   public boolean defaultEnabled(ConfigProperties config) {
@@ -113,20 +113,6 @@ public abstract class InstrumentationModule implements Ordered {
    * @param className The name of the class that may or may not be a helper class.
    */
   public boolean isHelperClass(String className) {
-    return false;
-  }
-
-  /**
-   * Note this is an experimental feature until phase 1 of <a
-   * href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8999">
-   * implementing the invokedynamic based instrumentation mechanism</a> is complete. Instrumentation
-   * modules that override this to true (recommended) must use the inline=false Invoke Dynamic style
-   * of Byte Buddy advices which calls out to helper classes in their own classloader, thus enabling
-   * better isolation, best practice code development, avoids shading and enables standard debugging
-   * techniques. The non-inlining of advice will be enforced by muzzle (TODO)
-   */
-  @Deprecated // to be removed in next release
-  public boolean isIndyModule() {
     return false;
   }
 

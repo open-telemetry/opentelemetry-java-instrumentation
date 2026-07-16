@@ -11,7 +11,6 @@ import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SE
 
 import io.opentelemetry.api.common.AttributeKey;
 
-// until old peer.service attribute is dropped in 3.0
 @SuppressWarnings("deprecation") // using deprecated semconv
 public class SemconvServiceStabilityUtil {
 

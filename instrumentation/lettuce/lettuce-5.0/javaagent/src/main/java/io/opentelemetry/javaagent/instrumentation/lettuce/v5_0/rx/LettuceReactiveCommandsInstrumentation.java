@@ -13,9 +13,11 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.lettuce.core.AbstractRedisReactiveCommands;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons;
 import java.util.function.Supplier;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -53,8 +55,11 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static <K, V, T> RedisCommand<K, V, T> extractCommandName(
+        @Advice.This AbstractRedisReactiveCommands<K, V> commands,
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
-      return supplier.get();
+      RedisCommand<K, V, T> command = supplier.get();
+      LettuceSingletons.attachAddress(command, commands.getConnection());
+      return command;
     }
 
     // throwables wouldn't matter here, because no spans have been started due to redis command not
@@ -81,8 +86,11 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static <K, V, T> RedisCommand<K, V, T> extractCommandName(
+        @Advice.This AbstractRedisReactiveCommands<K, V> commands,
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
-      return supplier.get();
+      RedisCommand<K, V, T> command = supplier.get();
+      LettuceSingletons.attachAddress(command, commands.getConnection());
+      return command;
     }
 
     // if there is an exception thrown, then don't make spans
