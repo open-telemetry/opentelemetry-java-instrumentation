@@ -74,7 +74,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
 
   private final Map<String, BytecodeWithUrl> additionalInjectedClasses;
   private final ClassLoader agentOrExtensionCl;
-  private volatile MethodHandles.Lookup cachedLookup;
+  @Nullable private volatile MethodHandles.Lookup cachedLookup;
 
   @Nullable private final ClassLoader instrumentedCl;
 
@@ -171,7 +171,9 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       ExperimentalInstrumentationModule experimentalModule =
           (ExperimentalInstrumentationModule) module;
       hiddenAgentPackages.addAll(experimentalModule.agentPackagesToHide());
-      if (!forMuzzleCheck && !experimentalModule.exposedClassNames().isEmpty()) {
+      if (!forMuzzleCheck
+          && instrumentedCl != null
+          && !experimentalModule.exposedClassNames().isEmpty()) {
         // Using a weak reference because HelperInjector.addExposedClass places the supplier into
         // a weak map where instrumentedCl is the key. We must ensure that the value of the map
         // does not strongly reference the key, otherwise we would leak class loaders.
@@ -289,6 +291,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     return true;
   }
 
+  @Nullable
   private static Class<?> tryLoad(@Nullable ClassLoader cl, String name) {
     try {
       return Class.forName(name, false, cl);
