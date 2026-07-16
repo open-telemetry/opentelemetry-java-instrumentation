@@ -35,8 +35,7 @@ import java.util.Map;
  * }</pre>
  *
  * <p>For declarative-config model integration, call {@link
- * #applyToModel(OpenTelemetryConfigurationModel)} or use {@link
- * DefaultInstrumentationConfigApplier} when a static helper is more convenient.
+ * #applyToModel(OpenTelemetryConfigurationModel)}.
  */
 public final class DefaultInstrumentationConfig {
 

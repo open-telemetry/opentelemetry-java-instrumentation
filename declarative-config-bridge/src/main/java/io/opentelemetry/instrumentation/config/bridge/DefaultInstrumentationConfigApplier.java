@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /** Utility that applies {@link DefaultInstrumentationConfig} defaults to the declarative model. */
-public final class DefaultInstrumentationConfigApplier {
+final class DefaultInstrumentationConfigApplier {
 
   /**
    * Applies defaults to the declarative configuration model under {@code
