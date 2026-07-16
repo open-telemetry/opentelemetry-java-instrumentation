@@ -5,14 +5,6 @@ plugins {
 }
 
 spotless {
-  java {
-    googleJavaFormat()
-    licenseHeaderFile(
-      rootProject.file("../buildscripts/spotless.license.java"),
-      "(package|import|public)"
-    )
-    target("src/**/*.java")
-  }
   kotlinGradle {
     // not sure why it's not using the indent settings from .editorconfig
     ktlint().editorConfigOverride(mapOf(

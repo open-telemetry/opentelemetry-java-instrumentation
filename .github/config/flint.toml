@@ -3,3 +3,139 @@ exclude = ["CHANGELOG.md", "licenses/licenses.md"]
 
 [checks.lychee]
 check_all_local = true
+
+[checks.license-header]
+patterns = ["*.java", "*.kt", "*.scala", "*.groovy"]
+exclude = ["package-info.java", "examples/distro/buildSrc/src/main/kotlin/**"]
+text = "Copyright The OpenTelemetry Authors"
+lines_to_check = 5
+
+[checks.google-java-format]
+patterns = ["*.java"]
+skip_reflowing_long_strings = true
+off_on_markers = [
+  { off = "// spotless:off", on = "// spotless:on" },
+  { off = "/* @formatter:off */", on = "/* @formatter:on */" },
+]
+exclude = [
+  "gradle-plugins/**",
+  "instrumentation/quarkus-resteasy-reactive-1.11/quarkus-2.0-plugin/**",
+  "instrumentation/quarkus-resteasy-reactive-1.11/quarkus-3.0-plugin/**",
+  "instrumentation/quarkus-resteasy-reactive-1.11/quarkus-3.9-plugin/**",
+  "instrumentation/quarkus-resteasy-reactive-1.11/quarkus-common-plugin/**",
+]
+
+[checks.regex-replace]
+patterns = ["*.java"]
+exclude = [
+  "benchmark-overhead/**",
+  "examples/extension/**",
+  "examples/distro/**",
+  "gradle-plugins/**",
+  "instrumentation/quarkus-resteasy-reactive-1.11/quarkus-2.0-plugin/**",
+  "instrumentation/quarkus-resteasy-reactive-1.11/quarkus-3.0-plugin/**",
+  "instrumentation/quarkus-resteasy-reactive-1.11/quarkus-3.9-plugin/**",
+  "instrumentation/quarkus-resteasy-reactive-1.11/quarkus-common-plugin/**",
+]
+
+[[checks.regex-replace.sets]]
+name = "static-imports"
+replacement = '$1'
+skip_line_pattern = '^\s*import '
+add_lines_before_pattern = '^\s*import '
+add_lines_fallback_after_pattern = '^\s*package '
+ignore_regions = [
+  { start_pattern = '^\s*/\*(?:[^*]|\*+[^*/])*\**\s*$', end_pattern = '^\s*(?:\*/|[^/]*\*/\s*$)' },
+  { start_pattern = '^\s*/\*.*\*/\s*$', end_pattern = '^\s*/\*.*\*/\s*$' },
+]
+
+[[checks.regex-replace.sets.rules]]
+pattern = '\bObjects\.(requireNonNull)\b'
+add_lines = ['import static java.util.Objects.$1;']
+
+[[checks.regex-replace.sets.rules]]
+pattern = '\bElementMatchers\.([a-z][a-zA-Z0-9]*)\b'
+add_lines = ['import static net.bytebuddy.matcher.ElementMatchers.$1;']
+
+[[checks.regex-replace.sets.rules]]
+pattern = '\bAgentElementMatchers\.([a-z][a-zA-Z0-9]*)\b'
+add_lines = ['import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.$1;']
+
+[[checks.regex-replace.sets.rules]]
+pattern = '\bTimeUnit\.([A-Z][A-Z_0-9]*)\b'
+add_lines = ['import static java.util.concurrent.TimeUnit.$1;']
+
+[[checks.regex-replace.sets.rules]]
+pattern = '\bStandardCharsets\.([A-Z][A-Z_0-9]*)\b'
+add_lines = ['import static java.nio.charset.StandardCharsets.$1;']
+
+[[checks.regex-replace.sets.rules]]
+pattern = '\bArrays\.(asList)\b'
+add_lines = ['import static java.util.Arrays.$1;']
+content_exclude_pattern = 'extends AbstractAssert'
+
+[[checks.regex-replace.sets.rules]]
+pattern = '\bCollections\.(singleton[a-zA-Z0-9]*|empty[a-zA-Z0-9]*)\b'
+add_lines = ['import static java.util.Collections.$1;']
+
+[[checks.regex-replace.sets.rules]]
+pattern = '\bArgumentMatchers\.([a-z][a-zA-Z0-9]*)\b'
+add_lines = ['import static org.mockito.ArgumentMatchers.$1;']
+
+[[checks.regex-replace.sets.rules]]
+pattern = '\bMockito\.(mock|mockStatic|spy|when|verify|verifyNoInteractions|verifyNoMoreInteractions|doAnswer|doReturn|doThrow|lenient|never|times|atLeastOnce|withSettings)\b'
+add_lines = ['import static org.mockito.Mockito.$1;']
+
+[[checks.regex-replace.sets.rules]]
+pattern = '\bAssertions\.(assertThat)\b'
+add_lines = ['import static org.assertj.core.api.Assertions.$1;']
+
+[[checks.regex-replace.sets.rules]]
+pattern = '\bOpenTelemetryAssertions\.([a-z][a-zA-Z0-9]*)\b'
+add_lines = ['import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.$1;']
+
+[[checks.regex-replace.sets.rules]]
+pattern = '\bSemconvStability\.(emit[a-zA-Z0-9]*)\b'
+add_lines = ['import static io.opentelemetry.instrumentation.api.internal.SemconvStability.$1;']
+
+[[checks.regex-replace.sets.rules]]
+pattern = '\bTestLatestDeps\.(testLatestDeps)\b'
+add_lines = ['import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.$1;']
+
+[[checks.regex-replace.sets.rules]]
+pattern = '\bSqlDialect\.(DOUBLE_QUOTES_ARE_[A-Z_]+)\b'
+add_lines = ['import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.$1;']
+
+[[checks.regex-replace.sets.rules]]
+pattern = '\bCollectors\.([a-z][a-zA-Z0-9]*)\b'
+add_lines = ['import static java.util.stream.Collectors.$1;']
+
+[[checks.regex-replace.sets.rules]]
+pattern = '\bAttributeKey\.(stringKey|longKey|booleanKey|doubleKey|stringArrayKey|longArrayKey|booleanArrayKey|doubleArrayKey)\b'
+add_lines = ['import static io.opentelemetry.api.common.AttributeKey.$1;']
+line_exclude_pattern = '= AttributeKey\.'
+file_pattern = 'Test\.java$'
+
+[[checks.regex-replace.sets.rules]]
+pattern = '\bArguments\.(argumentSet)\b'
+add_lines = ['import static org.junit.jupiter.params.provider.Arguments.$1;']
+file_pattern = 'Test\.java$'
+
+[[checks.regex-replace.sets.rules]]
+pattern = '(^|[^.])\bLevel\.([A-Z][A-Z_0-9]*)\b'
+replacement = '$1$2'
+add_lines = ['import static java.util.logging.Level.$2;']
+content_pattern = '(?m)^\s*import java\.util\.logging\.Level;$'
+
+[[checks.regex-replace.sets.derived_rules]]
+source_pattern = '^import (?P<package>io\.opentelemetry\.semconv(?:\.[a-z][a-z.]*)?\.)(?P<class>[A-Z][a-zA-Z0-9]+);$'
+pattern = '\b{class}\.([A-Z][A-Z_0-9]*)\b'
+add_lines = ['import static {package}$1;']
+source_exclude_pattern = 'SchemaUrls'
+
+[[checks.regex-replace.sets.derived_rules]]
+source_pattern = '^import (?P<package>io\.opentelemetry\.semconv(?:\.[a-z][a-z.]*)?\.)(?P<class>[A-Z][a-zA-Z0-9]+);$'
+pattern = '\b{class}\.([A-Z][a-zA-Z0-9]*[a-z][a-zA-Z0-9]*)\.([A-Z][A-Z_0-9]+)\b'
+replacement = '$1.$2'
+add_lines = ['import {package}$1;']
+source_exclude_pattern = 'SchemaUrls'

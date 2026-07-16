@@ -9,15 +9,15 @@ This project follows the
 
 One of the CI checks will fail if source code is not formatted according to Google Java Style.
 
-Run the following command to reformat all files:
+Run the following command to format Java files and run the configured linters:
 
 ```bash
-./gradlew spotlessApply
+mise run lint:fix
 ```
 
-In addition to Google Java Style formatting, spotless applies
-[custom static importing rules](../../conventions/src/main/kotlin/io/opentelemetry/instrumentation/gradle/StaticImportFormatter.kt)
-(e.g. rewriting `Objects.requireNonNull` to a static import).
+In addition to Google Java Style formatting, Flint applies the repository's
+configured regular-expression import rules (for example, rewriting
+`Objects.requireNonNull` to a static import).
 
 #### Pre-commit hook
 

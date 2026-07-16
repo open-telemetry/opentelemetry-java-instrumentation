@@ -1,5 +1,4 @@
 import com.diffplug.spotless.LineEnding
-import io.opentelemetry.instrumentation.gradle.StaticImportFormatter
 
 plugins {
   id("com.diffplug.spotless")
@@ -9,23 +8,9 @@ spotless {
   // Match .gitattributes without probing source files during configuration.
   lineEndings = LineEnding.UNIX
 
-  java {
-    custom("staticImports", StaticImportFormatter())
-    googleJavaFormat()
-    licenseHeaderFile(
-      rootProject.file("buildscripts/spotless.license.java"),
-      "(package|import|public|// Includes work from:)"
-    )
-    toggleOffOn()
-    target("src/**/*.java")
-  }
   plugins.withId("scala") {
     scala {
       scalafmt()
-      licenseHeaderFile(
-        rootProject.file("buildscripts/spotless.license.java"),
-        "(package|import|public)"
-      )
       target("src/**/*.scala")
     }
   }
@@ -48,10 +33,6 @@ spotless {
           // also very hard to find out where this happens
           "ktlint_standard_wrapping" to "disabled"
         )
-      )
-      licenseHeaderFile(
-        rootProject.file("buildscripts/spotless.license.java"),
-        "(package|import|class|// Includes work from:)"
       )
     }
   }
