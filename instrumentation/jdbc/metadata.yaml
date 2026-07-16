@@ -38,8 +38,21 @@ configurations:
   - name: otel.instrumentation.common.peer-service-mapping
     declarative_name: java.common.service_peer_mapping
     description: Used to specify a mapping from host names or IP addresses to peer services.
-    type: structured_list
+    type: map
     default: ""
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+        - peer
+        - service_name
+      properties:
+        peer:
+          type: string
+          description: Host name or IP address to match against.
+        service_name:
+          type: string
+          description: Peer service name to record for matching peers.
   - name: otel.instrumentation.jdbc.experimental.capture-query-parameters
     declarative_name: java.jdbc.capture_query_parameters/development
     description: >

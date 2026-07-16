@@ -30,7 +30,6 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
     systemProperty("collectMetadata", otelProps.collectMetadata)
@@ -42,6 +41,14 @@ tasks {
 
     jvmArgs("-Dotel.instrumentation.lettuce.experimental-span-attributes=true")
     systemProperty("metadataConfig", "otel.instrumentation.lettuce.experimental-span-attributes=true")
+  }
+
+  val testConnectionTelemetryEnabled = register<Test>("testConnectionTelemetryEnabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.lettuce.connection-telemetry.enabled=true")
   }
 
   val testStableSemconv = register<Test>("testStableSemconv") {
@@ -61,6 +68,6 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv, testExperimental, testV3Preview)
+    dependsOn(testConnectionTelemetryEnabled, testStableSemconv, testExperimental, testV3Preview)
   }
 }

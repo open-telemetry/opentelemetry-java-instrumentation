@@ -24,6 +24,8 @@ import io.opentelemetry.instrumentation.runtimetelemetry.internal.memory.Paralle
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.network.NetworkReadHandler;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.network.NetworkWriteHandler;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.threads.ThreadCountHandler;
+import io.opentelemetry.instrumentation.runtimetelemetry.internal.threads.VirtualThreadPinnedHandler;
+import io.opentelemetry.instrumentation.runtimetelemetry.internal.threads.VirtualThreadSubmitFailedHandler;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
@@ -72,6 +74,8 @@ final class HandlerRegistry {
             new ContainerConfigurationHandler(meter, useLegacyCpuCountMetric),
             new LongLockHandler(meter),
             new ThreadCountHandler(meter),
+            new VirtualThreadPinnedHandler(meter),
+            new VirtualThreadSubmitFailedHandler(meter),
             new ClassesLoadedHandler(meter),
             new MetaspaceSummaryHandler(meter),
             new CodeCacheConfigurationHandler(meter),
