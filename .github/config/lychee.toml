@@ -27,7 +27,5 @@ exclude = [
   '^http://www.slf4j.org.*',
   '^https://logback.qos.ch/.*',
   '^https://vaadin.com/$',
-  '^https://camel.apache.org/$',
-  # SSL certificate expired.
-  '^https://www.gwtproject.org/$'
+  '^https://camel.apache.org/$'
 ]
