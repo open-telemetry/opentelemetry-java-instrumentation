@@ -13,10 +13,10 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule.HelperClassStrategy;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule.HelperClassStrategy;
 import io.opentelemetry.javaagent.tooling.HelperClassDefinition;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.InjectionMode;
@@ -104,14 +104,17 @@ public final class InstrumentationModuleInstaller {
 
   private boolean useIndy(InstrumentationModule instrumentationModule) {
     // first check whether user has specified how the helper classes should be handled
-    HelperClassStrategy helperClassStrategy = instrumentationModule.helperClassStrategy();
-    switch (helperClassStrategy) {
-      case INJECTED:
-        return false;
-      case ISOLATED:
-        return true;
-      case DEFAULT:
-        // fallthrough to the next check
+    if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
+      HelperClassStrategy helperClassStrategy =
+          ((ExperimentalInstrumentationModule) instrumentationModule).helperClassStrategy();
+      switch (helperClassStrategy) {
+        case INJECTED:
+          return false;
+        case ISOLATED:
+          return true;
+        case DEFAULT:
+          // fallthrough to the next check
+      }
     }
 
     // enabled for v3 preview, otherwise opt-in
