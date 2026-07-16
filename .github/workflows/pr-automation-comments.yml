@@ -1,10 +1,11 @@
 name: PR Automation Comments
 on:
-  pull_request_target:
+  # Required to comment on labeled fork PRs; no PR code is checked out or executed.
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
     types: [labeled]
 
 permissions:
-  pull-requests: write
+  pull-requests: write # zizmor: ignore[excessive-permissions]
 
 jobs:
   comment-on-breaking-change:
@@ -94,7 +95,7 @@ jobs:
                 "",
                 "### 📋 Checklist",
                 "- Deprecation details added to the PR description",
-                "- Deprecation is documented in the changelog entry for the next release",
+                "- Deprecation is documented in the \"Unreleased\" section of the [Changelog](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/CHANGELOG.md), preferably as part of this PR.",
                 "- Consider adding deprecation warnings in code/documentation",
                 "",
                 "Your deprecation notes will be included in the release notes to help users prepare for future changes.",

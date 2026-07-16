@@ -24,22 +24,26 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.nCopies;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.redis.client.Command;
 import io.vertx.redis.client.Redis;
 import io.vertx.redis.client.RedisAPI;
 import io.vertx.redis.client.RedisConnection;
 import io.vertx.redis.client.Request;
+import io.vertx.redis.client.Response;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -212,6 +216,45 @@ class VertxRedisClientTest {
                             redisSpanAttributes("RANDOMKEY", "RANDOMKEY"))));
   }
 
+  @Test
+  void emptyBatch() throws Exception {
+    Future<List<Response>> future = connection.batch(emptyList());
+
+    if (isVertx40x() && !future.isComplete()) {
+      // Vert.x 4.0.x never completes an empty batch. Complete it only to clean up the test.
+      assertThat(
+              future
+                  .getClass()
+                  .getMethod("tryComplete", Object.class)
+                  .invoke(future, (Object) null))
+          .isEqualTo(true);
+    } else {
+      assertThat(future.toCompletionStage().toCompletableFuture().get(30, SECONDS)).isEmpty();
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "PIPELINE " + host + ":" + port
+                                : "PIPELINE")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(redisSpanAttributes("PIPELINE", "", 0L))));
+  }
+
+  private static boolean isVertx40x() {
+    try {
+      return Class.forName(
+                  "io.vertx.redis.client.impl.RedisConnectionManager$RedisConnectionProvider")
+              .getDeclaredMethod("init", RedisConnection.class)
+          != null;
+    } catch (ReflectiveOperationException ignored) {
+      return false;
+    }
+  }
+
   @ParameterizedTest
   @MethodSource("batchScenarios")
   void batchCommand(BatchScenario scenario) throws Exception {
@@ -235,44 +278,55 @@ class VertxRedisClientTest {
 
   private static Stream<Arguments> batchScenarios() {
     String longBatchKey = String.join("", nCopies(1020, "x"));
+    int batchSize = 33;
+    int truncatedQueryTextCommandCount = 31;
     // No empty scenario: Vert.x Redis never completes client.batch(emptyList()),
     // and times out before asserting instrumentation.
     return Stream.of(
-        Arguments.argumentSet(
+        argumentSet(
             "single",
             BatchScenario.builder()
                 .addRequest(Request.cmd(Command.SET).arg("batch1").arg("v1"))
                 .operationName("SET")
                 .queryText("SET batch1 ?")
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoSameOperation",
             BatchScenario.builder()
                 .addRequest(Request.cmd(Command.SET).arg("batch1").arg("v1"))
                 .addRequest(Request.cmd(Command.SET).arg("batch2").arg("v2"))
                 .operationName("PIPELINE SET")
-                .queryText("SET batch1 ?;SET batch2 ?")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; SET batch2 ?"
+                        : "SET batch1 ?;SET batch2 ?")
                 .batchSize(2)
                 .build()),
-        Arguments.argumentSet(
+        argumentSet(
             "twoDifferentOperations",
             BatchScenario.builder()
                 .addRequest(Request.cmd(Command.SET).arg("batch1").arg("v1"))
                 .addRequest(Request.cmd(Command.GET).arg("batch1"))
                 .operationName("PIPELINE")
-                .queryText("SET batch1 ?;GET batch1")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; GET batch1"
+                        : "SET batch1 ?;GET batch1")
                 .batchSize(2)
                 .build()),
-        Arguments.argumentSet(
-            "large",
+        argumentSet(
+            "truncatedQueryText",
             BatchScenario.builder()
                 .requests(
                     Stream.generate(() -> Request.cmd(Command.GET).arg(longBatchKey))
-                        .limit(33)
+                        .limit(batchSize)
                         .collect(toList()))
                 .operationName("PIPELINE GET")
-                .queryText(String.join(";", nCopies(31, "GET " + longBatchKey)))
-                .batchSize(33)
+                .queryText(
+                    String.join(
+                        emitStableDatabaseSemconv() ? "; " : ";",
+                        nCopies(truncatedQueryTextCommandCount, "GET " + longBatchKey)))
+                .batchSize(batchSize)
                 .build()));
   }
 

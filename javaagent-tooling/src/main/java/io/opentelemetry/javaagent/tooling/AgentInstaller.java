@@ -105,6 +105,8 @@ public class AgentInstaller {
     }
   }
 
+  // Need to call deprecated API for backward compatibility with extensions that haven't migrated.
+  @SuppressWarnings("deprecation")
   private static void installBytebuddyAgent(
       Instrumentation inst,
       ClassLoader extensionClassLoader,
@@ -153,8 +155,7 @@ public class AgentInstaller {
 
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         installOpenTelemetrySdk(extensionClassLoader);
-
-    ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    ConfigProperties sdkConfig = getConfig(autoConfiguredSdk);
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);
     ConfiguredResourceAttributesHolder.initialize(
@@ -212,6 +213,11 @@ public class AgentInstaller {
     runAfterAgentListeners(agentListeners, autoConfiguredSdk);
   }
 
+  private static ConfigProperties getConfig(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
+    ConfigProperties config = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    return config == null ? EmptyConfigProperties.INSTANCE : config;
+  }
+
   private static AgentBuilder newAgentBuilder(ByteBuddy byteBuddy) {
     // AgentBuilder.Default constructor triggers sun.misc.Unsafe::objectFieldOffset called warning
     // AgentBuilder$Default.<init>
@@ -267,6 +273,8 @@ public class AgentInstaller {
     agentBuilder.installOn(instrumentation);
   }
 
+  // Need to call deprecated API for backward compatibility with extensions that haven't migrated.
+  @SuppressWarnings("deprecation")
   private static void setBootstrapPackages(
       ConfigProperties config, ClassLoader extensionClassLoader) {
     BootstrapPackagesBuilderImpl builder = new BootstrapPackagesBuilderImpl();
@@ -281,14 +289,14 @@ public class AgentInstaller {
     DefineClassHelper.internalSetHandler(DefineClassHandler.INSTANCE);
   }
 
-  // Need to call deprecated API for backward compatibility with extensions that haven't migrated
+  // Need to call deprecated API for backward compatibility with extensions that haven't migrated.
   @SuppressWarnings("deprecation")
   private static AgentBuilder configureIgnoredTypes(
       ConfigProperties config, ClassLoader extensionClassLoader, AgentBuilder agentBuilder) {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer :
         loadOrdered(IgnoredTypesConfigurer.class, extensionClassLoader)) {
-      configurer.configure(builder, config != null ? config : EmptyConfigProperties.INSTANCE);
+      configurer.configure(builder, config);
     }
 
     Trie<Boolean> ignoredTasksTrie = builder.buildIgnoredTasksTrie();
