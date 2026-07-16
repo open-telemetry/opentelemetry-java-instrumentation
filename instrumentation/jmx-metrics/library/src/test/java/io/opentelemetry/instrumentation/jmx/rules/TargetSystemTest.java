@@ -134,9 +134,14 @@ class TargetSystemTest {
     }
     targetDependencies = emptyList();
 
-    if (weaver != null) {
-      stop(weaver);
-      requireNonNull(weaverMetricsVerify).accept(weaver.getResult().checkCommonViolations());
+    try {
+      if (weaver != null) {
+        stop(weaver);
+        requireNonNull(weaverMetricsVerify).accept(weaver.getResult().checkCommonViolations());
+      }
+    } finally {
+      // ensure underlying resources are freed on weaver metrics validation failure
+      otlpServer.reset();
     }
   }
 
