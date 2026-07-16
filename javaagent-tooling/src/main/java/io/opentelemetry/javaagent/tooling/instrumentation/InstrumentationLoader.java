@@ -29,12 +29,12 @@ public class InstrumentationLoader implements AgentExtension {
     Instrumentation instrumentation =
         requireNonNull(
             InstrumentationHolder.getInstrumentation(), "Instrumentation must not be null");
-    InstrumentationModuleInstaller instrumentationModuleInstaller =
-        new InstrumentationModuleInstaller(instrumentation);
-    int numberOfLoadedModules = 0;
     ClassLoader extensionsClassLoader =
         requireNonNull(
             Utils.getExtensionsClassLoader(), "Extensions class loader must not be null");
+    InstrumentationModuleInstaller instrumentationModuleInstaller =
+        new InstrumentationModuleInstaller(instrumentation, extensionsClassLoader);
+    int numberOfLoadedModules = 0;
     for (InstrumentationModule instrumentationModule :
         loadOrdered(InstrumentationModule.class, extensionsClassLoader)) {
       if (logger.isLoggable(FINE)) {

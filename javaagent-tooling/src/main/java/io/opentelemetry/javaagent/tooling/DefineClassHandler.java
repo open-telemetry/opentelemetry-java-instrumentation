@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.util.Collections.emptySet;
+import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper.Handler;
 import java.util.HashSet;
@@ -18,7 +19,7 @@ import org.objectweb.asm.ClassReader;
 public class DefineClassHandler implements Handler {
   public static final DefineClassHandler INSTANCE = new DefineClassHandler();
   private static final ThreadLocal<DefineClassContextImpl> defineClassContext =
-      ThreadLocal.withInitial(() -> DefineClassContextImpl.NOP);
+      ThreadLocal.withInitial(() -> DefineClassContextImpl.ROOT);
 
   private static Predicate<ClassLoader> ignoredClassLoaders = (classLoader) -> false;
 
@@ -121,14 +122,7 @@ public class DefineClassHandler implements Handler {
   }
 
   private static class DefineClassContextImpl implements DefineClassContext {
-    // NOP is returned from beforeDefineClass without calling enter() (no frame pushed),
-    // so exit() must not mutate the ThreadLocal — otherwise a nested J9 defineClass would
-    // clobber an outer frame that is still active.
-    private static final DefineClassContextImpl NOP =
-        new DefineClassContextImpl() {
-          @Override
-          public void exit() {}
-        };
+    private static final DefineClassContextImpl ROOT = new DefineClassContextImpl();
 
     @Nullable private final DefineClassContextImpl previous;
     @Nullable String failedClassDotName;
@@ -151,7 +145,9 @@ public class DefineClassHandler implements Handler {
 
     @Override
     public void exit() {
-      defineClassContext.set(previous != null ? previous : NOP);
+      // ROOT itself has no previous context but is never returned to callers. Every returned
+      // context is created by enter(), which captures ROOT or an outer context as its predecessor.
+      defineClassContext.set(requireNonNull(previous));
     }
   }
 }
