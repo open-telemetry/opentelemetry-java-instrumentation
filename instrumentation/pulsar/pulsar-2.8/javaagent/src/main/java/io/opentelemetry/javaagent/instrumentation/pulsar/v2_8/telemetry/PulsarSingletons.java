@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -90,9 +91,10 @@ public class PulsarSingletons {
       return instrumenterBuilder
           .addSpanLinksExtractor(
               new PropagatorBasedSpanLinksExtractor<>(propagator, MessageTextMapGetter.INSTANCE))
-          .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+          .buildInstrumenter(MessagingSpanKindExtractor.create(MessagingOperationType.RECEIVE));
     }
-    return instrumenterBuilder.buildConsumerInstrumenter(MessageTextMapGetter.INSTANCE);
+    return instrumenterBuilder.buildInstrumenter(
+        MessagingSpanKindExtractor.create(MessagingOperationType.RECEIVE));
   }
 
   private static Instrumenter<PulsarBatchRequest, Void> createConsumerBatchReceiveInstrumenter() {
@@ -111,7 +113,8 @@ public class PulsarSingletons {
             .addSpanLinksExtractor(new PulsarBatchRequestSpanLinksExtractor(propagator))
             .addOperationMetrics(MessagingConsumerMetrics.get());
     setMessagingReceiveExceptionEventExtractor(instrumenterBuilder);
-    return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    return instrumenterBuilder.buildInstrumenter(
+        MessagingSpanKindExtractor.create(MessagingOperationType.RECEIVE));
   }
 
   private static Instrumenter<PulsarRequest, Void> createConsumerProcessInstrumenter() {

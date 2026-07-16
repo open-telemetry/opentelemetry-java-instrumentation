@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.pulsar.v1_0;
 
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 
 import io.opentelemetry.instrumentation.spring.pulsar.v1_0.AbstractSpringPulsarTest;
@@ -22,12 +24,15 @@ class SpringPulsarTest extends AbstractSpringPulsarTest {
     AtomicReference<SpanData> producer = new AtomicReference<>();
 
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(INTERNAL, CONSUMER),
+        orderByRootSpanKind(INTERNAL, emitStableMessagingSemconv() ? CLIENT : CONSUMER),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
                 span -> {
-                  span.hasName(OTEL_TOPIC + " publish")
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "publish " + OTEL_TOPIC
+                              : OTEL_TOPIC + " publish")
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(publishAttributes());
@@ -37,12 +42,18 @@ class SpringPulsarTest extends AbstractSpringPulsarTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(String.format("%s receive", OTEL_TOPIC))
-                        .hasKind(CONSUMER)
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "receive " + OTEL_TOPIC
+                                : OTEL_TOPIC + " receive")
+                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(receiveAttributes()),
                 span ->
-                    span.hasName(String.format("%s process", OTEL_TOPIC))
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "process " + OTEL_TOPIC
+                                : OTEL_TOPIC + " process")
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producer.get().getSpanContext()))
