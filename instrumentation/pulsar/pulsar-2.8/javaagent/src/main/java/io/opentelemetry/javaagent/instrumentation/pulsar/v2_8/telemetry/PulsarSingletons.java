@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageO
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -122,7 +123,8 @@ public class PulsarSingletons {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, MessageOperation.PROCESS))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(getter, MessageOperation.PROCESS));
+                createMessagingAttributesExtractor(getter, MessageOperation.PROCESS))
+            .addOperationMetrics(MessagingProcessMetrics.get());
     setMessagingProcessExceptionEventExtractor(instrumenterBuilder);
 
     if (receiveInstrumentationEnabled) {

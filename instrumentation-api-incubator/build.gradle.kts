@@ -92,6 +92,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database,code,service.peer,rpc")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
     inputs.dir(jflexOutputDir)
   }
 
@@ -99,6 +100,15 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,code/dup,service.peer/dup,rpc/dup")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    inputs.dir(jflexOutputDir)
+  }
+
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
     inputs.dir(jflexOutputDir)
   }
 
@@ -117,6 +127,12 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv, testBothSemconv, testExceptionSignalLogs, testExceptionSignalLogsDup)
+    dependsOn(
+      testStableSemconv,
+      testBothSemconv,
+      testV3Preview,
+      testExceptionSignalLogs,
+      testExceptionSignalLogsDup,
+    )
   }
 }

@@ -78,7 +78,9 @@ public final class SqlQueryAnalyzer {
 
   // visible for tests
   static boolean isCached(String query, SqlDialect dialect) {
-    return sqlToQueryCache.get(CacheKey.create(query, dialect)) != null;
+    Cache<CacheKey, SqlQuery> cache =
+        SemconvStability.v3Preview() ? sqlToQueryCacheWithSummary : sqlToQueryCache;
+    return cache.get(CacheKey.create(query, dialect)) != null;
   }
 
   @AutoValue

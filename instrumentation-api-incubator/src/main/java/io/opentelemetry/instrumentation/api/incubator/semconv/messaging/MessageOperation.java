@@ -9,7 +9,7 @@ import java.util.Locale;
 
 /**
  * Represents type of <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#operation-names">operations</a>
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/messaging/messaging-spans.md#operation-types">operations</a>
  * that may be used in a messaging system.
  */
 public enum MessageOperation {
@@ -18,9 +18,8 @@ public enum MessageOperation {
   PROCESS;
 
   /**
-   * Returns the operation name as defined in <a
-   * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#operation-names">the
-   * specification</a>.
+   * Returns the legacy operation name. The v1.43 operation name defaults to this value unless an
+   * instrumentation supplies a system-specific override.
    */
   String operationName() {
     return name().toLowerCase(Locale.ROOT);

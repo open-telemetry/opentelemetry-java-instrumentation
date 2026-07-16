@@ -6,7 +6,10 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_ANONYMOUS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -17,9 +20,12 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ENVELOPE_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.entry;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -48,7 +54,7 @@ class MessagingAttributesExtractorTest {
       boolean anonymous,
       String destination,
       MessageOperation operation,
-      String expectedDestination) {
+      String operationName) {
     // given
     Map<String, String> request = new HashMap<>();
     request.put("system", "myQueue");
@@ -69,7 +75,7 @@ class MessagingAttributesExtractorTest {
     request.put("batchMessageCount", "2");
 
     AttributesExtractor<Map<String, String>, String> underTest =
-        MessagingAttributesExtractor.create(TestGetter.INSTANCE, operation);
+        MessagingAttributesExtractor.create(TestGetter.INSTANCE, operation, operationName);
 
     Context context = Context.root();
 
@@ -78,16 +84,22 @@ class MessagingAttributesExtractorTest {
     underTest.onStart(startAttributes, context, request);
 
     AttributesBuilder endAttributes = Attributes.builder();
-    underTest.onEnd(endAttributes, context, request, "42", null);
+    underTest.onEnd(endAttributes, context, request, "42", new IllegalStateException());
 
     // then
     List<MapEntry<AttributeKey<?>, Object>> expectedEntries = new ArrayList<>();
     expectedEntries.add(entry(MESSAGING_SYSTEM, "myQueue"));
-    expectedEntries.add(entry(MESSAGING_DESTINATION_NAME, expectedDestination));
     if (temporary) {
       expectedEntries.add(entry(MESSAGING_DESTINATION_TEMPORARY, true));
+      if (emitStableMessagingSemconv()) {
+        expectedEntries.add(entry(MESSAGING_DESTINATION_NAME, destination));
+        expectedEntries.add(entry(MESSAGING_DESTINATION_TEMPLATE, destination));
+      } else {
+        expectedEntries.add(entry(MESSAGING_DESTINATION_NAME, "(temporary)"));
+      }
     } else {
-      expectedEntries.add(entry(MESSAGING_DESTINATION_TEMPLATE, expectedDestination));
+      expectedEntries.add(entry(MESSAGING_DESTINATION_NAME, destination));
+      expectedEntries.add(entry(MESSAGING_DESTINATION_TEMPLATE, destination));
     }
     if (anonymous) {
       expectedEntries.add(entry(MESSAGING_DESTINATION_ANONYMOUS, true));
@@ -95,22 +107,46 @@ class MessagingAttributesExtractorTest {
     expectedEntries.add(entry(MESSAGING_MESSAGE_CONVERSATION_ID, "42"));
     expectedEntries.add(entry(MESSAGING_MESSAGE_BODY_SIZE, 100L));
     expectedEntries.add(entry(MESSAGING_MESSAGE_ENVELOPE_SIZE, 120L));
-    expectedEntries.add(entry(stringKey("messaging.client_id"), "43"));
-    expectedEntries.add(entry(MESSAGING_OPERATION, operation.operationName()));
+    if (emitOldMessagingSemconv()) {
+      expectedEntries.add(entry(stringKey("messaging.client_id"), "43"));
+      expectedEntries.add(entry(MESSAGING_OPERATION, operation.operationName()));
+    }
+    if (emitStableMessagingSemconv()) {
+      expectedEntries.add(entry(stringKey("messaging.client.id"), "43"));
+      expectedEntries.add(entry(MESSAGING_OPERATION_NAME, operationName));
+      expectedEntries.add(
+          entry(MESSAGING_OPERATION_TYPE, MessagingOperation.create(operation).type()));
+    }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     MapEntry<? extends AttributeKey<?>, ?>[] expectedEntriesArr =
         expectedEntries.toArray(new MapEntry[0]);
     assertThat(startAttributes.build()).containsOnly(expectedEntriesArr);
 
-    assertThat(endAttributes.build())
-        .containsOnly(entry(MESSAGING_MESSAGE_ID, "42"), entry(MESSAGING_BATCH_MESSAGE_COUNT, 2L));
+    if (emitStableMessagingSemconv()) {
+      assertThat(endAttributes.build())
+          .containsOnly(
+              entry(MESSAGING_MESSAGE_ID, "42"),
+              entry(MESSAGING_BATCH_MESSAGE_COUNT, 2L),
+              entry(ERROR_TYPE, IllegalStateException.class.getName()));
+    } else {
+      assertThat(endAttributes.build())
+          .containsOnly(
+              entry(MESSAGING_MESSAGE_ID, "42"), entry(MESSAGING_BATCH_MESSAGE_COUNT, 2L));
+    }
   }
 
   static Stream<Arguments> destinations() {
     return Stream.of(
-        Arguments.of(false, false, "destination", MessageOperation.RECEIVE, "destination"),
-        Arguments.of(true, true, null, MessageOperation.PROCESS, "(temporary)"));
+        argumentSet(
+            "regular destination", false, false, "destination", MessageOperation.RECEIVE, "poll"),
+        argumentSet(
+            "temporary anonymous destination",
+            true,
+            true,
+            "generated-destination",
+            MessageOperation.PROCESS,
+            "process"));
   }
 
   @Test

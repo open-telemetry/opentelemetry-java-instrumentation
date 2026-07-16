@@ -23,6 +23,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -74,8 +76,10 @@ public abstract class KafkaClientBaseTest {
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected static final String SHARED_TOPIC = "shared.topic";
-  protected static final AttributeKey<String> MESSAGING_CLIENT_ID =
+  protected static final AttributeKey<String> MESSAGING_CLIENT_ID_OLD =
       AttributeKey.stringKey("messaging.client_id");
+  private static final AttributeKey<String> MESSAGING_CLIENT_ID =
+      AttributeKey.stringKey("messaging.client.id");
 
   private KafkaContainer kafka;
   protected Producer<Integer, String> producer;
@@ -181,8 +185,12 @@ public abstract class KafkaClientBaseTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MESSAGING_OPERATION, "publish"),
-                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "publish" : null),
+                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
+                satisfies(
+                    emitStableMessagingSemconv() ? MESSAGING_CLIENT_ID : MESSAGING_CLIENT_ID_OLD,
+                    val -> val.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty)));
     if (emitOldMessagingSemconv()) {
       assertions.add(satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative));
@@ -215,8 +223,12 @@ public abstract class KafkaClientBaseTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MESSAGING_OPERATION, "receive"),
-                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null),
+                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null),
+                satisfies(
+                    emitStableMessagingSemconv() ? MESSAGING_CLIENT_ID : MESSAGING_CLIENT_ID_OLD,
+                    val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive)));
     // consumer group is not available in version 0.11
     if (testLatestDeps()) {
@@ -236,8 +248,12 @@ public abstract class KafkaClientBaseTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MESSAGING_OPERATION, "process"),
-                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
+                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
+                satisfies(
+                    emitStableMessagingSemconv() ? MESSAGING_CLIENT_ID : MESSAGING_CLIENT_ID_OLD,
+                    val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty)));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(

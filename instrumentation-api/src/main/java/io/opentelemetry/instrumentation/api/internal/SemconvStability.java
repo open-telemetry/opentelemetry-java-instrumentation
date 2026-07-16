@@ -173,6 +173,10 @@ public final class SemconvStability {
     return emitOldMessagingSemconv;
   }
 
+  /**
+   * Returns whether the selected v1 experimental messaging semantic conventions should be emitted.
+   * The method name is retained for 2.x compatibility with other semconv selectors.
+   */
   public static boolean emitStableMessagingSemconv() {
     return emitStableMessagingSemconv;
   }
