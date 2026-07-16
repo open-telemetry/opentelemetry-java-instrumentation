@@ -5,21 +5,16 @@
 
 package io.opentelemetry.instrumentation.apachedbcp;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import java.sql.Connection;
 import java.sql.Driver;
-import java.util.Set;
-import java.util.function.Consumer;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,9 +24,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public abstract class AbstractApacheDbcpInstrumentationTest {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-dbcp-2.0";
-  private static final AttributeKey<String> POOL_NAME_KEY =
-      AttributeKey.stringKey(
-          emitStableDatabaseSemconv() ? "db.client.connection.pool.name" : "pool.name");
 
   @Mock private Driver driverMock;
   @Mock private Connection connectionMock;
@@ -80,22 +72,6 @@ public abstract class AbstractApacheDbcpInstrumentationTest {
         .disableUseTime()
         .disablePendingRequests()
         .assertConnectionPoolEmitsMetrics();
-  }
-
-  protected void assertConnectionUsagePoolNamesSatisfying(Consumer<Set<String>> assertion) {
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            emitStableDatabaseSemconv()
-                ? "db.client.connection.count"
-                : "db.client.connections.usage",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertion.accept(
-                            metric.getLongSumData().getPoints().stream()
-                                .map(point -> point.getAttributes().get(POOL_NAME_KEY))
-                                .collect(toSet()))));
   }
 
   protected void assertNoMetrics() {

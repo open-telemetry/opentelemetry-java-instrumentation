@@ -5,7 +5,9 @@ description: >
   The auto-instrumentation detects the `BasicDataSource` lifecycle when the underlying
   `DataSource` is created and closed. When a JMX `ObjectName` is successfully registered, its
   `name` property is used as the pool name; if the property is absent, the full `ObjectName` is
-  used. When no JMX `ObjectName` is registered, a generated `dbcp2-N` name is used.
+  used. When no JMX `ObjectName` is registered, the JDBC URL and connection properties are used
+  to derive `server.address[:server.port][/db.namespace]`. If no server address or database
+  namespace is available, `apache-dbcp2` is used.
 library_link: https://commons.apache.org/proper/commons-dbcp/
 semantic_conventions:
   - DATABASE_POOL_METRICS

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.opentelemetry.instrumentation.apachedbcp.AbstractApacheDbcpInstrumentationTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -38,68 +36,47 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
   }
 
   @Test
-  void shouldReportMetricsWithDefaultDataSourceNameWhenJmxNameIsNull() throws Exception {
+  void shouldUseJdbcUrlForDataSourceNameWhenJmxNameIsNull() throws Exception {
     BasicDataSource dataSource = createDataSource();
+    dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
 
-    try {
-      dataSource.getConnection().close();
-
-      assertConnectionUsagePoolNamesSatisfying(
-          poolNames ->
-              assertThat(poolNames)
-                  .hasSize(1)
-                  .allMatch(poolName -> poolName != null && poolName.matches("dbcp2-[0-9]+")));
-    } finally {
-      dataSource.close();
-      shutdown(dataSource);
-    }
-
-    assertNoMetrics();
+    assertDataSourceName(dataSource, "db.example:5432/orders");
   }
 
   @Test
-  void shouldReportMetricsWithDefaultDataSourceNameWhenJmxNameIsInvalid() throws Exception {
+  void shouldUseConnectionPropertiesForDataSourceNameWhenJmxNameIsInvalid() throws Exception {
     BasicDataSource dataSource = createDataSource();
     dataSource.setJmxName("invalid-jmx-name");
+    dataSource.setUrl("jdbc:postgresql:ignored");
+    dataSource.addConnectionProperty("serverName", "properties.example");
+    dataSource.addConnectionProperty("portNumber", "5433");
+    dataSource.addConnectionProperty("databaseName", "inventory");
 
-    try {
-      dataSource.getConnection().close();
-
-      assertConnectionUsagePoolNamesSatisfying(
-          poolNames ->
-              assertThat(poolNames)
-                  .hasSize(1)
-                  .allMatch(poolName -> poolName != null && poolName.matches("dbcp2-[0-9]+")));
-    } finally {
-      dataSource.close();
-      shutdown(dataSource);
-    }
-
-    assertNoMetrics();
+    assertDataSourceName(dataSource, "properties.example:5433/inventory");
   }
 
   @Test
-  void shouldGenerateDifferentDefaultDataSourceNames() throws Exception {
-    BasicDataSource firstDataSource = createDataSource();
-    BasicDataSource secondDataSource = createDataSource();
+  void shouldUseServerAddressWhenPortAndNamespaceAreMissing() throws Exception {
+    BasicDataSource dataSource = createDataSource();
+    dataSource.setUrl("jdbc:custom:ignored");
+    dataSource.addConnectionProperty("serverName", "address-only.example");
 
-    try {
-      firstDataSource.getConnection().close();
-      secondDataSource.getConnection().close();
+    assertDataSourceName(dataSource, "address-only.example");
+  }
 
-      assertConnectionUsagePoolNamesSatisfying(
-          poolNames ->
-              assertThat(poolNames)
-                  .hasSize(2)
-                  .allMatch(poolName -> poolName != null && poolName.matches("dbcp2-[0-9]+")));
-    } finally {
-      firstDataSource.close();
-      secondDataSource.close();
-      shutdown(firstDataSource);
-      shutdown(secondDataSource);
-    }
+  @Test
+  void shouldUseDbNamespaceWhenServerAddressIsMissing() throws Exception {
+    BasicDataSource dataSource = createDataSource();
+    dataSource.setUrl("jdbc:h2:mem:orders");
 
-    assertNoMetrics();
+    assertDataSourceName(dataSource, "orders");
+  }
+
+  @Test
+  void shouldUseFixedDataSourceNameWhenServerAddressAndNamespaceAreMissing() throws Exception {
+    BasicDataSource dataSource = createDataSource();
+
+    assertDataSourceName(dataSource, "apache-dbcp2");
   }
 
   @Test
@@ -145,6 +122,20 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
       if (mbeanServer.isRegistered(objectName)) {
         mbeanServer.unregisterMBean(objectName);
       }
+      shutdown(dataSource);
+    }
+
+    assertNoMetrics();
+  }
+
+  private void assertDataSourceName(BasicDataSource dataSource, String dataSourceName)
+      throws Exception {
+    try {
+      dataSource.getConnection().close();
+
+      assertDataSourceMetrics(dataSourceName);
+    } finally {
+      dataSource.close();
       shutdown(dataSource);
     }
 

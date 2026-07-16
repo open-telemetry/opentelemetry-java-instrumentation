@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.getDefaultName;
+import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.getDataSourceName;
 import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -42,15 +42,16 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
   public static class StartPoolMaintenanceAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This BasicDataSource dataSource) {
-      String dataSourceName;
+      String dataSourceName = null;
       ObjectName objectName = OpenTelemetryBasicDataSourceUtil.getRegisteredJmxName(dataSource);
       if (objectName != null) {
         dataSourceName = objectName.getKeyProperty("name");
         if (dataSourceName == null) {
           dataSourceName = objectName.toString();
         }
-      } else {
-        dataSourceName = getDefaultName();
+      }
+      if (dataSourceName == null) {
+        dataSourceName = getDataSourceName(dataSource);
       }
       telemetry().registerMetrics(dataSource, dataSourceName);
     }

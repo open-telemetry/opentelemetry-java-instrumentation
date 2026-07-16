@@ -5,15 +5,20 @@
 
 package org.apache.commons.dbcp2;
 
+import java.util.Properties;
 import javax.annotation.Nullable;
 import javax.management.ObjectName;
 
-// Helper for accessing protected BasicDataSource methods from the same package.
+// Helper for accessing non-public BasicDataSource methods from the same package.
 public final class OpenTelemetryBasicDataSourceUtil {
 
   @Nullable
   public static ObjectName getRegisteredJmxName(BasicDataSource dataSource) {
     return dataSource.getRegisteredJmxName();
+  }
+
+  public static Properties getConnectionProperties(BasicDataSource dataSource) {
+    return dataSource.getConnectionProperties();
   }
 
   private OpenTelemetryBasicDataSourceUtil() {}

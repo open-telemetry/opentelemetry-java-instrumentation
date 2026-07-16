@@ -16,7 +16,21 @@ dependencies {
 
   implementation(project(":instrumentation:apache-dbcp-2.0:library"))
 
+  bootstrap(project(":instrumentation:jdbc:bootstrap"))
+  compileOnly(
+    project(
+      path = ":instrumentation:jdbc:library",
+      configuration = "shadow",
+    ),
+  )
+
   testImplementation(project(":instrumentation:apache-dbcp-2.0:testing"))
+  testInstrumentation(
+    project(
+      path = ":instrumentation:jdbc:library",
+      configuration = "shadow",
+    ),
+  )
 }
 
 tasks {
