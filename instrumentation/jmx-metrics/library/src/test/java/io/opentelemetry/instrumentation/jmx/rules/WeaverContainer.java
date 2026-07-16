@@ -325,7 +325,7 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
     }
   }
 
-  public static class WeaverValidationAdvice {
+  private static class WeaverValidationAdvice {
 
     @Nullable private final String signalName;
     private final String message;
