@@ -323,7 +323,10 @@ public class OpenTelemetryAutoConfiguration {
   @ConditionalOnMissingBean({ConfigProvider.class})
   static class FallbackConfigProvider {
     @Bean
-    ConfigProvider configProvider() {
+    ConfigProvider configProvider(OpenTelemetry openTelemetry) {
+      if (openTelemetry instanceof ExtendedOpenTelemetry) {
+        return ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider();
+      }
       return ConfigProvider.noop();
     }
   }
