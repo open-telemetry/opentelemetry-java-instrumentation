@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jmx.rules;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
@@ -45,52 +46,50 @@ class JvmTest extends TargetSystemTest {
             .withEnv("CATALINA_OPTS", String.join(" ", jvmArgs))
             .withStartupTimeout(Duration.ofMinutes(2))
             .withExposedPorts(8080)
-            .waitingFor(Wait.forListeningPorts(8080));
+            .waitingFor(Wait.forListeningPort());
 
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
 
     startWeaverValidation(
         "jvm.yaml",
-        result -> {
-          // ensure that all jvm.* metrics and attributes are registered
-          checkNothingUnregisteredWithPrefix(result, "jvm.");
-          // ensure that we have all the metrics and attributes we expect
-          checkRegistered(
-              "jvm.",
-              result.getSeenRegistryMetrics(),
-              "jvm.memory.committed",
-              "jvm.system.cpu.utilization",
-              "jvm.class.unloaded",
-              "jvm.file_descriptor.limit",
-              "jvm.cpu.recent_utilization",
-              "jvm.memory.used_after_last_gc",
-              "jvm.buffer.memory.limit",
-              "jvm.cpu.count",
-              "jvm.class.count",
-              "jvm.memory.used",
-              "jvm.memory.init",
-              "jvm.class.loaded",
-              "jvm.memory.limit",
-              "jvm.buffer.memory.used",
-              "jvm.buffer.count",
-              "jvm.file_descriptor.count",
-              "jvm.gc.duration",
-              "jvm.system.cpu.load_1m",
-              "jvm.cpu.time",
-              "jvm.thread.count");
-          checkRegistered(
-              "jvm.",
-              result.getSeenRegistryAttributes(),
-              "jvm.buffer.pool.name",
-              "jvm.gc.action",
-              "jvm.gc.cause",
-              "jvm.gc.name",
-              "jvm.memory.pool.name",
-              "jvm.memory.type",
-              "jvm.thread.daemon",
-              "jvm.thread.state");
-        });
+        result ->
+            result
+                .checkNothingUnregisteredWithPrefix("jvm.")
+                .checkRegisteredMetrics(
+                    "jvm.",
+                    asList(
+                        "jvm.memory.committed",
+                        "jvm.system.cpu.utilization",
+                        "jvm.class.unloaded",
+                        "jvm.file_descriptor.limit",
+                        "jvm.cpu.recent_utilization",
+                        "jvm.memory.used_after_last_gc",
+                        "jvm.buffer.memory.limit",
+                        "jvm.cpu.count",
+                        "jvm.class.count",
+                        "jvm.memory.used",
+                        "jvm.memory.init",
+                        "jvm.class.loaded",
+                        "jvm.memory.limit",
+                        "jvm.buffer.memory.used",
+                        "jvm.buffer.count",
+                        "jvm.file_descriptor.count",
+                        "jvm.system.cpu.load_1m",
+                        "jvm.cpu.time",
+                        "jvm.thread.count"),
+                    singletonList(
+                        // may not be reported because GC does not have time to run
+                        "jvm.gc.duration"))
+                .checkRegisteredAttributes(
+                    "jvm.",
+                    asList("jvm.buffer.pool.name", "jvm.memory.pool.name", "jvm.memory.type"),
+                    asList(
+                        "jvm.gc.action",
+                        "jvm.gc.cause",
+                        "jvm.gc.name",
+                        "jvm.thread.daemon",
+                        "jvm.thread.state")));
 
     startTarget(target);
 

@@ -5,15 +5,21 @@
 
 package io.opentelemetry.instrumentation.jmx.rules;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.HttpData;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -101,15 +107,15 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
     private final List<WeaverValidationAdvice> advices;
     private final Set<String> seenNonRegistryMetrics;
     private final Set<String> seenNonRegistryAttributes;
-    private final Set<String> seenRegistryMetrics;
-    private final Set<String> seenRegistryAttributes;
+    private final Map<String, Integer> seenRegistryMetrics;
+    private final Map<String, Integer> seenRegistryAttributes;
 
     private WeaverValidationResult(
         List<WeaverValidationAdvice> advices,
         Set<String> seenNonRegistryMetrics,
         Set<String> seenNonRegistryAttributes,
-        Set<String> seenRegistryMetrics,
-        Set<String> seenRegistryAttributes) {
+        Map<String, Integer> seenRegistryMetrics,
+        Map<String, Integer> seenRegistryAttributes) {
       this.advices = advices;
       this.seenNonRegistryMetrics = seenNonRegistryMetrics;
       this.seenNonRegistryAttributes = seenNonRegistryAttributes;
@@ -149,18 +155,15 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
                 }
               });
 
-      BiFunction<JsonNode, String, Set<String>> doParse =
+      BiFunction<JsonNode, String, Map<String, Integer>> doParse =
           (jsonNode, key) -> {
-            Set<String> result = new HashSet<>();
+            Map<String, Integer> result = new HashMap<>();
             JsonNode node = jsonNode.get(key);
             node.fieldNames()
                 .forEachRemaining(
                     name -> {
                       JsonNode jsonCount = node.get(name);
-                      // only include items that have been reported at least once
-                      if (jsonCount.isInt() && jsonCount.asInt() > 0) {
-                        result.add(name);
-                      }
+                      result.put(name, jsonCount.asInt());
                     });
             return result;
           };
@@ -168,8 +171,8 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
       JsonNode statistics = json.get("statistics");
       return new WeaverValidationResult(
           advices,
-          doParse.apply(statistics, "seen_non_registry_metrics"),
-          doParse.apply(statistics, "seen_non_registry_attributes"),
+          doParse.apply(statistics, "seen_non_registry_metrics").keySet(),
+          doParse.apply(statistics, "seen_non_registry_attributes").keySet(),
           doParse.apply(statistics, "seen_registry_metrics"),
           doParse.apply(statistics, "seen_registry_attributes"));
     }
@@ -207,7 +210,7 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
      * @return set of metrics that were reported and are part of tested registry
      */
     public Set<String> getSeenRegistryMetrics() {
-      return seenRegistryMetrics;
+      return seenRegistryMetrics.keySet();
     }
 
     /**
@@ -216,7 +219,97 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
      * @return set of attributes that were reported and are part of tested registry
      */
     public Set<String> getSeenRegistryAttributes() {
-      return seenRegistryAttributes;
+      return seenRegistryAttributes.keySet();
+    }
+
+    @CanIgnoreReturnValue
+    public WeaverValidationResult checkNothingUnregisteredWithPrefix(String prefix) {
+      seenNonRegistryMetrics.forEach(
+          attribute ->
+              assertThat(attribute)
+                  .describedAs("no un-registered metric with prefix %s expected", prefix)
+                  .doesNotStartWith(prefix));
+
+      seenNonRegistryAttributes.forEach(
+          attribute ->
+              assertThat(attribute)
+                  .describedAs("no un-registered attribute with prefix %s expected", prefix)
+                  .doesNotStartWith(prefix));
+      return this;
+    }
+
+    /**
+     * Checks metrics that are registered
+     *
+     * @param prefix metric prefix
+     * @param reportedMetrics metrics that should have been registered and reported
+     * @param optionalReportedMetrics metrics that should have been registered but are optionally
+     *     reported
+     * @return this
+     */
+    @CanIgnoreReturnValue
+    public WeaverValidationResult checkRegisteredMetrics(
+        String prefix,
+        Collection<String> reportedMetrics,
+        Collection<String> optionalReportedMetrics) {
+      return checkRegistered(
+          "metrics", seenRegistryMetrics, prefix, reportedMetrics, optionalReportedMetrics);
+    }
+
+    private WeaverValidationResult checkRegistered(
+        String type,
+        Map<String, Integer> map,
+        String prefix,
+        Collection<String> reported,
+        Collection<String> notReported) {
+
+      Set<String> expectedKeys = new HashSet<>(reported);
+      expectedKeys.addAll(notReported);
+      assertThat(expectedKeys)
+          .describedAs("overlap between reported and optionally reported %s", type)
+          .hasSize(reported.size() + notReported.size());
+
+      assertThat(map.keySet())
+          .filteredOn(item -> item.startsWith(prefix))
+          .describedAs("expected registered %s to contain all keys", type)
+          .containsExactlyInAnyOrderElementsOf(expectedKeys);
+
+      reported.forEach(
+          key ->
+              assertThat(map.get(key))
+                  .describedAs("expected registered %s to contain key %s with count > 0", type, key)
+                  .isGreaterThan(0));
+
+      notReported.forEach(
+          key ->
+              assertThat(map.get(key))
+                  .describedAs(
+                      "expected registered %s to contain key %s with count >= 0", type, key)
+                  .isGreaterThanOrEqualTo(0));
+
+      return this;
+    }
+
+    /**
+     * Checks attributes that are registered
+     *
+     * @param prefix attribute prefix
+     * @param reportedAttributes attributes that should have been registered and reported
+     * @param optionalReportedAttributes attributes that should have been registered but are
+     *     optionally reported
+     * @return this
+     */
+    @CanIgnoreReturnValue
+    public WeaverValidationResult checkRegisteredAttributes(
+        String prefix,
+        Collection<String> reportedAttributes,
+        Collection<String> optionalReportedAttributes) {
+      return checkRegistered(
+          "attributes",
+          seenRegistryAttributes,
+          prefix,
+          reportedAttributes,
+          optionalReportedAttributes);
     }
   }
 
