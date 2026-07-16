@@ -7,17 +7,23 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA;
 import static java.util.Arrays.asList;
@@ -47,9 +53,9 @@ import org.apache.kafka.streams.kstream.KStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @DisplayName("test kafka produce and consume with streams in-between")
   @Test
   void testKafkaProduceAndConsumeWithStreamsInBetween() throws Exception {
@@ -101,30 +107,22 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
     // Add your assertTraces logic here
     testing.waitAndAssertSortedTraces(
         TelemetryDataUtil.orderByRootSpanName(
-            STREAM_PENDING + " publish",
-            STREAM_PENDING + " receive",
-            STREAM_PROCESSED + " receive"),
+            emitStableMessagingSemconv() ? "send " + STREAM_PENDING : STREAM_PENDING + " publish",
+            emitStableMessagingSemconv() ? "poll " + STREAM_PENDING : STREAM_PENDING + " receive",
+            emitStableMessagingSemconv()
+                ? "poll " + STREAM_PROCESSED
+                : STREAM_PROCESSED + " receive"),
         trace -> {
           trace.hasSpansSatisfyingExactly(
               // kafka-clients PRODUCER
               span ->
-                  span.hasName(STREAM_PENDING + " publish")
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "send " + STREAM_PENDING
+                              : STREAM_PENDING + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasNoParent()
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, KAFKA),
-                          equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
-                          equalTo(MESSAGING_OPERATION, "publish"),
-                          satisfies(
-                              stringKey("messaging.client_id"), val -> val.startsWith("producer")),
-                          satisfies(
-                              MESSAGING_DESTINATION_PARTITION_ID,
-                              val -> val.isInstanceOf(String.class)),
-                          equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
-                          equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
-                          equalTo(
-                              stringKey("messaging.kafka.bootstrap.servers"),
-                              EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null)));
+                      .hasAttributesSatisfyingExactly(producerAttributes(STREAM_PENDING, true)));
           producerPendingRef.set(trace.getSpan(0));
         },
         trace -> {
@@ -133,18 +131,17 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
               span -> {
                 List<AttributeAssertion> assertions =
                     new ArrayList<>(
-                        asList(
-                            equalTo(MESSAGING_SYSTEM, KAFKA),
-                            equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
-                            equalTo(MESSAGING_OPERATION, "receive"),
-                            satisfies(
-                                stringKey("messaging.client_id"), val -> val.endsWith("consumer")),
-                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
+                        messagingAttributes(
+                            STREAM_PENDING, "receive", "poll", "receive", "consumer", false));
+                assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
                 if (testLatestDeps()) {
-                  assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test-application"));
+                  addGroupAssertions(assertions, "test-application");
                 }
-                span.hasName(STREAM_PENDING + " receive")
-                    .hasKind(SpanKind.CONSUMER)
+                span.hasName(
+                        emitStableMessagingSemconv()
+                            ? "poll " + STREAM_PENDING
+                            : STREAM_PENDING + " receive")
+                    .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
                     .hasNoParent()
                     .hasAttributesSatisfyingExactly(assertions);
               },
@@ -152,20 +149,16 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
               span -> {
                 List<AttributeAssertion> assertions =
                     new ArrayList<>(
-                        asList(
-                            equalTo(MESSAGING_SYSTEM, KAFKA),
-                            equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
-                            equalTo(MESSAGING_OPERATION, "process"),
-                            satisfies(
-                                stringKey("messaging.client_id"), val -> val.endsWith("consumer")),
-                            satisfies(
-                                MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class)),
-                            satisfies(
-                                MESSAGING_DESTINATION_PARTITION_ID,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
-                            equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
-                            equalTo(stringKey("asdf"), "testing")));
+                        messagingAttributes(
+                            STREAM_PENDING, "process", "process", "process", "consumer", false));
+                assertions.add(
+                    satisfies(MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class)));
+                assertions.add(
+                    satisfies(
+                        MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
+                assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
+                assertions.add(equalTo(stringKey("asdf"), "testing"));
+                addOffsetAssertions(assertions, 0);
 
                 if (EXPERIMENTAL_ATTRIBUTES) {
                   assertions.add(
@@ -175,9 +168,12 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 }
 
                 if (testLatestDeps()) {
-                  assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test-application"));
+                  addGroupAssertions(assertions, "test-application");
                 }
-                span.hasName(STREAM_PENDING + " process")
+                span.hasName(
+                        emitStableMessagingSemconv()
+                            ? "process " + STREAM_PENDING
+                            : STREAM_PENDING + " process")
                     .hasKind(SpanKind.CONSUMER)
                     .hasParent(trace.getSpan(0))
                     .hasLinks(LinkData.create(producerPendingRef.get().getSpanContext()))
@@ -185,24 +181,15 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
               },
               // kafka-clients PRODUCER
               span ->
-                  span.hasName(STREAM_PROCESSED + " publish")
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "send " + STREAM_PROCESSED
+                              : STREAM_PROCESSED + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(1))
                       .hasTraceId(receivedContext.getTraceId())
                       .hasSpanId(receivedContext.getSpanId())
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, KAFKA),
-                          equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
-                          equalTo(MESSAGING_OPERATION, "publish"),
-                          satisfies(
-                              stringKey("messaging.client_id"), val -> val.endsWith("producer")),
-                          satisfies(
-                              MESSAGING_DESTINATION_PARTITION_ID,
-                              val -> val.isInstanceOf(String.class)),
-                          equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
-                          equalTo(
-                              stringKey("messaging.kafka.bootstrap.servers"),
-                              EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null)));
+                      .hasAttributesSatisfyingExactly(producerAttributes(STREAM_PROCESSED, false)));
 
           producerProcessedRef.set(trace.getSpan(2));
         },
@@ -212,19 +199,17 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 span -> {
                   List<AttributeAssertion> assertions =
                       new ArrayList<>(
-                          asList(
-                              equalTo(MESSAGING_SYSTEM, KAFKA),
-                              equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
-                              equalTo(MESSAGING_OPERATION, "receive"),
-                              satisfies(
-                                  stringKey("messaging.client_id"),
-                                  val -> val.startsWith("consumer")),
-                              equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
+                          messagingAttributes(
+                              STREAM_PROCESSED, "receive", "poll", "receive", "consumer", true));
+                  assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
                   if (testLatestDeps()) {
-                    assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
+                    addGroupAssertions(assertions, "test");
                   }
-                  span.hasName(STREAM_PROCESSED + " receive")
-                      .hasKind(SpanKind.CONSUMER)
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "poll " + STREAM_PROCESSED
+                              : STREAM_PROCESSED + " receive")
+                      .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
                       .hasNoParent()
                       .hasAttributesSatisfyingExactly(assertions);
                 },
@@ -232,21 +217,17 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 span -> {
                   List<AttributeAssertion> assertions =
                       new ArrayList<>(
-                          asList(
-                              equalTo(MESSAGING_SYSTEM, KAFKA),
-                              equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
-                              equalTo(MESSAGING_OPERATION, "process"),
-                              satisfies(
-                                  stringKey("messaging.client_id"),
-                                  val -> val.startsWith("consumer")),
-                              satisfies(
-                                  MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class)),
-                              satisfies(
-                                  MESSAGING_DESTINATION_PARTITION_ID,
-                                  val -> val.isInstanceOf(String.class)),
-                              equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
-                              equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
-                              equalTo(longKey("testing"), 123)));
+                          messagingAttributes(
+                              STREAM_PROCESSED, "process", "process", "process", "consumer", true));
+                  assertions.add(
+                      satisfies(MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class)));
+                  assertions.add(
+                      satisfies(
+                          MESSAGING_DESTINATION_PARTITION_ID,
+                          val -> val.isInstanceOf(String.class)));
+                  assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
+                  assertions.add(equalTo(longKey("testing"), 123));
+                  addOffsetAssertions(assertions, 0);
                   if (EXPERIMENTAL_ATTRIBUTES) {
                     assertions.add(
                         satisfies(
@@ -255,13 +236,94 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   }
 
                   if (testLatestDeps()) {
-                    assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
+                    addGroupAssertions(assertions, "test");
                   }
-                  span.hasName(STREAM_PROCESSED + " process")
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "process " + STREAM_PROCESSED
+                              : STREAM_PROCESSED + " process")
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(trace.getSpan(0))
                       .hasLinks(LinkData.create(producerProcessedRef.get().getSpanContext()))
                       .hasAttributesSatisfyingExactly(assertions);
                 }));
+  }
+
+  private static List<AttributeAssertion> producerAttributes(String topic, boolean includeKey) {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            messagingAttributes(topic, "publish", "send", "send", "producer", includeKey));
+    assertions.add(
+        satisfies(MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
+    assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, includeKey ? "10" : null));
+    assertions.add(
+        equalTo(
+            stringKey("messaging.kafka.bootstrap.servers"),
+            EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null));
+    addOffsetAssertions(assertions, 0);
+    return assertions;
+  }
+
+  private static List<AttributeAssertion> messagingAttributes(
+      String topic,
+      String oldOperation,
+      String operationName,
+      String operationType,
+      String clientIdSuffix,
+      boolean startsWith) {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(MESSAGING_SYSTEM, KAFKA),
+                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? oldOperation : null),
+                equalTo(
+                    MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operationName : null),
+                equalTo(
+                    MESSAGING_OPERATION_TYPE,
+                    emitStableMessagingSemconv() ? operationType : null)));
+    if (emitOldMessagingSemconv()) {
+      assertions.add(
+          satisfies(
+              stringKey("messaging.client_id"),
+              val -> {
+                if (startsWith) {
+                  val.startsWith(clientIdSuffix);
+                } else {
+                  val.endsWith(clientIdSuffix);
+                }
+              }));
+    }
+    if (emitStableMessagingSemconv()) {
+      assertions.add(
+          satisfies(
+              stringKey("messaging.client.id"),
+              val -> {
+                if (startsWith) {
+                  val.startsWith(clientIdSuffix);
+                } else {
+                  val.endsWith(clientIdSuffix);
+                }
+              }));
+    }
+    return assertions;
+  }
+
+  private static void addOffsetAssertions(List<AttributeAssertion> assertions, long offset) {
+    if (emitOldMessagingSemconv()) {
+      assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, offset));
+    }
+    if (emitStableMessagingSemconv()) {
+      assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, offset));
+    }
+  }
+
+  private static void addGroupAssertions(List<AttributeAssertion> assertions, String group) {
+    if (emitOldMessagingSemconv()) {
+      assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, group));
+    }
+    if (emitStableMessagingSemconv()) {
+      assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, group));
+    }
   }
 }

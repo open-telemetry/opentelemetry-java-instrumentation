@@ -9,16 +9,23 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -60,7 +67,10 @@ class WrapperTest extends AbstractWrapperTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(SHARED_TOPIC + " publish")
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "send " + SHARED_TOPIC
+                              : SHARED_TOPIC + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -80,13 +90,19 @@ class WrapperTest extends AbstractWrapperTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(SHARED_TOPIC + " receive")
-                        .hasKind(SpanKind.CONSUMER)
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "poll " + SHARED_TOPIC
+                                : SHARED_TOPIC + " receive")
+                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasLinksSatisfying(links -> assertThat(links).isEmpty())
                         .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders)),
                 span ->
-                    span.hasName(SHARED_TOPIC + " process")
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "process " + SHARED_TOPIC
+                                : SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpanContext.get()))
@@ -105,10 +121,12 @@ class WrapperTest extends AbstractWrapperTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MESSAGING_OPERATION, "publish"),
-                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
-                satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
-                satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
+                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
+                satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty)));
+    addClientIdAssertions(assertions, "producer");
+    addOffsetAssertions(assertions);
     if (testHeaders) {
       assertions.add(
           equalTo(
@@ -123,19 +141,23 @@ class WrapperTest extends AbstractWrapperTest {
     return assertions;
   }
 
-  private static List<AttributeAssertion> processAttributes(
+  static List<AttributeAssertion> processAttributes(
       String greeting, boolean testHeaders, boolean testExperimental) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MESSAGING_OPERATION, "process"),
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
+                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, greeting.getBytes(UTF_8).length),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
-                satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
-                equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
-                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer"))));
+                equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, emitOldMessagingSemconv() ? "test" : null),
+                equalTo(
+                    MESSAGING_CONSUMER_GROUP_NAME, emitStableMessagingSemconv() ? "test" : null)));
+    addClientIdAssertions(assertions, "consumer");
+    addOffsetAssertions(assertions);
     if (testHeaders) {
       assertions.add(
           equalTo(
@@ -154,16 +176,40 @@ class WrapperTest extends AbstractWrapperTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(MESSAGING_OPERATION, "receive"),
-                equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
-                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "poll" : null),
+                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null),
+                equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, emitOldMessagingSemconv() ? "test" : null),
+                equalTo(
+                    MESSAGING_CONSUMER_GROUP_NAME, emitStableMessagingSemconv() ? "test" : null),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
+    addClientIdAssertions(assertions, "consumer");
     if (testHeaders) {
       assertions.add(
           equalTo(
               MessageHeaderUtil.headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
     return assertions;
+  }
+
+  private static void addClientIdAssertions(
+      List<AttributeAssertion> assertions, String clientIdPrefix) {
+    if (emitOldMessagingSemconv()) {
+      assertions.add(satisfies(MESSAGING_CLIENT_ID_OLD, val -> val.startsWith(clientIdPrefix)));
+    }
+    if (emitStableMessagingSemconv()) {
+      assertions.add(
+          satisfies(stringKey("messaging.client.id"), val -> val.startsWith(clientIdPrefix)));
+    }
+  }
+
+  private static void addOffsetAssertions(List<AttributeAssertion> assertions) {
+    if (emitOldMessagingSemconv()) {
+      assertions.add(satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative));
+    }
+    if (emitStableMessagingSemconv()) {
+      assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
+    }
   }
 
   @Test
@@ -182,14 +228,26 @@ class WrapperTest extends AbstractWrapperTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("unknown receive")
-                        .hasKind(SpanKind.CONSUMER)
+                    span.hasName(emitStableMessagingSemconv() ? "poll" : "unknown receive")
+                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasException(emitExceptionAsSpanEvents() ? error : null)
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "kafka"),
-                            equalTo(MESSAGING_OPERATION, "receive"),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "poll" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "receive" : null),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableMessagingSemconv()
+                                    ? IllegalStateException.class.getName()
+                                    : null),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0))));
 
     if (emitExceptionAsLogs()) {

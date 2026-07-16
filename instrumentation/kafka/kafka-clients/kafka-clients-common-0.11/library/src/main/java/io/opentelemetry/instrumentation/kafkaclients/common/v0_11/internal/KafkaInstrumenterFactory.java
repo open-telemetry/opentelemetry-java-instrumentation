@@ -15,6 +15,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
@@ -80,14 +81,18 @@ public final class KafkaInstrumenterFactory {
 
     KafkaProducerAttributesGetter getter = new KafkaProducerAttributesGetter();
     MessagingOperationType operationType = MessagingOperationType.SEND;
+    String operationName = "send";
 
     InstrumenterBuilder<KafkaProducerRequest, RecordMetadata> builder =
         Instrumenter.<KafkaProducerRequest, RecordMetadata>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.builder(getter, operationType)
+                    .setOperationName(operationName)
+                    .build())
             .addAttributesExtractor(
-                buildMessagingAttributesExtractor(getter, operationType, capturedHeaders))
+                buildMessagingAttributesExtractor(
+                    getter, operationType, operationName, capturedHeaders))
             .addAttributesExtractors(extractors)
             .addAttributesExtractor(new KafkaProducerAttributesExtractor())
             .setErrorCauseExtractor(errorCauseExtractor);
@@ -95,7 +100,7 @@ public final class KafkaInstrumenterFactory {
       builder.addAttributesExtractor(new KafkaProducerExperimentalAttributesExtractor());
     }
     setMessagingSendExceptionEventExtractor(builder);
-    return builder.buildInstrumenter(SpanKindExtractor.alwaysProducer());
+    return builder.buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
   public Instrumenter<KafkaReceiveRequest, Void> createConsumerReceiveInstrumenter() {
@@ -106,20 +111,24 @@ public final class KafkaInstrumenterFactory {
       Iterable<AttributesExtractor<KafkaReceiveRequest, Void>> extractors) {
     KafkaReceiveAttributesGetter getter = new KafkaReceiveAttributesGetter();
     MessagingOperationType operationType = MessagingOperationType.RECEIVE;
+    String operationName = "poll";
 
     InstrumenterBuilder<KafkaReceiveRequest, Void> builder =
         Instrumenter.<KafkaReceiveRequest, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.builder(getter, operationType)
+                    .setOperationName(operationName)
+                    .build())
             .addAttributesExtractor(
-                buildMessagingAttributesExtractor(getter, operationType, capturedHeaders))
+                buildMessagingAttributesExtractor(
+                    getter, operationType, operationName, capturedHeaders))
             .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
             .addAttributesExtractors(extractors)
             .setErrorCauseExtractor(errorCauseExtractor)
             .setEnabled(messagingReceiveInstrumentationEnabled);
     setMessagingReceiveExceptionEventExtractor(builder);
-    return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    return builder.buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
   public Instrumenter<KafkaProcessRequest, Void> createConsumerProcessInstrumenter() {
@@ -175,6 +184,18 @@ public final class KafkaInstrumenterFactory {
             .setErrorCauseExtractor(errorCauseExtractor);
     setMessagingProcessExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+  }
+
+  private static <REQUEST, RESPONSE>
+      AttributesExtractor<REQUEST, RESPONSE> buildMessagingAttributesExtractor(
+          MessagingAttributesGetter<REQUEST, RESPONSE> getter,
+          MessagingOperationType operationType,
+          String operationName,
+          List<String> capturedHeaders) {
+    return MessagingAttributesExtractor.builder(getter, operationType)
+        .setOperationName(operationName)
+        .setCapturedHeaders(capturedHeaders)
+        .build();
   }
 
   private static <REQUEST, RESPONSE>

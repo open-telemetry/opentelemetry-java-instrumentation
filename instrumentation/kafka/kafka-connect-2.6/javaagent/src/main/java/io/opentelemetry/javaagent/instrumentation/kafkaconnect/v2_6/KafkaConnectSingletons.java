@@ -11,10 +11,10 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
 public class KafkaConnectSingletons {
 
@@ -41,7 +41,9 @@ public class KafkaConnectSingletons {
             .addSpanLinksExtractor(spanLinksExtractor);
     setMessagingProcessExceptionEventExtractor(builder);
 
-    instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    instrumenter =
+        builder.buildInstrumenter(
+            MessagingSpanKindExtractor.create(MessagingOperationType.PROCESS));
   }
 
   public static Instrumenter<KafkaConnectTask, Void> instrumenter() {

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.List;
@@ -23,7 +25,10 @@ class WrapperPropagationDisabledTest extends AbstractWrapperTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(SHARED_TOPIC + " publish")
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "send " + SHARED_TOPIC
+                                : SHARED_TOPIC + " publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -35,7 +40,10 @@ class WrapperPropagationDisabledTest extends AbstractWrapperTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(SHARED_TOPIC + " process")
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "process " + SHARED_TOPIC
+                                : SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasLinks()

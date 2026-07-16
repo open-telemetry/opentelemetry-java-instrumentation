@@ -56,17 +56,17 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
 
     testing()
         .waitAndAssertSortedTraces(
-            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+            orderByRootSpanKind(SpanKind.INTERNAL, receiveKind()),
             trace -> {
               trace.hasSpansSatisfyingExactlyInAnyOrder(
                   span -> span.hasName("producer"),
                   span ->
-                      span.hasName("testBatchTopic publish")
+                      span.hasName(spanName("testBatchTopic", "publish", "send"))
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(sendAttributes(record1)),
                   span ->
-                      span.hasName("testBatchTopic publish")
+                      span.hasName(spanName("testBatchTopic", "publish", "send"))
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(sendAttributes(record2)));
@@ -77,14 +77,14 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
             trace ->
                 trace.hasSpansSatisfyingExactlyInAnyOrder(
                     span ->
-                        span.hasName("testBatchTopic receive")
-                            .hasKind(SpanKind.CONSUMER)
+                        span.hasName(spanName("testBatchTopic", "receive", "poll"))
+                            .hasKind(receiveKind())
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(receiveAttributes("testBatchTopic")),
 
                     // batch consumer
                     span ->
-                        span.hasName("testBatchTopic process")
+                        span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(0))
                             .hasLinks(
@@ -96,7 +96,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
 
                     // single consumer 1
                     span ->
-                        span.hasName("testBatchTopic process")
+                        span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(0))
                             .hasLinks(LinkData.create(producer1.get().getSpanContext()))
@@ -105,7 +105,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
 
                     // single consumer 2
                     span ->
-                        span.hasName("testBatchTopic process")
+                        span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(0))
                             .hasLinks(LinkData.create(producer2.get().getSpanContext()))
@@ -129,12 +129,12 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
     // the regular handler is not being called if the batch one fails
     testing()
         .waitAndAssertSortedTraces(
-            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+            orderByRootSpanKind(SpanKind.INTERNAL, receiveKind()),
             trace -> {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("producer"),
                   span ->
-                      span.hasName("testBatchTopic publish")
+                      span.hasName(spanName("testBatchTopic", "publish", "send"))
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(sendAttributes(record)));
@@ -144,26 +144,26 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("testBatchTopic receive")
-                            .hasKind(SpanKind.CONSUMER)
+                        span.hasName(spanName("testBatchTopic", "receive", "poll"))
+                            .hasKind(receiveKind())
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(receiveAttributes("testBatchTopic")),
 
                     // batch consumer
                     span ->
-                        span.hasName("testBatchTopic process")
+                        span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(0))
                             .hasLinks(LinkData.create(producer.get().getSpanContext()))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
                             .hasAttributesSatisfyingExactly(
-                                batchProcessAttributes("testBatchTopic")),
+                                withErrorType(batchProcessAttributes("testBatchTopic"))),
                     span -> span.hasName("batch consumer").hasParent(trace.getSpan(1)),
 
                     // single consumer
                     span ->
-                        span.hasName("testBatchTopic process")
+                        span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(processAttributes(record)),

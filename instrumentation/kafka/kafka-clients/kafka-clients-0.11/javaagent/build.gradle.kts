@@ -67,7 +67,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testV3Preview = register<Test>("testV3Preview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -79,11 +79,26 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     // kafka metrics are disabled by default with v3-preview enabled
     jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("KafkaClientPropagationDisabledTest")
+      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    // kafka metrics are disabled by default with v3-preview enabled
+    jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testV3Preview, testBothSemconv)
   }
 
   test {
