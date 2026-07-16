@@ -38,12 +38,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterAll;
@@ -136,91 +134,7 @@ class TargetSystemTest {
 
     if (weaver != null) {
       stop(weaver);
-      validateWeaverResultCommon(weaver.getResult());
-      requireNonNull(weaverMetricsVerify).accept(weaver.getResult());
-    }
-  }
-
-  private static void validateWeaverResultCommon(WeaverContainer.WeaverValidationResult result) {
-    AtomicInteger violationCount = new AtomicInteger(0);
-    result
-        .getValidationAdvices()
-        .forEach(
-            advice -> {
-              if (shouldIgnoreAdvice(advice)) {
-                return;
-              }
-
-              String signalOrResource = advice.getSignalName();
-              if (signalOrResource == null) {
-                signalOrResource = "resource attribute";
-              }
-              switch (advice.getLevel()) {
-                case "information":
-                  logger.info(
-                      "weaver reported information on {} : {}",
-                      signalOrResource,
-                      advice.getMessage());
-                  break;
-                case "violation":
-                  logger.error(
-                      "weaver reported violation on {} : {}",
-                      signalOrResource,
-                      advice.getMessage());
-                  violationCount.getAndIncrement();
-                  break;
-                case "improvement":
-                  logger.warn(
-                      "weaver reported improvement on {} : {}",
-                      signalOrResource,
-                      advice.getMessage());
-                  break;
-                default:
-                  throw new IllegalStateException("unknown advice level " + advice.getLevel());
-              }
-            });
-
-    assertThat(violationCount.get())
-        .describedAs("no registry violation should be reported")
-        .isEqualTo(0);
-  }
-
-  protected void checkNothingUnregisteredWithPrefix(
-      WeaverContainer.WeaverValidationResult result, String prefix) {
-    result
-        .getSeenNonRegistryMetrics()
-        .forEach(
-            attribute ->
-                assertThat(attribute)
-                    .describedAs("no un-registered metric with prefix %s expected", prefix)
-                    .doesNotStartWith(prefix));
-    result
-        .getSeenNonRegistryAttributes()
-        .forEach(
-            attribute ->
-                assertThat(attribute)
-                    .describedAs("no un-registered attribute with prefix %s expected", prefix)
-                    .doesNotStartWith(prefix));
-  }
-
-  protected void checkRegistered(String prefix, Set<String> collection, String... items) {
-    assertThat(collection)
-        .filteredOn(item -> item.startsWith(prefix))
-        .containsExactlyInAnyOrder(items);
-  }
-
-  private static boolean shouldIgnoreAdvice(WeaverContainer.WeaverValidationAdvice advice) {
-    if (advice.getSignalName() == null) {
-      return false;
-    }
-    // ignore old sdk metrics that are not part of semantic conventions
-    switch (advice.getSignalName()) {
-      case "otlp.exporter.seen":
-      case "otlp.exporter.exported":
-      case "otel.sdk.metric_reader.collection.duration":
-        return true;
-      default:
-        return false;
+      requireNonNull(weaverMetricsVerify).accept(weaver.getResult().checkCommonViolations());
     }
   }
 

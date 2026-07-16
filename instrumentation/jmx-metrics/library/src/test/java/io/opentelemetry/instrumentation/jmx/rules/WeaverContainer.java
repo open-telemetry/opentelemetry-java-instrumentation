@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -177,51 +178,6 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
           doParse.apply(statistics, "seen_registry_attributes"));
     }
 
-    /**
-     * Get list of all validation messages
-     *
-     * @return list of validation messages
-     */
-    public List<WeaverValidationAdvice> getValidationAdvices() {
-      return advices;
-    }
-
-    /**
-     * Get reported metrics that are not defined in registry
-     *
-     * @return set of metrics that were reported but are not part of tested registry
-     */
-    public Set<String> getSeenNonRegistryMetrics() {
-      return seenNonRegistryMetrics;
-    }
-
-    /**
-     * Get reported attributes that are not defined in registry
-     *
-     * @return set of attributes that were reported but are not part of tested registry
-     */
-    public Set<String> getSeenNonRegistryAttributes() {
-      return seenNonRegistryAttributes;
-    }
-
-    /**
-     * Get reported metrics that are defined in registry
-     *
-     * @return set of metrics that were reported and are part of tested registry
-     */
-    public Set<String> getSeenRegistryMetrics() {
-      return seenRegistryMetrics.keySet();
-    }
-
-    /**
-     * Get reported attributes that are defined in registry
-     *
-     * @return set of attributes that were reported and are part of tested registry
-     */
-    public Set<String> getSeenRegistryAttributes() {
-      return seenRegistryAttributes.keySet();
-    }
-
     @CanIgnoreReturnValue
     public WeaverValidationResult checkNothingUnregisteredWithPrefix(String prefix) {
       seenNonRegistryMetrics.forEach(
@@ -310,6 +266,62 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
           prefix,
           reportedAttributes,
           optionalReportedAttributes);
+    }
+
+    @CanIgnoreReturnValue
+    public WeaverValidationResult checkCommonViolations() {
+      AtomicInteger violationCount = new AtomicInteger(0);
+      advices.forEach(
+          advice -> {
+            if (shouldIgnoreAdvice(advice)) {
+              return;
+            }
+
+            String signalOrResource = advice.getSignalName();
+            if (signalOrResource == null) {
+              signalOrResource = "resource attribute";
+            }
+            switch (advice.getLevel()) {
+              case "information":
+                logger.info(
+                    "weaver reported information on {} : {}",
+                    signalOrResource,
+                    advice.getMessage());
+                break;
+              case "violation":
+                logger.error(
+                    "weaver reported violation on {} : {}", signalOrResource, advice.getMessage());
+                violationCount.getAndIncrement();
+                break;
+              case "improvement":
+                logger.warn(
+                    "weaver reported improvement on {} : {}",
+                    signalOrResource,
+                    advice.getMessage());
+                break;
+              default:
+                throw new IllegalStateException("unknown advice level " + advice.getLevel());
+            }
+          });
+      assertThat(violationCount.get())
+          .describedAs("no registry violation should be reported")
+          .isEqualTo(0);
+      return this;
+    }
+
+    private static boolean shouldIgnoreAdvice(WeaverContainer.WeaverValidationAdvice advice) {
+      if (advice.getSignalName() == null) {
+        return false;
+      }
+      // ignore old sdk metrics that are not part of semantic conventions
+      switch (advice.getSignalName()) {
+        case "otlp.exporter.seen":
+        case "otlp.exporter.exported":
+        case "otel.sdk.metric_reader.collection.duration":
+          return true;
+        default:
+          return false;
+      }
     }
   }
 
