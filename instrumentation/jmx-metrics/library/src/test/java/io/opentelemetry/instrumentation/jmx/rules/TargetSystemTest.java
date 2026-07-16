@@ -17,6 +17,7 @@ import static org.awaitility.Awaitility.await;
 import com.linecorp.armeria.server.ServerBuilder;
 import com.linecorp.armeria.server.grpc.GrpcService;
 import com.linecorp.armeria.testing.junit5.server.ServerExtension;
+import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig;
@@ -320,6 +321,7 @@ class TargetSystemTest {
   private static class OtlpGrpcServer extends ServerExtension {
 
     @Nullable private MetricsServiceGrpc.MetricsServiceFutureStub forwardStub;
+    @Nullable private ManagedChannel forwardChannel;
 
     /**
      * Sets the forwarding endpoint where the server should forward data to
@@ -327,9 +329,8 @@ class TargetSystemTest {
      * @param endpoint endpoint host:port
      */
     void setForwardEndpoint(String endpoint) {
-      forwardStub =
-          MetricsServiceGrpc.newFutureStub(
-              ManagedChannelBuilder.forTarget(endpoint).usePlaintext().build());
+      forwardChannel = ManagedChannelBuilder.forTarget(endpoint).usePlaintext().build();
+      forwardStub = MetricsServiceGrpc.newFutureStub(forwardChannel);
     }
 
     private final BlockingQueue<ExportMetricsServiceRequest> metricRequests =
@@ -341,6 +342,11 @@ class TargetSystemTest {
 
     void reset() {
       metricRequests.clear();
+      forwardStub = null;
+      if (forwardChannel != null) {
+        forwardChannel.shutdownNow();
+        forwardChannel = null;
+      }
     }
 
     @Override
