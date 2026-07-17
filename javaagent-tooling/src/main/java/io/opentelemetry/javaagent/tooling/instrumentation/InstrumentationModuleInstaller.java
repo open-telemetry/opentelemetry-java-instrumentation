@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
-import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -108,10 +107,6 @@ public final class InstrumentationModuleInstaller {
   }
 
   private boolean useIndy(InstrumentationModule instrumentationModule) {
-    // enabled for v3 preview, otherwise opt-in
-    if (!AgentCommonConfig.get().isV3Preview() && !AgentDistributionConfig.get().isIndyEnabled()) {
-      return false;
-    }
     // first check whether user has specified how the helper classes should be handled
     if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
       HelperClassStrategy helperClassStrategy =
@@ -124,6 +119,11 @@ public final class InstrumentationModuleInstaller {
         case DEFAULT:
           // fallthrough to the next check
       }
+    }
+
+    // enabled for v3 preview, otherwise opt-in
+    if (!AgentCommonConfig.get().isV3Preview() && !AgentDistributionConfig.get().isIndyEnabled()) {
+      return false;
     }
     // check whether muzzle has collected information about the advice classes
     if (instrumentationModule instanceof InstrumentationModuleMuzzle) {
@@ -155,14 +155,7 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
 
-    List<String> injectedHelperClassNames;
-    if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
-      ExperimentalInstrumentationModule experimentalInstrumentationModule =
-          (ExperimentalInstrumentationModule) instrumentationModule;
-      injectedHelperClassNames = experimentalInstrumentationModule.injectedClassNames();
-    } else {
-      injectedHelperClassNames = emptyList();
-    }
+    List<String> injectedHelperClassNames = instrumentationModule.injectedClassNames();
 
     MuzzleMatcher muzzleMatcher =
         new MuzzleMatcher(
