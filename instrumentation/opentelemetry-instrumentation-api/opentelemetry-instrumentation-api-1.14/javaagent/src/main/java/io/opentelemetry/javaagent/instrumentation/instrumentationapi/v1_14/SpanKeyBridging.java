@@ -51,9 +51,7 @@ public class SpanKeyBridging {
         application.io.opentelemetry.instrumentation.api.internal.SpanKey.DB_CLIENT,
         SpanKey.DB_CLIENT);
 
-    map.put(
-        application.io.opentelemetry.instrumentation.api.internal.SpanKey.PRODUCER_CREATE,
-        SpanKey.PRODUCER_CREATE);
+    putIfPresent(map, "PRODUCER_CREATE", SpanKey.PRODUCER_CREATE);
     map.put(
         application.io.opentelemetry.instrumentation.api.internal.SpanKey.PRODUCER,
         SpanKey.PRODUCER);
@@ -63,10 +61,24 @@ public class SpanKeyBridging {
     map.put(
         application.io.opentelemetry.instrumentation.api.internal.SpanKey.CONSUMER_PROCESS,
         SpanKey.CONSUMER_PROCESS);
-    map.put(
-        application.io.opentelemetry.instrumentation.api.internal.SpanKey.CONSUMER_SETTLE,
-        SpanKey.CONSUMER_SETTLE);
+    putIfPresent(map, "CONSUMER_SETTLE", SpanKey.CONSUMER_SETTLE);
     return map;
+  }
+
+  private static void putIfPresent(
+      Map<application.io.opentelemetry.instrumentation.api.internal.SpanKey, SpanKey> map,
+      String fieldName,
+      SpanKey agentSpanKey) {
+    try {
+      application.io.opentelemetry.instrumentation.api.internal.SpanKey applicationSpanKey =
+          (application.io.opentelemetry.instrumentation.api.internal.SpanKey)
+              application.io.opentelemetry.instrumentation.api.internal.SpanKey.class
+                  .getField(fieldName)
+                  .get(null);
+      map.put(applicationSpanKey, agentSpanKey);
+    } catch (ReflectiveOperationException ignored) {
+      // The application may use an instrumentation-api version from before this key was added.
+    }
   }
 
   @Nullable
