@@ -30,7 +30,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:hbase:hbase-client-1.4:javaagent"))
   testInstrumentation(project(":instrumentation:hbase:hbase-client-2.0:javaagent"))
 
-  latestDepTestLibrary("org.apache.hbase:hbase-client:1.3.+") // latest version before 1.4
+  latestDepTestLibrary("org.apache.hbase:hbase-client:1.3.+") // see hbase-client-1.4 module
 }
 
 configurations
