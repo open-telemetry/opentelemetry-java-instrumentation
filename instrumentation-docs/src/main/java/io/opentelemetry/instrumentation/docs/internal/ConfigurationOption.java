@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.docs.internal;
 
 import static java.util.Objects.requireNonNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -25,7 +26,11 @@ public record ConfigurationOption(
     @JsonProperty("declarative_type") @Nullable ConfigurationType declarativeType,
     @JsonProperty("declarative_schema") @Nullable DeclarativeSchema declarativeSchema,
     @Nullable String ref,
-    @Nullable String id) {
+    // The definition id is assigned internally via withId() during registry resolution; it must
+    // never be supplied from metadata.yaml, otherwise an inline option could claim a registry id
+    // and
+    // overwrite the shared definition in buildDefinitionCatalog.
+    @JsonIgnore @Nullable String id) {
 
   public ConfigurationOption {
     // A reference entry (`- ref: <id>`) in a metadata.yaml carries only the ref id; it is resolved

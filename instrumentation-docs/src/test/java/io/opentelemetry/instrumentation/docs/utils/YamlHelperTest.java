@@ -812,6 +812,26 @@ class YamlHelperTest {
   }
 
   @Test
+  void testInlineConfigurationCannotSupplyId() throws JsonProcessingException {
+    // The definition id is assigned internally; an inline option must not be able to claim one from
+    // metadata.yaml, otherwise it could overwrite a registry-backed definition in the catalog.
+    String input =
+        """
+        configurations:
+          - name: otel.instrumentation.my-module.example
+            description: Example option.
+            type: boolean
+            default: false
+            id: http.known-methods
+        """;
+
+    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
+
+    assertThat(metadata.getConfigurations()).hasSize(1);
+    assertThat(metadata.getConfigurations().get(0).id()).isNull();
+  }
+
+  @Test
   void testUnknownConfigurationRefFails() {
     String input =
         """

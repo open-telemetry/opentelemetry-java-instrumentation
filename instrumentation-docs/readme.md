@@ -218,7 +218,9 @@ libraries:
 ```
 
 Configuration ids are the curated ids from the shared registry (see below) for shared options, or the
-config `name` for module-specific options. Metric ids are `<metric name>-<short content hash>`; the
+config `name` for module-specific options. If two module-specific options share the same `name` but
+have different content, their ids are disambiguated as `<config name>-<short content hash>`. Metric
+ids are `<metric name>-<short content hash>`; the
 hash disambiguates metrics that share a name but have different attribute sets. Any consumer of
 `instrumentation-list.yaml` must resolve `configuration_refs` / `metric_refs` against `definitions`
 before reading the underlying config/metric content.
