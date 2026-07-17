@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
@@ -21,6 +22,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNameExtractor;
@@ -225,6 +228,26 @@ public final class AwsSdkInstrumenterFactory {
         builder -> {
           builder
               .addAttributesExtractor(new DynamoDbAttributesExtractor())
+              .addOperationMetrics(DbClientMetrics.get());
+          setDbClientExceptionEventExtractor(builder);
+        },
+        true);
+  }
+
+  public Instrumenter<ExecutionAttributes, Response> rdsDataInstrumenter() {
+    RdsDataSqlAttributesGetter getter = new RdsDataSqlAttributesGetter();
+    SpanNameExtractor<ExecutionAttributes> spanNameExtractor =
+        emitStableDatabaseSemconv()
+            ? DbClientSpanNameExtractor.create(getter)
+            : AwsSdkInstrumenterFactory::spanName;
+    return createInstrumenter(
+        openTelemetry,
+        spanNameExtractor,
+        SpanKindExtractor.alwaysClient(),
+        attributesExtractors(),
+        builder -> {
+          builder
+              .addAttributesExtractor(SqlClientAttributesExtractor.create(getter))
               .addOperationMetrics(DbClientMetrics.get());
           setDbClientExceptionEventExtractor(builder);
         },
