@@ -75,8 +75,6 @@ public final class InstrumentationModuleInstaller {
                 ClassFileLocator.ForClassLoader.of(extensionsClassLoader)));
   }
 
-  // Need to call deprecated API for backward compatibility with modules that haven't migrated
-  @SuppressWarnings("deprecation")
   AgentBuilder install(
       InstrumentationModule instrumentationModule,
       AgentBuilder parentAgentBuilder,
