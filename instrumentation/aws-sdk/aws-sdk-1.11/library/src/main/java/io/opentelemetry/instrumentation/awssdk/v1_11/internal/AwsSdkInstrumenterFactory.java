@@ -23,6 +23,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -111,7 +112,7 @@ public final class AwsSdkInstrumenterFactory {
     return createInstrumenter(
         openTelemetry,
         MessagingSpanNameExtractor.create(getter, operationType),
-        SpanKindExtractor.alwaysConsumer(),
+        MessagingSpanKindExtractor.create(operationType),
         toSqsRequestExtractors(attributesExtractors()),
         singletonList(messagingAttributeExtractor),
         builder -> setMessagingReceiveExceptionEventExtractor(builder),

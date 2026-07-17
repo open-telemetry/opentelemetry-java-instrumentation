@@ -15,6 +15,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
@@ -119,7 +120,7 @@ public final class KafkaInstrumenterFactory {
             .setErrorCauseExtractor(errorCauseExtractor)
             .setEnabled(messagingReceiveInstrumentationEnabled);
     setMessagingReceiveExceptionEventExtractor(builder);
-    return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    return builder.buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
   public Instrumenter<KafkaProcessRequest, Void> createConsumerProcessInstrumenter() {

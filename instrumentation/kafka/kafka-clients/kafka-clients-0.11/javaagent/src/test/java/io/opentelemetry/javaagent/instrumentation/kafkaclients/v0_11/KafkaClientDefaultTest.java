@@ -78,7 +78,8 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     }
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+        orderByRootSpanKind(
+            SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -103,7 +104,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                             emitStableMessagingSemconv()
                                 ? "receive " + SHARED_TOPIC
                                 : SHARED_TOPIC + " receive")
-                        .hasKind(SpanKind.CONSUMER)
+                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders)),
                 span ->
@@ -135,7 +136,8 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+        orderByRootSpanKind(
+            SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span ->
@@ -155,7 +157,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                             emitStableMessagingSemconv()
                                 ? "receive " + SHARED_TOPIC
                                 : SHARED_TOPIC + " receive")
-                        .hasKind(SpanKind.CONSUMER)
+                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(receiveAttributes(false)),
                 span ->
@@ -203,7 +205,8 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+        orderByRootSpanKind(
+            SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span ->
@@ -223,7 +226,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                             emitStableMessagingSemconv()
                                 ? "receive " + SHARED_TOPIC
                                 : SHARED_TOPIC + " receive")
-                        .hasKind(SpanKind.CONSUMER)
+                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(receiveAttributes(false)),
                 span ->
@@ -276,7 +279,8 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     }
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+        orderByRootSpanKind(
+            SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -301,7 +305,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                             emitStableMessagingSemconv()
                                 ? "receive " + SHARED_TOPIC
                                 : SHARED_TOPIC + " receive")
-                        .hasKind(SpanKind.CONSUMER)
+                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(receiveAttributes(false)),
                 span ->

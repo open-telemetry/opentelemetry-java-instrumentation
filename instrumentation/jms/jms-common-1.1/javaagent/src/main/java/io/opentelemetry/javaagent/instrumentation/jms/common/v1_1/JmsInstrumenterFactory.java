@@ -14,6 +14,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -80,7 +81,7 @@ public class JmsInstrumenterFactory {
               openTelemetry.getPropagators().getTextMapPropagator(),
               MessagePropertyGetter.INSTANCE));
     }
-    return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    return builder.buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
   public Instrumenter<MessageWithDestination, Void> createConsumerProcessInstrumenter(

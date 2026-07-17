@@ -15,6 +15,7 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -71,7 +72,7 @@ final class RocketMqInstrumenterFactory {
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(new RocketMqConsumerReceiveAttributeExtractor());
     setMessagingReceiveExceptionEventExtractor(instrumenterBuilder);
-    return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    return instrumenterBuilder.buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
   public static Instrumenter<MessageView, ConsumeResult> createConsumerProcessInstrumenter(
