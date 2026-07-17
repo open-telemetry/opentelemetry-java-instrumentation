@@ -40,9 +40,6 @@ engine:
   id: copilot
   model: ${{ needs.dispatch.outputs.model }}
 
-sandbox:
-  agent: false
-
 network:
   allowed:
     - defaults
@@ -60,12 +57,15 @@ tools:
     - "rg:*"
     - "grep:*"
 
-# The finalize job owns review posting directly via `.github/scripts/pr-review/post.py`.
-# This placeholder opts out of gh-aw's default `create_issue` safe output,
-# which would otherwise turn an agent narration or fallback into a separate
-# `[pr-review]` issue instead of the intended findings artifact.
+# Results are exported as an artifact and posted by finalize, not published
+# through safe outputs. The custom job prevents gh-aw from auto-injecting its
+# default `create-issue` output and is intentionally never called. `noop` remains
+# available for an explicit summary-only completion, but must not create an issue.
+# Neither configured path mutates repository content, so threat detection is unnecessary.
 safe-outputs:
   threat-detection: false
+  noop:
+    report-as-issue: false
   jobs:
     suppress_default_create_issue:
       runs-on: ubuntu-latest
