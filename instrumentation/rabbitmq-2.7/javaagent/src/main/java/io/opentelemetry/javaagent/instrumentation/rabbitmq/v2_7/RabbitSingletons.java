@@ -17,6 +17,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -116,7 +117,11 @@ public class RabbitSingletons {
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, DeliveryRequest::spanName)
             .addAttributesExtractors(extractors);
     setMessagingProcessExceptionEventExtractor(builder);
-    return builder.buildConsumerInstrumenter(new DeliveryRequestGetter());
+    return MessagingProcessInstrumenterFactory.create(
+        builder,
+        GlobalOpenTelemetry.getPropagators().getTextMapPropagator(),
+        new DeliveryRequestGetter(),
+        false);
   }
 
   private static <T, V> AttributesExtractor<T, V> buildMessagingAttributesExtractor(

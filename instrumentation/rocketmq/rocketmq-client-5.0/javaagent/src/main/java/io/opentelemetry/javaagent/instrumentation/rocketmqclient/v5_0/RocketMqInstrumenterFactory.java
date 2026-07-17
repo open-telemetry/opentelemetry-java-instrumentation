@@ -17,13 +17,11 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import java.util.List;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
 import org.apache.rocketmq.client.apis.message.MessageView;
@@ -103,14 +101,11 @@ final class RocketMqInstrumenterFactory {
                 });
     setMessagingProcessExceptionEventExtractor(instrumenterBuilder);
 
-    if (receiveInstrumentationEnabled) {
-      SpanLinksExtractor<MessageView> spanLinksExtractor =
-          new PropagatorBasedSpanLinksExtractor<>(
-              openTelemetry.getPropagators().getTextMapPropagator(), new MessageMapGetter());
-      instrumenterBuilder.addSpanLinksExtractor(spanLinksExtractor);
-      return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
-    }
-    return instrumenterBuilder.buildConsumerInstrumenter(new MessageMapGetter());
+    return MessagingProcessInstrumenterFactory.create(
+        instrumenterBuilder,
+        openTelemetry.getPropagators().getTextMapPropagator(),
+        new MessageMapGetter(),
+        receiveInstrumentationEnabled);
   }
 
   private static <T, R> AttributesExtractor<T, R> buildMessagingAttributesExtractor(

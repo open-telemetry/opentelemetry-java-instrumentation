@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.services.sqs.model.Message;
@@ -72,7 +74,10 @@ class TracingIterator implements Iterator<Message> {
     if (next != null) {
       Context parentContext = receiveContext;
       if (parentContext == null) {
-        parentContext = SqsParentContext.ofSystemAttributes(next.getAttributes());
+        parentContext =
+            emitStableMessagingSemconv()
+                ? Context.current()
+                : SqsParentContext.ofSystemAttributes(next.getAttributes());
       }
 
       currentRequest = SqsProcessRequest.create(request, SqsMessageImpl.wrap(next));

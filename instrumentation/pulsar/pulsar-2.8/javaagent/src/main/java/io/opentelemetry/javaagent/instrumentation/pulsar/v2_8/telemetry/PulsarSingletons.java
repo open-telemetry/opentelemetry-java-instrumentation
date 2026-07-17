@@ -24,11 +24,10 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.internal.Timer;
@@ -52,8 +51,7 @@ public class PulsarSingletons {
   private static final List<String> capturedHeaders =
       ExperimentalConfig.get().getMessagingHeaders();
   private static final boolean receiveInstrumentationEnabled =
-      ExperimentalConfig.get().messagingReceiveInstrumentationEnabled()
-          || emitStableMessagingSemconv();
+      ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
 
   private static final Instrumenter<PulsarRequest, Void> consumerProcessInstrumenter =
       createConsumerProcessInstrumenter();
@@ -89,7 +87,7 @@ public class PulsarSingletons {
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
     setMessagingReceiveExceptionEventExtractor(instrumenterBuilder);
 
-    if (receiveInstrumentationEnabled) {
+    if (emitStableMessagingSemconv() || receiveInstrumentationEnabled) {
       return instrumenterBuilder
           .addSpanLinksExtractor(
               new PropagatorBasedSpanLinksExtractor<>(propagator, MessageTextMapGetter.INSTANCE))
@@ -131,13 +129,11 @@ public class PulsarSingletons {
             .addOperationMetrics(MessagingProcessMetrics.get());
     setMessagingProcessExceptionEventExtractor(instrumenterBuilder);
 
-    if (receiveInstrumentationEnabled) {
-      SpanLinksExtractor<PulsarRequest> spanLinksExtractor =
-          new PropagatorBasedSpanLinksExtractor<>(propagator, MessageTextMapGetter.INSTANCE);
-      instrumenterBuilder.addSpanLinksExtractor(spanLinksExtractor);
-      return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
-    }
-    return instrumenterBuilder.buildConsumerInstrumenter(MessageTextMapGetter.INSTANCE);
+    return MessagingProcessInstrumenterFactory.create(
+        instrumenterBuilder,
+        propagator,
+        MessageTextMapGetter.INSTANCE,
+        receiveInstrumentationEnabled);
   }
 
   private static Instrumenter<PulsarRequest, Void> createProducerInstrumenter() {
@@ -191,7 +187,9 @@ public class PulsarSingletons {
       if (MessageListenerContext.isProcessing()) {
         return null;
       }
-      parent = propagator.extract(parent, request, MessageTextMapGetter.INSTANCE);
+      if (!emitStableMessagingSemconv()) {
+        parent = propagator.extract(parent, request, MessageTextMapGetter.INSTANCE);
+      }
     }
     Context receiveContext =
         InstrumenterUtil.startAndEnd(

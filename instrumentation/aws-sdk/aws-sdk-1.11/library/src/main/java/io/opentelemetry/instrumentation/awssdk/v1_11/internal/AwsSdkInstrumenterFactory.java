@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -25,6 +26,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessContextCustomizer;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -134,13 +136,19 @@ public final class AwsSdkInstrumenterFactory {
             .addAttributesExtractor(messagingAttributeExtractor);
     setMessagingProcessExceptionEventExtractor(builder);
 
-    if (messagingReceiveInstrumentationEnabled) {
+    if (emitStableMessagingSemconv() || messagingReceiveInstrumentationEnabled) {
       builder.addSpanLinksExtractor(
           (spanLinks, parentContext, request) -> {
             Context extracted =
                 SqsParentContext.ofSystemAttributes(request.getMessage().getAttributes());
             spanLinks.addLink(Span.fromContext(extracted).getSpanContext());
           });
+    }
+    if (emitStableMessagingSemconv()) {
+      builder.addContextCustomizer(
+          MessagingProcessContextCustomizer.create(
+              (parentContext, request) ->
+                  SqsParentContext.ofSystemAttributes(request.getMessage().getAttributes())));
     }
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }

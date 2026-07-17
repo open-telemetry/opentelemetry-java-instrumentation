@@ -12,10 +12,9 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import org.apache.pulsar.client.api.Message;
 
@@ -40,14 +39,12 @@ public class SpringPulsarSingletons {
                     .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build());
     setMessagingProcessExceptionEventExtractor(builder);
-    if (messagingReceiveInstrumentationEnabled) {
-      builder.addSpanLinksExtractor(
-          new PropagatorBasedSpanLinksExtractor<>(
-              openTelemetry.getPropagators().getTextMapPropagator(), new MessageHeaderGetter()));
-      instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
-    } else {
-      instrumenter = builder.buildConsumerInstrumenter(new MessageHeaderGetter());
-    }
+    instrumenter =
+        MessagingProcessInstrumenterFactory.create(
+            builder,
+            openTelemetry.getPropagators().getTextMapPropagator(),
+            new MessageHeaderGetter(),
+            messagingReceiveInstrumentationEnabled);
   }
 
   public static Instrumenter<Message<?>, Void> instrumenter() {

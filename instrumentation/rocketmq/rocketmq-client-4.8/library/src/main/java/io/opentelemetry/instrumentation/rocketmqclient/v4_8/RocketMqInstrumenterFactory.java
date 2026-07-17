@@ -15,12 +15,11 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
-import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import java.util.List;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.common.message.MessageExt;
@@ -100,17 +99,11 @@ class RocketMqInstrumenterFactory {
     }
     setMessagingProcessExceptionEventExtractor(builder);
 
-    if (batch) {
-      SpanLinksExtractor<MessageExt> spanLinksExtractor =
-          new PropagatorBasedSpanLinksExtractor<>(
-              openTelemetry.getPropagators().getTextMapPropagator(), new TextMapExtractAdapter());
-
-      return builder
-          .addSpanLinksExtractor(spanLinksExtractor)
-          .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
-    } else {
-      return builder.buildConsumerInstrumenter(new TextMapExtractAdapter());
-    }
+    return MessagingProcessInstrumenterFactory.create(
+        builder,
+        openTelemetry.getPropagators().getTextMapPropagator(),
+        new TextMapExtractAdapter(),
+        batch);
   }
 
   private static <T> AttributesExtractor<T, Void> buildMessagingAttributesExtractor(
