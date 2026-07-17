@@ -95,9 +95,9 @@ final class SpymemcachedQueryText {
   }
 
   private static boolean isIgnored(Object arg) {
-    // transcoders are not part of the command that is sent to memcached
-    // reading the keys of an iterator based bulk operation would consume the iterator before the
-    // instrumented method gets to it, so those keys are left out
+    // transcoders are not part of the command that is sent to memcached.
+    // reading the keys of a bulk operation that was given an iterator would consume the iterator
+    // before the instrumented method gets to it, so those keys are left out
     return arg instanceof Transcoder || arg instanceof Iterator;
   }
 

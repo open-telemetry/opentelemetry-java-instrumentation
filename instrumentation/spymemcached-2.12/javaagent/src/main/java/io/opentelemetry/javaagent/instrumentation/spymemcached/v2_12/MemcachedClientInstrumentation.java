@@ -49,8 +49,13 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod().and(isPublic()).and(returns(named("net.spy.memcached.internal.BulkFuture"))),
         getClass().getName() + "$AsyncBulkAdvice");
+    // the blocking getBulk methods return a Map, so they are not covered by the matchers above.
+    // Advising them makes the span start at the call the application actually made, where the keys
+    // are still a collection or an array; the asyncGetBulk method they delegate to only receives an
+    // iterator, which cannot be read without consuming it.
     transformer.applyAdviceToMethod(
-        isPublic().and(namedOneOf("incr", "decr")), getClass().getName() + "$SyncOperationAdvice");
+        isPublic().and(namedOneOf("incr", "decr", "getBulk")),
+        getClass().getName() + "$SyncOperationAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -68,8 +73,11 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     public static void methodExit(
         @Advice.Return @Nullable OperationFuture<?> future,
         @Advice.Thrown @Nullable Throwable thrown,
-        @Advice.Enter AdviceScope<OperationFuture<?>, OperationCompletionListener> adviceScope) {
-      adviceScope.end(future, thrown);
+        @Advice.Enter @Nullable
+            AdviceScope<OperationFuture<?>, OperationCompletionListener> adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(future, thrown);
+      }
     }
   }
 
@@ -88,8 +96,10 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     public static void methodExit(
         @Advice.Return @Nullable GetFuture<?> future,
         @Advice.Thrown @Nullable Throwable thrown,
-        @Advice.Enter AdviceScope<GetFuture<?>, GetCompletionListener> adviceScope) {
-      adviceScope.end(future, thrown);
+        @Advice.Enter @Nullable AdviceScope<GetFuture<?>, GetCompletionListener> adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(future, thrown);
+      }
     }
   }
 
@@ -108,8 +118,10 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     public static void methodExit(
         @Advice.Return @Nullable BulkFuture<?> future,
         @Advice.Thrown @Nullable Throwable thrown,
-        @Advice.Enter AdviceScope<BulkFuture<?>, BulkGetCompletionListener> adviceScope) {
-      adviceScope.end(future, thrown);
+        @Advice.Enter @Nullable AdviceScope<BulkFuture<?>, BulkGetCompletionListener> adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(future, thrown);
+      }
     }
   }
 
@@ -127,8 +139,10 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
         @Advice.Thrown @Nullable Throwable thrown,
-        @Advice.Enter AdviceScope<Void, SyncCompletionListener> adviceScope) {
-      adviceScope.end(null, thrown);
+        @Advice.Enter @Nullable AdviceScope<Void, SyncCompletionListener> adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(null, thrown);
+      }
     }
   }
 
@@ -152,10 +166,17 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
         return new AdviceScope<>(handler, callDepth, null);
       }
 
-      return new AdviceScope<>(
-          handler,
-          callDepth,
-          handler.create(Context.current(), client.getConnection(), methodName, args));
+      T listener;
+      try {
+        listener = handler.create(Context.current(), client.getConnection(), methodName, args);
+      } catch (Throwable t) {
+        // building the query text reads application provided arguments, which may throw; the call
+        // depth has to be restored, otherwise every following call on this thread is treated as
+        // nested and is not traced
+        callDepth.decrementAndGet();
+        throw t;
+      }
+      return new AdviceScope<>(handler, callDepth, listener);
     }
 
     public void end(@Nullable F future, @Nullable Throwable throwable) {
