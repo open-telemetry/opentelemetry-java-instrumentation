@@ -58,6 +58,15 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("SqsSuppressReceiveSpansTest.testAbandonedIteratorDoesNotParentNextProcessSpan")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+  }
+
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -65,6 +74,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testStableSemconv, testExceptionSignalLogs)
+    dependsOn(testing.suites, testStableSemconv, testMessagingPreview, testExceptionSignalLogs)
   }
 }

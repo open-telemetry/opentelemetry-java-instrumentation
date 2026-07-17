@@ -10,9 +10,11 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.services.sqs.model.Message;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 
@@ -76,7 +78,7 @@ class TracingIterator implements Iterator<Message> {
       if (parentContext == null) {
         parentContext =
             emitStableMessagingSemconv()
-                ? Context.current()
+                ? currentContextWithoutLeakedProcessSpan()
                 : SqsParentContext.ofSystemAttributes(next.getAttributes());
       }
 
@@ -85,6 +87,18 @@ class TracingIterator implements Iterator<Message> {
       currentScope = currentContext.makeCurrent();
     }
     return next;
+  }
+
+  private static Context currentContextWithoutLeakedProcessSpan() {
+    Context context = Context.current();
+    Span currentSpan = Span.fromContext(context);
+    // If the current span is a process span leaked by an abandoned iterator, replace it with an
+    // invalid span so the customizer falls back to extracting the parent from the message's
+    // producer context. Otherwise leave the context untouched, so a genuine ambient application
+    // span (if any) remains the parent. Either way baggage and other context values are preserved.
+    return currentSpan == SpanKey.CONSUMER_PROCESS.fromContextOrNull(context)
+        ? context.with(Span.getInvalid())
+        : context;
   }
 
   private void closeScopeAndEndSpan() {
