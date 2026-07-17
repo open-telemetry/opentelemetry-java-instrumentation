@@ -34,6 +34,9 @@ import org.apache.kafka.clients.producer.RecordMetadata;
  */
 public final class KafkaInstrumenterFactory {
 
+  private static final String SEND_OPERATION_NAME = "send";
+  private static final String POLL_OPERATION_NAME = "poll";
+
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
   private ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
@@ -86,9 +89,12 @@ public final class KafkaInstrumenterFactory {
         Instrumenter.<KafkaProducerRequest, RecordMetadata>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.builder(getter, operationType)
+                    .setOperationName(SEND_OPERATION_NAME)
+                    .build())
             .addAttributesExtractor(
-                buildMessagingAttributesExtractor(getter, operationType, capturedHeaders))
+                buildMessagingAttributesExtractor(
+                    getter, operationType, SEND_OPERATION_NAME, capturedHeaders))
             .addAttributesExtractors(extractors)
             .addAttributesExtractor(new KafkaProducerAttributesExtractor())
             .setErrorCauseExtractor(errorCauseExtractor);
@@ -112,9 +118,12 @@ public final class KafkaInstrumenterFactory {
         Instrumenter.<KafkaReceiveRequest, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.builder(getter, operationType)
+                    .setOperationName(POLL_OPERATION_NAME)
+                    .build())
             .addAttributesExtractor(
-                buildMessagingAttributesExtractor(getter, operationType, capturedHeaders))
+                buildMessagingAttributesExtractor(
+                    getter, operationType, POLL_OPERATION_NAME, capturedHeaders))
             .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
             .addAttributesExtractors(extractors)
             .setErrorCauseExtractor(errorCauseExtractor)
@@ -184,6 +193,18 @@ public final class KafkaInstrumenterFactory {
           MessagingOperationType operationType,
           List<String> capturedHeaders) {
     return MessagingAttributesExtractor.builder(getter, operationType)
+        .setCapturedHeaders(capturedHeaders)
+        .build();
+  }
+
+  private static <REQUEST, RESPONSE>
+      AttributesExtractor<REQUEST, RESPONSE> buildMessagingAttributesExtractor(
+          MessagingAttributesGetter<REQUEST, RESPONSE> getter,
+          MessagingOperationType operationType,
+          String operationName,
+          List<String> capturedHeaders) {
+    return MessagingAttributesExtractor.builder(getter, operationType)
+        .setOperationName(operationName)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }

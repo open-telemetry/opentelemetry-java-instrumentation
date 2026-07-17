@@ -185,7 +185,7 @@ public abstract class KafkaClientBaseTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "publish" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
                 equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
                 satisfies(effectiveKey(MESSAGING_CLIENT_ID), val -> val.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty)));
@@ -221,7 +221,7 @@ public abstract class KafkaClientBaseTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
-                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "poll" : null),
                 equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null),
                 satisfies(effectiveKey(MESSAGING_CLIENT_ID), val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive)));

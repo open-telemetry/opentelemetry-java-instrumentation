@@ -86,7 +86,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
               span ->
                   span.hasName(
                           emitStableMessagingSemconv()
-                              ? "publish " + SHARED_TOPIC
+                              ? "send " + SHARED_TOPIC
                               : SHARED_TOPIC + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
@@ -102,7 +102,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                 span ->
                     span.hasName(
                             emitStableMessagingSemconv()
-                                ? "receive " + SHARED_TOPIC
+                                ? "poll " + SHARED_TOPIC
                                 : SHARED_TOPIC + " receive")
                         .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
                         .hasNoParent()
@@ -143,7 +143,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
               span ->
                   span.hasName(
                           emitStableMessagingSemconv()
-                              ? "publish " + SHARED_TOPIC
+                              ? "send " + SHARED_TOPIC
                               : SHARED_TOPIC + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasNoParent()
@@ -155,7 +155,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                 span ->
                     span.hasName(
                             emitStableMessagingSemconv()
-                                ? "receive " + SHARED_TOPIC
+                                ? "poll " + SHARED_TOPIC
                                 : SHARED_TOPIC + " receive")
                         .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
                         .hasNoParent()
@@ -212,7 +212,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
               span ->
                   span.hasName(
                           emitStableMessagingSemconv()
-                              ? "publish " + SHARED_TOPIC
+                              ? "send " + SHARED_TOPIC
                               : SHARED_TOPIC + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasNoParent()
@@ -224,7 +224,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                 span ->
                     span.hasName(
                             emitStableMessagingSemconv()
-                                ? "receive " + SHARED_TOPIC
+                                ? "poll " + SHARED_TOPIC
                                 : SHARED_TOPIC + " receive")
                         .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
                         .hasNoParent()
@@ -287,7 +287,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
               span ->
                   span.hasName(
                           emitStableMessagingSemconv()
-                              ? "publish " + SHARED_TOPIC
+                              ? "send " + SHARED_TOPIC
                               : SHARED_TOPIC + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
@@ -303,7 +303,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                 span ->
                     span.hasName(
                             emitStableMessagingSemconv()
-                                ? "receive " + SHARED_TOPIC
+                                ? "poll " + SHARED_TOPIC
                                 : SHARED_TOPIC + " receive")
                         .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
                         .hasNoParent()
