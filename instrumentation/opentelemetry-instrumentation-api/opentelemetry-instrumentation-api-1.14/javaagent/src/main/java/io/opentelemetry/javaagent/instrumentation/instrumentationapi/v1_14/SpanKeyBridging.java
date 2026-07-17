@@ -52,6 +52,9 @@ public class SpanKeyBridging {
         SpanKey.DB_CLIENT);
 
     map.put(
+        application.io.opentelemetry.instrumentation.api.internal.SpanKey.PRODUCER_CREATE,
+        SpanKey.PRODUCER_CREATE);
+    map.put(
         application.io.opentelemetry.instrumentation.api.internal.SpanKey.PRODUCER,
         SpanKey.PRODUCER);
     map.put(
@@ -60,6 +63,9 @@ public class SpanKeyBridging {
     map.put(
         application.io.opentelemetry.instrumentation.api.internal.SpanKey.CONSUMER_PROCESS,
         SpanKey.CONSUMER_PROCESS);
+    map.put(
+        application.io.opentelemetry.instrumentation.api.internal.SpanKey.CONSUMER_SETTLE,
+        SpanKey.CONSUMER_SETTLE);
     return map;
   }
 
