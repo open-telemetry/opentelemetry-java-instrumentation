@@ -22,3 +22,13 @@ configurations:
     description: Whether to instrument all classes that implement the Executor interface.
     type: boolean
     default: false
+  - name: otel.instrumentation.executors.name-normalization
+    declarative_name: java.executors.thread_name_normalization
+    description: >
+      Determines how executor thread names are normalized. all replaces every group of digits with
+      *; trailing replaces only the final group; other values act as all.
+    type: string
+    default: all
+    examples:
+      - all
+      - trailing

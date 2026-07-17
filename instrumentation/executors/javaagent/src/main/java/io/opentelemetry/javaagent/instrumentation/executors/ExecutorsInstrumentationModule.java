@@ -11,6 +11,8 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstrumentationModule;
+import io.opentelemetry.javaagent.instrumentation.executors.metrics.ThreadPerTaskExecutorMetricsInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.executors.metrics.ThreadPoolExecutorMetricsInstrumentation;
 import java.util.List;
 
 @AutoService({InstrumentationModule.class, EarlyInstrumentationModule.class})
@@ -30,6 +32,8 @@ public class ExecutorsInstrumentationModule extends InstrumentationModule
         new JavaForkJoinTaskInstrumentation(),
         new RunnableInstrumentation(),
         new ThreadPoolExtendingExecutorInstrumentation(),
+        new ThreadPoolExecutorMetricsInstrumentation(),
+        new ThreadPerTaskExecutorMetricsInstrumentation(),
         new VirtualThreadInstrumentation(),
         new StructuredTaskScopeInstrumentation());
   }

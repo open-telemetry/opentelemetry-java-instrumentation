@@ -42,6 +42,29 @@ testing {
         }
       }
     }
+
+    register<JvmTestSuite>("testTrailingThreadNameNormalization") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+        }
+      }
+
+      dependencies {
+        implementation(project(":instrumentation:executors:testing"))
+        compileOnly(project(":instrumentation:executors:bootstrap"))
+        compileOnly(project(":javaagent-bootstrap"))
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            systemProperty("otel.instrumentation.executors.name-normalization", "trailing")
+            systemProperty("test.name-normalization.expected", "trailing")
+          }
+        }
+      }
+    }
   }
 }
 
