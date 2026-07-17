@@ -21,6 +21,11 @@
 
 A rename of any of these surfaces is a breaking change even if no Java symbol moved.
 
+### Replacement stability
+
+A replacement must be at least as stable as the contract being deprecated. Do not direct users of
+a stable API to an incubating or experimental API.
+
 ## When Are Breaking Changes Allowed?
 
 Only in **non-stable (alpha) modules** — i.e. artifacts whose version has the `-alpha` suffix.
