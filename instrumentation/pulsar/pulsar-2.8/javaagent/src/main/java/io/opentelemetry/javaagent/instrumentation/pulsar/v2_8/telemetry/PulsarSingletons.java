@@ -15,10 +15,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
@@ -78,9 +78,9 @@ public class PulsarSingletons {
         Instrumenter.<PulsarRequest, Void>builder(
                 telemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
+                MessagingSpanNameExtractor.create(getter, MessagingOperationType.RECEIVE))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
+                createMessagingAttributesExtractor(getter, MessagingOperationType.RECEIVE))
             .addOperationMetrics(MessagingConsumerMetrics.get())
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
@@ -103,9 +103,9 @@ public class PulsarSingletons {
         Instrumenter.<PulsarBatchRequest, Void>builder(
                 telemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
+                MessagingSpanNameExtractor.create(getter, MessagingOperationType.RECEIVE))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
+                createMessagingAttributesExtractor(getter, MessagingOperationType.RECEIVE))
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
             .addSpanLinksExtractor(new PulsarBatchRequestSpanLinksExtractor(propagator))
@@ -121,9 +121,9 @@ public class PulsarSingletons {
         Instrumenter.<PulsarRequest, Void>builder(
                 telemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, MessageOperation.PROCESS))
+                MessagingSpanNameExtractor.create(getter, MessagingOperationType.PROCESS))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(getter, MessageOperation.PROCESS))
+                createMessagingAttributesExtractor(getter, MessagingOperationType.PROCESS))
             .addOperationMetrics(MessagingProcessMetrics.get());
     setMessagingProcessExceptionEventExtractor(instrumenterBuilder);
 
@@ -143,9 +143,9 @@ public class PulsarSingletons {
         Instrumenter.<PulsarRequest, Void>builder(
                 telemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, MessageOperation.PUBLISH))
+                MessagingSpanNameExtractor.create(getter, MessagingOperationType.SEND))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(getter, MessageOperation.PUBLISH))
+                createMessagingAttributesExtractor(getter, MessagingOperationType.SEND))
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
             .addOperationMetrics(MessagingProducerMetrics.get());
@@ -160,8 +160,8 @@ public class PulsarSingletons {
   }
 
   private static <T> AttributesExtractor<T, Void> createMessagingAttributesExtractor(
-      MessagingAttributesGetter<T, Void> getter, MessageOperation operation) {
-    return MessagingAttributesExtractor.builder(getter, operation)
+      MessagingAttributesGetter<T, Void> getter, MessagingOperationType operationType) {
+    return MessagingAttributesExtractor.builder(getter, operationType)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }

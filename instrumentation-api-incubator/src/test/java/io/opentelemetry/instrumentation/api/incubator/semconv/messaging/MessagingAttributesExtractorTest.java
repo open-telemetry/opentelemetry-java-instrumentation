@@ -32,6 +32,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +54,7 @@ class MessagingAttributesExtractorTest {
       boolean temporary,
       boolean anonymous,
       String destination,
-      MessageOperation operation,
+      MessagingOperationType operationType,
       String operationName) {
     // given
     Map<String, String> request = new HashMap<>();
@@ -69,13 +70,16 @@ class MessagingAttributesExtractorTest {
     }
     request.put("url", "http://broker/topic");
     request.put("conversationId", "42");
+    request.put("messageId", "42");
     request.put("bodySize", "100");
     request.put("envelopeSize", "120");
     request.put("clientId", "43");
     request.put("batchMessageCount", "2");
 
     AttributesExtractor<Map<String, String>, String> underTest =
-        MessagingAttributesExtractor.create(TestGetter.INSTANCE, operation, operationName);
+        MessagingAttributesExtractor.builder(TestGetter.INSTANCE, operationType)
+            .setOperationName(operationName)
+            .build();
 
     Context context = Context.root();
 
@@ -109,12 +113,12 @@ class MessagingAttributesExtractorTest {
     expectedEntries.add(entry(MESSAGING_MESSAGE_ENVELOPE_SIZE, 120L));
     if (emitOldMessagingSemconv()) {
       expectedEntries.add(entry(stringKey("messaging.client_id"), "43"));
-      expectedEntries.add(entry(MESSAGING_OPERATION, operation.legacyOperationName()));
+      expectedEntries.add(entry(MESSAGING_OPERATION, operationType.defaultOperationName()));
     }
     if (emitStableMessagingSemconv()) {
       expectedEntries.add(entry(stringKey("messaging.client.id"), "43"));
       expectedEntries.add(entry(MESSAGING_OPERATION_NAME, operationName));
-      expectedEntries.add(entry(MESSAGING_OPERATION_TYPE, operation.operationType()));
+      expectedEntries.add(entry(MESSAGING_OPERATION_TYPE, operationType.value()));
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -138,21 +142,118 @@ class MessagingAttributesExtractorTest {
   static Stream<Arguments> destinations() {
     return Stream.of(
         argumentSet(
-            "regular destination", false, false, "destination", MessageOperation.RECEIVE, "poll"),
+            "create operation",
+            false,
+            false,
+            "destination",
+            MessagingOperationType.CREATE,
+            "create"),
+        argumentSet(
+            "regular destination",
+            false,
+            false,
+            "destination",
+            MessagingOperationType.RECEIVE,
+            "poll"),
         argumentSet(
             "temporary anonymous destination",
             true,
             true,
             "generated-destination",
-            MessageOperation.PROCESS,
-            "process"));
+            MessagingOperationType.PROCESS,
+            "process"),
+        argumentSet(
+            "settle operation",
+            false,
+            false,
+            "destination",
+            MessagingOperationType.SETTLE,
+            "settle"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("spanKeys")
+  void shouldReturnSpanKey(MessagingOperationType operationType, SpanKey spanKey) {
+    MessagingAttributesExtractor<Map<String, String>, String> underTest =
+        new MessagingAttributesExtractor<>(
+            TestGetter.INSTANCE,
+            operationType,
+            operationType.defaultOperationName(),
+            new ArrayList<>());
+
+    assertThat(underTest.internalGetSpanKey()).isSameAs(spanKey);
+  }
+
+  static Stream<Arguments> spanKeys() {
+    return Stream.of(
+        argumentSet("create", MessagingOperationType.CREATE, SpanKey.PRODUCER_CREATE),
+        argumentSet("send", MessagingOperationType.SEND, SpanKey.PRODUCER),
+        argumentSet("receive", MessagingOperationType.RECEIVE, SpanKey.CONSUMER_RECEIVE),
+        argumentSet("process", MessagingOperationType.PROCESS, SpanKey.CONSUMER_PROCESS),
+        argumentSet("settle", MessagingOperationType.SETTLE, SpanKey.CONSUMER_SETTLE));
+  }
+
+  @SuppressWarnings("deprecation") // testing deprecated API
+  @Test
+  void shouldSupportDeprecatedMessageOperation() {
+    AttributesExtractor<Map<String, String>, String> underTest =
+        MessagingAttributesExtractor.create(TestGetter.INSTANCE, MessageOperation.PUBLISH);
+
+    AttributesBuilder attributes = Attributes.builder();
+    underTest.onStart(attributes, Context.root(), emptyMap());
+
+    List<MapEntry<AttributeKey<?>, Object>> expectedEntries = new ArrayList<>();
+    if (emitOldMessagingSemconv()) {
+      expectedEntries.add(entry(MESSAGING_OPERATION, "publish"));
+    }
+    if (emitStableMessagingSemconv()) {
+      expectedEntries.add(entry(MESSAGING_OPERATION_NAME, "publish"));
+      expectedEntries.add(entry(MESSAGING_OPERATION_TYPE, "send"));
+    }
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    MapEntry<? extends AttributeKey<?>, ?>[] expectedEntriesArr =
+        expectedEntries.toArray(new MapEntry[0]);
+    assertThat(attributes.build()).containsOnly(expectedEntriesArr);
+  }
+
+  @Test
+  void shouldExtractOperationNameWithoutOperationType() {
+    MessagingOperationType operationType = null;
+    AttributesExtractor<Map<String, String>, String> underTest =
+        MessagingAttributesExtractor.builder(TestGetter.INSTANCE, operationType)
+            .setOperationName("ack")
+            .build();
+
+    AttributesBuilder attributes = Attributes.builder();
+    underTest.onStart(attributes, Context.root(), emptyMap());
+
+    Attributes expected =
+        emitStableMessagingSemconv()
+            ? Attributes.of(MESSAGING_OPERATION_NAME, "ack")
+            : Attributes.empty();
+    assertThat(attributes.build()).isEqualTo(expected);
+  }
+
+  @Test
+  void shouldExtractErrorTypeFromResponse() {
+    MessagingOperationType operationType = null;
+    AttributesExtractor<Map<String, String>, String> underTest =
+        MessagingAttributesExtractor.create(TestGetter.INSTANCE, operationType);
+
+    AttributesBuilder attributes = Attributes.builder();
+    underTest.onEnd(attributes, Context.root(), emptyMap(), "failure", null);
+
+    Attributes expected =
+        emitStableMessagingSemconv() ? Attributes.of(ERROR_TYPE, "failure") : Attributes.empty();
+    assertThat(attributes.build()).isEqualTo(expected);
   }
 
   @Test
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // given
+    MessagingOperationType operationType = null;
     AttributesExtractor<Map<String, String>, String> underTest =
-        MessagingAttributesExtractor.create(TestGetter.INSTANCE, null);
+        MessagingAttributesExtractor.create(TestGetter.INSTANCE, operationType);
 
     Context context = Context.root();
 
@@ -219,7 +320,7 @@ class MessagingAttributesExtractorTest {
 
     @Override
     public String getMessageId(Map<String, String> request, String response) {
-      return response;
+      return request.get("messageId");
     }
 
     @Nullable
@@ -233,6 +334,11 @@ class MessagingAttributesExtractorTest {
     public Long getBatchMessageCount(Map<String, String> request, @Nullable String response) {
       String payloadSize = request.get("batchMessageCount");
       return payloadSize == null ? null : Long.valueOf(payloadSize);
+    }
+
+    @Override
+    public String getErrorType(Map<String, String> request, String response, Throwable error) {
+      return "failure".equals(response) ? response : null;
     }
   }
 }

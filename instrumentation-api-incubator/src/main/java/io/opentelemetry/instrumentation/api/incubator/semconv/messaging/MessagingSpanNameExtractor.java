@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
@@ -19,33 +18,53 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
    *
    * @see MessagingAttributesGetter#getDestination(Object) used to extract {@code <destination
    *     name>}.
-   * @see MessageOperation used to extract {@code <operation name>}.
+   * @see MessagingOperationType used to extract {@code <operation name>}.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      MessagingAttributesGetter<REQUEST, ?> getter, MessageOperation messageOperation) {
-    return new MessagingSpanNameExtractor<>(
-        getter, messageOperation, messageOperation.legacyOperationName());
+      MessagingAttributesGetter<REQUEST, ?> getter, MessagingOperationType operationType) {
+    return builder(getter, operationType).build();
   }
 
-  /** Returns a {@link SpanNameExtractor} with a system-specific v1.43 operation name. */
+  /**
+   * @deprecated Use {@link #create(MessagingAttributesGetter, MessagingOperationType)}. Will be
+   *     removed in 3.0.
+   */
+  @Deprecated // to be removed in 3.0
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      MessagingAttributesGetter<REQUEST, ?> getter,
-      MessageOperation messageOperation,
-      String operationName) {
-    return new MessagingSpanNameExtractor<>(getter, messageOperation, operationName);
+      MessagingAttributesGetter<REQUEST, ?> getter, MessageOperation operation) {
+    return create(getter, operation.type());
+  }
+
+  /**
+   * Returns a new {@link MessagingSpanNameExtractorBuilder} that can be used to configure the
+   * messaging span name extractor.
+   */
+  public static <REQUEST> MessagingSpanNameExtractorBuilder<REQUEST> builder(
+      MessagingAttributesGetter<REQUEST, ?> getter, MessagingOperationType operationType) {
+    return new MessagingSpanNameExtractorBuilder<>(getter, operationType);
+  }
+
+  /**
+   * @deprecated Use {@link #builder(MessagingAttributesGetter, MessagingOperationType)}. Will be
+   *     removed in 3.0.
+   */
+  @Deprecated // to be removed in 3.0
+  public static <REQUEST> MessagingSpanNameExtractorBuilder<REQUEST> builder(
+      MessagingAttributesGetter<REQUEST, ?> getter, MessageOperation operation) {
+    return builder(getter, operation.type());
   }
 
   private final MessagingAttributesGetter<REQUEST, ?> getter;
-  private final MessageOperation messageOperation;
+  private final MessagingOperationType operationType;
   private final String operationName;
 
-  private MessagingSpanNameExtractor(
+  MessagingSpanNameExtractor(
       MessagingAttributesGetter<REQUEST, ?> getter,
-      MessageOperation messageOperation,
+      MessagingOperationType operationType,
       String operationName) {
     this.getter = getter;
-    this.messageOperation = requireNonNull(messageOperation, "messageOperation");
-    this.operationName = requireNonNull(operationName, "operationName");
+    this.operationType = operationType;
+    this.operationName = operationName;
   }
 
   @Override
@@ -68,6 +87,6 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
       destinationName = "unknown";
     }
 
-    return destinationName + " " + messageOperation.legacyOperationName();
+    return destinationName + " " + operationType.defaultOperationName();
   }
 }

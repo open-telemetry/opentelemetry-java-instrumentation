@@ -18,11 +18,30 @@ public final class MessagingSpanKindExtractor {
    * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/messaging/messaging-spans.md#span-kind">v1.43
    * messaging span kind conventions</a>.
    */
-  public static <REQUEST> SpanKindExtractor<REQUEST> create(MessageOperation operation) {
+  public static <REQUEST> SpanKindExtractor<REQUEST> create(MessagingOperationType operationType) {
+    return create(operationType, true);
+  }
+
+  /**
+   * Returns a span kind extractor following the <a
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/messaging/messaging-spans.md#span-kind">v1.43
+   * messaging span kind conventions</a>.
+   *
+   * @param isSpanContextPropagated whether the context of a {@link MessagingOperationType#SEND}
+   *     span is propagated as the message creation context; ignored for other operation types
+   */
+  public static <REQUEST> SpanKindExtractor<REQUEST> create(
+      MessagingOperationType operationType, boolean isSpanContextPropagated) {
     SpanKind spanKind;
-    switch (operation) {
-      case PUBLISH:
+    switch (operationType) {
+      case CREATE:
         spanKind = SpanKind.PRODUCER;
+        break;
+      case SEND:
+        spanKind =
+            emitStableMessagingSemconv() && !isSpanContextPropagated
+                ? SpanKind.CLIENT
+                : SpanKind.PRODUCER;
         break;
       case RECEIVE:
         spanKind = emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER;
@@ -30,11 +49,22 @@ public final class MessagingSpanKindExtractor {
       case PROCESS:
         spanKind = SpanKind.CONSUMER;
         break;
+      case SETTLE:
+        spanKind = SpanKind.CLIENT;
+        break;
       default:
         throw new IllegalStateException("Can't possibly happen");
     }
     SpanKind result = spanKind;
     return request -> result;
+  }
+
+  /**
+   * @deprecated Use {@link #create(MessagingOperationType)}. Will be removed in 3.0.
+   */
+  @Deprecated // to be removed in 3.0
+  public static <REQUEST> SpanKindExtractor<REQUEST> create(MessageOperation operation) {
+    return create(operation.type());
   }
 
   private MessagingSpanKindExtractor() {}

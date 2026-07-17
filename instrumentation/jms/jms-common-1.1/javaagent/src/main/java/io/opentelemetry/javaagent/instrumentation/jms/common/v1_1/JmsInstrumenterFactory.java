@@ -12,8 +12,8 @@ import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -51,28 +51,28 @@ public class JmsInstrumenterFactory {
 
   public Instrumenter<MessageWithDestination, Void> createProducerInstrumenter() {
     JmsMessageAttributesGetter getter = new JmsMessageAttributesGetter();
-    MessageOperation operation = MessageOperation.PUBLISH;
+    MessagingOperationType operationType = MessagingOperationType.SEND;
 
     InstrumenterBuilder<MessageWithDestination, Void> builder =
         Instrumenter.<MessageWithDestination, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operation))
-            .addAttributesExtractor(createMessagingAttributesExtractor(operation));
+                MessagingSpanNameExtractor.create(getter, operationType))
+            .addAttributesExtractor(createMessagingAttributesExtractor(operationType));
     setMessagingSendExceptionEventExtractor(builder);
     return builder.buildProducerInstrumenter(new MessagePropertySetter());
   }
 
   public Instrumenter<MessageWithDestination, Void> createConsumerReceiveInstrumenter() {
     JmsMessageAttributesGetter getter = new JmsMessageAttributesGetter();
-    MessageOperation operation = MessageOperation.RECEIVE;
+    MessagingOperationType operationType = MessagingOperationType.RECEIVE;
 
     InstrumenterBuilder<MessageWithDestination, Void> builder =
         Instrumenter.<MessageWithDestination, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operation))
-            .addAttributesExtractor(createMessagingAttributesExtractor(operation));
+                MessagingSpanNameExtractor.create(getter, operationType))
+            .addAttributesExtractor(createMessagingAttributesExtractor(operationType));
     setMessagingReceiveExceptionEventExtractor(builder);
     if (messagingReceiveInstrumentationEnabled) {
       builder.addSpanLinksExtractor(
@@ -86,14 +86,14 @@ public class JmsInstrumenterFactory {
   public Instrumenter<MessageWithDestination, Void> createConsumerProcessInstrumenter(
       boolean canHaveReceiveInstrumentation) {
     JmsMessageAttributesGetter getter = new JmsMessageAttributesGetter();
-    MessageOperation operation = MessageOperation.PROCESS;
+    MessagingOperationType operationType = MessagingOperationType.PROCESS;
 
     InstrumenterBuilder<MessageWithDestination, Void> builder =
         Instrumenter.<MessageWithDestination, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operation))
-            .addAttributesExtractor(createMessagingAttributesExtractor(operation));
+                MessagingSpanNameExtractor.create(getter, operationType))
+            .addAttributesExtractor(createMessagingAttributesExtractor(operationType));
     setMessagingProcessExceptionEventExtractor(builder);
     if (canHaveReceiveInstrumentation && messagingReceiveInstrumentationEnabled) {
       builder.addSpanLinksExtractor(
@@ -106,8 +106,8 @@ public class JmsInstrumenterFactory {
   }
 
   private AttributesExtractor<MessageWithDestination, Void> createMessagingAttributesExtractor(
-      MessageOperation operation) {
-    return MessagingAttributesExtractor.builder(new JmsMessageAttributesGetter(), operation)
+      MessagingOperationType operationType) {
+    return MessagingAttributesExtractor.builder(new JmsMessageAttributesGetter(), operationType)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }

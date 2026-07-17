@@ -12,9 +12,9 @@ import static java.util.Collections.emptyList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -84,7 +84,7 @@ public final class SpringIntegrationTelemetryBuilder {
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     new SpringMessagingAttributesGetter(),
-                    MessageOperation.PROCESS,
+                    MessagingOperationType.PROCESS,
                     capturedHeaders));
     setMessagingProcessExceptionEventExtractor(consumerBuilder);
     Instrumenter<MessageWithChannel, Void> consumerInstrumenter =
@@ -99,7 +99,7 @@ public final class SpringIntegrationTelemetryBuilder {
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     new SpringMessagingAttributesGetter(),
-                    MessageOperation.PUBLISH,
+                    MessagingOperationType.SEND,
                     capturedHeaders));
     setMessagingSendExceptionEventExtractor(producerBuilder);
     Instrumenter<MessageWithChannel, Void> producerInstrumenter =
@@ -121,9 +121,9 @@ public final class SpringIntegrationTelemetryBuilder {
 
   private static AttributesExtractor<MessageWithChannel, Void> buildMessagingAttributesExtractor(
       MessagingAttributesGetter<MessageWithChannel, Void> getter,
-      MessageOperation operation,
+      MessagingOperationType operationType,
       List<String> capturedHeaders) {
-    return MessagingAttributesExtractor.builder(getter, operation)
+    return MessagingAttributesExtractor.builder(getter, operationType)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }

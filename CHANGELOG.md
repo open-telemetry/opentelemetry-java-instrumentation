@@ -4,6 +4,8 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `MessageOperation` in favor of `MessagingOperationType`.
+  ([#19233](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19233))
 - Deprecate `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative component configuration
   through `DeclarativeConfigProperties` directly. To expose `ConfigProperties` through the
   declarative configuration API, use `ConfigPropertiesBackedConfigProvider`.

@@ -9,8 +9,8 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -26,7 +26,7 @@ public class SpringPulsarSingletons {
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     SpringPulsarMessageAttributesGetter getter = new SpringPulsarMessageAttributesGetter();
-    MessageOperation operation = MessageOperation.PROCESS;
+    MessagingOperationType operationType = MessagingOperationType.PROCESS;
     boolean messagingReceiveInstrumentationEnabled =
         ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
 
@@ -34,9 +34,9 @@ public class SpringPulsarSingletons {
         Instrumenter.<Message<?>, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operation))
+                MessagingSpanNameExtractor.create(getter, operationType))
             .addAttributesExtractor(
-                MessagingAttributesExtractor.builder(getter, operation)
+                MessagingAttributesExtractor.builder(getter, operationType)
                     .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build());
     setMessagingProcessExceptionEventExtractor(builder);

@@ -31,7 +31,7 @@ class MessagingSpanNameExtractorTest {
       boolean isAnonymousQueue,
       String destinationName,
       String destinationTemplate,
-      MessageOperation operation,
+      MessagingOperationType operationType,
       String operationName,
       String oldSpanName,
       String spanName) {
@@ -57,7 +57,9 @@ class MessagingSpanNameExtractorTest {
     }
 
     SpanNameExtractor<Message> underTest =
-        MessagingSpanNameExtractor.create(getter, operation, operationName);
+        MessagingSpanNameExtractor.builder(getter, operationType)
+            .setOperationName(operationName)
+            .build();
 
     // when
     String actualSpanName = underTest.extract(message);
@@ -74,7 +76,7 @@ class MessagingSpanNameExtractorTest {
             false,
             "destination",
             null,
-            MessageOperation.PUBLISH,
+            MessagingOperationType.SEND,
             "send",
             "destination publish",
             "send destination"),
@@ -84,7 +86,7 @@ class MessagingSpanNameExtractorTest {
             false,
             "generated",
             null,
-            MessageOperation.PROCESS,
+            MessagingOperationType.PROCESS,
             "process",
             "(temporary) process",
             "process"),
@@ -94,7 +96,7 @@ class MessagingSpanNameExtractorTest {
             false,
             null,
             null,
-            MessageOperation.RECEIVE,
+            MessagingOperationType.RECEIVE,
             "receive",
             "unknown receive",
             "receive"),
@@ -104,7 +106,7 @@ class MessagingSpanNameExtractorTest {
             false,
             "customer-42",
             "customer-{id}",
-            MessageOperation.PUBLISH,
+            MessagingOperationType.SEND,
             "send",
             "customer-42 publish",
             "send customer-{id}"),
@@ -114,7 +116,7 @@ class MessagingSpanNameExtractorTest {
             true,
             "generated",
             null,
-            MessageOperation.PROCESS,
+            MessagingOperationType.PROCESS,
             "process",
             "generated process",
             "process"));

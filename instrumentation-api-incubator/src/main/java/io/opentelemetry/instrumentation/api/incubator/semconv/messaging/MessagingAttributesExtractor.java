@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -67,68 +66,55 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
 
   static final String TEMP_DESTINATION_NAME = "(temporary)";
 
-  /**
-   * Creates the messaging attributes extractor for the given {@link MessageOperation operation}
-   * with default configuration.
-   */
+  /** Creates the messaging attributes extractor for the given operation type. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter,
-      @Nullable MessageOperation messageOperation) {
-    return builder(getter, messageOperation).build();
+      @Nullable MessagingOperationType operationType) {
+    return builder(getter, operationType).build();
   }
 
   /**
-   * Creates the messaging attributes extractor with a system-specific v1.43 operation name.
-   *
-   * <p>The {@code operationName} is emitted as {@code messaging.operation.name}. The legacy {@code
-   * messaging.operation} value remains derived from {@code operation}.
+   * @deprecated Use {@link #create(MessagingAttributesGetter, MessagingOperationType)}. Will be
+   *     removed in 3.0.
    */
+  @Deprecated // to be removed in 3.0
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter,
-      MessageOperation messageOperation,
-      String operationName) {
-    return builder(getter, messageOperation, operationName).build();
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter, @Nullable MessageOperation operation) {
+    return create(getter, operation == null ? null : operation.type());
   }
 
   /**
-   * Returns a new {@link MessagingAttributesExtractorBuilder} for the given {@link MessageOperation
-   * operation} that can be used to configure the messaging attributes extractor.
+   * Returns a new {@link MessagingAttributesExtractorBuilder} configured for the given operation
+   * type.
    */
   public static <REQUEST, RESPONSE> MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter,
-      @Nullable MessageOperation messageOperation) {
-    return new MessagingAttributesExtractorBuilder<>(
-        getter,
-        messageOperation,
-        messageOperation == null ? null : messageOperation.legacyOperationName());
+      @Nullable MessagingOperationType operationType) {
+    return new MessagingAttributesExtractorBuilder<>(getter, operationType);
   }
 
   /**
-   * Returns a new {@link MessagingAttributesExtractorBuilder} with a system-specific v1.43
-   * operation name.
+   * @deprecated Use {@link #builder(MessagingAttributesGetter, MessagingOperationType)}. Will be
+   *     removed in 3.0.
    */
+  @Deprecated // to be removed in 3.0
   public static <REQUEST, RESPONSE> MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter,
-      MessageOperation messageOperation,
-      String operationName) {
-    return new MessagingAttributesExtractorBuilder<>(
-        getter,
-        requireNonNull(messageOperation, "messageOperation"),
-        requireNonNull(operationName, "operationName"));
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter, @Nullable MessageOperation operation) {
+    return builder(getter, operation == null ? null : operation.type());
   }
 
   private final MessagingAttributesGetter<REQUEST, RESPONSE> getter;
-  @Nullable private final MessageOperation messageOperation;
+  @Nullable private final MessagingOperationType operationType;
   @Nullable private final String operationName;
   private final List<String> capturedHeaders;
 
   MessagingAttributesExtractor(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter,
-      @Nullable MessageOperation messageOperation,
+      @Nullable MessagingOperationType operationType,
       @Nullable String operationName,
       List<String> capturedHeaders) {
     this.getter = getter;
-    this.messageOperation = messageOperation;
+    this.operationType = operationType;
     this.operationName = operationName;
     this.capturedHeaders = new ArrayList<>(capturedHeaders);
   }
@@ -163,13 +149,13 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     if (emitStableMessagingSemconv()) {
       attributes.put(MESSAGING_CLIENT_ID, getter.getClientId(request));
     }
-    if (messageOperation != null) {
-      if (emitOldMessagingSemconv()) {
-        attributes.put(MESSAGING_OPERATION, messageOperation.legacyOperationName());
-      }
-      if (emitStableMessagingSemconv()) {
-        attributes.put(MESSAGING_OPERATION_NAME, operationName);
-        attributes.put(MESSAGING_OPERATION_TYPE, messageOperation.operationType());
+    if (emitOldMessagingSemconv() && operationType != null) {
+      attributes.put(MESSAGING_OPERATION, operationType.defaultOperationName());
+    }
+    if (emitStableMessagingSemconv()) {
+      attributes.put(MESSAGING_OPERATION_NAME, operationName);
+      if (operationType != null) {
+        attributes.put(MESSAGING_OPERATION_TYPE, operationType.value());
       }
     }
   }
@@ -183,8 +169,12 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
     attributes.put(MESSAGING_MESSAGE_ID, getter.getMessageId(request, response));
     attributes.put(MESSAGING_BATCH_MESSAGE_COUNT, getter.getBatchMessageCount(request, response));
-    if (emitStableMessagingSemconv() && error != null) {
-      attributes.put(ERROR_TYPE, error.getClass().getName());
+    if (emitStableMessagingSemconv()) {
+      String errorType = getter.getErrorType(request, response, error);
+      if (errorType == null && error != null) {
+        errorType = error.getClass().getName();
+      }
+      attributes.put(ERROR_TYPE, errorType);
     }
 
     for (String name : capturedHeaders) {
@@ -202,17 +192,21 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   @Override
   @Nullable
   public SpanKey internalGetSpanKey() {
-    if (messageOperation == null) {
+    if (operationType == null) {
       return null;
     }
 
-    switch (messageOperation) {
-      case PUBLISH:
+    switch (operationType) {
+      case CREATE:
+        return SpanKey.PRODUCER_CREATE;
+      case SEND:
         return SpanKey.PRODUCER;
       case RECEIVE:
         return SpanKey.CONSUMER_RECEIVE;
       case PROCESS:
         return SpanKey.CONSUMER_PROCESS;
+      case SETTLE:
+        return SpanKey.CONSUMER_SETTLE;
     }
     throw new IllegalStateException("Can't possibly happen");
   }

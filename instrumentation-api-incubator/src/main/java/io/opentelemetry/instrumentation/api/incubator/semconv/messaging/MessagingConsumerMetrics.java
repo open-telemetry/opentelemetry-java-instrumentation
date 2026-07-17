@@ -95,31 +95,34 @@ public final class MessagingConsumerMetrics implements OperationListener {
       clientOperationDurationHistogram.record(duration, filteredAttributes, context);
     }
 
-    long receiveMessagesCount = getReceiveMessagesCount(state.startAttributes(), endAttributes);
+    Long batchMessageCount = getBatchMessageCount(state.startAttributes(), endAttributes);
     if (receiveMessageCount != null) {
-      receiveMessageCount.add(receiveMessagesCount, attributes, context);
+      receiveMessageCount.add(
+          batchMessageCount == null ? 1 : batchMessageCount, attributes, context);
     }
     if (consumedMessagesCounter != null) {
       consumedMessagesCounter.add(
-          getConsumedMessagesCount(attributes, receiveMessagesCount), filteredAttributes, context);
+          getConsumedMessagesCount(attributes, batchMessageCount), filteredAttributes, context);
     }
   }
 
-  private static long getReceiveMessagesCount(Attributes... attributesList) {
+  @Nullable
+  private static Long getBatchMessageCount(Attributes... attributesList) {
     for (Attributes attributes : attributesList) {
       Long value = attributes.get(MESSAGING_BATCH_MESSAGE_COUNT);
       if (value != null) {
         return value;
       }
     }
-    return 1;
+    return null;
   }
 
-  private static long getConsumedMessagesCount(Attributes attributes, long receiveMessagesCount) {
-    return attributes.get(MESSAGING_BATCH_MESSAGE_COUNT) == null
-            && attributes.get(ERROR_TYPE) != null
-        ? 0
-        : receiveMessagesCount;
+  private static long getConsumedMessagesCount(
+      Attributes attributes, @Nullable Long batchMessageCount) {
+    if (batchMessageCount != null) {
+      return batchMessageCount;
+    }
+    return attributes.get(ERROR_TYPE) == null ? 1 : 0;
   }
 
   private static DoubleHistogram buildReceiveDuration(Meter meter) {

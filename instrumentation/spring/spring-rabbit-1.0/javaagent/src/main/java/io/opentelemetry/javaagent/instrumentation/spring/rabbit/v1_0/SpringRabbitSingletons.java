@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -24,15 +24,15 @@ public class SpringRabbitSingletons {
 
   static {
     SpringRabbitMessageAttributesGetter getter = new SpringRabbitMessageAttributesGetter();
-    MessageOperation operation = MessageOperation.PROCESS;
+    MessagingOperationType operationType = MessagingOperationType.PROCESS;
 
     InstrumenterBuilder<Message, Void> builder =
         Instrumenter.<Message, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operation))
+                MessagingSpanNameExtractor.create(getter, operationType))
             .addAttributesExtractor(
-                MessagingAttributesExtractor.builder(getter, operation)
+                MessagingAttributesExtractor.builder(getter, operationType)
                     .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build());
     setMessagingProcessExceptionEventExtractor(builder);

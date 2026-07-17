@@ -5,35 +5,24 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
-import java.util.Locale;
-
 /**
- * Represents type of <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/messaging/messaging-spans.md#operation-types">operations</a>
- * that may be used in a messaging system.
+ * Represents an operation that may be used in a messaging system.
+ *
+ * @deprecated Use {@link MessagingOperationType}. Will be removed in 3.0.
  */
+@Deprecated // to be removed in 3.0
 public enum MessageOperation {
-  PUBLISH,
-  RECEIVE,
-  PROCESS;
+  PUBLISH(MessagingOperationType.SEND),
+  RECEIVE(MessagingOperationType.RECEIVE),
+  PROCESS(MessagingOperationType.PROCESS);
 
-  /**
-   * Returns the legacy operation name. The v1.43 operation name defaults to this value unless an
-   * instrumentation supplies a system-specific override.
-   */
-  String legacyOperationName() {
-    return name().toLowerCase(Locale.ROOT);
+  private final MessagingOperationType operationType;
+
+  MessageOperation(MessagingOperationType operationType) {
+    this.operationType = operationType;
   }
 
-  String operationType() {
-    switch (this) {
-      case PUBLISH:
-        return "send";
-      case RECEIVE:
-        return "receive";
-      case PROCESS:
-        return "process";
-    }
-    throw new IllegalStateException("Can't possibly happen");
+  MessagingOperationType type() {
+    return operationType;
   }
 }

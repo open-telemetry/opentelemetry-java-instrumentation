@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -18,17 +19,24 @@ import javax.annotation.Nullable;
 public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   final MessagingAttributesGetter<REQUEST, RESPONSE> getter;
-  @Nullable final MessageOperation messageOperation;
-  @Nullable final String operationName;
+  @Nullable MessagingOperationType operationType;
+  @Nullable String operationName;
   List<String> capturedHeaders = emptyList();
 
   MessagingAttributesExtractorBuilder(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter,
-      @Nullable MessageOperation messageOperation,
-      @Nullable String operationName) {
+      @Nullable MessagingOperationType operationType) {
     this.getter = getter;
-    this.messageOperation = messageOperation;
-    this.operationName = operationName;
+    this.operationType = operationType;
+    this.operationName = operationType == null ? null : operationType.defaultOperationName();
+  }
+
+  /** Configures the system-specific operation name emitted as {@code messaging.operation.name}. */
+  @CanIgnoreReturnValue
+  public MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> setOperationName(
+      String operationName) {
+    this.operationName = requireNonNull(operationName, "operationName");
+    return this;
   }
 
   /**
@@ -53,6 +61,6 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
     return new MessagingAttributesExtractor<>(
-        getter, messageOperation, operationName, capturedHeaders);
+        getter, operationType, operationName, capturedHeaders);
   }
 }
