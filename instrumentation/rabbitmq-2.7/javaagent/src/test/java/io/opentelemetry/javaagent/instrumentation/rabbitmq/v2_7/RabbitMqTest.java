@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -159,6 +160,23 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                         null,
                         null,
                         false)));
+  }
+
+  @Test
+  void testReceiveSpanKind() throws IOException {
+    String queueName = channel.queueDeclare().getQueue();
+    channel.basicPublish("", queueName, null, "test".getBytes(Charset.defaultCharset()));
+    testing.clearData();
+
+    testing.runWithSpan("parent", () -> channel.basicGet(queueName, true));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test

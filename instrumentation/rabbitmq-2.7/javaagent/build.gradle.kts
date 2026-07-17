@@ -44,7 +44,20 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.rabbitmq.experimental-span-attributes=true")
   }
 
+  // The task name follows the existing pattern; messaging conventions are still preview, and this
+  // task is limited to the receive span-kind path migrated here.
+  val testStableSemconv = register<Test>("testStableSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("RabbitMqTest.testReceiveSpanKind")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
+  }
+
   check {
-    dependsOn(testExperimental)
+    dependsOn(testExperimental, testStableSemconv)
   }
 }
