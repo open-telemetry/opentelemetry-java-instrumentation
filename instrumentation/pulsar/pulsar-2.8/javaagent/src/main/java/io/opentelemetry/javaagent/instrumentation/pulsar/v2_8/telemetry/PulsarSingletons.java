@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
@@ -51,7 +52,8 @@ public class PulsarSingletons {
   private static final List<String> capturedHeaders =
       ExperimentalConfig.get().getMessagingHeaders();
   private static final boolean receiveInstrumentationEnabled =
-      ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+      ExperimentalConfig.get().messagingReceiveInstrumentationEnabled()
+          || emitStableMessagingSemconv();
 
   private static final Instrumenter<PulsarRequest, Void> consumerProcessInstrumenter =
       createConsumerProcessInstrumenter();

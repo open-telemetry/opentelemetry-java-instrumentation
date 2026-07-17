@@ -147,12 +147,14 @@ class PulsarClientTest extends AbstractPulsarClientTest {
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+        orderByRootSpanKind(
+            SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(topic + " publish")
+                  span.hasName(
+                          emitStableMessagingSemconv() ? "publish " + topic : topic + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -163,12 +165,17 @@ class PulsarClientTest extends AbstractPulsarClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(topic + " receive")
-                        .hasKind(SpanKind.CONSUMER)
+                    span.hasName(
+                            emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
+                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic, msgId.toString(), false))));
+
+    if (emitStableMessagingSemconv()) {
+      return;
+    }
 
     assertThat(testing.metrics())
         .filteredOn(
