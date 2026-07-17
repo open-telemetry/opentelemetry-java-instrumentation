@@ -49,7 +49,26 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
   }
 
+  val testConnectionTelemetryEnabledStableSemconv =
+    register<Test>("testConnectionTelemetryEnabledStableSemconv") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      jvmArgs(
+        "-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true",
+        "-Dotel.semconv-stability.opt-in=database,service.peer"
+      )
+      systemProperty(
+        "metadataConfig",
+        "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.opt-in=database,service.peer"
+      )
+    }
+
   check {
-    dependsOn(testConnectionTelemetryEnabled, testStableSemconv, testExperimental)
+    dependsOn(
+      testConnectionTelemetryEnabled,
+      testConnectionTelemetryEnabledStableSemconv,
+      testStableSemconv,
+      testExperimental
+    )
   }
 }
