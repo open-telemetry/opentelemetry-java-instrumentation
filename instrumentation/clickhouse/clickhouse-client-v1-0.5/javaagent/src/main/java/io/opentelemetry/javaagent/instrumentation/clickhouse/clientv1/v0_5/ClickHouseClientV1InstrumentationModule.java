@@ -11,13 +11,11 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class ClickHouseClientV1InstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class ClickHouseClientV1InstrumentationModule extends InstrumentationModule {
 
   public ClickHouseClientV1InstrumentationModule() {
     super("clickhouse-client-v1", "clickhouse-client-v1-0.5", "clickhouse", "clickhouse-client");
