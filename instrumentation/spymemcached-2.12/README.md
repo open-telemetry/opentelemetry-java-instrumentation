@@ -3,3 +3,4 @@
 | System property                                                  | Type    | Default | Description                                          |
 | ---------------------------------------------------------------- | ------- | ------- | ---------------------------------------------------- |
 | `otel.instrumentation.spymemcached.experimental-span-attributes` | Boolean | `false` | Enables the capture of experimental span attributes. |
+| `otel.instrumentation.spymemcached.query-sanitization.enabled`   | Boolean | `true`  | Enables the DB query sanitization.                   |

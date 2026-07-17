@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
@@ -15,11 +17,21 @@ import net.spy.memcached.MemcachedNode;
 @AutoValue
 public abstract class SpymemcachedRequest {
 
-  public static SpymemcachedRequest create(MemcachedConnection connection, String queryText) {
-    return new AutoValue_SpymemcachedRequest(connection, queryText);
+  private static final boolean SANITIZATION_ENABLED =
+      DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "spymemcached");
+
+  public static SpymemcachedRequest create(
+      MemcachedConnection connection, String methodName, Object[] args) {
+    String operationName = operationName(methodName);
+    return new AutoValue_SpymemcachedRequest(
+        connection,
+        operationName,
+        SpymemcachedQueryText.create(operationName, args, SANITIZATION_ENABLED));
   }
 
   public abstract MemcachedConnection getConnection();
+
+  public abstract String getOperationName();
 
   public abstract String getQueryText();
 
@@ -52,17 +64,16 @@ public abstract class SpymemcachedRequest {
     return handlingNodeAddress;
   }
 
-  public String getOperationName() {
-    String queryText = getQueryText();
-    if (queryText.startsWith("async")) {
-      queryText = queryText.substring("async".length());
+  private static String operationName(String methodName) {
+    if (methodName.startsWith("async")) {
+      methodName = methodName.substring("async".length());
     }
-    if (queryText.startsWith("CAS")) {
+    if (methodName.startsWith("CAS")) {
       // 'CAS' name is special, we have to lowercase whole name
-      return "cas" + queryText.substring("CAS".length());
+      return "cas" + methodName.substring("CAS".length());
     }
 
-    char[] chars = queryText.toCharArray();
+    char[] chars = methodName.toCharArray();
     // Lowercase first letter
     chars[0] = Character.toLowerCase(chars[0]);
     return new String(chars);

@@ -14,3 +14,15 @@ configurations:
       `spymemcached.command.cancelled`.
     type: boolean
     default: false
+  - name: otel.instrumentation.spymemcached.query-sanitization.enabled
+    declarative_name: java.spymemcached.query_sanitization.enabled
+    description: >
+      Enables query sanitization for Memcached commands. Takes precedence over
+      otel.instrumentation.common.db.query-sanitization.enabled.
+    type: boolean
+    default: true
+  - name: otel.instrumentation.common.db.query-sanitization.enabled
+    declarative_name: java.common.db.query_sanitization.enabled
+    description: Enables query sanitization for database queries.
+    type: boolean
+    default: true
