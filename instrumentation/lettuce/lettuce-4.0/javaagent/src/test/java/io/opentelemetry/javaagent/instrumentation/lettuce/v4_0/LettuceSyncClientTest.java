@@ -34,6 +34,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,12 +106,19 @@ class LettuceSyncClientTest {
     syncCommands.set("TESTKEY", "TESTVAL");
     syncCommands.hmset("TESTHM", TEST_HASH_MAP);
 
-    // 2 sets + 1 connect trace
-    testing.waitForTraces(3);
+    // 2 sets (+ 1 connect trace when connection telemetry is enabled)
+    testing.waitForTraces(connectionTelemetryEnabled() ? 3 : 2);
     testing.clearData();
   }
 
+  private static boolean connectionTelemetryEnabled() {
+    return Boolean.getBoolean("otel.instrumentation.lettuce.connection-telemetry.enabled");
+  }
+
   @Test
+  @EnabledIfSystemProperty(
+      named = "otel.instrumentation.lettuce.connection-telemetry.enabled",
+      matches = "true")
   void testConnect() {
     RedisClient testConnectionClient = RedisClient.create(embeddedDbUri);
     testConnectionClient.setOptions(CLIENT_OPTIONS);
@@ -133,6 +141,9 @@ class LettuceSyncClientTest {
   }
 
   @Test
+  @EnabledIfSystemProperty(
+      named = "otel.instrumentation.lettuce.connection-telemetry.enabled",
+      matches = "true")
   void testConnectException() {
     RedisClient testConnectionClient = RedisClient.create(dbUriNonExistent);
     testConnectionClient.setOptions(CLIENT_OPTIONS);
@@ -313,8 +324,10 @@ class LettuceSyncClientTest {
     cleanup.deferCleanup(connection1);
 
     RedisCommands<String, String> commands = connection1.sync();
-    // 1 connect trace
-    testing.waitForTraces(1);
+    if (connectionTelemetryEnabled()) {
+      // 1 connect trace
+      testing.waitForTraces(1);
+    }
     testing.clearData();
 
     commands.debugSegfault();
@@ -352,8 +365,10 @@ class LettuceSyncClientTest {
     cleanup.deferCleanup(connection1);
 
     RedisCommands<String, String> commands = connection1.sync();
-    // 1 connect trace
-    testing.waitForTraces(1);
+    if (connectionTelemetryEnabled()) {
+      // 1 connect trace
+      testing.waitForTraces(1);
+    }
     testing.clearData();
 
     commands.shutdown(false);

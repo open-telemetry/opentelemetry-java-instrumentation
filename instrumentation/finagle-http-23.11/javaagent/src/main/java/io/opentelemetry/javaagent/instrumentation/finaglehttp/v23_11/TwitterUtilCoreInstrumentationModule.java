@@ -10,12 +10,10 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class TwitterUtilCoreInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class TwitterUtilCoreInstrumentationModule extends InstrumentationModule {
 
   public TwitterUtilCoreInstrumentationModule() {
     super("finagle-http", "finagle-http-23.11", "twitter-util-core");

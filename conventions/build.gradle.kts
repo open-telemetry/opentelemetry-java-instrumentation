@@ -56,7 +56,7 @@ dependencies {
   // When updating, update above in plugins too
   implementation("com.diffplug.spotless:spotless-plugin-gradle:8.8.0")
   implementation("com.google.guava:guava:33.6.0-jre")
-  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.5.1") {
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.6.0") {
     // plexus-xml 4.1+ pulls in Maven 4 API which uses JPMS-only service registration,
     // causing "No XmlService implementation found" in Gradle's classloader
     // We exclude plexus-xml and plexus-utils here because our current usages of the shadow plugin
@@ -69,7 +69,7 @@ dependencies {
   implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.5.0")
   implementation("org.sonatype.gradle.plugins:scan-gradle-plugin:3.1.6")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:2.0.1")
-  implementation("org.spdx:spdx-gradle-plugin:0.11.0")
+  implementation("org.spdx:spdx-gradle-plugin:0.12.0")
   // When updating, also update dependencyManagement/build.gradle.kts
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.18.11")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
