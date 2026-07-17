@@ -213,9 +213,9 @@ public class OpenTelemetryAutoConfiguration {
        * <p>Not using spring boot properties directly, because declarative configuration does not
        * integrate with spring boot properties.
        *
-       * @deprecated Migrate consuming auto-configurations to the Declarative Config API. This
-       *     compatibility bean will be removed in 3.0 together with {@link
-       *     DeclarativeConfigPropertiesBridgeBuilder}.
+       * @deprecated This {@link ConfigProperties} compatibility bean will be removed in 3.0.
+       *     Auto-configurations that support the experimental Declarative Configuration should use
+       *     the Declarative Config API directly.
        */
       @Deprecated // will be removed in 3.0
       @Bean

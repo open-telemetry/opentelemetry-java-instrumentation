@@ -21,13 +21,10 @@
 
 A rename of any of these surfaces is a breaking change even if no Java symbol moved.
 
-### A replacement must be stable
+### Replacement stability
 
-Do not deprecate a stable API solely in favor of an incubating replacement. For example, the stable
-Spring Boot starter's `ConfigProperties` bean remains supported for non-declarative configuration
-because `ConfigProvider` is still an incubating API. Declarative configuration is the exception:
-its `ConfigProperties` bean is a compatibility bridge and may be deprecated in favor of injecting
-`ConfigProvider` and reading declarative instrumentation configuration.
+A replacement must be at least as stable as the contract being deprecated. Do not direct users of
+a stable API to an incubating or experimental API.
 
 ## When Are Breaking Changes Allowed?
 
