@@ -2,12 +2,13 @@ display_name: Apache DBCP
 description: >
   This instrumentation enables database connection pools metrics for Apache DBCP.
 
-  The auto-instrumentation detects the `BasicDataSource` lifecycle when the underlying
-  `DataSource` is created and closed. When a JMX `ObjectName` is successfully registered, its
-  `name` property is used as the pool name; if the property is absent, the full `ObjectName` is
-  used. When no JMX `ObjectName` is registered, the JDBC URL and connection properties are used
-  to derive `server.address[:server.port][/db.namespace]`. If no server address or database
-  namespace is available, `apache-dbcp2` is used.
+  The auto-instrumentation registers metrics after `BasicDataSource` completes
+  `startPoolMaintenance()`, when the connection pool has been initialized. It unregisters metrics
+  when `BasicDataSource` is closed or deregistered. JMX registration is not required. When a JMX
+  `ObjectName` is available, its `name` property is used as the pool name; if the property is
+  absent, the full `ObjectName` is used. Otherwise, the JDBC URL and connection properties are
+  used to derive `server.address[:server.port][/db.namespace]`. If neither server address nor
+  database namespace is available, `apache-dbcp2` is used.
 library_link: https://commons.apache.org/proper/commons-dbcp/
 semantic_conventions:
   - DATABASE_POOL_METRICS

@@ -40,7 +40,7 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class StartPoolMaintenanceAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This BasicDataSource dataSource) {
       String dataSourceName = null;
       ObjectName objectName = OpenTelemetryBasicDataSourceUtil.getRegisteredJmxName(dataSource);
@@ -59,7 +59,7 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class DeregisterAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.This BasicDataSource dataSource) {
       telemetry().unregisterMetrics(dataSource);
     }
