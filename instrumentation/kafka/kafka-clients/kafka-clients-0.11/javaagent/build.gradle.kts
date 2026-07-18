@@ -53,6 +53,16 @@ tasks {
     include("**/KafkaClientSuppressReceiveSpansTest.*")
   }
 
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("KafkaClientSuppressReceiveSpansTest.testAbandonedIteratorDoesNotParentNextProcessSpan")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
+  }
+
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -95,7 +105,12 @@ tasks {
   }
 
   check {
-    dependsOn(testPropagationDisabled, testReceiveSpansDisabled, testExperimental)
+    dependsOn(
+      testPropagationDisabled,
+      testReceiveSpansDisabled,
+      testMessagingPreview,
+      testExperimental,
+    )
   }
 }
 
