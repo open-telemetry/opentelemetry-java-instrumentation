@@ -22,7 +22,6 @@ import net.bytebuddy.matcher.ElementMatcher;
  * (attachments), Triple transmits trace context as HTTP/2 headers. This means the parent trace
  * context is always available even when service routing fails, resulting in a single trace (1
  * client span + 1 server _OTHER span).
- *
  */
 public class GrpcRequestHandlerMappingInstrumentation implements TypeInstrumentation {
 
