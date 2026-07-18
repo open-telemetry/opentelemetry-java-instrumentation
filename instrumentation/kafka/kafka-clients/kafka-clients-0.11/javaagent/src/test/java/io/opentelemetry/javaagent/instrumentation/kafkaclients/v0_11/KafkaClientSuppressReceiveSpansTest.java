@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -156,6 +158,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
 
   @Test
   void testAbandonedIteratorDoesNotParentNextProcessSpan() throws Exception {
+    assumeTrue(emitStableMessagingSemconv());
     producer.send(new ProducerRecord<>(SHARED_TOPIC, "first")).get(5, SECONDS);
     awaitUntilConsumerIsReady();
     Iterator<? extends ConsumerRecord<?, ?>> firstIterator = poll(Duration.ofSeconds(5)).iterator();

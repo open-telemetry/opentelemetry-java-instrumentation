@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -26,6 +27,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -95,41 +97,42 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
     getTesting().waitAndAssertTraces(traceAsserts);
   }
 
-    @Test
-    void testAbandonedIteratorDoesNotParentNextProcessSpan() {
-        SqsClientBuilder builder = SqsClient.builder();
-        configureSdkClient(builder);
-        SqsClient client = configureSqsClient(builder.build());
+  @Test
+  void testAbandonedIteratorDoesNotParentNextProcessSpan() {
+    assumeTrue(emitStableMessagingSemconv());
+    SqsClientBuilder builder = SqsClient.builder();
+    configureSdkClient(builder);
+    SqsClient client = configureSqsClient(builder.build());
 
-        client.createQueue(createQueueRequest);
-        client.sendMessage(sendMessageRequest.toBuilder().messageBody("first").build());
-        ReceiveMessageResponse firstResponse = client.receiveMessage(receiveMessageRequest);
-        client.sendMessage(sendMessageRequest.toBuilder().messageBody("second").build());
-        ReceiveMessageResponse secondResponse = client.receiveMessage(receiveMessageRequest);
+    client.createQueue(createQueueRequest);
+    client.sendMessage(sendMessageRequest.toBuilder().messageBody("first").build());
+    ReceiveMessageResponse firstResponse = client.receiveMessage(receiveMessageRequest);
+    client.sendMessage(sendMessageRequest.toBuilder().messageBody("second").build());
+    ReceiveMessageResponse secondResponse = client.receiveMessage(receiveMessageRequest);
 
-        Iterator<Message> firstIterator = firstResponse.messages().iterator();
-        Iterator<Message> secondIterator = secondResponse.messages().iterator();
-        assertThat(firstIterator.hasNext()).isTrue();
-        firstIterator.next();
-        assertThat(secondIterator.hasNext()).isTrue();
-        secondIterator.next();
-        assertThat(secondIterator.hasNext()).isFalse();
-        assertThat(firstIterator.hasNext()).isFalse();
+    Iterator<Message> firstIterator = firstResponse.messages().iterator();
+    Iterator<Message> secondIterator = secondResponse.messages().iterator();
+    assertThat(firstIterator.hasNext()).isTrue();
+    firstIterator.next();
+    assertThat(secondIterator.hasNext()).isTrue();
+    secondIterator.next();
+    assertThat(secondIterator.hasNext()).isFalse();
+    assertThat(firstIterator.hasNext()).isFalse();
 
-        getTesting()
-                .waitAndAssertTraces(
-                        trace ->
-                                trace.hasSpansSatisfyingExactly(
-                                        span -> span.hasName("Sqs.CreateQueue").hasNoParent()),
-                        trace ->
-                                trace.hasSpansSatisfyingExactly(
-                                span -> span.hasName("publish testSdkSqs").hasNoParent(),
-                                span -> span.hasName("process testSdkSqs").hasParent(trace.getSpan(0))),
-                        trace ->
-                                trace.hasSpansSatisfyingExactly(
-                                span -> span.hasName("publish testSdkSqs").hasNoParent(),
-                                span -> span.hasName("process testSdkSqs").hasParent(trace.getSpan(0))));
-    }
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("Sqs.CreateQueue").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("publish testSdkSqs").hasNoParent(),
+                    span -> span.hasName("process testSdkSqs").hasParent(trace.getSpan(0))),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("publish testSdkSqs").hasNoParent(),
+                    span -> span.hasName("process testSdkSqs").hasParent(trace.getSpan(0))));
+  }
 
   @Test
   @SuppressWarnings("deprecation") // using deprecated semconv
