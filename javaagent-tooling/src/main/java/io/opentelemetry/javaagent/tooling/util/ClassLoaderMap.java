@@ -16,6 +16,7 @@ import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.modifier.Ownership;
 import net.bytebuddy.description.modifier.Visibility;
@@ -35,6 +36,7 @@ class ClassLoaderMap {
     return defaultInjector;
   }
 
+  @Nullable
   public static Object get(ClassLoader classLoader, Injector classInjector, Object key) {
     return getClassLoaderData(classLoader, classInjector, false).get(key);
   }
