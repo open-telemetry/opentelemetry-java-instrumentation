@@ -56,17 +56,15 @@ public class DubboProtocolInstrumentation implements TypeInstrumentation {
       }
 
       InetSocketAddress remoteAddress = null;
-      InetSocketAddress localAddress = null;
       try {
         Channel channel = (Channel) channelObj;
         remoteAddress = channel.getRemoteAddress();
-        localAddress = channel.getLocalAddress();
       } catch (Throwable ignored) {
         // channel type may not match in some versions
       }
 
       DubboUnknownServiceHelper.createUnknownServiceSpan(
-          (RpcInvocation) inv, remoteAddress, localAddress, throwable, startTimeMillis);
+          (RpcInvocation) inv, remoteAddress, throwable, startTimeMillis);
     }
   }
 }

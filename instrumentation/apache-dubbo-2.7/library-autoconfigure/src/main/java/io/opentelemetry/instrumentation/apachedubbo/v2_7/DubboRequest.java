@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
+import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboRegistryUtil;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
@@ -12,21 +13,14 @@ import org.apache.dubbo.common.URL;
 import org.apache.dubbo.rpc.RpcContext;
 import org.apache.dubbo.rpc.RpcInvocation;
 
-public final class DubboRequest {
-
-  private final RpcInvocation invocation;
-  @Nullable private final RpcContext context;
-  @Nullable private final URL url;
-  @Nullable private final InetSocketAddress remoteAddress;
-  @Nullable private final InetSocketAddress localAddress;
-  @Nullable private final String registryAddress;
-  @Nullable private final String originalFullMethodName;
+@AutoValue
+public abstract class DubboRequest {
 
   @SuppressWarnings("deprecation") // RpcContext.getContext()
   static DubboRequest create(RpcInvocation invocation, RpcContext context) {
     // In dubbo 3 RpcContext delegates to a ThreadLocal context. We copy the url, remote address,
     // and registry address here to ensure we can access them from the thread that ends the span.
-    return new DubboRequest(
+    return new AutoValue_DubboRequest(
         invocation,
         context,
         context.getUrl(),
@@ -39,64 +33,32 @@ public final class DubboRequest {
   public static DubboRequest createForUnknownService(
       RpcInvocation invocation,
       String originalFullMethodName,
-      @Nullable InetSocketAddress remoteAddress,
-      @Nullable InetSocketAddress localAddress) {
-    return new DubboRequest(
-        invocation, null, null, remoteAddress, localAddress, null, originalFullMethodName);
+      @Nullable InetSocketAddress remoteAddress) {
+    return new AutoValue_DubboRequest(
+        invocation, null, null, remoteAddress, null, null, originalFullMethodName);
   }
 
-  private DubboRequest(
-      RpcInvocation invocation,
-      @Nullable RpcContext context,
-      @Nullable URL url,
-      @Nullable InetSocketAddress remoteAddress,
-      @Nullable InetSocketAddress localAddress,
-      @Nullable String registryAddress,
-      @Nullable String originalFullMethodName) {
-    this.invocation = invocation;
-    this.context = context;
-    this.url = url;
-    this.remoteAddress = remoteAddress;
-    this.localAddress = localAddress;
-    this.registryAddress = registryAddress;
-    this.originalFullMethodName = originalFullMethodName;
-  }
-
-  RpcInvocation invocation() {
-    return invocation;
-  }
+  abstract RpcInvocation invocation();
 
   @Nullable
-  public RpcContext context() {
-    return context;
-  }
+  public abstract RpcContext context();
 
   @Nullable
-  public URL url() {
-    return url;
-  }
+  public abstract URL url();
 
   @Nullable
-  public InetSocketAddress remoteAddress() {
-    return remoteAddress;
-  }
+  public abstract InetSocketAddress remoteAddress();
 
   @Nullable
-  public InetSocketAddress localAddress() {
-    return localAddress;
-  }
+  public abstract InetSocketAddress localAddress();
 
   @Nullable
-  public String registryAddress() {
-    return registryAddress;
-  }
+  public abstract String registryAddress();
 
   @Nullable
-  String originalFullMethodName() {
-    return originalFullMethodName;
-  }
+  abstract String originalFullMethodName();
 
   boolean isUnknownService() {
-    return originalFullMethodName != null;
+    return originalFullMethodName() != null;
   }
 }

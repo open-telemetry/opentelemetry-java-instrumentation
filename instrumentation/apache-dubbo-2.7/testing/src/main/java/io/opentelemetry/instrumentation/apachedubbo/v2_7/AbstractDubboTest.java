@@ -14,8 +14,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -590,10 +588,6 @@ public abstract class AbstractDubboTest {
                                               v -> assertThat(v).contains("MiddleService"))),
                                   satisfies(ERROR_TYPE, val -> val.isNotNull()),
                                   satisfies(
-                                      NETWORK_LOCAL_ADDRESS, val -> val.isInstanceOf(String.class)),
-                                  satisfies(
-                                      NETWORK_LOCAL_PORT, val -> val.isInstanceOf(Long.class)),
-                                  satisfies(
                                       NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
                                   satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                                   satisfies(
@@ -628,10 +622,6 @@ public abstract class AbstractDubboTest {
                                                           "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
                                               v -> assertThat(v).contains("MiddleService"))),
                                   satisfies(ERROR_TYPE, val -> val.isNotNull()),
-                                  satisfies(
-                                      NETWORK_LOCAL_ADDRESS, val -> val.isInstanceOf(String.class)),
-                                  satisfies(
-                                      NETWORK_LOCAL_PORT, val -> val.isInstanceOf(Long.class)),
                                   satisfies(
                                       NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
                                   satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
@@ -748,9 +738,6 @@ public abstract class AbstractDubboTest {
                                                         "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
                                             v -> assertThat(v).contains("MiddleService"))),
                                 satisfies(ERROR_TYPE, val -> val.isNotNull()),
-                                satisfies(
-                                    NETWORK_LOCAL_ADDRESS, val -> val.isInstanceOf(String.class)),
-                                satisfies(NETWORK_LOCAL_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
                                 satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),

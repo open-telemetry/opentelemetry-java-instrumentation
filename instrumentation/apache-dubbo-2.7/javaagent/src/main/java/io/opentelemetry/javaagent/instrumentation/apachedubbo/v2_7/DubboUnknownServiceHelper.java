@@ -14,8 +14,10 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.time.Instant;
 import java.util.Collection;
@@ -40,49 +42,6 @@ public final class DubboUnknownServiceHelper {
           return carrier != null ? carrier.get(key) : null;
         }
       };
-
-  /**
-   * Lazily-cached MethodHandles for Dubbo Triple protocol's HttpRequest interface. Resolved once
-   * from the runtime class to avoid per-call reflection overhead. The HttpRequest class (from
-   * dubbo-remoting-http12) is not available at compile time against Dubbo 2.7.
-   */
-  private static final class HttpRequestAccess {
-    private static final Object UNAVAILABLE = new Object();
-    private static volatile Object instance;
-
-    final MethodHandle uri;
-    final MethodHandle header;
-    final MethodHandle headerNames;
-    final MethodHandle remoteAddr;
-    final MethodHandle remotePort;
-    final MethodHandle localAddr;
-    final MethodHandle localPort;
-
-    private HttpRequestAccess(Class<?> clazz) throws ReflectiveOperationException {
-      MethodHandles.Lookup lookup = MethodHandles.publicLookup();
-      uri = lookup.unreflect(clazz.getMethod("uri"));
-      header = lookup.unreflect(clazz.getMethod("header", CharSequence.class));
-      headerNames = lookup.unreflect(clazz.getMethod("headerNames"));
-      remoteAddr = lookup.unreflect(clazz.getMethod("remoteAddr"));
-      remotePort = lookup.unreflect(clazz.getMethod("remotePort"));
-      localAddr = lookup.unreflect(clazz.getMethod("localAddr"));
-      localPort = lookup.unreflect(clazz.getMethod("localPort"));
-    }
-
-    @Nullable
-    static HttpRequestAccess resolve(Object requestObj) {
-      Object ref = instance;
-      if (ref == null) {
-        try {
-          ref = new HttpRequestAccess(requestObj.getClass());
-        } catch (Throwable t) {
-          ref = UNAVAILABLE;
-        }
-        instance = ref;
-      }
-      return ref instanceof HttpRequestAccess ? (HttpRequestAccess) ref : null;
-    }
-  }
 
   private static final TextMapGetter<Object> HTTP_REQUEST_GETTER =
       new TextMapGetter<Object>() {
@@ -124,27 +83,32 @@ public final class DubboUnknownServiceHelper {
   private static final String DEDUP_ATTACHMENT_KEY = "_otel_unknown_svc_span";
 
   /**
-   * Creates an unknown service span when {@code DubboProtocol.getInvoker()} throws. This handles
-   * the Dubbo protocol (binary) case where decode succeeds past {@code
-   * PermittedSerializationKeeper} (older Dubbo versions without the check, or generic invocations
-   * that pass) but the invoker lookup fails. Trace context is extracted from invocation
-   * attachments, so the resulting span is linked to the client span (1 trace).
+   * Creates an unknown service span when {@code DubboProtocol.getInvoker()} throws because the
+   * requested service is not registered in the exporter map. This handles the Dubbo protocol
+   * (binary) case where decode succeeds past {@code PermittedSerializationKeeper} (older Dubbo
+   * versions without the check, or generic invocations that pass) but the invoker lookup fails.
+   * Trace context is extracted from invocation attachments, so the resulting span is linked to the
+   * client span (1 trace).
+   *
+   * <p>Only {@code RemotingException} with "Not found exported service" triggers span creation;
+   * other getInvoker failures are not unknown-service errors and are ignored.
    */
   @SuppressWarnings("deprecation") // Dubbo 2.7 API: getAttachments()
   public static void createUnknownServiceSpan(
       RpcInvocation rpcInvocation,
       @Nullable InetSocketAddress remoteAddress,
-      @Nullable InetSocketAddress localAddress,
       Throwable throwable,
       long startTimeMillis) {
 
-    if (serverInstrumenter() == null || isAlreadyRecorded(rpcInvocation)) {
+    if (serverInstrumenter() == null
+        || !isUnknownServiceInvokerFailure(throwable)
+        || isAlreadyRecorded(rpcInvocation)) {
       return;
     }
 
     DubboRequest request =
         DubboRequest.createForUnknownService(
-            rpcInvocation, buildOriginalFullMethodName(rpcInvocation), remoteAddress, localAddress);
+            rpcInvocation, buildOriginalFullMethodName(rpcInvocation), remoteAddress);
 
     Context parentContext =
         GlobalOpenTelemetry.getPropagators()
@@ -155,10 +119,14 @@ public final class DubboUnknownServiceHelper {
   }
 
   /**
-   * Creates an unknown service span when {@code DecodeableRpcInvocation.decode()} throws. This
-   * handles the Dubbo protocol (binary) case where {@code PermittedSerializationKeeper} rejects the
-   * request during decode because the service is not registered. This happens in newer Dubbo
-   * versions that enforce serialization security checks.
+   * Creates an unknown service span when {@code DecodeableRpcInvocation.decode()} throws because
+   * {@code PermittedSerializationKeeper} rejects the request for an unregistered service. This
+   * happens in newer Dubbo versions that enforce serialization security checks.
+   *
+   * <p>Only {@code IOException} whose message contains "invocation rejected" (the signature of
+   * {@code PermittedSerializationKeeper}) triggers span creation. Other decode failures (malformed
+   * streams, unsupported serialization, argument deserialization for registered services, etc.) are
+   * not unknown-service errors and are ignored.
    *
    * <p>Note: trace context is unavailable in this path because in the Dubbo protocol wire format,
    * attachments (which carry traceparent) are serialized after parameter values and haven't been
@@ -167,23 +135,23 @@ public final class DubboUnknownServiceHelper {
   public static void createUnknownServiceSpanFromDecode(
       RpcInvocation rpcInvocation, Object channelObj, Throwable throwable, long startTimeMillis) {
 
-    if (serverInstrumenter() == null || isAlreadyRecorded(rpcInvocation)) {
+    if (serverInstrumenter() == null
+        || !isUnknownServiceDecodeFailure(throwable)
+        || isAlreadyRecorded(rpcInvocation)) {
       return;
     }
 
     InetSocketAddress remoteAddress = null;
-    InetSocketAddress localAddress = null;
     try {
       Channel channel = (Channel) channelObj;
       remoteAddress = channel.getRemoteAddress();
-      localAddress = channel.getLocalAddress();
     } catch (Throwable ignored) {
       // channel type may not match in some versions
     }
 
     DubboRequest request =
         DubboRequest.createForUnknownService(
-            rpcInvocation, buildOriginalFullMethodName(rpcInvocation), remoteAddress, localAddress);
+            rpcInvocation, buildOriginalFullMethodName(rpcInvocation), remoteAddress);
 
     startAndEndSpan(serverInstrumenter(), Context.root(), request, throwable, startTimeMillis);
   }
@@ -193,18 +161,22 @@ public final class DubboUnknownServiceHelper {
    * Dubbo protocol (binary), Triple transmits trace context as HTTP/2 headers, so the parent
    * context is always available — resulting in a single trace.
    *
+   * <p>Only {@code HttpStatusException} with status 404 (the Dubbo Triple not-found outcome)
+   * triggers span creation. Other Triple failures (e.g., descriptor/codec construction for
+   * recognized methods) are not unknown-service errors and are ignored.
+   *
    * <p>Uses cached MethodHandles to access the HttpRequest object because Triple classes (from
    * dubbo-rpc-triple / dubbo-remoting-http12) are not available at compile time against Dubbo 2.7.
    *
    * @param requestObj the HttpRequest object from GrpcRequestHandlerMapping.getRequestHandler()
-   * @param throwable the exception thrown (typically HttpStatusException with 404)
+   * @param throwable the exception thrown (HttpStatusException with 404 for not-found)
    * @param startTimeMillis timestamp when the method was entered
    */
   @SuppressWarnings("deprecation") // Dubbo 2.7 API: setAttachment()
   public static void createUnknownServiceSpanFromTriple(
       Object requestObj, Throwable throwable, long startTimeMillis) {
 
-    if (serverInstrumenter() == null) {
+    if (serverInstrumenter() == null || !isTripleNotFoundFailure(throwable)) {
       return;
     }
 
@@ -230,12 +202,10 @@ public final class DubboUnknownServiceHelper {
     rpcInvocation.setAttachment("path", parts[0]);
     rpcInvocation.setMethodName(parts[1]);
 
-    InetSocketAddress remoteAddress = buildSocketAddress(access, requestObj, true);
-    InetSocketAddress localAddress = buildSocketAddress(access, requestObj, false);
+    InetSocketAddress remoteAddress = buildRemoteSocketAddress(access, requestObj);
 
     DubboRequest request =
-        DubboRequest.createForUnknownService(
-            rpcInvocation, fullMethodName, remoteAddress, localAddress);
+        DubboRequest.createForUnknownService(rpcInvocation, fullMethodName, remoteAddress);
 
     Context parentContext =
         GlobalOpenTelemetry.getPropagators()
@@ -243,6 +213,46 @@ public final class DubboUnknownServiceHelper {
             .extract(Context.root(), requestObj, HTTP_REQUEST_GETTER);
 
     startAndEndSpan(serverInstrumenter(), parentContext, request, throwable, startTimeMillis);
+  }
+
+  /**
+   * Returns {@code true} if the throwable indicates that {@code PermittedSerializationKeeper}
+   * rejected the request because the service is not registered.
+   */
+  static boolean isUnknownServiceDecodeFailure(Throwable throwable) {
+    if (!(throwable instanceof IOException)) {
+      return false;
+    }
+    String message = throwable.getMessage();
+    return message != null && message.contains("invocation rejected");
+  }
+
+  /**
+   * Returns {@code true} if the throwable indicates that {@code DubboProtocol.getInvoker()} could
+   * not find the requested service in the exporter map.
+   */
+  static boolean isUnknownServiceInvokerFailure(Throwable throwable) {
+    String message = throwable.getMessage();
+    return message != null && message.contains("Not found exported service");
+  }
+
+  /**
+   * Returns {@code true} if the throwable is a Dubbo Triple 404 (service not found). The class
+   * check uses the name string because {@code HttpStatusException} is not available at compile time
+   * against Dubbo 2.7.
+   */
+  static boolean isTripleNotFoundFailure(Throwable throwable) {
+    if (!"org.apache.dubbo.remoting.http12.exception.HttpStatusException"
+        .equals(throwable.getClass().getName())) {
+      return false;
+    }
+    try {
+      Method statusMethod = throwable.getClass().getMethod("getStatusCode");
+      Object status = statusMethod.invoke(throwable);
+      return status instanceof Integer && (Integer) status == 404;
+    } catch (ReflectiveOperationException ignored) {
+      return false;
+    }
   }
 
   /**
@@ -270,13 +280,11 @@ public final class DubboUnknownServiceHelper {
   }
 
   @Nullable
-  private static InetSocketAddress buildSocketAddress(
-      HttpRequestAccess access, Object requestObj, boolean remote) {
+  private static InetSocketAddress buildRemoteSocketAddress(
+      HttpRequestAccess access, Object requestObj) {
     try {
-      MethodHandle addrHandle = remote ? access.remoteAddr : access.localAddr;
-      MethodHandle portHandle = remote ? access.remotePort : access.localPort;
-      String addr = (String) addrHandle.invoke(requestObj);
-      int port = (int) portHandle.invoke(requestObj);
+      String addr = (String) access.remoteAddr.invoke(requestObj);
+      int port = (int) access.remotePort.invoke(requestObj);
       if (addr != null && port > 0) {
         return new InetSocketAddress(addr, port);
       }
@@ -325,4 +333,43 @@ public final class DubboUnknownServiceHelper {
   }
 
   private DubboUnknownServiceHelper() {}
+
+  /**
+   * Lazily-cached MethodHandles for Dubbo Triple protocol's HttpRequest interface. Resolved once
+   * from the runtime class to avoid per-call reflection overhead. The HttpRequest class (from
+   * dubbo-remoting-http12) is not available at compile time against Dubbo 2.7.
+   */
+  private static final class HttpRequestAccess {
+    private static final Object UNAVAILABLE = new Object();
+    private static volatile Object instance;
+
+    final MethodHandle uri;
+    final MethodHandle header;
+    final MethodHandle headerNames;
+    final MethodHandle remoteAddr;
+    final MethodHandle remotePort;
+
+    private HttpRequestAccess(Class<?> clazz) throws ReflectiveOperationException {
+      MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+      uri = lookup.unreflect(clazz.getMethod("uri"));
+      header = lookup.unreflect(clazz.getMethod("header", CharSequence.class));
+      headerNames = lookup.unreflect(clazz.getMethod("headerNames"));
+      remoteAddr = lookup.unreflect(clazz.getMethod("remoteAddr"));
+      remotePort = lookup.unreflect(clazz.getMethod("remotePort"));
+    }
+
+    @Nullable
+    static HttpRequestAccess resolve(Object requestObj) {
+      Object ref = instance;
+      if (ref == null) {
+        try {
+          ref = new HttpRequestAccess(requestObj.getClass());
+        } catch (Throwable t) {
+          ref = UNAVAILABLE;
+        }
+        instance = ref;
+      }
+      return ref instanceof HttpRequestAccess ? (HttpRequestAccess) ref : null;
+    }
+  }
 }
