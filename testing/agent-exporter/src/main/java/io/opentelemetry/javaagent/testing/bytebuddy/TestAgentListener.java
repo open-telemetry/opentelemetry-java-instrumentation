@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.testing.bytebuddy;
 
 import static java.util.logging.Level.SEVERE;
 
+import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.tooling.EmptyConfigProperties;
 import io.opentelemetry.javaagent.tooling.SafeServiceLoader;
@@ -22,7 +23,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -37,8 +40,17 @@ public class TestAgentListener implements AgentBuilder.Listener {
 
   private static final Trie<IgnoreAllow> ADDITIONAL_LIBRARIES_TRIE;
   private static final Trie<IgnoreAllow> OTHER_IGNORES_TRIE;
+  private static final AtomicBoolean contextStorageInitialized = new AtomicBoolean();
+  private static final AtomicReference<Boolean> contextStorageInitializedBeforeInstrumentation =
+      new AtomicReference<>();
 
   static {
+    // record when context storage is initialized so tests can verify the agent startup ordering
+    ContextStorage.addWrapper(
+        storage -> {
+          contextStorageInitialized.set(true);
+          return storage;
+        });
     ADDITIONAL_LIBRARIES_TRIE = buildAdditionalLibraryIgnores();
     OTHER_IGNORES_TRIE = buildOtherConfiguredIgnores();
   }
@@ -73,6 +85,10 @@ public class TestAgentListener implements AgentBuilder.Listener {
 
   public static int getInstrumentationErrorCount() {
     return INSTANCE.instrumentationErrorCount.get();
+  }
+
+  public static boolean isContextStorageInitializedBeforeInstrumentation() {
+    return Boolean.TRUE.equals(contextStorageInitializedBeforeInstrumentation.get());
   }
 
   public static int getAndResetMuzzleFailureCount() {
@@ -113,6 +129,9 @@ public class TestAgentListener implements AgentBuilder.Listener {
   @Override
   public void onDiscovery(
       String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {
+    // capture the state when installation of the main agent builder starts discovering classes
+    contextStorageInitializedBeforeInstrumentation.compareAndSet(
+        null, contextStorageInitialized.get());
     for (Function<String, Boolean> skipCondition : skipTransformationConditions) {
       if (skipCondition.apply(typeName)) {
         throw new AbortTransformationException(
