@@ -36,6 +36,11 @@ class SqsParentContextTest {
   private static SqsMessage messageWithTraceHeader() {
     return new SqsMessage() {
       @Override
+      public Context getCreationContext() {
+        return Context.root();
+      }
+
+      @Override
       public Map<String, MessageAttributeValue> messageAttributes() {
         return emptyMap();
       }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -128,6 +129,16 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
 
   protected String getKafkaBootstrapServers() {
     return kafka.getHost() + ":" + kafkaExposedPort;
+  }
+
+  protected static String messagingSpanName(
+      String destinationName, String oldOperationName, String stableOperationName) {
+    if (emitStableMessagingSemconv()) {
+      return destinationName == null
+          ? stableOperationName
+          : stableOperationName + " " + destinationName;
+    }
+    return (destinationName == null ? "unknown" : destinationName) + " " + oldOperationName;
   }
 
   @Override
@@ -278,7 +289,9 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
             .withEnv("OTEL_METRIC_EXPORT_INTERVAL", "1000")
             .withEnv(
                 "OTEL_SEMCONV_STABILITY_OPT_IN",
-                System.getProperty("otel.semconv-stability.opt-in"))
+                emitStableMessagingSemconv()
+                    ? "messaging"
+                    : System.getProperty("otel.semconv-stability.opt-in"))
             .withEnv("CONNECT_BOOTSTRAP_SERVERS", getInternalKafkaBootstrapServers())
             .withEnv("CONNECT_REST_ADVERTISED_HOST_NAME", KAFKA_CONNECT_NETWORK_ALIAS)
             .withEnv("CONNECT_PLUGIN_PATH", PLUGIN_PATH_CONTAINER)

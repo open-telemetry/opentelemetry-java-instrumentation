@@ -63,6 +63,7 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("SqsSuppressReceiveSpansTest.testAbandonedIteratorDoesNotParentNextProcessSpan")
+      includeTestsMatching("SqsTracingTest.testReceiveSpanLinksToProducer")
     }
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
   }

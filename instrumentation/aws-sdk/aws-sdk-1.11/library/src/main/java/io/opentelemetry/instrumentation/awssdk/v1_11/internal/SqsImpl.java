@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
@@ -78,8 +80,9 @@ public final class SqsImpl {
               timer.now());
     }
 
+    Context processParentContext = emitStableMessagingSemconv() ? parentContext : receiveContext;
     addTracing(
-        receiveMessageResult, request, response, consumerProcessInstrumenter, receiveContext);
+        receiveMessageResult, request, response, consumerProcessInstrumenter, processParentContext);
   }
 
   @Nullable private static final Field messagesField = getMessagesField();
@@ -100,7 +103,7 @@ public final class SqsImpl {
       Request<?> request,
       Response<?> response,
       Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter,
-      @Nullable Context receiveContext) {
+      @Nullable Context processParentContext) {
     if (messagesField == null) {
       return;
     }
@@ -114,7 +117,7 @@ public final class SqsImpl {
               consumerProcessInstrumenter,
               request,
               response,
-              receiveContext));
+              processParentContext));
     } catch (IllegalAccessException ignored) {
       // should not happen, we call setAccessible on the field
     }

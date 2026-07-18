@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE;
 
@@ -76,7 +77,8 @@ public final class SqsImpl {
         config.getConsumerReceiveInstrumenter();
     io.opentelemetry.context.Context receiveContext = null;
     SqsReceiveRequest receiveRequest =
-        SqsReceiveRequest.create(executionAttributes, SqsMessageImpl.wrap(response.messages()));
+        SqsReceiveRequest.create(
+            executionAttributes, SqsMessageImpl.wrap(response.messages(), config));
     if (timer != null && consumerReceiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
       receiveContext =
           InstrumenterUtil.startAndEnd(
@@ -88,6 +90,8 @@ public final class SqsImpl {
               timer.startTime(),
               timer.now());
     }
+    io.opentelemetry.context.Context processParentContext =
+        emitStableMessagingSemconv() ? parentContext : receiveContext;
     // copy ExecutionAttributes as these will get cleared before the process spans are created
     ExecutionAttributes copy = new ExecutionAttributes();
     copy.putAttribute(
@@ -108,7 +112,7 @@ public final class SqsImpl {
             copy,
             new Response(context.httpResponse(), response),
             config,
-            receiveContext);
+            processParentContext);
 
     // store tracing list in context so that our proxied SqsClient/SqsAsyncClient could pick it up
     SqsTracingContext.set(parentContext, tracingList);

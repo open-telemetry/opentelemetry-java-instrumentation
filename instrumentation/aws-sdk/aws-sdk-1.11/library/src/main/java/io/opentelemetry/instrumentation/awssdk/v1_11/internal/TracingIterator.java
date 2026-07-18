@@ -5,26 +5,16 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-
-import com.amazonaws.Request;
-import com.amazonaws.Response;
 import com.amazonaws.services.sqs.model.Message;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 
 class TracingIterator implements Iterator<Message> {
 
   private final Iterator<Message> delegateIterator;
-  private final Instrumenter<SqsProcessRequest, Response<?>> instrumenter;
-  private final Request<?> request;
-  private final Response<?> response;
-  @Nullable private final Context receiveContext;
+  private final TracingList tracingList;
 
   /*
    * Note: this may potentially create problems if this iterator is used from different threads. But
@@ -34,26 +24,13 @@ class TracingIterator implements Iterator<Message> {
   @Nullable private Context currentContext;
   @Nullable private Scope currentScope;
 
-  private TracingIterator(
-      Iterator<Message> delegateIterator,
-      Instrumenter<SqsProcessRequest, Response<?>> instrumenter,
-      Request<?> request,
-      Response<?> response,
-      @Nullable Context receiveContext) {
+  private TracingIterator(Iterator<Message> delegateIterator, TracingList tracingList) {
     this.delegateIterator = delegateIterator;
-    this.instrumenter = instrumenter;
-    this.request = request;
-    this.response = response;
-    this.receiveContext = receiveContext;
+    this.tracingList = tracingList;
   }
 
-  static Iterator<Message> wrap(
-      Iterator<Message> delegateIterator,
-      Instrumenter<SqsProcessRequest, Response<?>> instrumenter,
-      Request<?> request,
-      Response<?> response,
-      @Nullable Context receiveContext) {
-    return new TracingIterator(delegateIterator, instrumenter, request, response, receiveContext);
+  static Iterator<Message> wrap(Iterator<Message> delegateIterator, TracingList tracingList) {
+    return new TracingIterator(delegateIterator, tracingList);
   }
 
   @Override
@@ -74,37 +51,25 @@ class TracingIterator implements Iterator<Message> {
     // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
     Message next = delegateIterator.next();
     if (next != null) {
-      Context parentContext = receiveContext;
+      SqsMessage sqsMessage = SqsMessageImpl.wrap(next);
+      Context parentContext = tracingList.getProcessParentContext();
       if (parentContext == null) {
-        parentContext =
-            emitStableMessagingSemconv()
-                ? currentContextWithoutLeakedProcessSpan()
-                : SqsParentContext.ofSystemAttributes(next.getAttributes());
+        parentContext = sqsMessage.getCreationContext();
       }
 
-      currentRequest = SqsProcessRequest.create(request, SqsMessageImpl.wrap(next));
-      currentContext = instrumenter.start(parentContext, currentRequest);
+      currentRequest = SqsProcessRequest.create(tracingList.getRequest(), sqsMessage);
+      currentContext = tracingList.getInstrumenter().start(parentContext, currentRequest);
       currentScope = currentContext.makeCurrent();
     }
     return next;
   }
 
-  private static Context currentContextWithoutLeakedProcessSpan() {
-    Context context = Context.current();
-    Span currentSpan = Span.fromContext(context);
-    // If the current span is a process span leaked by an abandoned iterator, replace it with an
-    // invalid span so the customizer falls back to extracting the parent from the message's
-    // producer context. Otherwise leave the context untouched, so a genuine ambient application
-    // span (if any) remains the parent. Either way baggage and other context values are preserved.
-    return currentSpan == SpanKey.CONSUMER_PROCESS.fromContextOrNull(context)
-        ? context.with(Span.getInvalid())
-        : context;
-  }
-
   private void closeScopeAndEndSpan() {
     if (currentScope != null) {
       currentScope.close();
-      instrumenter.end(currentContext, currentRequest, response, null);
+      tracingList
+          .getInstrumenter()
+          .end(currentContext, currentRequest, tracingList.getResponse(), null);
       currentScope = null;
       currentRequest = null;
       currentContext = null;

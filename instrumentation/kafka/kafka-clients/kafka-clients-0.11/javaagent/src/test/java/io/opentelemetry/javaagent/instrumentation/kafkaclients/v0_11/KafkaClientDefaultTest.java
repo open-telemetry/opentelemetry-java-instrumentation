@@ -77,6 +77,42 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
           });
     }
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    if (emitStableMessagingSemconv()) {
+      testing.waitAndAssertSortedTraces(
+          orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                  span -> {
+                    span.hasName("send " + SHARED_TOPIC)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes("10", greeting, testHeaders));
+                    producerSpan.set(span.actual());
+                  },
+                  span ->
+                      span.hasName("process " + SHARED_TOPIC)
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                          .hasAttributesSatisfyingExactly(
+                              processAttributes("10", greeting, testHeaders, false)),
+                  span -> span.hasName("processing").hasParent(trace.getSpan(2)),
+                  span ->
+                      span.hasName("producer callback")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasParent(trace.getSpan(0))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("poll " + SHARED_TOPIC)
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
+      return;
+    }
+
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(
             SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
@@ -120,6 +156,39 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                 span -> span.hasName("processing").hasParent(trace.getSpan(1))));
   }
 
+  @Test
+  void testReceiveDoesNotParentProcessSpan() throws Exception {
+    producer.send(new ProducerRecord<>(SHARED_TOPIC, 10, "Hello Kafka!")).get(5, SECONDS);
+
+    awaitUntilConsumerIsReady();
+    ConsumerRecords<?, ?> records = poll(Duration.ofSeconds(5));
+    assertThat(records.count()).isEqualTo(1);
+
+    for (ConsumerRecord<?, ?> ignored : records) {
+      testing.runWithSpan("processing", () -> {});
+    }
+
+    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanKind(SpanKind.PRODUCER, SpanKind.CLIENT),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> {
+                  span.hasName("send " + SHARED_TOPIC).hasKind(SpanKind.PRODUCER).hasNoParent();
+                  producerSpan.set(span.actual());
+                },
+                span ->
+                    span.hasName("process " + SHARED_TOPIC)
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0))
+                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext())),
+                span -> span.hasName("processing").hasParent(trace.getSpan(1))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("poll " + SHARED_TOPIC).hasKind(SpanKind.CLIENT).hasNoParent()));
+  }
+
   @DisplayName("test pass through tombstone")
   @Test
   void testPassThroughTombstone() throws Exception {
@@ -135,6 +204,35 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     }
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    if (emitStableMessagingSemconv()) {
+      testing.waitAndAssertSortedTraces(
+          orderByRootSpanKind(SpanKind.PRODUCER, SpanKind.CLIENT),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> {
+                    span.hasName("send " + SHARED_TOPIC)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(sendAttributes(null, null, false));
+                    producerSpan.set(span.actual());
+                  },
+                  span ->
+                      span.hasName("process " + SHARED_TOPIC)
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(0))
+                          .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                          .hasAttributesSatisfyingExactly(
+                              processAttributes(null, null, false, false))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("poll " + SHARED_TOPIC)
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(receiveAttributes(false))));
+      return;
+    }
+
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(
             SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
@@ -204,6 +302,35 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     }
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    if (emitStableMessagingSemconv()) {
+      testing.waitAndAssertSortedTraces(
+          orderByRootSpanKind(SpanKind.PRODUCER, SpanKind.CLIENT),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> {
+                    span.hasName("send " + SHARED_TOPIC)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(sendAttributes(null, greeting, false));
+                    producerSpan.set(span.actual());
+                  },
+                  span ->
+                      span.hasName("process " + SHARED_TOPIC)
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(0))
+                          .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                          .hasAttributesSatisfyingExactly(
+                              processAttributes(null, greeting, false, false))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("poll " + SHARED_TOPIC)
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(receiveAttributes(false))));
+      return;
+    }
+
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(
             SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
@@ -278,6 +405,41 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
           });
     }
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    if (emitStableMessagingSemconv()) {
+      testing.waitAndAssertSortedTraces(
+          orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                  span -> {
+                    span.hasName("send " + SHARED_TOPIC)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(sendAttributes("10", greeting, false));
+                    producerSpan.set(span.actual());
+                  },
+                  span ->
+                      span.hasName("process " + SHARED_TOPIC)
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                          .hasAttributesSatisfyingExactly(
+                              processAttributes("10", greeting, false, false)),
+                  span -> span.hasName("processing").hasParent(trace.getSpan(2)),
+                  span ->
+                      span.hasName("producer callback")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasParent(trace.getSpan(0))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("poll " + SHARED_TOPIC)
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(receiveAttributes(false))));
+      return;
+    }
+
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(
             SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),

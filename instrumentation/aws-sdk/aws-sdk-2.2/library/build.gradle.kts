@@ -87,6 +87,7 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("Aws2SqsSuppressReceiveSpansW3cPropagatorTest.testAbandonedIteratorDoesNotParentNextProcessSpan")
+      includeTestsMatching("Aws2SqsDefaultPropagatorTest.testReceiveSpanLinksToProducer")
     }
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
   }

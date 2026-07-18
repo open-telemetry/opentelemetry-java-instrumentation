@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.List;
@@ -32,11 +34,13 @@ final class RocketMqConsumerInstrumenter {
       }
     } else {
       if (batchReceiveInstrumenter.shouldStart(parentContext, null)) {
-        Context rootContext = batchReceiveInstrumenter.start(parentContext, null);
+        Context receiveContext = batchReceiveInstrumenter.start(parentContext, null);
+        Context processParentContext =
+            emitStableMessagingSemconv() ? parentContext : receiveContext;
         for (MessageExt message : msgs) {
-          createChildSpan(rootContext, message);
+          createChildSpan(processParentContext, message);
         }
-        return rootContext;
+        return receiveContext;
       }
     }
     return parentContext;

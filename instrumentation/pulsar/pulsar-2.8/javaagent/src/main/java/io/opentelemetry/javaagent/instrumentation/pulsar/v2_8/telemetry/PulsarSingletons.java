@@ -200,10 +200,11 @@ public class PulsarSingletons {
             throwable,
             timer.startTime(),
             timer.now());
+    Context processParentContext = emitStableMessagingSemconv() ? parent : receiveContext;
     // injected context is used in MessageListenerInstrumentation and also in the spring-pulsar
     // instrumentation
-    VirtualFieldStore.inject(message, receiveContext);
-    return receiveContext;
+    VirtualFieldStore.inject(message, processParentContext);
+    return processParentContext;
   }
 
   @Nullable
@@ -230,12 +231,13 @@ public class PulsarSingletons {
             throwable,
             timer.startTime(),
             timer.now());
+    Context processParentContext = emitStableMessagingSemconv() ? parent : receiveContext;
     // injected context is used in MessageListenerInstrumentation and also in the spring-pulsar
     // instrumentation
     for (Message<?> message : messages) {
-      VirtualFieldStore.inject(message, receiveContext);
+      VirtualFieldStore.inject(message, processParentContext);
     }
-    return receiveContext;
+    return processParentContext;
   }
 
   public static CompletableFuture<Void> wrap(CompletableFuture<Void> future) {

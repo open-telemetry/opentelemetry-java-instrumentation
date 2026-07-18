@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -29,6 +30,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SE
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -272,6 +274,42 @@ public abstract class AbstractSqsTracingTest {
                         span.hasName("process child")
                             .hasParent(trace.getSpan(1))
                             .hasTotalAttributeCount(0)));
+  }
+
+  @Test
+  void testReceiveSpanLinksToProducer() {
+    assumeTrue(emitStableMessagingSemconv());
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "hello"));
+    sqsClient.receiveMessage(queueUrl);
+
+    AtomicReference<SpanData> publishSpan = new AtomicReference<>();
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("SQS.CreateQueue").hasKind(SpanKind.CLIENT)),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> {
+                      publishSpan.set(trace.getSpan(0));
+                      span.hasName("publish testSdkSqs").hasKind(SpanKind.PRODUCER);
+                    }),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("receive testSdkSqs")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasLinksSatisfying(
+                                links ->
+                                    assertThat(links)
+                                        .singleElement()
+                                        .satisfies(
+                                            link ->
+                                                assertThat(link.getSpanContext().getSpanId())
+                                                    .isEqualTo(publishSpan.get().getSpanId())))));
   }
 
   @Test

@@ -57,10 +57,22 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("KafkaClientSuppressReceiveSpansTest.testAbandonedIteratorDoesNotParentNextProcessSpan")
+      includeTestsMatching("KafkaClientDefaultTest.testKafkaProducerAndConsumerSpan")
     }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
+  }
+
+  val testMessagingPreviewDup = register<Test>("testMessagingPreviewDup") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("KafkaClientDefaultTest.testReceiveDoesNotParentProcessSpan")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging/dup")
   }
 
   val testExperimental = register<Test>("testExperimental") {
@@ -109,6 +121,7 @@ tasks {
       testPropagationDisabled,
       testReceiveSpansDisabled,
       testMessagingPreview,
+      testMessagingPreviewDup,
       testExperimental,
     )
   }

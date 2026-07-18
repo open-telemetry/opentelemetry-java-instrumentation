@@ -9,8 +9,8 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
@@ -117,7 +117,18 @@ public final class AwsSdkInstrumenterFactory {
         MessagingSpanKindExtractor.create(operationType),
         toSqsRequestExtractors(attributesExtractors()),
         singletonList(messagingAttributeExtractor),
-        builder -> setMessagingReceiveExceptionEventExtractor(builder),
+        builder -> {
+          setMessagingReceiveExceptionEventExtractor(builder);
+          if (emitStableMessagingSemconv()) {
+            builder.addSpanLinksExtractor(
+                (spanLinks, parentContext, request) -> {
+                  for (SqsMessage message : request.getMessages()) {
+                    spanLinks.addLink(
+                        Span.fromContext(message.getCreationContext()).getSpanContext());
+                  }
+                });
+          }
+        },
         messagingReceiveInstrumentationEnabled);
   }
 
@@ -139,17 +150,15 @@ public final class AwsSdkInstrumenterFactory {
     if (emitStableMessagingSemconv() || messagingReceiveInstrumentationEnabled) {
       builder.addSpanLinksExtractor(
           (spanLinks, parentContext, request) -> {
-            Context extracted =
-                SqsParentContext.ofSystemAttributes(request.getMessage().getAttributes());
-            spanLinks.addLink(Span.fromContext(extracted).getSpanContext());
+            spanLinks.addLink(
+                Span.fromContext(request.getMessage().getCreationContext()).getSpanContext());
           });
     }
     if (emitStableMessagingSemconv()) {
       builder.addContextCustomizer(
           MessagingProcessContextCustomizer.create(
               (parentContext, request) ->
-                  SqsParentContext.ofSystemAttributes(
-                      parentContext, request.getMessage().getAttributes())));
+                  parentContext.with(Span.fromContext(request.getMessage().getCreationContext()))));
     }
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }

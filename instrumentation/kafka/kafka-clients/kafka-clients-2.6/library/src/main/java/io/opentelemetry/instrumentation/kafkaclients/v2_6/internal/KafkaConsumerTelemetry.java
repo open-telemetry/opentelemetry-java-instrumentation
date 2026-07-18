@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.context.Context;
@@ -77,9 +78,9 @@ public class KafkaConsumerTelemetry {
     }
     Context parentContext = Context.current();
     KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumerGroup, clientId);
-    Context context = null;
+    Context receiveContext = null;
     if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
-      context =
+      receiveContext =
           InstrumenterUtil.startAndEnd(
               consumerReceiveInstrumenter,
               parentContext,
@@ -90,11 +91,7 @@ public class KafkaConsumerTelemetry {
               timer.now());
     }
 
-    // we're returning the context of the receive span so that process spans can use it as
-    // parent context even though the span has ended
-    // this is the suggested behavior according to the spec batch receive scenario:
-    // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#batch-receiving
-    return context;
+    return emitStableMessagingSemconv() ? parentContext : receiveContext;
   }
 
   public <K, V> void buildAndFinishErrorSpan(

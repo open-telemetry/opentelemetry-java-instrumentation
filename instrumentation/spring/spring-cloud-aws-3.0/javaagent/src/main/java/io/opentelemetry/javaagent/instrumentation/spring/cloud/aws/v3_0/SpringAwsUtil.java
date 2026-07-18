@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.Response;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsMessage;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsMessageImpl;
-import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsParentContext;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsProcessRequest;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingList;
@@ -83,10 +82,11 @@ public class SpringAwsUtil {
     if (tracingContext == null) {
       return null;
     }
-    SqsMessage wrappedMessage = SqsMessageImpl.wrap(tracingContext.sqsMessage);
-    Context parentContext = tracingContext.receiveContext;
+    SqsMessage wrappedMessage =
+        SqsMessageImpl.wrap(tracingContext.sqsMessage, tracingContext.config);
+    Context parentContext = tracingContext.processParentContext;
     if (parentContext == null) {
-      parentContext = SqsParentContext.ofMessage(wrappedMessage, tracingContext.config);
+      parentContext = wrappedMessage.getCreationContext();
     }
     return parentContext.makeCurrent();
   }
@@ -121,7 +121,7 @@ public class SpringAwsUtil {
     private final Response response;
     private final Instrumenter<SqsProcessRequest, Response> instrumenter;
     private final TracingExecutionInterceptor config;
-    @Nullable private final Context receiveContext;
+    @Nullable private final Context processParentContext;
     private final software.amazon.awssdk.services.sqs.model.Message sqsMessage;
 
     private TracingContext(
@@ -130,16 +130,16 @@ public class SpringAwsUtil {
       this.response = tracingList.getResponse();
       this.instrumenter = tracingList.getInstrumenter();
       this.config = tracingList.getConfig();
-      this.receiveContext = tracingList.getReceiveContext();
+      this.processParentContext = tracingList.getProcessParentContext();
       this.sqsMessage = sqsMessage;
     }
 
     @Nullable
     MessageScope trace() {
-      SqsMessage wrappedMessage = SqsMessageImpl.wrap(sqsMessage);
-      Context parentContext = receiveContext;
+      SqsMessage wrappedMessage = SqsMessageImpl.wrap(sqsMessage, config);
+      Context parentContext = processParentContext;
       if (parentContext == null) {
-        parentContext = SqsParentContext.ofMessage(wrappedMessage, config);
+        parentContext = wrappedMessage.getCreationContext();
       }
       SqsProcessRequest processRequest = SqsProcessRequest.create(request, wrappedMessage);
       if (!instrumenter.shouldStart(parentContext, processRequest)) {

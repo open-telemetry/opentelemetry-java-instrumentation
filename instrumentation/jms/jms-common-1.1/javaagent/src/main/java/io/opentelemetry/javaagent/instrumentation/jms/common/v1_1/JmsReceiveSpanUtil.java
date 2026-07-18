@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.common.v1_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
@@ -44,7 +46,7 @@ public class JmsReceiveSpanUtil {
               throwable,
               timer.startTime(),
               timer.now());
-      JmsReceiveContextHolder.set(receiveContext);
+      JmsReceiveContextHolder.set(emitStableMessagingSemconv() ? parentContext : receiveContext);
     }
   }
 

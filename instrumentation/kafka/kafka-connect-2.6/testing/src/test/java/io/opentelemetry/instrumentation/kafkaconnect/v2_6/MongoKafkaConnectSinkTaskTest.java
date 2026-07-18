@@ -7,11 +7,14 @@ package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingOperationTypeIncubatingValues.PROCESS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA;
@@ -128,32 +131,41 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
             // producer is in a separate trace, linked to consumer with a span link
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasName(testTopicName + " publish").hasKind(SpanKind.PRODUCER).hasNoParent();
+                  span.hasName(messagingSpanName(testTopicName, "publish", "send"))
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasNoParent();
                   producerSpanContext.set(span.actual().getSpanContext());
                 }),
         trace ->
             // kafka connect sends message to status topic while processing our message
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("kafka-connect-status publish")
+                    span.hasName(messagingSpanName("kafka-connect-status", "publish", "send"))
                         .hasKind(SpanKind.PRODUCER)
                         .hasNoParent(),
                 span ->
-                    span.hasName("kafka-connect-status process")
+                    span.hasName(messagingSpanName("kafka-connect-status", "process", "process"))
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))),
         trace ->
             // kafka connect consumer trace, linked to producer span via a span link
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(testTopicName + " process")
+                    span.hasName(messagingSpanName(testTopicName, "process", "process"))
                         .hasKind(CONSUMER)
                         .hasNoParent()
                         .hasLinks(LinkData.create(producerSpanContext.get()))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
                             equalTo(MESSAGING_DESTINATION_NAME, testTopicName),
-                            equalTo(MESSAGING_OPERATION, PROCESS),
+                            equalTo(
+                                MESSAGING_OPERATION, emitStableMessagingSemconv() ? null : PROCESS),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "process" : null),
                             equalTo(MESSAGING_SYSTEM, KAFKA),
                             satisfies(THREAD_ID, val -> val.isNotZero()),
                             satisfies(THREAD_NAME, val -> val.isNotBlank())),
@@ -217,11 +229,11 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
             // kafka connect sends message to status topic while processing our message
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("kafka-connect-status publish")
+                    span.hasName(messagingSpanName("kafka-connect-status", "publish", "send"))
                         .hasKind(SpanKind.PRODUCER)
                         .hasNoParent(),
                 span ->
-                    span.hasName("kafka-connect-status process")
+                    span.hasName(messagingSpanName("kafka-connect-status", "process", "process"))
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0)));
 
@@ -234,19 +246,19 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
                 span -> {
-                  span.hasName(topicName1 + " publish")
+                  span.hasName(messagingSpanName(topicName1, "publish", "send"))
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0));
                   producerSpanContext1.set(span.actual().getSpanContext());
                 },
                 span -> {
-                  span.hasName(topicName2 + " publish")
+                  span.hasName(messagingSpanName(topicName2, "publish", "send"))
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0));
                   producerSpanContext2.set(span.actual().getSpanContext());
                 },
                 span -> {
-                  span.hasName(topicName3 + " publish")
+                  span.hasName(messagingSpanName(topicName3, "publish", "send"))
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0));
                   producerSpanContext3.set(span.actual().getSpanContext());
@@ -258,7 +270,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
             // kafka connect consumer trace, linked to producer span via a span link
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("unknown process")
+                    span.hasName(messagingSpanName(null, "process", "process"))
                         .hasKind(CONSUMER)
                         .hasNoParent()
                         .hasLinks(
@@ -267,7 +279,14 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                             LinkData.create(producerSpanContext3.get()))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 3),
-                            equalTo(MESSAGING_OPERATION, PROCESS),
+                            equalTo(
+                                MESSAGING_OPERATION, emitStableMessagingSemconv() ? null : PROCESS),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "process" : null),
                             equalTo(MESSAGING_SYSTEM, KAFKA),
                             satisfies(THREAD_ID, val -> val.isNotZero()),
                             satisfies(THREAD_NAME, val -> val.isNotBlank())),

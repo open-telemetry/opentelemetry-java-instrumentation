@@ -20,7 +20,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
@@ -84,25 +83,19 @@ public final class AwsSdkInstrumenterFactory {
           asList(rpcAttributesExtractor, httpAttributesExtractor, experimentalAttributesExtractor);
 
   private final OpenTelemetry openTelemetry;
-  @Nullable private final TextMapPropagator messagingPropagator;
   private final List<String> capturedHeaders;
   private final boolean captureExperimentalSpanAttributes;
   private final boolean messagingReceiveInstrumentationEnabled;
-  private final boolean useXrayPropagator;
 
   public AwsSdkInstrumenterFactory(
       OpenTelemetry openTelemetry,
-      @Nullable TextMapPropagator messagingPropagator,
       List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes,
-      boolean messagingReceiveInstrumentationEnabled,
-      boolean useXrayPropagator) {
+      boolean messagingReceiveInstrumentationEnabled) {
     this.openTelemetry = openTelemetry;
-    this.messagingPropagator = messagingPropagator;
     this.capturedHeaders = capturedHeaders;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
-    this.useXrayPropagator = useXrayPropagator;
   }
 
   public Instrumenter<ExecutionAttributes, Response> requestInstrumenter() {
@@ -146,7 +139,18 @@ public final class AwsSdkInstrumenterFactory {
         MessagingSpanKindExtractor.create(operationType),
         toSqsRequestExtractors(consumerAttributesExtractors()),
         singletonList(messagingAttributeExtractor),
-        builder -> setMessagingReceiveExceptionEventExtractor(builder),
+        builder -> {
+          setMessagingReceiveExceptionEventExtractor(builder);
+          if (emitStableMessagingSemconv()) {
+            builder.addSpanLinksExtractor(
+                (spanLinks, parentContext, request) -> {
+                  for (SqsMessage message : request.getMessages()) {
+                    spanLinks.addLink(
+                        Span.fromContext(message.getCreationContext()).getSpanContext());
+                  }
+                });
+          }
+        },
         messagingReceiveInstrumentationEnabled);
   }
 
@@ -166,21 +170,15 @@ public final class AwsSdkInstrumenterFactory {
     if (emitStableMessagingSemconv() || messagingReceiveInstrumentationEnabled) {
       builder.addSpanLinksExtractor(
           (spanLinks, parentContext, request) -> {
-            Context extracted =
-                SqsParentContext.ofMessage(
-                    request.getMessage(), messagingPropagator, useXrayPropagator);
-            spanLinks.addLink(Span.fromContext(extracted).getSpanContext());
+            spanLinks.addLink(
+                Span.fromContext(request.getMessage().getCreationContext()).getSpanContext());
           });
     }
     if (emitStableMessagingSemconv()) {
       builder.addContextCustomizer(
           MessagingProcessContextCustomizer.create(
               (parentContext, request) ->
-                  SqsParentContext.ofMessage(
-                      parentContext,
-                      request.getMessage(),
-                      messagingPropagator,
-                      useXrayPropagator)));
+                  parentContext.with(Span.fromContext(request.getMessage().getCreationContext()))));
     }
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
