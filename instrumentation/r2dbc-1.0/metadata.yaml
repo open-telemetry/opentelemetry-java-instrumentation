@@ -14,11 +14,7 @@ configurations:
       otel.instrumentation.common.db.query-sanitization.enabled.
     type: boolean
     default: true
-  - name: otel.instrumentation.common.db.query-sanitization.enabled
-    declarative_name: java.common.db.query_sanitization.enabled
-    description: Enables query sanitization for database queries.
-    type: boolean
-    default: true
+  - ref: common.db.query-sanitization.enabled
   - name: otel.instrumentation.r2dbc.experimental.sqlcommenter.enabled
     declarative_name: java.r2dbc.sqlcommenter/development.enabled
     description: >
@@ -28,21 +24,4 @@ configurations:
       database performance.
     type: boolean
     default: false
-  - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.service_peer_mapping
-    description: Used to specify a mapping from host names or IP addresses to peer services.
-    type: map
-    default: ""
-    declarative_type: structured_list
-    declarative_schema:
-      type: object
-      required:
-        - peer
-        - service_name
-      properties:
-        peer:
-          type: string
-          description: Host name or IP address to match against.
-        service_name:
-          type: string
-          description: Peer service name to record for matching peers.
+  - ref: common.peer-service-mapping
