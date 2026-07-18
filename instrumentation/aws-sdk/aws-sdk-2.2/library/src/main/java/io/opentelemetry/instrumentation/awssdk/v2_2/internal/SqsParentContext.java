@@ -65,34 +65,60 @@ public final class SqsParentContext {
 
   static Context ofMessageAttributes(
       Map<String, MessageAttributeValue> messageAttributes, TextMapPropagator propagator) {
+    return ofMessageAttributes(Context.root(), messageAttributes, propagator);
+  }
+
+  static Context ofMessageAttributes(
+      Context parentContext,
+      Map<String, MessageAttributeValue> messageAttributes,
+      TextMapPropagator propagator) {
     return propagator.extract(
-        Context.root(), messageAttributes, MessageAttributeValueMapGetter.INSTANCE);
+        parentContext, messageAttributes, MessageAttributeValueMapGetter.INSTANCE);
   }
 
   static Context ofSystemAttributes(Map<String, String> systemAttributes) {
+    return ofSystemAttributes(Context.root(), systemAttributes);
+  }
+
+  static Context ofSystemAttributes(Context parentContext, Map<String, String> systemAttributes) {
     String traceHeader = systemAttributes.get(AWS_TRACE_SYSTEM_ATTRIBUTE);
     return AwsXrayPropagator.getInstance()
         .extract(
-            Context.root(), singletonMap("X-Amzn-Trace-Id", traceHeader), StringMapGetter.INSTANCE);
+            parentContext, singletonMap("X-Amzn-Trace-Id", traceHeader), StringMapGetter.INSTANCE);
   }
 
   public static Context ofMessage(SqsMessage message, TracingExecutionInterceptor config) {
-    return ofMessage(message, config.getMessagingPropagator(), config.shouldUseXrayPropagator());
+    return ofMessage(Context.root(), message, config);
+  }
+
+  static Context ofMessage(
+      Context parentContext, SqsMessage message, TracingExecutionInterceptor config) {
+    return ofMessage(
+        parentContext, message, config.getMessagingPropagator(), config.shouldUseXrayPropagator());
   }
 
   static Context ofMessage(
       SqsMessage message, TextMapPropagator messagingPropagator, boolean shouldUseXrayPropagator) {
-    Context parentContext = Context.root();
+    return ofMessage(Context.root(), message, messagingPropagator, shouldUseXrayPropagator);
+  }
+
+  static Context ofMessage(
+      Context parentContext,
+      SqsMessage message,
+      TextMapPropagator messagingPropagator,
+      boolean shouldUseXrayPropagator) {
+    Context extractedContext = parentContext;
 
     if (messagingPropagator != null) {
-      parentContext = ofMessageAttributes(message.messageAttributes(), messagingPropagator);
+      extractedContext =
+          ofMessageAttributes(parentContext, message.messageAttributes(), messagingPropagator);
     }
 
-    if (shouldUseXrayPropagator && parentContext == Context.root()) {
-      parentContext = ofSystemAttributes(message.attributesAsStrings());
+    if (shouldUseXrayPropagator && extractedContext == parentContext) {
+      extractedContext = ofSystemAttributes(parentContext, message.attributesAsStrings());
     }
 
-    return parentContext;
+    return extractedContext;
   }
 
   private SqsParentContext() {}

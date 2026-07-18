@@ -177,7 +177,10 @@ public final class AwsSdkInstrumenterFactory {
           MessagingProcessContextCustomizer.create(
               (parentContext, request) ->
                   SqsParentContext.ofMessage(
-                      request.getMessage(), messagingPropagator, useXrayPropagator)));
+                      parentContext,
+                      request.getMessage(),
+                      messagingPropagator,
+                      useXrayPropagator)));
     }
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }

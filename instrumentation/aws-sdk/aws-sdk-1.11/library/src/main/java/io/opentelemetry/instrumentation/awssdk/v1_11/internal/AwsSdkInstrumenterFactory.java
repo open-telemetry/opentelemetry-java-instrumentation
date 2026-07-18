@@ -148,7 +148,8 @@ public final class AwsSdkInstrumenterFactory {
       builder.addContextCustomizer(
           MessagingProcessContextCustomizer.create(
               (parentContext, request) ->
-                  SqsParentContext.ofSystemAttributes(request.getMessage().getAttributes())));
+                  SqsParentContext.ofSystemAttributes(
+                      parentContext, request.getMessage().getAttributes())));
     }
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
