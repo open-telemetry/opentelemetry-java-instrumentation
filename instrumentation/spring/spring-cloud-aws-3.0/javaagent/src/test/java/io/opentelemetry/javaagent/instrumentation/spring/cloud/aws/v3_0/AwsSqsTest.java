@@ -228,32 +228,38 @@ class AwsSqsTest {
                 });
 
     testing.runWithSpan(
-        "parent",
+        "parent1",
         () ->
-            sqsTemplate.sendMany(
+            sqsTemplate.send(
                 "test-batch-queue",
-                asList(
-                    MessageBuilder.withPayload(messageContent1).build(),
-                    MessageBuilder.withPayload(messageContent2).build())));
+                messageContent1));
+
+    testing.runWithSpan(
+        "parent2",
+        () ->
+            sqsTemplate.send(
+                "test-batch-queue",
+                messageContent2));
 
     registry.getContainerById("batchContainer").start();
 
     List<String> result = messageFuture.get(10, SECONDS);
     assertThat(result).containsExactlyInAnyOrder(messageContent1, messageContent2);
 
-    AtomicReference<SpanData> producer = new AtomicReference<>();
+    AtomicReference<SpanData> producer1 = new AtomicReference<>();
+    AtomicReference<SpanData> producer2 = new AtomicReference<>();
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> span.hasName("parent1").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span -> {
                   span.hasName("test-batch-queue publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           equalTo(RPC_SYSTEM, "aws-api"),
-                          equalTo(RPC_METHOD, "SendMessageBatch"),
+                          equalTo(RPC_METHOD, "SendMessage"),
                           equalTo(RPC_SERVICE, "Sqs"),
                           equalTo(HTTP_REQUEST_METHOD, POST),
                           equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
@@ -273,7 +279,38 @@ class AwsSqsTest {
                                   + AwsSqsTestApplication.sqsPort
                                   + "/000000000000/test-batch-queue"),
                           satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
-                  producer.set(trace.getSpan(1));
+                  producer1.set(trace.getSpan(1));
+                }),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> {
+                  span.hasName("test-batch-queue publish")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(RPC_SYSTEM, "aws-api"),
+                          equalTo(RPC_METHOD, "SendMessage"),
+                          equalTo(RPC_SERVICE, "Sqs"),
+                          equalTo(HTTP_REQUEST_METHOD, POST),
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                          equalTo(SERVER_ADDRESS, "localhost"),
+                          equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+                          satisfies(
+                              URL_FULL,
+                              val ->
+                                  val.startsWith(
+                                      "http://localhost:" + AwsSqsTestApplication.sqsPort)),
+                          equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                          equalTo(MESSAGING_OPERATION, "publish"),
+                          equalTo(MESSAGING_DESTINATION_NAME, "test-batch-queue"),
+                          equalTo(
+                              AWS_SQS_QUEUE_URL,
+                              "http://localhost:"
+                                  + AwsSqsTestApplication.sqsPort
+                                  + "/000000000000/test-batch-queue"),
+                          satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
+                  producer2.set(trace.getSpan(1));
                 }),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -305,18 +342,18 @@ class AwsSqsTest {
                             links -> {
                               assertThat(links).hasSize(2);
                               assertThat(links)
-                                  .satisfiesExactly(
+                                  .satisfiesExactlyInAnyOrder(
                                       l -> {
                                         assertThat(l.getSpanContext().getTraceId())
-                                            .isEqualTo(producer.get().getTraceId());
+                                            .isEqualTo(producer1.get().getTraceId());
                                         assertThat(l.getSpanContext().getSpanId())
-                                            .isEqualTo(producer.get().getSpanId());
+                                            .isEqualTo(producer1.get().getSpanId());
                                       },
                                       l -> {
                                         assertThat(l.getSpanContext().getTraceId())
-                                            .isEqualTo(producer.get().getTraceId());
+                                            .isEqualTo(producer2.get().getTraceId());
                                         assertThat(l.getSpanContext().getSpanId())
-                                            .isEqualTo(producer.get().getSpanId());
+                                            .isEqualTo(producer2.get().getSpanId());
                                       });
                             })
                         .hasAttributesSatisfyingExactly(

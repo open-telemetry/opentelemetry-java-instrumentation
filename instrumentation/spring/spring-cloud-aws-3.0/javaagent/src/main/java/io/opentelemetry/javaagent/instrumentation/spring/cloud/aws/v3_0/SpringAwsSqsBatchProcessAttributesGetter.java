@@ -108,6 +108,13 @@ class SpringAwsSqsBatchProcessAttributesGetter
 
   @Override
   public List<String> getMessageHeader(Collection<Message<?>> messages, String name) {
-    return emptyList();
+    List<String> values = new java.util.ArrayList<>();
+    for (Message<?> message : messages) {
+      Object value = message.getHeaders().get(name);
+      if (value != null) {
+        values.add(value.toString());
+      }
+    }
+    return values.isEmpty() ? emptyList() : values;
   }
 }

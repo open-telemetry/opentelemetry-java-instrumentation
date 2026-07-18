@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0.SpringAwsSqsSingletons.batchProcessInstrumenter;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -85,9 +87,6 @@ public class SpringAwsUtil {
       return null;
     }
 
-    Instrumenter<Collection<Message<?>>, Void> batchInstrumenter =
-        SpringAwsSqsSingletons.batchProcessInstrumenter();
-
     // Use the receive context as parent when receive telemetry is enabled
     // (otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true),
     // otherwise use Context.current() which starts a new trace for the batch.
@@ -95,10 +94,10 @@ public class SpringAwsUtil {
     if (parentContext == null) {
       parentContext = Context.current();
     }
-    if (!batchInstrumenter.shouldStart(parentContext, messages)) {
+    if (!batchProcessInstrumenter().shouldStart(parentContext, messages)) {
       return null;
     }
-    Context batchContext = batchInstrumenter.start(parentContext, messages);
+    Context batchContext = batchProcessInstrumenter().start(parentContext, messages);
 
     for (Message<?> msg : messages) {
       TracingContext tc = tracingContextField.get(msg);
@@ -107,7 +106,7 @@ public class SpringAwsUtil {
       }
     }
 
-    return new BatchMessageScope(batchInstrumenter, batchContext, messages);
+    return new BatchMessageScope(batchProcessInstrumenter(), batchContext, messages);
   }
 
   @Nullable
