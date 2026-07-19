@@ -50,12 +50,12 @@ public abstract class AbstractSingleRecordNoReceiveTelemetryVertxKafkaTest
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("producer"),
                     span ->
-                        span.hasName("testSingleTopic publish")
+                        span.hasName(spanName("testSingleTopic", "publish", "send"))
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(sendAttributes(record)),
                     span ->
-                        span.hasName("testSingleTopic process")
+                        span.hasName(spanName("testSingleTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(processAttributes(record)),
@@ -78,17 +78,18 @@ public abstract class AbstractSingleRecordNoReceiveTelemetryVertxKafkaTest
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("producer"),
                     span ->
-                        span.hasName("testSingleTopic publish")
+                        span.hasName(spanName("testSingleTopic", "publish", "send"))
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(sendAttributes(record)),
                     span ->
-                        span.hasName("testSingleTopic process")
+                        span.hasName(spanName("testSingleTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(1))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
-                            .hasAttributesSatisfyingExactly(processAttributes(record)),
+                            .hasAttributesSatisfyingExactly(
+                                withErrorType(processAttributes(record))),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 }
