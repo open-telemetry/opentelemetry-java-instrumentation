@@ -26,10 +26,6 @@ public class QuartzSingletons {
   private static boolean emitExperimentalTelemetry(DeclarativeConfigProperties config) {
     Boolean emitExperimentalTelemetry =
         config.getBoolean("emit_experimental_telemetry/development");
-    if (emitExperimentalTelemetry != null) {
-      return emitExperimentalTelemetry;
-    }
-
     // Support the deprecated config key until 3.0.
     Boolean deprecatedExperimentalSpanAttributes =
         config.getBoolean("experimental_span_attributes/development");
@@ -39,10 +35,14 @@ public class QuartzSingletons {
               + " declarative configuration is deprecated and will be removed in 3.0. Use"
               + " otel.instrumentation.quartz.emit-experimental-telemetry or equivalent"
               + " declarative configuration instead.");
-      return deprecatedExperimentalSpanAttributes;
     }
 
-    return false;
+    if (emitExperimentalTelemetry != null) {
+      return emitExperimentalTelemetry;
+    }
+    return deprecatedExperimentalSpanAttributes != null
+        ? deprecatedExperimentalSpanAttributes
+        : false;
   }
 
   public static QuartzTelemetry telemetry() {
