@@ -70,7 +70,6 @@ import software.amazon.awssdk.services.rdsdata.model.Field;
 import software.amazon.awssdk.services.rdsdata.model.SqlParameter;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractAws2RdsDataTest {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
   private static final String AWS_SERVICE = "RdsData";
@@ -306,6 +305,7 @@ public abstract class AbstractAws2RdsDataTest {
                     }));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void addDatabaseAttributes(
       List<AttributeAssertion> attributes,
       String legacyStatement,
@@ -331,6 +331,7 @@ public abstract class AbstractAws2RdsDataTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> commonAttributes(
       String operation, String path, Integer statusCode, String requestId) {
     List<AttributeAssertion> attributes =
