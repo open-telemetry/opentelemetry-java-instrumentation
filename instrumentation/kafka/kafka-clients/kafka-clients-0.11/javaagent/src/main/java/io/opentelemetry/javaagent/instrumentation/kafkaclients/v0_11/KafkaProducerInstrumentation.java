@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.PRODUCER_PROPAGATION_ENABLED;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.PRODUCER_SPAN_CONTEXT_PROPAGATION_ENABLED;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -79,8 +80,8 @@ class KafkaProducerInstrumentation implements TypeInstrumentation {
       }
 
       public ProducerRecord<?, ?> propagateContext(
-          ApiVersions apiVersions, ProducerRecord<?, ?> record) {
-        if (PRODUCER_PROPAGATION_ENABLED && KafkaPropagation.shouldPropagate(apiVersions)) {
+          ProducerRecord<?, ?> record, boolean shouldPropagate) {
+        if (shouldPropagate) {
           return KafkaPropagation.propagateContext(context, record);
         }
         return record;
@@ -112,13 +113,20 @@ class KafkaProducerInstrumentation implements TypeInstrumentation {
       String bootstrapServers =
           KafkaUtil.extractBootstrapServers(
               producerConfig.getList(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
+      boolean shouldPropagate =
+          PRODUCER_PROPAGATION_ENABLED && KafkaPropagation.shouldPropagate(apiVersions);
       KafkaProducerRequest request =
-          KafkaProducerRequest.create(record, clientId, bootstrapServers);
+          KafkaProducerRequest.create(
+              record,
+              clientId,
+              bootstrapServers,
+              PRODUCER_SPAN_CONTEXT_PROPAGATION_ENABLED
+                  && KafkaPropagation.shouldPropagate(apiVersions));
       AdviceScope adviceScope = AdviceScope.start(request);
       if (adviceScope == null) {
         return new Object[] {null, record, callback};
       }
-      record = adviceScope.propagateContext(apiVersions, record);
+      record = adviceScope.propagateContext(record, shouldPropagate);
       callback = adviceScope.wrapCallback(callback);
       return new Object[] {adviceScope, record, callback};
     }

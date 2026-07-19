@@ -5,13 +5,30 @@
 
 package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.groupTraces;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingOperationTypeIncubatingValues.PROCESS;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
 import static java.time.temporal.ChronoUnit.MINUTES;
+import static java.util.Arrays.asList;
 import static org.awaitility.Awaitility.await;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -21,7 +38,11 @@ import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.smoketest.SmokeTestInstrumentationExtension;
 import io.opentelemetry.smoketest.TelemetryRetriever;
@@ -29,8 +50,10 @@ import io.opentelemetry.smoketest.TelemetryRetrieverProvider;
 import io.restassured.http.ContentType;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.apache.http.HttpStatus;
 import org.apache.kafka.clients.admin.AdminClient;
@@ -128,6 +151,37 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
 
   protected String getKafkaBootstrapServers() {
     return kafka.getHost() + ":" + kafkaExposedPort;
+  }
+
+  protected static String messagingSpanName(
+      String destinationName, String oldOperationName, String stableOperationName) {
+    if (emitStableMessagingSemconv()) {
+      return destinationName == null
+          ? stableOperationName
+          : stableOperationName + " " + destinationName;
+    }
+    return (destinationName == null ? "unknown" : destinationName) + " " + oldOperationName;
+  }
+
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  protected final void waitAndAssertTracesIgnoringStableReceive(
+      Consumer<TraceAssert>... assertions) {
+    await()
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(
+            () -> {
+              List<List<SpanData>> traces = groupTraces(testing.spans());
+              if (emitStableMessagingSemconv()) {
+                traces.removeIf(
+                    trace ->
+                        trace.size() == 1
+                            && trace.get(0).getKind() == SpanKind.CLIENT
+                            && (trace.get(0).getName().equals("poll")
+                                || trace.get(0).getName().startsWith("poll ")));
+              }
+              TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(asList(assertions));
+            });
   }
 
   @Override
@@ -263,9 +317,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
             .withCopyFileToContainer(
                 MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent.jar")
             // Configure the agent to export spans to backend (like smoke tests)
-            .withEnv(
-                "JAVA_TOOL_OPTIONS",
-                "-javaagent:/opentelemetry-javaagent.jar " + "-Dotel.javaagent.debug=true")
+            .withEnv("JAVA_TOOL_OPTIONS", javaToolOptions())
             // Disable test exporter and force OTLP exporter
             .withEnv("OTEL_TESTING_EXPORTER_ENABLED", "false")
             .withEnv("OTEL_TRACES_EXPORTER", "otlp")
@@ -278,7 +330,9 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
             .withEnv("OTEL_METRIC_EXPORT_INTERVAL", "1000")
             .withEnv(
                 "OTEL_SEMCONV_STABILITY_OPT_IN",
-                System.getProperty("otel.semconv-stability.opt-in"))
+                emitStableMessagingSemconv()
+                    ? "messaging"
+                    : System.getProperty("otel.semconv-stability.opt-in"))
             .withEnv("CONNECT_BOOTSTRAP_SERVERS", getInternalKafkaBootstrapServers())
             .withEnv("CONNECT_REST_ADVERTISED_HOST_NAME", KAFKA_CONNECT_NETWORK_ALIAS)
             .withEnv("CONNECT_PLUGIN_PATH", PLUGIN_PATH_CONTAINER)
@@ -307,6 +361,62 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
                     + " && "
                     + "echo 'Starting Kafka Connect with logging to /var/log/kafka-connect/' && "
                     + "/etc/confluent/docker/run 2>&1 | tee /var/log/kafka-connect/kafka-connect.log");
+  }
+
+  private static String javaToolOptions() {
+    StringBuilder options =
+        new StringBuilder("-javaagent:/opentelemetry-javaagent.jar -Dotel.javaagent.debug=true");
+    appendSystemProperty(options, "otel.instrumentation.common.v3-preview");
+    appendSystemProperty(options, "otel.semconv-stability.preview");
+    return options.toString();
+  }
+
+  private static void appendSystemProperty(StringBuilder options, String propertyName) {
+    String value = System.getProperty(propertyName);
+    if (value != null) {
+      options.append(" -D").append(propertyName).append('=').append(value);
+    }
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  protected static AttributeAssertion[] processAttributes(String destination, long batchSize) {
+    return processAttributes(destination, batchSize, true);
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  protected static AttributeAssertion[] processAttributes(long batchSize) {
+    return processAttributes("", batchSize, false);
+  }
+
+  private static AttributeAssertion[] processAttributes(
+      String destination, long batchSize, boolean hasDestination) {
+    boolean v3Preview = Boolean.getBoolean("otel.instrumentation.common.v3-preview");
+    return new AttributeAssertion[] {
+      equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize),
+      equalTo(MESSAGING_DESTINATION_NAME, hasDestination ? destination : null),
+      equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? PROCESS : null),
+      equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? PROCESS : null),
+      equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? PROCESS : null),
+      equalTo(MESSAGING_SYSTEM, KAFKA),
+      satisfies(
+          THREAD_ID,
+          val -> {
+            if (v3Preview) {
+              val.isNull();
+            } else {
+              val.isNotZero();
+            }
+          }),
+      satisfies(
+          THREAD_NAME,
+          val -> {
+            if (v3Preview) {
+              val.isNull();
+            } else {
+              val.isNotBlank();
+            }
+          })
+    };
   }
 
   @BeforeEach
