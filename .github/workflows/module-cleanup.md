@@ -44,19 +44,9 @@ timeout-minutes: 30
 
 environment: protected
 
-# Disable strict mode so we can opt out of the AWF agent sandbox below.
-strict: false
-
 engine:
   id: copilot
   model: ${{ vars.MODULE_CLEANUP_MODEL || 'gpt-5' }}
-
-# Disable the AWF sandbox so copilot-cli connects directly to
-# api.githubcopilot.com. In sandboxed Copilot workflows, gh-aw enables
-# Copilot BYOK/offline mode but does not set responses wire-API routing
-# for GPT-5-family models yet. See https://github.com/github/gh-aw/issues/31241.
-sandbox:
-  agent: false
 
 network:
   allowed:
@@ -72,24 +62,16 @@ tools:
 # keeps all post-LLM logic in shell where it can run reliably regardless
 # of how the agent session ends.
 #
-# The `safe-outputs.jobs.suppress_default_create_issue` placeholder below
-# exists solely to opt out of gh-aw's default behavior, which auto-injects
-# a `create-issue` safe output whenever no non-builtin safe output is
-# configured (see https://github.github.io/gh-aw/reference/safe-outputs/
-# under "System Types"). Without this opt-out, every successful run posts
-# the agent's narration as a separate `[module-cleanup]` issue, which is
-# noise on top of the batch PR the finalize job already opens.
-#
-# The placeholder safe-job is intentionally never invoked by the agent
-# (see "What you must NOT do" in the persona). gh-aw only emits the job
-# when the corresponding MCP tool is called, so leaving it uninvoked
-# costs nothing at runtime.
+# Results are exported as an artifact and handled by finalize, not published
+# through safe outputs. The custom job prevents gh-aw from auto-injecting its
+# default `create-issue` output and is intentionally never called. `noop` remains
+# available for an explicit summary-only completion, but must not create an issue.
+# Neither configured path mutates repository content, so threat detection is unnecessary.
 
 safe-outputs:
-  # Threat detection requires the AWF agent sandbox, which we disable
-  # because of https://github.com/github/gh-aw/issues/31241. The placeholder
-  # safe-job below carries no untrusted output, so threat detection is unnecessary.
   threat-detection: false
+  noop:
+    report-as-issue: false
   jobs:
     suppress_default_create_issue:
       runs-on: ubuntu-latest
@@ -141,11 +123,13 @@ jobs:
       contents: read
       actions: write # to trigger next iteration
     steps:
-      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: otelbot-token
         with:
-          app-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_APP_ID }}
+          client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           # Full history is required: finalize computes

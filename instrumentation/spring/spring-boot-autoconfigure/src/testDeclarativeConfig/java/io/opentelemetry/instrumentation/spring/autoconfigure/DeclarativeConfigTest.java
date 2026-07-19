@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web.SpringWebInstrumentationAutoConfiguration;
@@ -31,6 +33,14 @@ class DeclarativeConfigTest {
     }
   }
 
+  @TestConfiguration
+  static class InstrumentationConfigCustomizerConfiguration {
+    @Bean
+    TestInstrumentationConfigCustomizerProvider testInstrumentationConfigCustomizerProvider() {
+      return new TestInstrumentationConfigCustomizerProvider();
+    }
+  }
+
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
@@ -43,33 +53,75 @@ class DeclarativeConfigTest {
   void customOpenTelemetry() {
     this.contextRunner
         .withUserConfiguration(CustomTracerConfiguration.class)
-        .withPropertyValues("otel.file_format=1.0")
+        .withPropertyValues("otel.file_format=1.1")
         .run(
             context ->
                 assertThat(context)
                     .hasBean("customOpenTelemetry")
                     .doesNotHaveBean("openTelemetry")
-                    .hasBean("otelProperties"));
+                    .hasBean("otelProperties")
+                    .getBean("configProvider")
+                    .isEqualTo(ConfigProvider.noop()));
   }
 
   @Test
   @DisplayName(
-      "when Application Context DOES NOT contain OpenTelemetry bean should initialize openTelemetry")
+      "when Application Context DOES NOT contain OpenTelemetry bean should initialize"
+          + " openTelemetry")
   void initializeProvidersAndOpenTelemetry() {
     this.contextRunner.run(
-        context ->
-            assertThat(context)
-                .getBean("openTelemetry", OpenTelemetry.class)
-                .isNotNull()
-                .satisfies(
-                    o -> {
-                      DeclarativeConfigProperties config =
-                          DeclarativeConfigUtil.getInstrumentationConfig(o, "foo");
-                      assertThat(config.getString("string_key")).isEqualTo("string_value");
-                      assertThat(config.getBoolean("bool_key")).isTrue();
-                      assertThat(config.getDouble("double_key")).isEqualTo(3.14);
-                      assertThat(config.getLong("int_key")).isEqualTo(42);
-                    }));
+        context -> {
+          assertThat(context)
+              .getBean("openTelemetry", OpenTelemetry.class)
+              .isNotNull()
+              .satisfies(
+                  o -> {
+                    DeclarativeConfigProperties config =
+                        DeclarativeConfigUtil.getInstrumentationConfig(o, "foo");
+                    assertThat(config.getString("string_key")).isEqualTo("string_value");
+                    assertThat(config.getBoolean("bool_key")).isTrue();
+                    assertThat(config.getDouble("double_key")).isEqualTo(3.14);
+                    assertThat(config.getLong("int_key")).isEqualTo(42);
+                  });
+          assertThat(context).getBean("configProvider", ConfigProvider.class).isNotNull();
+        });
+  }
+
+  @Test
+  @DisplayName(
+      "configProvider bean should reflect DeclarativeConfigurationCustomizerProvider changes"
+          + " applied during SDK creation, not just the raw pre-customization model")
+  void configProviderReflectsModelCustomizer() {
+    this.contextRunner
+        .withUserConfiguration(InstrumentationConfigCustomizerConfiguration.class)
+        .run(
+            context ->
+                assertThat(context)
+                    .getBean("configProvider", ConfigProvider.class)
+                    .satisfies(
+                        configProvider -> {
+                          DeclarativeConfigProperties fooConfig =
+                              configProvider
+                                  .getInstrumentationConfig()
+                                  .getStructured("java")
+                                  .getStructured("foo");
+                          assertThat(fooConfig.getString("string_key")).isEqualTo("string_value");
+                          assertThat(
+                                  fooConfig.getString(
+                                      TestInstrumentationConfigCustomizerProvider.CUSTOMIZER_KEY))
+                              .isEqualTo(
+                                  TestInstrumentationConfigCustomizerProvider.CUSTOMIZED_VALUE);
+                        }));
+  }
+
+  @Test
+  void configProviderMatchesOpenTelemetryConfigProvider() {
+    this.contextRunner.run(
+        context -> {
+          OpenTelemetry openTelemetry = context.getBean(OpenTelemetry.class);
+          assertThat(context.getBean(ConfigProvider.class))
+              .isSameAs(((ExtendedOpenTelemetry) openTelemetry).getConfigProvider());
+        });
   }
 
   @Test
@@ -150,7 +202,7 @@ class DeclarativeConfigTest {
   @Test
   void shouldInitializeSdkWhenNotDisabled() {
     this.contextRunner
-        .withPropertyValues("otel.file_format=1.0", "otel.disabled=false")
+        .withPropertyValues("otel.file_format=1.1", "otel.disabled=false")
         .run(
             context ->
                 assertThat(context).getBean("openTelemetry").isInstanceOf(OpenTelemetrySdk.class));
@@ -160,19 +212,21 @@ class DeclarativeConfigTest {
   void shouldInitializeNoopOpenTelemetryWhenSdkIsDisabled() {
     this.contextRunner
         .withPropertyValues(
-            "otel.file_format=1.0",
+            "otel.file_format=1.1",
             "otel.disabled=true",
             "otel.resource.attributes=service.name=workflow-backend-dev,service.version=3c8f9ce9")
         .run(
-            context ->
-                assertThat(context).getBean("openTelemetry").isEqualTo(OpenTelemetry.noop()));
+            context -> {
+              assertThat(context).getBean("openTelemetry").isEqualTo(OpenTelemetry.noop());
+              assertThat(context).getBean("configProvider").isEqualTo(ConfigProvider.noop());
+            });
   }
 
   @Test
   void shouldLoadInstrumentation() {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
-        .withPropertyValues("otel.file_format=1.0")
+        .withPropertyValues("otel.file_format=1.1")
         .run(context -> assertThat(context).hasBean("otelRestTemplateBeanPostProcessor"));
   }
 
@@ -181,7 +235,7 @@ class DeclarativeConfigTest {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
         .withPropertyValues(
-            "otel.file_format=1.0",
+            "otel.file_format=1.1",
             "otel.distribution.spring_starter.instrumentation.default_enabled=false")
         .run(context -> assertThat(context).doesNotHaveBean("otelRestTemplateBeanPostProcessor"));
   }
@@ -191,7 +245,7 @@ class DeclarativeConfigTest {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
         .withPropertyValues(
-            "otel.file_format=1.0",
+            "otel.file_format=1.1",
             "otel.distribution.spring_starter.instrumentation.default_enabled=false",
             "otel.distribution.spring_starter.instrumentation.enabled=spring_web")
         .run(context -> assertThat(context).hasBean("otelRestTemplateBeanPostProcessor"));
@@ -202,7 +256,7 @@ class DeclarativeConfigTest {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
         .withPropertyValues(
-            "otel.file_format=1.0",
+            "otel.file_format=1.1",
             "otel.distribution.spring_starter.instrumentation.default_enabled=false",
             "otel.distribution.spring_starter.instrumentation.disabled=spring_web")
         .run(context -> assertThat(context).doesNotHaveBean("otelRestTemplateBeanPostProcessor"));
@@ -213,7 +267,7 @@ class DeclarativeConfigTest {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
         .withPropertyValues(
-            "otel.file_format=1.0",
+            "otel.file_format=1.1",
             "otel.distribution.spring_starter.instrumentation.default_enabled=false",
             "otel.distribution.spring_starter.instrumentation.enabled[0]=spring_web")
         .run(context -> assertThat(context).hasBean("otelRestTemplateBeanPostProcessor"));
@@ -224,7 +278,7 @@ class DeclarativeConfigTest {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
         .withPropertyValues(
-            "otel.file_format=1.0",
+            "otel.file_format=1.1",
             "otel.distribution.spring_starter.instrumentation.disabled[0]=spring_web")
         .run(context -> assertThat(context).doesNotHaveBean("otelRestTemplateBeanPostProcessor"));
   }

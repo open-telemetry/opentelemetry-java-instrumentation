@@ -1,0 +1,106 @@
+name: Auto-update gh-aw lockfiles
+
+on:
+  push:
+    branches:
+      - 'renovate/**'
+    paths:
+      - '.github/workflows/build-common.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Regenerate agentic workflow lockfiles
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(sed -nE 's/.*gh extension install github\/gh-aw --pin (v[0-9]+\.[0-9]+\.[0-9]+).*/\1/p' \
+            .github/workflows/build-common.yml)
+          if [[ ! $version =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Unable to read a single pinned gh-aw version: $version" >&2
+            exit 1
+          fi
+          gh extension install github/gh-aw --pin "$version"
+          gh aw compile --action-tag "$version" --approve --no-check-update
+
+      - name: Create generated-files patch
+        run: |
+          files=(
+            .github/aw/actions-lock.json
+            .github/workflows/*.lock.yml
+          )
+          git add -N -- "${files[@]}"
+          git diff --binary -- "${files[@]}" > gh-aw-lockfiles.patch
+
+      - name: Upload generated-files patch
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gh-aw-lockfiles
+          path: gh-aw-lockfiles.patch
+
+  apply:
+    runs-on: ubuntu-latest
+    needs: generate
+    steps:
+      - name: Download generated-files patch
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: gh-aw-lockfiles
+          path: ${{ runner.temp }}
+
+      - name: Check patch
+        id: patch
+        working-directory: ${{ runner.temp }}
+        run: |
+          if [ ! -s gh-aw-lockfiles.patch ]; then
+            exit 0
+          fi
+          while IFS= read -r path; do
+            case "$path" in
+              .github/aw/actions-lock.json |
+              .github/workflows/*.lock.yml) ;;
+              *)
+                echo "Unexpected path in generated patch: $path" >&2
+                exit 1
+                ;;
+            esac
+          done < <(git apply --numstat gh-aw-lockfiles.patch | cut -f3)
+          echo "exists=true" >> "$GITHUB_OUTPUT"
+
+      - name: Create otelbot token
+        if: steps.patch.outputs.exists == 'true'
+        id: otelbot-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+          permission-contents: write
+          permission-workflows: write
+
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        if: steps.patch.outputs.exists == 'true'
+        with:
+          persist-credentials: false
+
+      - name: Apply patch and push
+        if: steps.patch.outputs.exists == 'true'
+        env:
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+        run: |
+          gh auth setup-git
+          git apply --index "${{ runner.temp }}/gh-aw-lockfiles.patch"
+          .github/scripts/use-cla-approved-bot.sh
+          git commit -m "Update gh-aw lockfiles"
+          git push

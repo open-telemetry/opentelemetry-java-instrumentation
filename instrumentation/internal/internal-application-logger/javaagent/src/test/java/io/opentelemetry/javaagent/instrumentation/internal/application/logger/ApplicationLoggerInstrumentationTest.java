@@ -35,6 +35,9 @@ class ApplicationLoggerInstrumentationTest {
             log ->
                 log.startsWith(
                     "INFO io.opentelemetry.javaagent.tooling.VersionLogger :: opentelemetry-javaagent - version: "));
+    // spring boot's LoggingApplicationListener re-triggers our instrumentation during startup,
+    // this shouldn't be reported as multiple application logger implementations being installed
+    assertThat(logs).noneMatch(log -> log.contains("Multiple application logger implementations"));
   }
 
   private static List<String> forkAndRun(String mainClassName) throws Exception {

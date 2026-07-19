@@ -4,10 +4,28 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative component configuration
+  through `DeclarativeConfigProperties` directly. To expose `ConfigProperties` through the
+  declarative configuration API, use `ConfigPropertiesBackedConfigProvider`.
+- Deprecate the Spring Boot starter `ConfigProperties` bean when experimental Declarative
+  Configuration is enabled. Auto-configurations that support the experimental Declarative
+  Configuration should use the Declarative Config API directly. This compatibility bean will be
+  removed in 3.0. The `ConfigProperties` bean remains supported for non-declarative configuration.
 - The `otel.instrumentation.quartz.experimental-span-attributes` configuration property and
   `QuartzTelemetryBuilder.setCaptureExperimentalSpanAttributes(boolean)` are deprecated and will be
   removed in 3.0. Use `otel.instrumentation.quartz.emit-experimental-telemetry` and
   `QuartzTelemetryBuilder.setEmitExperimentalTelemetry(boolean)` instead.
+
+### 📈 Enhancements
+
+- Add Cassandra JMX metrics target system.
+  ([#19080](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19080))
+- Add `captureTemplate` and `captureArguments` options to the log4j, java-util-logging, and
+  jboss-logmanager logging instrumentations, capturing the log message template and arguments as
+  separate `log.body.template` / `log.body.parameters` attributes. This extends the same option
+  that was previously added for logback in
+  [#15423](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15423).
+  ([#19154](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19154))
 
 ## Version 2.29.0 (2026-06-19)
 

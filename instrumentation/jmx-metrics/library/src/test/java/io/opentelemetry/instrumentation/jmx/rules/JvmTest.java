@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jmx.rules;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
@@ -45,10 +46,52 @@ class JvmTest extends TargetSystemTest {
             .withEnv("CATALINA_OPTS", String.join(" ", jvmArgs))
             .withStartupTimeout(Duration.ofMinutes(2))
             .withExposedPorts(8080)
-            .waitingFor(Wait.forListeningPorts(8080));
+            .waitingFor(Wait.forListeningPort());
 
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
+
+    startWeaverValidation(
+        "jvm.yaml",
+        result ->
+            result
+                .checkNothingUnregisteredWithPrefix("jvm.")
+                .checkRegisteredMetrics(
+                    "jvm.",
+                    asList(
+                        "jvm.memory.committed",
+                        "jvm.system.cpu.utilization",
+                        "jvm.class.unloaded",
+                        "jvm.file_descriptor.limit",
+                        "jvm.cpu.recent_utilization",
+                        "jvm.memory.used_after_last_gc",
+                        "jvm.buffer.memory.limit",
+                        "jvm.cpu.count",
+                        "jvm.class.count",
+                        "jvm.memory.used",
+                        "jvm.memory.init",
+                        "jvm.class.loaded",
+                        "jvm.memory.limit",
+                        "jvm.buffer.memory.used",
+                        "jvm.buffer.count",
+                        "jvm.file_descriptor.count",
+                        "jvm.system.cpu.load_1m",
+                        "jvm.cpu.time",
+                        "jvm.thread.count"),
+                    singletonList(
+                        // metric not reported with JMX as it's an histogram
+                        "jvm.gc.duration"))
+                .checkRegisteredAttributes(
+                    "jvm.",
+                    asList("jvm.buffer.pool.name", "jvm.memory.pool.name", "jvm.memory.type"),
+                    asList(
+                        // jvm.gc.duration metric using them is not captured with JMX
+                        "jvm.gc.action",
+                        "jvm.gc.cause",
+                        "jvm.gc.name",
+                        // attributes not available with JMX
+                        "jvm.thread.daemon",
+                        "jvm.thread.state")));
 
     startTarget(target);
 
@@ -119,7 +162,7 @@ class JvmTest extends TargetSystemTest {
                     metric
                         .hasDescription("Number of classes loaded since JVM start.")
                         .hasUnit("{class}")
-                        .isUpDownCounter()
+                        .isCounter()
                         .hasDataPointsWithoutAttributes())
             .add(
                 "jvm.class.unloaded",
@@ -127,7 +170,7 @@ class JvmTest extends TargetSystemTest {
                     metric
                         .hasDescription("Number of classes unloaded since JVM start.")
                         .hasUnit("{class}")
-                        .isUpDownCounter()
+                        .isCounter()
                         .hasDataPointsWithoutAttributes())
             .add(
                 "jvm.class.count",

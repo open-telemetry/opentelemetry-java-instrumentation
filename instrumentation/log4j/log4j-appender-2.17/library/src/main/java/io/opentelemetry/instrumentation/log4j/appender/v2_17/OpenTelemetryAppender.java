@@ -116,6 +116,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @PluginBuilderAttribute private boolean captureCodeAttributes;
     @PluginBuilderAttribute private boolean captureMapMessageAttributes;
     @PluginBuilderAttribute private boolean captureMarkerAttribute;
+    @PluginBuilderAttribute private boolean captureTemplate;
+    @PluginBuilderAttribute private boolean captureArguments;
     @Nullable @PluginBuilderAttribute private String captureContextDataAttributes;
     @PluginBuilderAttribute private int numLogsCapturedBeforeOtelInstall;
 
@@ -164,6 +166,29 @@ public class OpenTelemetryAppender extends AbstractAppender {
       return asBuilder();
     }
 
+    /**
+     * Sets whether the message template should be captured in logs if arguments are provided.
+     *
+     * @param captureTemplate whether the message template should be captured in logs if arguments
+     *     are provided
+     */
+    @CanIgnoreReturnValue
+    public B setCaptureTemplate(boolean captureTemplate) {
+      this.captureTemplate = captureTemplate;
+      return asBuilder();
+    }
+
+    /**
+     * Sets whether the arguments should be captured in logs.
+     *
+     * @param captureArguments whether the arguments should be captured in logs
+     */
+    @CanIgnoreReturnValue
+    public B setCaptureArguments(boolean captureArguments) {
+      this.captureArguments = captureArguments;
+      return asBuilder();
+    }
+
     /** Configures the {@link ThreadContext} attributes that will be copied to logs. */
     @CanIgnoreReturnValue
     public B setCaptureContextDataAttributes(String captureContextDataAttributes) {
@@ -203,6 +228,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
           captureCodeAttributes,
           captureMapMessageAttributes,
           captureMarkerAttribute,
+          captureTemplate,
+          captureArguments,
           captureContextDataAttributes,
           numLogsCapturedBeforeOtelInstall,
           openTelemetry);
@@ -219,6 +246,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureCodeAttributes,
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
+      boolean captureTemplate,
+      boolean captureArguments,
       @Nullable String captureContextDataAttributes,
       int numLogsCapturedBeforeOtelInstall,
       @Nullable OpenTelemetry openTelemetry) {
@@ -234,6 +263,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
             captureCodeAttributes,
             captureMapMessageAttributes,
             captureMarkerAttribute,
+            captureTemplate,
+            captureArguments,
             captureContextDataAttributes,
             v3Preview);
     this.openTelemetry = openTelemetry;
@@ -261,6 +292,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureCodeAttributes,
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
+      boolean captureTemplate,
+      boolean captureArguments,
       @Nullable String captureContextDataAttributes,
       boolean v3Preview) {
     return new LogEventMapper<>(
@@ -269,6 +302,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
         captureCodeAttributes,
         captureMapMessageAttributes,
         captureMarkerAttribute,
+        captureTemplate,
+        captureArguments,
         splitAndFilterBlanksAndNulls(captureContextDataAttributes),
         v3Preview);
   }
