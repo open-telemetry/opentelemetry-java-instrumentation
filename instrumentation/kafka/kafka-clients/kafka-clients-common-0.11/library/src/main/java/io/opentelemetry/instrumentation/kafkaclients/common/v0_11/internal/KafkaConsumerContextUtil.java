@@ -5,7 +5,11 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -27,6 +31,17 @@ public final class KafkaConsumerContextUtil {
       VirtualField.find(ConsumerRecords.class, Context.class);
   private static final VirtualField<ConsumerRecords<?, ?>, String[]> recordsConsumerInfoField =
       VirtualField.find(ConsumerRecords.class, String[].class);
+
+  public static Context withoutLeakedProcessSpan(Context context) {
+    if (!emitStableMessagingSemconv()) {
+      return context;
+    }
+
+    Span currentSpan = Span.fromContext(context);
+    return currentSpan == SpanKey.CONSUMER_PROCESS.fromContextOrNull(context)
+        ? context.with(Span.getInvalid())
+        : context;
+  }
 
   public static KafkaConsumerContext get(ConsumerRecord<?, ?> records) {
     Context receiveContext = recordContextField.get(records);

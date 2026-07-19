@@ -5,13 +5,9 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.Iterator;
 import java.util.function.BooleanSupplier;
 import javax.annotation.Nullable;
@@ -49,21 +45,9 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
     Context receiveContext = consumerContext.getContext();
     // use the receive CONSUMER as parent if it's available
     this.parentContext =
-        receiveContext != null
-            ? receiveContext
-            : currentContextWithoutLeakedProcessSpan(Context.current());
+        KafkaConsumerContextUtil.withoutLeakedProcessSpan(
+            receiveContext != null ? receiveContext : Context.current());
     this.consumerContext = consumerContext;
-  }
-
-  private static Context currentContextWithoutLeakedProcessSpan(Context context) {
-    if (!emitStableMessagingSemconv()) {
-      return context;
-    }
-
-    Span currentSpan = Span.fromContext(context);
-    return currentSpan == SpanKey.CONSUMER_PROCESS.fromContextOrNull(context)
-        ? context.with(Span.getInvalid())
-        : context;
   }
 
   public static <K, V> Iterator<ConsumerRecord<K, V>> wrap(

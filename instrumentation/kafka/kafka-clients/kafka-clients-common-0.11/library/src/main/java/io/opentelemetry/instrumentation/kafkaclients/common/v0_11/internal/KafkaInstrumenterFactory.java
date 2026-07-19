@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -127,7 +128,7 @@ public final class KafkaInstrumenterFactory {
             .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
             .addAttributesExtractors(extractors)
             .setErrorCauseExtractor(errorCauseExtractor)
-            .setEnabled(messagingReceiveInstrumentationEnabled);
+            .setEnabled(emitStableMessagingSemconv() || messagingReceiveInstrumentationEnabled);
     setMessagingReceiveExceptionEventExtractor(builder);
     return builder.buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }

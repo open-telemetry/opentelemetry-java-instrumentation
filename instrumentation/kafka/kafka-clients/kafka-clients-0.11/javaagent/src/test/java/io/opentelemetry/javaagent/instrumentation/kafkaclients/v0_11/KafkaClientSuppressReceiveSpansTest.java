@@ -5,21 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientPropagationBaseTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
-import java.util.Iterator;
 import java.util.List;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -154,35 +149,5 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(null, greeting, false, false))));
-  }
-
-  @Test
-  void testAbandonedIteratorDoesNotParentNextProcessSpan() throws Exception {
-    assumeTrue(emitStableMessagingSemconv());
-    producer.send(new ProducerRecord<>(SHARED_TOPIC, "first")).get(5, SECONDS);
-    awaitUntilConsumerIsReady();
-    Iterator<? extends ConsumerRecord<?, ?>> firstIterator = poll(Duration.ofSeconds(5)).iterator();
-    assertThat(firstIterator.hasNext()).isTrue();
-    firstIterator.next();
-
-    try (Scope ignored = Context.root().makeCurrent()) {
-      producer.send(new ProducerRecord<>(SHARED_TOPIC, "second")).get(5, SECONDS);
-    }
-    Iterator<? extends ConsumerRecord<?, ?>> secondIterator =
-        poll(Duration.ofSeconds(5)).iterator();
-    assertThat(secondIterator.hasNext()).isTrue();
-    secondIterator.next();
-    assertThat(secondIterator.hasNext()).isFalse();
-    assertThat(firstIterator.hasNext()).isFalse();
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("send " + SHARED_TOPIC).hasNoParent(),
-                span -> span.hasName("process " + SHARED_TOPIC).hasParent(trace.getSpan(0))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("send " + SHARED_TOPIC).hasNoParent(),
-                span -> span.hasName("process " + SHARED_TOPIC).hasParent(trace.getSpan(0))));
   }
 }

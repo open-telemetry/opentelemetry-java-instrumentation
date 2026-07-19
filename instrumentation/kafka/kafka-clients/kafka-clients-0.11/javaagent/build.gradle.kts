@@ -58,8 +58,8 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("KafkaClientDefaultTest.testKafkaProducerAndConsumerSpan")
+      includeTestsMatching("KafkaClientDefaultTest.testAbandonedIteratorDoesNotParentNextProcessSpan")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
   }
@@ -70,7 +70,6 @@ tasks {
     filter {
       includeTestsMatching("KafkaClientDefaultTest.testReceiveDoesNotParentProcessSpan")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging/dup")
   }
@@ -96,7 +95,6 @@ tasks {
       excludeTestsMatching("KafkaClientPropagationDisabledTest")
       excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     // kafka metrics are disabled by default with v3-preview enabled

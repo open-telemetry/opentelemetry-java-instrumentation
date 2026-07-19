@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
@@ -76,7 +77,7 @@ public class KafkaConsumerTelemetry {
     if (records.isEmpty()) {
       return null;
     }
-    Context parentContext = Context.current();
+    Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(Context.current());
     KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumerGroup, clientId);
     Context receiveContext = null;
     if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
@@ -96,7 +97,7 @@ public class KafkaConsumerTelemetry {
 
   public <K, V> void buildAndFinishErrorSpan(
       Consumer<K, V> consumer, Timer timer, Throwable error) {
-    Context parentContext = Context.current();
+    Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(Context.current());
     ConsumerRecords<K, V> records = new ConsumerRecords<>(emptyMap());
     KafkaReceiveRequest request =
         KafkaReceiveRequest.create(
