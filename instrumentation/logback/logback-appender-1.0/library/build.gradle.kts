@@ -1,5 +1,6 @@
 plugins {
   id("otel.library-instrumentation")
+  id("otel.osgi-conventions")
   id("org.graalvm.buildtools.native")
 }
 
