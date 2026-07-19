@@ -30,6 +30,7 @@ public class QuartzSingletons {
       return emitExperimentalTelemetry;
     }
 
+    // Support the deprecated config key until 3.0.
     Boolean deprecatedExperimentalSpanAttributes =
         config.getBoolean("experimental_span_attributes/development");
     if (deprecatedExperimentalSpanAttributes != null) {
