@@ -3,12 +3,6 @@ plugins {
   id("otel.animalsniffer-conventions")
 }
 
-otelJava {
-  // io.grpc.override.ContextStorageOverride must live in gRPC's package, which doesn't work in
-  // OSGi where each bundle has its own class loader
-  osgiEnabled.set(false)
-}
-
 val grpcVersion = "1.6.0"
 
 dependencies {

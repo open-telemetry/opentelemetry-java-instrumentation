@@ -3,12 +3,6 @@ plugins {
   id("otel.nullaway-conventions")
 }
 
-otelJava {
-  // OtelCommandArgsUtil needs package-private access to io.lettuce.core.protocol, which doesn't
-  // work in OSGi where each bundle has its own class loader
-  osgiEnabled.set(false)
-}
-
 dependencies {
   library("io.lettuce:lettuce-core:5.1.0.RELEASE")
 

@@ -1,5 +1,6 @@
 plugins {
   id("otel.sdk-extension")
+  id("otel.osgi-conventions")
 }
 
 val mrJarVersions = listOf(9, 11)
