@@ -53,7 +53,7 @@ final class TracingSchedulerListener extends SchedulerListenerSupport {
     if (msg != null) {
       logRecordBuilder.setBody(msg);
     }
-    if (captureExperimentalAttributes && schedulerName != null) {
+    if (captureExperimentalAttributes) {
       logRecordBuilder.setAttribute(QuartzExperimentalAttributes.SCHEDULER_NAME, schedulerName);
     }
     logRecordBuilder.emit();

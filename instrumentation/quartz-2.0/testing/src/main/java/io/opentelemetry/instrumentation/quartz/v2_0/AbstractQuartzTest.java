@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeSta
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
@@ -117,6 +118,8 @@ public abstract class AbstractQuartzTest {
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalStateException("Bad job"))
                             .hasAttributesSatisfyingExactly(assertions)));
+
+    assertThat(getTesting().logRecords()).isEmpty();
   }
 
   @Test
@@ -140,7 +143,7 @@ public abstract class AbstractQuartzTest {
                     .hasAttributesSatisfyingExactly(
                         equalTo(stringKey("exception.type"), SchedulerException.class.getName()),
                         equalTo(stringKey("exception.message"), "boom"),
-                        satisfies(stringKey("exception.stacktrace"), value -> value.isNotEmpty()),
+                        satisfies(stringKey("exception.stacktrace"), val -> val.isNotEmpty()),
                         equalTo(
                             stringKey("quartz.scheduler.name"),
                             EMIT_EXPERIMENTAL_TELEMETRY ? "default" : null)));
