@@ -113,6 +113,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                       span.hasName("poll " + SHARED_TOPIC)
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
+                          .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                           .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
       return;
     }

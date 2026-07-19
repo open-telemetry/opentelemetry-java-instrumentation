@@ -129,6 +129,11 @@ public final class KafkaInstrumenterFactory {
             .addAttributesExtractors(extractors)
             .setErrorCauseExtractor(errorCauseExtractor)
             .setEnabled(emitStableMessagingSemconv() || messagingReceiveInstrumentationEnabled);
+    if (emitStableMessagingSemconv()) {
+      builder.addSpanLinksExtractor(
+          new KafkaBatchProcessSpanLinksExtractor(
+              openTelemetry.getPropagators().getTextMapPropagator()));
+    }
     setMessagingReceiveExceptionEventExtractor(builder);
     return builder.buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
