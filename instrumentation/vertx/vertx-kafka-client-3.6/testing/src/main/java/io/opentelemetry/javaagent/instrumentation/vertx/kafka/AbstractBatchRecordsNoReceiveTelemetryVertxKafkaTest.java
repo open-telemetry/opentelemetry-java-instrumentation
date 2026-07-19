@@ -64,12 +64,12 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
 
                   // first record
                   span ->
-                      span.hasName("testBatchTopic publish")
+                      span.hasName(spanName("testBatchTopic", "publish", "send"))
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(sendAttributes(record1)),
                   span ->
-                      span.hasName("testBatchTopic process")
+                      span.hasName(spanName("testBatchTopic", "process", "process"))
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(1))
                           .hasAttributesSatisfyingExactly(processAttributes(record1)),
@@ -77,12 +77,12 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
 
                   // second record
                   span ->
-                      span.hasName("testBatchTopic publish")
+                      span.hasName(spanName("testBatchTopic", "publish", "send"))
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(sendAttributes(record2)),
                   span ->
-                      span.hasName("testBatchTopic process")
+                      span.hasName(spanName("testBatchTopic", "process", "process"))
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(4))
                           .hasAttributesSatisfyingExactly(processAttributes(record2)),
@@ -95,7 +95,7 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
                 trace.hasSpansSatisfyingExactly(
                     // batch consumer
                     span ->
-                        span.hasName("testBatchTopic process")
+                        span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
                             .hasLinks(
@@ -127,12 +127,12 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("producer"),
                   span ->
-                      span.hasName("testBatchTopic publish")
+                      span.hasName(spanName("testBatchTopic", "publish", "send"))
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(sendAttributes(record)),
                   span ->
-                      span.hasName("testBatchTopic process")
+                      span.hasName(spanName("testBatchTopic", "process", "process"))
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(1))
                           .hasAttributesSatisfyingExactly(processAttributes(record)),
@@ -143,14 +143,14 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("testBatchTopic process")
+                        span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
                             .hasLinks(LinkData.create(producer.get().getSpanContext()))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
                             .hasAttributesSatisfyingExactly(
-                                batchProcessAttributes("testBatchTopic")),
+                                withErrorType(batchProcessAttributes("testBatchTopic"))),
                     span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))));
   }
 }
