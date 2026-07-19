@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-### 🛠️ Deprecations
+### 🚫 Deprecations
 
 - The `otel.instrumentation.quartz.experimental-span-attributes` configuration property and
   `QuartzTelemetryBuilder.setCaptureExperimentalSpanAttributes(boolean)` are deprecated and will be

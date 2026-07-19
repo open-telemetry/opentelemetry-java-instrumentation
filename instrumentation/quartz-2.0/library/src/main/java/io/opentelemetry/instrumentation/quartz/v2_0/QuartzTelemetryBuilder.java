@@ -61,7 +61,7 @@ public final class QuartzTelemetryBuilder {
   /**
    * Sets whether experimental attributes should be set to spans.
    *
-   * @deprecated Use {@link #setEmitExperimentalTelemetry(boolean)} instead.
+   * @deprecated Use {@link #setEmitExperimentalTelemetry(boolean)} instead. Will be removed in 3.0.
    */
   @Deprecated
   @CanIgnoreReturnValue
