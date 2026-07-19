@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -39,12 +41,12 @@ class MessagingSpanNameExtractorTest {
     Message message = new Message();
 
     if (emitStableMessagingSemconv()) {
-      when(getter.getDestinationTemplate(message)).thenReturn(destinationTemplate);
-      if (destinationTemplate == null) {
-        when(getter.isTemporaryDestination(message)).thenReturn(isTemporaryQueue);
-        if (!isTemporaryQueue) {
-          when(getter.isAnonymousDestination(message)).thenReturn(isAnonymousQueue);
-          if (!isAnonymousQueue) {
+      when(getter.isTemporaryDestination(message)).thenReturn(isTemporaryQueue);
+      if (!isTemporaryQueue) {
+        when(getter.isAnonymousDestination(message)).thenReturn(isAnonymousQueue);
+        if (!isAnonymousQueue) {
+          when(getter.getDestinationTemplate(message)).thenReturn(destinationTemplate);
+          if (destinationTemplate == null) {
             when(getter.getDestination(message)).thenReturn(destinationName);
           }
         }
@@ -66,6 +68,9 @@ class MessagingSpanNameExtractorTest {
 
     // then
     assertThat(actualSpanName).isEqualTo(emitStableMessagingSemconv() ? spanName : oldSpanName);
+    if (emitStableMessagingSemconv() && (isTemporaryQueue || isAnonymousQueue)) {
+      verify(getter, never()).getDestinationTemplate(message);
+    }
   }
 
   static Stream<Arguments> spanNameParams() {

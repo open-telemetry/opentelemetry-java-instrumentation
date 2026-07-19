@@ -70,11 +70,12 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
   @Override
   public String extract(REQUEST request) {
     if (emitStableMessagingSemconv()) {
-      String destinationName = getter.getDestinationTemplate(request);
-      if (destinationName == null
-          && !getter.isTemporaryDestination(request)
-          && !getter.isAnonymousDestination(request)) {
-        destinationName = getter.getDestination(request);
+      String destinationName = null;
+      if (!getter.isTemporaryDestination(request) && !getter.isAnonymousDestination(request)) {
+        destinationName = getter.getDestinationTemplate(request);
+        if (destinationName == null) {
+          destinationName = getter.getDestination(request);
+        }
       }
       return destinationName == null ? operationName : operationName + " " + destinationName;
     }
