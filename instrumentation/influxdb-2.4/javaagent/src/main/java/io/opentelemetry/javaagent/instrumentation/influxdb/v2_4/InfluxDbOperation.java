@@ -12,8 +12,12 @@ import javax.annotation.Nullable;
 public abstract class InfluxDbOperation {
 
   public static InfluxDbOperation create(
-      String host, int port, @Nullable String namespace, @Nullable String operation) {
-    return new AutoValue_InfluxDbOperation(host, port, namespace, operation);
+      String host,
+      int port,
+      @Nullable String namespace,
+      @Nullable String operation,
+      @Nullable Long batchSize) {
+    return new AutoValue_InfluxDbOperation(host, port, namespace, operation, batchSize);
   }
 
   public abstract String getHost();
@@ -25,4 +29,7 @@ public abstract class InfluxDbOperation {
 
   @Nullable
   public abstract String getOperation();
+
+  @Nullable
+  public abstract Long getBatchSize();
 }

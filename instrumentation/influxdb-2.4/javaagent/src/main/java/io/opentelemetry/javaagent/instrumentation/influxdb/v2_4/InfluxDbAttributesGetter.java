@@ -41,6 +41,12 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
     return null;
   }
 
+  @Nullable
+  @Override
+  public Long getDbOperationBatchSize(InfluxDbOperation request) {
+    return request.getBatchSize();
+  }
+
   @Override
   public String getServerAddress(InfluxDbOperation request) {
     return request.getHost();
