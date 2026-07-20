@@ -87,7 +87,7 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
     ObjectName objectName =
         new ObjectName("org.apache.commons.dbcp2:type=BasicDataSource,name=registeredPool");
     MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
-    mbeanServer.registerMBean(dataSource, objectName);
+    objectName = mbeanServer.registerMBean(dataSource, objectName).getObjectName();
 
     try {
       dataSource.getConnection().close();
