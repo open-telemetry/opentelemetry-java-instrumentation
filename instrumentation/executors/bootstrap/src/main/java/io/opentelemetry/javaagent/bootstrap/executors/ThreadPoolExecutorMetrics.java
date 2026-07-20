@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.lang.ref.WeakReference;
 import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
@@ -33,62 +32,48 @@ public final class ThreadPoolExecutorMetrics {
   private static final Pattern TRAILING_DIGITS_PATTERN = Pattern.compile("\\d+$");
   private static final Pattern ALL_DIGITS_PATTERN = Pattern.compile("\\d+");
 
-  private static final Cache<Executor, MetricsRegistration> registrations = Cache.weak();
+  private static final Cache<Executor, Registration> registrations = Cache.weak();
 
-  public static void register(ThreadPoolExecutor executor, ThreadFactory threadFactory) {
-    registerMetrics(executor, threadFactory, emptySet());
+  public static void preRegister(ThreadPoolExecutor executor) {
+    preRegister(executor, emptySet());
   }
 
-  public static void register(Executor executor, ThreadFactory threadFactory, Set<Thread> threads) {
-    registerMetrics(executor, threadFactory, threads);
-  }
-
-  private static void registerMetrics(
-      Executor executor, ThreadFactory threadFactory, Set<Thread> threads) {
-    registrations.computeIfAbsent(
-        executor,
-        ignored -> {
-          String threadName = threadName(threadFactory);
-          return createRegistration(
-              executor,
-              threads,
-              UNKNOWN,
-              threadName,
-              executorName(threadName, THREAD_NAME_NORMALIZATION));
-        });
+  public static void preRegister(Executor executor, Set<Thread> threads) {
+    registrations.computeIfAbsent(executor, ignored -> new Registration(threads));
   }
 
   public static void reregister(
       Executor executor, @Nullable String ownerName, String threadNameNormalization) {
     String executorOwnerName = ownerName == null ? UNKNOWN : ownerName;
-    MetricsRegistration registration = registrations.get(executor);
+    Registration registration = registrations.get(executor);
     if (registration != null) {
-      updateRegistration(
-          executor,
-          registration,
-          registration.reregister(
-              executor,
-              executorOwnerName,
-              executorName(registration.threadName, threadNameNormalization)));
+      registration.reregister(executor, executorOwnerName, threadNameNormalization);
     }
   }
 
-  public static void reregister(ThreadPoolExecutor executor, ThreadFactory threadFactory) {
-    MetricsRegistration registration = registrations.get(executor);
+  public static void onThreadFactoryChanged(Executor executor) {
+    Registration registration = registrations.get(executor);
     if (registration != null) {
-      updateRegistration(executor, registration, registration.reregister(executor, threadFactory));
+      registration.awaitNextWorkerThread();
+    }
+  }
+
+  public static void onWorkerThreadStarted(Executor executor, Thread thread) {
+    Registration registration = registrations.get(executor);
+    if (registration != null) {
+      registration.onWorkerThreadStarted(executor, thread);
     }
   }
 
   public static void recordRejectedTask(Executor executor) {
-    MetricsRegistration registration = registrations.get(executor);
-    if (registration != null && registration.rejectedTasks != null) {
-      registration.rejectedTasks.add(1, registration.attributes);
+    Registration registration = registrations.get(executor);
+    if (registration != null) {
+      registration.recordRejectedTask();
     }
   }
 
   public static void unregister(Executor executor) {
-    MetricsRegistration registration;
+    Registration registration;
     synchronized (registrations) {
       registration = registrations.get(executor);
       if (registration != null) {
@@ -98,75 +83,6 @@ public final class ThreadPoolExecutorMetrics {
     if (registration != null) {
       registration.close();
     }
-  }
-
-  private static void updateRegistration(
-      Executor executor,
-      MetricsRegistration registration,
-      @Nullable MetricsRegistration replacement) {
-    boolean closeRegistration = false;
-    @Nullable MetricsRegistration discardedReplacement = null;
-    synchronized (registrations) {
-      if (registrations.get(executor) != registration) {
-        if (replacement != registration) {
-          discardedReplacement = replacement;
-        }
-      } else if (replacement == null) {
-        registrations.remove(executor);
-        closeRegistration = true;
-      } else if (replacement != registration) {
-        registrations.put(executor, replacement);
-        closeRegistration = true;
-      }
-    }
-    if (closeRegistration) {
-      registration.close();
-    }
-    if (discardedReplacement != null) {
-      discardedReplacement.close();
-    }
-  }
-
-  private static MetricsRegistration createRegistration(
-      Executor executor,
-      Set<Thread> threads,
-      String ownerName,
-      String threadName,
-      String executorName) {
-    JvmExecutorMetrics metrics =
-        JvmExecutorMetrics.create(
-            GlobalOpenTelemetry.get(),
-            INSTRUMENTATION_NAME,
-            executorName,
-            ownerName,
-            executor.getClass().getName());
-
-    AtomicReference<BatchCallback> callback;
-    @Nullable LongCounter rejectedTasks;
-    if (executor instanceof ThreadPoolExecutor) {
-      callback = createBatchCallback(metrics, (ThreadPoolExecutor) executor);
-      rejectedTasks = metrics.rejectedTasks();
-    } else {
-      callback = createBatchCallback(metrics, threads);
-      rejectedTasks = null;
-    }
-
-    WeakReference<Set<Thread>> threadsRef = new WeakReference<>(threads);
-
-    return new MetricsRegistration(
-        callback,
-        rejectedTasks,
-        metrics.attributes(),
-        threadName,
-        executorName,
-        ownerName,
-        (newExecutor, newOwnerName, newExecutorName) -> {
-          Set<Thread> activeThreads = threadsRef.get();
-          return activeThreads == null
-              ? null
-              : createRegistration(
-                  newExecutor, activeThreads, newOwnerName, threadName, newExecutorName);
-        });
   }
 
   private static AtomicReference<BatchCallback> createBatchCallback(
@@ -255,86 +171,128 @@ public final class ThreadPoolExecutorMetrics {
         .replaceAll("*");
   }
 
-  private static String threadName(@Nullable ThreadFactory threadFactory) {
-    try {
-      if (threadFactory != null) {
-        Thread thread = threadFactory.newThread(ThreadPoolExecutorMetrics::noopRunnable);
-        if (thread != null) {
-          String threadName = thread.getName();
-          if (threadName != null) {
-            threadName = threadName.trim();
-            if (!threadName.isEmpty()) {
-              return threadName;
-            }
-          }
+  private static final class Registration {
+    private final WeakReference<Set<Thread>> threadsRef;
+    private String ownerName = UNKNOWN;
+    private String threadNameNormalization = THREAD_NAME_NORMALIZATION;
+    @Nullable private AtomicReference<BatchCallback> callback;
+    @Nullable private LongCounter rejectedTasks;
+    private Attributes attributes = Attributes.empty();
+    private String threadName = UNKNOWN;
+    private String executorName = UNKNOWN;
+    private volatile boolean awaitingWorkerThread = true;
+    private boolean closed;
+
+    private Registration(Set<Thread> threads) {
+      threadsRef = new WeakReference<>(threads);
+    }
+
+    private synchronized void awaitNextWorkerThread() {
+      if (!closed) {
+        awaitingWorkerThread = true;
+      }
+    }
+
+    private void onWorkerThreadStarted(Executor executor, Thread thread) {
+      if (!awaitingWorkerThread) {
+        return;
+      }
+
+      @Nullable AtomicReference<BatchCallback> previous;
+      synchronized (this) {
+        if (closed || !awaitingWorkerThread) {
+          return;
         }
-      }
-    } catch (Throwable ignored) {
-      // Use the fallback name when the thread factory cannot be safely probed.
-    }
-    return UNKNOWN;
-  }
 
-  private static void noopRunnable() {}
+        Set<Thread> threads = threadsRef.get();
+        if (threads == null) {
+          return;
+        }
 
-  private interface RegistrationFactory {
-    @Nullable
-    MetricsRegistration create(Executor executor, String ownerName, String executorName);
-  }
-
-  private static final class MetricsRegistration {
-    private final AtomicReference<BatchCallback> callback;
-    @Nullable private final LongCounter rejectedTasks;
-    private final Attributes attributes;
-    private final String threadName;
-    private final String executorName;
-    private final String ownerName;
-    private final RegistrationFactory registrationFactory;
-
-    private MetricsRegistration(
-        AtomicReference<BatchCallback> callback,
-        @Nullable LongCounter rejectedTasks,
-        Attributes attributes,
-        String threadName,
-        String executorName,
-        String ownerName,
-        RegistrationFactory registrationFactory) {
-      this.callback = callback;
-      this.rejectedTasks = rejectedTasks;
-      this.attributes = attributes;
-      this.threadName = threadName;
-      this.executorName = executorName;
-      this.ownerName = ownerName;
-      this.registrationFactory = registrationFactory;
-    }
-
-    @Nullable
-    private MetricsRegistration reregister(
-        Executor executor, String ownerName, String newExecutorName) {
-      if (this.ownerName.equals(ownerName) && executorName.equals(newExecutorName)) {
-        return this;
+        awaitingWorkerThread = false;
+        previous = callback;
+        String newThreadName = thread.getName();
+        registerMetrics(
+            executor, threads, newThreadName, executorName(newThreadName, threadNameNormalization));
       }
 
-      MetricsRegistration replacement =
-          registrationFactory.create(executor, ownerName, newExecutorName);
-      return replacement;
+      if (previous != null) {
+        closeCallback(previous);
+      }
     }
 
-    private MetricsRegistration reregister(
-        ThreadPoolExecutor executor, ThreadFactory threadFactory) {
-      String newThreadName = ThreadPoolExecutorMetrics.threadName(threadFactory);
-      String newExecutorName = executorName(newThreadName, THREAD_NAME_NORMALIZATION);
-      if (threadName.equals(newThreadName) && executorName.equals(newExecutorName)) {
-        return this;
+    private void reregister(
+        Executor executor, String newOwnerName, String newThreadNameNormalization) {
+      @Nullable AtomicReference<BatchCallback> previous;
+      synchronized (this) {
+        if (closed) {
+          return;
+        }
+
+        String newExecutorName = executorName(threadName, newThreadNameNormalization);
+        boolean metricsUnchanged =
+            ownerName.equals(newOwnerName) && executorName.equals(newExecutorName);
+        ownerName = newOwnerName;
+        threadNameNormalization = newThreadNameNormalization;
+        if (callback == null || metricsUnchanged) {
+          return;
+        }
+
+        Set<Thread> threads = threadsRef.get();
+        if (threads == null) {
+          return;
+        }
+
+        previous = callback;
+        registerMetrics(executor, threads, threadName, newExecutorName);
       }
 
-      MetricsRegistration replacement =
-          createRegistration(executor, emptySet(), ownerName, newThreadName, newExecutorName);
-      return replacement;
+      closeCallback(previous);
+    }
+
+    private synchronized void recordRejectedTask() {
+      if (callback != null && rejectedTasks != null) {
+        rejectedTasks.add(1, attributes);
+      }
     }
 
     private void close() {
-      closeCallback(callback);
+      @Nullable AtomicReference<BatchCallback> previous;
+      synchronized (this) {
+        closed = true;
+        awaitingWorkerThread = false;
+        previous = callback;
+        callback = null;
+        rejectedTasks = null;
+        attributes = Attributes.empty();
+      }
+
+      if (previous != null) {
+        closeCallback(previous);
+      }
+    }
+
+    private void registerMetrics(
+        Executor executor, Set<Thread> threads, String threadName, String executorName) {
+      JvmExecutorMetrics metrics =
+          JvmExecutorMetrics.create(
+              GlobalOpenTelemetry.get(),
+              INSTRUMENTATION_NAME,
+              executorName,
+              ownerName,
+              executor.getClass().getName());
+
+      if (executor instanceof ThreadPoolExecutor) {
+        callback = createBatchCallback(metrics, (ThreadPoolExecutor) executor);
+        rejectedTasks = metrics.rejectedTasks();
+      } else {
+        callback = createBatchCallback(metrics, threads);
+        rejectedTasks = null;
+      }
+
+      attributes = metrics.attributes();
+      this.threadName = threadName;
+      this.executorName = executorName;
     }
   }
 

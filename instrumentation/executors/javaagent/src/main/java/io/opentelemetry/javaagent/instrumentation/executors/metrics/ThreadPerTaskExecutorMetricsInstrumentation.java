@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.bootstrap.executors.ThreadPoolExecutorMetrics;
@@ -16,7 +17,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ExecutorService;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -36,6 +37,9 @@ public class ThreadPerTaskExecutorMetricsInstrumentation implements TypeInstrume
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArguments(1)), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
+        named("start").and(takesArgument(0, Thread.class)).and(takesArguments(1)),
+        getClass().getName() + "$StartAdvice");
+    transformer.applyAdviceToMethod(
         namedOneOf("shutdown", "shutdownNow", "close")
             .and(takesArguments(0))
             .and(methodIsDeclaredByType(named(THREAD_PER_TASK_EXECUTOR))),
@@ -47,10 +51,17 @@ public class ThreadPerTaskExecutorMetricsInstrumentation implements TypeInstrume
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
-        @Advice.This Executor executor,
-        @Advice.Argument(0) ThreadFactory threadFactory,
-        @Advice.FieldValue("threads") Set<Thread> threads) {
-      ThreadPoolExecutorMetrics.register(executor, threadFactory, threads);
+        @Advice.This Executor executor, @Advice.FieldValue("threads") Set<Thread> threads) {
+      ThreadPoolExecutorMetrics.preRegister(executor, threads);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class StartAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(@Advice.This Executor executor, @Advice.Argument(0) Thread thread) {
+      ThreadPoolExecutorMetrics.onWorkerThreadStarted(executor, thread);
     }
   }
 
@@ -58,8 +69,10 @@ public class ThreadPerTaskExecutorMetricsInstrumentation implements TypeInstrume
   public static class ShutdownAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.This Executor executor) {
-      ThreadPoolExecutorMetrics.unregister(executor);
+    public static void onExit(@Advice.This ExecutorService executor) {
+      if (executor.isShutdown()) {
+        ThreadPoolExecutorMetrics.unregister(executor);
+      }
     }
   }
 }

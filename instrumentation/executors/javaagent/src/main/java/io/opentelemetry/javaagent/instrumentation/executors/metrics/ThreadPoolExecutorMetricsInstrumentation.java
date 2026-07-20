@@ -16,7 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.javaagent.bootstrap.executors.ThreadPoolExecutorMetrics;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -45,6 +45,11 @@ public class ThreadPoolExecutorMetricsInstrumentation implements TypeInstrumenta
             .and(methodIsDeclaredByType(named(ThreadPoolExecutor.class.getName()))),
         getClass().getName() + "$SetThreadFactoryAdvice");
     transformer.applyAdviceToMethod(
+        named("runWorker")
+            .and(takesArguments(1))
+            .and(methodIsDeclaredByType(named(ThreadPoolExecutor.class.getName()))),
+        getClass().getName() + "$RunWorkerAdvice");
+    transformer.applyAdviceToMethod(
         named("reject")
             .and(takesArgument(0, Runnable.class))
             .and(takesArguments(1))
@@ -59,10 +64,9 @@ public class ThreadPoolExecutorMetricsInstrumentation implements TypeInstrumenta
   public static class ConstructorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This ThreadPoolExecutor executor, @Advice.Argument(5) ThreadFactory threadFactory) {
+    public static void onExit(@Advice.This ThreadPoolExecutor executor) {
       if (!(executor instanceof ScheduledThreadPoolExecutor)) {
-        ThreadPoolExecutorMetrics.register(executor, threadFactory);
+        ThreadPoolExecutorMetrics.preRegister(executor);
       }
     }
   }
@@ -71,10 +75,20 @@ public class ThreadPoolExecutorMetricsInstrumentation implements TypeInstrumenta
   public static class SetThreadFactoryAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This ThreadPoolExecutor executor, @Advice.Argument(0) ThreadFactory threadFactory) {
+    public static void onExit(@Advice.This ThreadPoolExecutor executor) {
       if (!(executor instanceof ScheduledThreadPoolExecutor)) {
-        ThreadPoolExecutorMetrics.reregister(executor, threadFactory);
+        ThreadPoolExecutorMetrics.onThreadFactoryChanged(executor);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class RunWorkerAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter(@Advice.This ThreadPoolExecutor executor) {
+      if (!(executor instanceof ScheduledThreadPoolExecutor)) {
+        ThreadPoolExecutorMetrics.onWorkerThreadStarted(executor, Thread.currentThread());
       }
     }
   }
@@ -94,8 +108,8 @@ public class ThreadPoolExecutorMetricsInstrumentation implements TypeInstrumenta
   public static class ShutdownAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.This Executor executor) {
-      if (!(executor instanceof ScheduledThreadPoolExecutor)) {
+    public static void onExit(@Advice.This ExecutorService executor) {
+      if (!(executor instanceof ScheduledThreadPoolExecutor) && executor.isShutdown()) {
         ThreadPoolExecutorMetrics.unregister(executor);
       }
     }
