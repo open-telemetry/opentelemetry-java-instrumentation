@@ -20,6 +20,8 @@
   already expose a max. It is no longer emitted when `otel.instrumentation.common.v3-preview` is
   enabled.
   ([#19397](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19397))
+- Deprecate `MessageOperation` in favor of `MessagingOperationType`.
+  ([#19357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19357))
 
 ## Version 2.30.0 (2026-07-22)
 
