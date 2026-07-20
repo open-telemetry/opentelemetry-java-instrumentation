@@ -9,6 +9,7 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
+import javax.annotation.Nullable;
 import org.quartz.SchedulerException;
 import org.quartz.listeners.SchedulerListenerSupport;
 
@@ -20,11 +21,11 @@ import org.quartz.listeners.SchedulerListenerSupport;
 final class TracingSchedulerListener extends SchedulerListenerSupport {
 
   private final Logger eventLogger;
-  private final String schedulerName;
+  @Nullable private final String schedulerName;
   private final boolean captureExperimentalAttributes;
 
   TracingSchedulerListener(
-      Logger eventLogger, String schedulerName, boolean captureExperimentalAttributes) {
+      Logger eventLogger, @Nullable String schedulerName, boolean captureExperimentalAttributes) {
     this.eventLogger = eventLogger;
     this.schedulerName = schedulerName;
     this.captureExperimentalAttributes = captureExperimentalAttributes;

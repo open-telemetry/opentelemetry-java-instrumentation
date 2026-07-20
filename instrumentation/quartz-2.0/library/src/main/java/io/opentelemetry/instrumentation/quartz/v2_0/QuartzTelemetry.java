@@ -72,9 +72,9 @@ public final class QuartzTelemetry {
       return;
     }
     try {
-      // The scheduler name is only available at configuration time, so capture it now and hand it
-      // to the listener.
-      String schedulerName = scheduler.getSchedulerName();
+      // The scheduler name is only available at configuration time, so capture it now when the
+      // experimental attribute is enabled and hand it to the listener.
+      String schedulerName = emitExperimentalTelemetry ? scheduler.getSchedulerName() : null;
       scheduler
           .getListenerManager()
           .addSchedulerListener(
