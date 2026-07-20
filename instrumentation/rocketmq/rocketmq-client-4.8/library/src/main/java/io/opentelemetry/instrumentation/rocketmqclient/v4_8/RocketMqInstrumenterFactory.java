@@ -65,7 +65,7 @@ class RocketMqInstrumenterFactory {
         Instrumenter.<SendMessageContext, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.createForOperationType(getter, operationType))
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(getter, operationType, capturedHeaders));
     if (emitStableMessagingSemconv()) {
@@ -159,7 +159,7 @@ class RocketMqInstrumenterFactory {
         Instrumenter.builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
-            MessagingSpanNameExtractor.create(getter, operationType));
+            MessagingSpanNameExtractor.createForOperationType(getter, operationType));
 
     builder.addAttributesExtractor(
         buildMessagingAttributesExtractor(getter, operationType, capturedHeaders));

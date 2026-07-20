@@ -20,12 +20,16 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
    *     name>}.
    * @see MessagingOperationType used to extract {@code <operation name>}.
    */
-  public static <REQUEST> SpanNameExtractor<REQUEST> create(
+  public static <REQUEST> SpanNameExtractor<REQUEST> createForOperationType(
       MessagingAttributesGetter<REQUEST, ?> getter, MessagingOperationType operationType) {
-    return builder(getter, operationType).build();
+    return builderForOperationType(getter, operationType).build();
   }
 
-  /** Returns a messaging span name extractor for the given operation. */
+  /**
+   * @deprecated Use {@link #createForOperationType(MessagingAttributesGetter,
+   *     MessagingOperationType)}. Will be removed in 3.0.
+   */
+  @Deprecated // to be removed in 3.0
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       MessagingAttributesGetter<REQUEST, ?> getter, MessageOperation operation) {
     return builder(getter, operation).build();
@@ -35,12 +39,16 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
    * Returns a new {@link MessagingSpanNameExtractorBuilder} that can be used to configure the
    * messaging span name extractor.
    */
-  public static <REQUEST> MessagingSpanNameExtractorBuilder<REQUEST> builder(
+  public static <REQUEST> MessagingSpanNameExtractorBuilder<REQUEST> builderForOperationType(
       MessagingAttributesGetter<REQUEST, ?> getter, MessagingOperationType operationType) {
     return new MessagingSpanNameExtractorBuilder<>(getter, operationType, true);
   }
 
-  /** Returns a messaging span name extractor builder for the given operation. */
+  /**
+   * @deprecated Use {@link #builderForOperationType(MessagingAttributesGetter,
+   *     MessagingOperationType)}. Will be removed in 3.0.
+   */
+  @Deprecated // to be removed in 3.0
   public static <REQUEST> MessagingSpanNameExtractorBuilder<REQUEST> builder(
       MessagingAttributesGetter<REQUEST, ?> getter, MessageOperation operation) {
     return new MessagingSpanNameExtractorBuilder<>(getter, operation.type(), false);

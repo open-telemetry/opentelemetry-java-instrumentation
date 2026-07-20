@@ -32,7 +32,7 @@ public class KafkaConnectSingletons {
         Instrumenter.<KafkaConnectTask, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(
+                MessagingSpanNameExtractor.createForOperationType(
                     new KafkaConnectAttributesGetter(), MessagingOperationType.PROCESS))
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builderForOperationType(

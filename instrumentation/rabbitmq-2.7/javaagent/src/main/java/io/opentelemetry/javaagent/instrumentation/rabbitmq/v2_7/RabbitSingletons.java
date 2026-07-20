@@ -103,7 +103,8 @@ public class RabbitSingletons {
 
     SpanNameExtractor<ReceiveRequest> spanNameExtractor =
         emitStableMessagingSemconv()
-            ? MessagingSpanNameExtractor.create(getter, MessagingOperationType.RECEIVE)
+            ? MessagingSpanNameExtractor.createForOperationType(
+                getter, MessagingOperationType.RECEIVE)
             : ReceiveRequest::spanName;
     InstrumenterBuilder<ReceiveRequest, GetResponse> builder =
         Instrumenter.<ReceiveRequest, GetResponse>builder(
@@ -137,7 +138,8 @@ public class RabbitSingletons {
 
     SpanNameExtractor<DeliveryRequest> spanNameExtractor =
         emitStableMessagingSemconv()
-            ? MessagingSpanNameExtractor.create(getter, MessagingOperationType.PROCESS)
+            ? MessagingSpanNameExtractor.createForOperationType(
+                getter, MessagingOperationType.PROCESS)
             : DeliveryRequest::spanName;
     InstrumenterBuilder<DeliveryRequest, Void> builder =
         Instrumenter.<DeliveryRequest, Void>builder(

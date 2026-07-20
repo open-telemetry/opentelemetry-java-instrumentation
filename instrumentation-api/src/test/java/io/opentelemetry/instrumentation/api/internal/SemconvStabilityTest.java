@@ -356,7 +356,7 @@ class SemconvStabilityTest {
 
     assertThat(rpc).isEqualTo(SemconvMode.V0_STABLE);
     assertThat(servicePeer).isEqualTo(SemconvMode.V0_STABLE);
-    assertThat(messaging).isEqualTo(SemconvMode.V0_STABLE);
+    assertThat(messaging).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
   }
 
   @ParameterizedTest
@@ -420,29 +420,35 @@ class SemconvStabilityTest {
             preview("messaging/dup"),
             SemconvMode.V1_EXPERIMENTAL.withDualEmit()),
         argumentSet(
-            "v3 activation remains staged",
+            "v3 activates messaging preview",
             true,
             noStableOptIn(),
             noPreview(),
-            SemconvMode.V0_STABLE),
+            SemconvMode.V1_EXPERIMENTAL),
         argumentSet(
             "v3 ignores legacy opt-in property",
             true,
             stableOptIn("messaging"),
             noPreview(),
-            SemconvMode.V0_STABLE),
+            SemconvMode.V1_EXPERIMENTAL),
         argumentSet(
             "v3 ignores legacy opt-in dual emit",
             true,
             stableOptIn("messaging/dup"),
             noPreview(),
-            SemconvMode.V0_STABLE),
+            SemconvMode.V1_EXPERIMENTAL),
         argumentSet(
             "v3 with explicit preview",
             true,
             noStableOptIn(),
             preview("messaging"),
-            SemconvMode.V1_EXPERIMENTAL));
+            SemconvMode.V1_EXPERIMENTAL),
+        argumentSet(
+            "v3 with explicit preview dual emit",
+            true,
+            noStableOptIn(),
+            preview("messaging/dup"),
+            SemconvMode.V1_EXPERIMENTAL.withDualEmit()));
   }
 
   @SafeVarargs

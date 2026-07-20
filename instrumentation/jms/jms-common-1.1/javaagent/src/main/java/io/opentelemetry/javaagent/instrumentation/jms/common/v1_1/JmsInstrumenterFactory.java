@@ -58,7 +58,7 @@ public class JmsInstrumenterFactory {
         Instrumenter.<MessageWithDestination, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.createForOperationType(getter, operationType))
             .addAttributesExtractor(createMessagingAttributesExtractor(operationType));
     setMessagingSendExceptionEventExtractor(builder);
     return builder.buildProducerInstrumenter(new MessagePropertySetter());
@@ -72,7 +72,7 @@ public class JmsInstrumenterFactory {
         Instrumenter.<MessageWithDestination, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.createForOperationType(getter, operationType))
             .addAttributesExtractor(createMessagingAttributesExtractor(operationType));
     setMessagingReceiveExceptionEventExtractor(builder);
     if (messagingReceiveInstrumentationEnabled) {
@@ -93,7 +93,7 @@ public class JmsInstrumenterFactory {
         Instrumenter.<MessageWithDestination, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.createForOperationType(getter, operationType))
             .addAttributesExtractor(createMessagingAttributesExtractor(operationType));
     setMessagingProcessExceptionEventExtractor(builder);
     return MessagingProcessInstrumenterFactory.create(

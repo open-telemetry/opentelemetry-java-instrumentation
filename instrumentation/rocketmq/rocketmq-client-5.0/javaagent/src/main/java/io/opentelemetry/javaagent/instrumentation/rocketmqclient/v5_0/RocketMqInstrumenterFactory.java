@@ -45,7 +45,7 @@ final class RocketMqInstrumenterFactory {
         Instrumenter.<PublishingMessageImpl, SendReceiptImpl>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.createForOperationType(getter, operationType))
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(new RocketMqProducerAttributeExtractor());
     setMessagingSendExceptionEventExtractor(instrumenterBuilder);
@@ -65,7 +65,7 @@ final class RocketMqInstrumenterFactory {
         Instrumenter.<ReceiveMessageRequest, List<MessageView>>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.createForOperationType(getter, operationType))
             .setEnabled(enabled)
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(new RocketMqConsumerReceiveAttributeExtractor());
@@ -87,7 +87,7 @@ final class RocketMqInstrumenterFactory {
         Instrumenter.<MessageView, ConsumeResult>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.createForOperationType(getter, operationType))
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(new RocketMqConsumerProcessAttributeExtractor())
             .setSpanStatusExtractor(

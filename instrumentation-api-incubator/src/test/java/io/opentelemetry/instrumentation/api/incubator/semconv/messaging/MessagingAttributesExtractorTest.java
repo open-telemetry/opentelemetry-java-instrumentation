@@ -263,6 +263,7 @@ class MessagingAttributesExtractorTest {
     assertThat(attributes.build()).isEqualTo(expected);
   }
 
+  @SuppressWarnings("OtelDeprecatedApiUsage")
   @Test
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // given

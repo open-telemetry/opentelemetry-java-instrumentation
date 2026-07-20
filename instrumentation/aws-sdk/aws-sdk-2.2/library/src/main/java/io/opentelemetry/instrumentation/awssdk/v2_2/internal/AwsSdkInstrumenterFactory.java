@@ -143,7 +143,7 @@ public final class AwsSdkInstrumenterFactory {
 
     return createInstrumenter(
         openTelemetry,
-        MessagingSpanNameExtractor.create(getter, operationType),
+        MessagingSpanNameExtractor.createForOperationType(getter, operationType),
         MessagingSpanKindExtractor.create(operationType),
         toSqsRequestExtractors(consumerAttributesExtractors()),
         singletonList(messagingAttributeExtractor),
@@ -173,7 +173,7 @@ public final class AwsSdkInstrumenterFactory {
         Instrumenter.<SqsProcessRequest, Response>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.createForOperationType(getter, operationType))
             .addAttributesExtractors(toSqsRequestExtractors(consumerAttributesExtractors()))
             .addAttributesExtractor(messagingAttributesExtractor(getter, operationType));
     setMessagingProcessExceptionEventExtractor(builder);
@@ -244,7 +244,7 @@ public final class AwsSdkInstrumenterFactory {
 
     return createInstrumenter(
         openTelemetry,
-        MessagingSpanNameExtractor.create(getter, operationType),
+        MessagingSpanNameExtractor.createForOperationType(getter, operationType),
         SpanKindExtractor.alwaysProducer(),
         attributesExtractors(),
         singletonList(messagingAttributeExtractor),

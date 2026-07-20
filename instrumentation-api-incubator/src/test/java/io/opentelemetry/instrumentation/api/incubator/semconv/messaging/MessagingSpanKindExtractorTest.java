@@ -40,6 +40,7 @@ class MessagingSpanKindExtractorTest {
     assertThat(spanKind).isEqualTo(SpanKind.PRODUCER);
   }
 
+  @SuppressWarnings("OtelDeprecatedApiUsage")
   @Test
   void messageOperationUsesLegacySpanKind() {
     SpanKind receiveKind =

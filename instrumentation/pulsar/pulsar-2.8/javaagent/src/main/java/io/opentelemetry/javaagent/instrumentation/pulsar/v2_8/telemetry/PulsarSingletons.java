@@ -79,7 +79,8 @@ public class PulsarSingletons {
         Instrumenter.<PulsarRequest, Void>builder(
                 telemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, MessagingOperationType.RECEIVE))
+                MessagingSpanNameExtractor.createForOperationType(
+                    getter, MessagingOperationType.RECEIVE))
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(getter, MessagingOperationType.RECEIVE))
             .addOperationMetrics(MessagingConsumerMetrics.getForOperationType())
@@ -105,7 +106,8 @@ public class PulsarSingletons {
         Instrumenter.<PulsarBatchRequest, Void>builder(
                 telemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, MessagingOperationType.RECEIVE))
+                MessagingSpanNameExtractor.createForOperationType(
+                    getter, MessagingOperationType.RECEIVE))
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(getter, MessagingOperationType.RECEIVE))
             .addAttributesExtractor(
@@ -124,7 +126,8 @@ public class PulsarSingletons {
         Instrumenter.<PulsarRequest, Void>builder(
                 telemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, MessagingOperationType.PROCESS))
+                MessagingSpanNameExtractor.createForOperationType(
+                    getter, MessagingOperationType.PROCESS))
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(getter, MessagingOperationType.PROCESS))
             .addOperationMetrics(MessagingProcessMetrics.get());
@@ -147,7 +150,8 @@ public class PulsarSingletons {
         Instrumenter.<PulsarRequest, Void>builder(
                 telemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, MessagingOperationType.SEND))
+                MessagingSpanNameExtractor.createForOperationType(
+                    getter, MessagingOperationType.SEND))
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(getter, MessagingOperationType.SEND))
             .addAttributesExtractor(

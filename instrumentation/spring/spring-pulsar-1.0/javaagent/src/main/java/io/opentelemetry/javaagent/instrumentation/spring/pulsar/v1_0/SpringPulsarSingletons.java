@@ -51,7 +51,7 @@ public class SpringPulsarSingletons {
         Instrumenter.<Message<?>, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.createForOperationType(getter, operationType))
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builderForOperationType(getter, operationType)
                     .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())

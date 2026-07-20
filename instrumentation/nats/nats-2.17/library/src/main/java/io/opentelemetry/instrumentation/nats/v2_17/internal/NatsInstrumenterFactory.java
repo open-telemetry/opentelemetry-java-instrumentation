@@ -30,7 +30,7 @@ public final class NatsInstrumenterFactory {
         Instrumenter.<NatsRequest, NatsRequest>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(
+                MessagingSpanNameExtractor.createForOperationType(
                     new NatsRequestMessagingAttributesGetter(), MessagingOperationType.SEND))
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builderForOperationType(
@@ -47,7 +47,7 @@ public final class NatsInstrumenterFactory {
         Instrumenter.<NatsRequest, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(
+                MessagingSpanNameExtractor.createForOperationType(
                     new NatsRequestMessagingAttributesGetter(), MessagingOperationType.PROCESS))
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builderForOperationType(

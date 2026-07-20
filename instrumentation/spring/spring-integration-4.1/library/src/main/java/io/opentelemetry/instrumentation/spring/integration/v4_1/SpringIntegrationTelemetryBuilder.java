@@ -83,7 +83,7 @@ public final class SpringIntegrationTelemetryBuilder {
         Instrumenter.<MessageWithChannel, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(
+                MessagingSpanNameExtractor.createForOperationType(
                     consumerNameGetter, MessagingOperationType.PROCESS))
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
@@ -103,7 +103,8 @@ public final class SpringIntegrationTelemetryBuilder {
         Instrumenter.<MessageWithChannel, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(producerNameGetter, MessagingOperationType.SEND))
+                MessagingSpanNameExtractor.createForOperationType(
+                    producerNameGetter, MessagingOperationType.SEND))
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(

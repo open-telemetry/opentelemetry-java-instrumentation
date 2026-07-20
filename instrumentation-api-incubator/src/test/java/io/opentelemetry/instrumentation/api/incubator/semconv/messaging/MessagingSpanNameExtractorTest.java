@@ -28,6 +28,7 @@ class MessagingSpanNameExtractorTest {
 
   @Mock MessagingAttributesGetter<Message, Void> getter;
 
+  @SuppressWarnings("OtelDeprecatedApiUsage")
   @Test
   void shouldKeepLegacyNameForMessageOperation() {
     Message message = new Message();
@@ -40,6 +41,7 @@ class MessagingSpanNameExtractorTest {
     assertThat(underTest.extract(message)).isEqualTo("destination publish");
   }
 
+  @SuppressWarnings("OtelDeprecatedApiUsage")
   @Test
   void shouldRejectOperationNameForMessageOperation() {
     assertThatThrownBy(
@@ -48,6 +50,15 @@ class MessagingSpanNameExtractorTest {
                     .setOperationName("send"))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Operation name is not configurable for legacy builders");
+  }
+
+  @SuppressWarnings("OtelDeprecatedApiUsage")
+  @Test
+  void shouldKeepNullLiteralCallsSourceCompatible() {
+    assertThatThrownBy(() -> MessagingSpanNameExtractor.create(getter, null))
+        .isInstanceOf(NullPointerException.class);
+    assertThatThrownBy(() -> MessagingSpanNameExtractor.builder(getter, null))
+        .isInstanceOf(NullPointerException.class);
   }
 
   @ParameterizedTest
@@ -83,7 +94,7 @@ class MessagingSpanNameExtractorTest {
     }
 
     SpanNameExtractor<Message> underTest =
-        MessagingSpanNameExtractor.builder(getter, operationType)
+        MessagingSpanNameExtractor.builderForOperationType(getter, operationType)
             .setOperationName(operationName)
             .build();
 

@@ -93,7 +93,7 @@ public final class KafkaInstrumenterFactory {
         Instrumenter.<KafkaProducerRequest, RecordMetadata>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.builder(getter, operationType)
+                MessagingSpanNameExtractor.builderForOperationType(getter, operationType)
                     .setOperationName(SEND_OPERATION_NAME)
                     .build())
             .addAttributesExtractor(
@@ -127,7 +127,7 @@ public final class KafkaInstrumenterFactory {
         Instrumenter.<KafkaReceiveRequest, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.builder(getter, operationType)
+                MessagingSpanNameExtractor.builderForOperationType(getter, operationType)
                     .setOperationName(POLL_OPERATION_NAME)
                     .build())
             .addAttributesExtractor(
@@ -159,7 +159,7 @@ public final class KafkaInstrumenterFactory {
         Instrumenter.<KafkaProcessRequest, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.createForOperationType(getter, operationType))
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(getter, operationType, capturedHeaders))
             .addAttributesExtractor(new KafkaConsumerAttributesExtractor())
@@ -191,7 +191,7 @@ public final class KafkaInstrumenterFactory {
         Instrumenter.<KafkaReceiveRequest, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.createForOperationType(getter, operationType))
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(getter, operationType, capturedHeaders))
             .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
