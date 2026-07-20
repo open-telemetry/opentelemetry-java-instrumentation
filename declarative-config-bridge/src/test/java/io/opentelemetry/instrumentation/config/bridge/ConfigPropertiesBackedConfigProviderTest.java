@@ -14,9 +14,9 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("deprecation") // testing deprecated compatibility API
 class ConfigPropertiesBackedConfigProviderTest {
   @Test
+  @SuppressWarnings("deprecation") // testing deprecated compatibility API
   void testCreateUsesDefaults() {
     // Verify that create() still supports the default mappings (e.g.
     // otel.instrumentation...)
