@@ -25,9 +25,15 @@ public final class DeclarativeConfigBridge {
   /**
    * Creates component-local declarative properties backed by flat {@link ConfigProperties}.
    *
-   * <p>The returned properties have the same root-relative shape as the properties passed to a
-   * declarative {@code ComponentProvider}. For example, a component can read {@code enabled} while
-   * the bridge resolves the value from {@code configPropertyPrefix + "enabled"}.
+   * <p>The returned properties translate scalar and string scalar-list reads relative to the
+   * component root. For example, a component can read {@code enabled} while the bridge resolves the
+   * value from {@code configPropertyPrefix + "enabled"}.
+   *
+   * <p>This bridge does not provide full parity with native declarative configuration: {@link
+   * DeclarativeConfigProperties#getPropertyKeys()} is always empty, {@link
+   * DeclarativeConfigProperties#getStructured(String)} returns a non-null view even when the child
+   * is absent, scalar lists support only {@link String} elements, and structured lists are not
+   * supported.
    */
   public static DeclarativeConfigProperties createComponentProperties(
       ConfigProperties configProperties, String configPropertyPrefix) {
