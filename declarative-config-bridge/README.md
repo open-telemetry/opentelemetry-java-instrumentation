@@ -58,7 +58,7 @@ Let's first look at the yaml file that is used to configure the inferred spans p
 file_format: 1.1
 tracer_provider:
   processors:
-    - inferred_spans:
+    - inferred_spans/development:
         backup_diagnostic_files: true
 ```
 
@@ -70,7 +70,7 @@ public class InferredSpansSpanProcessorProvider implements ComponentProvider {
 
   @Override
   public String getName() {
-    return "inferred_spans";
+    return "inferred_spans/development";
   }
 
   @Override
