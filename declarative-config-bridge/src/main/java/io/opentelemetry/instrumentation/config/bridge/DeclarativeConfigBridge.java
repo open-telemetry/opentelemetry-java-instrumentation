@@ -35,7 +35,8 @@ public final class DeclarativeConfigBridge {
         configProperties, configPropertyPrefix);
   }
 
-  static ConfigProvider createConfigProvider(DeclarativeConfigProperties instrumentationConfig) {
+  private static ConfigProvider createConfigProvider(
+      DeclarativeConfigProperties instrumentationConfig) {
     return new BridgedConfigProvider(instrumentationConfig);
   }
 
