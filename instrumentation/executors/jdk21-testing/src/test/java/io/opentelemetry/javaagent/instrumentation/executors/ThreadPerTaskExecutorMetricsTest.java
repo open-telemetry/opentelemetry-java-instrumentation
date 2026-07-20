@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.executors;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -135,29 +134,29 @@ class ThreadPerTaskExecutorMetricsTest {
 
   private static void assertNoThreadPerTaskMetrics(String executorName, String ownerName) {
     testing.clearData();
-    await()
-        .untilAsserted(
-            () ->
-                assertThat(testing.metrics())
-                    .filteredOn(
-                        metric ->
-                            metric
-                                .getInstrumentationScopeInfo()
-                                .getName()
-                                .equals(INSTRUMENTATION_NAME))
-                    .allSatisfy(
-                        metric ->
-                            assertThat(metric.getLongSumData().getPoints())
-                                .noneMatch(
-                                    point ->
-                                        executorName.equals(
-                                                point
-                                                    .getAttributes()
-                                                    .get(stringKey("jvm.executor.name")))
-                                            && ownerName.equals(
-                                                point
-                                                    .getAttributes()
-                                                    .get(stringKey("jvm.executor.owner.name"))))));
+    testing
+        .getOpenTelemetry()
+        .getMeter("test")
+        .counterBuilder("test.executor.metrics.collection")
+        .build()
+        .add(1);
+    testing.waitAndAssertMetrics(
+        "test", "test.executor.metrics.collection", metrics -> metrics.isNotEmpty());
+
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
+        .allSatisfy(
+            metric ->
+                assertThat(metric.getLongSumData().getPoints())
+                    .noneMatch(
+                        point ->
+                            executorName.equals(
+                                    point.getAttributes().get(stringKey("jvm.executor.name")))
+                                && ownerName.equals(
+                                    point
+                                        .getAttributes()
+                                        .get(stringKey("jvm.executor.owner.name")))));
   }
 
   private static final class NamedThreadFactory implements ThreadFactory {
