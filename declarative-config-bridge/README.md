@@ -73,8 +73,8 @@ public class InferredSpansSpanProcessorProvider implements ComponentProvider {
   }
 
   @Override
-  public String getType() {
-    return "processor";
+  public Class<SpanProcessor> getType() {
+    return SpanProcessor.class;
   }
 
   @Override

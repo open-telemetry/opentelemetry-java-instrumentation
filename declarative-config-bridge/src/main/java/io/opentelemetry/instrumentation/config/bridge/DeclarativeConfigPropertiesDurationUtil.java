@@ -22,8 +22,6 @@ import javax.annotation.Nullable;
  */
 public final class DeclarativeConfigPropertiesDurationUtil {
 
-  private DeclarativeConfigPropertiesDurationUtil() {}
-
   /**
    * Reads a duration from declarative config.
    *
@@ -43,4 +41,6 @@ public final class DeclarativeConfigPropertiesDurationUtil {
     }
     return Duration.ofMillis(rawLongValue);
   }
+
+  private DeclarativeConfigPropertiesDurationUtil() {}
 }
