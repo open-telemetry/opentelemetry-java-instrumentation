@@ -18,6 +18,8 @@ import org.apache.pulsar.client.impl.TopicMessageImpl;
 public class VirtualFieldStore {
   private static final VirtualField<Message<?>, Context> MSG_FIELD =
       VirtualField.find(Message.class, Context.class);
+  private static final VirtualField<Message<?>, Boolean> MSG_RECEIVE_TELEMETRY_FIELD =
+      VirtualField.find(Message.class, Boolean.class);
   private static final VirtualField<Producer<?>, ProducerData> PRODUCER_FIELD =
       VirtualField.find(Producer.class, ProducerData.class);
   private static final VirtualField<Consumer<?>, String> CONSUMER_FIELD =
@@ -49,6 +51,24 @@ public class VirtualFieldStore {
     if (instance != null) {
       CALLBACK_FIELD.set(instance, SendCallbackData.create(context, request));
     }
+  }
+
+  public static void markReceiveTelemetryRecorded(Message<?> instance) {
+    if (instance instanceof TopicMessageImpl<?>) {
+      TopicMessageImpl<?> topicMessage = (TopicMessageImpl<?>) instance;
+      instance = topicMessage.getMessage();
+    }
+    if (instance != null) {
+      MSG_RECEIVE_TELEMETRY_FIELD.set(instance, true);
+    }
+  }
+
+  public static boolean wasReceiveTelemetryRecorded(Message<?> instance) {
+    if (instance instanceof TopicMessageImpl<?>) {
+      TopicMessageImpl<?> topicMessage = (TopicMessageImpl<?>) instance;
+      instance = topicMessage.getMessage();
+    }
+    return instance != null && Boolean.TRUE.equals(MSG_RECEIVE_TELEMETRY_FIELD.get(instance));
   }
 
   public static Context extract(Message<?> instance) {

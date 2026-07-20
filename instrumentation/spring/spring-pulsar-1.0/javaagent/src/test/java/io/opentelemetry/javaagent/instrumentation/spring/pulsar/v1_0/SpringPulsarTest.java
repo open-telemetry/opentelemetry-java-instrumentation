@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.pulsar.v1_0;
 
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 
 import io.opentelemetry.instrumentation.spring.pulsar.v1_0.AbstractSpringPulsarTest;
@@ -20,6 +22,35 @@ class SpringPulsarTest extends AbstractSpringPulsarTest {
   @Override
   protected void assertSpringPulsar() {
     AtomicReference<SpanData> producer = new AtomicReference<>();
+
+    if (emitStableMessagingSemconv()) {
+      testing.waitAndAssertSortedTraces(
+          orderByRootSpanKind(INTERNAL, CLIENT),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent").hasNoParent(),
+                  span ->
+                      span.hasName("publish " + OTEL_TOPIC)
+                          .hasKind(PRODUCER)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(publishAttributes()),
+                  span ->
+                      span.hasName("process " + OTEL_TOPIC)
+                          .hasKind(CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasTotalRecordedLinks(0)
+                          .hasAttributesSatisfyingExactly(processAttributes()),
+                  span -> span.hasName("consumer").hasParent(trace.getSpan(2))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("receive " + OTEL_TOPIC)
+                          .hasKind(CLIENT)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(receiveAttributes())));
+      assertStableProcessMetrics(true);
+      return;
+    }
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(INTERNAL, CONSUMER),
@@ -37,12 +68,12 @@ class SpringPulsarTest extends AbstractSpringPulsarTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(String.format("%s receive", OTEL_TOPIC))
+                    span.hasName(OTEL_TOPIC + " receive")
                         .hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(receiveAttributes()),
                 span ->
-                    span.hasName(String.format("%s process", OTEL_TOPIC))
+                    span.hasName(OTEL_TOPIC + " process")
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producer.get().getSpanContext()))
