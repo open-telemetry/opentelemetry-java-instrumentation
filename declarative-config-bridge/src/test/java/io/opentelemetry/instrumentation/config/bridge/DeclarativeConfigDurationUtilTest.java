@@ -18,19 +18,17 @@ import java.io.ByteArrayInputStream;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
 
-class DeclarativeConfigPropertiesDurationUtilTest {
+class DeclarativeConfigDurationUtilTest {
 
   @Test
   void getDuration_supportsDurationStringsForConfigPropertiesBackedConfig() {
     DeclarativeConfigProperties config =
-        ConfigPropertiesBackedConfigProvider.builder()
-            .setAccessPath("", "otel.inferred.spans.")
-            .build(
-                DefaultConfigProperties.createFromMap(
-                    singletonMap("otel.inferred.spans.min.duration", "42ms")))
-            .getInstrumentationConfig();
+        DeclarativeConfigBridge.createComponentProperties(
+            DefaultConfigProperties.createFromMap(
+                singletonMap("otel.inferred.spans.min.duration", "42ms")),
+            "otel.inferred.spans.");
 
-    assertThat(DeclarativeConfigPropertiesDurationUtil.getDuration(config, "min_duration"))
+    assertThat(DeclarativeConfigDurationUtil.getDuration(config, "min_duration"))
         .isEqualTo(Duration.ofMillis(42));
   }
 
@@ -38,7 +36,7 @@ class DeclarativeConfigPropertiesDurationUtilTest {
   void getDuration_supportsIntegerMillisForDeclarativeYaml() {
     DeclarativeConfigProperties config = createYamlConfig("min_duration: 42");
 
-    assertThat(DeclarativeConfigPropertiesDurationUtil.getDuration(config, "min_duration"))
+    assertThat(DeclarativeConfigDurationUtil.getDuration(config, "min_duration"))
         .isEqualTo(Duration.ofMillis(42));
   }
 
@@ -46,8 +44,7 @@ class DeclarativeConfigPropertiesDurationUtilTest {
   void getDuration_doesNotSupportDurationStringsForDeclarativeYaml() {
     DeclarativeConfigProperties config = createYamlConfig("min_duration: 42ms");
 
-    assertThat(DeclarativeConfigPropertiesDurationUtil.getDuration(config, "min_duration"))
-        .isNull();
+    assertThat(DeclarativeConfigDurationUtil.getDuration(config, "min_duration")).isNull();
   }
 
   private static DeclarativeConfigProperties createYamlConfig(String propertyLine) {

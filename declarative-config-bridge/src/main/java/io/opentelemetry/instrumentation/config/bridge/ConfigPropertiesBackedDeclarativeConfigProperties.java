@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.config.bridge;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -29,8 +28,8 @@ import javax.annotation.Nullable;
 final class ConfigPropertiesBackedDeclarativeConfigProperties
     implements DeclarativeConfigProperties {
 
-  static final String DEFAULT_ACCESS_ROOT = "java.";
-  static final String DEFAULT_RESULT_PREFIX = "otel.instrumentation.";
+  private static final String JAVA_DECLARATIVE_PREFIX = "java.";
+  private static final String INSTRUMENTATION_PROPERTY_PREFIX = "otel.instrumentation.";
   private static final String JAVA_COMMON_SERVICE_PEER_MAPPING = "java.common.service_peer_mapping";
 
   private static final Map<String, String> SPECIAL_MAPPINGS;
@@ -97,44 +96,30 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   private final ConfigProperties configProperties;
   private final List<String> path;
-  private final Map<String, String> mappings;
-  private final String accessRoot;
-  private final String resultPrefix;
+  private final String declarativePrefix;
+  private final String configPropertyPrefix;
 
   static DeclarativeConfigProperties createInstrumentationConfig(
       ConfigProperties configProperties) {
-    return createInstrumentationConfig(
-        configProperties, emptyMap(), DEFAULT_ACCESS_ROOT, DEFAULT_RESULT_PREFIX);
+    return new ConfigPropertiesBackedDeclarativeConfigProperties(
+        configProperties, emptyList(), JAVA_DECLARATIVE_PREFIX, INSTRUMENTATION_PROPERTY_PREFIX);
   }
 
-  static DeclarativeConfigProperties createInstrumentationConfig(
-      ConfigProperties configProperties,
-      Map<String, String> mappings,
-      String accessRoot,
-      String resultPrefix) {
-    for (String mapping : mappings.keySet()) {
-      if (SPECIAL_MAPPINGS.containsKey(mapping)) {
-        throw new IllegalArgumentException(
-            "Custom mapping must not override built-in mapping: " + mapping);
-      }
-    }
-    Map<String, String> mergedMappings = new HashMap<>(SPECIAL_MAPPINGS);
-    mergedMappings.putAll(mappings);
+  static DeclarativeConfigProperties createComponentProperties(
+      ConfigProperties configProperties, String configPropertyPrefix) {
     return new ConfigPropertiesBackedDeclarativeConfigProperties(
-        configProperties, emptyList(), mergedMappings, accessRoot, resultPrefix);
+        configProperties, emptyList(), "", configPropertyPrefix);
   }
 
   private ConfigPropertiesBackedDeclarativeConfigProperties(
       ConfigProperties configProperties,
       List<String> path,
-      Map<String, String> mappings,
-      String accessRoot,
-      String resultPrefix) {
+      String declarativePrefix,
+      String configPropertyPrefix) {
     this.configProperties = configProperties;
     this.path = path;
-    this.mappings = mappings;
-    this.accessRoot = accessRoot;
-    this.resultPrefix = resultPrefix;
+    this.declarativePrefix = declarativePrefix;
+    this.configPropertyPrefix = configPropertyPrefix;
   }
 
   @Nullable
@@ -199,7 +184,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     List<String> newPath = new ArrayList<>(path);
     newPath.add(name);
     return new ConfigPropertiesBackedDeclarativeConfigProperties(
-        configProperties, newPath, mappings, accessRoot, resultPrefix);
+        configProperties, newPath, declarativePrefix, configPropertyPrefix);
   }
 
   @Nullable
@@ -245,16 +230,16 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     String fullPath = pathWithName(name);
 
     // Check explicit property mappings first
-    String mappedKey = mappings.get(fullPath);
+    String mappedKey = SPECIAL_MAPPINGS.get(fullPath);
     if (mappedKey != null) {
       return mappedKey;
     }
 
-    if (!accessRoot.isEmpty() && !fullPath.startsWith(accessRoot)) {
+    if (!declarativePrefix.isEmpty() && !fullPath.startsWith(declarativePrefix)) {
       return "";
     }
 
-    String[] segments = fullPath.substring(accessRoot.length()).split("\\.");
+    String[] segments = fullPath.substring(declarativePrefix.length()).split("\\.");
     StringBuilder translatedPath = new StringBuilder();
 
     for (int i = 0; i < segments.length; i++) {
@@ -264,7 +249,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
       translatedPath.append(translateName(segments[i]));
     }
 
-    return resultPrefix + translatedPath;
+    return configPropertyPrefix + translatedPath;
   }
 
   private String pathWithName(String name) {

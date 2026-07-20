@@ -4,13 +4,13 @@
 > `DeclarativeConfigPropertiesBridgeBuilder` is deprecated and will be removed in 3.0. Read
 > declarative component configuration through `DeclarativeConfigProperties` directly. To expose
 > `ConfigProperties` through the declarative configuration API, use
-> `ConfigPropertiesBackedConfigProvider`.
+> `DeclarativeConfigBridge`.
 
 Declarative Config Bridge allows instrumentation authors to access configuration in a uniform way,
 regardless of the configuration source.
 
-The bridge lets callers expose flat `ConfigProperties` through the declarative configuration API,
-including custom property mappings and custom declarative/flat prefixes.
+The bridge lets callers expose either the complete flat instrumentation configuration or a
+component's flat property namespace through the declarative configuration API.
 
 ## Example
 
@@ -28,6 +28,9 @@ class InferredSpansConfig {
 
 The auto configuration path can bridge flat config into that declarative view:
 
+`createComponentProperties(...)` returns the same root-relative configuration shape that
+`ComponentProvider.create(...)` receives for native declarative configuration.
+
 ```java
 @AutoService(AutoConfigurationCustomizerProvider.class)
 public class InferredSpansAutoConfig implements AutoConfigurationCustomizerProvider {
@@ -37,10 +40,8 @@ public class InferredSpansAutoConfig implements AutoConfigurationCustomizerProvi
     config.addTracerProviderCustomizer(
         (providerBuilder, properties) -> {
           DeclarativeConfigProperties declarativeProperties =
-              ConfigPropertiesBackedConfigProvider.builder()
-                  .setAccessPath("", "otel.inferred.spans.")
-                  .build(properties)
-                  .getInstrumentationConfig();
+              DeclarativeConfigBridge.createComponentProperties(
+                properties, "otel.inferred.spans.");
           providerBuilder.addSpanProcessor(
               InferredSpansConfig.createSpanProcessor(declarativeProperties));
           return providerBuilder;
@@ -85,11 +86,11 @@ public class InferredSpansSpanProcessorProvider implements ComponentProvider {
 ```
 
 For duration properties, contrib's `span-stacktrace` and `inferred-spans` use
-`DeclarativeConfigPropertiesDurationUtil.getDuration(...)`:
+`DeclarativeConfigDurationUtil.getDuration(...)`:
 
 ```java
 Duration minDuration =
-    DeclarativeConfigPropertiesDurationUtil.getDuration(properties, "min_duration");
+    DeclarativeConfigDurationUtil.getDuration(properties, "min_duration");
 ```
 
 String duration values such as `42ms` are supported when the declarative config is backed by flat

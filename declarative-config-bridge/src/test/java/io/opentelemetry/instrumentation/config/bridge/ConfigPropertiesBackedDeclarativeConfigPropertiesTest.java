@@ -100,31 +100,6 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
-  void testCustomMappingsIncludeSpecialMappings() {
-    Map<String, String> properties = new HashMap<>();
-    properties.put("otel.custom.enabled", "true");
-    properties.put("otel.instrumentation.http.client.capture-request-headers", "header1,header2");
-    Map<String, String> customMappings = new HashMap<>();
-    customMappings.put("java.custom.enabled", "otel.custom.enabled");
-
-    ConfigPropertiesBackedConfigProvider.Builder builder =
-        ConfigPropertiesBackedConfigProvider.builder();
-
-    DefaultConfigProperties fromMap = DefaultConfigProperties.createFromMap(properties);
-    customMappings.forEach(builder::addMapping);
-    DeclarativeConfigProperties config = builder.build(fromMap).getInstrumentationConfig();
-
-    assertThat(config.getStructured("java").getStructured("custom").getBoolean("enabled")).isTrue();
-    assertThat(
-            config
-                .getStructured("general")
-                .getStructured("http")
-                .getStructured("client")
-                .getScalarList("request_captured_headers", String.class))
-        .containsExactly("header1", "header2");
-  }
-
-  @Test
   void testCommonDbQuerySanitizationMapping() {
     DeclarativeConfigProperties config =
         createConfig("otel.instrumentation.common.db.query-sanitization.enabled", "false");

@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.tooling;
 import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
+import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigBridge;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -42,8 +42,8 @@ public final class OpenTelemetryInstaller {
       // Provide a fake declarative configuration based on config properties
       // so that declarative configuration API can be used everywhere
       sdk =
-          new ExtendedOpenTelemetrySdkWrapper(
-              sdk, ConfigPropertiesBackedConfigProvider.create(configProperties));
+            new ExtendedOpenTelemetrySdkWrapper(
+              sdk, DeclarativeConfigBridge.createInstrumentationConfig(configProperties));
       AgentDistributionConfig.set(AgentDistributionConfig.fromConfigProperties(configProperties));
     }
 

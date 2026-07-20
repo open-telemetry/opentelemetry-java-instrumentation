@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
  * be normalized to integer milliseconds, which means string durations in declarative YAML are not
  * accepted.
  */
-public final class DeclarativeConfigPropertiesDurationUtil {
+public final class DeclarativeConfigDurationUtil {
 
   /**
    * Reads a duration from declarative config.
@@ -42,5 +42,5 @@ public final class DeclarativeConfigPropertiesDurationUtil {
     return Duration.ofMillis(rawLongValue);
   }
 
-  private DeclarativeConfigPropertiesDurationUtil() {}
+  private DeclarativeConfigDurationUtil() {}
 }
