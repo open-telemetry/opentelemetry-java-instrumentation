@@ -128,6 +128,31 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
     assertNoMetrics();
   }
 
+  @Test
+  void shouldReportMetricsAfterMBeanDeregistration() throws Exception {
+    BasicDataSource dataSource = createDataSource();
+
+    ObjectName objectName =
+        new ObjectName("org.apache.commons.dbcp2:type=BasicDataSource,name=deregisteredPool");
+    MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
+    objectName = mbeanServer.registerMBean(dataSource, objectName).getObjectName();
+
+    try {
+      dataSource.getConnection().close();
+      mbeanServer.unregisterMBean(objectName);
+
+      assertDataSourceMetrics("deregisteredPool");
+    } finally {
+      dataSource.close();
+      if (mbeanServer.isRegistered(objectName)) {
+        mbeanServer.unregisterMBean(objectName);
+      }
+      shutdown(dataSource);
+    }
+
+    assertNoMetrics();
+  }
+
   private void assertDataSourceName(BasicDataSource dataSource, String dataSourceName)
       throws Exception {
     try {

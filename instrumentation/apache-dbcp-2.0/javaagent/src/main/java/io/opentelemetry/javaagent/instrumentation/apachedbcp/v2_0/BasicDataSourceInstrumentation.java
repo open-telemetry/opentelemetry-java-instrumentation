@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheD
 import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -34,8 +33,8 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$StartPoolMaintenanceAdvice");
 
     typeTransformer.applyAdviceToMethod(
-        isPublic().and(namedOneOf("close", "postDeregister")).and(takesArguments(0)),
-        getClass().getName() + "$DeregisterAdvice");
+        isPublic().and(named("close")).and(takesArguments(0)),
+        getClass().getName() + "$CloseAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -58,7 +57,7 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class DeregisterAdvice {
+  public static class CloseAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.This BasicDataSource dataSource) {
       telemetry().unregisterMetrics(dataSource);
