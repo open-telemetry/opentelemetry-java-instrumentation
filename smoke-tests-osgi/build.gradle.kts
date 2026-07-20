@@ -125,7 +125,7 @@ fun registerOsgiSuite(
   // upstream semconv jar) to the OSGi runtime. Resolved lazily at execution time (configuration-cache
   // safe; the lambda captures only effectiveRunsystempackages). These must be in the bndrun *before*
   // resolution so the resolver can satisfy mandatory imports of non-OSGi jars (e.g. instrumentation-api's
-  // mandatory import of io.opentelemetry.semconv). Entries use "packagePrefix|artifactNamePrefix" when
+  // mandatory import of io.opentelemetry.semconv). Entries use "packagePrefix|artifactName" when
   // the package and artifact names differ.
   val systemPackagesContent = configurations.named(sourceSet.runtimeClasspathConfigurationName)
     .flatMap { it.incoming.artifacts.resolvedArtifacts }
@@ -139,8 +139,13 @@ fun registerOsgiSuite(
       for (entry in entries) {
         val parts = entry.split("|")
         val packagePrefix = parts[0]
-        val artifactPrefix = (if (parts.size > 1) parts[1] else packagePrefix).trimEnd { c -> c.isDigit() }.lowercase()
-        for ((id, file) in byModule.filter { it.first.module.lowercase().startsWith(artifactPrefix) }) {
+        val artifactName = (if (parts.size > 1) parts[1] else packagePrefix).trimEnd { c -> c.isDigit() }.lowercase()
+        // Match the artifact name exactly (ignoring trailing version digits). A prefix match would
+        // wrongly pull in sibling artifacts - e.g. "opentelemetry-semconv" must not match
+        // "opentelemetry-semconv-incubating", which shares the io.opentelemetry.semconv Maven group
+        // and would emit a duplicate io.opentelemetry.semconv system package plus an ambiguous
+        // -runpath entry, breaking the framework launch.
+        for ((id, file) in byModule.filter { it.first.module.trimEnd { c -> c.isDigit() }.lowercase() == artifactName }) {
           val mainAttributes = JarFile(file).use { it.manifest?.mainAttributes }
           val bsn = mainAttributes?.getValue("Bundle-SymbolicName")?.substringBefore(';')?.trim()
           // The system bundle advertises the package at the jar's real (Maven) version.
@@ -223,10 +228,21 @@ fun registerOsgiSuite(
 }
 
 // Suite: api - core instrumentation API + annotations bundles in isolation.
-val apiSuiteTask = registerOsgiSuite("api") {
+val apiSuiteTask = registerOsgiSuite(
+  "api",
+  // instrumentation-api and instrumentation-annotations are pulled in transitively because the test
+  // imports their packages. instrumentation-api-incubator and instrumentation-annotations-support
+  // are opt-in bundles that no test class imports, so root them explicitly to prove their generated
+  // OSGi wiring resolves in the container.
+  extraRunrequires = listOf(
+    "opentelemetry-instrumentation-api-incubator",
+    "opentelemetry-instrumentation-annotations-support",
+  ),
+) {
   implementation(project(":instrumentation-api"))
   implementation(project(":instrumentation-api-incubator"))
   implementation(project(":instrumentation-annotations"))
+  implementation(project(":instrumentation-annotations-support"))
 }
 
 // Suite: apacheHttpClient - a representative library instrumentation bundle, exercised against the

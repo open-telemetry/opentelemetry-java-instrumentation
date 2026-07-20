@@ -18,9 +18,10 @@ import org.osgi.test.junit5.context.BundleContextExtension;
 class ApacheHttpClientOsgiTest {
 
   @Test
-  void telemetryWrapsClientInOsgi() {
+  void telemetryWrapsClientInOsgi() throws Exception {
     ApacheHttpClientTelemetry telemetry = ApacheHttpClientTelemetry.create(OpenTelemetry.noop());
-    CloseableHttpClient client = telemetry.createHttpClient();
-    assertNotNull(client);
+    try (CloseableHttpClient client = telemetry.createHttpClient()) {
+      assertNotNull(client);
+    }
   }
 }

@@ -22,9 +22,6 @@
   that was previously added for logback in
   [#15423](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15423).
   ([#19154](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19154))
-- A selected set of library, API, and SDK extension artifacts now carry OSGi bundle metadata, so they
-  can be consumed directly in OSGi runtimes without external wrapper bundles.
-  ([#18995](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18995))
 
 ## Version 2.29.0 (2026-06-19)
 
