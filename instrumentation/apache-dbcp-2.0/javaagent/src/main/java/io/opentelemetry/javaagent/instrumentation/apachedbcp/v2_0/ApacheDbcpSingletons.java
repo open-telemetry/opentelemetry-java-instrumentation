@@ -44,6 +44,15 @@ public class ApacheDbcpSingletons {
       poolName.append(dbNamespace);
     }
 
+    // Following the semantic conventions, the derived name combines server.address, server.port,
+    // and db.namespace, which is not guaranteed to be unique (e.g. multiple pools pointing at the
+    // same database). We intentionally do not append a numeric suffix to disambiguate collisions:
+    // a per-application sequence number is not stable across restarts or nodes (initialization
+    // order can swap suffixes between nodes, and multiple applications on the same node would
+    // still collide), so it would not reliably identify which pool the metrics belong to. Since
+    // opentelemetry-java 1.50.0, asynchronous instruments spatially aggregate observations that
+    // share the same attributes (Sum) instead of dropping them, so a shared pool.name no longer
+    // causes lost measurements or duplicate-value warnings.
     return poolName.length() > 0 ? poolName.toString() : "apache-dbcp2";
   }
 
