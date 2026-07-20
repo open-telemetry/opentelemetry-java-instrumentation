@@ -1,0 +1,126 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/open-telemetry/weaver/v0.24.2/schemas/semconv.schema.json
+
+groups:
+  - id: attributes.tomcat
+    type: attribute_group
+    brief: Tomcat attributes
+    attributes:
+      - id: tomcat.context
+        type: string
+        stability: development
+        brief: Web application context path
+        examples:
+          - "/myapp"
+      - id: tomcat.request.processor.name
+        type: string
+        stability: development
+        brief: Name of the Tomcat request processor.
+        examples:
+          - "http-nio-8080"
+      - id: tomcat.thread.pool.name
+        type: string
+        stability: development
+        brief: Name of the Tomcat thread pool.
+        examples:
+          - "http-nio-8080"
+
+  - id: metric.tomcat.session.active.count
+    metric_name: tomcat.session.active.count
+    stability: development
+    type: metric
+    brief: The number of currently active sessions.
+    unit: "{session}"
+    instrument: updowncounter
+    attributes:
+      - ref: tomcat.context
+
+  - id: metric.tomcat.session.active.limit
+    metric_name: tomcat.session.active.limit
+    stability: development
+    type: metric
+    brief: Maximum possible number of active sessions.
+    unit: "{session}"
+    instrument: updowncounter
+    attributes:
+      - ref: tomcat.context
+
+  - id: metric.tomcat.error.count
+    metric_name: tomcat.error.count
+    stability: development
+    type: metric
+    brief: The number of errors.
+    unit: "{error}"
+    instrument: counter
+    attributes:
+      - ref: tomcat.request.processor.name
+
+  - id: metric.tomcat.request.count
+    metric_name: tomcat.request.count
+    stability: development
+    type: metric
+    brief: The number of requests processed.
+    unit: "{request}"
+    instrument: counter
+    attributes:
+      - ref: tomcat.request.processor.name
+
+  - id: metric.tomcat.request.duration.max
+    metric_name: tomcat.request.duration.max
+    stability: development
+    type: metric
+    brief: The longest request processing time.
+    unit: "s"
+    instrument: gauge
+    attributes:
+      - ref: tomcat.request.processor.name
+
+  - id: metric.tomcat.request.duration.sum
+    metric_name: tomcat.request.duration.sum
+    stability: development
+    type: metric
+    brief: The total duration of requests processed.
+    unit: "s"
+    instrument: counter
+    attributes:
+      - ref: tomcat.request.processor.name
+
+  - id: metric.tomcat.thread.count
+    metric_name: tomcat.thread.count
+    stability: development
+    type: metric
+    brief: Tomcat thread count.
+    unit: "{thread}"
+    instrument: updowncounter
+    attributes:
+      - ref: tomcat.thread.pool.name
+
+  - id: metric.tomcat.network.io
+    metric_name: tomcat.network.io
+    stability: development
+    type: metric
+    brief: The number of bytes transmitted.
+    unit: "By"
+    instrument: counter
+    attributes:
+      - ref: tomcat.request.processor.name
+      - ref: network.io.direction
+
+  - id: metric.tomcat.thread.limit
+    metric_name: tomcat.thread.limit
+    stability: development
+    type: metric
+    brief: Tomcat thread limit.
+    unit: "{thread}"
+    instrument: updowncounter
+    attributes:
+      - ref: tomcat.thread.pool.name
+
+  - id: metric.tomcat.thread.busy.count
+    metric_name: tomcat.thread.busy.count
+    stability: development
+    type: metric
+    brief: Tomcat busy thread count.
+    unit: "{thread}"
+    instrument: updowncounter
+    attributes:
+      - ref: tomcat.thread.pool.name
