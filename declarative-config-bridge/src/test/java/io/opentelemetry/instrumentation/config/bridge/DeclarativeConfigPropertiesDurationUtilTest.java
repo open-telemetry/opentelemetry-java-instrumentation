@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 class DeclarativeConfigPropertiesDurationUtilTest {
 
   @Test
-  void parseDuration_supportsDurationStringsForConfigPropertiesBackedConfig() {
+  void getDuration_supportsDurationStringsForConfigPropertiesBackedConfig() {
     DeclarativeConfigProperties config =
         ConfigPropertiesBackedConfigProvider.builder()
             .setAccessPath("", "otel.inferred.spans.")
@@ -30,23 +30,23 @@ class DeclarativeConfigPropertiesDurationUtilTest {
                     singletonMap("otel.inferred.spans.min.duration", "42ms")))
             .getInstrumentationConfig();
 
-    assertThat(DeclarativeConfigPropertiesDurationUtil.parseDuration(config, "min_duration"))
+    assertThat(DeclarativeConfigPropertiesDurationUtil.getDuration(config, "min_duration"))
         .isEqualTo(Duration.ofMillis(42));
   }
 
   @Test
-  void parseDuration_supportsIntegerMillisForDeclarativeYaml() {
+  void getDuration_supportsIntegerMillisForDeclarativeYaml() {
     DeclarativeConfigProperties config = createYamlConfig("min_duration: 42");
 
-    assertThat(DeclarativeConfigPropertiesDurationUtil.parseDuration(config, "min_duration"))
+    assertThat(DeclarativeConfigPropertiesDurationUtil.getDuration(config, "min_duration"))
         .isEqualTo(Duration.ofMillis(42));
   }
 
   @Test
-  void parseDuration_doesNotSupportDurationStringsForDeclarativeYaml() {
+  void getDuration_doesNotSupportDurationStringsForDeclarativeYaml() {
     DeclarativeConfigProperties config = createYamlConfig("min_duration: 42ms");
 
-    assertThat(DeclarativeConfigPropertiesDurationUtil.parseDuration(config, "min_duration"))
+    assertThat(DeclarativeConfigPropertiesDurationUtil.getDuration(config, "min_duration"))
         .isNull();
   }
 

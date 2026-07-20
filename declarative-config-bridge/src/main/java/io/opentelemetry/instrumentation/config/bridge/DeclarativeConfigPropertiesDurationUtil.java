@@ -30,7 +30,7 @@ public final class DeclarativeConfigPropertiesDurationUtil {
    * milliseconds for the same key.
    */
   @Nullable
-  public static Duration parseDuration(DeclarativeConfigProperties properties, String key) {
+  public static Duration getDuration(DeclarativeConfigProperties properties, String key) {
     if (properties instanceof ConfigPropertiesBackedDeclarativeConfigProperties) {
       return ((ConfigPropertiesBackedDeclarativeConfigProperties) properties).getDuration(key);
     }

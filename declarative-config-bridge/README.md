@@ -85,11 +85,11 @@ public class InferredSpansSpanProcessorProvider implements ComponentProvider {
 ```
 
 For duration properties, contrib's `span-stacktrace` and `inferred-spans` use
-`DeclarativeConfigPropertiesDurationUtil.parseDuration(...)`:
+`DeclarativeConfigPropertiesDurationUtil.getDuration(...)`:
 
 ```java
 Duration minDuration =
-    DeclarativeConfigPropertiesDurationUtil.parseDuration(properties, "min_duration");
+    DeclarativeConfigPropertiesDurationUtil.getDuration(properties, "min_duration");
 ```
 
 String duration values such as `42ms` are supported when the declarative config is backed by flat

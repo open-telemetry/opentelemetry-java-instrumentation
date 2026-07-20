@@ -92,7 +92,7 @@ class ConfigPropertiesBackedConfigProviderTest {
 
     DeclarativeConfigProperties config = provider.getInstrumentationConfig();
 
-    assertThat(DeclarativeConfigPropertiesDurationUtil.parseDuration(config, "min_duration"))
+    assertThat(DeclarativeConfigPropertiesDurationUtil.getDuration(config, "min_duration"))
         .isEqualTo(Duration.ofMillis(42));
   }
 }
