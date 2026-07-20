@@ -42,7 +42,7 @@ public final class OpenTelemetryInstaller {
       // so that declarative configuration API can be used everywhere. In declarative-config mode
       // there is no ConfigProperties instance to bridge here, so preserve the SDK as-is.
       sdk =
-            new ExtendedOpenTelemetrySdkWrapper(
+          new ExtendedOpenTelemetrySdkWrapper(
               sdk, DeclarativeConfigBridge.createInstrumentationConfig(configProperties));
       AgentDistributionConfig.set(AgentDistributionConfig.fromConfigProperties(configProperties));
     }

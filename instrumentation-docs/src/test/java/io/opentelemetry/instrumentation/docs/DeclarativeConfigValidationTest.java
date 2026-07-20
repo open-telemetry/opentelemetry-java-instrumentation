@@ -118,8 +118,8 @@ class DeclarativeConfigValidationTest {
     DefaultConfigProperties configProperties = DefaultConfigProperties.createFromMap(properties);
 
     DeclarativeConfigProperties declarativeConfig =
-      DeclarativeConfigBridge.createInstrumentationConfig(configProperties)
-        .getInstrumentationConfig();
+        DeclarativeConfigBridge.createInstrumentationConfig(configProperties)
+            .getInstrumentationConfig();
 
     Object retrievedValue =
         navigateAndGetValue(declarativeConfig, declarativePath, type, structuredList);
