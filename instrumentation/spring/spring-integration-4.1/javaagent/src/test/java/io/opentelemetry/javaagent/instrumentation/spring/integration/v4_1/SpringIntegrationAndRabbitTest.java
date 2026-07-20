@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -119,7 +120,10 @@ class SpringIntegrationAndRabbitTest {
                             equalTo(MESSAGING_OPERATION, "process"),
                             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class))),
+                                MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class)),
+                            equalTo(
+                                MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
+                                emitStableMessagingSemconv() ? "testTopic" : null)),
                 span ->
                     span.hasName("consumer").hasParent(trace.getSpan(8)).hasTotalAttributeCount(0)),
         trace ->
