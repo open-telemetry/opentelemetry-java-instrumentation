@@ -28,6 +28,7 @@ class MessagingSpanNameExtractorTest {
 
   @Mock MessagingAttributesGetter<Message, Void> getter;
 
+  @SuppressWarnings("OtelDeprecatedApiUsage")
   @Test
   void shouldKeepLegacyNameForMessageOperation() {
     Message message = new Message();
@@ -40,6 +41,7 @@ class MessagingSpanNameExtractorTest {
     assertThat(underTest.extract(message)).isEqualTo("destination publish");
   }
 
+  @SuppressWarnings("OtelDeprecatedApiUsage")
   @Test
   void shouldRejectOperationNameForMessageOperation() {
     assertThatThrownBy(

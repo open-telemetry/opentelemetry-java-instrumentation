@@ -76,7 +76,12 @@ public final class MessagingConsumerMetrics implements OperationListener {
             || consumedMessagesCounter != null;
   }
 
-  /** Returns metrics for extractors configured with {@link MessageOperation}. */
+  /**
+   * Returns metrics for extractors configured with {@link MessageOperation}.
+   *
+   * @deprecated Use {@link #getForOperationType()}. Will be removed in 3.0.
+   */
+  @Deprecated // to be removed in 3.0
   public static OperationMetrics get() {
     return OperationMetricsUtil.create(
         "messaging consumer", meter -> new MessagingConsumerMetrics(meter, Variant.LEGACY));
