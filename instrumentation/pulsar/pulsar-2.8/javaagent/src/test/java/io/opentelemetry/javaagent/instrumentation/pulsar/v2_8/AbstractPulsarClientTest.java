@@ -6,6 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -18,6 +22,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -67,7 +73,7 @@ abstract class AbstractPulsarClientTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractPulsarClientTest.class);
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.pulsar-2.8";
+  static final String INSTRUMENTATION_NAME = "io.opentelemetry.pulsar-2.8";
 
   private static final DockerImageName DEFAULT_IMAGE_NAME =
       DockerImageName.parse("apachepulsar/pulsar:2.8.0");
@@ -165,7 +171,8 @@ abstract class AbstractPulsarClientTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(topic + " publish")
+                  span.hasName(
+                          emitStableMessagingSemconv() ? "publish " + topic : topic + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -176,12 +183,17 @@ abstract class AbstractPulsarClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(topic + " receive")
-                        .hasKind(SpanKind.CONSUMER)
+                    span.hasName(
+                            emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
+                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             batchReceiveAttributes(topic, null, false))));
+
+    if (!emitOldMessagingSemconv()) {
+      return;
+    }
 
     assertThat(testing.metrics())
         .filteredOn(
@@ -285,7 +297,8 @@ abstract class AbstractPulsarClientTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(topic + " publish")
+                  span.hasName(
+                          emitStableMessagingSemconv() ? "publish " + topic : topic + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -297,15 +310,30 @@ abstract class AbstractPulsarClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(topic + " receive")
-                        .hasKind(SpanKind.CONSUMER)
+                    span.hasName(
+                            emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
+                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(batchReceiveAttributes(topic, null, false)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(1))));
+                        .satisfies(
+                            spanData -> {
+                              if (emitStableMessagingSemconv()) {
+                                assertThat(spanData.getParentSpanId())
+                                    .isIn(
+                                        trace.getSpan(0).getSpanId(), trace.getSpan(1).getSpanId());
+                              } else {
+                                assertThat(spanData.getParentSpanId())
+                                    .isEqualTo(trace.getSpan(1).getSpanId());
+                              }
+                            })));
+
+    if (!emitOldMessagingSemconv()) {
+      return;
+    }
 
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
@@ -386,11 +414,12 @@ abstract class AbstractPulsarClientTest {
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort),
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
-                equalTo(MESSAGING_OPERATION, "publish"),
+                oldOperation("publish"),
+                operationName("publish"),
+                operationType("publish"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
                 equalTo(stringKey("messaging.pulsar.message.type"), experimental("normal"))));
-
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
@@ -421,7 +450,9 @@ abstract class AbstractPulsarClientTest {
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort),
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
-                equalTo(MESSAGING_OPERATION, "receive"),
+                oldOperation("receive"),
+                operationName("receive"),
+                operationType("receive"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
@@ -445,7 +476,9 @@ abstract class AbstractPulsarClientTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "pulsar"),
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
-                equalTo(MESSAGING_OPERATION, "process"),
+                oldOperation("process"),
+                operationName("process"),
+                operationType("process"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
@@ -456,6 +489,20 @@ abstract class AbstractPulsarClientTest {
       assertions.add(equalTo(MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(partitionIndex)));
     }
     return assertions;
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private static AttributeAssertion oldOperation(String operation) {
+    return equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null);
+  }
+
+  private static AttributeAssertion operationName(String operation) {
+    return equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null);
+  }
+
+  private static AttributeAssertion operationType(String operation) {
+    String operationType = operation.equals("publish") ? "send" : operation;
+    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operationType : null);
   }
 
   static void acknowledgeMessage(Consumer<String> consumer, Message<String> message) {
