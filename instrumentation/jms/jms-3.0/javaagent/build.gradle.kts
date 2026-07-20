@@ -51,6 +51,18 @@ tasks {
     include("**/Jms3SuppressReceiveSpansTest.*")
   }
 
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("Jms3SuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
   test {
     filter {
       excludeTestsMatching("Jms3SuppressReceiveSpansTest")
@@ -63,6 +75,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testReceiveSpansDisabled)
+    dependsOn(testing.suites, testReceiveSpansDisabled, testV3Preview)
   }
 }
