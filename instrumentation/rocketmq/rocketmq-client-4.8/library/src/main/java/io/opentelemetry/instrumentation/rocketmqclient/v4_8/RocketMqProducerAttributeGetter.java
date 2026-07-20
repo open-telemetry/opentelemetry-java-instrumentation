@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -27,7 +28,14 @@ final class RocketMqProducerAttributeGetter
   @Override
   public String getDestination(SendMessageContext request) {
     Message message = request.getMessage();
-    return message == null ? null : message.getTopic();
+    if (message == null) {
+      return null;
+    }
+    if (!emitStableMessagingSemconv()) {
+      return message.getTopic();
+    }
+    return RocketMqNamespaceUtil.withoutNamespace(
+        message.getTopic(), RocketMqNamespaceUtil.getNamespace(request));
   }
 
   @Nullable
@@ -80,6 +88,14 @@ final class RocketMqProducerAttributeGetter
   @Nullable
   @Override
   public Long getBatchMessageCount(SendMessageContext request, @Nullable Void unused) {
+    Message message = request.getMessage();
+    if (emitStableMessagingSemconv() && message instanceof Iterable<?>) {
+      long batchSize = 0;
+      for (Object ignored : (Iterable<?>) message) {
+        batchSize++;
+      }
+      return batchSize;
+    }
     return null;
   }
 
