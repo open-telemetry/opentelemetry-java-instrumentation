@@ -21,8 +21,14 @@ tasks.named<Jar>("jar") {
     // corresponding to compileOnly dependencies). The trailing "*" imports everything else.
     val optionalPackages = mutableListOf("javax.annotation")
     optionalPackages.addAll(otelJava.osgiOptionalPackages.get())
-    val importPackages =
-      optionalPackages.joinToString(",") { "$it.*;resolution:=optional" } + ",*"
+    // Order matters - bnd uses the first matching clause per package: explicit per-package clauses
+    // (version ranges / resolution:=optional) first, then the wildcard optional packages, then the
+    // "*" catch-all.
+    val importClauses =
+      otelJava.osgiImportPackages.get() +
+        optionalPackages.map { "$it.*;resolution:=optional" } +
+        "*"
+    val importPackages = importClauses.joinToString(",")
 
     bnd(
       mapOf(

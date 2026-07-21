@@ -273,6 +273,21 @@ val logbackAppenderSuiteTask = registerOsgiSuite("logbackAppender") {
   implementation("ch.qos.logback:logback-classic")
 }
 
+// Suite: logbackAppenderLegacy - proves the widened import ranges let the appender bundle resolve
+// against the oldest supported Logback/SLF4J (1.2.x / 1.7.x), where org.slf4j.event 2.0 is absent,
+// so the org.slf4j.event optional import must not block resolution. Resolve-only: it verifies the
+// OSGi wiring is satisfiable without booting a container. Nothing imports the appender's packages
+// here, so root it explicitly.
+val logbackAppenderLegacySuiteTask = registerOsgiSuite(
+  "logbackAppenderLegacy",
+  extraRunrequires = listOf("opentelemetry-logback-appender-1.0"),
+  resolveOnly = true,
+) {
+  implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
+  implementation("ch.qos.logback:logback-classic") { version { strictly("1.2.13") } }
+  implementation("org.slf4j:slf4j-api") { version { strictly("1.7.36") } }
+}
+
 // Suite: resources - the key SPI test. Asserts the AutoService-generated ResourceProvider services
 // are mediated by SPI Fly, i.e. the -metainf-services: auto capabilities resolve in OSGi.
 val resourcesSuiteTask = registerOsgiSuite(
@@ -298,9 +313,18 @@ tasks {
       apiSuiteTask,
       apacheHttpClientSuiteTask,
       logbackAppenderSuiteTask,
+      logbackAppenderLegacySuiteTask,
       resourcesSuiteTask,
     )
   }
+}
+
+// The root build only disables tasks of type Test under -PskipTests=true, but the bnd Resolve /
+// TestOSGi tasks are not Test-typed - without this they would still run (booting the OSGi
+// containers) during the CI build phase that is meant to compile without running tests.
+if (project.findProperty("skipTests") as String? == "true") {
+  tasks.withType<Resolve>().configureEach { enabled = false }
+  tasks.withType<TestOSGi>().configureEach { enabled = false }
 }
 
 // Skip ossIndexAudit on test module.
