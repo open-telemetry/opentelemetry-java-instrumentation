@@ -2,28 +2,151 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes to non-stable APIs
+
+- Remove `ExperimentalInstrumentationModule#getModuleGroup()` and switch instrumentation module
+  classloader sharing to the agent/extension classloader, breaking custom extensions that relied on
+  grouping modules by name.
+  ([#18859](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18859))
+- Change the stable database semconv emitted for DynamoDB batch writes: `db.operation.name` now
+  reflects the batch item type or `BATCH`, and `db.operation.batch.size` is emitted for every batch
+  request, including empty ones.
+  ([#19034](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19034))
+- Rediscala transaction `exec()` calls now emit a single aggregated client span with
+  `db.operation.batch_size` instead of separate spans for each queued command.
+  ([#19056](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19056))
+- Remove `InstrumentationModule.isIndyModule()`.
+  ([#19140](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19140))
+- Remove deprecated query-related APIs from `SqlClientAttributesGetter`, `CassandraRequest`, and
+  `Experimental`.
+  ([#19165](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19165))
+- Removes the deprecated `Enduser*` attribute-capturing APIs from the Spring Security 6.0 library;
+  use the `User*` replacements instead.
+  ([#19168](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19168))
+
 ### 🚫 Deprecations
 
+- Deprecate the `ConfigProperties` parameter on `AgentExtension.extend(...)`,
+  `BootstrapPackagesConfigurer.configure(...)`, and `InstrumentationModule.defaultEnabled(...)`.
+  ([#19148](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19148))
+- Deprecate the Spring Boot starter `ConfigProperties` bean when experimental Declarative
+  Configuration is enabled.
+  ([#19175](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19175))
+- Deprecate `DeclarativeConfigPropertiesBridge`, `DeclarativeConfigPropertiesBridgeBuilder`, and the
+  Spring `otelProperties` compatibility bean; use `DeclarativeConfigProperties` directly or
+  `ConfigPropertiesBackedConfigProvider` instead.
+  ([#19202](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19202))
 - Deprecate `ConfigPropertiesBackedConfigProvider` in favor of `DeclarativeConfigBridge`. It will be
   removed in 2.31.0.
-- Deprecate `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative component configuration
-  through `DeclarativeConfigProperties` directly. To expose `ConfigProperties` through the
-  declarative configuration API, use `DeclarativeConfigBridge`.
-- Deprecate the Spring Boot starter `ConfigProperties` bean when experimental Declarative
-  Configuration is enabled. Auto-configurations that support the experimental Declarative
-  Configuration should use the Declarative Config API directly. This compatibility bean will be
-  removed in 3.0. The `ConfigProperties` bean remains supported for non-declarative configuration.
+  ([#19220](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19220))
+
+### 🌟 New javaagent instrumentation
+
+- Adds Javaagent support for HBase client 1.4.
+  ([#19087](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19087))
+
+### 🌟 New library instrumentation
+
+- Add library instrumentation for Thrift async server.
+  ([#19062](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19062))
 
 ### 📈 Enhancements
 
-- Add Cassandra JMX metrics target system.
+- Add async server instrumentation for Apache Thrift 0.13 so async server requests are traced and
+  context is propagated.
+  ([#18994](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18994))
+- Jedis pipeline and transaction commands now emit a single client span with combined query text and
+  `db.operation.batch.size`.
+  ([#19054](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19054))
+- Adds batch spans for Lettuce manual-flush command batches.
+  ([#19055](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19055))
+- Vert.x Redis batch commands now produce spans, including batch size and query text when available.
+  ([#19057](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19057))
+- Adds tracing for Lettuce 4.0 reactive commands, including exceptional completion and cancellation.
+  ([#19071](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19071))
+- Enable `otel.instrumentation.common.v3-preview` to run eligible instrumentations with non-inlined
+  advice loading and isolated helper classes.
+  ([#19076](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19076))
+- Add the experimental Cassandra JMX metrics target system.
   ([#19080](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19080))
+- Gate `process.command_args` and `process.command_line` behind
+  `otel.instrumentation.resources.experimental.process-command-attributes.enabled` when
+  `otel.instrumentation.common.v3-preview=true`.
+  ([#19082](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19082))
+- Add JFR-based `jvm.thread.virtual.pinned` and `jvm.thread.virtual.submit_failed` metrics for Java
+  19+ virtual threads.
+  ([#19092](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19092))
+- `InstrumentationModule` now exposes `injectedClassNames()` and `exposedClassNames()` for indy
+  instrumentations, so module authors no longer need `ExperimentalInstrumentationModule` for those
+  helper-class declarations.
+  ([#19142](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19142))
+- Multi-query batch spans now set `db.operation.name` and `db.collection.name` when all statements
+  share the same operation and collection.
+  ([#19147](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19147))
 - Add `captureTemplate` and `captureArguments` options to the log4j, java-util-logging, and
   jboss-logmanager logging instrumentations, capturing the log message template and arguments as
-  separate `log.body.template` / `log.body.parameters` attributes. This extends the same option
-  that was previously added for logback in
-  [#15423](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15423).
+  separate `log.body.template` / `log.body.parameters` attributes.
   ([#19154](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19154))
+- Use `; ` between commands in Redis batch query text when `otel.semconv-stability.opt-in=database`
+  is enabled.
+  ([#19164](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19164))
+- HBase batch requests now include `db.operation.batch_size` and batch operation names when stable
+  database semantic conventions are enabled.
+  ([#19172](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19172))
+- Ignore deprecated config aliases when `otel.instrumentation.common.v3-preview` is enabled.
+  ([#19179](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19179))
+- Add `server.address` and `server.port` to Redisson client spans.
+  ([#19191](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19191))
+- Add `server.address` and `server.port` attributes to Lettuce Redis client spans.
+  ([#19192](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19192))
+- Add server address and port attributes to Rediscala client spans.
+  ([#19193](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19193))
+
+### 🛠️ Bug fixes
+
+- Fix Dubbo client spans to emit `server.address` from the registry URL plus service target and
+  leave `server.port` unset for registry-backed calls.
+  ([#17244](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17244))
+- Fix MSSQL JDBC URLs so `database=` is treated as an alias for `databaseName` when extracting
+  `db.name`.
+  ([#19029](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19029))
+- Fix a `NullPointerException` when executing an empty JDBC batch.
+  ([#19037](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19037))
+- Fix MySQL and MariaDB `db.connection_string` values so IPv6 hosts stay bracketed instead of
+  becoming ambiguous.
+  ([#19078](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19078))
+- Suppress duplicate warnings when the application logger bridge is installed multiple times during
+  startup.
+  ([#19088](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19088))
+- Capture custom object values passed to `PreparedStatement.setObject()` in query parameter
+  attributes.
+  ([#19093](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19093))
+- Fix Pulsar `MultiTopicsConsumerImpl` so background `receiveMessageFromConsumer` calls no longer
+  create extra receive telemetry.
+  ([#19095](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19095))
+- `SpringConfigProperties.getMap()` now parses map properties using Spring's normal map binding, so
+  map-style settings like `otel.instrumentation.common.peer-service-mapping` work without SpEL
+  syntax.
+  ([#19113](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19113))
+- Fix JMS destination extraction so messages with an unreadable destination no longer get `unknown`
+  as the destination attribute.
+  ([#19115](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19115))
+- Pulsar messaging spans now derive the message ID from the underlying `Message` at span-collection
+  time, restoring `messaging.message.id` when it was previously missing.
+  ([#19120](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19120))
+- Fix `jvm.class.loaded` and `jvm.class.unloaded` to use counter instruments.
+  ([#19141](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19141))
+- Handle explicit empty database batches so `db.operation.batch.size=0` is treated as a batch for
+  span naming and batch attributes.
+  ([#19143](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19143))
+- Fixes empty R2DBC batch spans to report `db.operation.batch_size=0` instead of omitting it.
+  ([#19161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19161))
+- Fix Vert.x SQL batch telemetry to report `batchSize=0` for empty batches.
+  ([#19162](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19162))
+- Set `db.query.summary` to `BATCH` for explicit empty database batches.
+  ([#19189](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19189))
+- Capture Vert.x Redis spans for empty batches.
+  ([#19199](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19199))
 
 ## Version 2.29.0 (2026-06-19)
 
