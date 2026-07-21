@@ -32,3 +32,8 @@ configurations:
     examples:
       - all
       - trailing
+  - name: otel.instrumentation.executors-metrics.enabled
+    declarative_name: java.executors_metrics.enabled
+    description: Enables executor metrics instrumentation.
+    type: boolean
+    default: false

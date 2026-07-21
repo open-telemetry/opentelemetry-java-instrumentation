@@ -77,6 +77,7 @@ tasks {
     jvmArgs(
       "-Dotel.instrumentation.executors.include=io.opentelemetry.javaagent.instrumentation.executors.ExecutorInstrumentationTest\$CustomThreadPoolExecutor,io.opentelemetry.javaagent.instrumentation.executors.ThreadPoolExecutorTest\$RunnableCheckingThreadPoolExecutor"
     )
+    jvmArgs("-Dotel.instrumentation.executors-metrics.enabled=true")
     jvmArgs("-Djava.awt.headless=true")
   }
 
