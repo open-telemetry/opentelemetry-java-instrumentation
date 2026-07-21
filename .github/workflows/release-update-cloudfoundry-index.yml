@@ -47,6 +47,7 @@ jobs:
         with:
           client-id: ${{ vars.OTELBOT_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          permission-contents: write
           permission-pull-requests: write
 
       - name: create pr with repo changes
@@ -54,6 +55,7 @@ jobs:
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
+          gh auth setup-git
           git add index.yml
           if git diff-index --quiet --cached HEAD ; then
             echo "index.yml already current"

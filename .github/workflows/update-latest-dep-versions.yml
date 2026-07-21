@@ -56,6 +56,7 @@ jobs:
         with:
           client-id: ${{ vars.OTELBOT_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          permission-contents: write
           permission-pull-requests: write
 
       - name: Create pull request
@@ -64,6 +65,7 @@ jobs:
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
+          gh auth setup-git
           message="Update pinned latest dep versions"
           body="Auto-generated update of pinned latest dependency versions used by \`testLatestDeps\` builds."
           branch="otelbot/update-latest-dep-versions"

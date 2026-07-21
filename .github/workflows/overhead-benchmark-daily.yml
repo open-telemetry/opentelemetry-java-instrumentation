@@ -61,7 +61,10 @@ jobs:
 
       - name: Commit updated results
         working-directory: ./gh-pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          gh auth setup-git
           git add benchmark-overhead/results
           git commit -m "update test result data"
           git push

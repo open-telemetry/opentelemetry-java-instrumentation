@@ -161,9 +161,12 @@ jobs:
 
       - name: Push branch
         if: steps.changes.outputs.committed == 'true'
-        run: git push -f origin "${STEPS_BRANCH_OUTPUTS_NAME}"
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           STEPS_BRANCH_OUTPUTS_NAME: ${{ steps.branch.outputs.name }}
+        run: |
+          gh auth setup-git
+          git push -f origin "${STEPS_BRANCH_OUTPUTS_NAME}"
 
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: otelbot-token
@@ -199,7 +202,10 @@ jobs:
       - name: Record attempt
         if: steps.changes.outputs.committed == 'true'
         working-directory: progress
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          gh auth setup-git
           if grep -Fxq "$TEST_CLASS" attempted.txt; then
             echo "$TEST_CLASS already recorded"
           else
