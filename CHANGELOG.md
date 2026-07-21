@@ -67,15 +67,8 @@
   [#19199](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19199))
 - Add tracing for Lettuce 4.0 reactive commands, including exceptional completion and cancellation.
   ([#19071](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19071))
-- Enable `otel.instrumentation.common.v3-preview` to run eligible instrumentations with non-inlined
-  advice loading and isolated helper classes.
-  ([#19076](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19076))
 - Add the experimental Cassandra JMX metrics target system.
   ([#19080](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19080))
-- Gate `process.command_args` and `process.command_line` behind
-  `otel.instrumentation.resources.experimental.process-command-attributes.enabled` when
-  `otel.instrumentation.common.v3-preview=true`.
-  ([#19082](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19082))
 - Suppress duplicate warnings when the application logger bridge is installed multiple times during
   startup.
   ([#19088](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19088))
@@ -93,22 +86,21 @@
   jboss-logmanager logging instrumentations, capturing the log message template and arguments as
   separate `log.body.template` / `log.body.parameters` attributes.
   ([#19154](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19154))
-- Ignore configuration aliases scheduled for removal in 3.0 (common logging context keys,
-  database/SQLCommenter, GraphQL sanitizer and operation-name, and Log4j context-data keys) when
-  `otel.instrumentation.common.v3-preview` is enabled.
-  ([#19179](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19179))
 - Add `server.address` and `server.port` attributes to Redisson client spans.
   ([#19191](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19191))
 - Add `server.address` and `server.port` attributes to Lettuce Redis client spans.
   ([#19192](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19192))
 - Add `server.address` and `server.port` attributes to Rediscala client spans.
   ([#19193](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19193))
+- Set `server.address` on registry-backed Dubbo client spans to the registry address plus the
+  service target (`registry://host:port/interface:version:group`) and leave `server.port` unset,
+  gated behind the stable rpc semconv opt-in (`otel.semconv-stability.opt-in=rpc`); the resolved
+  provider host and port are kept under the default semconv.
+  ([#17244](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17244),
+  [#19285](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19285))
 
 ### 🛠️ Bug fixes
 
-- Fix registry-backed Dubbo client spans to set `server.address` to the registry address plus the
-  service target (`registry://host:port/interface:version:group`) and leave `server.port` unset.
-  ([#17244](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/17244))
 - Fix MySQL and MariaDB `db.connection_string` values so IPv6 hosts stay bracketed instead of
   becoming ambiguous.
   ([#19078](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19078))
