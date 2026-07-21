@@ -301,6 +301,24 @@ val resourcesSuiteTask = registerOsgiSuite(
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
 }
 
+// Suite: resourcesNoIncubator - proves the resources bundle resolves with the optional
+// declarative-config stack absent, i.e. that io.opentelemetry.api.incubator.config is imported
+// optionally. opentelemetry-api-incubator is excluded from the runtime classpath below; if that
+// import were mandatory the resolve would fail. Resolve-only: it verifies OSGi wiring without
+// booting a container (the declarative-config ComponentProvider is never instantiated).
+val resourcesNoIncubatorSuiteTask = registerOsgiSuite(
+  "resourcesNoIncubator",
+  extraRunrequires = listOf("opentelemetry-resources"),
+  resolveOnly = true,
+) {
+  implementation(project(":instrumentation:resources:library"))
+  implementation("io.opentelemetry:opentelemetry-sdk")
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
+}
+configurations["testResourcesNoIncubatorRuntimeClasspath"].exclude(
+  mapOf("group" to "io.opentelemetry", "module" to "opentelemetry-api-incubator"),
+)
+
 tasks {
   jar {
     enabled = false
@@ -315,6 +333,7 @@ tasks {
       logbackAppenderSuiteTask,
       logbackAppenderLegacySuiteTask,
       resourcesSuiteTask,
+      resourcesNoIncubatorSuiteTask,
     )
   }
 }
