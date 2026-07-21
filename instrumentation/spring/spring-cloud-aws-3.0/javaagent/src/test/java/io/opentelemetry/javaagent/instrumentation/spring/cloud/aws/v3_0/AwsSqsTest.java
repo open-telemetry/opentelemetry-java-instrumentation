@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -18,6 +19,8 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQ
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
@@ -103,7 +106,10 @@ class AwsSqsTest {
                                         "http://localhost:" + AwsSqsTestApplication.sqsPort)),
                             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class))),
                 span ->
-                    span.hasName("test-queue publish")
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "publish test-queue"
+                                : "test-queue publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -121,7 +127,15 @@ class AwsSqsTest {
                                         "http://localhost:" + AwsSqsTestApplication.sqsPort)),
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-                            equalTo(MESSAGING_OPERATION, "publish"),
+                            equalTo(
+                                MESSAGING_OPERATION,
+                                emitStableMessagingSemconv() ? null : "publish"),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "publish" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "send" : null),
                             equalTo(MESSAGING_DESTINATION_NAME, "test-queue"),
                             equalTo(
                                 AWS_SQS_QUEUE_URL,
@@ -129,27 +143,41 @@ class AwsSqsTest {
                                     + AwsSqsTestApplication.sqsPort
                                     + "/000000000000/test-queue"),
                             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class))),
-                span ->
-                    span.hasName("test-queue process")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(2))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, "aws-api"),
-                            equalTo(RPC_METHOD, "ReceiveMessage"),
-                            equalTo(RPC_SERVICE, "Sqs"),
-                            equalTo(HTTP_REQUEST_METHOD, POST),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
-                            satisfies(
-                                URL_FULL,
-                                val ->
-                                    val.startsWith(
-                                        "http://localhost:" + AwsSqsTestApplication.sqsPort)),
-                            equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-                            equalTo(MESSAGING_OPERATION, "process"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "test-queue")),
+                span -> {
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "process test-queue"
+                              : "test-queue process")
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasParent(trace.getSpan(2))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(RPC_SYSTEM, "aws-api"),
+                          equalTo(RPC_METHOD, "ReceiveMessage"),
+                          equalTo(RPC_SERVICE, "Sqs"),
+                          equalTo(HTTP_REQUEST_METHOD, POST),
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                          equalTo(SERVER_ADDRESS, "localhost"),
+                          equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+                          satisfies(
+                              URL_FULL,
+                              val ->
+                                  val.startsWith(
+                                      "http://localhost:" + AwsSqsTestApplication.sqsPort)),
+                          equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                          satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                          equalTo(
+                              MESSAGING_OPERATION, emitStableMessagingSemconv() ? null : "process"),
+                          equalTo(
+                              MESSAGING_OPERATION_NAME,
+                              emitStableMessagingSemconv() ? "process" : null),
+                          equalTo(
+                              MESSAGING_OPERATION_TYPE,
+                              emitStableMessagingSemconv() ? "process" : null),
+                          equalTo(MESSAGING_DESTINATION_NAME, "test-queue"));
+                  if (emitStableMessagingSemconv()) {
+                    span.hasTotalRecordedLinks(0);
+                  }
+                },
                 span ->
                     span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(3)),
                 span ->

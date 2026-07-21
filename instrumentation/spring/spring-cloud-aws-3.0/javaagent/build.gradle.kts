@@ -28,6 +28,21 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
+tasks {
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0.AwsSqsTest")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+  }
+
+  check {
+    dependsOn(testMessagingPreview)
+  }
+}
+
 if (otelProps.denyUnsafe) {
   // org.elasticmq:elasticmq-rest-sqs_2.13 uses unsafe. Future versions are likely to fix this.
   tasks.withType<Test>().configureEach {
