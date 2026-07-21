@@ -13,6 +13,11 @@
   Configuration is enabled. Auto-configurations that support the experimental Declarative
   Configuration should use the Declarative Config API directly. This compatibility bean will be
   removed in 3.0. The `ConfigProperties` bean remains supported for non-declarative configuration.
+- For library instrumentation users, deprecate configuring span suppression using the
+  `otel.instrumentation.experimental.span-suppression-strategy` system property in favor of
+  `Experimental.setSpanSuppressionStrategy(...)` or declarative instrumentation configuration.
+  The Java agent continues to support the system property through its declarative config bridge.
+  ([#19180](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19180))
 
 ### 📈 Enhancements
 

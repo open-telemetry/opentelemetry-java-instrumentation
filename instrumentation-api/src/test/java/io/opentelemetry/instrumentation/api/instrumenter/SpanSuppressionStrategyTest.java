@@ -8,11 +8,18 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.impl.InstrumentationUtil;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,10 +29,56 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junitpioneer.jupiter.SetSystemProperty;
 
 class SpanSuppressionStrategyTest {
 
   static final Span span = Span.getInvalid();
+
+  @Test
+  @SetSystemProperty(
+      key = "otel.instrumentation.experimental.span-suppression-strategy",
+      value = "none")
+  void programmaticSpanSuppressionStrategyShouldOverrideDeprecatedProperty() {
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(OpenTelemetry.noop(), "test", request -> "test");
+    Experimental.setSpanSuppressionStrategy(builder, "span-kind");
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+
+    assertThat(suppressor.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
+  }
+
+  @Test
+  @SetSystemProperty(
+      key = "otel.instrumentation.experimental.span-suppression-strategy",
+      value = "span-kind")
+  void shouldReadDeprecatedProperty() {
+    assertThat(InstrumenterBuilder.getDeprecatedSpanSuppressionStrategyProperty())
+        .isEqualTo("span-kind");
+  }
+
+  @Test
+  @SetSystemProperty(
+      key = "otel.instrumentation.experimental.span-suppression-strategy",
+      value = "span-kind")
+  void shouldIgnoreDeprecatedPropertyWhenConfiguredV3PreviewIsEnabled() {
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
+    ConfigProvider configProvider = mock(ConfigProvider.class);
+    DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
+    when(openTelemetry.getConfigProvider()).thenReturn(configProvider);
+    when(configProvider.getInstrumentationConfig("common")).thenReturn(commonConfig);
+    when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
+    when(commonConfig.getBoolean("v3_preview")).thenReturn(true);
+
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(openTelemetry, "test", request -> "test");
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+    assertThat(context).isSameAs(Context.root());
+  }
 
   @ParameterizedTest
   @MethodSource("configArgs")
