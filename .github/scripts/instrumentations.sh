@@ -279,6 +279,8 @@ readonly INSTRUMENTATIONS=(
   "spring:spring-web:spring-web-6.0:javaagent:testExperimental"
   "spring:spring-webflux:spring-webflux-5.0:javaagent:test"
   "spring:spring-webflux:spring-webflux-5.0:javaagent:testStableSemconv"
+  "spring:spring-webflux:spring-webflux-5.0:javaagent:testControllerTelemetry"
+  "spring:spring-webflux:spring-webflux-5.0:javaagent:testControllerTelemetryStableSemconv"
   "spring:spring-webflux:spring-webflux-5.3:library:test"
   "spring:spring-webflux:spring-webflux-5.3:library:testStableSemconv"
   "spring:spring-webmvc:spring-webmvc-3.1:javaagent:test"

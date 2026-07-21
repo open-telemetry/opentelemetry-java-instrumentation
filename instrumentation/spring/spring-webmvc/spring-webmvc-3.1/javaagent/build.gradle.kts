@@ -48,21 +48,12 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  test {
-    exclude("**/boot/**", "**/filter/**")
-  }
-
-  val testControllerTelemetry by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
     systemProperty(
       "metadataConfig",
       "otel.instrumentation.common.experimental.controller-telemetry.enabled=true," +
         "otel.instrumentation.common.experimental.view-telemetry.enabled=true"
     )
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
   }
@@ -76,19 +67,11 @@ tasks {
         "otel.instrumentation.common.experimental.view-telemetry.enabled=true," +
         "otel.instrumentation.spring-webmvc.experimental-span-attributes=true"
     )
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
   }
 
   check {
-    dependsOn(testControllerTelemetry, testExperimental)
-  }
-
-  if (otelProps.collectMetadata) {
-    test {
-      finalizedBy(testControllerTelemetry)
-    }
+    dependsOn(testExperimental)
   }
 }
 

@@ -54,44 +54,20 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     systemProperty("ratpack14Test", true) // used in AbstractRatpackHttpClientTest
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  test {
-    exclude("**/server/**")
-  }
-
-  val testControllerTelemetry by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    include("**/server/**")
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true"
-    )
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true," +
-        "otel.semconv-stability.opt-in=service.peer"
-    )
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
   }
 
   check {
-    dependsOn(testControllerTelemetry, testStableSemconv)
-  }
-
-  if (otelProps.collectMetadata) {
-    test {
-      finalizedBy(testControllerTelemetry)
-    }
+    dependsOn(testStableSemconv)
   }
 
   if (otelProps.denyUnsafe) {

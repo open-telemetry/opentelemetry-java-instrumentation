@@ -116,6 +116,7 @@ tasks {
   val testExceptionSignalLogs by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+    exclude("**/server/**")
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
     systemProperty(
@@ -132,15 +133,6 @@ tasks {
       testControllerTelemetryStableSemconv,
       testExceptionSignalLogs
     )
-  }
-
-  if (otelProps.collectMetadata) {
-    test {
-      finalizedBy(testControllerTelemetry)
-    }
-    testStableSemconv.configure {
-      finalizedBy(testControllerTelemetryStableSemconv)
-    }
   }
 }
 

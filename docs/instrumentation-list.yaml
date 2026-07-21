@@ -15389,7 +15389,7 @@ libraries:
     type: boolean
     default: false
   telemetry:
-  - when: default
+  - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
     metrics:
     - name: http.client.request.duration
       description: Duration of HTTP client requests.
@@ -15422,15 +15422,13 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
-    spans:
     - span_kind: INTERNAL
       attributes:
       - name: code.function
         type: STRING
       - name: code.namespace
         type: STRING
-  - when: otel.semconv-stability.opt-in=service.peer
+  - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true,otel.semconv-stability.opt-in=service.peer
     metrics:
     - name: http.client.request.duration
       description: Duration of HTTP client requests.
@@ -15463,8 +15461,6 @@ libraries:
         type: STRING
       - name: url.full
         type: STRING
-  - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true,otel.semconv-stability.opt-in=service.peer
-    spans:
     - span_kind: INTERNAL
       attributes:
       - name: code.function
