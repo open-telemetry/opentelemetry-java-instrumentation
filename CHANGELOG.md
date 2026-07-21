@@ -4,9 +4,11 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `ConfigPropertiesBackedConfigProvider` in favor of `DeclarativeConfigBridge`. It will be
+  removed in 2.31.0.
 - Deprecate `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative component configuration
   through `DeclarativeConfigProperties` directly. To expose `ConfigProperties` through the
-  declarative configuration API, use `ConfigPropertiesBackedConfigProvider`.
+  declarative configuration API, use `DeclarativeConfigBridge`.
 - Deprecate the Spring Boot starter `ConfigProperties` bean when experimental Declarative
   Configuration is enabled. Auto-configurations that support the experimental Declarative
   Configuration should use the Declarative Config API directly. This compatibility bean will be
