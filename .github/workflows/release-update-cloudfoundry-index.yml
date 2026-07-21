@@ -47,13 +47,13 @@ jobs:
         with:
           client-id: ${{ vars.OTELBOT_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
-          permission-contents: write
           permission-pull-requests: write
 
       - name: create pr with repo changes
         env:
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # pull requests from secrets.GITHUB_TOKEN do not run workflows
+          OTELBOT_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           gh auth setup-git
           git add index.yml
@@ -63,7 +63,7 @@ jobs:
           fi
           git commit -m "Updated index.yml"
           git push --set-upstream origin otelbot/cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }}
-          gh pr create --base cloudfoundry \
+          GH_TOKEN="$OTELBOT_TOKEN" gh pr create --base cloudfoundry \
             --head otelbot/cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }} \
             --title 'Release updates for Cloudfoundry Repo' \
             --body '[Created by Github action]'

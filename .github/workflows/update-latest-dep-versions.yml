@@ -56,14 +56,14 @@ jobs:
         with:
           client-id: ${{ vars.OTELBOT_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
-          permission-contents: write
           permission-pull-requests: write
 
       - name: Create pull request
         if: steps.check-changes.outputs.changed == 'true'
         env:
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # pull requests from secrets.GITHUB_TOKEN do not run workflows
+          OTELBOT_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           gh auth setup-git
           message="Update pinned latest dep versions"
@@ -100,11 +100,12 @@ jobs:
           git push --force-with-lease --set-upstream origin $branch
 
           # only create a new PR if one doesn't already exist
-          existing_pr=$(gh pr list --head "$branch" --state open --json number --jq '.[0].number')
+          existing_pr=$(GH_TOKEN="$OTELBOT_TOKEN" gh pr list --head "$branch" --state open --json number --jq '.[0].number')
           if [ -z "$existing_pr" ]; then
-            gh pr create --title "$message" \
-                         --body "$body" \
-                         --base main
+            GH_TOKEN="$OTELBOT_TOKEN" gh pr create \
+              --title "$message" \
+              --body "$body" \
+              --base main
           fi
 
   workflow-notification:

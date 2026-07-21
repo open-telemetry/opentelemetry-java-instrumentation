@@ -35,18 +35,18 @@ jobs:
         with:
           client-id: ${{ vars.OTELBOT_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
-          permission-contents: write
           permission-pull-requests: write
 
       - name: Create pull request
         env:
           NUMBER: ${{ github.event.inputs.number }}
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # pull requests from secrets.GITHUB_TOKEN do not run workflows
+          OTELBOT_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           gh auth setup-git
-          commit=$(gh pr view $NUMBER --json mergeCommit --jq .mergeCommit.oid)
-          title=$(gh pr view $NUMBER --json title --jq .title)
+          commit=$(GH_TOKEN="$OTELBOT_TOKEN" gh pr view $NUMBER --json mergeCommit --jq .mergeCommit.oid)
+          title=$(GH_TOKEN="$OTELBOT_TOKEN" gh pr view $NUMBER --json title --jq .title)
 
           branch="otelbot/backport-${NUMBER}-to-${GITHUB_REF_NAME//\//-}"
 
@@ -60,6 +60,7 @@ jobs:
           # so for now at least PRs that update workflow files need to be backported manually
           git push --set-upstream origin $branch
 
-          gh pr create --title "[$GITHUB_REF_NAME] $title" \
-                       --body "Clean cherry-pick of #$NUMBER to the \`$GITHUB_REF_NAME\` branch." \
-                       --base $GITHUB_REF_NAME
+          GH_TOKEN="$OTELBOT_TOKEN" gh pr create \
+            --title "[$GITHUB_REF_NAME] $title" \
+            --body "Clean cherry-pick of #$NUMBER to the \`$GITHUB_REF_NAME\` branch." \
+            --base $GITHUB_REF_NAME
