@@ -14,7 +14,9 @@ import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetrics
 import java.sql.Connection;
 import java.sql.SQLException;
 import org.apache.tomcat.jdbc.pool.DataSource;
+import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.assertj.core.api.AbstractIterableAssert;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -24,7 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class TomcatJdbcInstrumentationTest {
 
-  private static final String DEFAULT_POOL_NAME = "jdbc";
+  private static final String DEFAULT_POOL_NAME = "tomcat-jdbc";
 
   @RegisterExtension
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -32,22 +34,72 @@ class TomcatJdbcInstrumentationTest {
   @Mock javax.sql.DataSource dataSourceMock;
   @Mock Connection connectionMock;
 
-  @Test
-  void shouldReportMetrics() throws SQLException {
+  @BeforeEach
+  void setUp() throws SQLException {
     when(dataSourceMock.getConnection()).thenReturn(connectionMock);
+  }
 
-    // there shouldn't be any problems if this method gets called more than once
-    DataSource firstTomcatDataSource = newDataSource();
-    firstTomcatDataSource.createPool();
-    assertConnectionPoolMetrics(firstTomcatDataSource, DEFAULT_POOL_NAME + "-1");
-    firstTomcatDataSource.close();
+  @Test
+  void shouldUseJdbcUrlForDefaultPoolName() throws SQLException {
+    DataSource dataSource = newDataSource();
+    dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
 
-    DataSource secondTomcatDataSource = newDataSource();
-    assertConnectionPoolMetrics(secondTomcatDataSource, DEFAULT_POOL_NAME + "-2");
+    assertConnectionPoolMetrics(dataSource, "db.example:5432/orders");
+  }
 
-    DataSource namedTomcatDataSource = newDataSource();
-    namedTomcatDataSource.setName("testPool");
-    assertConnectionPoolMetrics(namedTomcatDataSource, "testPool");
+  @Test
+  void shouldUseConnectionPropertiesForDefaultPoolName() throws SQLException {
+    DataSource dataSource = newDataSource();
+    dataSource.setUrl("jdbc:postgresql:ignored");
+    dataSource.setConnectionProperties(
+        "serverName=properties.example;portNumber=5433;databaseName=inventory");
+
+    assertConnectionPoolMetrics(dataSource, "properties.example:5433/inventory");
+  }
+
+  @Test
+  void shouldUseServerAddressWhenPortAndNamespaceAreMissing() throws SQLException {
+    DataSource dataSource = newDataSource();
+    dataSource.setUrl("jdbc:custom:ignored");
+    dataSource.setConnectionProperties("serverName=address-only.example");
+
+    assertConnectionPoolMetrics(dataSource, "address-only.example");
+  }
+
+  @Test
+  void shouldUseDbNamespaceWhenServerAddressIsMissing() throws SQLException {
+    DataSource dataSource = newDataSource();
+    dataSource.setUrl("jdbc:h2:mem:orders");
+
+    assertConnectionPoolMetrics(dataSource, "orders");
+  }
+
+  @Test
+  void shouldUseFixedPoolNameWhenUrlCannotBeParsed() throws SQLException {
+    DataSource dataSource = newDataSource();
+
+    // Calling createPool twice must continue to register one metric callback.
+    dataSource.createPool();
+
+    assertConnectionPoolMetrics(dataSource, DEFAULT_POOL_NAME);
+  }
+
+  @Test
+  void shouldUseConfiguredPoolName() throws SQLException {
+    DataSource dataSource = newDataSource();
+    dataSource.setName("testPool");
+
+    assertConnectionPoolMetrics(dataSource, "testPool");
+  }
+
+  @Test
+  void shouldUseConfiguredPoolNameThatLooksLikeDefaultTomcatPoolName() throws SQLException {
+    DataSource dataSource = newDataSource();
+    String poolName =
+        "Tomcat Connection Pool[orders-" + System.identityHashCode(PoolProperties.class) + "]";
+    dataSource.setName(poolName);
+
+    assertConnectionPoolMetrics(dataSource, poolName);
   }
 
   private DataSource newDataSource() {
