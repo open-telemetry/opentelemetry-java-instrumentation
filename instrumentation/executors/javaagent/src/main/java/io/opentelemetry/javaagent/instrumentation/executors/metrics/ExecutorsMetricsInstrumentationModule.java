@@ -18,7 +18,7 @@ public class ExecutorsMetricsInstrumentationModule extends InstrumentationModule
     implements EarlyInstrumentationModule {
 
   public ExecutorsMetricsInstrumentationModule() {
-    super("executors-metrics", "executors");
+    super("executors", "executors-metrics");
   }
 
   @Override
