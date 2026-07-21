@@ -17,6 +17,8 @@ import static org.quartz.TriggerBuilder.newTrigger;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -147,6 +149,30 @@ public abstract class AbstractQuartzTest {
                         equalTo(
                             stringKey("quartz.scheduler.name"),
                             EMIT_EXPERIMENTAL_TELEMETRY ? "default" : null)));
+  }
+
+  @Test
+  void schedulerErrorDuringJobExecutionStillReported() throws SchedulerException {
+    SchedulerException cause = new SchedulerException("listener boom");
+
+    // A scheduler error raised while a job is executing on this thread (e.g. another listener
+    // failing) is not the job's own exception, so it must still be reported rather than suppressed
+    // as a duplicate.
+    Context jobContext = Context.current().with(TracingJobListener.JOB_CONTEXT_KEY, Boolean.TRUE);
+    try (Scope ignored = jobContext.makeCurrent()) {
+      for (SchedulerListener listener : scheduler.getListenerManager().getSchedulerListeners()) {
+        listener.schedulerError("Error executing Job (jobs.x: couldn't begin execution.", cause);
+      }
+    }
+
+    getTesting()
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord
+                    .hasEventName("quartz.scheduler.exception")
+                    .hasSeverity(Severity.ERROR)
+                    .hasBody("Error executing Job (jobs.x: couldn't begin execution.")
+                    .hasException(cause));
   }
 
   private static Scheduler createScheduler() throws Exception {
