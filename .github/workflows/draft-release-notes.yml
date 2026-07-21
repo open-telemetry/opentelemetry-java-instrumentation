@@ -22,6 +22,7 @@ jobs:
           # need full history and tags so the release-notes script can resolve
           # the previous release tag (e.g. v2.27.0) when computing the commit range
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Install Copilot CLI
         run: |
@@ -50,6 +51,7 @@ jobs:
         with:
           client-id: ${{ vars.OTELBOT_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          permission-contents: write
           permission-pull-requests: write
 
       - name: Create pull request against main
@@ -58,6 +60,7 @@ jobs:
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
+          gh auth setup-git
           message="Draft release notes"
           body=$(cat <<EOF
           Automated draft of the \`## Unreleased\` section of \`CHANGELOG.md\`.

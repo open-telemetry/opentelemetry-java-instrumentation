@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Verify prerequisites
         run: |
@@ -35,9 +37,13 @@ jobs:
           # history is needed to allow fast-forward push below in case
           # re-running this workflow after merging additional PRs to main
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Create release branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          gh auth setup-git
           version=$(.github/scripts/get-version.sh)
           version=${version//-SNAPSHOT/}
           if [[ $version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
@@ -97,6 +103,8 @@ jobs:
       - prereqs
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Set environment variables
         run: |

@@ -18,6 +18,8 @@ jobs:
       already-opened: ${{ steps.check-versions.outputs.already-opened }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - id: check-versions
         name: Check versions
@@ -56,6 +58,8 @@ jobs:
       - check-versions
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Update version
         env:
@@ -90,6 +94,7 @@ jobs:
         with:
           client-id: ${{ vars.OTELBOT_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          permission-contents: write
           permission-pull-requests: write
 
       - name: Create pull request against main
@@ -99,6 +104,7 @@ jobs:
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
+          gh auth setup-git
           message="Update the OpenTelemetry SDK version to $VERSION"
           body="Update the OpenTelemetry SDK version to \`$VERSION\`."
           branch="otelbot/update-opentelemetry-sdk-to-${VERSION}"

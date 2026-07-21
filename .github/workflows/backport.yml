@@ -25,6 +25,7 @@ jobs:
         with:
           # history is needed to run git cherry-pick below
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Use CLA approved bot
         run: .github/scripts/use-cla-approved-bot.sh

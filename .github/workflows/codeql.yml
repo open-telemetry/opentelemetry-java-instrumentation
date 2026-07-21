@@ -35,6 +35,8 @@ jobs:
     runs-on: ${{ github.repository == 'open-telemetry/opentelemetry-java-instrumentation' && 'oracle-vm-8cpu-32gb-x86-64' || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       # don't need to free disk space (which takes time) since running on larger machine
 

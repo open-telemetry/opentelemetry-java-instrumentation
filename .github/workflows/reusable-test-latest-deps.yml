@@ -30,6 +30,8 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -78,7 +80,7 @@ jobs:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         run: >
           ./gradlew
-          ${{ env.test-tasks }}
+          ${test_tasks}
           -PtestLatestDeps=true
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 

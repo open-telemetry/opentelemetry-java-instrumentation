@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
         # need to run this script before we switch branches
         # since the script doesn't exist on the cloudfoundry branch
@@ -27,6 +29,7 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: 'cloudfoundry'
+          persist-credentials: false
 
       - name: create working branch
         run: git checkout -b otelbot/cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }}

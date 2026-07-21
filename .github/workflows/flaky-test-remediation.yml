@@ -24,6 +24,7 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0  # need history to detect recently-modified files
+          persist-credentials: false
 
       - name: Fetch progress branch
         run: git fetch origin otelbot/flaky-test-remediation-progress
@@ -78,6 +79,8 @@ jobs:
       OUT_DIR: build/flaky-test-remediation
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -158,7 +161,9 @@ jobs:
 
       - name: Push branch
         if: steps.changes.outputs.committed == 'true'
-        run: git push -f origin "${{ steps.branch.outputs.name }}"
+        run: git push -f origin "${STEPS_BRANCH_OUTPUTS_NAME}"
+        env:
+          STEPS_BRANCH_OUTPUTS_NAME: ${{ steps.branch.outputs.name }}
 
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: otelbot-token
@@ -183,6 +188,7 @@ jobs:
         with:
           ref: otelbot/flaky-test-remediation-progress
           path: progress
+          persist-credentials: false
 
       - name: Use CLA approved bot
         if: steps.changes.outputs.committed == 'true'
