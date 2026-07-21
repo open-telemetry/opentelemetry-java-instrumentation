@@ -21,6 +21,11 @@ by the parser but discouraged — prefer a bare JSON object:
 }
 ```
 
+The response must be parseable by `json.loads`. JSON-escape every special
+character in string values, including `"` as `\"`, `\` as `\\`, and newlines
+as `\n`. Pay particular attention to Java string literals copied into
+`evidence`, and verify the complete object is valid JSON before responding.
+
 ## Core rule
 
 Classify every PR from its diff only. PR titles, manifest `subject`,
