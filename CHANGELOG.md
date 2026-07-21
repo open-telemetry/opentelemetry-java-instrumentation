@@ -70,11 +70,9 @@
   ([#19071](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19071))
 - Add the experimental Cassandra JMX metrics target system.
   ([#19080](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19080))
-- Suppress duplicate warnings when the application logger bridge is installed multiple times during
-  startup.
-  ([#19088](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19088))
-- Add JFR-based `jvm.thread.virtual.pinned` and `jvm.thread.virtual.submit_failed` metrics for Java
-  19+ virtual threads.
+- Add experimental JFR-based `jvm.thread.virtual.pinned` and `jvm.thread.virtual.submit_failed`
+  metrics for Java 19+ virtual threads; enable with
+  `otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics=true`.
   ([#19092](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19092))
 - Capture custom object values passed to `PreparedStatement.setObject()` in query parameter
   attributes.
@@ -103,6 +101,9 @@
 
 ### 🛠️ Bug fixes
 
+- Fix a spurious duplicate warning when the application logger bridge is installed multiple times
+  during startup.
+  ([#19088](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19088))
 - Fix MySQL and MariaDB `db.connection_string` values so IPv6 hosts stay bracketed instead of
   becoming ambiguous.
   ([#19078](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19078))
