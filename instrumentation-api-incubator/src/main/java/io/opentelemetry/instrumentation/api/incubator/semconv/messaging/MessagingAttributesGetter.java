@@ -56,6 +56,21 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
+   * Returns a description of a class of error the operation ended with.
+   *
+   * <p>If this method returns {@code null}, the exception class name (if any) will be used as error
+   * type.
+   *
+   * <p>The cardinality of the error type should be low. The instrumentations implementing this
+   * method are recommended to document the custom values they support.
+   */
+  @Nullable
+  default String getErrorType(
+      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
+    return null;
+  }
+
+  /**
    * Extracts all values of header named {@code name} from the request, or an empty list if there
    * were none.
    *
