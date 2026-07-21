@@ -19,8 +19,9 @@
 
 ### 🚫 Deprecations
 
-- Deprecate the Spring Boot starter `ConfigProperties` bean used with experimental declarative
-  configuration in favor of the new `ConfigProvider` bean; it will be removed in 3.0.
+- Deprecate only the Spring Boot starter `ConfigProperties` compatibility bean used with
+  experimental declarative configuration, in favor of the new `ConfigProvider` bean; it will be
+  removed in 3.0. The `ConfigProperties` bean remains supported for non-declarative configuration.
   ([#19175](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19175))
 - Deprecate `DeclarativeConfigPropertiesBridge` and `DeclarativeConfigPropertiesBridgeBuilder`.
   Use `DeclarativeConfigProperties` directly or `DeclarativeConfigBridge` instead. Will be removed
@@ -84,7 +85,8 @@
   ([#19142](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19142))
 - Add `captureTemplate` and `captureArguments` options to the log4j, java-util-logging, and
   jboss-logmanager logging instrumentations, capturing the log message template and arguments as
-  separate `log.body.template` / `log.body.parameters` attributes.
+  separate `log.body.template` / `log.body.parameters` attributes; logback already supported these
+  options ([#15423](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15423)).
   ([#19154](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19154))
 - Add `server.address` and `server.port` attributes to Redisson client spans.
   ([#19191](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19191))
@@ -107,9 +109,10 @@
 - Fix multi-topic Pulsar consumers so the internal background receive no longer creates a spurious
   extra receive span.
   ([#19095](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19095))
-- `SpringConfigProperties.getMap()` now parses map properties using Spring's normal map binding, so
-  map-style settings like `otel.instrumentation.common.peer-service-mapping` work without SpEL
-  syntax.
+- `SpringConfigProperties.getMap()` no longer evaluates map property values as SpEL expressions;
+  non-special-cased map properties now parse as comma-delimited `key=value` pairs via the SDK's
+  `DefaultConfigProperties`, so settings like `otel.instrumentation.common.peer-service-mapping`
+  work without SpEL syntax.
   ([#19113](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19113))
 - Fix JMS destination extraction so an unreadable destination now leaves
   `messaging.destination.name` unset instead of reporting it as `unknown`.
