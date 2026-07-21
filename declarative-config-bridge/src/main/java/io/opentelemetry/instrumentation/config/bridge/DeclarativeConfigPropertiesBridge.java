@@ -48,7 +48,13 @@ import javax.annotation.Nullable;
  *       common:
  *         string_key: value
  * </pre>
+ *
+ * @deprecated Migrate code that reads declarative component configuration to use {@link
+ *     DeclarativeConfigProperties} directly. To expose {@link ConfigProperties} through the
+ *     declarative configuration API, use {@link DeclarativeConfigBridge}. This class will be
+ *     removed in 3.0.
  */
+@Deprecated // will be removed in 3.0
 final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";

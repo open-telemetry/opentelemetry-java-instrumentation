@@ -372,6 +372,48 @@ class SqlClientAttributesExtractorTest {
   }
 
   @Test
+  void shouldExtractEmptyBatchAttributes() {
+    // given
+    Map<String, Object> request = new HashMap<>();
+    request.put("db.namespace", "potatoes");
+    request.put("db.query.texts", emptySet());
+    request.put(DB_OPERATION_BATCH_SIZE.getKey(), 0L);
+
+    Context context = Context.root();
+
+    AttributesExtractor<Map<String, Object>, Void> underTest =
+        SqlClientAttributesExtractor.create(new TestMultiAttributesGetter());
+
+    // when
+    AttributesBuilder startAttributes = Attributes.builder();
+    underTest.onStart(startAttributes, context, request);
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    underTest.onEnd(endAttributes, context, request, null, null);
+
+    // then
+    // an explicit empty batch has no query texts, so db.query.summary falls back to "BATCH"
+    if (emitStableDatabaseSemconv() && emitOldDatabaseSemconv()) {
+      assertThat(startAttributes.build())
+          .containsOnly(
+              entry(DB_NAME, "potatoes"),
+              entry(DB_NAMESPACE, "potatoes"),
+              entry(DB_QUERY_SUMMARY, "BATCH"),
+              entry(DB_OPERATION_BATCH_SIZE, 0L));
+    } else if (emitOldDatabaseSemconv()) {
+      assertThat(startAttributes.build()).containsOnly(entry(DB_NAME, "potatoes"));
+    } else if (emitStableDatabaseSemconv()) {
+      assertThat(startAttributes.build())
+          .containsOnly(
+              entry(DB_NAMESPACE, "potatoes"),
+              entry(DB_QUERY_SUMMARY, "BATCH"),
+              entry(DB_OPERATION_BATCH_SIZE, 0L));
+    }
+
+    assertThat(endAttributes.build().isEmpty()).isTrue();
+  }
+
+  @Test
   void shouldExtractMultiQueryBatchAttributes() {
     // given
     Map<String, Object> request = new HashMap<>();

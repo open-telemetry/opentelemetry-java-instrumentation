@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.exporter.otlp.internal.OtlpSpanExporterProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -57,7 +58,22 @@ class OpenTelemetryAutoConfigurationTest {
                 assertThat(context)
                     .hasBean("customOpenTelemetry")
                     .doesNotHaveBean("openTelemetry")
-                    .hasBean("otelProperties"));
+                    .hasBean("otelProperties")
+                    .getBean("configProvider")
+                    .isEqualTo(ConfigProvider.noop()));
+  }
+
+  @Test
+  @DisplayName("when OpenTelemetry bean is custom, fallback ConfigProvider bean should be noop")
+  void fallbackConfigProviderWhenCustomOpenTelemetryProvided() {
+    this.contextRunner
+        .withUserConfiguration(CustomOtelConfiguration.class)
+        .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
+        .run(
+            context ->
+                assertThat(context)
+                    .getBean("configProvider", ConfigProvider.class)
+                    .isEqualTo(ConfigProvider.noop()));
   }
 
   @Test
@@ -65,8 +81,23 @@ class OpenTelemetryAutoConfigurationTest {
       "when Application Context DOES NOT contain OpenTelemetry bean should initialize openTelemetry")
   void initializeProvidersAndOpenTelemetry() {
     this.contextRunner
+        .withPropertyValues("otel.instrumentation.common.default-enabled=false")
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
-        .run(context -> assertThat(context).hasBean("openTelemetry").hasBean("otelProperties"));
+        .run(
+            context -> {
+              assertThat(context)
+                  .hasBean("openTelemetry")
+                  .hasBean("otelProperties")
+                  .hasBean("configProvider");
+              ConfigProvider configProvider = context.getBean(ConfigProvider.class);
+              assertThat(
+                      configProvider
+                          .getInstrumentationConfig()
+                          .getStructured("java")
+                          .getStructured("common")
+                          .getBoolean("default_enabled"))
+                  .isFalse();
+            });
   }
 
   @Test
@@ -165,7 +196,9 @@ class OpenTelemetryAutoConfigurationTest {
             "otel.sdk.disabled=true",
             "otel.resource.attributes=service.name=workflow-backend-dev,service.version=3c8f9ce9")
         .run(
-            context ->
-                assertThat(context).getBean("openTelemetry").isEqualTo(OpenTelemetry.noop()));
+            context -> {
+              assertThat(context).getBean("openTelemetry").isEqualTo(OpenTelemetry.noop());
+              assertThat(context).getBean("configProvider").isEqualTo(ConfigProvider.noop());
+            });
   }
 }

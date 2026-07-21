@@ -18,6 +18,7 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS
 import io.opentelemetry.semconv.DbAttributes.{DB_OPERATION_NAME, DB_SYSTEM_NAME}
+import io.opentelemetry.semconv.ServerAttributes.{SERVER_ADDRESS, SERVER_PORT}
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{AfterAll, BeforeAll, Test, TestInstance}
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -41,6 +42,8 @@ class RediscalaClientTest {
   var system: Object = null
   var redisServer: GenericContainer[_] = null
   var redisClient: RedisClient = null
+  var host: String = null
+  var port: JLong = null
 
   @BeforeAll
   def setUp(): Unit = {
@@ -48,8 +51,8 @@ class RediscalaClientTest {
       new GenericContainer("redis:6.2.3-alpine").withExposedPorts(6379)
     redisServer.start()
 
-    val host: String = redisServer.getHost
-    val port: Integer = redisServer.getMappedPort(6379)
+    host = redisServer.getHost
+    port = redisServer.getMappedPort(6379).longValue()
 
     try {
       val clazz = Class.forName("akka.actor.ActorSystem")
@@ -67,7 +70,7 @@ class RediscalaClientTest {
         .getConstructors()(0)
         .newInstance(
           host,
-          port,
+          Integer.valueOf(port.intValue()),
           Option.apply(null),
           Option.apply(null),
           Option.apply(null),
@@ -83,7 +86,7 @@ class RediscalaClientTest {
           .getConstructors()(0)
           .newInstance(
             host,
-            port,
+            Integer.valueOf(port.intValue()),
             Option.apply(null),
             Option.apply(null),
             "RedisClient",
@@ -125,12 +128,14 @@ class RediscalaClientTest {
           new Consumer[SpanDataAssert] {
             override def accept(span: SpanDataAssert): Unit = {
               span
-                .hasName("SET")
+                .hasName(spanName("SET"))
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
-                  equalTo(maybeStable(DB_OPERATION), "SET")
+                  equalTo(maybeStable(DB_OPERATION), "SET"),
+                  equalTo(SERVER_ADDRESS, host),
+                  equalTo(SERVER_PORT, port)
                 )
             }
           }
@@ -141,7 +146,9 @@ class RediscalaClientTest {
       testing,
       "io.opentelemetry.rediscala-1.8",
       DB_SYSTEM_NAME,
-      DB_OPERATION_NAME
+      DB_OPERATION_NAME,
+      SERVER_ADDRESS,
+      SERVER_PORT
     )
   }
 
@@ -178,24 +185,28 @@ class RediscalaClientTest {
           new Consumer[SpanDataAssert] {
             override def accept(span: SpanDataAssert): Unit = {
               span
-                .hasName("SET")
+                .hasName(spanName("SET"))
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
-                  equalTo(maybeStable(DB_OPERATION), "SET")
+                  equalTo(maybeStable(DB_OPERATION), "SET"),
+                  equalTo(SERVER_ADDRESS, host),
+                  equalTo(SERVER_PORT, port)
                 )
             }
           },
           new Consumer[SpanDataAssert] {
             override def accept(span: SpanDataAssert): Unit = {
               span
-                .hasName("GET")
+                .hasName(spanName("GET"))
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
-                  equalTo(maybeStable(DB_OPERATION), "GET")
+                  equalTo(maybeStable(DB_OPERATION), "GET"),
+                  equalTo(SERVER_ADDRESS, host),
+                  equalTo(SERVER_PORT, port)
                 )
             }
           }
@@ -230,12 +241,14 @@ class RediscalaClientTest {
           new Consumer[SpanDataAssert] {
             override def accept(span: SpanDataAssert): Unit = {
               span
-                .hasName(scenario.operationName)
+                .hasName(spanName(scenario.operationName))
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                   equalTo(maybeStable(DB_OPERATION), scenario.operationName),
+                  equalTo(SERVER_ADDRESS, host),
+                  equalTo(SERVER_PORT, port),
                   equalTo(
                     DB_OPERATION_BATCH_SIZE,
                     if (emitStableDatabaseSemconv()) scenario.batchSize
@@ -247,6 +260,9 @@ class RediscalaClientTest {
         )
     })
   }
+
+  private def spanName(operation: String): String =
+    if (emitStableDatabaseSemconv()) s"$operation $host:$port" else operation
 
   private def transactionScenarios(): Stream[Arguments] =
     Stream.of(

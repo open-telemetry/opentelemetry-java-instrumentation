@@ -32,7 +32,7 @@ jobs:
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
           java-version-file: .java-version
@@ -56,7 +56,7 @@ jobs:
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
           java-version-file: .java-version
@@ -97,7 +97,7 @@ jobs:
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
           java-version-file: .java-version
@@ -217,7 +217,7 @@ jobs:
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
           java-version-file: .java-version
@@ -307,20 +307,20 @@ jobs:
 
       - id: setup-test-java
         name: Set up JDK ${{ matrix.test-java-version }}-${{ matrix.vm }} for running tests
-        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           # using zulu because new releases get published quickly
           distribution: ${{ matrix.vm == 'hotspot' && 'zulu' || 'adopt-openj9'}}
           java-version: ${{ matrix.test-java-version != '25-deny-unsafe' && matrix.test-java-version || '25' }}
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
           java-version-file: .java-version
 
       - name: Set up Node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
 
       # vaadin tests use pnpm
       - name: Cache pnpm modules
@@ -435,7 +435,7 @@ jobs:
           }
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
           java-version-file: .java-version
@@ -495,7 +495,7 @@ jobs:
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
           java-version-file: .java-version
@@ -518,7 +518,7 @@ jobs:
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
           java-version-file: .java-version
