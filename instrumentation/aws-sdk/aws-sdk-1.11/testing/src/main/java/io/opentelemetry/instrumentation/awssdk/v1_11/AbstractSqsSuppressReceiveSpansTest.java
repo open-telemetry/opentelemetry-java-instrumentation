@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -25,6 +26,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -32,12 +34,14 @@ import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
+import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.util.Iterator;
 import org.elasticmq.rest.sqs.SQSRestServer;
 import org.elasticmq.rest.sqs.SQSRestServerBuilder;
 import org.junit.jupiter.api.AfterEach;
@@ -172,6 +176,41 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                         span.hasName("process child")
                             .hasParent(trace.getSpan(1))
                             .hasTotalAttributeCount(0)));
+  }
+
+  @Test
+  void testAbandonedIteratorDoesNotParentNextProcessSpan() {
+    assumeTrue(emitStableMessagingSemconv());
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "first"));
+    ReceiveMessageResult firstResponse = sqsClient.receiveMessage(queueUrl);
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "second"));
+    ReceiveMessageResult secondResponse = sqsClient.receiveMessage(queueUrl);
+
+    Iterator<Message> firstIterator = firstResponse.getMessages().iterator();
+    Iterator<Message> secondIterator = secondResponse.getMessages().iterator();
+    assertThat(firstIterator.hasNext()).isTrue();
+    firstIterator.next();
+    assertThat(secondIterator.hasNext()).isTrue();
+    secondIterator.next();
+    assertThat(secondIterator.hasNext()).isFalse();
+    assertThat(firstIterator.hasNext()).isFalse();
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("SQS.CreateQueue").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("publish testSdkSqs").hasNoParent(),
+                    span -> span.hasName("process testSdkSqs").hasParent(trace.getSpan(0))),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("publish testSdkSqs").hasNoParent(),
+                    span -> span.hasName("process testSdkSqs").hasParent(trace.getSpan(0))));
   }
 
   @Test

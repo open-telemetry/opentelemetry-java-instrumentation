@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -84,7 +85,7 @@ class SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Respo
   @Nullable
   @Override
   public Long getBatchMessageCount(Request<?> request, @Nullable Response<?> response) {
-    return null;
+    return emitStableMessagingSemconv() ? SqsAccess.getBatchMessageCount(request) : null;
   }
 
   @Override
