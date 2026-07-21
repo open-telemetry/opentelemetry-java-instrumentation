@@ -44,7 +44,7 @@ import javax.management.ObjectName;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public final class CassandraCompactionProgressHandler implements ExperimentalJmxMetricHandler {
+public class CassandraCompactionProgressHandler implements ExperimentalJmxMetricHandler {
 
   static final String HANDLER_NAME = "cassandra-compaction-progress";
   static final String METRIC_CURRENT = "cassandra.compaction.progress.bytes";
