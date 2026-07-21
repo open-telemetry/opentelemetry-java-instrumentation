@@ -180,6 +180,13 @@ public abstract class AbstractDubboRegistryTest {
                                     emitStableRpcSemconv()
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                                         : "$invoke"),
+                                equalTo(
+                                    maybeStablePeerService(),
+                                    hasServicePeerName()
+                                            && testLatestDeps()
+                                            && !emitStableRpcSemconv()
+                                        ? "test-peer-service"
+                                        : null),
                                 satisfies(
                                     SERVER_ADDRESS,
                                     val -> {
@@ -187,9 +194,13 @@ public abstract class AbstractDubboRegistryTest {
                                         val.isEqualTo(expectedServerAddress);
                                       } else {
                                         // registry override is gated behind the stable rpc semconv;
-                                        // under the old semconv the resolved provider host is used
-                                        val.isInstanceOf(String.class)
-                                            .isNotEqualTo(expectedServerAddress);
+                                        // under the old semconv the bare provider host is used, not
+                                        // the registry target (the exact host is environment
+                                        // dependent, so assert it is a plain host, not a registry
+                                        // url/target)
+                                        val.asString()
+                                            .isNotEqualTo(expectedServerAddress)
+                                            .doesNotContain("/");
                                       }
                                     }),
                                 equalTo(SERVER_PORT, emitStableRpcSemconv() ? null : (long) port),
