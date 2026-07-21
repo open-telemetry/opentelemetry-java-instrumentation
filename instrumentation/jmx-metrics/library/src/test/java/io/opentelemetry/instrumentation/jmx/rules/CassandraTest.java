@@ -7,19 +7,31 @@ package io.opentelemetry.instrumentation.jmx.rules;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
+import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 class CassandraTest extends TargetSystemTest {
 
   private static final int CASSANDRA_PORT = 9042;
+
+  // 4 batches x 2500 rows x 2 KB = ~20 MB; at 1 MB/s throttle compaction stays visible for ~20s,
+  // well within the 60s await in verifyMetrics().
+  private static final int COMPACTION_BATCHES = 4;
+  private static final int COMPACTION_ROWS_PER_BATCH = 2_500;
+  private static final int COMPACTION_VALUE_BYTES = 2_048;
+
+  private static final Logger logger = Logger.getLogger(CassandraTest.class.getName());
 
   @Test
   void testCassandraMetrics() {
@@ -47,7 +59,101 @@ class CassandraTest extends TargetSystemTest {
 
     startTarget(target);
 
+    seedCompactionData(target);
+    triggerCompaction(target);
+
     verifyMetrics(createMetricsVerifier());
+  }
+
+  private static void seedCompactionData(GenericContainer<?> target) {
+    try {
+      // Throttle compaction to 1 MB/s so it stays active long enough to be observed.
+      nodetool(target, "setcompactionthroughput", "1");
+
+      execOrThrow(
+          target,
+          "cqlsh",
+          "-e",
+          "CREATE KEYSPACE IF NOT EXISTS test"
+              + " WITH replication = {'class':'SimpleStrategy','replication_factor':1};"
+              + "CREATE TABLE IF NOT EXISTS test.data (id uuid PRIMARY KEY, val text)"
+              + " WITH compression = {'enabled':'false'};");
+      nodetool(target, "disableautocompaction", "test", "data");
+
+      for (int ignored = 0; ignored < COMPACTION_BATCHES; ignored++) {
+        seedCompactionBatch(target);
+        nodetool(target, "flush", "test", "data");
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException("Failed to seed Cassandra data", e);
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to seed Cassandra data", e);
+    }
+  }
+
+  private static void seedCompactionBatch(GenericContainer<?> target)
+      throws IOException, InterruptedException {
+    execOrThrow(
+        target,
+        "bash",
+        "-c",
+        // value is generated once and reused for all rows - only byte volume matters here.
+        "set -euo pipefail; "
+            + "value=$(head -c "
+            + COMPACTION_VALUE_BYTES
+            + " /dev/zero | tr '\\0' x); "
+            + "rm -f /tmp/cassandra-data.csv; "
+            + "for i in $(seq 1 "
+            + COMPACTION_ROWS_PER_BATCH
+            + "); do "
+            + "printf \"%s,%s\\n\" \"$(cat /proc/sys/kernel/random/uuid)\" \"$value\"; "
+            + "done > /tmp/cassandra-data.csv; "
+            + "cqlsh -e \"COPY test.data (id, val) FROM '/tmp/cassandra-data.csv' "
+            + "WITH HEADER = false AND MINBATCHSIZE = 1 AND MAXBATCHSIZE = 2;\"");
+  }
+
+  private static void triggerCompaction(GenericContainer<?> target) {
+    Thread compactionThread =
+        new Thread(
+            () -> {
+              try {
+                nodetool(target, "compact", "--", "test", "data");
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.warning("Background compaction interrupted");
+              } catch (Exception e) {
+                if (target.isRunning()) {
+                  logger.warning("Background compaction failed: " + e.getMessage());
+                }
+              }
+            },
+            "cassandra-compaction-trigger");
+    compactionThread.setDaemon(true);
+    compactionThread.start();
+  }
+
+  private static void nodetool(GenericContainer<?> target, String... args)
+      throws IOException, InterruptedException {
+    String[] command = new String[args.length + 1];
+    command[0] = "nodetool";
+    System.arraycopy(args, 0, command, 1, args.length);
+    execOrThrow(target, command);
+  }
+
+  private static void execOrThrow(GenericContainer<?> target, String... command)
+      throws IOException, InterruptedException {
+    Container.ExecResult result = target.execInContainer(command);
+    if (result.getExitCode() != 0) {
+      throw new IllegalStateException(
+          String.join(" ", command)
+              + " failed with exit code "
+              + result.getExitCode()
+              + "\nstdout:\n"
+              + result.getStdout()
+              + "\nstderr:\n"
+              + result.getStderr());
+    }
   }
 
   private static MetricsVerifier createMetricsVerifier() {
@@ -153,7 +259,31 @@ class CassandraTest extends TargetSystemTest {
                         errorAttributesGroup("read", "unavailable"),
                         errorAttributesGroup("write", "timeout"),
                         errorAttributesGroup("write", "failure"),
-                        errorAttributesGroup("write", "unavailable")));
+                        errorAttributesGroup("write", "unavailable")))
+        .add(
+            "cassandra.compaction.progress.bytes",
+            metric ->
+                metric
+                    .hasDescription("Bytes completed for in-flight compactions")
+                    .hasUnit("By")
+                    .isGauge()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("cassandra.compaction.task_type"),
+                            attribute("cassandra.keyspace", "test"),
+                            attribute("cassandra.table", "data"))))
+        .add(
+            "cassandra.compaction.progress.total",
+            metric ->
+                metric
+                    .hasDescription("Total bytes for in-flight compactions")
+                    .hasUnit("By")
+                    .isGauge()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attributeWithAnyValue("cassandra.compaction.task_type"),
+                            attribute("cassandra.keyspace", "test"),
+                            attribute("cassandra.table", "data"))));
   }
 
   private static AttributeMatcherGroup errorAttributesGroup(String operation, String status) {
