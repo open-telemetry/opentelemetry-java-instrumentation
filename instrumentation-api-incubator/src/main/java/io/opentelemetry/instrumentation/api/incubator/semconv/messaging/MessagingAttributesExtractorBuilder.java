@@ -38,6 +38,9 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> setOperationName(
       String operationName) {
+    if (!supportsStableSemconv) {
+      throw new IllegalStateException("Operation name is not configurable for legacy builders");
+    }
     this.operationName = requireNonNull(operationName, "operationName");
     return this;
   }

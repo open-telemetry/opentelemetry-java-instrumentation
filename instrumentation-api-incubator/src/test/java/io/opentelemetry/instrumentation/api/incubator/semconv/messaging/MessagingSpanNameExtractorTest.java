@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -37,6 +38,16 @@ class MessagingSpanNameExtractorTest {
         MessagingSpanNameExtractor.create(getter, MessageOperation.PUBLISH);
 
     assertThat(underTest.extract(message)).isEqualTo("destination publish");
+  }
+
+  @Test
+  void shouldRejectOperationNameForMessageOperation() {
+    assertThatThrownBy(
+            () ->
+                MessagingSpanNameExtractor.builder(getter, MessageOperation.PUBLISH)
+                    .setOperationName("send"))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Operation name is not configurable for legacy builders");
   }
 
   @ParameterizedTest

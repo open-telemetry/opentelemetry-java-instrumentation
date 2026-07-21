@@ -31,6 +31,9 @@ public final class MessagingSpanNameExtractorBuilder<REQUEST> {
   /** Configures the system-specific operation name used in the v1.43 messaging span name. */
   @CanIgnoreReturnValue
   public MessagingSpanNameExtractorBuilder<REQUEST> setOperationName(String operationName) {
+    if (!supportsStableSemconv) {
+      throw new IllegalStateException("Operation name is not configurable for legacy builders");
+    }
     this.operationName = requireNonNull(operationName, "operationName");
     return this;
   }

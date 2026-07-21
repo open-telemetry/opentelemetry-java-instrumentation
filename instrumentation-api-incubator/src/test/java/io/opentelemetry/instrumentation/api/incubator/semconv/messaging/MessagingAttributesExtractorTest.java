@@ -210,6 +210,17 @@ class MessagingAttributesExtractorTest {
             entry(MESSAGING_DESTINATION_ANONYMOUS, true), entry(MESSAGING_OPERATION, "publish"));
   }
 
+  @SuppressWarnings("deprecation") // testing deprecated API
+  @Test
+  void shouldRejectOperationNameForDeprecatedMessageOperation() {
+    assertThatThrownBy(
+            () ->
+                MessagingAttributesExtractor.builder(TestGetter.INSTANCE, MessageOperation.PUBLISH)
+                    .setOperationName("send"))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Operation name is not configurable for legacy builders");
+  }
+
   @Test
   void shouldExtractOperationNameWithoutOperationType() {
     MessagingOperationType operationType = null;
