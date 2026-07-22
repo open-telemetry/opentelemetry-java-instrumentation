@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.metrics;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.MetricsReporterList;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetryMetricsReporter;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetrySupplier;
@@ -50,6 +51,15 @@ public class KafkaMetricsUtil {
     config.put(
         OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME,
         INSTRUMENTATION_NAME);
+
+    String dropConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "kafka")
+            .getString("drop_metrics");
+
+    if (dropConfig != null) {
+      config.put(
+          OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_METRIC_DROP_FILTER, dropConfig);
+    }
   }
 
   private KafkaMetricsUtil() {}

@@ -47,6 +47,7 @@ public final class KafkaTelemetry {
   private final OpenTelemetry openTelemetry;
   private final KafkaProducerTelemetry producerTelemetry;
   private final KafkaConsumerTelemetry consumerTelemetry;
+  private final String metricDropFilterConfig;
 
   /** Returns a new {@link KafkaTelemetry} configured with the given {@link OpenTelemetry}. */
   public static KafkaTelemetry create(OpenTelemetry openTelemetry) {
@@ -65,7 +66,8 @@ public final class KafkaTelemetry {
       Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter,
       Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter,
       Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter,
-      boolean producerPropagationEnabled) {
+      boolean producerPropagationEnabled,
+      String metricDropFilterConfig) {
     this.openTelemetry = openTelemetry;
     this.producerTelemetry =
         new KafkaProducerTelemetry(
@@ -74,6 +76,7 @@ public final class KafkaTelemetry {
             producerPropagationEnabled);
     this.consumerTelemetry =
         new KafkaConsumerTelemetry(consumerReceiveInstrumenter, consumerProcessInstrumenter);
+    this.metricDropFilterConfig = metricDropFilterConfig;
   }
 
   /** Returns a decorated {@link Producer} that emits spans for each sent message. */
@@ -181,6 +184,13 @@ public final class KafkaTelemetry {
     config.put(
         OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME,
         KafkaTelemetryBuilder.INSTRUMENTATION_NAME);
+
+    if (metricDropFilterConfig != null) {
+      config.put(
+          OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_METRIC_DROP_FILTER,
+          metricDropFilterConfig);
+    }
+
     return Collections.unmodifiableMap(config);
   }
 
