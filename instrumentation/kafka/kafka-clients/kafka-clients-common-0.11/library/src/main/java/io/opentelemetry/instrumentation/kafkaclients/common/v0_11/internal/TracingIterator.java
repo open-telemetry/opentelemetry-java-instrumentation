@@ -44,7 +44,9 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
 
     Context receiveContext = consumerContext.getContext();
     // use the receive CONSUMER as parent if it's available
-    this.parentContext = receiveContext != null ? receiveContext : Context.current();
+    this.parentContext =
+        KafkaConsumerContextUtil.withoutLeakedProcessSpan(
+            receiveContext != null ? receiveContext : Context.current());
     this.consumerContext = consumerContext;
   }
 
@@ -80,6 +82,8 @@ public class TracingIterator<K, V> implements Iterator<ConsumerRecord<K, V>> {
     if (next != null && wrappingEnabled.getAsBoolean()) {
       currentRequest = KafkaProcessRequest.create(consumerContext, next);
       currentContext = instrumenter.start(parentContext, currentRequest);
+      currentContext =
+          KafkaConsumerContextUtil.withProcessParentSpan(currentContext, parentContext);
       currentScope = currentContext.makeCurrent();
     }
     return next;

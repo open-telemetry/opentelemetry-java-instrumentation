@@ -34,8 +34,16 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
   }
 
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
   check {
-    dependsOn(testExceptionSignalLogs)
+    dependsOn(testExceptionSignalLogs, testV3Preview)
   }
 }
 

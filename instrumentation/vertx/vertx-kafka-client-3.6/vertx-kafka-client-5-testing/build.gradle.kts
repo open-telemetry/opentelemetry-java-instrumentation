@@ -57,7 +57,24 @@ tasks {
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
   }
 
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+  }
+
+  val testV3PreviewNoReceiveTelemetry = register<Test>("testV3PreviewNoReceiveTelemetry") {
+    testClassesDirs = sourceSets["testNoReceiveTelemetry"].output.classesDirs
+    classpath = sourceSets["testNoReceiveTelemetry"].runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+  }
+
   check {
-    dependsOn(testing.suites, testExperimental)
+    dependsOn(testing.suites, testExperimental, testV3Preview, testV3PreviewNoReceiveTelemetry)
   }
 }

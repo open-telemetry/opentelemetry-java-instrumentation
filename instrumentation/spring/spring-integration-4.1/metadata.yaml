@@ -1,6 +1,8 @@
 display_name: Spring Integration
 description: This instrumentation enables producer and consumer messaging spans for Spring Integration.
 library_link: https://spring.io/projects/spring-integration
+semantic_conventions:
+  - MESSAGING_SPANS
 configurations:
   - name: otel.instrumentation.spring-integration.producer.enabled
     declarative_name: java.spring_integration.producer.enabled

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,14 +50,47 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
 
     AtomicReference<SpanData> producer = new AtomicReference<>();
 
+    if (emitStableMessagingSemconv()) {
+      testing()
+          .waitAndAssertSortedTraces(
+              orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
+              trace -> {
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("producer"),
+                    span ->
+                        span.hasName(spanName("testSingleTopic", "publish", "send"))
+                            .hasKind(SpanKind.PRODUCER)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(sendAttributes(record)),
+                    span ->
+                        span.hasName(spanName("testSingleTopic", "process", "process"))
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasParent(trace.getSpan(1))
+                            .hasAttributesSatisfyingExactly(processAttributes(record)),
+                    span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
+
+                producer.set(trace.getSpan(1));
+              },
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName(spanName("testSingleTopic", "receive", "poll"))
+                              .hasKind(SpanKind.CLIENT)
+                              .hasNoParent()
+                              .hasLinks(LinkData.create(producer.get().getSpanContext()))
+                              .hasAttributesSatisfyingExactly(
+                                  receiveAttributes("testSingleTopic"))));
+      return;
+    }
+
     testing()
         .waitAndAssertSortedTraces(
-            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+            orderByRootSpanKind(SpanKind.INTERNAL, receiveKind()),
             trace -> {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("producer"),
                   span ->
-                      span.hasName("testSingleTopic publish")
+                      span.hasName(spanName("testSingleTopic", "publish", "send"))
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(sendAttributes(record)));
@@ -66,12 +100,12 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("testSingleTopic receive")
-                            .hasKind(SpanKind.CONSUMER)
+                        span.hasName(spanName("testSingleTopic", "receive", "poll"))
+                            .hasKind(receiveKind())
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(receiveAttributes("testSingleTopic")),
                     span ->
-                        span.hasName("testSingleTopic process")
+                        span.hasName(spanName("testSingleTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(0))
                             .hasLinks(LinkData.create(producer.get().getSpanContext()))
@@ -91,14 +125,50 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
 
     AtomicReference<SpanData> producer = new AtomicReference<>();
 
+    if (emitStableMessagingSemconv()) {
+      testing()
+          .waitAndAssertSortedTraces(
+              orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
+              trace -> {
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("producer"),
+                    span ->
+                        span.hasName(spanName("testSingleTopic", "publish", "send"))
+                            .hasKind(SpanKind.PRODUCER)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(sendAttributes(record)),
+                    span ->
+                        span.hasName(spanName("testSingleTopic", "process", "process"))
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasParent(trace.getSpan(1))
+                            .hasStatus(StatusData.error())
+                            .hasException(new IllegalArgumentException("boom"))
+                            .hasAttributesSatisfyingExactly(
+                                withErrorType(processAttributes(record))),
+                    span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
+
+                producer.set(trace.getSpan(1));
+              },
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName(spanName("testSingleTopic", "receive", "poll"))
+                              .hasKind(SpanKind.CLIENT)
+                              .hasNoParent()
+                              .hasLinks(LinkData.create(producer.get().getSpanContext()))
+                              .hasAttributesSatisfyingExactly(
+                                  receiveAttributes("testSingleTopic"))));
+      return;
+    }
+
     testing()
         .waitAndAssertSortedTraces(
-            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+            orderByRootSpanKind(SpanKind.INTERNAL, receiveKind()),
             trace -> {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("producer"),
                   span ->
-                      span.hasName("testSingleTopic publish")
+                      span.hasName(spanName("testSingleTopic", "publish", "send"))
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(sendAttributes(record)));
@@ -108,18 +178,19 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("testSingleTopic receive")
-                            .hasKind(SpanKind.CONSUMER)
+                        span.hasName(spanName("testSingleTopic", "receive", "poll"))
+                            .hasKind(receiveKind())
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(receiveAttributes("testSingleTopic")),
                     span ->
-                        span.hasName("testSingleTopic process")
+                        span.hasName(spanName("testSingleTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(0))
                             .hasLinks(LinkData.create(producer.get().getSpanContext()))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
-                            .hasAttributesSatisfyingExactly(processAttributes(record)),
+                            .hasAttributesSatisfyingExactly(
+                                withErrorType(processAttributes(record))),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 }

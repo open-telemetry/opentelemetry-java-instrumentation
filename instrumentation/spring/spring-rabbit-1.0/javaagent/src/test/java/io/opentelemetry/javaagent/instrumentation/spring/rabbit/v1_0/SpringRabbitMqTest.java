@@ -5,15 +5,22 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_ANONYMOUS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
@@ -28,6 +35,8 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -39,7 +48,6 @@ import java.util.Map;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -108,22 +116,59 @@ class SpringRabbitMqTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "rabbitmq"),
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
-                satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
-    if (operation != null) {
-      assertions.add(equalTo(MESSAGING_OPERATION, operation));
-    }
+                satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
+                equalTo(MESSAGING_OPERATION, emitStableMessagingSemconv() ? null : operation),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null),
+                equalTo(
+                    MESSAGING_OPERATION_TYPE,
+                    emitStableMessagingSemconv()
+                        ? "publish".equals(operation) ? "send" : operation
+                        : null)));
     if (peerAddress != null) {
       assertions.add(equalTo(NETWORK_TYPE, "ipv4"));
       assertions.add(equalTo(NETWORK_PEER_ADDRESS, peerAddress));
       assertions.add(satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative));
+      assertions.add(equalTo(SERVER_ADDRESS, emitStableMessagingSemconv() ? peerAddress : null));
+      assertions.add(
+          satisfies(
+              SERVER_PORT,
+              val -> {
+                if (emitStableMessagingSemconv()) {
+                  val.isNotNegative();
+                } else {
+                  val.isNull();
+                }
+              }));
     }
     if (routingKey) {
       assertions.add(
           satisfies(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, AbstractStringAssert::isNotBlank));
     }
+    assertions.add(
+        satisfies(
+            longKey("messaging.rabbitmq.message.delivery_tag"),
+            val -> {
+              if (emitStableMessagingSemconv() && "process".equals(operation)) {
+                val.isNotNegative();
+              } else {
+                val.isNull();
+              }
+            }));
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
+    return assertions;
+  }
+
+  private static List<AttributeAssertion> getAnonymousQueueAssertions(
+      String queueName, String operation) {
+    List<AttributeAssertion> assertions =
+        getAssertions(
+            emitStableMessagingSemconv() ? queueName : "<default>", operation, ip, true, false);
+    assertions.add(
+        equalTo(
+            MESSAGING_DESTINATION_ANONYMOUS,
+            (emitStableMessagingSemconv() || "process".equals(operation)) ? true : null));
     return assertions;
   }
 
@@ -157,52 +202,69 @@ class SpringRabbitMqTest {
         });
     testing.waitAndAssertTraces(
         trace -> {
+          SpanData producerSpan = trace.getSpan(1);
+          SpanData firstProcessSpan = trace.getSpan(2);
+          SpanData secondProcessSpan = trace.getSpan(3);
+          SpanData rabbitProcessSpan =
+              "io.opentelemetry.rabbitmq-2.7"
+                      .equals(firstProcessSpan.getInstrumentationScopeInfo().getName())
+                  ? firstProcessSpan
+                  : secondProcessSpan;
+          SpanData springProcessSpan =
+              rabbitProcessSpan == firstProcessSpan ? secondProcessSpan : firstProcessSpan;
+
           trace.hasSpansSatisfyingExactlyInAnyOrder(
               span -> span.hasName("parent"),
               span ->
-                  span.hasName("<default> publish")
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "publish " + ConsumerConfig.TEST_QUEUE
+                              : "<default> publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          getAssertions("<default>", "publish", ip, true, testHeaders)),
+                          getAssertions(
+                              emitStableMessagingSemconv()
+                                  ? ConsumerConfig.TEST_QUEUE
+                                  : "<default>",
+                              "publish",
+                              ip,
+                              true,
+                              testHeaders)),
               // spring-cloud-stream-binder-rabbit listener puts all messages into a
               // BlockingQueue immediately after receiving
               // that's why the rabbitmq CONSUMER span will never have any child span (and
               // propagate context, actually)
-              span ->
-                  span.hasName("testQueue process")
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasParent(trace.getSpan(1))
-                      .hasAttributesSatisfyingExactly(
-                          getAssertions("<default>", "process", ip, true, testHeaders)),
-              // created by spring-rabbit instrumentation
-              span ->
-                  span.hasName("testQueue process")
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasParent(trace.getSpan(1))
-                      .hasAttributesSatisfyingExactly(
-                          getAssertions("testQueue", "process", null, false, testHeaders)),
               span -> {
-                // occasionally "testQueue process" spans have their order swapped, usually
-                // it would be
-                // 0 - parent
-                // 1 - <default> publish
-                // 2 - testQueue process (<default>)
-                // 3 - testQueue process (testQueue)
-                // 4 - consumer
-                // but it could also be
-                // 0 - parent
-                // 1 - <default> publish
-                // 2 - testQueue process (testQueue)
-                // 3 - consumer
-                // 4 - testQueue process (<default>)
-                // determine the correct parent span based on the span name
-                SpanData parentSpan = trace.getSpan(3);
-                if (!"testQueue process".equals(parentSpan.getName())) {
-                  parentSpan = trace.getSpan(2);
-                }
-                span.hasName("consumer").hasParent(parentSpan);
-              });
+                span.hasName(
+                        emitStableMessagingSemconv()
+                            ? "process " + ConsumerConfig.TEST_QUEUE
+                            : "testQueue process")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasParent(producerSpan)
+                    .hasAttributesSatisfyingExactly(
+                        getAssertions(
+                            emitStableMessagingSemconv() ? ConsumerConfig.TEST_QUEUE : "<default>",
+                            "process",
+                            ip,
+                            true,
+                            testHeaders));
+                verifyLink(span, null);
+              },
+              // created by spring-rabbit instrumentation
+              span -> {
+                span.hasName(
+                        emitStableMessagingSemconv()
+                            ? "process " + ConsumerConfig.TEST_QUEUE
+                            : "testQueue process")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasParent(producerSpan)
+                    .hasAttributesSatisfyingExactly(
+                        getAssertions(
+                            ConsumerConfig.TEST_QUEUE, "process", null, true, testHeaders));
+                verifyLink(span, null);
+              },
+              span -> span.hasName("consumer").hasParent(springProcessSpan));
         },
         trace -> {
           trace.hasSpansSatisfyingExactly(
@@ -217,32 +279,48 @@ class SpringRabbitMqTest {
         });
   }
 
-  @Test
-  void testAnonymousQueueSpanName() throws Exception {
+  @ParameterizedTest
+  @ValueSource(strings = {"anonymousQueue", "legacyAnonymousQueue"})
+  void testAnonymousQueueSpanName(String queueBeanName) throws Exception {
     Connection connection = connectionFactory.newConnection();
     cleanup.deferCleanup(connection);
     Channel channel = connection.createChannel();
     cleanup.deferCleanup(channel);
 
-    String anonymousQueueName = applicationContext.getBean(AnonymousQueue.class).getName();
+    String anonymousQueueName = applicationContext.getBean(queueBeanName, Queue.class).getName();
     applicationContext.getBean(AmqpTemplate.class).convertAndSend(anonymousQueueName, "test");
     applicationContext.getBean(AmqpTemplate.class).receive(anonymousQueueName, 5000);
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("<default> publish"),
+                span ->
+                    span.hasName(emitStableMessagingSemconv() ? "publish" : "<default> publish")
+                        .hasAttributesSatisfyingExactly(
+                            getAnonymousQueueAssertions(anonymousQueueName, "publish")),
                 // Verify that a constant span name is used instead of the randomly generated
                 // anonymous queue name
                 span ->
-                    span.hasName("<generated> process")
-                        .hasAttribute(
-                            equalTo(
-                                MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, anonymousQueueName))),
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "process"
+                                : queueBeanName.equals("anonymousQueue")
+                                    ? "<generated> process"
+                                    : anonymousQueueName + " process")
+                        .hasAttributesSatisfyingExactly(
+                            getAnonymousQueueAssertions(anonymousQueueName, "process"))),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.qos")),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.consume")),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.cancel")),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.ack")));
+  }
+
+  private static void verifyLink(SpanDataAssert span, SpanData linkSpan) {
+    if (linkSpan == null) {
+      span.hasTotalRecordedLinks(0);
+    } else {
+      span.hasLinks(LinkData.create(linkSpan.getSpanContext()));
+    }
   }
 
   @SpringBootConfiguration
@@ -250,6 +328,7 @@ class SpringRabbitMqTest {
   static class ConsumerConfig {
 
     static final String TEST_QUEUE = "testQueue";
+    static final String LEGACY_ANONYMOUS_QUEUE = "123e4567-e89b-12d3-a456-426614174000";
 
     @Bean
     Queue testQueue() {
@@ -259,6 +338,11 @@ class SpringRabbitMqTest {
     @Bean
     AnonymousQueue anonymousQueue() {
       return new AnonymousQueue();
+    }
+
+    @Bean
+    Queue legacyAnonymousQueue() {
+      return new Queue(LEGACY_ANONYMOUS_QUEUE);
     }
 
     @RabbitListener(queues = TEST_QUEUE)

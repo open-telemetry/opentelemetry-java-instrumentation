@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.context.Context;
@@ -12,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
@@ -75,11 +77,11 @@ public class KafkaConsumerTelemetry {
     if (records.isEmpty()) {
       return null;
     }
-    Context parentContext = Context.current();
+    Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(Context.current());
     KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumerGroup, clientId);
-    Context context = null;
+    Context receiveContext = null;
     if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
-      context =
+      receiveContext =
           InstrumenterUtil.startAndEnd(
               consumerReceiveInstrumenter,
               parentContext,
@@ -90,16 +92,12 @@ public class KafkaConsumerTelemetry {
               timer.now());
     }
 
-    // we're returning the context of the receive span so that process spans can use it as
-    // parent context even though the span has ended
-    // this is the suggested behavior according to the spec batch receive scenario:
-    // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#batch-receiving
-    return context;
+    return emitStableMessagingSemconv() ? parentContext : receiveContext;
   }
 
   public <K, V> void buildAndFinishErrorSpan(
       Consumer<K, V> consumer, Timer timer, Throwable error) {
-    Context parentContext = Context.current();
+    Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(Context.current());
     ConsumerRecords<K, V> records = new ConsumerRecords<>(emptyMap());
     KafkaReceiveRequest request =
         KafkaReceiveRequest.create(

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
@@ -100,7 +101,7 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
                     span ->
-                        span.hasName("sub publish")
+                        span.hasName(emitStableMessagingSemconv() ? "publish sub" : "sub publish")
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 messagingAttributes(
@@ -111,7 +112,7 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
                                         MessageHeaderUtil.headerAttributeKey("Test-Message-Header"),
                                         singletonList("test")))),
                     span ->
-                        span.hasName("sub process")
+                        span.hasName(emitStableMessagingSemconv() ? "process sub" : "sub process")
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(1))));
   }
@@ -141,11 +142,11 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
                     span ->
-                        span.hasName("sub publish")
+                        span.hasName(emitStableMessagingSemconv() ? "publish sub" : "sub publish")
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0)),
                     span ->
-                        span.hasName("sub process")
+                        span.hasName(emitStableMessagingSemconv() ? "process sub" : "sub process")
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(1)),
                     span ->
@@ -153,11 +154,11 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(2)),
                     span ->
-                        span.hasName("sub publish")
+                        span.hasName(emitStableMessagingSemconv() ? "publish sub" : "sub publish")
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0)),
                     span ->
-                        span.hasName("sub process")
+                        span.hasName(emitStableMessagingSemconv() ? "process sub" : "sub process")
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(4))
                             .hasAttributesSatisfyingExactly(
