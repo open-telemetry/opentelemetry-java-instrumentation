@@ -5,10 +5,11 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.assertTraceparentHeader;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -58,7 +59,7 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
                     span ->
-                        span.hasName("sub publish")
+                        span.hasName(emitStableMessagingSemconv() ? "publish sub" : "sub publish")
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -305,31 +306,35 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
                           // publisher: parent + publish
                           span -> span.hasName("parent").hasNoParent(),
                           span ->
-                              span.hasName("sub publish")
+                              span.hasName(
+                                      emitStableMessagingSemconv() ? "publish sub" : "sub publish")
                                   .hasKind(SpanKind.PRODUCER)
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
                                       messagingAttributes("publish", "sub", clientId)),
                           // subscriber: process + publish(response)
                           span ->
-                              span.hasName("sub process")
+                              span.hasName(
+                                      emitStableMessagingSemconv() ? "process sub" : "sub process")
                                   .hasKind(SpanKind.CONSUMER)
                                   .hasParent(trace.getSpan(1)),
                           span ->
-                              span.hasName("(temporary) publish")
+                              span.hasName(
+                                      emitStableMessagingSemconv()
+                                          ? "publish _INBOX."
+                                          : "(temporary) publish")
                                   .hasKind(SpanKind.PRODUCER)
                                   .hasParent(trace.getSpan(2)),
                           // publisher: process
                           span ->
-                              span.hasName("(temporary) process")
+                              span.hasName(
+                                      emitStableMessagingSemconv()
+                                          ? "process _INBOX."
+                                          : "(temporary) process")
                                   .hasKind(SpanKind.CONSUMER)
                                   .hasParent(trace.getSpan(3))
                                   .hasAttributesSatisfyingExactly(
-                                      messagingAttributes(
-                                          "process",
-                                          "(temporary)",
-                                          clientId,
-                                          equalTo(MESSAGING_DESTINATION_TEMPORARY, true)))));
+                                      messagingAttributes("process", "(temporary)", clientId))));
 
               trace.hasSpansSatisfyingExactly(asserts);
             });
@@ -348,11 +353,19 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
                     span ->
-                        span.hasName("sub publish")
+                        span.hasName(emitStableMessagingSemconv() ? "publish sub" : "sub publish")
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasException(exception)
                             .hasAttributesSatisfyingExactly(
-                                messagingAttributes("publish", "sub", clientId))));
+                                messagingAttributes(
+                                    "publish",
+                                    "sub",
+                                    clientId,
+                                    equalTo(
+                                        ERROR_TYPE,
+                                        emitStableMessagingSemconv()
+                                            ? exception.getClass().getName()
+                                            : null)))));
   }
 }
