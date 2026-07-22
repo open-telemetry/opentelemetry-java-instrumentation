@@ -82,12 +82,14 @@ jobs:
 
       - name: Build Linux docker images
         if: matrix.os != 'windows-latest'
+        shell: bash
         run: ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PextraTag=${NEEDS_PREPARE_OUTPUTS_TAG} -PsmokeTestServer=${{ matrix.smoke-test-server }}
         env:
           NEEDS_PREPARE_OUTPUTS_TAG: ${{ needs.prepare.outputs.tag }}
 
       - name: Build Windows docker images
         if: matrix.os == 'windows-latest'
+        shell: bash
         run: ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PextraTag=${NEEDS_PREPARE_OUTPUTS_TAG} -PsmokeTestServer=${{ matrix.smoke-test-server }}
         env:
           NEEDS_PREPARE_OUTPUTS_TAG: ${{ needs.prepare.outputs.tag }}
