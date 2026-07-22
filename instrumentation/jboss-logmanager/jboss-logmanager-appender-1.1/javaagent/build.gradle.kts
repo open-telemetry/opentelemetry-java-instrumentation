@@ -28,6 +28,7 @@ tasks {
   withType<Test>().configureEach {
     // TODO run tests both with and without experimental log attributes
     jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes=*")
+    jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental.exclude-mdc-attributes=excludedKey")
     jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental-log-attributes=true")
     jvmArgs("-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true")
   }

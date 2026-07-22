@@ -498,12 +498,22 @@ definitions:
       name: otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes
       declarative_name: java.jboss_logmanager.capture_mdc_attributes/development
       description: |
-        Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys.
+        Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys. Entries support glob wildcards ("*" and "?"). Use exclude-mdc-attributes to exclude specific keys.
       type: list
       default: ''
       examples:
       - custom-mdc-key
       - key1,key2,key3
+    otel.instrumentation.jboss-logmanager.experimental.exclude-mdc-attributes:
+      name: otel.instrumentation.jboss-logmanager.experimental.exclude-mdc-attributes
+      declarative_name: java.jboss_logmanager.exclude_mdc_attributes/development
+      description: |
+        Comma-separated list of MDC attribute keys to exclude from capture, supporting glob wildcards ("*" and "?"). Excludes only take effect alongside a non-empty capture-mdc-attributes list (e.g. capture-mdc-attributes="*" with exclude-mdc-attributes="secret*").
+      type: list
+      default: ''
+      examples:
+      - secret*
+      - key1,key2
     otel.instrumentation.jboss-logmanager.experimental.capture-template:
       name: otel.instrumentation.jboss-logmanager.experimental.capture-template
       declarative_name: java.jboss_logmanager.capture_template/development
@@ -646,25 +656,26 @@ definitions:
         Enables the capture of the Log4j marker attribute.
       type: boolean
       default: false
-    otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-436113d6:
+    otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes:
       name: otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
       declarative_name: java.log4j_appender.capture_mdc_attributes/development
       description: |
-        Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys.
-      type: list
-      default: ''
-      examples:
-      - custom-mdc-key
-      - key1,key2,key3
-    otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-e8e19d91:
-      name: otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
-      declarative_name: java.log4j_appender.capture_mdc_attributes/development
-      description: |
-        Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys.
+        Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys. Entries support glob wildcards ("*" and "?"). Use exclude-mdc-attributes to exclude specific keys.
       type: list
       default: ''
       examples:
       - '*'
+      - custom-mdc-key
+      - key1,key2,key3
+    otel.instrumentation.log4j-appender.experimental.exclude-mdc-attributes:
+      name: otel.instrumentation.log4j-appender.experimental.exclude-mdc-attributes
+      declarative_name: java.log4j_appender.exclude_mdc_attributes/development
+      description: |
+        Comma-separated list of MDC attribute keys to exclude from capture, supporting glob wildcards ("*" and "?"). Excludes only take effect alongside a non-empty capture-mdc-attributes list (e.g. capture-mdc-attributes="*" with exclude-mdc-attributes="secret*").
+      type: list
+      default: ''
+      examples:
+      - secret*
       - key1,key2
     otel.instrumentation.log4j-appender.experimental.capture-template:
       name: otel.instrumentation.log4j-appender.experimental.capture-template
@@ -740,12 +751,23 @@ definitions:
       name: otel.instrumentation.logback-appender.experimental.capture-mdc-attributes
       declarative_name: java.logback_appender.capture_mdc_attributes/development
       description: |
-        Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys.
+        Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys. Entries support glob wildcards ("*" and "?"). Use exclude-mdc-attributes to exclude specific keys.
       type: list
       default: ''
       examples:
+      - '*'
       - custom-mdc-key
       - key1,key2,key3
+    otel.instrumentation.logback-appender.experimental.exclude-mdc-attributes:
+      name: otel.instrumentation.logback-appender.experimental.exclude-mdc-attributes
+      declarative_name: java.logback_appender.exclude_mdc_attributes/development
+      description: |
+        Comma-separated list of MDC attribute keys to exclude from capture, supporting glob wildcards ("*" and "?"). Excludes only take effect alongside a non-empty capture-mdc-attributes list (e.g. capture-mdc-attributes="*" with exclude-mdc-attributes="secret*").
+      type: list
+      default: ''
+      examples:
+      - secret*
+      - key1,key2
     otel.instrumentation.logback-appender.experimental.capture-template:
       name: otel.instrumentation.logback-appender.experimental.capture-template
       declarative_name: java.logback_appender.capture_template/development
@@ -7513,6 +7535,7 @@ libraries:
   - otel.instrumentation.jboss-logmanager.experimental-log-attributes
   - otel.instrumentation.jboss-logmanager.experimental.capture-arguments
   - otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes
+  - otel.instrumentation.jboss-logmanager.experimental.exclude-mdc-attributes
   - otel.instrumentation.jboss-logmanager.experimental.capture-template
 - name: jboss-logmanager-mdc-1.1
   display_name: JBoss Log Manager
@@ -9551,7 +9574,8 @@ libraries:
   configuration_refs:
   - otel.instrumentation.log4j-appender.experimental-log-attributes
   - otel.instrumentation.log4j-appender.experimental.capture-code-attributes
-  - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-436113d6
+  - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
+  - otel.instrumentation.log4j-appender.experimental.exclude-mdc-attributes
 - name: log4j-appender-2.17
   display_name: Log4j
   description: |
@@ -9572,7 +9596,8 @@ libraries:
   - otel.instrumentation.log4j-appender.experimental.capture-code-attributes
   - otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes
   - otel.instrumentation.log4j-appender.experimental.capture-marker-attribute
-  - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-e8e19d91
+  - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
+  - otel.instrumentation.log4j-appender.experimental.exclude-mdc-attributes
   - otel.instrumentation.log4j-appender.experimental.capture-template
 - name: log4j-context-data-2.7
   display_name: Log4j
@@ -9648,6 +9673,7 @@ libraries:
   - otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments
   - otel.instrumentation.logback-appender.experimental.capture-marker-attribute
   - otel.instrumentation.logback-appender.experimental.capture-mdc-attributes
+  - otel.instrumentation.logback-appender.experimental.exclude-mdc-attributes
   - otel.instrumentation.logback-appender.experimental.capture-template
 - name: logback-mdc-1.0
   display_name: Logback

@@ -19,11 +19,13 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.internal.IncludeExcludePredicate;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import org.jboss.logmanager.ExtLogRecord;
 import org.jboss.logmanager.Level;
 import org.jboss.logmanager.Logger;
@@ -54,29 +56,23 @@ public class LoggingEventMapper {
     captureArguments = config.getBoolean("capture_arguments/development", false);
   }
 
-  private final List<AttributeKey<String>> captureMdcAttributeKeys;
-
-  // cached as an optimization
-  private final boolean captureAllMdcAttributes;
+  @Nullable private final Predicate<String> mdcAttributeFilter;
 
   private LoggingEventMapper() {
     List<String> captureMdcAttributes =
         DeclarativeConfigUtil.getInstrumentationConfig(
                 GlobalOpenTelemetry.get(), "jboss_logmanager")
             .getScalarList("capture_mdc_attributes/development", String.class, emptyList());
-    this.captureAllMdcAttributes =
-        captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
-    if (captureAllMdcAttributes) {
-      this.captureMdcAttributeKeys = emptyList();
-    } else {
-      List<AttributeKey<String>> keys = new ArrayList<>(captureMdcAttributes.size());
-      for (String key : captureMdcAttributes) {
-        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
-          keys.add(getMdcAttributeKey(key));
-        }
-      }
-      this.captureMdcAttributeKeys = keys;
-    }
+    List<String> excludeMdcAttributes =
+        DeclarativeConfigUtil.getInstrumentationConfig(
+                GlobalOpenTelemetry.get(), "jboss_logmanager")
+            .getScalarList("exclude_mdc_attributes/development", String.class, emptyList());
+    // an empty include list captures nothing; excludes only take effect alongside includes
+    this.mdcAttributeFilter =
+        captureMdcAttributes.isEmpty()
+            ? null
+            : IncludeExcludePredicate.createPatternMatching(
+                captureMdcAttributes, excludeMdcAttributes);
   }
 
   public void capture(Logger logger, ExtLogRecord record) {
@@ -144,19 +140,15 @@ public class LoggingEventMapper {
       builder.setEventName(otelEventName);
     }
 
-    if (captureAllMdcAttributes) {
-      for (Map.Entry<String, String> entry : context.entrySet()) {
-        String key = entry.getKey();
-        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
-          builder.setAttribute(getMdcAttributeKey(key), entry.getValue());
-        }
-      }
+    if (mdcAttributeFilter == null) {
       return;
     }
 
-    for (AttributeKey<String> attributeKey : captureMdcAttributeKeys) {
-      String value = context.get(attributeKey.getKey());
-      builder.setAttribute(attributeKey, value);
+    for (Map.Entry<String, String> entry : context.entrySet()) {
+      String key = entry.getKey();
+      if (!OTEL_EVENT_NAME.getKey().equals(key) && mdcAttributeFilter.test(key)) {
+        builder.setAttribute(getMdcAttributeKey(key), entry.getValue());
+      }
     }
   }
 

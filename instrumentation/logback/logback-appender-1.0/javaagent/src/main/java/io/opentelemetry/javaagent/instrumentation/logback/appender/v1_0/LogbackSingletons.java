@@ -39,11 +39,14 @@ public class LogbackSingletons {
         config.getBoolean("capture_logstash_structured_arguments/development", false);
     List<String> captureMdcAttributes =
         config.getScalarList("capture_mdc_attributes/development", String.class, emptyList());
+    List<String> excludeMdcAttributes =
+        config.getScalarList("exclude_mdc_attributes/development", String.class, emptyList());
 
     mapper =
         LoggingEventMapper.builder()
             .setCaptureExperimentalAttributes(captureExperimentalAttributes)
             .setCaptureMdcAttributes(captureMdcAttributes)
+            .setExcludeMdcAttributes(excludeMdcAttributes)
             .setCaptureCodeAttributes(captureCodeAttributes)
             .setCaptureMarkerAttribute(captureMarkerAttribute)
             .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
