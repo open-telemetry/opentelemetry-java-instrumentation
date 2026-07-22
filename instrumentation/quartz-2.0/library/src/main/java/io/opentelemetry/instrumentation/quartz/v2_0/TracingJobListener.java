@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.quartz.v2_0;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
@@ -15,6 +16,8 @@ import org.quartz.JobExecutionException;
 import org.quartz.JobListener;
 
 final class TracingJobListener implements JobListener {
+
+  static final ContextKey<Boolean> JOB_CONTEXT_KEY = ContextKey.named("quartz-job-execution");
 
   private static final VirtualField<JobExecutionContext, ContextAndScope> CONTEXT_VIRTUAL_FIELD =
       VirtualField.find(JobExecutionContext.class, ContextAndScope.class);
@@ -42,7 +45,7 @@ final class TracingJobListener implements JobListener {
       return;
     }
 
-    Context context = instrumenter.start(parentCtx, job);
+    Context context = instrumenter.start(parentCtx, job).with(JOB_CONTEXT_KEY, Boolean.TRUE);
 
     // Listeners are executed synchronously on the same thread starting here.
     // https://github.com/quartz-scheduler/quartz/blob/quartz-2.0.x/quartz/src/main/java/org/quartz/core/JobRunShell.java#L180

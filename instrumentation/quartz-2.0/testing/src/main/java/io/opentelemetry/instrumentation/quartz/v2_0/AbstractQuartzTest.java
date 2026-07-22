@@ -8,11 +8,14 @@ package io.opentelemetry.instrumentation.quartz.v2_0;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -32,14 +35,15 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.quartz.SchedulerListener;
 import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractQuartzTest {
 
-  protected static final boolean EXPERIMENTAL_ATTRIBUTES =
-      Boolean.getBoolean("otel.instrumentation.quartz.experimental-span-attributes");
+  protected static final boolean EMIT_EXPERIMENTAL_TELEMETRY =
+      Boolean.getBoolean("otel.instrumentation.quartz.emit-experimental-telemetry");
 
   private Scheduler scheduler;
 
@@ -68,7 +72,10 @@ public abstract class AbstractQuartzTest {
     scheduler.scheduleJob(jobDetail, trigger);
 
     List<AttributeAssertion> assertions = codeFunctionAssertions(SuccessfulJob.class, "execute");
-    assertions.add(equalTo(stringKey("job.system"), EXPERIMENTAL_ATTRIBUTES ? "quartz" : null));
+    assertions.add(equalTo(stringKey("job.system"), EMIT_EXPERIMENTAL_TELEMETRY ? "quartz" : null));
+    assertions.add(
+        equalTo(
+            stringKey("quartz.scheduler.name"), EMIT_EXPERIMENTAL_TELEMETRY ? "default" : null));
 
     getTesting()
         .waitAndAssertTraces(
@@ -95,7 +102,10 @@ public abstract class AbstractQuartzTest {
     scheduler.scheduleJob(jobDetail, trigger);
 
     List<AttributeAssertion> assertions = codeFunctionAssertions(FailingJob.class, "execute");
-    assertions.add(equalTo(stringKey("job.system"), EXPERIMENTAL_ATTRIBUTES ? "quartz" : null));
+    assertions.add(equalTo(stringKey("job.system"), EMIT_EXPERIMENTAL_TELEMETRY ? "quartz" : null));
+    assertions.add(
+        equalTo(
+            stringKey("quartz.scheduler.name"), EMIT_EXPERIMENTAL_TELEMETRY ? "default" : null));
 
     getTesting()
         .waitAndAssertTraces(
@@ -108,6 +118,68 @@ public abstract class AbstractQuartzTest {
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalStateException("Bad job"))
                             .hasAttributesSatisfyingExactly(assertions)));
+
+    assertThat(getTesting().logRecords()).isEmpty();
+  }
+
+  @Test
+  void schedulerError() throws SchedulerException {
+    SchedulerException cause = new SchedulerException("boom");
+
+    // A real scheduler error is hard to provoke deterministically in a unit test, so we invoke the
+    // registered SchedulerListener directly to verify the event it emits.
+    for (SchedulerListener listener : scheduler.getListenerManager().getSchedulerListeners()) {
+      listener.schedulerError("Something went wrong", cause);
+    }
+
+    getTesting()
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord
+                    .hasEventName("quartz.scheduler.exception")
+                    .hasSeverity(Severity.ERROR)
+                    .hasBody("Something went wrong")
+                    .hasException(cause)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("exception.type"), SchedulerException.class.getName()),
+                        equalTo(stringKey("exception.message"), "boom"),
+                        satisfies(stringKey("exception.stacktrace"), val -> val.isNotEmpty()),
+                        equalTo(
+                            stringKey("quartz.scheduler.name"),
+                            EMIT_EXPERIMENTAL_TELEMETRY ? "default" : null)));
+  }
+
+  @Test
+  void schedulerErrorDuringJobExecutionStillReported() throws SchedulerException {
+    Trigger trigger = newTrigger().build();
+    JobDetail jobDetail =
+        newJob()
+            .withIdentity("scheduler-error", "jobs")
+            .ofType(SchedulerErrorJob.class)
+            .build();
+
+    // A scheduler error raised while a job is executing on this thread (e.g. another listener
+    // failing) is not the job's own exception, so it must still be reported rather than suppressed
+    // as a duplicate.
+    scheduler.scheduleJob(jobDetail, trigger);
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("jobs.scheduler-error")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasNoParent()
+                            .hasStatus(StatusData.unset())));
+
+    getTesting()
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord
+                    .hasEventName("quartz.scheduler.exception")
+                    .hasSeverity(Severity.ERROR)
+                  .hasBody("Error executing Job (jobs.x: couldn't begin execution."));
   }
 
   private static Scheduler createScheduler() throws Exception {
@@ -130,6 +202,21 @@ public abstract class AbstractQuartzTest {
       try (ObjectOutputStream outputStream = new ObjectOutputStream(new ByteArrayOutputStream())) {
         outputStream.writeObject(context);
       } catch (IOException e) {
+        throw new IllegalStateException(e);
+      }
+    }
+  }
+
+  public static class SchedulerErrorJob implements Job {
+    @Override
+    public void execute(JobExecutionContext context) {
+      SchedulerException cause = new SchedulerException("listener boom");
+      try {
+        for (SchedulerListener listener :
+            context.getScheduler().getListenerManager().getSchedulerListeners()) {
+          listener.schedulerError("Error executing Job (jobs.x: couldn't begin execution.", cause);
+        }
+      } catch (SchedulerException e) {
         throw new IllegalStateException(e);
       }
     }
