@@ -5,15 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageProperties;
 
 class SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<Message, Void> {
+
+  @Nullable private static final Method getConsumerQueue = getConsumerQueueMethod();
 
   @Override
   public String getSystem(Message message) {
@@ -23,7 +29,52 @@ class SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<M
   @Override
   @Nullable
   public String getDestination(Message message) {
-    return message.getMessageProperties().getReceivedRoutingKey();
+    MessageProperties properties = message.getMessageProperties();
+    if (!emitStableMessagingSemconv()) {
+      return properties.getReceivedRoutingKey();
+    }
+
+    String exchange = properties.getReceivedExchange();
+    String routingKey = properties.getReceivedRoutingKey();
+    String queue = getConsumerQueue(properties);
+    StringBuilder destination = new StringBuilder();
+    appendDestinationPart(destination, exchange);
+    appendDestinationPart(destination, routingKey);
+    if (queue != null && !queue.equals(routingKey)) {
+      appendDestinationPart(destination, queue);
+    }
+    return destination.length() == 0 ? null : destination.toString();
+  }
+
+  @Nullable
+  private static Method getConsumerQueueMethod() {
+    try {
+      return MessageProperties.class.getMethod("getConsumerQueue");
+    } catch (NoSuchMethodException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static String getConsumerQueue(MessageProperties properties) {
+    if (getConsumerQueue == null) {
+      return null;
+    }
+    try {
+      return (String) getConsumerQueue.invoke(properties);
+    } catch (IllegalAccessException | InvocationTargetException ignored) {
+      return null;
+    }
+  }
+
+  private static void appendDestinationPart(StringBuilder destination, String part) {
+    if (part == null || part.isEmpty()) {
+      return;
+    }
+    if (destination.length() != 0) {
+      destination.append(':');
+    }
+    destination.append(part);
   }
 
   @Nullable
@@ -39,7 +90,34 @@ class SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<M
 
   @Override
   public boolean isAnonymousDestination(Message message) {
-    return false;
+    return isGeneratedQueueName(getConsumerQueue(message.getMessageProperties()));
+  }
+
+  private static boolean isGeneratedQueueName(@Nullable String queue) {
+    if (queue == null) {
+      return false;
+    }
+    if (queue.startsWith("amq.gen-") || queue.startsWith("spring.gen-")) {
+      return true;
+    }
+    return isCanonicalUuid(queue);
+  }
+
+  private static boolean isCanonicalUuid(String value) {
+    if (value.length() != 36) {
+      return false;
+    }
+    for (int i = 0; i < value.length(); i++) {
+      char ch = value.charAt(i);
+      if (i == 8 || i == 13 || i == 18 || i == 23) {
+        if (ch != '-') {
+          return false;
+        }
+      } else if (!((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f'))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @Override
