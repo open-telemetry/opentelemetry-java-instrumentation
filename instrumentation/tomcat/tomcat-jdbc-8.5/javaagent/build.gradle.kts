@@ -13,7 +13,22 @@ muzzle {
 
 dependencies {
   compileOnly("org.apache.tomcat:tomcat-jdbc:8.5.0")
+
+  bootstrap(project(":instrumentation:jdbc:bootstrap"))
+  compileOnly(
+    project(
+      path = ":instrumentation:jdbc:library",
+      configuration = "shadow",
+    ),
+  )
+
   testImplementation("org.apache.tomcat:tomcat-jdbc:8.5.0")
+  testInstrumentation(
+    project(
+      path = ":instrumentation:jdbc:library",
+      configuration = "shadow",
+    ),
+  )
 }
 
 tasks {
