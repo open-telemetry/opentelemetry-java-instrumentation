@@ -33,8 +33,8 @@ class HostIdResourceTest {
 
   @ParameterizedTest
   @MethodSource("createResourceLinuxCases")
-  void createResourceLinux(String expectedValue, Function<Path, List<String>> pathReader) {
-    HostIdResource hostIdResource = new HostIdResource(() -> "linux", pathReader, null);
+  void createResourceLinux(String expectedValue, Function<Path, List<String>> fileReader) {
+    HostIdResource hostIdResource = new HostIdResource(() -> "linux", fileReader, null, null);
     assertHostId(expectedValue, hostIdResource);
   }
 
@@ -42,6 +42,14 @@ class HostIdResourceTest {
     return Stream.of(
         argumentSet(
             "default", "test", (Function<Path, List<String>>) path -> singletonList("test")),
+        argumentSet(
+            "dbus fallback",
+            "dbus-id",
+            (Function<Path, List<String>>)
+                path ->
+                    path.endsWith("machine-id") && path.toString().contains("dbus")
+                        ? singletonList("dbus-id")
+                        : emptyList()),
         argumentSet(
             "empty file or error reading",
             null,
@@ -52,7 +60,7 @@ class HostIdResourceTest {
   @MethodSource("createResourceWindowsCases")
   void createResourceWindows(String expectedValue, Supplier<List<String>> queryWindowsRegistry) {
     HostIdResource hostIdResource =
-        new HostIdResource(() -> "Windows 95", null, queryWindowsRegistry);
+        new HostIdResource(() -> "Windows 95", null, queryWindowsRegistry, null);
     assertHostId(expectedValue, hostIdResource);
   }
 
@@ -67,6 +75,61 @@ class HostIdResourceTest {
                         "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography",
                         "    MachineGuid    REG_SZ    test")),
         argumentSet("short output", null, (Supplier<List<String>>) Collections::emptyList));
+  }
+
+  @ParameterizedTest
+  @MethodSource("createResourceMacOsCases")
+  void createResourceMacOs(String expectedValue, Function<List<String>, List<String>> command) {
+    HostIdResource hostIdResource = new HostIdResource(() -> "Mac OS X", null, null, command);
+    assertHostId(expectedValue, hostIdResource);
+  }
+
+  private static Stream<Arguments> createResourceMacOsCases() {
+    return Stream.of(
+        argumentSet(
+            "default",
+            "0123456789ABCDEF",
+            (Function<List<String>, List<String>>)
+                command ->
+                    asList(
+                        "+-o IOPlatformExpertDevice  <class IOPlatformExpertDevice>",
+                        "    \"IOPlatformUUID\" = \"0123456789ABCDEF\"")),
+        argumentSet(
+            "no uuid",
+            null,
+            (Function<List<String>, List<String>>)
+                command -> singletonList("+-o IOPlatformExpertDevice")),
+        argumentSet(
+            "empty output", null, (Function<List<String>, List<String>>) command -> emptyList()));
+  }
+
+  @ParameterizedTest
+  @MethodSource("createResourceBsdCases")
+  void createResourceBsd(
+      String expectedValue,
+      Function<Path, List<String>> fileReader,
+      Function<List<String>, List<String>> command) {
+    HostIdResource hostIdResource = new HostIdResource(() -> "FreeBSD", fileReader, null, command);
+    assertHostId(expectedValue, hostIdResource);
+  }
+
+  private static Stream<Arguments> createResourceBsdCases() {
+    return Stream.of(
+        argumentSet(
+            "hostid file",
+            "hostid-value",
+            (Function<Path, List<String>>) path -> singletonList("hostid-value"),
+            (Function<List<String>, List<String>>) command -> emptyList()),
+        argumentSet(
+            "kenv fallback",
+            "kenv-uuid",
+            (Function<Path, List<String>>) path -> emptyList(),
+            (Function<List<String>, List<String>>) command -> singletonList("kenv-uuid")),
+        argumentSet(
+            "nothing found",
+            null,
+            (Function<Path, List<String>>) path -> emptyList(),
+            (Function<List<String>, List<String>>) command -> emptyList()));
   }
 
   private static void assertHostId(String expectedValue, HostIdResource hostIdResource) {
