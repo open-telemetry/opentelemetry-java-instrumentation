@@ -73,9 +73,11 @@ public class AgentSpanTestingInstrumenter {
       SpanKey.HTTP_CLIENT,
       SpanKey.RPC_CLIENT,
       SpanKey.DB_CLIENT,
+      SpanKey.PRODUCER_CREATE,
       SpanKey.PRODUCER,
       SpanKey.CONSUMER_RECEIVE,
       SpanKey.CONSUMER_PROCESS,
+      SpanKey.CONSUMER_SETTLE,
     };
   }
 

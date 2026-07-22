@@ -119,7 +119,8 @@ class SpringIntegrationAndRabbitTest {
                             equalTo(MESSAGING_OPERATION, "process"),
                             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class))),
+                                MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class)),
+                            equalTo(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, "testTopic")),
                 span ->
                     span.hasName("consumer").hasParent(trace.getSpan(8)).hasTotalAttributeCount(0)),
         trace ->
