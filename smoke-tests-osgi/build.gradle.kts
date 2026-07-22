@@ -245,6 +245,19 @@ val apiSuiteTask = registerOsgiSuite(
   implementation(project(":instrumentation-annotations-support"))
 }
 
+// Suite: apiNoIncubator - proves the stable instrumentation-api bundle resolves without
+// instrumentation-api-incubator present, i.e. that its io.opentelemetry.instrumentation.api.incubator
+// import (used only via Class.forName in InternalInstrumenterCustomizerUtil) is optional. The api
+// suite always roots the incubator bundle, so it can't catch this. instrumentation-api does not
+// depend on instrumentation-api-incubator, so it is simply absent here. Resolve-only.
+val apiNoIncubatorSuiteTask = registerOsgiSuite(
+  "apiNoIncubator",
+  extraRunrequires = listOf("opentelemetry-instrumentation-api"),
+  resolveOnly = true,
+) {
+  implementation(project(":instrumentation-api"))
+}
+
 // Suite: apacheHttpClient - a representative library instrumentation bundle, exercised against the
 // stock Apache HttpComponents OSGi bundles - the exact same bundles AEM/Sling provide
 // (org.apache.httpcomponents.httpclient/httpcore), with commons-logging and Config Admin.
@@ -329,6 +342,7 @@ tasks {
     actions.clear()
     dependsOn(
       apiSuiteTask,
+      apiNoIncubatorSuiteTask,
       apacheHttpClientSuiteTask,
       logbackAppenderSuiteTask,
       logbackAppenderLegacySuiteTask,
