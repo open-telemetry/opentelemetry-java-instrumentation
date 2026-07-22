@@ -123,6 +123,14 @@ public abstract class AbstractHbaseTest {
     return 0;
   }
 
+  protected Class<? extends IOException> getTimeoutSpanExceptionType() {
+    return CallTimeoutException.class;
+  }
+
+  protected int getScanTraceCount() {
+    return 1;
+  }
+
   protected String putOperation() {
     return MUTATE;
   }
@@ -287,6 +295,7 @@ public abstract class AbstractHbaseTest {
       assertThatExceptionOfType(IOException.class).isThrownBy(() -> getWithPausedContainer(table));
     }
 
+    String timeoutSpanExceptionType = getTimeoutSpanExceptionType().getName();
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -314,9 +323,7 @@ public abstract class AbstractHbaseTest {
                                 equalTo(SERVER_PORT, REGION_SERVER_PORT),
                                 equalTo(
                                     ERROR_TYPE,
-                                    emitStableDatabaseSemconv()
-                                        ? CallTimeoutException.class.getName()
-                                        : null),
+                                    emitStableDatabaseSemconv() ? timeoutSpanExceptionType : null),
                                 satisfies(
                                     DB_USER,
                                     emitStableDatabaseSemconv()
@@ -327,9 +334,7 @@ public abstract class AbstractHbaseTest {
                                     event
                                         .hasName("exception")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                EXCEPTION_TYPE,
-                                                CallTimeoutException.class.getName()),
+                                            equalTo(EXCEPTION_TYPE, timeoutSpanExceptionType),
                                             satisfies(EXCEPTION_MESSAGE, AbstractAssert::isNotNull),
                                             satisfies(
                                                 EXCEPTION_STACKTRACE,
@@ -343,8 +348,8 @@ public abstract class AbstractHbaseTest {
     timeoutConfig.setInt(
         HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, GET_TIMEOUT_OPERATION_TIMEOUT_MILLIS);
     timeoutConfig.setInt(HConstants.HBASE_RPC_TIMEOUT_KEY, GET_TIMEOUT_RPC_TIMEOUT_MILLIS);
-    timeoutConfig.setInt(HConstants.HBASE_RPC_READ_TIMEOUT_KEY, GET_TIMEOUT_RPC_TIMEOUT_MILLIS);
-    timeoutConfig.setInt(HConstants.HBASE_RPC_WRITE_TIMEOUT_KEY, GET_TIMEOUT_RPC_TIMEOUT_MILLIS);
+    timeoutConfig.setInt("hbase.rpc.read.timeout", GET_TIMEOUT_RPC_TIMEOUT_MILLIS);
+    timeoutConfig.setInt("hbase.rpc.write.timeout", GET_TIMEOUT_RPC_TIMEOUT_MILLIS);
     return timeoutConfig;
   }
 
@@ -377,7 +382,12 @@ public abstract class AbstractHbaseTest {
       }
     }
     assertThat(rowIdList).containsExactly(SCAN_ROW);
-    testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, SCAN, REGION_SERVER_PORT, true));
+
+    List<Consumer<TraceAssert>> traceAssertions = new ArrayList<>();
+    for (int i = 0; i < getScanTraceCount(); i++) {
+      traceAssertions.add(traceAssertConsumer(TABLE_NAME, SCAN, REGION_SERVER_PORT, true));
+    }
+    testing().waitAndAssertTraces(traceAssertions);
   }
 
   @ParameterizedTest
