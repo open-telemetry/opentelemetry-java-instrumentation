@@ -16,6 +16,7 @@ import org.apache.dubbo.rpc.RpcInvocation;
 @AutoValue
 public abstract class DubboRequest {
 
+  @SuppressWarnings("deprecation") // RpcContext.getContext()
   static DubboRequest create(RpcInvocation invocation, RpcContext context) {
     // In dubbo 3 RpcContext delegates to a ThreadLocal context. We copy the url, remote address,
     // and registry address here to ensure we can access them from the thread that ends the span.
@@ -25,13 +26,24 @@ public abstract class DubboRequest {
         context.getUrl(),
         context.getRemoteAddress(),
         context.getLocalAddress(),
-        DubboRegistryUtil.extractRegistryAddress(invocation));
+        DubboRegistryUtil.extractRegistryAddress(invocation),
+        null);
+  }
+
+  public static DubboRequest createForUnknownService(
+      RpcInvocation invocation,
+      String originalFullMethodName,
+      @Nullable InetSocketAddress remoteAddress) {
+    return new AutoValue_DubboRequest(
+        invocation, null, null, remoteAddress, null, null, originalFullMethodName);
   }
 
   abstract RpcInvocation invocation();
 
+  @Nullable
   public abstract RpcContext context();
 
+  @Nullable
   public abstract URL url();
 
   @Nullable
@@ -42,4 +54,11 @@ public abstract class DubboRequest {
 
   @Nullable
   public abstract String registryAddress();
+
+  @Nullable
+  abstract String originalFullMethodName();
+
+  boolean isUnknownService() {
+    return originalFullMethodName() != null;
+  }
 }
