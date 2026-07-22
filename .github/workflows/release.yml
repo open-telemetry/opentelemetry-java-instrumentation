@@ -81,8 +81,15 @@ jobs:
           fi
 
           artifact_url="https://repo1.maven.org/maven2/io/opentelemetry/javaagent/opentelemetry-javaagent/$VERSION/opentelemetry-javaagent-$VERSION.jar"
-          if curl --silent --head --fail "$artifact_url" > /dev/null; then
+          if ! http_status=$(curl --silent --show-error --head --output /dev/null --write-out "%{http_code}" "$artifact_url"); then
+            echo "Failed to check whether version $VERSION is available from Maven Central"
+            exit 1
+          fi
+          if [[ $http_status == 200 ]]; then
             echo "Version $VERSION is already available from Maven Central"
+            exit 1
+          elif [[ $http_status != 404 ]]; then
+            echo "Unexpected response from Maven Central: HTTP $http_status"
             exit 1
           fi
 
