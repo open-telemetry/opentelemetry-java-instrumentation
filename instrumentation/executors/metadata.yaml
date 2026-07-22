@@ -22,3 +22,18 @@ configurations:
     description: Whether to instrument all classes that implement the Executor interface.
     type: boolean
     default: false
+  - name: otel.instrumentation.executors.name-normalization
+    declarative_name: java.executors.name_normalization
+    description: >
+      Determines how executor thread names are normalized. all replaces every group of digits with
+      *; trailing replaces only the final group; other values act as all.
+    type: string
+    default: all
+    examples:
+      - all
+      - trailing
+  - name: otel.instrumentation.executors-metrics.enabled
+    declarative_name: java.executors_metrics.enabled
+    description: Enables executor metrics instrumentation.
+    type: boolean
+    default: false
