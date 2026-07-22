@@ -37,21 +37,34 @@ public abstract class AbstractApacheDbcpInstrumentationTest {
 
   @Test
   void shouldReportMetrics() throws Exception {
-    // given
+    String dataSourceName = "dataSourceName";
+    BasicDataSource dataSource = createDataSource();
+    try {
+      configure(dataSource, dataSourceName);
+
+      dataSource.getConnection().close();
+
+      assertDataSourceMetrics(dataSourceName);
+    } finally {
+      dataSource.close();
+      shutdown(dataSource);
+    }
+
+    assertNoMetrics();
+  }
+
+  protected BasicDataSource createDataSource() throws Exception {
     when(driverMock.connect(any(), any())).thenReturn(connectionMock);
     when(connectionMock.isValid(anyInt())).thenReturn(true);
 
-    String dataSourceName = "dataSourceName";
     BasicDataSource dataSource = new BasicDataSource();
     dataSource.setDriver(driverMock);
     dataSource.setUrl("db:///url");
     dataSource.postDeregister();
-    configure(dataSource, dataSourceName);
+    return dataSource;
+  }
 
-    // when
-    dataSource.getConnection().close();
-
-    // then
+  protected void assertDataSourceMetrics(String dataSourceName) {
     DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, dataSourceName)
         .disableConnectionTimeouts()
         .disableCreateTime()
@@ -59,14 +72,11 @@ public abstract class AbstractApacheDbcpInstrumentationTest {
         .disableUseTime()
         .disablePendingRequests()
         .assertConnectionPoolEmitsMetrics();
+  }
 
-    // when
-    dataSource.close();
-    shutdown(dataSource);
-
+  protected void assertNoMetrics() {
     testing().clearData();
 
-    // then
     await()
         .untilAsserted(
             () ->

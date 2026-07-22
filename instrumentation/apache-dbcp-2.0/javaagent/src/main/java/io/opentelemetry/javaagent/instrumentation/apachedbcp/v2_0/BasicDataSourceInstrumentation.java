@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0;
 
+import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.getDataSourceName;
 import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -17,6 +18,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.apache.commons.dbcp2.OpenTelemetryBasicDataSourceUtil;
 
 class BasicDataSourceInstrumentation implements TypeInstrumentation {
   @Override
@@ -27,35 +29,36 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer typeTransformer) {
     typeTransformer.applyAdviceToMethod(
-        isPublic().and(named("preRegister")).and(takesArguments(2)),
-        getClass().getName() + "$PreRegisterAdvice");
+        named("startPoolMaintenance").and(takesArguments(0)),
+        getClass().getName() + "$StartPoolMaintenanceAdvice");
 
     typeTransformer.applyAdviceToMethod(
-        isPublic().and(named("postDeregister")), getClass().getName() + "$PostDeregisterAdvice");
+        isPublic().and(named("close")).and(takesArguments(0)),
+        getClass().getName() + "$CloseAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class PreRegisterAdvice {
+  public static class StartPoolMaintenanceAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.This BasicDataSource dataSource, @Advice.Return ObjectName objectName) {
-      String dataSourceName;
+    public static void onExit(@Advice.This BasicDataSource dataSource) {
+      String dataSourceName = null;
+      ObjectName objectName = OpenTelemetryBasicDataSourceUtil.getRegisteredJmxName(dataSource);
       if (objectName != null) {
         dataSourceName = objectName.getKeyProperty("name");
         if (dataSourceName == null) {
           dataSourceName = objectName.toString();
         }
-      } else {
-        // fallback just in case it is somehow registered without a name
-        dataSourceName = "dbcp2-" + System.identityHashCode(dataSource);
+      }
+      if (dataSourceName == null) {
+        dataSourceName = getDataSourceName(dataSource);
       }
       telemetry().registerMetrics(dataSource, dataSourceName);
     }
   }
 
   @SuppressWarnings("unused")
-  public static class PostDeregisterAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+  public static class CloseAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.This BasicDataSource dataSource) {
       telemetry().unregisterMetrics(dataSource);
     }
