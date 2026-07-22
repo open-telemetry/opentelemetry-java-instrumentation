@@ -27,7 +27,7 @@ final class ChatAttributesGetter
   }
 
   @Override
-  public String getSystem(ChatCompletionCreateParams request) {
+  public String getProviderName(ChatCompletionCreateParams request) {
     return GenAiAttributes.GenAiProviderNameIncubatingValues.OPENAI;
   }
 
