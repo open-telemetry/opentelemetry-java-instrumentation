@@ -1,6 +1,12 @@
 name: Release
 on:
   workflow_dispatch:
+    inputs:
+      recover_maven_central:
+        description: Republish only the main Maven Central bundle for an existing release
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -28,8 +34,8 @@ jobs:
     needs:
       - common
     outputs:
-      version: ${{ steps.create-github-release.outputs.version }}
-      prior-version: ${{ steps.create-github-release.outputs.prior-version }}
+      version: ${{ steps.release-info.outputs.version }}
+      prior-version: ${{ steps.release-info.outputs.prior-version }}
     steps:
       - run: |
           if [[ $GITHUB_REF_NAME != release/* ]]; then
@@ -63,6 +69,22 @@ jobs:
           fi
           echo "VERSION=$version" >> $GITHUB_ENV
           echo "PRIOR_VERSION=$prior_version" >> $GITHUB_ENV
+
+      - name: Validate Maven Central recovery
+        if: inputs.recover_maven_central
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! gh release view "v$VERSION" > /dev/null; then
+            echo "GitHub release v$VERSION does not exist"
+            exit 1
+          fi
+
+          artifact_url="https://repo1.maven.org/maven2/io/opentelemetry/javaagent/opentelemetry-javaagent/$VERSION/opentelemetry-javaagent-$VERSION.jar"
+          if curl --silent --head --fail "$artifact_url" > /dev/null; then
+            echo "Version $VERSION is already available from Maven Central"
+            exit 1
+          fi
 
         # check out main branch to verify there won't be problems with merging the change log
         # at the end of this workflow
@@ -107,6 +129,7 @@ jobs:
         run: ./gradlew assemble spdxSbom publishAllPublicationToReleaseRepoRepository generateReleaseBundle uploadReleaseBundle
 
       - name: Build and publish gradle plugins
+        if: ${{ !inputs.recover_maven_central }}
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
@@ -119,6 +142,7 @@ jobs:
         working-directory: gradle-plugins
 
       - name: Collect SBOMs
+        if: ${{ !inputs.recover_maven_central }}
         run: |
           mkdir sboms
           cp javaagent/build/spdx/*.spdx.json sboms
@@ -126,11 +150,13 @@ jobs:
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         name: Upload SBOMs
+        if: ${{ !inputs.recover_maven_central }}
         with:
           name: opentelemetry-java-instrumentation-SBOM
           path: "sboms/*.json"
 
       - name: Generate release notes
+        if: ${{ !inputs.recover_maven_central }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -157,18 +183,20 @@ jobs:
           fi
 
       - name: Simplify paths for attaching
+        if: ${{ !inputs.recover_maven_central }}
         run: |
           cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar opentelemetry-javaagent.jar
           cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar.asc opentelemetry-javaagent.jar.asc
 
       - uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        if: ${{ !inputs.recover_maven_central }}
         with:
           subject-path: |
             opentelemetry-javaagent.jar
             opentelemetry-java-instrumentation-SBOM.zip
 
-      - id: create-github-release
-        name: Create GitHub release
+      - name: Create GitHub release
+        if: ${{ !inputs.recover_maven_central }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -180,11 +208,15 @@ jobs:
                             opentelemetry-javaagent.jar.asc \
                             opentelemetry-java-instrumentation-SBOM.zip
 
+      - id: release-info
+        name: Set release information
+        run: |
           # these are used as job outputs
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "prior-version=$PRIOR_VERSION" >> $GITHUB_OUTPUT
 
   documentation-audit:
+    if: ${{ !inputs.recover_maven_central }}
     permissions:
       contents: read
       issues: write
