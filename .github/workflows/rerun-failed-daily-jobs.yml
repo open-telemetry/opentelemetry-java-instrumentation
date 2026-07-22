@@ -1,9 +1,9 @@
 name: Rerun failed daily jobs
 
 on:
-  # zizmor dangerous-triggers suppression rationale: uses only the trusted default-branch rerun script
-  # and treats the run ID as data.
-  workflow_run: # zizmor: ignore[dangerous-triggers]
+  workflow_run:
+    # zizmor: ignore[dangerous-triggers] Uses only the trusted default-branch rerun
+    # script and treats the run ID as data.
     workflows:
       - "Build (daily)"
       - "Build (daily --no-build-cache)"

@@ -58,8 +58,9 @@ jobs:
           # and so it uses more parallelism which uses more memory
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx8g /" gradle.properties
 
-      # zizmor cache-poisoning suppression rationale: this workflow analyzes release branches but does not build or publish release artifacts.
-      - name: Set up Gradle # zizmor: ignore[cache-poisoning]
+      - name: Set up Gradle
+        # zizmor: ignore[cache-poisoning] This workflow analyzes release branches
+        # but does not build or publish release artifacts.
         if: matrix.language == 'java'
         uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
         with:
