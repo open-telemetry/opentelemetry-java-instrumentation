@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7.internal;
 
 import static io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboRegistryUtil.buildServiceTarget;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
 
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
@@ -24,8 +25,10 @@ public final class DubboClientNetworkAttributesGetter
   @Nullable
   @Override
   public String getServerAddress(DubboRequest request) {
+    // the registry address is the logical target only under the stable rpc semconv; keep the
+    // resolved provider host under the old semconv to avoid changing already-emitted attributes
     String registryAddress = request.registryAddress();
-    if (registryAddress != null) {
+    if (registryAddress != null && emitStableRpcSemconv()) {
       return registryAddress + "/" + buildServiceTarget(request.url());
     }
     return request.url().getHost();
@@ -34,7 +37,7 @@ public final class DubboClientNetworkAttributesGetter
   @Nullable
   @Override
   public Integer getServerPort(DubboRequest request) {
-    if (request.registryAddress() != null) {
+    if (request.registryAddress() != null && emitStableRpcSemconv()) {
       return null;
     }
     int port = request.url().getPort();
