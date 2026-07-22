@@ -28,6 +28,8 @@ import javax.annotation.Nullable;
 final class ConfigPropertiesBackedDeclarativeConfigProperties
     implements DeclarativeConfigProperties {
 
+  private static final String JAVA_DECLARATIVE_PREFIX = "java.";
+  private static final String INSTRUMENTATION_PROPERTY_PREFIX = "otel.instrumentation.";
   private static final String JAVA_COMMON_SERVICE_PEER_MAPPING = "java.common.service_peer_mapping";
 
   private static final Map<String, String> SPECIAL_MAPPINGS;
@@ -94,16 +96,37 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   private final ConfigProperties configProperties;
   private final List<String> path;
+  private final String declarativePrefix;
+  private final String configPropertyPrefix;
+  private final boolean instrumentationConfig;
 
   static DeclarativeConfigProperties createInstrumentationConfig(
       ConfigProperties configProperties) {
-    return new ConfigPropertiesBackedDeclarativeConfigProperties(configProperties, emptyList());
+    return new ConfigPropertiesBackedDeclarativeConfigProperties(
+        configProperties,
+        emptyList(),
+        JAVA_DECLARATIVE_PREFIX,
+        INSTRUMENTATION_PROPERTY_PREFIX,
+        true);
+  }
+
+  static DeclarativeConfigProperties createComponentProperties(
+      ConfigProperties configProperties, String configPropertyPrefix) {
+    return new ConfigPropertiesBackedDeclarativeConfigProperties(
+        configProperties, emptyList(), "", configPropertyPrefix, false);
   }
 
   private ConfigPropertiesBackedDeclarativeConfigProperties(
-      ConfigProperties configProperties, List<String> path) {
+      ConfigProperties configProperties,
+      List<String> path,
+      String declarativePrefix,
+      String configPropertyPrefix,
+      boolean instrumentationConfig) {
     this.configProperties = configProperties;
     this.path = path;
+    this.declarativePrefix = declarativePrefix;
+    this.configPropertyPrefix = configPropertyPrefix;
+    this.instrumentationConfig = instrumentationConfig;
   }
 
   @Nullable
@@ -129,7 +152,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   public Long getLong(String name) {
     String fullPath = pathWithName(name);
 
-    if (fullPath.equals("java.jmx.discovery.delay")) {
+    if (instrumentationConfig && fullPath.equals("java.jmx.discovery.delay")) {
       Duration duration = configProperties.getDuration("otel.jmx.discovery.delay");
       if (duration != null) {
         return duration.toMillis();
@@ -144,6 +167,11 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     }
 
     return configProperties.getLong(resolvePropertyKey(name));
+  }
+
+  @Nullable
+  Duration getDuration(String name) {
+    return configProperties.getDuration(resolvePropertyKey(name));
   }
 
   @Nullable
@@ -162,7 +190,8 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   public DeclarativeConfigProperties getStructured(String name) {
     List<String> newPath = new ArrayList<>(path);
     newPath.add(name);
-    return new ConfigPropertiesBackedDeclarativeConfigProperties(configProperties, newPath);
+    return new ConfigPropertiesBackedDeclarativeConfigProperties(
+        configProperties, newPath, declarativePrefix, configPropertyPrefix, instrumentationConfig);
   }
 
   @Nullable
@@ -187,7 +216,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   @Override
   public List<DeclarativeConfigProperties> getStructuredList(String name) {
     String fullPath = pathWithName(name);
-    if (JAVA_COMMON_SERVICE_PEER_MAPPING.equals(fullPath)) {
+    if (instrumentationConfig && fullPath.equals(JAVA_COMMON_SERVICE_PEER_MAPPING)) {
       return ServicePeerMapping.getList(configProperties);
     }
     return null;
@@ -205,20 +234,32 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   }
 
   private String resolvePropertyKey(String name) {
-    return toPropertyKey(pathWithName(name));
+    return toPropertyKey(
+        pathWithName(name), declarativePrefix, configPropertyPrefix, instrumentationConfig);
   }
 
   static String toPropertyKey(String fullPath) {
-    String mappedKey = SPECIAL_MAPPINGS.get(fullPath);
-    if (mappedKey != null) {
-      return mappedKey;
+    return toPropertyKey(fullPath, JAVA_DECLARATIVE_PREFIX, INSTRUMENTATION_PROPERTY_PREFIX, true);
+  }
+
+  private static String toPropertyKey(
+      String fullPath,
+      String declarativePrefix,
+      String configPropertyPrefix,
+      boolean instrumentationConfig) {
+    if (instrumentationConfig) {
+      // Check explicit property mappings first
+      String mappedKey = SPECIAL_MAPPINGS.get(fullPath);
+      if (mappedKey != null) {
+        return mappedKey;
+      }
     }
 
-    if (!fullPath.startsWith("java.")) {
+    if (!declarativePrefix.isEmpty() && !fullPath.startsWith(declarativePrefix)) {
       return "";
     }
 
-    String[] segments = fullPath.substring(5).split("\\.");
+    String[] segments = fullPath.substring(declarativePrefix.length()).split("\\.");
     StringBuilder translatedPath = new StringBuilder();
 
     for (int i = 0; i < segments.length; i++) {
@@ -228,7 +269,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
       translatedPath.append(translateName(segments[i]));
     }
 
-    return "otel.instrumentation." + translatedPath;
+    return configPropertyPrefix + translatedPath;
   }
 
   private String pathWithName(String name) {

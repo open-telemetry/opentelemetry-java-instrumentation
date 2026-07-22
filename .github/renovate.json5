@@ -37,6 +37,13 @@
       groupName: 'weekly update',
     },
     {
+      // gh-aw updates need a dedicated branch so CI can regenerate their workflow lockfiles
+      matchPackageNames: [
+        'github/gh-aw',
+      ],
+      groupName: 'gh-aw',
+    },
+    {
       // do not update these workflow lockfiles
       matchManagers: [
         'github-actions',
@@ -397,6 +404,18 @@
     },
   ],
   customManagers: [
+    {
+      customType: 'regex',
+      datasourceTemplate: 'github-releases',
+      depNameTemplate: 'github/gh-aw',
+      versioningTemplate: 'semver-coerced',
+      managerFilePatterns: [
+        '.github/workflows/build-common.yml',
+      ],
+      matchStrings: [
+        'gh extension install github/gh-aw --pin (?<currentValue>v\\d+\\.\\d+\\.\\d+)',
+      ],
+    },
 // commented out to see whether weekly update passes without this block
 //    {
 //      customType: 'regex',

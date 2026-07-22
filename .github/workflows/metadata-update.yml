@@ -83,6 +83,8 @@ jobs:
         with:
           client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
 
       - name: Find or create metadata update branch
         if: steps.diffcheck.outputs.has_diff == 'true'
@@ -99,7 +101,18 @@ jobs:
         run: |
           BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
-          git commit -m "chore: update instrumentation list [automated]" || echo "No changes to commit."
+          git commit -m "chore: update instrumentation list [automated]"
+          # Metadata collection can run for hours, allowing workflow files on main to change after
+          # checkout. GitHub then rejects pushing the stale branch without workflows: write, even
+          # though the generated commit only changes docs/instrumentation-list.yaml. Merge instead
+          # of rebase so that commit remains tied to its source snapshot while the pushed branch
+          # contains the current workflow files.
+          git fetch origin main
+          if ! git merge --no-edit origin/main; then
+            echo "::error::Failed to merge the latest origin/main into the generated metadata commit."
+            git merge --abort
+            exit 1
+          fi
           git push --force origin "$BRANCH_NAME"
           git remote set-url origin "https://github.com/${{ github.repository }}.git"
 

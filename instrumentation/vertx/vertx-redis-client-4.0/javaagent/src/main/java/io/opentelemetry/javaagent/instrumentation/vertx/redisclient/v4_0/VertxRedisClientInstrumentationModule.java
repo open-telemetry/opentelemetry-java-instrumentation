@@ -11,12 +11,10 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class VertxRedisClientInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class VertxRedisClientInstrumentationModule extends InstrumentationModule {
 
   public VertxRedisClientInstrumentationModule() {
     super("vertx-redis-client", "vertx-redis-client-4.0", "vertx");
