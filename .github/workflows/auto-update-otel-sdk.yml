@@ -24,6 +24,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -o pipefail
+
           current_version=$(grep -Po "val otelSdkVersion = \"\K[0-9]+.[0-9]+.[0-9]+" \
                                 dependencyManagement/build.gradle.kts)
           latest_version=$(gh release view \
