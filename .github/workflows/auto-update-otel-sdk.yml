@@ -19,7 +19,8 @@ jobs:
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          persist-credentials: false
+          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
+          persist-credentials: true
 
       - id: check-versions
         name: Check versions
@@ -100,11 +101,9 @@ jobs:
         if: success() || failure()
         env:
           VERSION: ${{ needs.check-versions.outputs.latest-version }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # pull requests from secrets.GITHUB_TOKEN do not run workflows
-          OTELBOT_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
-          gh auth setup-git
           message="Update the OpenTelemetry SDK version to $VERSION"
           body="Update the OpenTelemetry SDK version to \`$VERSION\`."
           branch="otelbot/update-opentelemetry-sdk-to-${VERSION}"
@@ -114,7 +113,7 @@ jobs:
           git add licenses
           git commit -m "$message"
           git push --set-upstream origin $branch
-          GH_TOKEN="$OTELBOT_TOKEN" gh pr create \
+          gh pr create \
             --title "$message" \
             --body "$body" \
             --base main

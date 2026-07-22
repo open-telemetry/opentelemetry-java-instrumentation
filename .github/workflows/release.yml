@@ -71,7 +71,8 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: main
-          persist-credentials: false
+          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
+          persist-credentials: true
 
       - name: Check that change log update was merged to main
         run: |
@@ -274,11 +275,9 @@ jobs:
       - name: Create pull request against main
         env:
           VERSION: ${{ needs.release.outputs.version }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # pull requests from secrets.GITHUB_TOKEN do not run workflows
-          OTELBOT_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
-          gh auth setup-git
           message="Post-release updates for $VERSION"
           body="Post-release updates for \`$VERSION\`."
           branch="otelbot/update-apidiff-baseline-to-released-version-${VERSION}"
@@ -289,7 +288,7 @@ jobs:
           git add version.gradle.kts
           git commit -m "$message"
           git push --set-upstream origin $branch
-          GH_TOKEN="$OTELBOT_TOKEN" gh pr create \
+          gh pr create \
             --title "$message" \
             --body "$body" \
             --base main

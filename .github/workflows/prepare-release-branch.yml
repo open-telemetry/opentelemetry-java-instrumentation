@@ -37,13 +37,11 @@ jobs:
           # history is needed to allow fast-forward push below in case
           # re-running this workflow after merging additional PRs to main
           fetch-depth: 0
-          persist-credentials: false
+          # zizmor: ignore[artipacked] Credentials are required by the branch pushes below.
+          persist-credentials: true
 
       - name: Create release branch
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh auth setup-git
           version=$(.github/scripts/get-version.sh)
           version=${version//-SNAPSHOT/}
           if [[ $version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
@@ -82,18 +80,16 @@ jobs:
 
       - name: Create pull request against the release branch
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # pull requests from secrets.GITHUB_TOKEN do not run workflows
-          OTELBOT_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
-          gh auth setup-git
           message="Prepare release $VERSION"
           branch="otelbot/prepare-release-${VERSION}"
 
           git checkout -b $branch
           git commit -a -m "$message"
           git push --set-upstream origin $branch
-          GH_TOKEN="$OTELBOT_TOKEN" gh pr create \
+          gh pr create \
             --title "[$RELEASE_BRANCH_NAME] $message" \
             --body "$message." \
             --base $RELEASE_BRANCH_NAME
@@ -107,7 +103,8 @@ jobs:
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          persist-credentials: false
+          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
+          persist-credentials: true
 
       - name: Set environment variables
         run: |
@@ -145,11 +142,9 @@ jobs:
 
       - name: Create pull request against main
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # pull requests from secrets.GITHUB_TOKEN do not run workflows
-          OTELBOT_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
-          gh auth setup-git
           message="Update version to $NEXT_VERSION"
           body="Update version to \`$NEXT_VERSION\`."
           branch="otelbot/update-version-to-${NEXT_VERSION}"
@@ -157,7 +152,7 @@ jobs:
           git checkout -b $branch
           git commit -a -m "$message"
           git push --set-upstream origin $branch
-          GH_TOKEN="$OTELBOT_TOKEN" gh pr create \
+          gh pr create \
             --title "$message" \
             --body "$body" \
             --base main

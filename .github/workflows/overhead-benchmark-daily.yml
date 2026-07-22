@@ -22,7 +22,8 @@ jobs:
         with:
           ref: gh-pages
           path: gh-pages
-          persist-credentials: false
+          # zizmor: ignore[artipacked] Credentials are required by the gh-pages push below.
+          persist-credentials: true
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -61,10 +62,7 @@ jobs:
 
       - name: Commit updated results
         working-directory: ./gh-pages
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh auth setup-git
           git add benchmark-overhead/results
           git commit -m "update test result data"
           git push
