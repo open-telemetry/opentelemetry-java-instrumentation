@@ -182,7 +182,7 @@ public final class HostIdResource {
         break;
       }
     }
-    logger.fine("Failed to read macOS host id: no IOPlatformUUID found in ioreg output: " + lines);
+    logger.fine("Failed to read macOS host id: no IOPlatformUUID found in ioreg output");
     return Resource.empty();
   }
 
@@ -198,7 +198,7 @@ public final class HostIdResource {
         }
       }
     }
-    logger.fine("Failed to read Windows registry: No MachineGuid found in output: " + lines);
+    logger.fine("Failed to read Windows registry: No MachineGuid found in output");
     return Resource.empty();
   }
 
