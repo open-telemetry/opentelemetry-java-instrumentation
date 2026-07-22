@@ -201,7 +201,6 @@ tasks {
   }
 
   val generateReleaseBundle = register<Zip>("generateReleaseBundle") {
-    dependsOn(checkMavenPublicationCoordinates)
     dependsOn(project.tasks.withType<PublishToMavenRepository>())
     from("releaseRepo")
 
