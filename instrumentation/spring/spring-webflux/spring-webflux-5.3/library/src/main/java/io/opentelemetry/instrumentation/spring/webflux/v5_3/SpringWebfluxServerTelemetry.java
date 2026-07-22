@@ -34,19 +34,15 @@ public final class SpringWebfluxServerTelemetry {
 
   /** Returns a {@link WebFilter} that instruments HTTP server requests. */
   public WebFilter createWebFilter() {
+    ContextPropagationOperator.builder().build().registerOnEachOperator();
     return new TelemetryProducingWebFilter(serverInstrumenter);
   }
 
   /**
-   * Returns a {@link WebFilter} that instruments HTTP server requests. Also registers the Reactor
-   * context propagation hook for reactive pipelines.
+   * @deprecated Use {@link #createWebFilter()} instead.
    */
+  @Deprecated
   public WebFilter createWebFilterAndRegisterReactorHook() {
-    registerReactorHook();
     return this.createWebFilter();
-  }
-
-  private static void registerReactorHook() {
-    ContextPropagationOperator.builder().build().registerOnEachOperator();
   }
 }

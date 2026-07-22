@@ -43,6 +43,7 @@ public final class SpringWebfluxClientTelemetry {
    * @param exchangeFilterFunctions existing filter functions
    */
   public void addFilter(List<ExchangeFilterFunction> exchangeFilterFunctions) {
+    ContextPropagationOperator.builder().build().registerOnEachOperator();
     for (ExchangeFilterFunction filterFunction : exchangeFilterFunctions) {
       if (filterFunction instanceof WebClientTracingFilter) {
         return;
@@ -52,18 +53,11 @@ public final class SpringWebfluxClientTelemetry {
   }
 
   /**
-   * Adds an instrumented {@link ExchangeFilterFunction} to the provided list. Also registers the
-   * Reactor context propagation hook for reactive pipelines.
-   *
-   * @param exchangeFilterFunctions existing filter functions
+   * @deprecated Use {@link #addFilter(List)} instead.
    */
+  @Deprecated
   public void addFilterAndRegisterReactorHook(
       List<ExchangeFilterFunction> exchangeFilterFunctions) {
-    registerReactorHook();
     addFilter(exchangeFilterFunctions);
-  }
-
-  private static void registerReactorHook() {
-    ContextPropagationOperator.builder().build().registerOnEachOperator();
   }
 }
