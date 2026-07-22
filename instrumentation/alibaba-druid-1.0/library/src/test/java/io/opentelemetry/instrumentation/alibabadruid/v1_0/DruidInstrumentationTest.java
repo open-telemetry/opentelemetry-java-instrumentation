@@ -32,7 +32,9 @@ class DruidInstrumentationTest extends AbstractDruidInstrumentationTest {
 
   @Override
   protected void configure(DruidDataSource dataSource, String name) throws Exception {
-    ObjectName objectName = new ObjectName("com.alibaba.druid:type=DruidDataSource,id=" + name);
+    String dataSourceName = name == null ? "unknown" : name;
+    ObjectName objectName =
+        new ObjectName("com.alibaba.druid:type=DruidDataSource,id=" + dataSourceName);
     telemetry.registerMetrics(
         dataSource, objectName.getKeyProperty("type") + "-" + objectName.getKeyProperty("id"));
   }
