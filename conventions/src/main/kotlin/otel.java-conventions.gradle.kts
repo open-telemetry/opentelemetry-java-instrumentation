@@ -326,10 +326,12 @@ tasks.withType<Test>().configureEach {
   val testJavaVersion = otelProps.testJavaVersion
   val useJ9 = otelProps.testJavaVM == "openj9"
   if (useJ9 && testJavaVersion != null && testJavaVersion.isJava8) {
-    jvmArgs("-Xjit:exclude={io/opentelemetry/testing/internal/io/netty/buffer/HeapByteBufUtil.*}," +
+    jvmArgs(
+      "-Xjit:exclude={io/opentelemetry/testing/internal/io/netty/buffer/HeapByteBufUtil.*}," +
         "exclude={io/opentelemetry/testing/internal/io/netty/buffer/UnpooledHeapByteBuf.*}," +
         "exclude={io/opentelemetry/testing/internal/io/netty/buffer/AbstractByteBuf.*}," +
-        "exclude={io/opentelemetry/testing/internal/io/netty/handler/codec/base64/Base64.*}")
+        "exclude={io/opentelemetry/testing/internal/io/netty/handler/codec/base64/Base64.*}"
+    )
   }
 
   // There's no real harm in setting this for all tests even if any happen to not be using context
@@ -365,7 +367,7 @@ tasks.withType<Test>().configureEach {
 
   develocity.testRetry {
     // You can see tests that were retried by this mechanism in the collected test reports and build scans.
-    maxRetries.set(maxTestRetries);
+    maxRetries.set(maxTestRetries)
   }
 
   reports {
