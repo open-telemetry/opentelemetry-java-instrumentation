@@ -569,6 +569,7 @@
     "software.amazon.awssdk:kinesis#+": "2.48.1",
     "software.amazon.awssdk:lambda#+": "2.48.1",
     "software.amazon.awssdk:rds#+": "2.48.1",
+    "software.amazon.awssdk:rdsdata#+": "2.48.2",
     "software.amazon.awssdk:s3#+": "2.48.1",
     "software.amazon.awssdk:secretsmanager#+": "2.48.1",
     "software.amazon.awssdk:ses#+": "2.48.1",

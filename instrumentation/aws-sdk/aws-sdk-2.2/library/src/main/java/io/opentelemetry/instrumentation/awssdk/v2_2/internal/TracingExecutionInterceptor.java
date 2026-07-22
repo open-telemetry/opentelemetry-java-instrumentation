@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.DYNAMODB;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.RDS_DATA;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static java.util.stream.Collectors.joining;
 
@@ -79,6 +80,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private final Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> rdsDataInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter;
   private final Logger eventLogger;
 
@@ -116,6 +118,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter,
       Instrumenter<ExecutionAttributes, Response> producerInstrumenter,
       Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter,
+      Instrumenter<ExecutionAttributes, Response> rdsDataInstrumenter,
       Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter,
       Logger eventLogger,
       boolean captureExperimentalSpanAttributes,
@@ -128,6 +131,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
     this.producerInstrumenter = producerInstrumenter;
     this.dynamoDbInstrumenter = dynamoDbInstrumenter;
+    this.rdsDataInstrumenter = rdsDataInstrumenter;
     this.bedrockRuntimeInstrumenter = bedrockRuntimeInstrumenter;
     this.eventLogger = eventLogger;
     this.messagingPropagator = messagingPropagator;
@@ -480,6 +484,9 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
     if (awsSdkRequest != null && awsSdkRequest.type() == DYNAMODB) {
       return dynamoDbInstrumenter;
+    }
+    if (awsSdkRequest != null && awsSdkRequest.type() == RDS_DATA) {
+      return rdsDataInstrumenter;
     }
     return requestInstrumenter;
   }
