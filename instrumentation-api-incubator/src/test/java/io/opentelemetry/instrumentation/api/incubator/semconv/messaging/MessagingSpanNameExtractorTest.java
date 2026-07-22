@@ -5,11 +5,17 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -22,36 +28,128 @@ class MessagingSpanNameExtractorTest {
 
   @Mock MessagingAttributesGetter<Message, Void> getter;
 
+  @Test
+  void shouldKeepLegacyNameForMessageOperation() {
+    Message message = new Message();
+    when(getter.isTemporaryDestination(message)).thenReturn(false);
+    when(getter.getDestination(message)).thenReturn("destination");
+
+    SpanNameExtractor<Message> underTest =
+        MessagingSpanNameExtractor.create(getter, MessageOperation.PUBLISH);
+
+    assertThat(underTest.extract(message)).isEqualTo("destination publish");
+  }
+
+  @Test
+  void shouldRejectOperationNameForMessageOperation() {
+    assertThatThrownBy(
+            () ->
+                MessagingSpanNameExtractor.builder(getter, MessageOperation.PUBLISH)
+                    .setOperationName("send"))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Operation name is not configurable for legacy builders");
+  }
+
   @ParameterizedTest
   @MethodSource("spanNameParams")
   void shouldExtractSpanName(
       boolean isTemporaryQueue,
+      boolean isAnonymousQueue,
       String destinationName,
-      MessageOperation operation,
-      String expectedSpanName) {
+      String destinationTemplate,
+      MessagingOperationType operationType,
+      String operationName,
+      String oldSpanName,
+      String spanName) {
     // given
     Message message = new Message();
 
-    if (isTemporaryQueue) {
-      when(getter.isTemporaryDestination(message)).thenReturn(true);
+    if (emitStableMessagingSemconv()) {
+      when(getter.getDestinationTemplate(message)).thenReturn(destinationTemplate);
+      if (destinationTemplate == null) {
+        when(getter.isTemporaryDestination(message)).thenReturn(isTemporaryQueue);
+        if (!isTemporaryQueue) {
+          when(getter.isAnonymousDestination(message)).thenReturn(isAnonymousQueue);
+          if (!isAnonymousQueue) {
+            when(getter.getDestination(message)).thenReturn(destinationName);
+          }
+        }
+      }
     } else {
-      when(getter.getDestination(message)).thenReturn(destinationName);
+      when(getter.isTemporaryDestination(message)).thenReturn(isTemporaryQueue);
+      if (!isTemporaryQueue) {
+        when(getter.getDestination(message)).thenReturn(destinationName);
+      }
     }
 
-    SpanNameExtractor<Message> underTest = MessagingSpanNameExtractor.create(getter, operation);
+    SpanNameExtractor<Message> underTest =
+        MessagingSpanNameExtractor.builder(getter, operationType)
+            .setOperationName(operationName)
+            .build();
 
     // when
-    String spanName = underTest.extract(message);
+    String actualSpanName = underTest.extract(message);
 
     // then
-    assertThat(spanName).isEqualTo(expectedSpanName);
+    assertThat(actualSpanName).isEqualTo(emitStableMessagingSemconv() ? spanName : oldSpanName);
+    if (emitStableMessagingSemconv() && destinationTemplate != null) {
+      verify(getter, never()).isTemporaryDestination(message);
+      verify(getter, never()).isAnonymousDestination(message);
+    }
   }
 
   static Stream<Arguments> spanNameParams() {
     return Stream.of(
-        Arguments.of(false, "destination", MessageOperation.PUBLISH, "destination publish"),
-        Arguments.of(true, null, MessageOperation.PROCESS, "(temporary) process"),
-        Arguments.of(false, null, MessageOperation.RECEIVE, "unknown receive"));
+        argumentSet(
+            "operation name override",
+            false,
+            false,
+            "destination",
+            null,
+            MessagingOperationType.SEND,
+            "send",
+            "destination publish",
+            "send destination"),
+        argumentSet(
+            "temporary destination",
+            true,
+            false,
+            "generated",
+            "generated-{id}",
+            MessagingOperationType.PROCESS,
+            "process",
+            "(temporary) process",
+            "process generated-{id}"),
+        argumentSet(
+            "missing destination",
+            false,
+            false,
+            null,
+            null,
+            MessagingOperationType.RECEIVE,
+            "receive",
+            "unknown receive",
+            "receive"),
+        argumentSet(
+            "destination template",
+            false,
+            false,
+            "customer-42",
+            "customer-{id}",
+            MessagingOperationType.SEND,
+            "send",
+            "customer-42 publish",
+            "send customer-{id}"),
+        argumentSet(
+            "anonymous destination",
+            false,
+            true,
+            "generated",
+            "generated-{id}",
+            MessagingOperationType.PROCESS,
+            "process",
+            "generated process",
+            "process generated-{id}"));
   }
 
   static class Message {}
