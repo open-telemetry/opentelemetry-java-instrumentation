@@ -32,6 +32,7 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -138,7 +139,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasLinksSatisfying(links -> assertThat(links).isEmpty())
-                        .hasAttributesSatisfyingExactly(receiveAttributes()),
+                        .hasAttributesSatisfyingExactly(interceptorReceiveAttributes()),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
@@ -159,49 +160,64 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
   }
 
   private static List<AttributeAssertion> publishAttributes(boolean experimental) {
-    return asList(
-        equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
-        equalTo(MESSAGING_SYSTEM, "kafka"),
-        equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-        equalTo(MESSAGING_OPERATION, "publish"),
-        satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
-        satisfies(
-            stringKey("messaging.kafka.bootstrap.servers"),
-            val -> {
-              if (experimental) {
-                val.matches("^localhost:\\d+(,localhost:\\d+)*$");
-              }
-            }));
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
+                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                equalTo(MESSAGING_OPERATION, "publish"),
+                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+                satisfies(
+                    stringKey("messaging.kafka.bootstrap.servers"),
+                    val -> {
+                      if (experimental) {
+                        val.matches("^localhost:\\d+(,localhost:\\d+)*$");
+                      }
+                    })));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
+    return assertions;
   }
 
-  private static List<AttributeAssertion> receiveAttributes() {
-    return asList(
-        equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
-        equalTo(MESSAGING_SYSTEM, "kafka"),
-        equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-        equalTo(MESSAGING_OPERATION, "receive"),
-        equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
-        satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
-        equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
+  private static List<AttributeAssertion> interceptorReceiveAttributes() {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
+                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                equalTo(MESSAGING_OPERATION, "receive"),
+                equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
+                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
+                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
+    return assertions;
   }
 
   private static List<AttributeAssertion> processAttributes(boolean experimental) {
-    return asList(
-        equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
-        equalTo(MESSAGING_SYSTEM, "kafka"),
-        equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-        equalTo(MESSAGING_OPERATION, "process"),
-        equalTo(MESSAGING_MESSAGE_BODY_SIZE, greeting.getBytes(UTF_8).length),
-        satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
-        satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
-        equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
-        satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
-        satisfies(
-            longKey("kafka.record.queue_time_ms"),
-            val -> {
-              if (experimental) {
-                val.isNotNegative();
-              }
-            }));
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
+                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                equalTo(MESSAGING_OPERATION, "process"),
+                equalTo(MESSAGING_MESSAGE_BODY_SIZE, greeting.getBytes(UTF_8).length),
+                satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
+                satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
+                equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
+                satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
+                satisfies(
+                    longKey("kafka.record.queue_time_ms"),
+                    val -> {
+                      if (experimental) {
+                        val.isNotNegative();
+                      }
+                    })));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
+    return assertions;
   }
 }

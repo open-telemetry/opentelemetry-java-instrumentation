@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 import java.util.Iterator;
 import java.util.Map;
 import javax.annotation.Nullable;
+import org.apache.kafka.clients.Metadata;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.Metric;
@@ -22,22 +23,48 @@ public final class KafkaProducerRequest {
   private final ProducerRecord<?, ?> record;
   @Nullable private final String clientId;
   @Nullable private final String bootstrapServers;
+  @Nullable private final String clusterId;
 
   public static KafkaProducerRequest create(
       ProducerRecord<?, ?> record, Producer<?, ?> producer, @Nullable String bootstrapServers) {
-    return create(record, extractClientId(producer), bootstrapServers);
+    return new KafkaProducerRequest(
+        record,
+        extractClientId(producer),
+        bootstrapServers,
+        KafkaUtil.clusterIdFromMetadata(KafkaUtil.extractProducerMetadata(producer)));
   }
 
   public static KafkaProducerRequest create(
       ProducerRecord<?, ?> record, @Nullable String clientId, @Nullable String bootstrapServers) {
-    return new KafkaProducerRequest(record, clientId, bootstrapServers);
+    return new KafkaProducerRequest(record, clientId, bootstrapServers, null);
+  }
+
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      @Nullable String clusterId) {
+    return new KafkaProducerRequest(record, clientId, bootstrapServers, clusterId);
+  }
+
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      @Nullable Metadata kafkaMetadata) {
+    return new KafkaProducerRequest(
+        record, clientId, bootstrapServers, KafkaUtil.clusterIdFromMetadata(kafkaMetadata));
   }
 
   private KafkaProducerRequest(
-      ProducerRecord<?, ?> record, @Nullable String clientId, @Nullable String bootstrapServers) {
+      ProducerRecord<?, ?> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      @Nullable String clusterId) {
     this.record = record;
     this.clientId = clientId;
     this.bootstrapServers = bootstrapServers;
+    this.clusterId = clusterId;
   }
 
   public ProducerRecord<?, ?> getRecord() {
@@ -52,6 +79,11 @@ public final class KafkaProducerRequest {
   @Nullable
   public String getBootstrapServers() {
     return bootstrapServers;
+  }
+
+  @Nullable
+  public String getClusterId() {
+    return clusterId;
   }
 
   @Nullable

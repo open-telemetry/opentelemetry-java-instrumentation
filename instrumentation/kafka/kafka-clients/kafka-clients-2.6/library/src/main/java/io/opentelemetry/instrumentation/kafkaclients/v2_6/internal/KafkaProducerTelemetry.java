@@ -45,10 +45,14 @@ public class KafkaProducerTelemetry {
    * @param record the producer record to inject span info.
    */
   public <K, V> ProducerRecord<K, V> buildAndInjectSpan(
-      ProducerRecord<K, V> record, @Nullable String clientId, @Nullable String bootstrapServers) {
+      ProducerRecord<K, V> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      @Nullable String clusterId) {
     Context parentContext = Context.current();
 
-    KafkaProducerRequest request = KafkaProducerRequest.create(record, clientId, bootstrapServers);
+    KafkaProducerRequest request =
+        KafkaProducerRequest.create(record, clientId, bootstrapServers, clusterId);
     if (!producerInstrumenter.shouldStart(parentContext, request)) {
       return record;
     }

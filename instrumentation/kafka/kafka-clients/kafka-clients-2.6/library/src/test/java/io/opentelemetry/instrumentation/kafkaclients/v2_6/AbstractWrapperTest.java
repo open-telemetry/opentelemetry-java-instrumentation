@@ -31,8 +31,8 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
 
   @ParameterizedTest
   @CsvSource({
-    "true, true",
     "false, false",
+    "true, true",
   })
   void testWrappers(boolean testHeaders, boolean testExperimental) throws InterruptedException {
     KafkaTelemetryBuilder telemetryBuilder =

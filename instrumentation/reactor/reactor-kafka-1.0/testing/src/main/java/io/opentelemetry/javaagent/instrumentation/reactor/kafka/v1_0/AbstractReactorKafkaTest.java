@@ -93,6 +93,12 @@ public abstract class AbstractReactorKafkaTest {
 
     sender = KafkaSender.create(senderOptions());
     cleanup.deferAfterAll(sender::close);
+    // Trigger metadata fetch so cluster id is available before the first send. Without this,
+    // KafkaUtil.clusterIdFromMetadata returns null on the very first send because the broker has
+    // not yet responded with a metadata message containing the cluster resource.
+    sender
+        .doOnProducer(producer -> producer.partitionsFor("testTopic"))
+        .block(Duration.ofSeconds(5));
     receiver = KafkaReceiver.create(receiverOptions());
   }
 
@@ -220,6 +226,7 @@ public abstract class AbstractReactorKafkaTest {
                 satisfies(stringKey("messaging.client_id"), val -> val.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
+    assertions.add(satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           equalTo(stringKey("messaging.kafka.bootstrap.servers"), kafka.getBootstrapServers()));
@@ -241,6 +248,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_OPERATION, "receive"),
                 satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
+    assertions.add(satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
     if (HAS_CONSUMER_GROUP) {
       assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
     }
@@ -261,6 +269,7 @@ public abstract class AbstractReactorKafkaTest {
     if (HAS_CONSUMER_GROUP) {
       assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
     }
+    assertions.add(satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));

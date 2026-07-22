@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.apache.kafka.common.MetricName;
 import org.apache.kafka.common.metrics.KafkaMetric;
@@ -60,6 +61,12 @@ final class KafkaMetricRegistry {
 
   @Nullable
   static RegisteredObservable getRegisteredObservable(Meter meter, KafkaMetric kafkaMetric) {
+    return getRegisteredObservable(meter, kafkaMetric, () -> null);
+  }
+
+  @Nullable
+  static RegisteredObservable getRegisteredObservable(
+      Meter meter, KafkaMetric kafkaMetric, Supplier<String> clusterIdSupplier) {
     // If metric is not a Measurable, we can't map it to an instrument
     Class<? extends Measurable> measurable = getMeasurable(kafkaMetric);
     if (measurable == null) {
@@ -82,10 +89,12 @@ final class KafkaMetricRegistry {
 
     InstrumentDescriptor instrumentDescriptor =
         toInstrumentDescriptor(instrumentType, instrumentName, instrumentDescription);
-    Attributes attributes = toAttributes(metricName.tags());
+    Attributes staticAttributes = toAttributes(metricName.tags());
     AutoCloseable observable =
-        createObservable(meter, attributes, instrumentDescriptor, kafkaMetric);
-    return RegisteredObservable.create(metricName, instrumentDescriptor, attributes, observable);
+        createObservable(
+            meter, staticAttributes, instrumentDescriptor, kafkaMetric, clusterIdSupplier);
+    return RegisteredObservable.create(
+        metricName, instrumentDescriptor, staticAttributes, observable);
   }
 
   @Nullable
@@ -117,11 +126,21 @@ final class KafkaMetricRegistry {
 
   private static AutoCloseable createObservable(
       Meter meter,
-      Attributes attributes,
+      Attributes staticAttributes,
       InstrumentDescriptor instrumentDescriptor,
-      KafkaMetric kafkaMetric) {
+      KafkaMetric kafkaMetric,
+      Supplier<String> clusterIdSupplier) {
     Consumer<ObservableDoubleMeasurement> callback =
-        observableMeasurement -> observableMeasurement.record(value(kafkaMetric), attributes);
+        observableMeasurement -> {
+          String clusterId = clusterIdSupplier.get();
+          Attributes attrs =
+              clusterId == null
+                  ? staticAttributes
+                  : staticAttributes.toBuilder()
+                      .put(KafkaClusterId.ATTRIBUTE_KEY, clusterId)
+                      .build();
+          observableMeasurement.record(value(kafkaMetric), attrs);
+        };
     switch (instrumentDescriptor.getInstrumentType()) {
       case INSTRUMENT_TYPE_DOUBLE_OBSERVABLE_GAUGE:
         return meter
