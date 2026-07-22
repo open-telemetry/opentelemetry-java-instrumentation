@@ -192,6 +192,9 @@ public class AgentInstaller {
     logger.log(FINE, "Installed {0} extension(s)", numberOfLoadedExtensions);
 
     agentBuilder = AgentBuilderUtil.optimize(agentBuilder);
+    // initialize context storage before installed instrumentations can access it during class
+    // loading
+    ContextStorage.get();
     ClassFileTransformer transformer = agentBuilder.installOn(inst);
     LambdaTransformer lambdaTransformer;
     if (JavaModule.isSupported()) {
