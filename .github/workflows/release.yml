@@ -38,6 +38,8 @@ jobs:
           fi
 
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Set environment variables
         run: |
@@ -69,6 +71,7 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: main
+          persist-credentials: false
 
       - name: Check that change log update was merged to main
         run: |
@@ -85,6 +88,7 @@ jobs:
         with:
           # tags are needed for the generate-release-contributors.sh script
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -202,6 +206,8 @@ jobs:
       # add change log sync (if any) into this PR since the apidiff update
       # is required before any other PR can be merged anyway
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Copy change log section from release branch
         env:
@@ -213,6 +219,8 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: main
+          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
+          persist-credentials: true
 
       - name: Merge change log to main
         env:
@@ -267,7 +275,7 @@ jobs:
       - name: Create pull request against main
         env:
           VERSION: ${{ needs.release.outputs.version }}
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          # pull requests from secrets.GITHUB_TOKEN do not run workflows
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Post-release updates for $VERSION"
@@ -280,6 +288,7 @@ jobs:
           git add version.gradle.kts
           git commit -m "$message"
           git push --set-upstream origin $branch
-          gh pr create --title "$message" \
-                       --body "$body" \
-                       --base main
+          gh pr create \
+            --title "$message" \
+            --body "$body" \
+            --base main

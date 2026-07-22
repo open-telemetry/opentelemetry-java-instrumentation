@@ -27,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -51,6 +53,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -92,6 +96,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -131,6 +137,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Dependency check
         run: |
@@ -155,6 +163,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - run: .github/scripts/check-javaagent-suppression-keys.sh
 
@@ -162,6 +172,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - run: .github/scripts/check-latest-dep-test-overrides.sh
 
@@ -169,6 +181,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - run: .github/scripts/check-package-names.sh
 
@@ -212,6 +226,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -301,6 +317,8 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -351,20 +369,21 @@ jobs:
 
       - name: Set test tasks
         run: |
-          echo "test-tasks=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
+          echo "test_tasks=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
 
       - name: Test
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+          STEPS_SETUP_TEST_JAVA_OUTPUTS_PATH: ${{ steps.setup-test-java.outputs.path }}
         # spotless is checked separately since it's a common source of failure
         run: >
           ./gradlew
-          ${{ env.test-tasks }}
+          ${test_tasks}
           -PtestJavaVersion=${{ matrix.test-java-version }}
           -PtestJavaVM=${{ matrix.vm }}
           -PtestIndy=${{ matrix.test-indy }}
           -PdenyUnsafe=${{ matrix.test-java-version == '25-deny-unsafe' && 'true' || 'false' }}
-          -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }}
+          -Porg.gradle.java.installations.paths=${STEPS_SETUP_TEST_JAVA_OUTPUTS_PATH}
           -Porg.gradle.java.installations.auto-download=false
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
@@ -420,6 +439,8 @@ jobs:
         if: matrix.os == 'windows-latest'
 
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -490,6 +511,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -513,6 +536,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh

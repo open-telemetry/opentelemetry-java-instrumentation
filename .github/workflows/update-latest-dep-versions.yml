@@ -16,6 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
+          persist-credentials: true
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -59,7 +62,7 @@ jobs:
       - name: Create pull request
         if: steps.check-changes.outputs.changed == 'true'
         env:
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          # pull requests from secrets.GITHUB_TOKEN do not run workflows
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Update pinned latest dep versions"
@@ -98,9 +101,10 @@ jobs:
           # only create a new PR if one doesn't already exist
           existing_pr=$(gh pr list --head "$branch" --state open --json number --jq '.[0].number')
           if [ -z "$existing_pr" ]; then
-            gh pr create --title "$message" \
-                         --body "$body" \
-                         --base main
+            gh pr create \
+              --title "$message" \
+              --body "$body" \
+              --base main
           fi
 
   workflow-notification:

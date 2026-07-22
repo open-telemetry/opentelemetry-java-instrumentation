@@ -31,7 +31,8 @@ description: |
 on:
   workflow_dispatch:
   schedule:
-    - cron: "every 1h"
+    # hourly at minute 26
+    - cron: "26 */1 * * *"
 
 permissions:
   contents: read
@@ -123,7 +124,7 @@ jobs:
       contents: read
       actions: write # to trigger next iteration
     steps:
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      - uses: actions/create-github-app-token@v3.2.0
         id: otelbot-token
         with:
           client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
