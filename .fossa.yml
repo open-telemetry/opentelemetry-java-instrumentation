@@ -63,6 +63,12 @@ targets:
       target: ':instrumentation:alibaba-druid-1.0:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:apache-commons-pool-2.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:apache-commons-pool-2.0:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:apache-dbcp-2.0:javaagent'
     - type: gradle
       path: ./

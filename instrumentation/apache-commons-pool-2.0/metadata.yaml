@@ -1,0 +1,12 @@
+display_name: Apache Commons Pool
+description: >
+  This instrumentation enables object pool metrics for Apache Commons Pool
+  GenericObjectPool and GenericKeyedObjectPool instances.
+library_link: https://commons.apache.org/proper/commons-pool/
+disabled_by_default: true
+configurations:
+  - name: otel.instrumentation.apache-commons-pool.enabled
+    declarative_name: java.apache_commons_pool.enabled
+    description: Enables the Apache Commons Pool instrumentation.
+    type: boolean
+    default: false
