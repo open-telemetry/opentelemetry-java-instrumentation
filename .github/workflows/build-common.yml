@@ -45,7 +45,9 @@ jobs:
       - name: Spotless
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
-        run: ./gradlew spotlessCheck ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
+        run: |
+          ./gradlew spotlessCheck ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
+          ./gradlew -p conventions spotlessCheck ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
 
   license-check:
     runs-on: ubuntu-latest
