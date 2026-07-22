@@ -1,6 +1,7 @@
 name: PR Automation Comments
 on:
-  # Required to comment on labeled fork PRs; no PR code is checked out or executed.
+  # zizmor dangerous-triggers suppression rationale: required to comment on labeled fork PRs;
+  # no PR code is checked out or executed.
   pull_request_target: # zizmor: ignore[dangerous-triggers]
     types: [labeled]
 
