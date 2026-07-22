@@ -23,12 +23,23 @@ dependencies {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true")
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+  }
+
+  check {
+    dependsOn(testV3Preview)
   }
 }
 

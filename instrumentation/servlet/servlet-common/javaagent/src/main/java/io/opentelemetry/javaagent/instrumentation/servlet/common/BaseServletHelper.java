@@ -143,7 +143,8 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     if (!AppServerBridge.captureServletAttributes(context)) {
       return;
     }
-    Span serverSpan = LocalRootSpan.fromContextOrNull(context);
+    Span serverSpan =
+        v3Preview() ? Span.fromContextOrNull(context) : LocalRootSpan.fromContextOrNull(context);
     if (serverSpan == null) {
       return;
     }

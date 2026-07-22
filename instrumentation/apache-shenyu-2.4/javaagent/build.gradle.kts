@@ -38,17 +38,30 @@ if (otelProps.testLatestDeps) {
   }
 }
 
-tasks.test {
-  jvmArgs("-Dotel.instrumentation.apache-shenyu.experimental-span-attributes=true")
+tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.apache-shenyu.experimental-span-attributes=true")
 
-  systemProperty("metadataConfig", "otel.instrumentation.apache-shenyu.experimental-span-attributes=true")
-  systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("metadataConfig", "otel.instrumentation.apache-shenyu.experimental-span-attributes=true")
+    systemProperty("collectMetadata", otelProps.collectMetadata)
 
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-  systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+  }
+
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
+  check {
+    dependsOn(testV3Preview)
+  }
 }
 
 // spring 6 (spring boot 3) uses slf4j 2.0

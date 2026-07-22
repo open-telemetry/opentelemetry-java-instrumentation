@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.webmvc.v4_3;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.common.GatewayRouteHelper.ROUTE_ID_ATTRIBUTE;
 import static io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.common.GatewayRouteHelper.ROUTE_URI_ATTRIBUTE;
 
@@ -43,7 +44,8 @@ public class ServerRequestHelper {
       return;
     }
 
-    Span serverSpan = LocalRootSpan.fromContextOrNull(context);
+    Span serverSpan =
+        v3Preview() ? Span.fromContextOrNull(context) : LocalRootSpan.fromContextOrNull(context);
     if (serverSpan == null) {
       return;
     }

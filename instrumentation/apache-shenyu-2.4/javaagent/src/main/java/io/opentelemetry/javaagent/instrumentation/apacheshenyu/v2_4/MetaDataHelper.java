@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apacheshenyu.v2_4;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
@@ -69,7 +71,8 @@ public class MetaDataHelper {
     if (!CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       return;
     }
-    Span serverSpan = LocalRootSpan.fromContextOrNull(context);
+    Span serverSpan =
+        v3Preview() ? Span.fromContextOrNull(context) : LocalRootSpan.fromContextOrNull(context);
     if (serverSpan == null) {
       return;
     }

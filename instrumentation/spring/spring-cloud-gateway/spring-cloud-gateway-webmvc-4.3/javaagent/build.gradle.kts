@@ -29,9 +29,21 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:4.0.+") // related dependency
 }
 
-tasks.test {
-  jvmArgs("-Dotel.instrumentation.spring-cloud-gateway.experimental-span-attributes=true")
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.spring-cloud-gateway.experimental-span-attributes=true")
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
+
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+  }
+
+  check {
+    dependsOn(testV3Preview)
+  }
 }
 
 // spring 7 requires java 17
