@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 
 import io.opentelemetry.instrumentation.spring.jms.v2_0.AbstractJmsTest;
@@ -42,7 +44,7 @@ class SpringListenerTest extends AbstractJmsTest {
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(PRODUCER, CONSUMER),
+        orderByRootSpanKind(PRODUCER, emitStableMessagingSemconv() ? CLIENT : CONSUMER),
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> assertProducerSpan(span, "SpringListenerJms2", false));
