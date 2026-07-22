@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.config;
+package io.opentelemetry.javaagent.tooling.config.internal;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
