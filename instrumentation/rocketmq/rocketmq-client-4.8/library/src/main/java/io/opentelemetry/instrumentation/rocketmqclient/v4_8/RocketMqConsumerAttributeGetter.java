@@ -11,76 +11,88 @@ import static java.util.Collections.singletonList;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
-import org.apache.rocketmq.common.message.MessageExt;
+import org.apache.rocketmq.client.hook.ConsumeMessageContext;
 
-final class RocketMqConsumerAttributeGetter implements MessagingAttributesGetter<MessageExt, Void> {
+final class RocketMqConsumerAttributeGetter
+    implements MessagingAttributesGetter<RocketMqConsumerRequest, ConsumeMessageContext> {
 
   @Override
-  public String getSystem(MessageExt request) {
+  public String getSystem(RocketMqConsumerRequest request) {
     return "rocketmq";
   }
 
   @Override
-  public String getDestination(MessageExt request) {
-    return request.getTopic();
+  public String getDestination(RocketMqConsumerRequest request) {
+    return request.getMessage().getTopic();
   }
 
   @Nullable
   @Override
-  public String getDestinationTemplate(MessageExt request) {
+  public String getDestinationTemplate(RocketMqConsumerRequest request) {
     return null;
   }
 
   @Override
-  public boolean isTemporaryDestination(MessageExt request) {
+  public boolean isTemporaryDestination(RocketMqConsumerRequest request) {
     return false;
   }
 
   @Override
-  public boolean isAnonymousDestination(MessageExt request) {
+  public boolean isAnonymousDestination(RocketMqConsumerRequest request) {
     return false;
   }
 
   @Nullable
   @Override
-  public String getConversationId(MessageExt request) {
+  public String getConversationId(RocketMqConsumerRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long getMessageBodySize(MessageExt request) {
-    byte[] body = request.getBody();
+  public Long getMessageBodySize(RocketMqConsumerRequest request) {
+    byte[] body = request.getMessage().getBody();
     return body == null ? null : (long) body.length;
   }
 
   @Nullable
   @Override
-  public Long getMessageEnvelopeSize(MessageExt request) {
+  public Long getMessageEnvelopeSize(RocketMqConsumerRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getMessageId(MessageExt request, @Nullable Void unused) {
-    return request.getMsgId();
+  public String getMessageId(
+      RocketMqConsumerRequest request, @Nullable ConsumeMessageContext unused) {
+    return request.getMessage().getMsgId();
   }
 
   @Nullable
   @Override
-  public String getClientId(MessageExt request) {
+  public String getClientId(RocketMqConsumerRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long getBatchMessageCount(MessageExt request, @Nullable Void unused) {
+  public Long getBatchMessageCount(
+      RocketMqConsumerRequest request, @Nullable ConsumeMessageContext unused) {
     return null;
   }
 
+  @Nullable
   @Override
-  public List<String> getMessageHeader(MessageExt request, String name) {
-    String value = request.getProperties().get(name);
+  public String getErrorType(
+      RocketMqConsumerRequest request,
+      @Nullable ConsumeMessageContext response,
+      @Nullable Throwable error) {
+    return response != null && !response.isSuccess() ? response.getStatus() : null;
+  }
+
+  @Override
+  public List<String> getMessageHeader(RocketMqConsumerRequest request, String name) {
+    String value = request.getMessage().getProperties().get(name);
     if (value != null) {
       return singletonList(value);
     }
