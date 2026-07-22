@@ -69,8 +69,7 @@ jobs:
           fi
           while IFS= read -r path; do
             case "$path" in
-              .github/aw/actions-lock.json |
-              .github/workflows/*.lock.yml) ;;
+              .github/aw/actions-lock.json|.github/workflows/*.lock.yml) ;;
               *)
                 echo "Unexpected path in generated patch: $path" >&2
                 exit 1
