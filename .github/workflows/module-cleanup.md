@@ -31,6 +31,7 @@ description: |
 on:
   workflow_dispatch:
   schedule:
+    # hourly at minute 26
     - cron: "26 */1 * * *"
 
 permissions:
