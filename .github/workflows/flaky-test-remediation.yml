@@ -21,7 +21,7 @@ jobs:
       method: ${{ steps.select.outputs.method }}
       source_file: ${{ steps.select.outputs.source_file }}
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0  # need history to detect recently-modified files
           persist-credentials: false
@@ -78,7 +78,7 @@ jobs:
       TEST_SOURCE_FILE: ${{ needs.analyze.outputs.source_file }}
       OUT_DIR: build/flaky-test-remediation
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # zizmor: ignore[artipacked] Credentials are required by the branch push below.
           persist-credentials: true
@@ -87,7 +87,7 @@ jobs:
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK
-        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           distribution: temurin
           java-version-file: .java-version
@@ -185,7 +185,7 @@ jobs:
 
       - name: Check out progress branch
         if: steps.changes.outputs.committed == 'true'
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: otelbot/flaky-test-remediation-progress
           path: progress

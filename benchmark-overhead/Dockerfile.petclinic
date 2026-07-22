@@ -1,4 +1,4 @@
-FROM eclipse-temurin:11.0.31_11-jdk@sha256:29d6dba5f13264bbab01afd7fb241f08efafb8fe975d0bc9337b25ee39fd9758 as app-build
+FROM eclipse-temurin:11.0.31_11-jdk@sha256:51cad80517b1e18e289460e0a48657374d17711c83270263054a4a22cc1a992a as app-build
 
 # This is the base image that will contain a built version of the spring-petclinic-rest
 # application. Installing the dependencies and maven compiling the application is time
