@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.VirtualFieldStore;
@@ -40,17 +41,20 @@ class DefaultPulsarMessageListenerContainerInstrumentation implements TypeInstru
   @SuppressWarnings("unused")
   public static class DispatchMessageToListenerAdvice {
     public static class AdviceScope {
+      private final Instrumenter<Message<?>, Void> instrumenter;
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(Context context, Scope scope) {
+      public AdviceScope(
+          Instrumenter<Message<?>, Void> instrumenter, Context context, Scope scope) {
+        this.instrumenter = instrumenter;
         this.context = context;
         this.scope = scope;
       }
 
       public void end(@Nullable Throwable throwable, Message<?> message) {
         scope.close();
-        instrumenter().end(context, message, null, throwable);
+        instrumenter.end(context, message, null, throwable);
       }
     }
 
@@ -58,11 +62,13 @@ class DefaultPulsarMessageListenerContainerInstrumentation implements TypeInstru
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) Message<?> message) {
       Context parentContext = VirtualFieldStore.extract(message);
-      if (!instrumenter().shouldStart(parentContext, message)) {
+      Instrumenter<Message<?>, Void> instrumenter =
+          instrumenter(VirtualFieldStore.wasReceiveTelemetryRecorded(message));
+      if (!instrumenter.shouldStart(parentContext, message)) {
         return null;
       }
-      Context context = instrumenter().start(parentContext, message);
-      return new AdviceScope(context, context.makeCurrent());
+      Context context = instrumenter.start(parentContext, message);
+      return new AdviceScope(instrumenter, context, context.makeCurrent());
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
