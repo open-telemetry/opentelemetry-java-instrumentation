@@ -1,6 +1,9 @@
+import io.opentelemetry.instrumentation.gradle.CheckMavenPublicationCoordinatesTask
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.asRequestBody
+import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.MavenPublication
 import java.time.Duration
 import java.util.Base64
 
@@ -67,6 +70,22 @@ if (project.findProperty("skipTests") as String? == "true") {
   }
 }
 
+val mavenPublicationCoordinates = objects.listProperty<String>()
+
+subprojects {
+  val projectPath = path
+  pluginManager.withPlugin("maven-publish") {
+    extensions.getByType<PublishingExtension>().publications
+      .withType<MavenPublication>()
+      .configureEach {
+        val publication = this
+        mavenPublicationCoordinates.add(provider {
+          "${publication.groupId}:${publication.artifactId}:${publication.version}=$projectPath:${publication.name}"
+        })
+      }
+  }
+}
+
 if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
   tasks {
     register<DefaultTask>("listTestsInPartition") {
@@ -129,6 +148,21 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
 tasks {
   val stableVersion = version.toString().replace("-alpha", "")
 
+  val checkMavenPublicationCoordinates = register<CheckMavenPublicationCoordinatesTask>("checkMavenPublicationCoordinates") {
+    group = "Verification"
+    description = "Checks that Maven publications have unique coordinates"
+    publicationCoordinates.set(mavenPublicationCoordinates)
+  }
+
+  subprojects {
+    tasks.matching { it.name == "check" }.configureEach {
+      dependsOn(checkMavenPublicationCoordinates)
+    }
+    tasks.withType<PublishToMavenRepository>().configureEach {
+      dependsOn(checkMavenPublicationCoordinates)
+    }
+  }
+
   register<DefaultTask>("generateFossaConfiguration") {
     group = "Help"
     description = "Generate .fossa.yml configuration file"
@@ -167,6 +201,7 @@ tasks {
   }
 
   val generateReleaseBundle = register<Zip>("generateReleaseBundle") {
+    dependsOn(checkMavenPublicationCoordinates)
     dependsOn(project.tasks.withType<PublishToMavenRepository>())
     from("releaseRepo")
 
