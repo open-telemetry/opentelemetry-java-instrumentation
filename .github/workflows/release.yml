@@ -1,6 +1,12 @@
 name: Release
 on:
   workflow_dispatch:
+    inputs:
+      recover_maven_central:
+        description: Republish only the main Maven Central bundle for an existing release
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -28,8 +34,8 @@ jobs:
     needs:
       - common
     outputs:
-      version: ${{ steps.create-github-release.outputs.version }}
-      prior-version: ${{ steps.create-github-release.outputs.prior-version }}
+      version: ${{ steps.release-info.outputs.version }}
+      prior-version: ${{ steps.release-info.outputs.prior-version }}
     steps:
       - run: |
           if [[ $GITHUB_REF_NAME != release/* ]]; then
@@ -63,6 +69,29 @@ jobs:
           fi
           echo "VERSION=$version" >> $GITHUB_ENV
           echo "PRIOR_VERSION=$prior_version" >> $GITHUB_ENV
+
+      - name: Validate Maven Central recovery
+        if: inputs.recover_maven_central
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! gh release view "v$VERSION" > /dev/null; then
+            echo "GitHub release v$VERSION does not exist"
+            exit 1
+          fi
+
+          artifact_url="https://repo1.maven.org/maven2/io/opentelemetry/javaagent/opentelemetry-javaagent/$VERSION/opentelemetry-javaagent-$VERSION.jar"
+          if ! http_status=$(curl --silent --show-error --head --output /dev/null --write-out "%{http_code}" "$artifact_url"); then
+            echo "Failed to check whether version $VERSION is available from Maven Central"
+            exit 1
+          fi
+          if [[ $http_status == 200 ]]; then
+            echo "Version $VERSION is already available from Maven Central"
+            exit 1
+          elif [[ $http_status != 404 ]]; then
+            echo "Unexpected response from Maven Central: HTTP $http_status"
+            exit 1
+          fi
 
         # check out main branch to verify there won't be problems with merging the change log
         # at the end of this workflow
@@ -98,6 +127,7 @@ jobs:
         uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
 
       - name: Build and publish artifacts
+        if: ${{ !inputs.recover_maven_central }}
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
@@ -106,7 +136,30 @@ jobs:
         # run: ./gradlew assemble spdxSbom publishToSonatype closeAndReleaseSonatypeStagingRepository
         run: ./gradlew assemble spdxSbom publishAllPublicationToReleaseRepoRepository generateReleaseBundle uploadReleaseBundle
 
+      - name: Build Maven Central recovery bundle
+        if: inputs.recover_maven_central
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+        run: ./gradlew assemble spdxSbom publishAllPublicationToReleaseRepoRepository generateReleaseBundle
+
+      - name: Verify recovered javaagent
+        if: inputs.recover_maven_central
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "v$VERSION" --pattern opentelemetry-javaagent.jar --dir /tmp/release
+          cmp /tmp/release/opentelemetry-javaagent.jar javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar
+
+      - name: Upload Maven Central recovery bundle
+        if: inputs.recover_maven_central
+        env:
+          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
+          SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
+        run: ./gradlew uploadReleaseBundle -x generateReleaseBundle
+
       - name: Build and publish gradle plugins
+        if: ${{ !inputs.recover_maven_central }}
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
@@ -119,6 +172,7 @@ jobs:
         working-directory: gradle-plugins
 
       - name: Collect SBOMs
+        if: ${{ !inputs.recover_maven_central }}
         run: |
           mkdir sboms
           cp javaagent/build/spdx/*.spdx.json sboms
@@ -126,11 +180,13 @@ jobs:
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         name: Upload SBOMs
+        if: ${{ !inputs.recover_maven_central }}
         with:
           name: opentelemetry-java-instrumentation-SBOM
           path: "sboms/*.json"
 
       - name: Generate release notes
+        if: ${{ !inputs.recover_maven_central }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -157,18 +213,20 @@ jobs:
           fi
 
       - name: Simplify paths for attaching
+        if: ${{ !inputs.recover_maven_central }}
         run: |
           cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar opentelemetry-javaagent.jar
           cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar.asc opentelemetry-javaagent.jar.asc
 
       - uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        if: ${{ !inputs.recover_maven_central }}
         with:
           subject-path: |
             opentelemetry-javaagent.jar
             opentelemetry-java-instrumentation-SBOM.zip
 
-      - id: create-github-release
-        name: Create GitHub release
+      - name: Create GitHub release
+        if: ${{ !inputs.recover_maven_central }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -180,11 +238,15 @@ jobs:
                             opentelemetry-javaagent.jar.asc \
                             opentelemetry-java-instrumentation-SBOM.zip
 
+      - id: release-info
+        name: Set release information
+        run: |
           # these are used as job outputs
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "prior-version=$PRIOR_VERSION" >> $GITHUB_OUTPUT
 
   documentation-audit:
+    if: ${{ !inputs.recover_maven_central }}
     permissions:
       contents: read
       issues: write
