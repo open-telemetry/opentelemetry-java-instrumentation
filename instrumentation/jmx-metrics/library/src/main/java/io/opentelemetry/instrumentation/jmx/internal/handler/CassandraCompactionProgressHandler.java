@@ -126,8 +126,18 @@ public class CassandraCompactionProgressHandler implements ExperimentalJmxMetric
           continue;
         }
 
-        long completed = parseLong(entry.get("completed"));
-        long total = parseLong(entry.get("total"));
+        long completed;
+        long total;
+        try {
+          completed = parseLong(entry.get("completed"));
+          total = parseLong(entry.get("total"));
+        } catch (ArithmeticException e) {
+          logger.log(
+              WARNING,
+              "cassandra.compaction.progress: byte value overflows long range, skipping entry",
+              e);
+          continue;
+        }
 
         Attributes attrs = buildAttributes(taskType, keyspace, columnFamily);
         groups.merge(
@@ -148,7 +158,7 @@ public class CassandraCompactionProgressHandler implements ExperimentalJmxMetric
       return 0;
     }
     try {
-      return new BigInteger(value.toString()).longValue();
+      return new BigInteger(value.toString()).longValueExact();
     } catch (NumberFormatException e) {
       return 0;
     }

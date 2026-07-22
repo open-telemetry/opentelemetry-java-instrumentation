@@ -85,8 +85,8 @@ class CassandraCompactionProgressHandlerTest {
   }
 
   @Test
-  void parsesBigIntegerStringValues() throws Exception {
-    // values larger than Long.MAX_VALUE are truncated but must not throw
+  void skipsEntriesWithValuesExceedingLongRange() throws Exception {
+    // values larger than Long.MAX_VALUE cannot be safely cast to long — entry must be skipped
     String big = "99999999999999999999";
     when(connection.getAttribute(objectName, "Compactions"))
         .thenReturn(singletonList(compactionEntry("COMPACTION", "ks", "cf", big, big)));
@@ -94,7 +94,7 @@ class CassandraCompactionProgressHandlerTest {
     Map<Attributes, long[]> groups =
         CassandraCompactionProgressHandler.queryCompactions(connection, objectName);
 
-    assertThat(groups).hasSize(1);
+    assertThat(groups).isEmpty();
   }
 
   @Test
