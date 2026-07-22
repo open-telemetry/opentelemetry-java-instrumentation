@@ -29,6 +29,7 @@ public final class AgentInitializer {
   private static boolean isSecurityManagerSupportEnabled = false;
   private static volatile boolean agentStarted = false;
 
+  @SuppressWarnings("SystemOut")
   public static void initialize(
       Instrumentation inst, File javaagentFile, boolean fromPremain, @Nullable String agentArgs)
       throws Exception {
@@ -51,6 +52,29 @@ public final class AgentInitializer {
     // classes are loaded in boot loader
     if (AgentInitializer.class.getClassLoader() != null) {
       throw new IllegalStateException("agent initializer should be loaded in boot loader");
+    }
+
+    // check if running any JDK tool in $JAVA_HOME/bin, as this is common when setting
+    // JAVA_TOOL_OPTIONS or _JAVA_OPTIONS globally, and we don't want to instrument those tools.
+    // opt-in is still possible with an explicit otel.javaagent.enabled=true in system properties or
+    // java agent arguments
+    Boolean skipJdkTool =
+        doPrivileged(
+            new PrivilegedAction<Boolean>() {
+              @Override
+              public Boolean run() {
+                String enable = System.getProperty("otel.javaagent.enabled");
+                if (Boolean.parseBoolean(enable)) {
+                  return false;
+                }
+                String cmd = System.getProperty("sun.java.command");
+                return isJdkToolMainClass(cmd);
+              }
+            });
+    if (skipJdkTool) {
+      System.err.println(
+          "JDK tool detected, agent will not be started. To override this behavior, set the 'otel.javaagent.enabled=true' agent argument or system property");
+      return;
     }
 
     isSecurityManagerSupportEnabled = isSecurityManagerSupportEnabled();
@@ -239,6 +263,35 @@ public final class AgentInitializer {
           System.err.println("Setting property [" + key + "] = " + value);
         }
       }
+    }
+  }
+
+  static boolean isJdkToolMainClass(@Nullable String cmd) {
+    if (cmd == null || cmd.isEmpty()) {
+      return false;
+    }
+    int spaceIndex = cmd.indexOf(' ');
+    String first = spaceIndex == -1 ? cmd : cmd.substring(0, spaceIndex);
+
+    if (first.endsWith(".jar")) {
+      // java -jar /path/to/app.jar
+      return false;
+    }
+
+    // sun.java.command may be of the form "<module>/<mainClass>" when the main class belongs to a
+    // named module, e.g. "jdk.compiler/com.sun.tools.javac.Main"
+    int slashIndex = first.indexOf('/');
+    if (slashIndex < 0) {
+
+      // known exception for glassfish/payara application server
+      if (first.startsWith("com.sun.enterprise.glassfish.")) {
+        return false;
+      }
+
+      return first.startsWith("com.sun.") || first.startsWith("sun.") || first.startsWith("jdk.");
+    } else {
+      String moduleName = first.substring(0, slashIndex);
+      return moduleName.startsWith("jdk.") || moduleName.startsWith("java.");
     }
   }
 }
