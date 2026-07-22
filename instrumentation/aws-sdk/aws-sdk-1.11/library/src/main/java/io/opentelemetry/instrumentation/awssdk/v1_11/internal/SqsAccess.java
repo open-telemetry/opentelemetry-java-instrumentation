@@ -34,6 +34,12 @@ final class SqsAccess {
 
   @NoMuzzle
   @Nullable
+  static Long getBatchMessageCount(Request<?> request) {
+    return enabled ? SqsImpl.getBatchMessageCount(request) : null;
+  }
+
+  @NoMuzzle
+  @Nullable
   static String getMessageAttribute(Request<?> request, String name) {
     return enabled ? SqsImpl.getMessageAttribute(request, name) : null;
   }

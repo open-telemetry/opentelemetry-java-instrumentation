@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
@@ -34,6 +36,8 @@ public final class TracingRequestHandler extends RequestHandler2 {
       ContextKey.named(TracingRequestHandler.class.getName() + ".Timer");
   private static final ContextKey<Boolean> REQUEST_SPAN_SUPPRESSED_KEY =
       ContextKey.named(TracingRequestHandler.class.getName() + ".RequestSpanSuppressed");
+  private static final String SEND_MESSAGE_BATCH_REQUEST_CLASS =
+      "com.amazonaws.services.sqs.model.SendMessageBatchRequest";
   private static final String SEND_MESSAGE_REQUEST_CLASS =
       "com.amazonaws.services.sqs.model.SendMessageRequest";
   private static final String DYNAMODBV2_CLASS_PREFIX = "com.amazonaws.services.dynamodbv2.model.";
@@ -168,7 +172,8 @@ public final class TracingRequestHandler extends RequestHandler2 {
     if (className.startsWith(DYNAMODBV2_CLASS_PREFIX)) {
       return dynamoDbInstrumenter;
     }
-    if (className.equals(SEND_MESSAGE_REQUEST_CLASS)) {
+    if (className.equals(SEND_MESSAGE_REQUEST_CLASS)
+        || (emitStableMessagingSemconv() && className.equals(SEND_MESSAGE_BATCH_REQUEST_CLASS))) {
       return producerInstrumenter;
     }
     return requestInstrumenter;
