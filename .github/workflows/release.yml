@@ -120,6 +120,7 @@ jobs:
         uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
 
       - name: Build and publish artifacts
+        if: ${{ !inputs.recover_maven_central }}
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
@@ -127,6 +128,28 @@ jobs:
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
         # run: ./gradlew assemble spdxSbom publishToSonatype closeAndReleaseSonatypeStagingRepository
         run: ./gradlew assemble spdxSbom publishAllPublicationToReleaseRepoRepository generateReleaseBundle uploadReleaseBundle
+
+      - name: Build Maven Central recovery bundle
+        if: inputs.recover_maven_central
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+        run: ./gradlew assemble spdxSbom publishAllPublicationToReleaseRepoRepository generateReleaseBundle
+
+      - name: Verify recovered javaagent
+        if: inputs.recover_maven_central
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download "v$VERSION" --pattern opentelemetry-javaagent.jar --dir /tmp/release
+          cmp /tmp/release/opentelemetry-javaagent.jar javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar
+
+      - name: Upload Maven Central recovery bundle
+        if: inputs.recover_maven_central
+        env:
+          SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
+          SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
+        run: ./gradlew uploadReleaseBundle -x generateReleaseBundle
 
       - name: Build and publish gradle plugins
         if: ${{ !inputs.recover_maven_central }}
