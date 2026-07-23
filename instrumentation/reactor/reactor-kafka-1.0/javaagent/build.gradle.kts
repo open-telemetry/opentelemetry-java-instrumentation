@@ -99,6 +99,26 @@ tasks {
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
   }
 
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
+  val testV3PreviewReceiveSpansDisabled = register<Test>("testV3PreviewReceiveSpansDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
   test {
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
@@ -109,6 +129,12 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testExperimental, testReceiveSpansDisabled)
+    dependsOn(
+      testing.suites,
+      testExperimental,
+      testReceiveSpansDisabled,
+      testV3Preview,
+      testV3PreviewReceiveSpansDisabled,
+    )
   }
 }

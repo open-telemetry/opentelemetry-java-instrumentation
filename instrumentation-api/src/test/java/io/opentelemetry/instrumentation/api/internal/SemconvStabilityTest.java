@@ -9,6 +9,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
@@ -22,6 +23,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class SemconvStabilityTest {
@@ -377,6 +380,69 @@ class SemconvStabilityTest {
     assertThat(rpc).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
     assertThat(servicePeer).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
     assertThat(messaging).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
+  }
+
+  @ParameterizedTest
+  @MethodSource("messagingSelectionModes")
+  void messagingSelectionMatrix(
+      boolean v3Preview, Set<String> stableOptIn, Set<String> preview, SemconvMode expectedMode) {
+    SemconvMode messaging =
+        new SemconvSelectionResolver(general(), v3Preview, stableOptIn, preview).messaging();
+
+    assertThat(messaging).isEqualTo(expectedMode);
+  }
+
+  private static List<Arguments> messagingSelectionModes() {
+    return asList(
+        argumentSet("legacy default", false, noStableOptIn(), noPreview(), SemconvMode.V0_STABLE),
+        argumentSet(
+            "legacy opt-in property",
+            false,
+            stableOptIn("messaging"),
+            noPreview(),
+            SemconvMode.V1_EXPERIMENTAL),
+        argumentSet(
+            "preview property",
+            false,
+            noStableOptIn(),
+            preview("messaging"),
+            SemconvMode.V1_EXPERIMENTAL),
+        argumentSet(
+            "legacy opt-in dual emit",
+            false,
+            stableOptIn("messaging/dup"),
+            noPreview(),
+            SemconvMode.V1_EXPERIMENTAL.withDualEmit()),
+        argumentSet(
+            "preview dual emit",
+            false,
+            noStableOptIn(),
+            preview("messaging/dup"),
+            SemconvMode.V1_EXPERIMENTAL.withDualEmit()),
+        argumentSet(
+            "v3 activation remains staged",
+            true,
+            noStableOptIn(),
+            noPreview(),
+            SemconvMode.V0_STABLE),
+        argumentSet(
+            "v3 ignores legacy opt-in property",
+            true,
+            stableOptIn("messaging"),
+            noPreview(),
+            SemconvMode.V0_STABLE),
+        argumentSet(
+            "v3 ignores legacy opt-in dual emit",
+            true,
+            stableOptIn("messaging/dup"),
+            noPreview(),
+            SemconvMode.V0_STABLE),
+        argumentSet(
+            "v3 with explicit preview",
+            true,
+            noStableOptIn(),
+            preview("messaging"),
+            SemconvMode.V1_EXPERIMENTAL));
   }
 
   @SafeVarargs

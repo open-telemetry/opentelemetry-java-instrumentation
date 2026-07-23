@@ -29,6 +29,7 @@ public class KafkaProducerTelemetry {
   private final TextMapPropagator propagator;
   private final Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter;
   private final boolean producerPropagationEnabled;
+  private final boolean producerSpanContextPropagationEnabled;
 
   public KafkaProducerTelemetry(
       TextMapPropagator propagator,
@@ -37,6 +38,8 @@ public class KafkaProducerTelemetry {
     this.propagator = propagator;
     this.producerInstrumenter = producerInstrumenter;
     this.producerPropagationEnabled = producerPropagationEnabled;
+    this.producerSpanContextPropagationEnabled =
+        producerPropagationEnabled && KafkaPropagation.propagatesSpanContext(propagator);
   }
 
   /**
@@ -48,7 +51,9 @@ public class KafkaProducerTelemetry {
       ProducerRecord<K, V> record, @Nullable String clientId, @Nullable String bootstrapServers) {
     Context parentContext = Context.current();
 
-    KafkaProducerRequest request = KafkaProducerRequest.create(record, clientId, bootstrapServers);
+    KafkaProducerRequest request =
+        KafkaProducerRequest.create(
+            record, clientId, bootstrapServers, producerSpanContextPropagationEnabled);
     if (!producerInstrumenter.shouldStart(parentContext, request)) {
       return record;
     }
@@ -79,7 +84,9 @@ public class KafkaProducerTelemetry {
       String bootstrapServers) {
     Context parentContext = Context.current();
 
-    KafkaProducerRequest request = KafkaProducerRequest.create(record, producer, bootstrapServers);
+    KafkaProducerRequest request =
+        KafkaProducerRequest.create(
+            record, producer, bootstrapServers, producerSpanContextPropagationEnabled);
     if (!producerInstrumenter.shouldStart(parentContext, request)) {
       return sendFn.apply(record, callback);
     }

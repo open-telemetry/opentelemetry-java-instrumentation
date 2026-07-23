@@ -53,6 +53,28 @@ tasks {
     include("**/KafkaClientSuppressReceiveSpansTest.*")
   }
 
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("KafkaClientDefaultTest.testKafkaProducerAndConsumerSpan")
+      includeTestsMatching("KafkaClientDefaultTest.testAbandonedIteratorDoesNotParentNextProcessSpan")
+      includeTestsMatching("KafkaClientDefaultTest.testReceiveDoesNotParentProcessSpan")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
+  }
+
+  val testMessagingPreviewDup = register<Test>("testMessagingPreviewDup") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("KafkaClientDefaultTest.testReceiveDoesNotParentProcessSpan")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging/dup")
+  }
+
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -67,7 +89,34 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("KafkaClientPropagationDisabledTest")
+      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    // kafka metrics are disabled by default with v3-preview enabled
+    jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
+  val testV3PreviewReceiveSpansDisabled = register<Test>("testV3PreviewReceiveSpansDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+    }
+    include("**/KafkaClientSuppressReceiveSpansTest.*")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -75,15 +124,15 @@ tasks {
       excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     // kafka metrics are disabled by default with v3-preview enabled
     jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testV3Preview, testV3PreviewReceiveSpansDisabled, testBothSemconv)
   }
 
   test {
@@ -95,7 +144,13 @@ tasks {
   }
 
   check {
-    dependsOn(testPropagationDisabled, testReceiveSpansDisabled, testExperimental)
+    dependsOn(
+      testPropagationDisabled,
+      testReceiveSpansDisabled,
+      testMessagingPreview,
+      testMessagingPreviewDup,
+      testExperimental,
+    )
   }
 }
 

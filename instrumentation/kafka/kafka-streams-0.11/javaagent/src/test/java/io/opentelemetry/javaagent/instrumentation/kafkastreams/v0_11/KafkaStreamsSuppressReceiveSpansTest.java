@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -92,6 +93,31 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
     SpanContext receivedContext = Span.fromContext(getContext(receivedHeaders)).getSpanContext();
 
     AtomicReference<SpanData> streamSendSpanRef = new AtomicReference<>();
+    if (emitStableMessagingSemconv()) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("send " + STREAM_PENDING)
+                          .hasKind(SpanKind.PRODUCER)
+                          .hasNoParent(),
+                  span ->
+                      span.hasName("process " + STREAM_PENDING)
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(0)),
+                  span ->
+                      span.hasName("send " + STREAM_PROCESSED)
+                          .hasKind(SpanKind.PRODUCER)
+                          .hasParent(trace.getSpan(1))
+                          .hasTraceId(receivedContext.getTraceId())
+                          .hasSpanId(receivedContext.getSpanId()),
+                  span ->
+                      span.hasName("process " + STREAM_PROCESSED)
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(2))));
+      return;
+    }
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
