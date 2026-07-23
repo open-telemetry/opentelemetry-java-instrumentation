@@ -1,0 +1,177 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/open-telemetry/weaver/v0.24.2/schemas/semconv.schema.json
+
+groups:
+  - id: attributes.wildfly
+    type: attribute_group
+    brief: Wildfly attributes
+    attributes:
+      - id: wildfly.server
+        type: string
+        stability: development
+        brief: Wildfly server name
+        examples:
+          - "default-server"
+      - id: wildfly.listener
+        type: string
+        stability: development
+        brief: Wildfly listener name
+        examples:
+          - "default"
+      - id: wildfly.deployment
+        type: string
+        stability: development
+        brief: Wildfly deployment name
+        examples:
+          - "app.war"
+      - id: wildfly.rollback.cause
+        type: string
+        stability: development
+        brief: Wildfly transaction rollback cause
+        examples:
+          - "application"
+          - "resource"
+
+  - id: metric.wildfly.network.io
+    metric_name: wildfly.network.io
+    stability: development
+    type: metric
+    brief: Total number of bytes transferred
+    unit: By
+    instrument: counter
+    attributes:
+      - ref: network.io.direction
+
+  - id: metric.wildfly.error.count
+    metric_name: wildfly.error.count
+    stability: development
+    type: metric
+    brief: The number of requests that have resulted in a 5xx response
+    unit: "{request}"
+    instrument: counter
+    attributes:
+      - ref: wildfly.server
+      - ref: wildfly.listener
+
+  - id: metric.wildfly.request.count
+    metric_name: wildfly.request.count
+    stability: development
+    type: metric
+    brief: The number of requests served
+    unit: "{request}"
+    instrument: counter
+    attributes:
+      - ref: wildfly.server
+      - ref: wildfly.listener
+
+  - id: metric.wildfly.request.duration.sum
+    metric_name: wildfly.request.duration.sum
+    stability: development
+    type: metric
+    brief: The total amount of time spent processing requests
+    unit: s
+    instrument: counter
+    attributes:
+      - ref: wildfly.server
+      - ref: wildfly.listener
+
+  - id: metric.wildfly.transaction.count
+    metric_name: wildfly.transaction.count
+    stability: development
+    type: metric
+    brief: The number of in-flight transactions
+    unit: "{transaction}"
+    instrument: updowncounter
+
+  - id: metric.wildfly.transaction.created
+    metric_name: wildfly.transaction.created
+    stability: development
+    type: metric
+    brief: The total number of transactions created
+    unit: "{transaction}"
+    instrument: counter
+
+  - id: metric.wildfly.transaction.rollback
+    metric_name: wildfly.transaction.rollback
+    stability: development
+    type: metric
+    brief: The total number of transactions rolled back
+    unit: "{transaction}"
+    instrument: counter
+    attributes:
+      - ref: wildfly.rollback.cause
+
+  - id: metric.wildfly.transaction.committed
+    metric_name: wildfly.transaction.committed
+    stability: development
+    type: metric
+    brief: The total number of transactions committed
+    unit: "{transaction}"
+    instrument: counter
+
+  - id: metric.wildfly.db.client.connection.count
+    metric_name: wildfly.db.client.connection.count
+    stability: development
+    type: metric
+    brief: "The number of open physical database connections"
+    unit: "{connection}"
+    instrument: updowncounter
+    attributes:
+      - ref: db.client.connection.state
+
+  - id: metric.wildfly.db.client.connection.wait.count
+    metric_name: wildfly.db.client.connection.wait.count
+    stability: development
+    type: metric
+    brief: The number of connection requests that had to wait to obtain it
+    unit: "{request}"
+    instrument: counter
+
+  - id: metric.wildfly.session.created
+    metric_name: wildfly.session.created
+    stability: development
+    type: metric
+    brief: The total number of sessions created
+    unit: "{session}"
+    instrument: counter
+    attributes:
+      - ref: wildfly.deployment
+
+  - id: metric.wildfly.session.expired
+    metric_name: wildfly.session.expired
+    stability: development
+    type: metric
+    brief: The total number of sessions expired
+    unit: "{session}"
+    instrument: counter
+    attributes:
+      - ref: wildfly.deployment
+
+  - id: metric.wildfly.session.rejected
+    metric_name: wildfly.session.rejected
+    stability: development
+    type: metric
+    brief: The total number of sessions rejected
+    unit: "{session}"
+    instrument: counter
+    attributes:
+      - ref: wildfly.deployment
+
+  - id: metric.wildfly.session.active.count
+    metric_name: wildfly.session.active.count
+    stability: development
+    type: metric
+    brief: The number of active sessions
+    unit: "{session}"
+    instrument: updowncounter
+    attributes:
+      - ref: wildfly.deployment
+
+  - id: metric.wildfly.session.active.limit
+    metric_name: wildfly.session.active.limit
+    stability: development
+    type: metric
+    brief: The maximum number of active sessions
+    unit: "{session}"
+    instrument: updowncounter
+    attributes:
+      - ref: wildfly.deployment

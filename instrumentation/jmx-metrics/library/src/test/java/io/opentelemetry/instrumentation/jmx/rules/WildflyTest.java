@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.jmx.rules;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
@@ -51,6 +53,39 @@ class WildflyTest extends TargetSystemTest {
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
     copyTestWebAppToTarget(target, "/opt/jboss/wildfly/standalone/deployments/testapp.war");
+
+    startWeaverValidation(
+        "wildfly.yaml",
+        result ->
+            result
+                .checkNothingUnregisteredWithPrefix("wildfly.")
+                .checkRegisteredMetrics(
+                    "wildfly.",
+                    asList(
+                        "wildfly.session.created",
+                        "wildfly.session.active.count",
+                        "wildfly.session.active.limit",
+                        "wildfly.session.expired",
+                        "wildfly.session.rejected",
+                        "wildfly.request.count",
+                        "wildfly.request.duration.sum",
+                        "wildfly.error.count",
+                        "wildfly.network.io",
+                        "wildfly.db.client.connection.count",
+                        "wildfly.db.client.connection.wait.count",
+                        "wildfly.transaction.count",
+                        "wildfly.transaction.created",
+                        "wildfly.transaction.rollback",
+                        "wildfly.transaction.committed"),
+                    emptyList())
+                .checkRegisteredAttributes(
+                    "wildfly.",
+                    asList(
+                        "wildfly.deployment",
+                        "wildfly.server",
+                        "wildfly.listener",
+                        "wildfly.rollback.cause"),
+                    emptyList()));
 
     startTarget(target);
 
