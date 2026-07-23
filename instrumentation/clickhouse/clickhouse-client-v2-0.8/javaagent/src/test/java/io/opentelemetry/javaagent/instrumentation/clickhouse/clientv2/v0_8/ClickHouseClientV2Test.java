@@ -140,6 +140,45 @@ class ClickHouseClientV2Test {
   }
 
   @Test
+  void testClientWithMultipleEndpoints() throws Exception {
+    Client client =
+        new Client.Builder()
+            .addEndpoint(Protocol.HTTP, host, port, false)
+            .addEndpoint(Protocol.HTTP, "localhost", 8123, false)
+            .setOption("compress", "false")
+            .setUsername(USERNAME)
+            .setPassword(PASSWORD)
+            .build();
+    cleanup.deferCleanup(client);
+
+    QueryResponse response = client.query("select * from " + TABLE_NAME).join();
+    response.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "select test_table"
+                                : "SELECT " + DATABASE_NAME)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CLICKHOUSE),
+                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from " + TABLE_NAME),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test_table" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"))));
+  }
+
+  @Test
   void testQueryWithStringQuery() throws Exception {
     testing.runWithSpan(
         "parent",

@@ -54,14 +54,7 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
         return null;
       }
 
-      // https://clickhouse.com/docs/integrations/language-clients/java/client#client-configuration
-      // Currently, clientv2 supports only one endpoint. Since the endpoint is not going to change
-      // we'll cache it in a virtual field.
       AddressAndPort addressAndPort = ClickHouseClientV2Singletons.getAddressAndPort(client);
-      if (addressAndPort == null) {
-        String endpoint = client.getEndpoints().stream().findFirst().orElse(null);
-        addressAndPort = ClickHouseClientV2Singletons.setAddressAndPort(client, endpoint);
-      }
 
       String database = client.getConfiguration().get("database");
       Context parentContext = currentContext();
