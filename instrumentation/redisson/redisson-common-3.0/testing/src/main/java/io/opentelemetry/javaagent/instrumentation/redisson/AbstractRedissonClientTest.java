@@ -18,6 +18,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -31,13 +33,16 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.Collections.nCopies;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -87,6 +92,7 @@ public abstract class AbstractRedissonClientTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final String TEST_RECONNECT = "testReconnect";
+  private static final String TEST_SINGLE_CONNECTION = "testSingleConnection";
 
   private final GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
@@ -135,12 +141,16 @@ public abstract class AbstractRedissonClientTest {
       // command execution.
       singleServerConfig.setConnectionMinimumIdleSize(0);
     }
+    if (testInfo.getTags().contains(TEST_SINGLE_CONNECTION)) {
+      singleServerConfig.setConnectionMinimumIdleSize(1);
+      singleServerConfig.setConnectionPoolSize(1);
+    }
     try {
       // disable connection ping if it exists
-      singleServerConfig
-          .getClass()
-          .getMethod("setPingConnectionInterval", int.class)
-          .invoke(singleServerConfig, 0);
+      Method method =
+          singleServerConfig.getClass().getMethod("setPingConnectionInterval", int.class);
+      method.setAccessible(true);
+      method.invoke(singleServerConfig, 0);
     } catch (NoSuchMethodException ignored) {
       // ignored
     }
@@ -424,12 +434,35 @@ public abstract class AbstractRedissonClientTest {
           batch.getBucket("batch2").setAsync("v2");
           batch.execute();
         });
+    if (emitStableDatabaseSemconv()) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent").hasNoParent().hasKind(INTERNAL),
+                  span ->
+                      span.hasName("MULTI SET")
+                          .hasKind(CLIENT)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(DB_SYSTEM_NAME, REDIS),
+                              equalTo(DB_OPERATION_NAME, "MULTI SET"),
+                              equalTo(DB_OPERATION_BATCH_SIZE, 2L),
+                              equalTo(DB_QUERY_TEXT, "SET batch1 ?; SET batch2 ?"),
+                              equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? REDIS : null),
+                              equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "MULTI SET" : null),
+                              equalTo(
+                                  DB_STATEMENT,
+                                  emitOldDatabaseSemconv()
+                                      ? "SET batch1 ?; SET batch2 ?"
+                                      : null))));
+      return;
+    }
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasKind(INTERNAL),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "MULTI SET " + address : "DB Query")
+                    span.hasName("DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -437,21 +470,11 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(
-                                DB_OPERATION_NAME,
-                                emitStableDatabaseSemconv() ? "MULTI SET" : null),
-                            // db.operation.batch.size is not emitted because MULTI transaction
-                            // telemetry is split across wrapper and command spans, so this span
-                            // does not represent the full logical batch.
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                emitStableDatabaseSemconv()
-                                    ? "MULTI; SET batch1 ?"
-                                    : "MULTI;SET batch1 ?"))
+                            equalTo(DB_SYSTEM, REDIS),
+                            equalTo(DB_STATEMENT, "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + address : "SET")
+                    span.hasName("SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -459,12 +482,12 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET batch2 ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))
+                            equalTo(DB_SYSTEM, REDIS),
+                            equalTo(DB_STATEMENT, "SET batch2 ?"),
+                            equalTo(DB_OPERATION, "SET"))
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "EXEC " + address : "EXEC")
+                    span.hasName("EXEC")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -472,10 +495,269 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "EXEC"),
-                            equalTo(maybeStable(DB_OPERATION), "EXEC"))
+                            equalTo(DB_SYSTEM, REDIS),
+                            equalTo(DB_STATEMENT, "EXEC"),
+                            equalTo(DB_OPERATION, "EXEC"))
                         .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void atomicBatchSingleCommand() {
+    assumeStableAtomicBatchSupport();
+    RBatch batch =
+        redisson.createBatch(
+            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+    batch.getBucket("batch1").setAsync("v1");
+    batch.execute();
+    assertStableAtomicBatch("MULTI SET", null, "SET batch1 ?");
+  }
+
+  @Test
+  void batchChangedToAtomicAfterCommandsQueued() {
+    assumeStableAtomicBatchSupport();
+    BatchOptions options = BatchOptions.defaults();
+    RBatch batch = redisson.createBatch(options);
+    batch.getBucket("batch1").setAsync("v1");
+    batch.getBucket("batch2").setAsync("v2");
+    options.executionMode(BatchOptions.ExecutionMode.IN_MEMORY_ATOMIC);
+    batch.execute();
+    assertStableAtomicBatch("MULTI SET", 2L, "SET batch1 ?; SET batch2 ?");
+  }
+
+  @Test
+  @Tag(TEST_SINGLE_CONNECTION)
+  void batchChangedFromAtomicAfterCommandsQueued() {
+    assumeStableAtomicBatchSupport();
+    BatchOptions options =
+        BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.IN_MEMORY_ATOMIC);
+    RBatch batch = redisson.createBatch(options);
+    batch.getBucket("batch1").setAsync("v1");
+    batch.getBucket("batch2").setAsync("v2");
+    options.executionMode(BatchOptions.ExecutionMode.IN_MEMORY);
+    batch.execute();
+    redisson.getBucket("after-pipeline").get();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("PIPELINE SET " + address).hasKind(CLIENT).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET " + address).hasKind(CLIENT).hasNoParent()));
+  }
+
+  @Test
+  void atomicBatchBeforeRedisson372() {
+    assumeBatchBeforeRedisson372();
+
+    RBatch batch = createBatch(redisson).atomic();
+    batch.getBucket("batch1").setAsync("v1");
+    batch.getBucket("batch2").setAsync("v2");
+    batch.execute();
+    assertStableAtomicBatch("MULTI SET", 2L, "SET batch1 ?; SET batch2 ?");
+  }
+
+  @Test
+  @Tag(TEST_SINGLE_CONNECTION)
+  void batchBeforeRedisson372DoesNotSuppressPipeline() throws ReflectiveOperationException {
+    assumeBatchBeforeRedisson372();
+
+    RBatch batch = createBatch(redisson);
+    batch.getBucket("batch1").setAsync("v1");
+    batch.getBucket("batch2").setAsync("v2");
+    invokeExecute(batch);
+    redisson.getBucket("after-pipeline").get();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("PIPELINE SET " + address).hasKind(CLIENT).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET " + address).hasKind(CLIENT).hasNoParent()));
+  }
+
+  @Test
+  void atomicBatchCannotExecuteTwice() {
+    assumeStableAtomicBatchSupport();
+    RBatch batch =
+        redisson.createBatch(
+            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+    batch.getBucket("batch1").setAsync("v1");
+    batch.execute();
+
+    assertThat(catchThrowable(batch::execute)).isNotNull();
+    assertStableAtomicBatch("SET", null, "SET batch1 ?");
+  }
+
+  @Test
+  void atomicBatchMixedCommands() {
+    assumeStableAtomicBatchSupport();
+    RBatch batch =
+        redisson.createBatch(
+            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+    batch.getBucket("batch1").setAsync("v1");
+    batch.getBucket("batch1").getAsync();
+    batch.execute();
+    assertStableAtomicBatch("MULTI", 2L, "SET batch1 ?; GET batch1");
+  }
+
+  @Test
+  void atomicBatchAsyncCommand() {
+    assumeStableAtomicBatchSupport();
+    RBatch batch =
+        redisson.createBatch(
+            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+    batch.getBucket("batch1").setAsync("v1");
+    batch.getBucket("batch2").setAsync("v2");
+    batch.executeAsync().toCompletableFuture().join();
+    assertStableAtomicBatch("MULTI SET", 2L, "SET batch1 ?; SET batch2 ?");
+  }
+
+  @Test
+  @Tag(TEST_SINGLE_CONNECTION)
+  void atomicBatchDiscard() throws ReflectiveOperationException {
+    assumeStableAtomicBatchSupport();
+    try {
+      RBatch.class.getMethod("discard");
+    } catch (NoSuchMethodException ignored) {
+      Assumptions.abort();
+    }
+
+    RBatch batch =
+        redisson.createBatch(
+            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+    batch.getBucket("batch1").setAsync("v1");
+    batch.getClass().getMethod("discard").invoke(batch);
+
+    // Verify that DISCARD clears suppression state from the pooled connection.
+    redisson.getBucket("after-discard").get();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET " + address).hasKind(CLIENT).hasNoParent()));
+  }
+
+  @Test
+  void inMemoryAtomicBatchDiscard() throws ReflectiveOperationException {
+    assumeStableAtomicBatchSupport();
+    try {
+      RBatch.class.getMethod("discard");
+    } catch (NoSuchMethodException ignored) {
+      Assumptions.abort();
+    }
+
+    RBatch batch =
+        redisson.createBatch(
+            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.IN_MEMORY_ATOMIC));
+    batch.getBucket("batch1").setAsync("v1");
+    batch.getClass().getMethod("discard").invoke(batch);
+
+    assertThat(catchThrowable(batch::execute)).isNotNull();
+    redisson.getBucket("after-discard").get();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET " + address).hasKind(CLIENT).hasNoParent()));
+  }
+
+  @Test
+  void atomicBatchTruncatesQueryText() {
+    assumeStableAtomicBatchSupport();
+    String bucketName = "bucket" + String.join("", nCopies(15_000, "a"));
+    int batchSize = 4;
+    RBatch batch =
+        redisson.createBatch(
+            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+    for (int i = 0; i < batchSize; i++) {
+      batch.getBucket(bucketName).setAsync("v" + i);
+    }
+    batch.execute();
+    assertStableAtomicBatch(
+        "MULTI SET", (long) batchSize, String.join("; ", nCopies(2, "SET " + bucketName + " ?")));
+  }
+
+  @Test
+  @Tag(TEST_SINGLE_CONNECTION)
+  void atomicBatchFailure() {
+    assumeStableAtomicBatchSupport();
+    redisson.getBucket("wrongtype").set("value");
+    testing.clearData();
+
+    RBatch batch =
+        redisson.createBatch(
+            BatchOptions.defaults().executionMode(BatchOptions.ExecutionMode.REDIS_WRITE_ATOMIC));
+    batch.getMap("wrongtype").getAsync("field");
+    batch.getBucket("after").setAsync("value");
+
+    Throwable error = catchThrowable(batch::execute);
+    assertThat(error).isNotNull();
+    redisson.getBucket("after-failure").set("value");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("MULTI")
+                        .hasKind(CLIENT)
+                        .hasStatus(StatusData.error())
+                        .hasException(error)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_OPERATION_NAME, "MULTI"),
+                            equalTo(DB_OPERATION_BATCH_SIZE, 2L),
+                            equalTo(ERROR_TYPE, error.getClass().getName()),
+                            equalTo(DB_QUERY_TEXT, "HGET wrongtype field; SET after ?"),
+                            equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? REDIS : null),
+                            equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? "MULTI" : null),
+                            equalTo(
+                                DB_STATEMENT,
+                                emitOldDatabaseSemconv()
+                                    ? "HGET wrongtype field; SET after ?"
+                                    : null))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("SET " + address).hasKind(CLIENT).hasNoParent()));
+  }
+
+  private static void assumeStableAtomicBatchSupport() {
+    Assumptions.assumeTrue(emitStableDatabaseSemconv());
+    try {
+      Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
+    } catch (ClassNotFoundException ignored) {
+      Assumptions.abort();
+    }
+  }
+
+  private static void assumeBatchBeforeRedisson372() {
+    Assumptions.assumeTrue(emitStableDatabaseSemconv());
+    try {
+      RBatch.class.getMethod("atomic");
+      Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
+      Assumptions.abort();
+    } catch (NoSuchMethodException ignored) {
+      Assumptions.abort();
+    } catch (ClassNotFoundException ignored) {
+      // Atomic mode was passed to executeAsync before it became a CommandBatchService field.
+    }
+  }
+
+  private static void assertStableAtomicBatch(
+      String operationName, Long batchSize, String queryText) {
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(operationName)
+                        .hasKind(CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_OPERATION_NAME, operationName),
+                            equalTo(DB_OPERATION_BATCH_SIZE, batchSize),
+                            equalTo(DB_QUERY_TEXT, queryText),
+                            equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? REDIS : null),
+                            equalTo(DB_OPERATION, emitOldDatabaseSemconv() ? operationName : null),
+                            equalTo(DB_STATEMENT, emitOldDatabaseSemconv() ? queryText : null))));
   }
 
   @Test

@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.EndOperationListener;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.PromiseWrapper;
+import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonBatchContext;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonRequest;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
@@ -50,14 +51,20 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(RedisConnection connection, Object arg) {
+        Context parentContext = currentContext();
         InetSocketAddress remoteAddress =
             (InetSocketAddress) connection.getChannel().remoteAddress();
         RedissonRequest request = RedissonRequest.create(remoteAddress, arg);
+        if (RedissonBatchContext.shouldSuppress(connection, request)) {
+          return null;
+        }
+        if (RedissonBatchContext.isActive(parentContext)) {
+          return null;
+        }
         PromiseWrapper<?> promise = request.getPromiseWrapper();
         if (promise == null) {
           return null;
         }
-        Context parentContext = currentContext();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
         }
