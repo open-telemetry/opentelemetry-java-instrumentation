@@ -1,0 +1,222 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/open-telemetry/weaver/v0.24.2/schemas/semconv.schema.json
+
+groups:
+  - id: attributes.activemq
+    type: attribute_group
+    brief: ActiveMQ attributes
+    attributes:
+      - id: activemq.destination.type
+        type: string
+        stability: development
+        brief: ActiveMQ destination type (queue or topic)
+        examples:
+          - "queue"
+          - "topic"
+      - id: activemq.broker.name
+        type: string
+        stability: development
+        brief: ActiveMQ broker name
+        examples:
+          - "localhost"
+
+  - id: metric.activemq.producer.count
+    metric_name: activemq.producer.count
+    type: metric
+    stability: development
+    brief: The number of producers attached to this destination
+    unit: "{producer}"
+    instrument: updowncounter
+    attributes:
+      - ref: activemq.broker.name
+      - ref: messaging.destination.name
+      - ref: activemq.destination.type
+
+  - id: metric.activemq.consumer.count
+    metric_name: activemq.consumer.count
+    type: metric
+    stability: development
+    brief: The number of consumers attached to this destination
+    unit: "{consumer}"
+    instrument: updowncounter
+    attributes:
+      - ref: activemq.broker.name
+      - ref: messaging.destination.name
+      - ref: activemq.destination.type
+
+  - id: metric.activemq.destination.memory.usage
+    metric_name: activemq.destination.memory.usage
+    type: metric
+    stability: development
+    brief: The amount of used memory by this destination
+    unit: By
+    instrument: updowncounter
+    attributes:
+      - ref: activemq.broker.name
+      - ref: messaging.destination.name
+      - ref: activemq.destination.type
+
+  - id: metric.activemq.destination.memory.limit
+    metric_name: activemq.destination.memory.limit
+    type: metric
+    stability: development
+    brief: The amount of configured memory limit for this destination
+    unit: By
+    instrument: updowncounter
+    attributes:
+      - ref: activemq.broker.name
+      - ref: messaging.destination.name
+      - ref: activemq.destination.type
+
+  - id: metric.activemq.destination.temp.utilization
+    metric_name: activemq.destination.temp.utilization
+    type: metric
+    stability: development
+    brief: The percentage of non-persistent storage used by this destination
+    unit: "1"
+    instrument: gauge
+    attributes:
+      - ref: activemq.broker.name
+      - ref: messaging.destination.name
+      - ref: activemq.destination.type
+
+  - id: metric.activemq.destination.temp.limit
+    metric_name: activemq.destination.temp.limit
+    type: metric
+    stability: development
+    brief: The amount of configured non-persistent storage limit for this destination
+    unit: By
+    instrument: updowncounter
+    attributes:
+      - ref: activemq.broker.name
+      - ref: messaging.destination.name
+      - ref: activemq.destination.type
+
+  - id: metric.activemq.message.queue.size
+    metric_name: activemq.message.queue.size
+    type: metric
+    stability: development
+    brief: The current number of messages waiting to be consumed
+    unit: "{message}"
+    instrument: updowncounter
+    attributes:
+      - ref: activemq.broker.name
+      - ref: messaging.destination.name
+      - ref: activemq.destination.type
+
+  - id: metric.activemq.message.expired
+    metric_name: activemq.message.expired
+    type: metric
+    stability: development
+    brief: The number of messages not delivered because they expired
+    unit: "{message}"
+    instrument: counter
+    attributes:
+      - ref: activemq.broker.name
+      - ref: messaging.destination.name
+      - ref: activemq.destination.type
+
+  - id: metric.activemq.message.enqueued
+    metric_name: activemq.message.enqueued
+    type: metric
+    stability: development
+    brief: The number of messages sent to this destination
+    unit: "{message}"
+    instrument: counter
+    attributes:
+      - ref: activemq.broker.name
+      - ref: messaging.destination.name
+      - ref: activemq.destination.type
+
+  - id: metric.activemq.message.dequeued
+    metric_name: activemq.message.dequeued
+    type: metric
+    stability: development
+    brief: The number of messages acknowledged and removed from this destination
+    unit: "{message}"
+    instrument: counter
+    attributes:
+      - ref: activemq.broker.name
+      - ref: messaging.destination.name
+      - ref: activemq.destination.type
+
+  - id: metric.activemq.message.enqueue.average_duration
+    metric_name: activemq.message.enqueue.average_duration
+    type: metric
+    stability: development
+    brief: The average time a message was held on this destination
+    unit: "s"
+    instrument: gauge
+    attributes:
+      - ref: activemq.broker.name
+      - ref: messaging.destination.name
+      - ref: activemq.destination.type
+
+  - id: metric.activemq.connection.count
+    metric_name: activemq.connection.count
+    type: metric
+    stability: development
+    brief: The number of active connections
+    unit: "{connection}"
+    instrument: updowncounter
+    attributes:
+      - ref: activemq.broker.name
+
+  - id: metric.activemq.memory.utilization
+    metric_name: activemq.memory.utilization
+    type: metric
+    stability: development
+    brief: The percentage of broker memory used
+    unit: "1"
+    instrument: gauge
+    attributes:
+      - ref: activemq.broker.name
+
+  - id: metric.activemq.memory.limit
+    metric_name: activemq.memory.limit
+    type: metric
+    stability: development
+    brief: The amount of configured broker memory limit
+    unit: By
+    instrument: updowncounter
+    attributes:
+      - ref: activemq.broker.name
+
+  - id: metric.activemq.store.utilization
+    metric_name: activemq.store.utilization
+    type: metric
+    stability: development
+    brief: The percentage of broker persistent storage used
+    unit: "1"
+    instrument: gauge
+    attributes:
+      - ref: activemq.broker.name
+
+  - id: metric.activemq.store.limit
+    metric_name: activemq.store.limit
+    type: metric
+    stability: development
+    brief: The amount of configured broker persistent storage limit
+    unit: By
+    instrument: updowncounter
+    attributes:
+      - ref: activemq.broker.name
+
+  - id: metric.activemq.temp.utilization
+    metric_name: activemq.temp.utilization
+    type: metric
+    stability: development
+    brief: The percentage of broker non-persistent storage used
+    unit: "1"
+    instrument: gauge
+    attributes:
+      - ref: activemq.broker.name
+
+  - id: metric.activemq.temp.limit
+    metric_name: activemq.temp.limit
+    type: metric
+    stability: development
+    brief: The amount of configured broker non-persistent storage limit
+    unit: By
+    instrument: updowncounter
+    attributes:
+      - ref: activemq.broker.name
