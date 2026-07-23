@@ -100,6 +100,43 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
+  void testComponentConfigDoesNotUseInstrumentationSpecialCases() {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("component.general.http.client.request-captured-headers", "component-header");
+    properties.put(
+        "otel.instrumentation.http.client.capture-request-headers", "instrumentation-header");
+    properties.put("component.java.jmx.discovery.delay", "42");
+    properties.put("otel.jmx.discovery.delay", "30s");
+    properties.put(
+        "otel.instrumentation.common.peer-service-mapping", "1.2.3.4=InstrumentationService");
+
+    DeclarativeConfigProperties config =
+        ConfigPropertiesBackedDeclarativeConfigProperties.createComponentProperties(
+            DefaultConfigProperties.createFromMap(properties), "component.");
+
+    assertThat(
+            config
+                .getStructured("general")
+                .getStructured("http")
+                .getStructured("client")
+                .getScalarList("request_captured_headers", String.class))
+        .containsExactly("component-header");
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("jmx")
+                .getStructured("discovery")
+                .getLong("delay"))
+        .isEqualTo(42L);
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructuredList("service_peer_mapping"))
+        .isNull();
+  }
+
+  @Test
   void testCommonDbQuerySanitizationMapping() {
     DeclarativeConfigProperties config =
         createConfig("otel.instrumentation.common.db.query-sanitization.enabled", "false");
