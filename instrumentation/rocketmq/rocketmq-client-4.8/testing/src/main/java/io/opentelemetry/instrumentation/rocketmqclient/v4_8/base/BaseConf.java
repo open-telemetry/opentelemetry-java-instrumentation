@@ -18,6 +18,7 @@ import org.apache.rocketmq.test.util.MQRandomUtils;
 import org.apache.rocketmq.test.util.RandomUtil;
 
 public class BaseConf {
+  public static final String NAMESPACE = "namespace";
   public static final String nsAddr;
   private static final String clusterName;
   private static final NamesrvController namesrvController;
@@ -36,7 +37,7 @@ public class BaseConf {
 
   public static String initTopic() {
     String topic = MQRandomUtils.getRandomTopic();
-    IntegrationTestBase.initTopic(topic, nsAddr, clusterName);
+    IntegrationTestBase.initTopic(NAMESPACE + "%" + topic, nsAddr, clusterName);
     return topic;
   }
 
@@ -46,6 +47,7 @@ public class BaseConf {
     DefaultMQPushConsumer consumer = new DefaultMQPushConsumer("consumerGroup");
     consumer.setInstanceName(RandomUtil.getStringByUUID());
     consumer.setNamesrvAddr(nsAddr);
+    consumer.setNamespace(NAMESPACE);
     consumer.subscribe(topic, subExpression);
     consumer.setMessageListener(listener);
     consumer.start();
@@ -56,6 +58,7 @@ public class BaseConf {
     DefaultMQProducer producer = new DefaultMQProducer(RandomUtil.getStringByUUID());
     producer.setInstanceName(UUID.randomUUID().toString());
     producer.setNamesrvAddr(ns);
+    producer.setNamespace(NAMESPACE);
     producer.start();
     return producer;
   }

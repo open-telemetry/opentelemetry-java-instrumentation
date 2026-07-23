@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0.RocketMqSingletons.consumerReceiveInstrumenter;
 
 import apache.rocketmq.v2.ReceiveMessageRequest;
@@ -41,6 +42,9 @@ public class ReceiveSpanFinishingCallback implements FutureCallback<ReceiveMessa
     Instrumenter<ReceiveMessageRequest, List<MessageView>> receiveInstrumenter =
         consumerReceiveInstrumenter();
     Context parentContext = Context.current();
+    for (MessageView messageView : messageViews) {
+      VirtualFieldStore.setContextByMessage(messageView, parentContext);
+    }
     if (receiveInstrumenter.shouldStart(parentContext, request)) {
       Context context =
           InstrumenterUtil.startAndEnd(
@@ -51,8 +55,10 @@ public class ReceiveSpanFinishingCallback implements FutureCallback<ReceiveMessa
               null,
               timer.startTime(),
               timer.now());
-      for (MessageView messageView : messageViews) {
-        VirtualFieldStore.setContextByMessage(messageView, context);
+      if (!emitStableMessagingSemconv()) {
+        for (MessageView messageView : messageViews) {
+          VirtualFieldStore.setContextByMessage(messageView, context);
+        }
       }
     }
   }

@@ -5,7 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_CLIENT_GROUP;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_NAMESPACE;
 
 import apache.rocketmq.v2.ReceiveMessageRequest;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -31,6 +35,14 @@ class RocketMqConsumerReceiveAttributeExtractor
       @Nullable List<MessageView> messageViews,
       @Nullable Throwable error) {
     String consumerGroup = request.getGroup().getName();
-    attributes.put(MESSAGING_ROCKETMQ_CLIENT_GROUP, consumerGroup);
+    if (emitStableMessagingSemconv()) {
+      attributes.put(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup);
+      attributes.put(
+          MESSAGING_ROCKETMQ_NAMESPACE,
+          request.getMessageQueue().getTopic().getResourceNamespace());
+    }
+    if (emitOldMessagingSemconv()) {
+      attributes.put(MESSAGING_ROCKETMQ_CLIENT_GROUP, consumerGroup);
+    }
   }
 }

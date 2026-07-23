@@ -43,12 +43,16 @@ public final class SpanKey {
   private static final ContextKey<Span> DB_CLIENT_KEY =
       ContextKey.named("opentelemetry-traces-span-key-db-client");
 
+  private static final ContextKey<Span> PRODUCER_CREATE_KEY =
+      ContextKey.named("opentelemetry-traces-span-key-producer-create");
   private static final ContextKey<Span> PRODUCER_KEY =
       ContextKey.named("opentelemetry-traces-span-key-producer");
   private static final ContextKey<Span> CONSUMER_RECEIVE_KEY =
       ContextKey.named("opentelemetry-traces-span-key-consumer-receive");
   private static final ContextKey<Span> CONSUMER_PROCESS_KEY =
       ContextKey.named("opentelemetry-traces-span-key-consumer-process");
+  private static final ContextKey<Span> CONSUMER_SETTLE_KEY =
+      ContextKey.named("opentelemetry-traces-span-key-consumer-settle");
 
   /* Span keys */
 
@@ -66,9 +70,11 @@ public final class SpanKey {
   public static final SpanKey RPC_CLIENT = new SpanKey(RPC_CLIENT_KEY);
   public static final SpanKey DB_CLIENT = new SpanKey(DB_CLIENT_KEY);
 
+  public static final SpanKey PRODUCER_CREATE = new SpanKey(PRODUCER_CREATE_KEY);
   public static final SpanKey PRODUCER = new SpanKey(PRODUCER_KEY);
   public static final SpanKey CONSUMER_RECEIVE = new SpanKey(CONSUMER_RECEIVE_KEY);
   public static final SpanKey CONSUMER_PROCESS = new SpanKey(CONSUMER_PROCESS_KEY);
+  public static final SpanKey CONSUMER_SETTLE = new SpanKey(CONSUMER_SETTLE_KEY);
 
   private final ContextKey<Span> key;
 
