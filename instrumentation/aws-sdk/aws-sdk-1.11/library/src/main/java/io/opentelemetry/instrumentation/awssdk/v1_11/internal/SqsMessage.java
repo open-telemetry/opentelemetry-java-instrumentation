@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
+import io.opentelemetry.context.Context;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -13,6 +14,8 @@ import javax.annotation.Nullable;
  * avoids muzzle failure when sqs classes are not present.
  */
 interface SqsMessage {
+
+  Context getCreationContext();
 
   Map<String, String> getAttributes();
 
