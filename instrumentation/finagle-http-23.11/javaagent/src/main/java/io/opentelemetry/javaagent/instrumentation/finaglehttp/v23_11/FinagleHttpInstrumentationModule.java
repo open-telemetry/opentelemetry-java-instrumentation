@@ -10,12 +10,10 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class FinagleHttpInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class FinagleHttpInstrumentationModule extends InstrumentationModule {
 
   public FinagleHttpInstrumentationModule() {
     super("finagle-http", "finagle-http-23.11");

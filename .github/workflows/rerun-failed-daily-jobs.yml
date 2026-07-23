@@ -1,8 +1,9 @@
 name: Rerun failed daily jobs
 
 on:
-  # Uses only the trusted default-branch rerun script and treats the run ID as data.
-  workflow_run: # zizmor: ignore[dangerous-triggers]
+  workflow_run:
+    # zizmor: ignore[dangerous-triggers] Uses only the trusted default-branch rerun
+    # script and treats the run ID as data.
     workflows:
       - "Build (daily)"
       - "Build (daily --no-build-cache)"
@@ -29,6 +30,8 @@ jobs:
     if: github.event.workflow_run.conclusion == 'failure'
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Rerun eligible failed jobs
         env:

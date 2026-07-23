@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -113,16 +112,13 @@ public class AdviceInspector {
     }
 
     // no advice annotations were used so the instrumentation is using an AgentBuilder.Transformer
-    if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
-      ExperimentalInstrumentationModule experimentalModule =
-          (ExperimentalInstrumentationModule) instrumentationModule;
-      // injected class names makes sense only for indy instrumentation
-      if (!experimentalModule.injectedClassNames().isEmpty()) {
-        return true;
-      }
-      if (!experimentalModule.exposedClassNames().isEmpty()) {
-        return true;
-      }
+    // injected class names makes sense only for indy instrumentation
+    if (!instrumentationModule.injectedClassNames().isEmpty()) {
+      return true;
+    }
+    // exposed class names makes sense only for indy instrumentation
+    if (!instrumentationModule.exposedClassNames().isEmpty()) {
+      return true;
     }
 
     // we aren't able to tell whether the instrumentation is ready for indy instrumentation or not
