@@ -19,8 +19,8 @@ public class BulkGetCompletionListener extends CompletionListener<BulkGetFuture<
 
   @Nullable
   public static BulkGetCompletionListener create(
-      Context parentContext, MemcachedConnection connection, String methodName) {
-    SpymemcachedRequest request = SpymemcachedRequest.create(connection, methodName);
+      Context parentContext, MemcachedConnection connection, String methodName, Object[] args) {
+    SpymemcachedRequest request = SpymemcachedRequest.create(connection, methodName, args);
     if (!instrumenter().shouldStart(parentContext, request)) {
       return null;
     }
