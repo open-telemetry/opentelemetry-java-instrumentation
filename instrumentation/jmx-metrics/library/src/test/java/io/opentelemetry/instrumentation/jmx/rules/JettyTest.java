@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jmx.rules;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
@@ -63,6 +64,36 @@ class JettyTest extends TargetSystemTest {
     copyTestWebAppToTarget(container, "/var/lib/jetty/webapps/ROOT.war");
 
     startTarget(container);
+
+    List<String> reportedMetrics =
+        new ArrayList<>(
+            asList(
+                "jetty.thread.limit",
+                "jetty.thread.count",
+                "jetty.thread.queue.size",
+                "jetty.thread.busy.count",
+                "jetty.select.count",
+                "jetty.thread.idle.count"));
+
+    List<String> notReportedMetrics = new ArrayList<>();
+
+    if (jettyMajorVersion >= 12) {
+      reportedMetrics.add("jetty.session.count");
+      notReportedMetrics.add("jetty.session.created.count");
+      notReportedMetrics.add("jetty.session.duration.sum");
+    } else {
+      notReportedMetrics.add("jetty.session.count");
+      reportedMetrics.add("jetty.session.created.count");
+      reportedMetrics.add("jetty.session.duration.sum");
+    }
+
+    startWeaverValidation(
+        "jetty.yaml",
+        result ->
+            result
+                .checkNothingUnregisteredWithPrefix("jetty.")
+                .checkRegisteredMetrics("jetty.", reportedMetrics, notReportedMetrics)
+                .checkRegisteredAttributes("jetty.", singletonList("jetty.context"), emptyList()));
 
     verifyMetrics(createMetricsVerifier(jettyMajorVersion));
   }
