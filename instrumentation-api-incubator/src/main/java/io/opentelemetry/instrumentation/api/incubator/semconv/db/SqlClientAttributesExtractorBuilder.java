@@ -68,10 +68,12 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Sets whether the instrumentation knows that its SQL-like language or request shape is limited
-   * to a single operation and collection.
+   * Sets whether {@code db.operation.name} and {@code db.collection.name} can be derived from
+   * {@code db.query.text}.
    *
-   * <p>For most instrumentations, enabling this will produce invalid semantic conventions.
+   * <p>Enable this only when the database system does not support query text with multiple
+   * operations or multiple collections in non-batch operations. For most instrumentations, enabling
+   * this will produce invalid semantic conventions.
    */
   @CanIgnoreReturnValue
   public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setSingleOperationAndCollection(

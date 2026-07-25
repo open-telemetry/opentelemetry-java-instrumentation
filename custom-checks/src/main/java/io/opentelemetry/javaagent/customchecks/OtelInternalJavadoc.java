@@ -23,7 +23,7 @@ import javax.lang.model.element.Modifier;
 @AutoService(BugChecker.class)
 @BugPattern(
     summary =
-        "This public internal class doesn't end with any of the applicable javadoc disclaimers: \""
+        "This public internal class doesn't contain any of the applicable javadoc disclaimers: \""
             + OtelInternalJavadoc.EXPECTED_INTERNAL_COMMENT_V1
             + "\", or \""
             + OtelInternalJavadoc.EXPECTED_INTERNAL_COMMENT_V2

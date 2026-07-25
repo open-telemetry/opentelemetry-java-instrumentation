@@ -177,9 +177,17 @@ public final class ParseContext {
    * @param splitSeparator the separator between individual parameters (";" or "&amp;")
    */
   public void applyCommonParams(String jdbcUrl, String startDelimiter, String splitSeparator) {
-    Map<String, String> params =
-        UrlParsingUtils.extractParams(jdbcUrl, startDelimiter, splitSeparator);
+    applyCommonParams(UrlParsingUtils.extractParams(jdbcUrl, startDelimiter, splitSeparator));
+  }
 
+  /**
+   * Apply common parameters from a pre-parsed parameter map. Equivalent to {@link
+   * #applyCommonParams(String, String, String)} but avoids re-parsing the URL when the caller has
+   * already extracted the parameters.
+   *
+   * @param params the parameter map (keys must be lowercase)
+   */
+  public void applyCommonParams(Map<String, String> params) {
     if (params.isEmpty()) {
       return;
     }

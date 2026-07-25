@@ -36,7 +36,7 @@ tasks.withType<Test>().configureEach {
 }
 
 tasks {
-  val testExceptionSignalLogs by registering(Test::class) {
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

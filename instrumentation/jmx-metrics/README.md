@@ -18,7 +18,7 @@ To enable collection of the predefined metrics, specify a list of targets as the
 
 ```bash
 $ java -javaagent:path/to/opentelemetry-javaagent.jar \
-     -Dotel.jmx.target.system=jetty,kafka-broker \
+     -Dotel.jmx.target.system=jetty,experimental-kafka-broker \
      ... \
      -jar myapp.jar
 ```
@@ -28,11 +28,12 @@ No targets are enabled by default. The supported target environments are listed 
 - [activemq](library/activemq.md)
 - [camel](library/camel.md)
 - [jetty](library/jetty.md)
-- [kafka-broker](javaagent/kafka-broker.md)
-- [kafka-connect](library/kafka-connect.md)
+- [experimental-kafka-broker](javaagent/kafka-broker.md)
+- [experimental-kafka-connect](library/kafka-connect.md)
 - [tomcat](library/tomcat.md)
 - [wildfly](library/wildfly.md)
 - [hadoop](library/hadoop.md)
+- [experimental-cassandra](library/cassandra.md)
 
 The [jvm](library/jvm.md) metrics definitions are also included in the [jmx-metrics library](./library)
 to allow reusing them without instrumentation. When using instrumentation, the [runtime-telemetry](../runtime-telemetry)
@@ -496,7 +497,7 @@ To contribute to pre-defined metrics definitions or extend them through custom c
 
 - align and reuse [semantic conventions metrics recommendations and definitions](https://opentelemetry.io/docs/specs/semconv/general/metrics/) when possible.
 - namespace metric names and metric attributes with the target system as prefix.
-- metrics measuring time should prefer to use `duration` over `time`, also the metric value should use seconds as unit, using unit conversion if needed.
+- metrics measuring time should prefer to use `duration` over `time`, also the metric value should use seconds as unit (following [semantic conventions recommendations](https://opentelemetry.io/docs/specs/semconv/general/metrics/#instrument-units)), using unit conversion if needed.
 - metric name should not be the prefix of another metric, for example `request.duration` and `request.duration.last` should be avoided.
 - when a metric is exposed in JMX as "current value", only capture the "current value" and ignore any pre-aggregation (for example mean, min, max, ...) as it is better handled by a backend, for example
   - `threadpool.thread.count`

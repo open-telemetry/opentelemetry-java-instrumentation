@@ -11,13 +11,11 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class JerseyInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class JerseyInstrumentationModule extends InstrumentationModule {
   public JerseyInstrumentationModule() {
     super("jaxrs", "jaxrs-2.0", "jersey", "jersey-2.0");
   }
@@ -30,12 +28,6 @@ public class JerseyInstrumentationModule extends InstrumentationModule
         "javax.ws.rs.Path",
         // added in 2.0
         "org.glassfish.jersey.server.ContainerRequest");
-  }
-
-  @Override
-  public String getModuleGroup() {
-    // depends on Servlet3SnippetInjectingResponseWrapper
-    return "servlet";
   }
 
   @Override

@@ -29,7 +29,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testDataFetcher by registering(Test::class) {
+  val testDataFetcher = register<Test>("testDataFetcher") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

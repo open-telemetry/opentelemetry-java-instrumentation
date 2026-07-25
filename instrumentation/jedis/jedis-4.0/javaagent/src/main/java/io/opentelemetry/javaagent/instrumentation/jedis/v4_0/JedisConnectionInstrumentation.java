@@ -55,11 +55,11 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
   }
 
   public static class AdviceScope {
-    private final Context context;
-    private final Scope scope;
+    @Nullable private final Context context;
+    @Nullable private final Scope scope;
     private final JedisRequest request;
 
-    private AdviceScope(Context context, Scope scope, JedisRequest request) {
+    private AdviceScope(@Nullable Context context, @Nullable Scope scope, JedisRequest request) {
       this.context = context;
       this.scope = scope;
       this.request = request;
@@ -67,7 +67,18 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
     @Nullable
     public static AdviceScope start(JedisRequest request) {
+      if (JedisPipelineContext.inTransactionFraming()) {
+        // MULTI/EXEC/DISCARD frame a batched transaction; they are represented by the MULTI batch
+        // span rather than getting their own spans.
+        return null;
+      }
       Context parentContext = currentContext();
+      if (JedisPipelineContext.capture(request)) {
+        // A pipeline or transaction is active, so this command is captured and aggregated into the
+        // batch span created at sync()/exec() rather than getting its own span.
+        // Return a scope so method exit can capture the socket after sendCommand connects.
+        return new AdviceScope(null, null, request);
+      }
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }
@@ -76,7 +87,11 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
     }
 
     public void end(@Nullable Socket socket, @Nullable Throwable throwable) {
+      // sendCommand may connect after start(), so capture the socket after the command is sent.
       request.setSocket(socket);
+      if (scope == null || context == null) {
+        return;
+      }
       scope.close();
       JedisRequestContext.endIfNotAttached(instrumenter(), context, request, throwable);
     }

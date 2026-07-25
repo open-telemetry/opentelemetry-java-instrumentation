@@ -43,10 +43,7 @@ public class TomcatConnectionPoolMetrics {
     dataSourceMetrics.computeIfAbsent(dataSource, TomcatConnectionPoolMetrics::createInstruments);
   }
 
-  // deprecated DbConnectionPoolMetrics.create(Meter, String) overload exists solely so we can keep
-  // emitting the legacy io.opentelemetry.tomcat-jdbc scope by default; goes away in 3.0 once
-  // v3-preview becomes default
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation") // deprecated overload keeps the legacy scope by default
   private static BatchCallback createInstruments(DataSourceProxy dataSource) {
     DbConnectionPoolMetrics metrics =
         DbConnectionPoolMetrics.create(meter, dataSource.getPoolName());

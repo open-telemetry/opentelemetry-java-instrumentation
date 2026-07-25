@@ -49,7 +49,7 @@ testing {
   suites {
     // using a test suite to ensure that classes from library-instrumentation-shaded that were
     // extracted to the output directory are not available during tests
-    val testAzure by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testAzure") {
       dependencies {
         if (otelProps.testLatestDeps) {
           implementation("com.azure:azure-core:latest.release")

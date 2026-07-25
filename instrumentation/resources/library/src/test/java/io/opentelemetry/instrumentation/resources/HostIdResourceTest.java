@@ -12,7 +12,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
@@ -31,27 +31,26 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class HostIdResourceTest {
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest
   @MethodSource("createResourceLinuxCases")
-  void createResourceLinux(
-      String name, String expectedValue, Function<Path, List<String>> pathReader) {
+  void createResourceLinux(String expectedValue, Function<Path, List<String>> pathReader) {
     HostIdResource hostIdResource = new HostIdResource(() -> "linux", pathReader, null);
     assertHostId(expectedValue, hostIdResource);
   }
 
   private static Stream<Arguments> createResourceLinuxCases() {
     return Stream.of(
-        arguments("default", "test", (Function<Path, List<String>>) path -> singletonList("test")),
-        arguments(
+        argumentSet(
+            "default", "test", (Function<Path, List<String>>) path -> singletonList("test")),
+        argumentSet(
             "empty file or error reading",
             null,
             (Function<Path, List<String>>) path -> emptyList()));
   }
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest
   @MethodSource("createResourceWindowsCases")
-  void createResourceWindows(
-      String name, String expectedValue, Supplier<List<String>> queryWindowsRegistry) {
+  void createResourceWindows(String expectedValue, Supplier<List<String>> queryWindowsRegistry) {
     HostIdResource hostIdResource =
         new HostIdResource(() -> "Windows 95", null, queryWindowsRegistry);
     assertHostId(expectedValue, hostIdResource);
@@ -59,7 +58,7 @@ class HostIdResourceTest {
 
   private static Stream<Arguments> createResourceWindowsCases() {
     return Stream.of(
-        arguments(
+        argumentSet(
             "default",
             "test",
             (Supplier<List<String>>)
@@ -67,7 +66,7 @@ class HostIdResourceTest {
                     asList(
                         "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography",
                         "    MachineGuid    REG_SZ    test")),
-        arguments("short output", null, (Supplier<List<String>>) Collections::emptyList));
+        argumentSet("short output", null, (Supplier<List<String>>) Collections::emptyList));
   }
 
   private static void assertHostId(String expectedValue, HostIdResource hostIdResource) {

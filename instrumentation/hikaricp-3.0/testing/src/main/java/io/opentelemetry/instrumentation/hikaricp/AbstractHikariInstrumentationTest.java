@@ -88,15 +88,21 @@ public abstract class AbstractHikariInstrumentationTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "db.client.connections.idle.min",
+            emitStableDatabaseSemconv()
+                ? "db.client.connection.idle.min"
+                : "db.client.connections.idle.min",
             AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME, "db.client.connections.max", AbstractIterableAssert::isEmpty);
+            INSTRUMENTATION_NAME,
+            emitStableDatabaseSemconv() ? "db.client.connection.max" : "db.client.connections.max",
+            AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "db.client.connections.pending_requests",
+            emitStableDatabaseSemconv()
+                ? "db.client.connection.pending_requests"
+                : "db.client.connections.pending_requests",
             AbstractIterableAssert::isEmpty);
   }
 

@@ -194,7 +194,7 @@ class JdbcConnectionUrlParserTest {
             .setPort(3306)
             .build(),
         arg("jdbc:mysql:failover://[::1]:3306") // IPv6 without slash
-            .setShortUrl("mysql:failover://::1:3306")
+            .setShortUrl("mysql:failover://[::1]:3306")
             .setSystem(MYSQL)
             .setSubtype("failover")
             .setHost("::1")
@@ -419,7 +419,7 @@ class JdbcConnectionUrlParserTest {
             .setName("mdbdb")
             .build(),
         arg("jdbc:mariadb:loadbalance://[2001:0660:7401:0200:0000:0000:0edf:bdd7]:33,mdb.host/mdbdb")
-            .setShortUrl("mariadb:loadbalance://2001:0660:7401:0200:0000:0000:0edf:bdd7:33")
+            .setShortUrl("mariadb:loadbalance://[2001:0660:7401:0200:0000:0000:0edf:bdd7]:33")
             .setSystem(MARIADB)
             .setSubtype("loadbalance")
             .setHost("2001:0660:7401:0200:0000:0000:0edf:bdd7")
@@ -449,7 +449,7 @@ class JdbcConnectionUrlParserTest {
             .setPort(3306)
             .build(),
         arg("jdbc:mariadb:failover://[::1]:3306") // IPv6 without slash
-            .setShortUrl("mariadb:failover://::1:3306")
+            .setShortUrl("mariadb:failover://[::1]:3306")
             .setSystem(MARIADB)
             .setSubtype("failover")
             .setHost("::1")
@@ -557,6 +557,25 @@ class JdbcConnectionUrlParserTest {
             .setPort(1433)
             .setName("ssdb")
             .build(),
+        // database= alias (shorthand for databaseName)
+        arg("jdbc:sqlserver://ss.host;database=ssdb;")
+            .setShortUrl("sqlserver://ss.host:1433")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setHost("ss.host")
+            .setPort(1433)
+            .setName("ssdb")
+            .build(),
+        arg("jdbc:sqlserver://ss.host\\ssinstance:44;database=ssdb;user=ssuser")
+            .setShortUrl("sqlserver://ss.host:44")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setUser("ssuser")
+            .setHost("ss.host")
+            .setPort(44)
+            .setNamespace("ssinstance|ssdb")
+            .setName("ssinstance")
+            .build(),
         arg("jdbc:microsoft:sqlserver://ss.host:44;DatabaseName=ssdb;user=ssuser;password=pw;user=ssuser2;")
             .setShortUrl("microsoft:sqlserver://ss.host:44")
             .setSystem("microsoft.sql_server")
@@ -657,6 +676,28 @@ class JdbcConnectionUrlParserTest {
             .setHost("ss.host")
             .setPort(1433)
             .setNamespace("ssinstance")
+            .setName("ssinstance")
+            .build(),
+        // database= alias (shorthand for databaseName) in jTDS URLs
+        arg("jdbc:jtds:sqlserver://ss.host/ssdb;instance=ssinstance;database=otherdb")
+            .setShortUrl("jtds:sqlserver://ss.host:1433")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setSubtype("sqlserver")
+            .setHost("ss.host")
+            .setPort(1433)
+            .setNamespace("ssinstance|ssdb")
+            .setName("ssinstance")
+            .build(),
+        // database= param provides database name when there's no URL path
+        arg("jdbc:jtds:sqlserver://ss.host;instance=ssinstance;database=ssdb")
+            .setShortUrl("jtds:sqlserver://ss.host:1433")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setSubtype("sqlserver")
+            .setHost("ss.host")
+            .setPort(1433)
+            .setNamespace("ssinstance|ssdb")
             .setName("ssinstance")
             .build(),
         arg("jdbc:jtds:sqlserver://ss.host:1444/urldb")

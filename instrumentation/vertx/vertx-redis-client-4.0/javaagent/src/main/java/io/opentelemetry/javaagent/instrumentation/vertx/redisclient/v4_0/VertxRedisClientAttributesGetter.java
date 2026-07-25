@@ -7,19 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
-final class VertxRedisClientAttributesGetter
+class VertxRedisClientAttributesGetter
     implements DbClientAttributesGetter<VertxRedisClientRequest, Void> {
-
-  private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(
-          DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "vertx_redis_client"));
 
   @Override
   public String getDbSystemName(VertxRedisClientRequest request) {
@@ -51,14 +44,21 @@ final class VertxRedisClientAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getDbQueryText(VertxRedisClientRequest request) {
-    return sanitizer.sanitize(request.getCommand(), request.getArgs());
+    return request.getQueryText();
   }
 
   @Nullable
   @Override
   public String getDbOperationName(VertxRedisClientRequest request) {
-    return request.getCommand();
+    return request.getOperationName();
+  }
+
+  @Override
+  @Nullable
+  public Long getDbOperationBatchSize(VertxRedisClientRequest request) {
+    return request.getOperationBatchSize();
   }
 
   @Nullable

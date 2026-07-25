@@ -42,7 +42,7 @@ dependencies {
 }
 
 tasks {
-  val testWithRabbitInstrumentation by registering(Test::class) {
+  val testWithRabbitInstrumentation = register<Test>("testWithRabbitInstrumentation") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -54,7 +54,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.spring-rabbit.enabled=true")
   }
 
-  val testWithProducerInstrumentation by registering(Test::class) {
+  val testWithProducerInstrumentation = register<Test>("testWithProducerInstrumentation") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {

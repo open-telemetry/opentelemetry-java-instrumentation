@@ -141,9 +141,6 @@ targets:
       target: ':instrumentation:gwt-2.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:hbase-client-2.0:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:helidon-4.3:javaagent'
     - type: gradle
       path: ./
@@ -516,6 +513,15 @@ targets:
       target: ':instrumentation:graphql-java:graphql-java-common-12.0:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:hbase:hbase-client-1.4:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:hbase:hbase-client-2.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:hbase:hbase-client-common-1.4:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:hibernate:hibernate-3.3:javaagent'
     - type: gradle
       path: ./
@@ -595,6 +601,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:jedis:jedis-1.4:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:jedis:jedis-2.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jedis:jedis-3.0:javaagent'

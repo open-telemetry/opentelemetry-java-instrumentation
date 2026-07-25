@@ -25,7 +25,7 @@ final class RpcMetricsAdvice {
       AttributeKey.stringKey("rpc.response.status_code");
 
   // copied from RpcIncubatingAttributes
-  @Deprecated // use RPC_RESPONSE_STATUS_CODE for stable semconv
+  // use RPC_RESPONSE_STATUS_CODE for stable semconv
   private static final AttributeKey<Long> RPC_GRPC_STATUS_CODE =
       AttributeKey.longKey("rpc.grpc.status_code");
 
@@ -34,7 +34,6 @@ final class RpcMetricsAdvice {
   private static final List<AttributeKey<?>> RPC_METRICS_STABLE_ATTRIBUTE_KEYS =
       buildAttributeKeysList(true);
 
-  @SuppressWarnings("deprecation") // until old rpc semconv are dropped
   private static List<AttributeKey<?>> buildAttributeKeysList(boolean stable) {
     List<AttributeKey<?>> keys = new ArrayList<>();
 

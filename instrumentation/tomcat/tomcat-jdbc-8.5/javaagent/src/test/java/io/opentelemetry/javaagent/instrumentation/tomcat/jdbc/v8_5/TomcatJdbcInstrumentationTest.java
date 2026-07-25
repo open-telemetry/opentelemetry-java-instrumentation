@@ -78,19 +78,25 @@ class TomcatJdbcInstrumentationTest {
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
         "io.opentelemetry.tomcat-jdbc",
-        "db.client.connections.idle.min",
+        emitStableDatabaseSemconv()
+            ? "db.client.connection.idle.min"
+            : "db.client.connections.idle.min",
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
         "io.opentelemetry.tomcat-jdbc",
-        "db.client.connections.idle.max",
+        emitStableDatabaseSemconv()
+            ? "db.client.connection.idle.max"
+            : "db.client.connections.idle.max",
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
         "io.opentelemetry.tomcat-jdbc",
-        "db.client.connections.max",
+        emitStableDatabaseSemconv() ? "db.client.connection.max" : "db.client.connections.max",
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
         "io.opentelemetry.tomcat-jdbc",
-        "db.client.connections.pending_requests",
+        emitStableDatabaseSemconv()
+            ? "db.client.connection.pending_requests"
+            : "db.client.connections.pending_requests",
         AbstractIterableAssert::isEmpty);
   }
 }

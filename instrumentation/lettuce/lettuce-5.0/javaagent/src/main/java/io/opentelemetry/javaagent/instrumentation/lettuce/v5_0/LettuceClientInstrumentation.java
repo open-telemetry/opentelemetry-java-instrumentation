@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_URI;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.connectInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
@@ -16,6 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.lettuce.core.ConnectionFuture;
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.protocol.DefaultEndpoint;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -41,17 +43,34 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
             .and(nameEndsWith("Async"))
             .and(takesArgument(1, named("io.lettuce.core.RedisURI"))),
         getClass().getName() + "$ConnectAdvice");
+    transformer.applyAdviceToMethod(
+        named("connectStatefulAsync")
+            .and(takesArgument(1, named("io.lettuce.core.protocol.DefaultEndpoint")))
+            .and(takesArgument(2, named("io.lettuce.core.RedisURI"))),
+        getClass().getName() + "$AttachEndpointAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class AttachEndpointAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(
+        @Advice.Argument(1) DefaultEndpoint endpoint, @Advice.Argument(2) RedisURI redisUri) {
+      if (redisUri.getHost() != null) {
+        ENDPOINT_URI.set(endpoint, redisUri);
+      }
+    }
   }
 
   @SuppressWarnings("unused")
   public static class ConnectAdvice {
 
     public static class AdviceScope {
-      private final Context context;
+      @Nullable private final Context connectContext;
       private final Scope scope;
 
-      public AdviceScope(Context context, Scope scope) {
-        this.context = context;
+      public AdviceScope(@Nullable Context connectContext, Scope scope) {
+        this.connectContext = connectContext;
         this.scope = scope;
       }
 
@@ -62,11 +81,14 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
 
         scope.close();
 
-        if (throwable != null || connectionFuture == null) {
-          connectInstrumenter().end(context, redisUri, null, throwable);
+        if (connectContext == null) {
           return;
         }
-        connectionFuture.handleAsync(new EndConnectAsyncBiFunction<>(context, redisUri));
+        if (throwable != null || connectionFuture == null) {
+          connectInstrumenter().end(connectContext, redisUri, null, throwable);
+          return;
+        }
+        connectionFuture.handleAsync(new EndConnectAsyncBiFunction<>(connectContext, redisUri));
       }
     }
 
@@ -74,12 +96,13 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
     @Nullable
     public static AdviceScope onEnter(@Advice.Argument(1) RedisURI redisUri) {
       Context parentContext = currentContext();
-      if (!connectInstrumenter().shouldStart(parentContext, redisUri)) {
-        return null;
+      if (connectInstrumenter().shouldStart(parentContext, redisUri)) {
+        Context connectContext = connectInstrumenter().start(parentContext, redisUri);
+        Scope scope = connectContext.makeCurrent();
+        return new AdviceScope(connectContext, scope);
       }
 
-      Context context = connectInstrumenter().start(parentContext, redisUri);
-      return new AdviceScope(context, context.makeCurrent());
+      return new AdviceScope(null, parentContext.makeCurrent());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

@@ -15,7 +15,7 @@ dependencies {
 
 testing {
   suites {
-    val incubatorTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("incubatorTest") {
       dependencies {
         implementation("io.opentelemetry:opentelemetry-api-incubator:1.63.0-alpha")
       }

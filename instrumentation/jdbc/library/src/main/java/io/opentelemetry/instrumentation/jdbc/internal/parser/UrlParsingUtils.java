@@ -127,7 +127,13 @@ public final class UrlParsingUtils {
     }
     if (host != null) {
       url.append("//");
-      url.append(host);
+      if (host.contains(":") && !host.startsWith("[")) {
+        url.append('[');
+        url.append(host);
+        url.append(']');
+      } else {
+        url.append(host);
+      }
       if (port != null) {
         url.append(':');
         url.append(port);

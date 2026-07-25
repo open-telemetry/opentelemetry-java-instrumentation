@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.docs.parsers.TelemetryParser.norm
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
+import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import java.io.IOException;
@@ -17,8 +18,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
@@ -112,7 +115,18 @@ public class EmittedMetricsParser {
         Map<String, EmittedMetrics.Metric> metricMap = metricsByScopeName.get(scope);
 
         for (EmittedMetrics.Metric metric : scopeEntry.getMetrics()) {
-          metricMap.put(metric.getName(), metric); // deduplicate by name
+          EmittedMetrics.Metric existing = metricMap.get(metric.getName());
+          if (existing == null) {
+            metricMap.put(metric.getName(), metric);
+          } else {
+            // The same metric can be captured by multiple tests with differing attribute sets
+            // (e.g. jvm.thread.count is emitted by both the JMX and JFR code paths, only one of
+            // which carries jvm.thread.state). Union the attributes rather than letting the last
+            // file win, otherwise the generated docs depend on non-deterministic file iteration
+            // order.
+            existing.setAttributes(
+                mergeAttributes(existing.getAttributes(), metric.getAttributes()));
+          }
         }
       }
 
@@ -126,6 +140,23 @@ public class EmittedMetricsParser {
       result.put(when, new EmittedMetrics(when, mergedScopes));
     }
     return result;
+  }
+
+  /**
+   * Returns the union of two attribute lists, deduplicating by name and type. {@link
+   * TelemetryAttribute} defines equality on name and type, so a {@link LinkedHashSet} both
+   * deduplicates and preserves a stable insertion order.
+   */
+  private static List<TelemetryAttribute> mergeAttributes(
+      List<TelemetryAttribute> existing, List<TelemetryAttribute> additional) {
+    Set<TelemetryAttribute> merged = new LinkedHashSet<>();
+    if (existing != null) {
+      merged.addAll(existing);
+    }
+    if (additional != null) {
+      merged.addAll(additional);
+    }
+    return new ArrayList<>(merged);
   }
 
   /**

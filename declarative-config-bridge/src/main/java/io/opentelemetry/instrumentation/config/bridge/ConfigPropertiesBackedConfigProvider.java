@@ -12,25 +12,30 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 /**
  * A {@link ConfigProvider} implementation backed by {@link ConfigProperties}.
  *
- * <p>This allows instrumentations to always use {@code ExtendedOpenTelemetry.getConfigProvider()}
- * regardless of whether the user started with system properties or YAML.
+ * @deprecated Use {@link DeclarativeConfigBridge#createInstrumentationConfig(ConfigProperties)}.
+ *     This class will be removed in 2.31.0.
  */
+@Deprecated // will be removed in 2.31.0
 public final class ConfigPropertiesBackedConfigProvider implements ConfigProvider {
 
-  private final DeclarativeConfigProperties instrumentationConfig;
+  private final ConfigProvider delegate;
 
+  /**
+   * @deprecated Use {@link DeclarativeConfigBridge#createInstrumentationConfig(ConfigProperties)}.
+   *     This method will be removed in 2.31.0.
+   */
+  @Deprecated // will be removed in 2.31.0
   public static ConfigProvider create(ConfigProperties configProperties) {
-    return new ConfigPropertiesBackedConfigProvider(configProperties);
+    return new ConfigPropertiesBackedConfigProvider(
+        DeclarativeConfigBridge.createInstrumentationConfig(configProperties));
   }
 
-  private ConfigPropertiesBackedConfigProvider(ConfigProperties configProperties) {
-    this.instrumentationConfig =
-        ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
-            configProperties);
+  private ConfigPropertiesBackedConfigProvider(ConfigProvider delegate) {
+    this.delegate = delegate;
   }
 
   @Override
   public DeclarativeConfigProperties getInstrumentationConfig() {
-    return instrumentationConfig;
+    return delegate.getInstrumentationConfig();
   }
 }

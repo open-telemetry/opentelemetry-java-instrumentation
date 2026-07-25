@@ -3,7 +3,7 @@ import io.opentelemetry.javaagent.muzzle.MuzzleExtension
 import org.eclipse.aether.util.version.GenericVersionScheme
 
 tasks {
-  val resolveLatestDepVersions by registering {
+  register<DefaultTask>("resolveLatestDepVersions") {
     group = "help"
     description = "Resolve latest dependency versions and write to .github/config/latest-dep-versions.json"
 

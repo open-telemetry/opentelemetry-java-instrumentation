@@ -81,7 +81,7 @@ tasks {
     exclude("**/server/**")
   }
 
-  val testControllerTelemetry by registering(Test::class) {
+  val testControllerTelemetry = register<Test>("testControllerTelemetry") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     include("**/server/**")
@@ -92,7 +92,7 @@ tasks {
     )
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     exclude("**/server/**")
@@ -100,7 +100,7 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
   }
 
-  val testControllerTelemetryStableSemconv by registering(Test::class) {
+  val testControllerTelemetryStableSemconv = register<Test>("testControllerTelemetryStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     include("**/server/**")
@@ -113,7 +113,7 @@ tasks {
     )
   }
 
-  val testExceptionSignalLogs by registering(Test::class) {
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     exclude("**/server/**")

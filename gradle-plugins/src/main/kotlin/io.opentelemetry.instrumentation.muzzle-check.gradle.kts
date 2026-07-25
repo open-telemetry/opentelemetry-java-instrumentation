@@ -95,17 +95,17 @@ fun resolveUpperBound(group: String, module: String): Version? {
 
 val muzzleConfig = extensions.create<MuzzleExtension>("muzzle")
 
-val muzzleTooling: Configuration by configurations.creating {
+val muzzleTooling = configurations.create("muzzleTooling") {
   isCanBeConsumed = false
   isCanBeResolved = true
 }
 
-val muzzleBootstrap: Configuration by configurations.creating {
+val muzzleBootstrap = configurations.create("muzzleBootstrap") {
   isCanBeConsumed = false
   isCanBeResolved = true
 }
 
-val shadowModule by tasks.registering(ShadowJar::class) {
+val shadowModule = tasks.register<ShadowJar>("shadowModule") {
   from(zipTree(tasks.jar.get().archiveFile))
 
   configurations = listOf(project.configurations.runtimeClasspath.get())
@@ -115,13 +115,13 @@ val shadowModule by tasks.registering(ShadowJar::class) {
   dependsOn(tasks.jar)
 }
 
-val shadowMuzzleTooling by tasks.registering(ShadowJar::class) {
+val shadowMuzzleTooling = tasks.register<ShadowJar>("shadowMuzzleTooling") {
   configurations = listOf(muzzleTooling)
 
   archiveFileName.set("tooling-for-muzzle-check.jar")
 }
 
-val shadowMuzzleBootstrap by tasks.registering(ShadowJar::class) {
+val shadowMuzzleBootstrap = tasks.register<ShadowJar>("shadowMuzzleBootstrap") {
   configurations = listOf(muzzleBootstrap)
 
   // exclude the agent part of the javaagent-extension-api
@@ -182,13 +182,13 @@ listOf(shadowModule, shadowMuzzleTooling, shadowMuzzleBootstrap).forEach { task 
   }
 }
 
-val compileMuzzle by tasks.registering {
+val compileMuzzle = tasks.register("compileMuzzle") {
   dependsOn(shadowMuzzleBootstrap)
   dependsOn(shadowMuzzleTooling)
   dependsOn(tasks.named("classes"))
 }
 
-val muzzle by tasks.registering {
+val muzzle = tasks.register("muzzle") {
   group = "Muzzle"
   description = "Run instrumentation muzzle on compile time dependencies"
   dependsOn(compileMuzzle)

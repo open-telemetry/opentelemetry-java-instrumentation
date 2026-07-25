@@ -78,7 +78,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -745,10 +744,6 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     }
   }
 
-  @DisabledIfSystemProperty(
-      named = "java.vm.name",
-      matches = ".*IBM J9 VM.*",
-      disabledReason = "IBM JVM has different protocol support for TLS")
   @Test
   void httpsRequest() throws Exception {
     assumeTrue(options.getTestRemoteConnection());

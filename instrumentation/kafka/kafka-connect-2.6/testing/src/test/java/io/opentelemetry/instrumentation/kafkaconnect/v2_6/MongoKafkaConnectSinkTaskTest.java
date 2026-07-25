@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -157,7 +158,10 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                             satisfies(THREAD_ID, val -> val.isNotZero()),
                             satisfies(THREAD_NAME, val -> val.isNotBlank())),
                 span ->
-                    span.hasName("update " + DATABASE_NAME + "." + COLLECTION_NAME)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "update " + COLLECTION_NAME
+                                : "update " + DATABASE_NAME + "." + COLLECTION_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))),
         trace ->
@@ -268,15 +272,24 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                             satisfies(THREAD_ID, val -> val.isNotZero()),
                             satisfies(THREAD_NAME, val -> val.isNotBlank())),
                 span ->
-                    span.hasName("update " + DATABASE_NAME + "." + COLLECTION_NAME)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "update " + COLLECTION_NAME
+                                : "update " + DATABASE_NAME + "." + COLLECTION_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName("update " + DATABASE_NAME + "." + COLLECTION_NAME)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "update " + COLLECTION_NAME
+                                : "update " + DATABASE_NAME + "." + COLLECTION_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName("update " + DATABASE_NAME + "." + COLLECTION_NAME)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "update " + COLLECTION_NAME
+                                : "update " + DATABASE_NAME + "." + COLLECTION_NAME)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))),
         trace ->

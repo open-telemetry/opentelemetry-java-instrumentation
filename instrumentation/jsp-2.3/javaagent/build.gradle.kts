@@ -39,7 +39,6 @@ dependencies {
 
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-core:9.+") // documented limitation
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+") // documented limitation
-  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-logging-juli:9.+") // documented limitation
 }
 
 tasks {
@@ -64,7 +63,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.common.experimental.view-telemetry.enabled=true")
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

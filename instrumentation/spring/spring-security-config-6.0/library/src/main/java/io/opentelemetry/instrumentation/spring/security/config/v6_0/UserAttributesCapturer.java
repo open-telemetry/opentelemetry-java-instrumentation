@@ -177,26 +177,4 @@ public class UserAttributesCapturer {
     this.scopeGrantedAuthorityPrefix =
         requireNonNull(scopeGrantedAuthorityPrefix, "scopeGrantedAuthorityPrefix must not be null");
   }
-
-  // package-private read accessors, retained only for the deprecated EnduserAttributesCapturer
-
-  boolean isNameEnabled() {
-    return nameEnabled;
-  }
-
-  boolean isRolesEnabled() {
-    return rolesEnabled;
-  }
-
-  boolean isScopeEnabled() {
-    return scopeEnabled;
-  }
-
-  String getRoleGrantedAuthorityPrefix() {
-    return roleGrantedAuthorityPrefix;
-  }
-
-  String getScopeGrantedAuthorityPrefix() {
-    return scopeGrantedAuthorityPrefix;
-  }
 }

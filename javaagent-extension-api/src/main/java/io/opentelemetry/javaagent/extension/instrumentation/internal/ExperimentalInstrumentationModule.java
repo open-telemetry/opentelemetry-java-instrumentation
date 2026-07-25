@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.extension.instrumentation.internal;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 
-import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -25,26 +24,6 @@ public interface ExperimentalInstrumentationModule {
    * field is added and the second argument is the dot class name of the field type.
    */
   default void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {}
-
-  /**
-   * Returns a list of helper classes that will be defined in the class loader of the instrumented
-   * library.
-   */
-  default List<String> injectedClassNames() {
-    return emptyList();
-  }
-
-  /**
-   * By default every InstrumentationModule is loaded by an isolated classloader, even if multiple
-   * modules instrument the same application classloader.
-   *
-   * <p>Sometimes this is not desired, e.g. when instrumenting modular libraries such as the AWS
-   * SDK. In such cases the {@link InstrumentationModule}s which want to share a classloader can
-   * return the same group name from this method.
-   */
-  default String getModuleGroup() {
-    return getClass().getName();
-  }
 
   /**
    * Some instrumentations need to invoke classes which are present both in the agent classloader
@@ -68,20 +47,6 @@ public interface ExperimentalInstrumentationModule {
   // instance or a class FQN in the map entry, as it could lead to some limitations
   default Map<JavaModule, List<String>> jpmsModulesToOpen() {
     return emptyMap();
-  }
-
-  /**
-   * Returns a list of instrumentation helper classes that are exposed to the application class
-   * loader.
-   *
-   * <p>When using non-inline advice helper classes are loaded into a separate class loader. Classes
-   * from that class loader aren't visible to the instrumented application. This method can be used
-   * to expose some of the helper classes to the application class loader, so that they can be
-   * loaded through the loadClass method of the application class loader. This can for example be
-   * used to add a SPI implementation that can be loaded via the ServiceLoader.
-   */
-  default List<String> exposedClassNames() {
-    return emptyList();
   }
 
   /**

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -64,7 +65,33 @@ public final class R2dbcSqlAttributesGetter
 
   @Override
   public Collection<String> getRawQueryTexts(DbExecution request) {
-    return singleton(request.getRawQueryText());
+    Collection<String> rawQueryTexts = request.getRawQueryTexts();
+    // In old-only mode, join multi-query batches into a single query to preserve the legacy
+    // db.statement and db.operation extraction behavior. In database/dup mode, favor stable
+    // multi-query batch attributes because the shared SQL extractor can only use one raw query
+    // collection.
+    return emitStableDatabaseSemconv() || rawQueryTexts.size() == 1
+        ? rawQueryTexts
+        : singleton(join(";\n", rawQueryTexts));
+  }
+
+  private static String join(String delimiter, Collection<String> collection) {
+    StringBuilder builder = new StringBuilder();
+    for (String string : collection) {
+      if (builder.length() != 0) {
+        builder.append(delimiter);
+      }
+      builder.append(string);
+    }
+    return builder.toString();
+  }
+
+  @Override
+  @Nullable
+  public Long getDbOperationBatchSize(DbExecution request) {
+    // Batch size is a stable database semconv signal. Keep it hidden from old-only mode so legacy
+    // extraction does not start treating existing requests as batches.
+    return emitStableDatabaseSemconv() ? request.getBatchSize() : null;
   }
 
   @Nullable
@@ -90,7 +117,8 @@ public final class R2dbcSqlAttributesGetter
   }
 
   @Override
-  public boolean isParameterizedQuery(DbExecution request) {
+  public boolean isParameterizedQuery(DbExecution request, int queryIndex) {
+    // R2DBC does not support mixed parameterization within a single request.
     return request.isParameterizedQuery();
   }
 }

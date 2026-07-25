@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-final class LettuceDbAttributesGetter
+class LettuceDbAttributesGetter
     implements DbClientAttributesGetter<LettuceRequest, LettuceResponse> {
 
   // copied from DbIncubatingAttributes.DbSystemIncubatingValues
