@@ -58,6 +58,20 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
   }
 
+  val testConnectionTelemetryEnabledStableSemconv =
+    register<Test>("testConnectionTelemetryEnabledStableSemconv") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      jvmArgs(
+        "-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true",
+        "-Dotel.semconv-stability.opt-in=database,service.peer"
+      )
+      systemProperty(
+        "metadataConfig",
+        "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.opt-in=database,service.peer"
+      )
+    }
+
   // exercises the v3-preview path, where this advice-based module supersedes the SPI-based
   // lettuce-5.1 javaagent module (which is disabled under v3-preview)
   val testV3Preview = register<Test>("testV3Preview") {
@@ -68,6 +82,12 @@ tasks {
   }
 
   check {
-    dependsOn(testConnectionTelemetryEnabled, testStableSemconv, testExperimental, testV3Preview)
+    dependsOn(
+      testConnectionTelemetryEnabled,
+      testConnectionTelemetryEnabledStableSemconv,
+      testStableSemconv,
+      testExperimental,
+      testV3Preview
+    )
   }
 }

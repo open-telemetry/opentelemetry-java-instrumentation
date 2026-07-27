@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
         # need to run this script before we switch branches
         # since the script doesn't exist on the cloudfoundry branch
@@ -27,6 +29,8 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: 'cloudfoundry'
+          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
+          persist-credentials: true
 
       - name: create working branch
         run: git checkout -b otelbot/cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }}
@@ -48,7 +52,7 @@ jobs:
 
       - name: create pr with repo changes
         env:
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          # pull requests from secrets.GITHUB_TOKEN do not run workflows
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           git add index.yml

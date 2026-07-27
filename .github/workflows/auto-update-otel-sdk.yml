@@ -18,6 +18,8 @@ jobs:
       already-opened: ${{ steps.check-versions.outputs.already-opened }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - id: check-versions
         name: Check versions
@@ -56,6 +58,9 @@ jobs:
       - check-versions
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
+          persist-credentials: true
 
       - name: Update version
         env:
@@ -96,7 +101,7 @@ jobs:
         if: success() || failure()
         env:
           VERSION: ${{ needs.check-versions.outputs.latest-version }}
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          # pull requests from secrets.GITHUB_TOKEN do not run workflows
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Update the OpenTelemetry SDK version to $VERSION"
@@ -108,9 +113,10 @@ jobs:
           git add licenses
           git commit -m "$message"
           git push --set-upstream origin $branch
-          gh pr create --title "$message" \
-                       --body "$body" \
-                       --base main
+          gh pr create \
+            --title "$message" \
+            --body "$body" \
+            --base main
 
   workflow-notification:
     permissions:
