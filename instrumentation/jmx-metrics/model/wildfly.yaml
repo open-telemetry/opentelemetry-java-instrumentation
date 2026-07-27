@@ -39,6 +39,8 @@ groups:
     unit: By
     instrument: counter
     attributes:
+      - ref: wildfly.server
+      - ref: wildfly.listener
       - ref: network.io.direction
 
   - id: metric.wildfly.error.count
@@ -116,6 +118,7 @@ groups:
     unit: "{connection}"
     instrument: updowncounter
     attributes:
+      - ref: db.client.connection.pool.name
       - ref: db.client.connection.state
 
   - id: metric.wildfly.db.client.connection.wait.count
