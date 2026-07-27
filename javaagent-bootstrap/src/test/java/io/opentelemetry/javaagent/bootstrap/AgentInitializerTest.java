@@ -28,7 +28,11 @@ class AgentInitializerTest {
     assertThat(System.getProperty("bar")).isEqualTo("b,c");
   }
 
-  // This list of values has been compiled by invoking every binary in ${JAVA_HOME}/bin
+  // This list of values has been compiled by invoking every binary in ${JAVA_HOME}/bin by
+  // - adding the following code snippet into the agent 'premain' method:
+  //   System.err.println(System.getProperty("sun.java.command"));
+  // - setting JAVA_TOOL_OPTIONS to include -javaagent:/path/to/agent.jar
+  // - invoke all binaries in ${JAVA_HOME}/bin and collect the values from standard output
   @ParameterizedTest
   @ValueSource(
       strings = {
