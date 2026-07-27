@@ -22,6 +22,8 @@ jobs:
           # need full history and tags so the release-notes script can resolve
           # the previous release tag (e.g. v2.27.0) when computing the commit range
           fetch-depth: 0
+          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
+          persist-credentials: true
 
       - name: Install Copilot CLI
         run: |
@@ -55,7 +57,7 @@ jobs:
       - name: Create pull request against main
         env:
           ARTIFACT_URL: ${{ steps.upload-diagnostics.outputs.artifact-url }}
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          # pull requests from secrets.GITHUB_TOKEN do not run workflows
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Draft release notes"
@@ -73,6 +75,7 @@ jobs:
           git add CHANGELOG.md
           git commit -m "$message"
           git push --set-upstream origin $branch
-          gh pr create --title "$message" \
-                       --body "$body" \
-                       --base main
+          gh pr create \
+            --title "$message" \
+            --body "$body" \
+            --base main
