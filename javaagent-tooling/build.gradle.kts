@@ -2,6 +2,7 @@ import net.ltgt.gradle.errorprone.errorprone
 
 plugins {
   id("otel.java-conventions")
+  id("otel.nullaway-conventions")
   id("otel.publish-conventions")
   id("otel.jmh-conventions")
 }

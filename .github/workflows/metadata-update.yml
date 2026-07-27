@@ -98,8 +98,9 @@ jobs:
         if: steps.diffcheck.outputs.has_diff == 'true'
         env:
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token || github.token }}
+          STEPS_FINDBRANCH_OUTPUTS_BRANCH: ${{ steps.findbranch.outputs.branch }}
         run: |
-          BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
+          BRANCH_NAME="${STEPS_FINDBRANCH_OUTPUTS_BRANCH}"
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
           git commit -m "chore: update instrumentation list [automated]"
           # Metadata collection can run for hours, allowing workflow files on main to change after
@@ -121,8 +122,9 @@ jobs:
         id: createpr
         env:
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token || github.token }}
+          STEPS_FINDBRANCH_OUTPUTS_BRANCH: ${{ steps.findbranch.outputs.branch }}
         run: |
-          BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
+          BRANCH_NAME="${STEPS_FINDBRANCH_OUTPUTS_BRANCH}"
           PR_EXISTS=$(gh pr list --state open --head "$BRANCH_NAME" --json url -q '.[0].url')
           if [ -z "$PR_EXISTS" ]; then
             gh pr create \
@@ -141,8 +143,9 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token || github.token }}
           IS_UPSTREAM: ${{ github.repository == 'open-telemetry/opentelemetry-java-instrumentation' }}
+          STEPS_FINDBRANCH_OUTPUTS_BRANCH: ${{ steps.findbranch.outputs.branch }}
         run: |
-          BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
+          BRANCH_NAME="${STEPS_FINDBRANCH_OUTPUTS_BRANCH}"
           PR_URL=$(gh pr list --state open --head "$BRANCH_NAME" --json url -q '.[0].url')
           if [ -z "$PR_URL" ]; then
             echo "No open PR found for branch $BRANCH_NAME."
