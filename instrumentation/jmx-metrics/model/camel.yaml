@@ -47,6 +47,8 @@ groups:
     brief: Indicates the number of routes started successfully since context start-up or the last reset operation.
     unit: "{route}"
     instrument: updowncounter
+    attributes:
+      - ref: camel.context
 
   - id: metric.camel.context.route.added
     metric_name: camel.context.route.added
@@ -55,6 +57,8 @@ groups:
     brief: Indicates the total number of routes added successfully since context start-up or the last reset operation.
     unit: "{route}"
     instrument: counter
+    attributes:
+      - ref: camel.context
 
   - id: metric.camel.context.exchange.count
     metric_name: camel.context.exchange.count
@@ -63,6 +67,8 @@ groups:
     brief: Indicates the total number of exchanges, passed or failed, processed since context start-up or the last reset operation.
     unit: "{exchange}"
     instrument: counter
+    attributes:
+      - ref: camel.context
 
   - id: metric.camel.context.exchange.completed
     metric_name: camel.context.exchange.completed
@@ -71,6 +77,8 @@ groups:
     brief: Indicates the total number of exchanges processed successfully since context start-up or the last reset operation.
     unit: "{exchange}"
     instrument: counter
+    attributes:
+      - ref: camel.context
 
   - id: metric.camel.context.exchange.failed.count
     metric_name: camel.context.exchange.failed.count
@@ -79,6 +87,8 @@ groups:
     brief: Indicates the total number of exchanges that failed to process since context start-up or the last reset operation.
     unit: "{exchange}"
     instrument: counter
+    attributes:
+      - ref: camel.context
 
   - id: metric.camel.context.exchange.failed.handled
     metric_name: camel.context.exchange.failed.handled
@@ -87,6 +97,8 @@ groups:
     brief: Indicates the number of exchanges failed and handled by an ExceptionHandler in the context.
     unit: "{exchange}"
     instrument: counter
+    attributes:
+      - ref: camel.context
 
   - id: metric.camel.context.exchange.inflight
     metric_name: camel.context.exchange.inflight
@@ -95,6 +107,8 @@ groups:
     brief: Indicates the number of exchanges currently transiting the context.
     unit: "{exchange}"
     instrument: updowncounter
+    attributes:
+      - ref: camel.context
 
   - id: metric.camel.context.exchange.redelivered.count
     metric_name: camel.context.exchange.redelivered.count
@@ -103,6 +117,8 @@ groups:
     brief: Number of exchanges redelivered (internal only)  since context start-up or the last reset operation.
     unit: "{exchange}"
     instrument: counter
+    attributes:
+      - ref: camel.context
 
   - id: metric.camel.context.exchange.redelivered.external
     metric_name: camel.context.exchange.redelivered.external
@@ -111,6 +127,8 @@ groups:
     brief: The total number of all external initiated redeliveries (such as from JMS broker) since context start-up or the last reset operation.
     unit: "{exchange}"
     instrument: counter
+    attributes:
+      - ref: camel.context
 
   - id: metric.camel.context.exchange.processing.duration.max
     metric_name: camel.context.exchange.processing.duration.max
@@ -119,6 +137,8 @@ groups:
     brief: Indicates the longest time to process an exchange since context start-up or the last reset operation.
     unit: s
     instrument: gauge
+    attributes:
+      - ref: camel.context
 
   - id: metric.camel.context.exchange.processing.duration.mean
     metric_name: camel.context.exchange.processing.duration.mean
@@ -127,6 +147,8 @@ groups:
     brief: Indicates the mean processing time for all exchanges processed since context start-up or the last reset operation.
     unit: s
     instrument: gauge
+    attributes:
+      - ref: camel.context
 
   - id: metric.camel.context.exchange.processing.duration.min
     metric_name: camel.context.exchange.processing.duration.min
@@ -135,6 +157,8 @@ groups:
     brief: Indicates the shortest time to process an exchange since context start-up or the last reset operation.
     unit: s
     instrument: gauge
+    attributes:
+      - ref: camel.context
 
   - id: metric.camel.context.exchange.processing.duration.last
     metric_name: camel.context.exchange.processing.duration.last
@@ -143,6 +167,8 @@ groups:
     brief: Indicates the time it took to process the last exchange.
     unit: s
     instrument: gauge
+    attributes:
+      - ref: camel.context
 
   - id: metric.camel.context.exchange.processing.duration.last_delta
     metric_name: camel.context.exchange.processing.duration.last_delta
@@ -151,6 +177,8 @@ groups:
     brief: Indicates the difference of the Processing Time of the last two exchanges transited the context.
     unit: s
     instrument: gauge
+    attributes:
+      - ref: camel.context
 
   - id: metric.camel.context.exchange.processing.duration.sum
     metric_name: camel.context.exchange.processing.duration.sum
@@ -159,6 +187,8 @@ groups:
     brief: Indicates the total processing time to process all exchanges since context start-up or the last reset operation.
     unit: s
     instrument: counter
+    attributes:
+      - ref: camel.context
 
   # Route Level Metrics
 
@@ -170,6 +200,7 @@ groups:
     unit: "{exchange}"
     instrument: counter
     attributes:
+      - ref: camel.context
       - ref: camel.route
 
   - id: metric.camel.route.exchange.completed
@@ -180,6 +211,7 @@ groups:
     unit: "{exchange}"
     instrument: counter
     attributes:
+      - ref: camel.context
       - ref: camel.route
 
   - id: metric.camel.route.exchange.failed.count
@@ -190,6 +222,7 @@ groups:
     unit: "{exchange}"
     instrument: counter
     attributes:
+      - ref: camel.context
       - ref: camel.route
 
   - id: metric.camel.route.exchange.failed.handled
@@ -200,6 +233,7 @@ groups:
     unit: "{exchange}"
     instrument: counter
     attributes:
+      - ref: camel.context
       - ref: camel.route
 
   - id: metric.camel.route.exchange.inflight
@@ -210,6 +244,7 @@ groups:
     unit: "{exchange}"
     instrument: updowncounter
     attributes:
+      - ref: camel.context
       - ref: camel.route
 
   - id: metric.camel.route.exchange.redelivered.count
@@ -220,6 +255,7 @@ groups:
     unit: "{exchange}"
     instrument: counter
     attributes:
+      - ref: camel.context
       - ref: camel.route
 
   - id: metric.camel.route.exchange.redelivered.external
@@ -230,6 +266,7 @@ groups:
     unit: "{exchange}"
     instrument: counter
     attributes:
+      - ref: camel.context
       - ref: camel.route
 
   - id: metric.camel.route.exchange.processing.duration.max
@@ -240,6 +277,7 @@ groups:
     unit: s
     instrument: gauge
     attributes:
+      - ref: camel.context
       - ref: camel.route
 
   - id: metric.camel.route.exchange.processing.duration.mean
@@ -250,6 +288,7 @@ groups:
     unit: s
     instrument: gauge
     attributes:
+      - ref: camel.context
       - ref: camel.route
 
   - id: metric.camel.route.exchange.processing.duration.min
@@ -260,6 +299,7 @@ groups:
     unit: s
     instrument: gauge
     attributes:
+      - ref: camel.context
       - ref: camel.route
 
   - id: metric.camel.route.exchange.processing.duration.last
@@ -270,6 +310,7 @@ groups:
     unit: s
     instrument: gauge
     attributes:
+      - ref: camel.context
       - ref: camel.route
 
   - id: metric.camel.route.exchange.processing.duration.last_delta
@@ -280,6 +321,7 @@ groups:
     unit: s
     instrument: gauge
     attributes:
+      - ref: camel.context
       - ref: camel.route
 
   - id: metric.camel.route.exchange.processing.duration.sum
@@ -290,6 +332,7 @@ groups:
     unit: s
     instrument: counter
     attributes:
+      - ref: camel.context
       - ref: camel.route
 
   # Processor Level Metrics
@@ -302,6 +345,7 @@ groups:
     unit: "{exchange}"
     instrument: counter
     attributes:
+      - ref: camel.context
       - ref: camel.route
       - ref: camel.processor
       - ref: camel.destination
@@ -314,6 +358,7 @@ groups:
     unit: "{exchange}"
     instrument: counter
     attributes:
+      - ref: camel.context
       - ref: camel.route
       - ref: camel.processor
       - ref: camel.destination
@@ -326,6 +371,7 @@ groups:
     unit: "{exchange}"
     instrument: counter
     attributes:
+      - ref: camel.context
       - ref: camel.route
       - ref: camel.processor
       - ref: camel.destination
@@ -338,6 +384,7 @@ groups:
     unit: "{exchange}"
     instrument: counter
     attributes:
+      - ref: camel.context
       - ref: camel.route
       - ref: camel.processor
       - ref: camel.destination
@@ -350,6 +397,7 @@ groups:
     unit: "{exchange}"
     instrument: updowncounter
     attributes:
+      - ref: camel.context
       - ref: camel.route
       - ref: camel.processor
       - ref: camel.destination
@@ -362,6 +410,7 @@ groups:
     unit: "{exchange}"
     instrument: counter
     attributes:
+      - ref: camel.context
       - ref: camel.route
       - ref: camel.processor
       - ref: camel.destination
@@ -374,6 +423,7 @@ groups:
     unit: "{exchange}"
     instrument: counter
     attributes:
+      - ref: camel.context
       - ref: camel.route
       - ref: camel.processor
       - ref: camel.destination
@@ -388,6 +438,7 @@ groups:
     unit: s
     instrument: gauge
     attributes:
+      - ref: camel.context
       - ref: camel.route
       - ref: camel.processor
       - ref: camel.destination
@@ -402,6 +453,7 @@ groups:
     unit: s
     instrument: gauge
     attributes:
+      - ref: camel.context
       - ref: camel.route
       - ref: camel.processor
       - ref: camel.destination
@@ -416,6 +468,7 @@ groups:
     unit: s
     instrument: gauge
     attributes:
+      - ref: camel.context
       - ref: camel.route
       - ref: camel.processor
       - ref: camel.destination
@@ -430,6 +483,7 @@ groups:
     unit: s
     instrument: gauge
     attributes:
+      - ref: camel.context
       - ref: camel.route
       - ref: camel.processor
       - ref: camel.destination
@@ -444,6 +498,7 @@ groups:
     unit: s
     instrument: gauge
     attributes:
+      - ref: camel.context
       - ref: camel.route
       - ref: camel.processor
       - ref: camel.destination
@@ -458,6 +513,7 @@ groups:
     unit: s
     instrument: counter
     attributes:
+      - ref: camel.context
       - ref: camel.route
       - ref: camel.processor
       - ref: camel.destination
@@ -474,6 +530,7 @@ groups:
     unit: "{task}"
     instrument: counter
     attributes:
+      - ref: camel.context
       - ref: camel.threadpool.name
       - ref: camel.route
 
@@ -485,6 +542,7 @@ groups:
     unit: "{thread}"
     instrument: updowncounter
     attributes:
+      - ref: camel.context
       - ref: camel.threadpool.name
       - ref: camel.route
 
@@ -496,6 +554,7 @@ groups:
     unit: "{task}"
     instrument: counter
     attributes:
+      - ref: camel.context
       - ref: camel.threadpool.name
       - ref: camel.route
 
@@ -507,6 +566,7 @@ groups:
     unit: "{task}"
     instrument: updowncounter
     attributes:
+      - ref: camel.context
       - ref: camel.threadpool.name
       - ref: camel.route
 
@@ -518,6 +578,7 @@ groups:
     unit: "{thread}"
     instrument: updowncounter
     attributes:
+      - ref: camel.context
       - ref: camel.threadpool.name
       - ref: camel.route
 
@@ -529,6 +590,7 @@ groups:
     unit: "{thread}"
     instrument: gauge
     attributes:
+      - ref: camel.context
       - ref: camel.threadpool.name
       - ref: camel.route
 
@@ -540,6 +602,7 @@ groups:
     unit: "{thread}"
     instrument: updowncounter
     attributes:
+      - ref: camel.context
       - ref: camel.threadpool.name
       - ref: camel.route
 
@@ -551,5 +614,6 @@ groups:
     unit: "{thread}"
     instrument: updowncounter
     attributes:
+      - ref: camel.context
       - ref: camel.threadpool.name
       - ref: camel.route
