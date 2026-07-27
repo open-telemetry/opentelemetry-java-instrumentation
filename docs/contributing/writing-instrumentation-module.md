@@ -375,7 +375,7 @@ This means that extensions should not depend on internal instrumentation modules
 ### Classes injected in application classloader
 
 Injecting classes in the application classloader is possible by implementing the
-`ExperimentalInstrumentationModule#injectedClassNames` method. All the class names listed by the
+`InstrumentationModule#injectedClassNames` method. All the class names listed by the
 returned value will be loaded in the application classloader instead of the agent or instrumentation
 module classloader.
 

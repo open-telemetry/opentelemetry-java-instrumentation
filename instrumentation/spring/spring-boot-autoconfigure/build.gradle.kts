@@ -277,6 +277,7 @@ testing {
         implementation("io.opentelemetry:opentelemetry-sdk")
         implementation("io.opentelemetry:opentelemetry-exporter-otlp")
         implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
+        implementation("io.opentelemetry:opentelemetry-sdk-extension-declarative-config")
         implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
           exclude("org.junit.vintage", "junit-vintage-engine")
         }

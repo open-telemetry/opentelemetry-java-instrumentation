@@ -10,6 +10,7 @@ plugins {
   id("com.github.jk1.dependency-license-report")
 
   id("otel.java-conventions")
+  id("otel.nullaway-conventions")
   id("otel.publish-conventions")
   id("io.opentelemetry.instrumentation.javaagent-shadowing")
   id("org.spdx.sbom")

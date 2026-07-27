@@ -7,8 +7,4 @@ library_link: https://github.com/jakartaee/jws-api
 features:
   - CONTROLLER_SPANS
 configurations:
-  - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-    declarative_name: java.common.controller_telemetry/development.enabled
-    description: Enables the creation of experimental controller spans.
-    type: boolean
-    default: false
+  - ref: common.controller-telemetry.enabled

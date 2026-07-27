@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
+          persist-credentials: true
 
       - run: |
           if [[ ! $GITHUB_REF_NAME =~ ^release/v[0-9]+\.[0-9]+\.x$ ]]; then
@@ -60,7 +63,7 @@ jobs:
 
       - name: Create pull request
         env:
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          # pull requests from secrets.GITHUB_TOKEN do not run workflows
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Prepare release $VERSION"
@@ -69,6 +72,7 @@ jobs:
           git checkout -b $branch
           git commit -a -m "$message"
           git push --set-upstream origin $branch
-          gh pr create --title "[$GITHUB_REF_NAME] $message" \
-                       --body "$message." \
-                       --base $GITHUB_REF_NAME
+          gh pr create \
+            --title "[$GITHUB_REF_NAME] $message" \
+            --body "$message." \
+            --base $GITHUB_REF_NAME
