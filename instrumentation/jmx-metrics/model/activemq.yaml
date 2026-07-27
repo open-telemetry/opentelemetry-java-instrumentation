@@ -35,7 +35,7 @@ groups:
     metric_name: activemq.consumer.count
     type: metric
     stability: development
-    brief: The number of consumers attached to this destination
+    brief: The number of consumers subscribed to this destination
     unit: "{consumer}"
     instrument: updowncounter
     attributes:
