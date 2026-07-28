@@ -141,6 +141,8 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
               ? ((BatchPoints) arg0).getDatabase()
               // write data by UDP protocol, in this way, can't get database name.
               : arg0 instanceof Integer ? null : String.valueOf(arg0);
+      Long batchSize =
+          (arg0 instanceof BatchPoints) ? (long) ((BatchPoints) arg0).getPoints().size() : null;
 
       String operationName;
       if ("createDatabase".equals(methodName)) {
@@ -154,7 +156,8 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
       }
 
       InfluxDbOperation influxDbOperation =
-          InfluxDbOperation.create(httpUrl.host(), httpUrl.port(), database, operationName);
+          InfluxDbOperation.create(
+              httpUrl.host(), httpUrl.port(), database, operationName, batchSize);
 
       if (!requestInstrumenter().shouldStart(parentContext, influxDbOperation)) {
         return null;
