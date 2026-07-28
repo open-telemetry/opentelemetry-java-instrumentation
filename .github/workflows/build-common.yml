@@ -193,28 +193,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install gh-aw
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh extension install github/gh-aw --pin v0.74.0
-
-      # Always compile all gh-aw workflows. The compiler is pinned via
-      # `gh extension install --pin` and `--no-check-update`, and action
-      # SHAs are pinned via .github/aw/actions-lock.json, so the output is
-      # deterministic for a given pinned version. With no arguments, both
-      # `gh aw validate` and `gh aw compile` operate on every Markdown file
-      # in .github/workflows. Compiling all workflows takes only a couple
-      # of seconds.
-
-      - name: Validate gh-aw workflows
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh aw validate --no-check-update
-
       - name: Compile gh-aw workflows
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh aw compile --no-check-update
+        run: .github/scripts/compile-gh-aw-workflows.sh
 
       - name: Check generated files are committed
         run: |
