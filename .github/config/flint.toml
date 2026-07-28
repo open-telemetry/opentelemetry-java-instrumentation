@@ -6,8 +6,16 @@ check_all_local = true
 
 [checks.license-header]
 patterns = ["*.java", "*.kt", "*.scala", "*.groovy"]
-exclude = ["package-info.java", "examples/distro/buildSrc/src/main/kotlin/**"]
-text = "Copyright The OpenTelemetry Authors"
+exclude = [
+  "package-info.java",
+  "examples/distro/buildSrc/src/main/kotlin/**",
+  # This generated smoke-test fixture retains the legacy full Apache header.
+  "smoke-tests/images/play/app/controllers/HomeController.scala",
+]
+text = """/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */"""
 lines_to_check = 5
 
 [checks.google-java-format]
@@ -130,12 +138,12 @@ content_pattern = '(?m)^\s*import java\.util\.logging\.Level;$'
 [[checks.regex-replace.sets.derived_rules]]
 source_pattern = '^import (?P<package>io\.opentelemetry\.semconv(?:\.[a-z][a-z.]*)?\.)(?P<class>[A-Z][a-zA-Z0-9]+);$'
 pattern = '\b{class}\.([A-Z][A-Z_0-9]*)\b'
-add_lines = ['import static {package}$1;']
+add_lines = ['import static {package}{class}.$1;']
 source_exclude_pattern = 'SchemaUrls'
 
 [[checks.regex-replace.sets.derived_rules]]
 source_pattern = '^import (?P<package>io\.opentelemetry\.semconv(?:\.[a-z][a-z.]*)?\.)(?P<class>[A-Z][a-zA-Z0-9]+);$'
 pattern = '\b{class}\.([A-Z][a-zA-Z0-9]*[a-z][a-zA-Z0-9]*)\.([A-Z][A-Z_0-9]+)\b'
 replacement = '$1.$2'
-add_lines = ['import {package}$1;']
+add_lines = ['import {package}{class}.$1;']
 source_exclude_pattern = 'SchemaUrls'
