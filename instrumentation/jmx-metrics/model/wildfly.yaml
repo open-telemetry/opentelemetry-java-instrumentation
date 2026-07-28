@@ -120,6 +120,7 @@ groups:
     attributes:
       - ref: db.client.connection.pool.name
       - ref: db.client.connection.state
+      - ref: db.client.connection.pool.name
 
   - id: metric.wildfly.db.client.connection.wait.count
     metric_name: wildfly.db.client.connection.wait.count
@@ -128,6 +129,8 @@ groups:
     brief: The number of connection requests that had to wait to obtain it
     unit: "{request}"
     instrument: counter
+    attributes:
+      - ref: db.client.connection.pool.name
 
   - id: metric.wildfly.session.created
     metric_name: wildfly.session.created
