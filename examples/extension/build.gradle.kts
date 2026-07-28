@@ -105,7 +105,7 @@ dependencies {
   testImplementation("com.google.protobuf:protobuf-java-util:4.35.1")
   testImplementation("com.squareup.okhttp3:okhttp:5.4.0")
   testImplementation("io.opentelemetry:opentelemetry-api")
-  testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.10.0-alpha")
+  testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.11.0-alpha")
   testImplementation("org.assertj:assertj-core:3.27.7")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.4"))
