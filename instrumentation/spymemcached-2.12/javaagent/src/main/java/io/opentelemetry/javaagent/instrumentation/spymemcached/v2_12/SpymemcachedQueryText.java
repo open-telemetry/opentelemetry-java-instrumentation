@@ -52,8 +52,13 @@ final class SpymemcachedQueryText {
 
   private static final String OPERATION_DELETE = "delete";
 
-  static String create(String operationName, Object[] args, boolean sanitizationEnabled) {
-    int valueIndex = OPERATIONS_WITH_VALUE.contains(operationName) ? lastArgumentIndex(args) : -1;
+  static String create(
+      String operationName,
+      Class<?>[] parameterTypes,
+      Object[] args,
+      boolean sanitizationEnabled) {
+    int valueIndex =
+        OPERATIONS_WITH_VALUE.contains(operationName) ? lastArgumentIndex(parameterTypes) : -1;
 
     StringBuilder queryText = new StringBuilder(operationName);
     for (int i = 0; i < args.length; i++) {
@@ -65,7 +70,7 @@ final class SpymemcachedQueryText {
         }
         continue;
       }
-      if (isIgnored(operationName, i, arg)) {
+      if (isIgnored(operationName, parameterTypes, i, arg)) {
         continue;
       }
       if (!appendKeys(queryText, arg)) {
@@ -96,31 +101,41 @@ final class SpymemcachedQueryText {
     return append(queryText, String.valueOf(arg));
   }
 
-  private static boolean isIgnored(String operationName, int index, Object arg) {
-    // transcoders are not part of the command that is sent to memcached.
+  private static boolean isIgnored(
+      String operationName, Class<?>[] parameterTypes, int index, Object arg) {
+    // transcoders are not part of the command that is sent to memcached. Whether a parameter is a
+    // transcoder is determined from the instrumented method's declared parameter type rather than
+    // the runtime value: a Transcoder parameter can legitimately be passed as null, and a stored
+    // value could otherwise happen to implement Transcoder itself, either of which would confuse a
+    // runtime `instanceof` check.
+    if (Transcoder.class.isAssignableFrom(parameterTypes[index])) {
+      return true;
+    }
     // reading the keys of a bulk operation that was given an iterator would consume the iterator
     // before the instrumented method gets to it, so those keys are left out
-    if (arg instanceof Transcoder || arg instanceof Iterator) {
+    if (arg instanceof Iterator) {
       return true;
     }
     // the deprecated delete(String key, int hold) overload ignores its int argument and delegates
-    // to delete(key); the distinct delete(String key, long cas) overload takes a real CAS value
-    // that is sent to memcached, so only the Integer-typed argument is dropped here
-    return OPERATION_DELETE.equals(operationName) && index == 1 && arg instanceof Integer;
+    // to delete(key); the distinct delete(String key, long cas) overload takes a real cas value
+    // that is sent to memcached, so only the int-typed parameter is dropped here
+    return OPERATION_DELETE.equals(operationName)
+        && index == 1
+        && parameterTypes[index] == int.class;
   }
 
   /**
    * Returns the index of the last argument that ends up in the query text, or {@code -1}.
    *
-   * <p>Only the trailing {@link Transcoder} argument is skipped here: operations that carry a value
-   * never legitimately take an {@link Iterator} as that value, so treating an {@code
-   * Iterator}-typed value as ignorable (as {@link #isIgnored(String, int, Object)} does for bulk
+   * <p>Only a trailing {@link Transcoder}-typed parameter is skipped here: operations that carry a
+   * value never legitimately declare an {@link Iterator}-typed parameter for that value, so
+   * treating it as ignorable (as {@link #isIgnored(String, Class[], int, Object)} does for bulk
    * key operations) would cause the actual value to be mistaken for an earlier argument, e.g. the
    * expiration in {@code set}.
    */
-  private static int lastArgumentIndex(Object[] args) {
-    for (int i = args.length - 1; i >= 0; i--) {
-      if (!(args[i] instanceof Transcoder)) {
+  private static int lastArgumentIndex(Class<?>[] parameterTypes) {
+    for (int i = parameterTypes.length - 1; i >= 0; i--) {
+      if (!Transcoder.class.isAssignableFrom(parameterTypes[i])) {
         return i;
       }
     }

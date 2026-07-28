@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Iterator;
 import net.spy.memcached.transcoders.SerializingTranscoder;
+import net.spy.memcached.transcoders.Transcoder;
 import org.junit.jupiter.api.Test;
 
 class SpymemcachedQueryTextTest {
@@ -46,7 +47,11 @@ class SpymemcachedQueryTextTest {
   @Test
   void shouldNotMaskValueWhenSanitizationIsDisabled() {
     assertThat(
-            SpymemcachedQueryText.create("set", new Object[] {"my-key", 3600, "my-value"}, false))
+            SpymemcachedQueryText.create(
+                "set",
+                new Class<?>[] {String.class, int.class, Object.class},
+                new Object[] {"my-key", 3600, "my-value"},
+                false))
         .isEqualTo("set my-key 3600 my-value");
   }
 
@@ -61,13 +66,25 @@ class SpymemcachedQueryTextTest {
   void shouldIgnoreIgnoredHoldArgumentOfDeprecatedDelete() {
     // delete(String key, int hold) is deprecated and delegates to delete(key), silently dropping
     // the hold argument, so it must not appear in the query text
-    assertThat(create("delete", new Object[] {"my-key", 5})).isEqualTo("delete my-key");
+    assertThat(
+            SpymemcachedQueryText.create(
+                "delete",
+                new Class<?>[] {String.class, int.class},
+                new Object[] {"my-key", 5},
+                true))
+        .isEqualTo("delete my-key");
   }
 
   @Test
   void shouldCaptureCasArgumentOfDelete() {
     // delete(String key, long cas) is a distinct overload whose cas value is actually sent
-    assertThat(create("delete", new Object[] {"my-key", 5L})).isEqualTo("delete my-key 5");
+    assertThat(
+            SpymemcachedQueryText.create(
+                "delete",
+                new Class<?>[] {String.class, long.class},
+                new Object[] {"my-key", 5L},
+                true))
+        .isEqualTo("delete my-key 5");
   }
 
   @Test
@@ -88,6 +105,35 @@ class SpymemcachedQueryTextTest {
         .isEqualTo("get my-key");
     assertThat(
             create("set", new Object[] {"my-key", 3600, "my-value", new SerializingTranscoder()}))
+        .isEqualTo("set my-key 3600 ?");
+  }
+
+  @Test
+  void shouldIgnoreNullTranscoder() {
+    // a null transcoder is a legitimate call, e.g. set("key", 3600, "value", (Transcoder) null);
+    // the transcoder parameter position is known from the method signature, so a null value there
+    // must not be mistaken for the stored value and leak it unmasked
+    assertThat(
+            SpymemcachedQueryText.create(
+                "set",
+                new Class<?>[] {String.class, int.class, Object.class, Transcoder.class},
+                new Object[] {"my-key", 3600, "my-value", null},
+                true))
+        .isEqualTo("set my-key 3600 ?");
+  }
+
+  @Test
+  void shouldMaskStoredValueThatImplementsTranscoder() {
+    // a stored value that happens to implement Transcoder is still the value, not a transcoder
+    // parameter, since the instrumented overload here has no explicit Transcoder parameter
+    Transcoder<?> value = new SerializingTranscoder();
+
+    assertThat(
+            SpymemcachedQueryText.create(
+                "set",
+                new Class<?>[] {String.class, int.class, Object.class},
+                new Object[] {"my-key", 3600, value},
+                true))
         .isEqualTo("set my-key 3600 ?");
   }
 
@@ -118,7 +164,16 @@ class SpymemcachedQueryTextTest {
         .startsWith("get aaa");
   }
 
+  /**
+   * Infers parameter types from the runtime class of each (non-null) argument. This is accurate
+   * enough for tests that do not exercise the null-transcoder or primitive-parameter edge cases,
+   * which instead call {@link SpymemcachedQueryText#create} directly with explicit types.
+   */
   private static String create(String operationName, Object[] args) {
-    return SpymemcachedQueryText.create(operationName, args, true);
+    Class<?>[] parameterTypes = new Class<?>[args.length];
+    for (int i = 0; i < args.length; i++) {
+      parameterTypes[i] = args[i] == null ? Object.class : args[i].getClass();
+    }
+    return SpymemcachedQueryText.create(operationName, parameterTypes, args, true);
   }
 }

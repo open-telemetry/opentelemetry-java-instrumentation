@@ -17,6 +17,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -65,8 +66,10 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     public static AdviceScope<OperationFuture<?>, OperationCompletionListener> methodEnter(
         @Advice.This MemcachedClient client,
         @Advice.Origin("#m") String methodName,
+        @Advice.Origin Method method,
         @Advice.AllArguments Object[] args) {
-      return AdviceScope.start(AsyncOperationHandler.INSTANCE, client, methodName, args);
+      return AdviceScope.start(
+          AsyncOperationHandler.INSTANCE, client, methodName, method.getParameterTypes(), args);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -88,8 +91,10 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     public static AdviceScope<GetFuture<?>, GetCompletionListener> methodEnter(
         @Advice.This MemcachedClient client,
         @Advice.Origin("#m") String methodName,
+        @Advice.Origin Method method,
         @Advice.AllArguments Object[] args) {
-      return AdviceScope.start(AsyncGetHandler.INSTANCE, client, methodName, args);
+      return AdviceScope.start(
+          AsyncGetHandler.INSTANCE, client, methodName, method.getParameterTypes(), args);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -110,8 +115,10 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     public static AdviceScope<BulkFuture<?>, BulkGetCompletionListener> methodEnter(
         @Advice.This MemcachedClient client,
         @Advice.Origin("#m") String methodName,
+        @Advice.Origin Method method,
         @Advice.AllArguments Object[] args) {
-      return AdviceScope.start(AsyncBulkHandler.INSTANCE, client, methodName, args);
+      return AdviceScope.start(
+          AsyncBulkHandler.INSTANCE, client, methodName, method.getParameterTypes(), args);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -132,8 +139,10 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     public static AdviceScope<Void, SyncCompletionListener> methodEnter(
         @Advice.This MemcachedClient client,
         @Advice.Origin("#m") String methodName,
+        @Advice.Origin Method method,
         @Advice.AllArguments Object[] args) {
-      return AdviceScope.start(SyncHandler.INSTANCE, client, methodName, args);
+      return AdviceScope.start(
+          SyncHandler.INSTANCE, client, methodName, method.getParameterTypes(), args);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -160,7 +169,11 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     }
 
     public static <F, T extends CompletionListener<?>> AdviceScope<F, T> start(
-        Handler<F, T> handler, MemcachedClient client, String methodName, Object[] args) {
+        Handler<F, T> handler,
+        MemcachedClient client,
+        String methodName,
+        Class<?>[] parameterTypes,
+        Object[] args) {
       CallDepth callDepth = CallDepth.forClass(MemcachedClient.class);
       if (callDepth.getAndIncrement() > 0) {
         return new AdviceScope<>(handler, callDepth, null);
@@ -168,7 +181,9 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
 
       T listener;
       try {
-        listener = handler.create(Context.current(), client.getConnection(), methodName, args);
+        listener =
+            handler.create(
+                Context.current(), client.getConnection(), methodName, parameterTypes, args);
       } catch (Throwable t) {
         // building the query text reads application provided arguments, which may throw; the call
         // depth has to be restored, otherwise every following call on this thread is treated as
@@ -198,7 +213,11 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
   public interface Handler<F, T extends CompletionListener<?>> {
     @Nullable
     T create(
-        Context parentContext, MemcachedConnection connection, String methodName, Object[] args);
+        Context parentContext,
+        MemcachedConnection connection,
+        String methodName,
+        Class<?>[] parameterTypes,
+        Object[] args);
 
     default void addListener(F future, T listener) {}
   }
@@ -210,8 +229,13 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     @Override
     @Nullable
     public OperationCompletionListener create(
-        Context parentContext, MemcachedConnection connection, String methodName, Object[] args) {
-      return OperationCompletionListener.create(parentContext, connection, methodName, args);
+        Context parentContext,
+        MemcachedConnection connection,
+        String methodName,
+        Class<?>[] parameterTypes,
+        Object[] args) {
+      return OperationCompletionListener.create(
+          parentContext, connection, methodName, parameterTypes, args);
     }
 
     @Override
@@ -226,8 +250,13 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     @Override
     @Nullable
     public GetCompletionListener create(
-        Context parentContext, MemcachedConnection connection, String methodName, Object[] args) {
-      return GetCompletionListener.create(parentContext, connection, methodName, args);
+        Context parentContext,
+        MemcachedConnection connection,
+        String methodName,
+        Class<?>[] parameterTypes,
+        Object[] args) {
+      return GetCompletionListener.create(
+          parentContext, connection, methodName, parameterTypes, args);
     }
 
     @Override
@@ -242,8 +271,13 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     @Override
     @Nullable
     public BulkGetCompletionListener create(
-        Context parentContext, MemcachedConnection connection, String methodName, Object[] args) {
-      return BulkGetCompletionListener.create(parentContext, connection, methodName, args);
+        Context parentContext,
+        MemcachedConnection connection,
+        String methodName,
+        Class<?>[] parameterTypes,
+        Object[] args) {
+      return BulkGetCompletionListener.create(
+          parentContext, connection, methodName, parameterTypes, args);
     }
 
     @Override
@@ -258,8 +292,13 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     @Override
     @Nullable
     public SyncCompletionListener create(
-        Context parentContext, MemcachedConnection connection, String methodName, Object[] args) {
-      return SyncCompletionListener.create(parentContext, connection, methodName, args);
+        Context parentContext,
+        MemcachedConnection connection,
+        String methodName,
+        Class<?>[] parameterTypes,
+        Object[] args) {
+      return SyncCompletionListener.create(
+          parentContext, connection, methodName, parameterTypes, args);
     }
   }
 }
