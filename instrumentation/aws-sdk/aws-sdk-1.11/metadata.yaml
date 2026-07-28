@@ -26,8 +26,4 @@ configurations:
       only a span link connecting it to the producer trace.
     type: boolean
     default: false
-  - name: otel.instrumentation.messaging.experimental.capture-headers
-    declarative_name: java.common.messaging.capture_headers/development
-    description: Allows configuring headers to capture as span attributes.
-    type: list
-    default: ''
+  - ref: messaging.capture-headers

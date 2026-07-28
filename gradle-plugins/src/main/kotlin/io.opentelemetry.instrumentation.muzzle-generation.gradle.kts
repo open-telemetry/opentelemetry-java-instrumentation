@@ -43,7 +43,8 @@ val inputClasspath = (sourceSet.output.resourcesDir?.let { codegen.plus(project.
 URLConnection.setDefaultUseCaches("jar", false)
 
 val languageTasks = LANGUAGES.map { language ->
-  if (fileTree("src/${sourceSet.name}/${language}").isEmpty) {
+  // Inspecting source contents here invalidates the configuration cache after every source edit.
+  if (!file("src/${sourceSet.name}/${language}").isDirectory) {
     return@map null
   }
   val compileTaskName = sourceSet.getCompileTaskName(language)

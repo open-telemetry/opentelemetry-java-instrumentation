@@ -231,9 +231,23 @@ the `transform()` method.
 > by the agent's class loader, and this string concatenation is an optimization that prevents
 > the actual advice class from being loaded into the agent's class loader.
 
-## Use advice classes to write code that will get injected to the instrumented library classes
+## Use advice classes to write instrumentation code
 
-Advice classes aren't really classes in that they're raw pieces of code that are pasted directly into
+Two types of instrumentation are currently supported:
+
+- inlined instrumentation, where advice classes method body bytecode is copied into the instrumented class files
+- non-inlined instrumentation, where advice classes are loaded as regular class files.
+
+The choice between the two strategies is made by instrumentation author by using the `inline` property of the `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` annotations.
+
+- if `inline` property is not set or set to `true` (default), the advice is inlined into the instrumented class files
+- if `inline` property is explicitly set to `false`
+  - before 3.0.0: the advice is inlined
+  - as of 3.0.0 and later: the advice is not inlined
+
+## Inlined instrumentation
+
+With inlined instrumentation, advice classes aren't really classes in that they're raw pieces of code that are pasted directly into
 the instrumented library class files. You should not treat them as ordinary, plain Java classes.
 
 Unfortunately many standard practices do not apply to advice classes:
@@ -324,51 +338,12 @@ the `javaagent-extension-api` artifact has a class `Java8BytecodeBridge` which p
 methods for accessing these default methods from advice. We suggest avoiding Java 8 language features
 in advice classes at all - sometimes you don't know what bytecode version is used by the instrumented class.
 
-### Associate instrumentation classes with instrumented library classes
-
-Sometimes there is a need to associate some instrumentation class with an instrumented library class, and
-the library does not offer a way to do this. The OpenTelemetry javaagent provides `VirtualField`
-for that purpose. Consider the following example:
-
-```java
-VirtualField<Runnable, Context> virtualField =
-    VirtualField.get(Runnable.class, Context.class);
-```
-
-A `VirtualField` has a very similar interface to a map. It is not a simple map though: the javaagent uses many
-bytecode tweaks to optimize it. Because of this, retrieving a `VirtualField` instance is rather
-limited: the `VirtualField#get()` method must receive class references as its parameters; it won't
-work with variables, method params, etc. Both the owner class and the field class must be known at
-compile time for it to work.
-
-Use of `VirtualField` requires the `muzzle-generation` gradle plugin. Failing to use the plugin will result in
-ClassNotFoundException when trying to access the field.
-
-### Avoid using @Advice.Origin Method
-
-You shouldn't use ByteBuddy's @Advice.Origin Method method, as it
-inserts a call to `Class.getMethod(...)` in a transformed method.
-
-Instead, get the declaring class and method name, as loading
-constants from a constant pool is a much simpler operation.
-
-For example:
-
-```
-@Advice.Origin("#t") Class<?> declaringClass,
-@Advice.Origin("#m") String methodName
-```
-
 [suppress]: https://opentelemetry.io/docs/zero-code/java/agent/disable/#suppressing-specific-agent-instrumentation
 
-## Use non-inlined advice code with `invokedynamic`
-
-Using non-inlined advice code is possible thanks to the `invokedynamic` instruction, this strategy
-is referred as "indy" in reference to this. By extension "indy modules" are the instrumentation
-modules using this instrumentation strategy.
+## Non-inlined instrumentation
 
 The most common way to instrument code with ByteBuddy relies on inlining, this strategy will be
-referred as "inlined" strategy as opposed to "indy".
+referred as "inlined" strategy as opposed to "non-inlined".
 
 For inlined advices, the advice code is directly copied into the instrumented method.
 In addition, all helper classes are injected into the classloader of the instrumented classes.
@@ -381,42 +356,11 @@ invokedynamic bytecode instructions.
 
 Using indy instrumentation has these advantages:
 
-- allows instrumentations to have breakpoints set in them and be debugged using standard debugging techniques
+- allows instrumentation to have breakpoints set in them and be debugged using standard debugging techniques.
 - provides clean isolation of instrumentation advice from the application and other instrumentations
-- allows advice classes to contain static fields and methods which can be accessed from the advice entry points - in fact generally good development practices are enabled (whereas inlined advices are [restricted in how they can be implemented](#use-advice-classes-to-write-code-that-will-get-injected-to-the-instrumented-library-classes))
-
-### Indy modules and transition
-
-Making an instrumentation "indy" compatible (or native "indy") is not as straightforward as making it "inlined".
-However, ByteBuddy provides a set of tools and APIs that are mentioned below to make the process as smooth as possible.
-
-Due to the changes needed on most of the instrumentation modules the migration can't be achieved in a single step,
-we thus have to implement it in two steps:
-
-- `InstrumentationModule#isIndyModule` implementation return `true` (and changes needed to make it indy compatible)
-- set `inline = false` on advice methods annotated with `@Advice.OnMethodEnter` or `@Advice.OnMethodExit`
-
-The `otel.javaagent.experimental.indy` (default `false`) configuration option allows to opt-in for
-using "indy". When set to `true`, the `io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceTransformer`
-will transform advices automatically to make them "indy native". Using this option is temporary and will
-be removed once all the instrumentations are "indy native".
-
-This configuration is automatically enabled in CI with `testIndy*` checks or when the `-PtestIndy=true` parameter is added to gradle.
-
-In order to preserve compatibility with both instrumentation strategies, we have to omit the `inline = false`
-from the advice method annotations.
-
-We have three sets of instrumentation modules:
-
-- "inlined only": only compatible with "inlined", `isIndyModule` returns `false`.
-- "indy compatible": compatible with both "indy" and "inlined", do not override `isIndyModule`, advices are modified with `AdviceTransformer` to be made "indy native" or "inlined" at runtime.
-- "indy native": only compatible with "indy" `isIndyModule` returns `true`.
-
-The first step of the migration is to move all the "inlined only" to the "indy compatible" category
-by refactoring them with the limitations described below.
-
-Once everything is "indy compatible", we can evaluate changing the default value of `otel.javaagent.experimental.indy`
-to `true` and make it non-experimental.
+- allows advice classes to contain static fields and methods which can be accessed from the advice entry points - in fact generally good development practices are enabled (whereas inlined advices are [restricted in how they can be implemented](#inlined-instrumentation))
+- advice classes have access to agent code so communicating between advice and agent does not need an api in boot loader
+- advice classes code does not require to be compatible with instrumented class, for example we can call a static interface method in advice when instrumented class is compiled for Java 7 or older.
 
 ### Shared classes and common classloader
 
@@ -431,7 +375,7 @@ This means that extensions should not depend on internal instrumentation modules
 ### Classes injected in application classloader
 
 Injecting classes in the application classloader is possible by implementing the
-`ExperimentalInstrumentationModule#injectedClassNames` method. All the class names listed by the
+`InstrumentationModule#injectedClassNames` method. All the class names listed by the
 returned value will be loaded in the application classloader instead of the agent or instrumentation
 module classloader.
 
@@ -439,7 +383,7 @@ This allows for example to access package-private methods that would not be acce
 
 ### Advice local variables
 
-With inlined advices, declaring an advice method argument with `@Advice.Local` allows defining
+With [inlined advices](#inlined-instrumentation), declaring an advice method argument with `@Advice.Local` allows defining
 a variable that is local to the advice execution for communication between the enter and exit advices.
 
 When advices are not inlined, usage of `@Advice.Local` is not possible. It is however possible to
@@ -515,3 +459,42 @@ public static Object onEnter(@Advice.FieldValue("fieldName") Object originalFiel
 
 It is possible to modify multiple fields at once by using an array, see usages of
 `@Advice.AssignReturned.ToFields` for detailed examples.
+
+## Using virtual fields to associate instrumentation classes to instrumented classes
+
+Sometimes there is a need to associate some instrumentation class with an instrumented library class, and
+the library does not offer a way to do this. The Java javaagent provides `VirtualField`
+for that purpose. Consider the following example:
+
+```java
+VirtualField<Runnable, Context> virtualField =
+    VirtualField.get(Runnable.class, Context.class);
+```
+
+A `VirtualField` has a very similar interface to a map. It is not a simple map though: the javaagent uses many
+bytecode tweaks to optimize it. Because of this, retrieving a `VirtualField` instance is rather
+limited: the `VirtualField#get()` method must receive class references as its parameters; it won't
+work with variables, method params, etc. Both the owner class and the field class must be known at
+compile time for it to work.
+
+Use of `VirtualField` requires the `muzzle-generation` gradle plugin. Failing to use the plugin will result in
+ClassNotFoundException when trying to access the field.
+
+The call to `VirtualField.find()` is expensive, so it is best to call it once and cache the result in a field.
+In addition, when using [non-inlined instrumentation](#non-inlined-instrumentation), the calls to `VirtualField.find()` must be done outside the advice class and methods
+because those calls are re-written for efficiency. The `VirtualFieldChecker` class is used to check this at runtime when the advice class is loaded.
+
+## Avoid using @Advice.Origin Method
+
+You shouldn't use ByteBuddy's @Advice.Origin Method method, as it
+inserts a call to `Class.getMethod(...)` in a transformed method.
+
+Instead, get the declaring class and method name, as loading
+constants from a constant pool is a much simpler operation.
+
+For example:
+
+```
+@Advice.Origin("#t") Class<?> declaringClass,
+@Advice.Origin("#m") String methodName
+```
