@@ -19,6 +19,15 @@ In addition to Google Java Style formatting, Flint applies the repository's
 configured regular-expression import rules (for example, rewriting
 `Objects.requireNonNull` to a static import).
 
+Markdown files are formatted and linted separately through
+[flint](https://github.com/grafana/flint), run via [mise](https://mise.jdx.dev/):
+
+```bash
+mise run lint:fix
+```
+
+flint also checks that links in markdown files resolve.
+
 #### Pre-commit hook
 
 To completely delegate code style formatting to the machine,

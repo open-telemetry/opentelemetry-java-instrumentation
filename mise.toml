@@ -1,10 +1,10 @@
 [tools]
 
 # Linters
-"cargo:https://github.com/grafana/flint" = "rev:57a4c9b"
+"aqua:grafana/flint" = "0.22.10"
 google-java-format = "1.35.0"
 lychee = "0.24.2"
-rumdl = "0.2.32"
+rumdl = "0.2.42"
 
 [env]
 FLINT_CONFIG_DIR = ".github/config"

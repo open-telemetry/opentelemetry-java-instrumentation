@@ -47,9 +47,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
  * Integration test that verifies the registry-mode end-to-end flow: provider registers to
- * ZooKeeper, consumer discovers via ZooKeeper, and the {@code SERVER_ADDRESS} span attribute
- * contains the registry address (with service interface, version, and group) instead of the
- * provider host.
+ * ZooKeeper, consumer discovers via ZooKeeper, and, under the stable rpc semconv, the {@code
+ * SERVER_ADDRESS} span attribute contains the registry address (with service interface, version,
+ * and group) instead of the provider host. Under the old rpc semconv the resolved provider host is
+ * kept.
  */
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractDubboRegistryTest {
@@ -149,8 +150,9 @@ public abstract class AbstractDubboRegistryTest {
 
     assertThat(response).isEqualTo("hello");
 
-    // In registry mode, SERVER_ADDRESS = "registryProtocol://host:port/interface:version:group"
-    // and SERVER_PORT is absent (null).
+    // Under the stable rpc semconv, SERVER_ADDRESS =
+    // "registryProtocol://host:port/interface:version:group" and SERVER_PORT is absent (null).
+    // Under the old rpc semconv the resolved provider host/port are kept.
     // See https://github.com/open-telemetry/semantic-conventions/pull/3317
     String expectedServiceTarget =
         HelloService.class.getName() + ":" + SERVICE_VERSION + ":" + SERVICE_GROUP;
@@ -178,8 +180,30 @@ public abstract class AbstractDubboRegistryTest {
                                     emitStableRpcSemconv()
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                                         : "$invoke"),
-                                equalTo(SERVER_ADDRESS, expectedServerAddress),
-                                equalTo(SERVER_PORT, null),
+                                equalTo(
+                                    maybeStablePeerService(),
+                                    hasServicePeerName()
+                                            && testLatestDeps()
+                                            && !emitStableRpcSemconv()
+                                        ? "test-peer-service"
+                                        : null),
+                                satisfies(
+                                    SERVER_ADDRESS,
+                                    val -> {
+                                      if (emitStableRpcSemconv()) {
+                                        val.isEqualTo(expectedServerAddress);
+                                      } else {
+                                        // registry override is gated behind the stable rpc semconv;
+                                        // under the old semconv the bare provider host is used, not
+                                        // the registry target (the exact host is environment
+                                        // dependent, so assert it is a plain host, not a registry
+                                        // url/target)
+                                        val.asString()
+                                            .isNotEqualTo(expectedServerAddress)
+                                            .doesNotContain("/");
+                                      }
+                                    }),
+                                equalTo(SERVER_PORT, emitStableRpcSemconv() ? null : (long) port),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
                                     val ->

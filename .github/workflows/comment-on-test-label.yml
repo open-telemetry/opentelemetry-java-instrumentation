@@ -12,11 +12,13 @@ name: Comment on test-* label
 # `pull_request_target` would normally expose are not reachable.
 
 on:
-  pull_request_target: # zizmor: ignore[dangerous-triggers]
+  pull_request_target:
+    # zizmor: ignore[dangerous-triggers] No PR code is checked out or executed;
+    # the workflow only posts a comment using trusted workflow code.
     types: [labeled]
 
 permissions:
-  pull-requests: write # zizmor: ignore[excessive-permissions]
+  pull-requests: write # zizmor: ignore[excessive-permissions] Required to post the explanatory PR comment.
 
 jobs:
   comment:
