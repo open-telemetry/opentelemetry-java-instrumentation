@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkReques
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.DYNAMODB;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.KINESIS;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.LAMBDA;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.RDS_DATA;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.S3;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.SECRETSMANAGER;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.SNS;
@@ -156,7 +157,9 @@ enum AwsSdkRequest {
   ConverseRequest(
       BEDROCK_RUNTIME,
       "bedrockruntime.model.ConverseRequest",
-      request(stringKey("gen_ai.request.model"), "modelId"));
+      request(stringKey("gen_ai.request.model"), "modelId")),
+  ExecuteStatementRequest(RDS_DATA, "rdsdata.model.ExecuteStatementRequest"),
+  BatchExecuteStatementRequest(RDS_DATA, "rdsdata.model.BatchExecuteStatementRequest");
 
   private final AwsSdkRequestType type;
   private final String requestClass;

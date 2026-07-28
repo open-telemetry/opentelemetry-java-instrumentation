@@ -53,6 +53,7 @@ public class AwsSdkTelemetry {
   private final Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> rdsDataInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter;
   private final Logger eventLogger;
   private final boolean captureExperimentalSpanAttributes;
@@ -100,6 +101,7 @@ public class AwsSdkTelemetry {
     this.consumerProcessInstrumenter = instrumenterFactory.consumerProcessInstrumenter();
     this.producerInstrumenter = instrumenterFactory.producerInstrumenter();
     this.dynamoDbInstrumenter = instrumenterFactory.dynamoDbInstrumenter();
+    this.rdsDataInstrumenter = instrumenterFactory.rdsDataInstrumenter();
     this.bedrockRuntimeInstrumenter = instrumenterFactory.bedrockRuntimeInstrumenter();
     this.eventLogger = instrumenterFactory.eventLogger();
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
@@ -118,6 +120,7 @@ public class AwsSdkTelemetry {
         consumerProcessInstrumenter,
         producerInstrumenter,
         dynamoDbInstrumenter,
+        rdsDataInstrumenter,
         bedrockRuntimeInstrumenter,
         eventLogger,
         captureExperimentalSpanAttributes,
