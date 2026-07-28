@@ -120,7 +120,6 @@ groups:
     attributes:
       - ref: db.client.connection.pool.name
       - ref: db.client.connection.state
-      - ref: db.client.connection.pool.name
 
   - id: metric.wildfly.db.client.connection.wait.count
     metric_name: wildfly.db.client.connection.wait.count
