@@ -57,13 +57,13 @@ final class SpymemcachedQueryText {
     for (int i = 0; i < args.length; i++) {
       Object arg = args[i];
 
-      if (isIgnored(arg)) {
-        continue;
-      }
       if (i == valueIndex) {
         if (!append(queryText, sanitizationEnabled ? MASK : String.valueOf(arg))) {
           break;
         }
+        continue;
+      }
+      if (isIgnored(arg)) {
         continue;
       }
       if (!appendKeys(queryText, arg)) {
@@ -101,10 +101,18 @@ final class SpymemcachedQueryText {
     return arg instanceof Transcoder || arg instanceof Iterator;
   }
 
-  /** Returns the index of the last argument that ends up in the query text, or {@code -1}. */
+  /**
+   * Returns the index of the last argument that ends up in the query text, or {@code -1}.
+   *
+   * <p>Only the trailing {@link Transcoder} argument is skipped here: operations that carry a value
+   * never legitimately take an {@link Iterator} as that value, so treating an {@code
+   * Iterator}-typed value as ignorable (as {@link #isIgnored(Object)} does for bulk key operations)
+   * would cause the actual value to be mistaken for an earlier argument, e.g. the expiration in
+   * {@code set}.
+   */
   private static int lastArgumentIndex(Object[] args) {
     for (int i = args.length - 1; i >= 0; i--) {
-      if (!isIgnored(args[i])) {
+      if (!(args[i] instanceof Transcoder)) {
         return i;
       }
     }

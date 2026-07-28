@@ -87,6 +87,13 @@ class SpymemcachedQueryTextTest {
   }
 
   @Test
+  void shouldMaskStoredValueThatImplementsIterator() {
+    Iterator<String> value = asList("a", "b").iterator();
+
+    assertThat(create("set", new Object[] {"my-key", 3600, value})).isEqualTo("set my-key 3600 ?");
+  }
+
+  @Test
   void shouldTruncateLongQueryText() {
     StringBuilder key = new StringBuilder();
     for (int i = 0; i < SpymemcachedQueryText.LIMIT; i++) {
