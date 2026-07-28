@@ -50,6 +50,8 @@ final class SpymemcachedQueryText {
   private static final Set<String> OPERATIONS_WITH_VALUE =
       new HashSet<>(asList("set", "add", "replace", "append", "prepend", "cas"));
 
+  private static final String OPERATION_DELETE = "delete";
+
   static String create(String operationName, Object[] args, boolean sanitizationEnabled) {
     int valueIndex = OPERATIONS_WITH_VALUE.contains(operationName) ? lastArgumentIndex(args) : -1;
 
@@ -63,7 +65,7 @@ final class SpymemcachedQueryText {
         }
         continue;
       }
-      if (isIgnored(arg)) {
+      if (isIgnored(operationName, i, arg)) {
         continue;
       }
       if (!appendKeys(queryText, arg)) {
@@ -94,11 +96,17 @@ final class SpymemcachedQueryText {
     return append(queryText, String.valueOf(arg));
   }
 
-  private static boolean isIgnored(Object arg) {
+  private static boolean isIgnored(String operationName, int index, Object arg) {
     // transcoders are not part of the command that is sent to memcached.
     // reading the keys of a bulk operation that was given an iterator would consume the iterator
     // before the instrumented method gets to it, so those keys are left out
-    return arg instanceof Transcoder || arg instanceof Iterator;
+    if (arg instanceof Transcoder || arg instanceof Iterator) {
+      return true;
+    }
+    // the deprecated delete(String key, int hold) overload ignores its int argument and delegates
+    // to delete(key); the distinct delete(String key, long cas) overload takes a real CAS value
+    // that is sent to memcached, so only the Integer-typed argument is dropped here
+    return OPERATION_DELETE.equals(operationName) && index == 1 && arg instanceof Integer;
   }
 
   /**
@@ -106,9 +114,9 @@ final class SpymemcachedQueryText {
    *
    * <p>Only the trailing {@link Transcoder} argument is skipped here: operations that carry a value
    * never legitimately take an {@link Iterator} as that value, so treating an {@code
-   * Iterator}-typed value as ignorable (as {@link #isIgnored(Object)} does for bulk key operations)
-   * would cause the actual value to be mistaken for an earlier argument, e.g. the expiration in
-   * {@code set}.
+   * Iterator}-typed value as ignorable (as {@link #isIgnored(String, int, Object)} does for bulk
+   * key operations) would cause the actual value to be mistaken for an earlier argument, e.g. the
+   * expiration in {@code set}.
    */
   private static int lastArgumentIndex(Object[] args) {
     for (int i = args.length - 1; i >= 0; i--) {

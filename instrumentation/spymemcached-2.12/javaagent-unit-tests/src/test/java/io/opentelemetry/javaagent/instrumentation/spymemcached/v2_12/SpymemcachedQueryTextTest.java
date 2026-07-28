@@ -58,6 +58,19 @@ class SpymemcachedQueryTextTest {
   }
 
   @Test
+  void shouldIgnoreIgnoredHoldArgumentOfDeprecatedDelete() {
+    // delete(String key, int hold) is deprecated and delegates to delete(key), silently dropping
+    // the hold argument, so it must not appear in the query text
+    assertThat(create("delete", new Object[] {"my-key", 5})).isEqualTo("delete my-key");
+  }
+
+  @Test
+  void shouldCaptureCasArgumentOfDelete() {
+    // delete(String key, long cas) is a distinct overload whose cas value is actually sent
+    assertThat(create("delete", new Object[] {"my-key", 5L})).isEqualTo("delete my-key 5");
+  }
+
+  @Test
   void shouldCaptureBulkKeysFromCollection() {
     assertThat(create("getBulk", new Object[] {asList("key1", "key2")}))
         .isEqualTo("getBulk key1 key2");
