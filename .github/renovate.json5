@@ -410,7 +410,7 @@
       depNameTemplate: 'github/gh-aw',
       versioningTemplate: 'semver-coerced',
       managerFilePatterns: [
-        '.github/workflows/build-common.yml',
+        '.github/scripts/compile-gh-aw-workflows.sh',
       ],
       matchStrings: [
         'gh extension install github/gh-aw --pin (?<currentValue>v\\d+\\.\\d+\\.\\d+)',
