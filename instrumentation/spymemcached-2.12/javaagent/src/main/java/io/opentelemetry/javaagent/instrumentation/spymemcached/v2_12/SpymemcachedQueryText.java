@@ -53,10 +53,7 @@ final class SpymemcachedQueryText {
   private static final String OPERATION_DELETE = "delete";
 
   static String create(
-      String operationName,
-      Class<?>[] parameterTypes,
-      Object[] args,
-      boolean sanitizationEnabled) {
+      String operationName, Class<?>[] parameterTypes, Object[] args, boolean sanitizationEnabled) {
     int valueIndex =
         OPERATIONS_WITH_VALUE.contains(operationName) ? lastArgumentIndex(parameterTypes) : -1;
 
@@ -129,8 +126,8 @@ final class SpymemcachedQueryText {
    *
    * <p>Only a trailing {@link Transcoder}-typed parameter is skipped here: operations that carry a
    * value never legitimately declare an {@link Iterator}-typed parameter for that value, so
-   * treating it as ignorable (as {@link #isIgnored(String, Class[], int, Object)} does for bulk
-   * key operations) would cause the actual value to be mistaken for an earlier argument, e.g. the
+   * treating it as ignorable (as {@link #isIgnored(String, Class[], int, Object)} does for bulk key
+   * operations) would cause the actual value to be mistaken for an earlier argument, e.g. the
    * expiration in {@code set}.
    */
   private static int lastArgumentIndex(Class<?>[] parameterTypes) {
