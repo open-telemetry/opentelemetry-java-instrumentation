@@ -63,7 +63,7 @@ public final class HostIdResource {
 
   // Prefer the SystemRoot/windir environment variables to locate the Windows directory, falling
   // back to the conventional install path only if neither is set.
-  private static final String[] WINDOWS_ROOT_ENV_VARS = {"SystemRoot", "windir"};
+  private static final List<String> WINDOWS_ROOT_ENV_VARS = asList("SystemRoot", "windir");
   private static final String WINDOWS_ROOT_FALLBACK = "C:\\Windows";
   private static final List<String> WINDOWS_REGISTRY_QUERY_ARGS =
       asList("query", "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography", "/v", "MachineGuid");
@@ -72,23 +72,19 @@ public final class HostIdResource {
       new HostIdResource(
           HostIdResource::getOsTypeSystemProperty,
           HostIdResource::readFileLines,
-          HostIdResource::queryWindowsRegistry,
           HostIdResource::runCommand);
 
   private final Supplier<String> getOsType;
   private final Function<Path, List<String>> fileReader;
-  private final Supplier<List<String>> queryWindowsRegistry;
   private final Function<List<String>, List<String>> commandExecutor;
 
   // Visible for testing
   HostIdResource(
       Supplier<String> getOsType,
       Function<Path, List<String>> fileReader,
-      Supplier<List<String>> queryWindowsRegistry,
       Function<List<String>, List<String>> commandExecutor) {
     this.getOsType = getOsType;
     this.fileReader = fileReader;
-    this.queryWindowsRegistry = queryWindowsRegistry;
     this.commandExecutor = commandExecutor;
   }
 
@@ -187,7 +183,10 @@ public final class HostIdResource {
   }
 
   private Resource readWindowsGuid() {
-    List<String> lines = queryWindowsRegistry.get();
+    List<String> command = new ArrayList<>();
+    command.add(windowsRegPath(name -> System.getenv(name)));
+    command.addAll(WINDOWS_REGISTRY_QUERY_ARGS);
+    List<String> lines = commandExecutor.apply(command);
 
     for (String line : lines) {
       if (line.contains("MachineGuid")) {
@@ -202,17 +201,11 @@ public final class HostIdResource {
     return Resource.empty();
   }
 
-  private static List<String> queryWindowsRegistry() {
-    List<String> command = new ArrayList<>();
-    command.add(windowsRegPath());
-    command.addAll(WINDOWS_REGISTRY_QUERY_ARGS);
-    return runCommand(command);
-  }
-
-  private static String windowsRegPath() {
+  // Visible for testing
+  static String windowsRegPath(Function<String, String> getEnv) {
     String root = null;
     for (String envVar : WINDOWS_ROOT_ENV_VARS) {
-      root = System.getenv(envVar);
+      root = getEnv.apply(envVar);
       if (root != null && !root.isEmpty()) {
         break;
       }

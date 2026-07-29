@@ -18,10 +18,8 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.assertj.core.api.MapAssert;
 import org.junit.jupiter.api.Test;
@@ -34,7 +32,7 @@ class HostIdResourceTest {
   @ParameterizedTest
   @MethodSource("createResourceLinuxCases")
   void createResourceLinux(String expectedValue, Function<Path, List<String>> fileReader) {
-    HostIdResource hostIdResource = new HostIdResource(() -> "linux", fileReader, null, null);
+    HostIdResource hostIdResource = new HostIdResource(() -> "linux", fileReader, null);
     assertHostId(expectedValue, hostIdResource);
   }
 
@@ -58,9 +56,8 @@ class HostIdResourceTest {
 
   @ParameterizedTest
   @MethodSource("createResourceWindowsCases")
-  void createResourceWindows(String expectedValue, Supplier<List<String>> queryWindowsRegistry) {
-    HostIdResource hostIdResource =
-        new HostIdResource(() -> "Windows 95", null, queryWindowsRegistry, null);
+  void createResourceWindows(String expectedValue, Function<List<String>, List<String>> command) {
+    HostIdResource hostIdResource = new HostIdResource(() -> "Windows 95", null, command);
     assertHostId(expectedValue, hostIdResource);
   }
 
@@ -69,18 +66,53 @@ class HostIdResourceTest {
         argumentSet(
             "default",
             "test",
-            (Supplier<List<String>>)
-                () ->
-                    asList(
-                        "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography",
-                        "    MachineGuid    REG_SZ    test")),
-        argumentSet("short output", null, (Supplier<List<String>>) Collections::emptyList));
+            (Function<List<String>, List<String>>)
+                command -> {
+                  assertThat(command.get(0)).endsWith("\\System32\\reg.exe");
+                  assertThat(command.subList(1, command.size()))
+                      .containsExactly(
+                          "query",
+                          "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography",
+                          "/v",
+                          "MachineGuid");
+                  return asList(
+                      "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography",
+                      "    MachineGuid    REG_SZ    test");
+                }),
+        argumentSet(
+            "short output", null, (Function<List<String>, List<String>>) command -> emptyList()));
+  }
+
+  @ParameterizedTest
+  @MethodSource("windowsRegPathCases")
+  void windowsRegPath(String expectedPath, Function<String, String> getEnv) {
+    assertThat(HostIdResource.windowsRegPath(getEnv)).isEqualTo(expectedPath);
+  }
+
+  private static Stream<Arguments> windowsRegPathCases() {
+    return Stream.of(
+        argumentSet(
+            "SystemRoot",
+            "D:\\Win\\System32\\reg.exe",
+            (Function<String, String>) name -> "SystemRoot".equals(name) ? "D:\\Win" : null),
+        argumentSet(
+            "windir fallback",
+            "E:\\Win\\System32\\reg.exe",
+            (Function<String, String>) name -> "windir".equals(name) ? "E:\\Win" : null),
+        argumentSet(
+            "neither set",
+            "C:\\Windows\\System32\\reg.exe",
+            (Function<String, String>) name -> null),
+        argumentSet(
+            "empty values",
+            "C:\\Windows\\System32\\reg.exe",
+            (Function<String, String>) name -> ""));
   }
 
   @ParameterizedTest
   @MethodSource("createResourceMacOsCases")
   void createResourceMacOs(String expectedValue, Function<List<String>, List<String>> command) {
-    HostIdResource hostIdResource = new HostIdResource(() -> "Mac OS X", null, null, command);
+    HostIdResource hostIdResource = new HostIdResource(() -> "Mac OS X", null, command);
     assertHostId(expectedValue, hostIdResource);
   }
 
@@ -90,10 +122,13 @@ class HostIdResourceTest {
             "default",
             "0123456789ABCDEF",
             (Function<List<String>, List<String>>)
-                command ->
-                    asList(
-                        "+-o IOPlatformExpertDevice  <class IOPlatformExpertDevice>",
-                        "    \"IOPlatformUUID\" = \"0123456789ABCDEF\"")),
+                command -> {
+                  assertThat(command)
+                      .containsExactly("/usr/sbin/ioreg", "-rd1", "-c", "IOPlatformExpertDevice");
+                  return asList(
+                      "+-o IOPlatformExpertDevice  <class IOPlatformExpertDevice>",
+                      "    \"IOPlatformUUID\" = \"0123456789ABCDEF\"");
+                }),
         argumentSet(
             "no uuid",
             null,
@@ -109,7 +144,7 @@ class HostIdResourceTest {
       String expectedValue,
       Function<Path, List<String>> fileReader,
       Function<List<String>, List<String>> command) {
-    HostIdResource hostIdResource = new HostIdResource(() -> "FreeBSD", fileReader, null, command);
+    HostIdResource hostIdResource = new HostIdResource(() -> "FreeBSD", fileReader, command);
     assertHostId(expectedValue, hostIdResource);
   }
 
@@ -124,7 +159,11 @@ class HostIdResourceTest {
             "kenv fallback",
             "kenv-uuid",
             (Function<Path, List<String>>) path -> emptyList(),
-            (Function<List<String>, List<String>>) command -> singletonList("kenv-uuid")),
+            (Function<List<String>, List<String>>)
+                command -> {
+                  assertThat(command).containsExactly("/bin/kenv", "-q", "smbios.system.uuid");
+                  return singletonList("kenv-uuid");
+                }),
         argumentSet(
             "nothing found",
             null,
