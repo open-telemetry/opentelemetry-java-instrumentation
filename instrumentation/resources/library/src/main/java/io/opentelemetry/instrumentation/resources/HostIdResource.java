@@ -50,6 +50,14 @@ public final class HostIdResource {
   // copied from HostIncubatingAttributes
   static final AttributeKey<String> HOST_ID = AttributeKey.stringKey("host.id");
 
+  /**
+   * @deprecated This constant is no longer used and will be removed in a future release. The
+   *     Windows registry is now queried using an absolute path to {@code reg.exe}.
+   */
+  @Deprecated
+  public static final String REGISTRY_QUERY =
+      "reg query HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography /v MachineGuid";
+
   // Non-privileged machine-id sources per the semantic conventions. Commands are invoked with
   // absolute paths to avoid resolving them through a potentially attacker controlled PATH, see
   // https://github.com/open-telemetry/semantic-conventions/pull/3896
@@ -126,7 +134,7 @@ public final class HostIdResource {
   }
 
   private boolean runningBsd() {
-    return getOsType.get().endsWith("BSD");
+    return getOsType.get().toLowerCase(Locale.ROOT).endsWith("bsd");
   }
 
   // see
@@ -175,7 +183,6 @@ public final class HostIdResource {
             return Resource.create(Attributes.of(HOST_ID, uuid));
           }
         }
-        break;
       }
     }
     logger.fine("Failed to read macOS host id: no IOPlatformUUID found in ioreg output");
@@ -184,7 +191,7 @@ public final class HostIdResource {
 
   private Resource readWindowsGuid() {
     List<String> command = new ArrayList<>();
-    command.add(windowsRegPath(name -> System.getenv(name)));
+    command.add(windowsRegPath(System::getenv));
     command.addAll(WINDOWS_REGISTRY_QUERY_ARGS);
     List<String> lines = commandExecutor.apply(command);
 
