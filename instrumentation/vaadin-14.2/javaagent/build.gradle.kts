@@ -91,6 +91,7 @@ val vaadinBuildService =
 
 tasks {
   withType<Test>().configureEach {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     usesService(vaadinBuildService)
 
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
