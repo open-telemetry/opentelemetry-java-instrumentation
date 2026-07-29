@@ -105,8 +105,6 @@ public class AgentInstaller {
     }
   }
 
-  // Need to call deprecated API for backward compatibility with extensions that haven't migrated.
-  @SuppressWarnings("deprecation")
   private static void installBytebuddyAgent(
       Instrumentation inst,
       ClassLoader extensionClassLoader,
@@ -273,8 +271,6 @@ public class AgentInstaller {
     agentBuilder.installOn(instrumentation);
   }
 
-  // Need to call deprecated API for backward compatibility with extensions that haven't migrated.
-  @SuppressWarnings("deprecation")
   private static void setBootstrapPackages(
       ConfigProperties config, ClassLoader extensionClassLoader) {
     BootstrapPackagesBuilderImpl builder = new BootstrapPackagesBuilderImpl();
@@ -289,8 +285,6 @@ public class AgentInstaller {
     DefineClassHelper.internalSetHandler(DefineClassHandler.INSTANCE);
   }
 
-  // Need to call deprecated API for backward compatibility with extensions that haven't migrated.
-  @SuppressWarnings("deprecation")
   private static AgentBuilder configureIgnoredTypes(
       ConfigProperties config, ClassLoader extensionClassLoader, AgentBuilder agentBuilder) {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();

@@ -89,9 +89,13 @@ class LettuceReactiveClientTest {
     RedisCommands<String, String> syncCommands = connection.sync();
     syncCommands.set("TESTKEY", "TESTVAL");
 
-    // 1 set + 1 connect trace
-    testing.waitForTraces(2);
+    // 1 set (+ 1 connect trace when connection telemetry is enabled)
+    testing.waitForTraces(connectionTelemetryEnabled() ? 2 : 1);
     testing.clearData();
+  }
+
+  private static boolean connectionTelemetryEnabled() {
+    return Boolean.getBoolean("otel.instrumentation.lettuce.connection-telemetry.enabled");
   }
 
   @Test
@@ -456,8 +460,10 @@ class LettuceReactiveClientTest {
     StatefulRedisConnection<String, String> statefulConnection = client.connect();
     cleanup.deferCleanup(statefulConnection);
 
-    // 1 connect trace
-    testing.waitForTraces(1);
+    if (connectionTelemetryEnabled()) {
+      // 1 connect trace
+      testing.waitForTraces(1);
+    }
     testing.clearData();
 
     action.accept(statefulConnection, containerPort);

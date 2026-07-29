@@ -34,6 +34,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import ch.qos.logback.classic.LoggerContext;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
@@ -84,6 +86,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
   @Autowired private OtelResourceProperties otelResourceProperties;
   @Autowired private OtlpExporterProperties otlpExporterProperties;
   @Autowired private JdbcTemplate jdbcTemplate;
+  @Autowired private ConfigProvider configProvider;
 
   abstract void makeClientCall();
 
@@ -155,6 +158,14 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
     }
     LoggerContext loggerContext = (LoggerContext) loggerFactorySpi;
     loggerContext.reset();
+  }
+
+  @Test
+  void configProviderReflectsConfiguredProperties() {
+    // otel.instrumentation.kafka.experimental-span-attributes=true in application.yaml
+    DeclarativeConfigProperties kafkaConfig =
+        configProvider.getInstrumentationConfig().getStructured("java").getStructured("kafka");
+    assertThat(kafkaConfig.getBoolean("experimental_span_attributes/development")).isTrue();
   }
 
   @Test
