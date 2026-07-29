@@ -153,10 +153,7 @@ public abstract class AbstractQuartzTest {
   void schedulerErrorDuringJobExecutionStillReported() throws SchedulerException {
     Trigger trigger = newTrigger().build();
     JobDetail jobDetail =
-        newJob()
-            .withIdentity("scheduler-error", "jobs")
-            .ofType(SchedulerErrorJob.class)
-            .build();
+        newJob().withIdentity("scheduler-error", "jobs").ofType(SchedulerErrorJob.class).build();
 
     // A scheduler error raised while a job is executing on this thread (e.g. another listener
     // failing) is not the job's own exception, so it must still be reported rather than suppressed
@@ -179,7 +176,7 @@ public abstract class AbstractQuartzTest {
                 logRecord
                     .hasEventName("quartz.scheduler.exception")
                     .hasSeverity(Severity.ERROR)
-                  .hasBody("Error executing Job (jobs.x: couldn't begin execution."));
+                    .hasBody("Error executing Job (jobs.x: couldn't begin execution."));
   }
 
   private static Scheduler createScheduler() throws Exception {
