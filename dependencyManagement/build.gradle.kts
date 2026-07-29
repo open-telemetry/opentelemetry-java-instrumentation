@@ -6,7 +6,7 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.64.0"
-val otelContribVersion = "1.58.0-alpha"
+val otelContribVersion = "1.59.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -85,7 +85,7 @@ val DEPENDENCIES = listOf(
   "io.r2dbc:r2dbc-proxy:1.1.6.RELEASE",
   "ch.qos.logback:logback-classic:1.3.16", // 1.4+ requires Java 11+
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.13.7",
+  "com.uber.nullaway:nullaway:0.13.8",
   "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.11.0",
   "commons-codec:commons-codec:1.22.0",
@@ -104,7 +104,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-samplers:${otelContribVersion}",
-  "io.opentelemetry.proto:opentelemetry-proto:1.10.0-alpha",
+  "io.opentelemetry.proto:opentelemetry-proto:1.11.0-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
   "org.assertj:assertj-core:3.27.7",
   "org.awaitility:awaitility:4.3.0",
