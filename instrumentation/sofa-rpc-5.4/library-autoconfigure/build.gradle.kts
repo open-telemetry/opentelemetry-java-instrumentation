@@ -2,6 +2,8 @@ plugins {
   id("otel.library-instrumentation")
 }
 
+base.archivesName.set("${base.archivesName.get()}-autoconfigure")
+
 dependencies {
   implementation(project(":instrumentation:sofa-rpc-5.4:library"))
 

@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.tooling;
 import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
+import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigBridge;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -43,7 +43,7 @@ public final class OpenTelemetryInstaller {
       // there is no ConfigProperties instance to bridge here, so preserve the SDK as-is.
       sdk =
           new ExtendedOpenTelemetrySdkWrapper(
-              sdk, ConfigPropertiesBackedConfigProvider.create(configProperties));
+              sdk, DeclarativeConfigBridge.createInstrumentationConfig(configProperties));
       AgentDistributionConfig.set(AgentDistributionConfig.fromConfigProperties(configProperties));
     }
 
