@@ -528,9 +528,9 @@ class InstrumenterTest {
 
   @Test
   void operationListenersFromNestedInstrumenterPropagateToDifferentInstrumenterEnd() {
-    AtomicReference<Boolean> parentEndContext = new AtomicReference<>();
-    AtomicReference<Boolean> childStartContext = new AtomicReference<>();
-    AtomicReference<Boolean> childEndContext = new AtomicReference<>();
+    AtomicBoolean parentListenerEnded = new AtomicBoolean();
+    AtomicBoolean childListenerStarted = new AtomicBoolean();
+    AtomicBoolean childListenerEnded = new AtomicBoolean();
 
     OperationListener parentOperationListener =
         new OperationListener() {
@@ -541,30 +541,29 @@ class InstrumenterTest {
 
           @Override
           public void onEnd(Context context, Attributes endAttributes, long endNanos) {
-            parentEndContext.set(true);
+            parentListenerEnded.set(true);
           }
         };
     OperationListener childOperationListener =
         new OperationListener() {
           @Override
           public Context onStart(Context context, Attributes startAttributes, long startNanos) {
-            childStartContext.set(true);
+            childListenerStarted.set(true);
             return context;
           }
 
           @Override
           public void onEnd(Context context, Attributes endAttributes, long endNanos) {
-            childEndContext.set(true);
+            childListenerEnded.set(true);
           }
         };
 
-    InstrumenterBuilder<Map<String, String>, Map<String, String>> parentBuilder =
-        Instrumenter.<Map<String, String>, Map<String, String>>builder(
-                otelTesting.getOpenTelemetry(), "test", unused -> "span")
-            .addOperationListener(parentOperationListener);
-    parentBuilder.propagateOperationListenersToOnEnd = true;
     Instrumenter<Map<String, String>, Map<String, String>> parentInstrumenter =
-        parentBuilder.buildServerInstrumenter(new MapGetter());
+        InstrumenterUtil.propagateOperationListenersToOnEnd(
+                Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                        otelTesting.getOpenTelemetry(), "test", unused -> "span")
+                    .addOperationListener(parentOperationListener))
+            .buildServerInstrumenter(new MapGetter());
     Instrumenter<Map<String, String>, Map<String, String>> childStartingInstrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
@@ -579,11 +578,12 @@ class InstrumenterTest {
     Context childContext = childStartingInstrumenter.start(parentContext, REQUEST);
     childEndingInstrumenter.end(childContext, REQUEST, RESPONSE, null);
 
-    assertThat(childStartContext.get()).isTrue();
-    assertThat(childEndContext.get()).isTrue();
-    assertThat(parentEndContext.get()).isNull();
+    assertThat(childListenerStarted).isTrue();
+    assertThat(childListenerEnded).isTrue();
+    assertThat(parentListenerEnded).isFalse();
 
     parentInstrumenter.end(parentContext, REQUEST, RESPONSE, null);
+    assertThat(parentListenerEnded).isTrue();
   }
 
   @Test
