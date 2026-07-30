@@ -1,0 +1,111 @@
+# Shared configuration definitions ("globals") for instrumentation metadata.
+#
+# These are configuration options that many instrumentations expose identically. Instead of
+# hand-copying the full block into every instrumentation's metadata.yaml, a module references a
+# definition by id:
+#
+#   configurations:
+#     - ref: http.known-methods
+#     - name: otel.instrumentation.my-module.specific   # module-specific configs stay inline
+#       ...
+#
+# The doc generator resolves each `ref` against this file (see SharedConfigurationRegistry) and
+# fails the build on an unknown id. The id is also used as the definition key in the generated
+# docs/instrumentation-list.yaml `definitions.configurations` catalog, so keep ids stable.
+configurations:
+  http.known-methods:
+    name: otel.instrumentation.http.known-methods
+    declarative_name: java.common.http.known_methods
+    description: "Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`."
+    type: list
+    default: "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"
+
+  common.peer-service-mapping:
+    name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.service_peer_mapping
+    description: "Used to specify a mapping from host names or IP addresses to peer services."
+    type: map
+    default: ""
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+        - peer
+        - service_name
+      properties:
+        peer:
+          type: string
+          description: "Host name or IP address to match against."
+        service_name:
+          type: string
+          description: "Peer service name to record for matching peers."
+
+  http.client.capture-request-headers:
+    name: otel.instrumentation.http.client.capture-request-headers
+    declarative_name: general.http.client.request_captured_headers
+    description: "List of HTTP request headers to capture in HTTP client telemetry."
+    type: list
+    default: ""
+
+  http.client.capture-response-headers:
+    name: otel.instrumentation.http.client.capture-response-headers
+    declarative_name: general.http.client.response_captured_headers
+    description: "List of HTTP response headers to capture in HTTP client telemetry."
+    type: list
+    default: ""
+
+  http.client.emit-experimental-telemetry:
+    name: otel.instrumentation.http.client.emit-experimental-telemetry
+    declarative_name: java.common.http.client.emit_experimental_telemetry/development
+    description: "Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.body.size` and `http.client.response.body.size` metrics."
+    type: boolean
+    default: false
+
+  http.server.capture-request-headers:
+    name: otel.instrumentation.http.server.capture-request-headers
+    declarative_name: general.http.server.request_captured_headers
+    description: "List of HTTP request headers to capture in HTTP server telemetry."
+    type: list
+    default: ""
+
+  http.server.capture-response-headers:
+    name: otel.instrumentation.http.server.capture-response-headers
+    declarative_name: general.http.server.response_captured_headers
+    description: "List of HTTP response headers to capture in HTTP server telemetry."
+    type: list
+    default: ""
+
+  http.server.emit-experimental-telemetry:
+    name: otel.instrumentation.http.server.emit-experimental-telemetry
+    declarative_name: java.common.http.server.emit_experimental_telemetry/development
+    description: "Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.body.size` and `http.server.response.body.size` metrics."
+    type: boolean
+    default: false
+
+  common.controller-telemetry.enabled:
+    name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    declarative_name: java.common.controller_telemetry/development.enabled
+    description: "Enables the creation of experimental controller spans."
+    type: boolean
+    default: false
+
+  sanitization.url.sensitive-query-parameters:
+    name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
+    declarative_name: general.sanitization.url.sensitive_query_parameters/development
+    description: "List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans."
+    type: list
+    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
+
+  common.db.query-sanitization.enabled:
+    name: otel.instrumentation.common.db.query-sanitization.enabled
+    declarative_name: java.common.db.query_sanitization.enabled
+    description: "Enables query sanitization for database queries."
+    type: boolean
+    default: true
+
+  messaging.capture-headers:
+    name: otel.instrumentation.messaging.experimental.capture-headers
+    declarative_name: java.common.messaging.capture_headers/development
+    description: "A comma-separated list of header names to capture as span attributes."
+    type: list
+    default: ""
