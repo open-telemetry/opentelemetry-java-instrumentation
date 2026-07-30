@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4;
+package io.opentelemetry.javaagent.instrumentation.hbase.client.common;
 
 import com.google.auto.value.AutoValue;
 import javax.annotation.Nullable;

@@ -10,8 +10,8 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.getTableName;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.resetRequestAndContext;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.setRequestAndContext;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientUtil.methodDescriptorName;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4.HbaseSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4.HbaseSingletons.methodDescriptorName;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -21,6 +21,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseBatchMetadata;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
 import java.net.InetSocketAddress;

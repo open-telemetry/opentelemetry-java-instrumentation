@@ -123,10 +123,14 @@ public abstract class AbstractHbaseTest {
     return 0;
   }
 
+  // HBase 1.0-1.3 overrides this with IOException because IPCUtil.wrapException() wraps the
+  // timeout in a plain IOException.
   protected Class<? extends IOException> getTimeoutSpanExceptionType() {
     return CallTimeoutException.class;
   }
 
+  // HBase 1.0-1.3 overrides this to 3 because a one-row scan deterministically sends open, next,
+  // and close RPCs; newer clients complete it with a single RPC.
   protected int getScanTraceCount() {
     return 1;
   }
@@ -348,6 +352,7 @@ public abstract class AbstractHbaseTest {
     timeoutConfig.setInt(
         HConstants.HBASE_CLIENT_OPERATION_TIMEOUT, GET_TIMEOUT_OPERATION_TIMEOUT_MILLIS);
     timeoutConfig.setInt(HConstants.HBASE_RPC_TIMEOUT_KEY, GET_TIMEOUT_RPC_TIMEOUT_MILLIS);
+    // HBASE_RPC_READ_TIMEOUT_KEY and HBASE_RPC_WRITE_TIMEOUT_KEY were added in HConstants 1.4.0.
     timeoutConfig.setInt("hbase.rpc.read.timeout", GET_TIMEOUT_RPC_TIMEOUT_MILLIS);
     timeoutConfig.setInt("hbase.rpc.write.timeout", GET_TIMEOUT_RPC_TIMEOUT_MILLIS);
     return timeoutConfig;
