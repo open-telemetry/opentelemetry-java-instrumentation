@@ -10,31 +10,31 @@ groups:
         stability: development
         brief: Camel context
         examples:
-          - "myQueue"
+          - "camel-1"
       - id: camel.route
         type: string
         stability: development
-        brief: Camel route
+        brief: Camel route.
         examples:
           - "route1"
           - "route2"
       - id: camel.processor
         type: string
         stability: development
-        brief: Camel processor
+        brief: Camel processor.
         examples:
           - "processor1"
           - "processor2"
       - id: camel.destination
         type: string
         stability: development
-        brief: camel.destination
+        brief: Camel destination.
         examples:
           - "my-destination"
       - id: camel.threadpool.name
         type: string
         stability: development
-        brief: Camel thread pool name
+        brief: Camel thread pool name.
         examples:
           - "camel-1"
 
@@ -550,7 +550,9 @@ groups:
     metric_name: camel.threadpool.task.completed
     type: metric
     stability: development
-    brief: The approximate total number of tasks that have completed execution. Because the states of tasks and threads may change dynamically during computation, the returned value is only an approximation, but one that does not ever decrease across successive calls.
+    brief: The approximate total number of tasks that have completed execution.
+    note: |
+      Because the states of tasks and threads may change dynamically during computation, the returned value is only an approximation, but one that does not ever decrease across successive calls.
     unit: "{task}"
     instrument: counter
     attributes:
