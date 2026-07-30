@@ -85,7 +85,7 @@ class CassandraTest extends TargetSystemTest {
               + " WITH compression = {'enabled':'false'};");
       nodetool(target, "disableautocompaction", "test", "data");
 
-      for (int ignored = 0; ignored < COMPACTION_BATCHES; ignored++) {
+      for (int i = 0; i < COMPACTION_BATCHES; i++) {
         seedCompactionBatch(target);
         nodetool(target, "flush", "test", "data");
       }

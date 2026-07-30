@@ -59,6 +59,7 @@ class CassandraCompactionProgressHandlerTest {
         .thenReturn(
             asList(
                 compactionEntry("COMPACTION", "ks1", "cf1", "10", "100"),
+                compactionEntry(null, "ks1", "cf1", "5", "50"),
                 compactionEntry("COMPACTION", null, "cf1", "5", "50"),
                 compactionEntry("COMPACTION", "ks1", null, "5", "50")));
 
@@ -127,7 +128,7 @@ class CassandraCompactionProgressHandlerTest {
   @Test
   void handlerNameIsStable() {
     assertThat(new CassandraCompactionProgressHandler().getName())
-        .isEqualTo(CassandraCompactionProgressHandler.HANDLER_NAME);
+        .isEqualTo("cassandra-compaction-progress");
   }
 
   @Test

@@ -47,8 +47,8 @@ import javax.management.ObjectName;
 public class CassandraCompactionProgressHandler implements ExperimentalJmxMetricHandler {
 
   static final String HANDLER_NAME = "cassandra-compaction-progress";
-  static final String METRIC_CURRENT = "cassandra.compaction.progress.completed";
-  static final String METRIC_TOTAL = "cassandra.compaction.progress.size";
+  private static final String METRIC_CURRENT = "cassandra.compaction.progress.completed";
+  private static final String METRIC_TOTAL = "cassandra.compaction.progress.size";
 
   private static final String ATTR_TASK_TYPE = "cassandra.compaction.task_type";
   private static final String ATTR_KEYSPACE = "cassandra.keyspace";
