@@ -33,7 +33,6 @@ import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomi
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerProvider;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerUtil;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
@@ -417,14 +416,25 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     }
 
     String result = commonConfig.getString("span_suppression_strategy/development");
-    if (result == null && !SemconvStability.v3Preview(openTelemetry)) {
-      result = getDeprecatedSpanSuppressionStrategyProperty();
+    if (result == null) {
+      // Read even in v3 preview so the deprecated property still triggers a warning when ignored.
+      String deprecatedResult = getDeprecatedSpanSuppressionStrategyProperty();
+      if (!isV3Preview(commonConfig)) {
+        result = deprecatedResult;
+      }
     }
     return SpanSuppressionStrategy.fromConfig(result);
   }
 
+  private static boolean isV3Preview(DeclarativeConfigProperties commonConfig) {
+    Boolean value = commonConfig.getBoolean("v3_preview");
+    return value != null
+        ? value
+        : SystemProperty.getBoolean("otel.instrumentation.common.v3-preview", false);
+  }
+
   @Nullable
-  static String getDeprecatedSpanSuppressionStrategyProperty() {
+  private static String getDeprecatedSpanSuppressionStrategyProperty() {
     String value =
         SystemProperty.getString("otel.instrumentation.experimental.span-suppression-strategy");
     if (value != null && spanSuppressionPropertyWarningLogged.compareAndSet(false, true)) {

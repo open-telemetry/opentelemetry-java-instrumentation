@@ -54,9 +54,14 @@ class SpanSuppressionStrategyTest {
   @SetSystemProperty(
       key = "otel.instrumentation.experimental.span-suppression-strategy",
       value = "span-kind")
-  void shouldReadDeprecatedProperty() {
-    assertThat(InstrumenterBuilder.getDeprecatedSpanSuppressionStrategyProperty())
-        .isEqualTo("span-kind");
+  void shouldUseDeprecatedProperty() {
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(OpenTelemetry.noop(), "test", request -> "test");
+
+    SpanSuppressor suppressor = builder.buildSpanSuppressor();
+    Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
+
+    assertThat(suppressor.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
   }
 
   @Test
@@ -69,7 +74,6 @@ class SpanSuppressionStrategyTest {
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
     when(openTelemetry.getConfigProvider()).thenReturn(configProvider);
     when(configProvider.getInstrumentationConfig("common")).thenReturn(commonConfig);
-    when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
     when(commonConfig.getBoolean("v3_preview")).thenReturn(true);
 
     InstrumenterBuilder<String, String> builder =
