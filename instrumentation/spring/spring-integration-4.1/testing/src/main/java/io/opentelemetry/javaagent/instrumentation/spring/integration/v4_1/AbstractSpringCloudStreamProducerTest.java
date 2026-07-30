@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.messagingAttributes;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -38,13 +40,23 @@ abstract class AbstractSpringCloudStreamProducerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("producer").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName("testProducer.output publish")
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "publish testProducer.output"
+                                : "testProducer.output publish")
                         .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0)),
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            messagingAttributes("publish", "testProducer.output")),
                 span ->
-                    span.hasName("testConsumer.input process")
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "process testConsumer.input"
+                                : "testConsumer.input process")
                         .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(1)),
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            messagingAttributes("process", "testConsumer.input")),
                 span ->
                     span.hasName("consumer")
                         .hasKind(SpanKind.INTERNAL)
