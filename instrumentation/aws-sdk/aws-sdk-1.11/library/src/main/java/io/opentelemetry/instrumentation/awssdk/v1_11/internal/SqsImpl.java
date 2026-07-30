@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
@@ -12,6 +14,7 @@ import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
+import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
 import io.opentelemetry.context.Context;
@@ -78,8 +81,9 @@ public final class SqsImpl {
               timer.now());
     }
 
+    Context processParentContext = emitStableMessagingSemconv() ? parentContext : receiveContext;
     addTracing(
-        receiveMessageResult, request, response, consumerProcessInstrumenter, receiveContext);
+        receiveMessageResult, request, response, consumerProcessInstrumenter, processParentContext);
   }
 
   @Nullable private static final Field messagesField = getMessagesField();
@@ -100,7 +104,7 @@ public final class SqsImpl {
       Request<?> request,
       Response<?> response,
       Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter,
-      @Nullable Context receiveContext) {
+      @Nullable Context processParentContext) {
     if (messagesField == null) {
       return;
     }
@@ -114,7 +118,7 @@ public final class SqsImpl {
               consumerProcessInstrumenter,
               request,
               response,
-              receiveContext));
+              processParentContext));
     } catch (IllegalAccessException ignored) {
       // should not happen, we call setAccessible on the field
     }
@@ -129,6 +133,14 @@ public final class SqsImpl {
       return true;
     }
     return false;
+  }
+
+  @Nullable
+  static Long getBatchMessageCount(Request<?> request) {
+    if (request.getOriginalRequest() instanceof SendMessageBatchRequest) {
+      return (long) ((SendMessageBatchRequest) request.getOriginalRequest()).getEntries().size();
+    }
+    return null;
   }
 
   @Nullable

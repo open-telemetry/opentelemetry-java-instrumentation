@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -22,6 +23,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
@@ -29,6 +32,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SE
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -40,6 +44,8 @@ import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
+import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
+import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -275,6 +281,87 @@ public abstract class AbstractSqsTracingTest {
   }
 
   @Test
+  void testReceiveSpanLinksToProducer() {
+    assumeTrue(emitStableMessagingSemconv());
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "hello"));
+    sqsClient.receiveMessage(queueUrl);
+
+    AtomicReference<SpanData> publishSpan = new AtomicReference<>();
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("SQS.CreateQueue").hasKind(SpanKind.CLIENT)),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> {
+                      publishSpan.set(trace.getSpan(0));
+                      span.hasName("publish testSdkSqs").hasKind(SpanKind.PRODUCER);
+                    }),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("receive testSdkSqs")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasLinksSatisfying(
+                                links ->
+                                    assertThat(links)
+                                        .singleElement()
+                                        .satisfies(
+                                            link ->
+                                                assertThat(link.getSpanContext().getSpanId())
+                                                    .isEqualTo(publishSpan.get().getSpanId())))));
+  }
+
+  @Test
+  void testBatchSendMessageCount() {
+    assumeTrue(emitStableMessagingSemconv());
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+    sqsClient.sendMessageBatch(
+        new SendMessageBatchRequest()
+            .withQueueUrl(queueUrl)
+            .withEntries(
+                new SendMessageBatchRequestEntry("i1", "e1"),
+                new SendMessageBatchRequestEntry("i2", "e2"),
+                new SendMessageBatchRequestEntry("i3", "e3")));
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("SQS.CreateQueue").hasKind(SpanKind.CLIENT)),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("publish testSdkSqs")
+                            .hasKind(SpanKind.PRODUCER)
+                            .hasNoParent()
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                equalTo(AWS_SQS_QUEUE_URL, queueUrl),
+                                satisfies(
+                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
+                                equalTo(RPC_SYSTEM, "aws-api"),
+                                equalTo(RPC_SERVICE, "AmazonSQS"),
+                                equalTo(RPC_METHOD, "SendMessageBatch"),
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, sqsPort),
+                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                equalTo(MESSAGING_OPERATION_NAME, "publish"),
+                                equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 3),
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"))));
+  }
+
+  @Test
   void testSimpleSqsProducerConsumerServicesWithParentSpan() {
     sqsClient.createQueue("testSdkSqs");
     SendMessageRequest sendMessageRequest =
@@ -293,6 +380,69 @@ public abstract class AbstractSqsTracingTest {
                   .getMessages()
                   .forEach(message -> testing().runWithSpan("process child", () -> {}));
             });
+
+    if (emitStableMessagingSemconv()) {
+      AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+      testing()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("SQS.CreateQueue").hasKind(SpanKind.CLIENT)),
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span -> {
+                        producerSpan.set(trace.getSpan(0));
+                        span.hasName("publish testSdkSqs").hasKind(SpanKind.PRODUCER);
+                      }),
+              trace -> {
+                Consumer<SpanDataAssert> receiveSpanAssertion =
+                    span ->
+                        span.hasName("receive testSdkSqs")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasLinksSatisfying(
+                                links ->
+                                    assertThat(links)
+                                        .singleElement()
+                                        .satisfies(
+                                            link ->
+                                                assertThat(link.getSpanContext().getSpanId())
+                                                    .isEqualTo(producerSpan.get().getSpanId())));
+                Consumer<SpanDataAssert> sdkSpanAssertion =
+                    span ->
+                        span.hasName("SQS.ReceiveMessage")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0));
+                Consumer<SpanDataAssert> processSpanAssertion =
+                    span ->
+                        span.hasName("process testSdkSqs")
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasParent(trace.getSpan(0))
+                            .hasLinksSatisfying(
+                                links ->
+                                    assertThat(links)
+                                        .singleElement()
+                                        .satisfies(
+                                            link ->
+                                                assertThat(link.getSpanContext().getSpanId())
+                                                    .isEqualTo(producerSpan.get().getSpanId())));
+
+                List<Consumer<SpanDataAssert>> assertions =
+                    new ArrayList<>(
+                        asList(
+                            span -> span.hasName("parent").hasNoParent(),
+                            receiveSpanAssertion,
+                            sdkSpanAssertion,
+                            processSpanAssertion,
+                            span -> span.hasName("process child")));
+                if ("SQS.ReceiveMessage".equals(trace.getSpan(1).getName())) {
+                  assertions.set(1, sdkSpanAssertion);
+                  assertions.set(2, receiveSpanAssertion);
+                }
+                trace.hasSpansSatisfyingExactly(assertions);
+              });
+      return;
+    }
 
     testing()
         .waitAndAssertTraces(

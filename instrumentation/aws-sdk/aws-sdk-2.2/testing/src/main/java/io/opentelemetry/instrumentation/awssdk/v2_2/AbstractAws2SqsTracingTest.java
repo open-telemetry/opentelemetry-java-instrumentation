@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -20,6 +21,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
@@ -28,6 +31,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -87,10 +91,16 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                   equalTo(SERVER_PORT, sqsPort),
                                   equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                   equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                  equalTo(MESSAGING_OPERATION, "publish"),
                                   satisfies(
                                       MESSAGING_MESSAGE_ID,
                                       val -> val.isInstanceOf(String.class))));
+
+                      if (emitStableMessagingSemconv()) {
+                        attributes.add(equalTo(MESSAGING_OPERATION_NAME, "publish"));
+                        attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "send"));
+                      } else {
+                        attributes.add(equalTo(MESSAGING_OPERATION, "publish"));
+                      }
 
                       if (captureHeaders) {
                         attributes.add(
@@ -98,7 +108,10 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                 headerAttributeKey("Test-Message-Header"),
                                 val -> val.isEqualTo(ImmutableList.of("test"))));
                       }
-                      span.hasName("testSdkSqs publish")
+                      span.hasName(
+                              emitStableMessagingSemconv()
+                                  ? "publish testSdkSqs"
+                                  : "testSdkSqs publish")
                           .hasKind(SpanKind.PRODUCER)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(attributes);
@@ -161,8 +174,14 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                     equalTo(SERVER_PORT, sqsPort),
                                     equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                     equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                    equalTo(MESSAGING_OPERATION, "receive"),
                                     equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
+
+                        if (emitStableMessagingSemconv()) {
+                          attributes.add(equalTo(MESSAGING_OPERATION_NAME, "receive"));
+                          attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "receive"));
+                        } else {
+                          attributes.add(equalTo(MESSAGING_OPERATION, "receive"));
+                        }
 
                         if (captureHeaders) {
                           attributes.add(
@@ -177,10 +196,25 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                           span.hasNoParent();
                         }
 
-                        span.hasName("testSdkSqs receive")
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasTotalRecordedLinks(0)
+                        span.hasName(
+                                emitStableMessagingSemconv()
+                                    ? "receive testSdkSqs"
+                                    : "testSdkSqs receive")
+                            .hasKind(
+                                emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
                             .hasAttributesSatisfyingExactly(attributes);
+                        if (emitStableMessagingSemconv()) {
+                          span.hasLinksSatisfying(
+                              links ->
+                                  assertThat(links)
+                                      .singleElement()
+                                      .satisfies(
+                                          link ->
+                                              assertThat(link.getSpanContext().getSpanId())
+                                                  .isEqualTo(publishSpan.get().getSpanId())));
+                        } else {
+                          span.hasTotalRecordedLinks(0);
+                        }
                       },
                       span -> {
                         List<AttributeAssertion> attributes =
@@ -199,10 +233,16 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                     equalTo(SERVER_PORT, sqsPort),
                                     equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                     equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                    equalTo(MESSAGING_OPERATION, "process"),
                                     satisfies(
                                         MESSAGING_MESSAGE_ID,
                                         val -> val.isInstanceOf(String.class))));
+
+                        if (emitStableMessagingSemconv()) {
+                          attributes.add(equalTo(MESSAGING_OPERATION_NAME, "process"));
+                          attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "process"));
+                        } else {
+                          attributes.add(equalTo(MESSAGING_OPERATION, "process"));
+                        }
 
                         if (captureHeaders) {
                           attributes.add(
@@ -211,8 +251,14 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                   val -> val.isEqualTo(singletonList("test"))));
                         }
 
-                        span.hasName("testSdkSqs process")
-                            .hasParent(trace.getSpan(0 + offset))
+                        span.hasName(
+                                emitStableMessagingSemconv()
+                                    ? "process testSdkSqs"
+                                    : "testSdkSqs process")
+                            .hasParent(
+                                emitStableMessagingSemconv() && withParent
+                                    ? trace.getSpan(0)
+                                    : trace.getSpan(0 + offset))
                             .hasKind(SpanKind.CONSUMER)
                             .hasLinksSatisfying(
                                 links ->
@@ -259,6 +305,90 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
 
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
     assertSqsTraces(false, true);
+  }
+
+  @Test
+  void testReceiveSpanLinksToProducer() {
+    assumeTrue(emitStableMessagingSemconv());
+    SqsClientBuilder builder = SqsClient.builder();
+    configureSdkClient(builder);
+    SqsClient client = configureSqsClient(builder.build());
+
+    client.createQueue(createQueueRequest);
+    client.sendMessage(sendMessageRequest);
+    client.receiveMessage(receiveMessageRequest);
+
+    AtomicReference<SpanData> publishSpan = new AtomicReference<>();
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("Sqs.CreateQueue").hasKind(SpanKind.CLIENT)),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> {
+                      publishSpan.set(trace.getSpan(0));
+                      span.hasName("publish testSdkSqs").hasKind(SpanKind.PRODUCER);
+                    }),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("receive testSdkSqs")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasLinksSatisfying(
+                                links ->
+                                    assertThat(links)
+                                        .singleElement()
+                                        .satisfies(
+                                            link ->
+                                                assertThat(link.getSpanContext().getSpanId())
+                                                    .isEqualTo(publishSpan.get().getSpanId())))));
+  }
+
+  @Test
+  void testBatchSendMessageCount() {
+    assumeTrue(emitStableMessagingSemconv());
+    SqsClientBuilder builder = SqsClient.builder();
+    configureSdkClient(builder);
+    SqsClient client = configureSqsClient(builder.build());
+
+    client.createQueue(createQueueRequest);
+    client.sendMessageBatch(sendMessageBatchRequest);
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("Sqs.CreateQueue").hasKind(SpanKind.CLIENT)),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("publish testSdkSqs")
+                            .hasKind(SpanKind.PRODUCER)
+                            .hasNoParent()
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                equalTo(AWS_SQS_QUEUE_URL, queueUrl),
+                                satisfies(
+                                    AWS_REQUEST_ID,
+                                    val ->
+                                        val.matches(
+                                            "\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
+                                equalTo(RPC_SYSTEM, "aws-api"),
+                                equalTo(RPC_SERVICE, "Sqs"),
+                                equalTo(RPC_METHOD, "SendMessageBatch"),
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                satisfies(
+                                    URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, sqsPort),
+                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                equalTo(MESSAGING_OPERATION_NAME, "publish"),
+                                equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 3))));
   }
 
   @Test
