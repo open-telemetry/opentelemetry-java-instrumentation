@@ -105,7 +105,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .isUpDownCounter()
                     .hasUnit("{producer}")
                     .hasDataPointsWithAttributes(topicAttributes)
-                    .hasDescription("The number of producers attached to this destination"))
+                    .hasDescription("The number of producers attached to this destination."))
         .add(
             "activemq.consumer.count",
             metric ->
@@ -113,7 +113,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .isUpDownCounter()
                     .hasUnit("{consumer}")
                     .hasDataPointsWithAttributes(topicAttributes)
-                    .hasDescription("The number of consumers subscribed to this destination"))
+                    .hasDescription("The number of consumers subscribed to this destination."))
         // message consumption and in-flight
         .add(
             "activemq.message.queue.size",
@@ -122,7 +122,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .isUpDownCounter()
                     .hasUnit("{message}")
                     .hasDataPointsWithAttributes(topicAttributes)
-                    .hasDescription("The current number of messages waiting to be consumed"))
+                    .hasDescription("The current number of messages waiting to be consumed."))
         .add(
             "activemq.message.expired",
             metric ->
@@ -130,7 +130,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .isCounter()
                     .hasUnit("{message}")
                     .hasDataPointsWithAttributes(topicAttributes)
-                    .hasDescription("The number of messages not delivered because they expired"))
+                    .hasDescription("The number of messages not delivered because they expired."))
         .add(
             "activemq.message.enqueued",
             metric ->
@@ -138,7 +138,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .isCounter()
                     .hasUnit("{message}")
                     .hasDataPointsWithAttributes(topicAttributes)
-                    .hasDescription("The number of messages sent to this destination"))
+                    .hasDescription("The number of messages sent to this destination."))
         .add(
             "activemq.message.dequeued",
             metric ->
@@ -147,7 +147,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .hasUnit("{message}")
                     .hasDataPointsWithAttributes(topicAttributes)
                     .hasDescription(
-                        "The number of messages acknowledged and removed from this destination"))
+                        "The number of messages acknowledged and removed from this destination."))
         .add(
             "activemq.message.enqueue.average_duration",
             metric ->
@@ -155,7 +155,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .isGauge()
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(topicAttributes)
-                    .hasDescription("The average time a message was held on this destination"))
+                    .hasDescription("The average time a message was held on this destination."))
         // destination memory/temp usage and limits
         .add(
             "activemq.destination.memory.usage",
@@ -164,7 +164,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .isUpDownCounter()
                     .hasUnit("By")
                     .hasDataPointsWithAttributes(topicAttributes)
-                    .hasDescription("The amount of used memory by this destination"))
+                    .hasDescription("The amount of used memory by this destination."))
         .add(
             "activemq.destination.memory.limit",
             metric ->
@@ -172,7 +172,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .isUpDownCounter()
                     .hasUnit("By")
                     .hasDataPointsWithAttributes(topicAttributes)
-                    .hasDescription("The amount of configured memory limit for this destination"))
+                    .hasDescription("The amount of configured memory limit for this destination."))
         .add(
             "activemq.destination.temp.utilization",
             metric ->
@@ -181,7 +181,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .hasUnit("1")
                     .hasDataPointsWithAttributes(topicAttributes)
                     .hasDescription(
-                        "The percentage of non-persistent storage used by this destination"))
+                        "The fraction of non-persistent storage used by this destination."))
         .add(
             "activemq.destination.temp.limit",
             metric ->
@@ -190,7 +190,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .hasUnit("By")
                     .hasDataPointsWithAttributes(topicAttributes)
                     .hasDescription(
-                        "The amount of configured non-persistent storage limit for this destination"))
+                        "The amount of configured non-persistent storage limit for this destination."))
         // broker metrics
         .add(
             "activemq.connection.count",
@@ -199,7 +199,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .isUpDownCounter()
                     .hasUnit("{connection}")
                     .hasDataPointsWithAttributes(brokerAttributes)
-                    .hasDescription("The number of active connections"))
+                    .hasDescription("The number of active connections."))
         .add(
             "activemq.memory.utilization",
             metric ->
@@ -207,7 +207,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .isGauge()
                     .hasUnit("1")
                     .hasDataPointsWithAttributes(brokerAttributes)
-                    .hasDescription("The percentage of broker memory used"))
+                    .hasDescription("The fraction of broker memory used."))
         .add(
             "activemq.memory.limit",
             metric ->
@@ -215,7 +215,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .isUpDownCounter()
                     .hasUnit("By")
                     .hasDataPointsWithAttributes(brokerAttributes)
-                    .hasDescription("The amount of configured broker memory limit"))
+                    .hasDescription("The amount of configured broker memory limit."))
         .add(
             "activemq.store.utilization",
             metric ->
@@ -223,7 +223,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .isGauge()
                     .hasUnit("1")
                     .hasDataPointsWithAttributes(brokerAttributes)
-                    .hasDescription("The percentage of broker persistent storage used"))
+                    .hasDescription("The fraction of broker persistent storage used."))
         .add(
             "activemq.store.limit",
             metric ->
@@ -231,7 +231,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .isUpDownCounter()
                     .hasUnit("By")
                     .hasDataPointsWithAttributes(brokerAttributes)
-                    .hasDescription("The amount of configured broker persistent storage limit"))
+                    .hasDescription("The amount of configured broker persistent storage limit."))
         .add(
             "activemq.temp.utilization",
             metric ->
@@ -239,7 +239,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .isGauge()
                     .hasUnit("1")
                     .hasDataPointsWithAttributes(brokerAttributes)
-                    .hasDescription("The percentage of broker non-persistent storage used"))
+                    .hasDescription("The fraction of broker non-persistent storage used."))
         .add(
             "activemq.temp.limit",
             metric ->
@@ -248,6 +248,6 @@ class ActiveMqTest extends TargetSystemTest {
                     .hasUnit("By")
                     .hasDataPointsWithAttributes(brokerAttributes)
                     .hasDescription(
-                        "The amount of configured broker non-persistent storage limit"));
+                        "The amount of configured broker non-persistent storage limit."));
   }
 }

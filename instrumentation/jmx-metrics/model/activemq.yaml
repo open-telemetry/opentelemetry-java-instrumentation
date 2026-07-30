@@ -80,7 +80,7 @@ groups:
     metric_name: activemq.destination.temp.utilization
     type: metric
     stability: development
-    brief: The percentage of non-persistent storage used by this destination
+    brief: The fraction of non-persistent storage used by this destination
     unit: "1"
     instrument: gauge
     attributes:
@@ -174,7 +174,7 @@ groups:
     metric_name: activemq.memory.utilization
     type: metric
     stability: development
-    brief: The percentage of broker memory used
+    brief: The fraction of broker memory used
     unit: "1"
     instrument: gauge
     attributes:
@@ -194,7 +194,7 @@ groups:
     metric_name: activemq.store.utilization
     type: metric
     stability: development
-    brief: The percentage of broker persistent storage used
+    brief: The fraction of broker persistent storage used
     unit: "1"
     instrument: gauge
     attributes:
@@ -214,7 +214,7 @@ groups:
     metric_name: activemq.temp.utilization
     type: metric
     stability: development
-    brief: The percentage of broker non-persistent storage used
+    brief: The fraction of broker non-persistent storage used
     unit: "1"
     instrument: gauge
     attributes:
