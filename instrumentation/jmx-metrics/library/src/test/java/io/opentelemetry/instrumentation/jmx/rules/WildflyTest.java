@@ -124,7 +124,7 @@ class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isUpDownCounter()
-                    .hasDescription("The maximum number of active sessions.")
+                    .hasDescription("The maximum supported number of active sessions.")
                     .hasUnit("{session}")
                     .hasDataPointsWithOneAttribute(deploymentAttribute))
         .add(

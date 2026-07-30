@@ -21,7 +21,7 @@ rules:
       maxActiveSessions:
         metric: active.limit
         type: updowncounter
-        desc: The maximum number of active sessions.
+        desc: The maximum supported number of active sessions.
         # discard negative values used to indicate absence of limit
         dropNegativeValues: true
       # wildfly.session.expired

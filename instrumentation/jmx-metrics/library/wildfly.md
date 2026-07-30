@@ -12,7 +12,7 @@ Here is the list of metrics based on MBeans exposed by Wildfly.
 | wildfly.session.rejected                | Counter       | {session}     | wildfly.deployment                                         | The number of rejected sessions.                                 |
 | wildfly.session.created                 | Counter       | {session}     | wildfly.deployment                                         | The number of sessions created.                                  |
 | wildfly.session.active.count            | UpDownCounter | {session}     | wildfly.deployment                                         | The number of active sessions.                                   |
-| wildfly.session.active.limit            | UpDownCounter | {session}     | wildfly.deployment                                         | The maximum number of active sessions.                           |
+| wildfly.session.active.limit            | UpDownCounter | {session}     | wildfly.deployment                                         | The maximum supported number of active sessions.                 |
 | wildfly.db.client.connection.count      | UpDownCounter | {connection}  | db.client.connection.pool.name, db.client.connection.state | The number of open physical database connections.                |
 | wildfly.db.client.connection.wait.count | Counter       | {request}     | db.client.connection.pool.name                             | The number of connection requests that had to wait to obtain it. |
 | wildfly.transaction.count               | UpDownCounter | {transaction} |                                                            | The number of in-flight transactions.                            |
