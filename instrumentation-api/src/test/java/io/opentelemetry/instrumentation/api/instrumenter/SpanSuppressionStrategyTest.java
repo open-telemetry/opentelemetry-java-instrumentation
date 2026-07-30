@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -48,6 +49,26 @@ class SpanSuppressionStrategyTest {
     Context context = suppressor.storeInContext(Context.root(), SpanKind.CLIENT, span);
 
     assertThat(suppressor.shouldSuppress(context, SpanKind.CLIENT)).isTrue();
+  }
+
+  @Test
+  void programmaticSpanSuppressionStrategyShouldRejectNull() {
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(OpenTelemetry.noop(), "test", request -> "test");
+
+    assertThatThrownBy(() -> Experimental.setSpanSuppressionStrategy(builder, null))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("spanSuppressionStrategy");
+  }
+
+  @Test
+  void programmaticSpanSuppressionStrategyShouldRejectUnknownValue() {
+    InstrumenterBuilder<String, String> builder =
+        Instrumenter.<String, String>builder(OpenTelemetry.noop(), "test", request -> "test");
+
+    assertThatThrownBy(() -> Experimental.setSpanSuppressionStrategy(builder, "spanKind"))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Unrecognized span suppression strategy: spanKind");
   }
 
   @Test

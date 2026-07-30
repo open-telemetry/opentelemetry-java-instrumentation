@@ -92,7 +92,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
                 requireNonNull(exceptionEventExtractor, "exceptionEventExtractor"));
     Experimental.internalSetSpanSuppressionStrategy(
         (builder, strategy) ->
-            builder.spanSuppressionStrategy = SpanSuppressionStrategy.fromConfig(strategy));
+            builder.spanSuppressionStrategy =
+                SpanSuppressionStrategy.fromProgrammatic(
+                    requireNonNull(strategy, "spanSuppressionStrategy")));
   }
 
   InstrumenterBuilder(
