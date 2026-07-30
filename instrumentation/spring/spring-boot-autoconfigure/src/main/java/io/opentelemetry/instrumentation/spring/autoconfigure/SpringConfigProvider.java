@@ -27,10 +27,8 @@ final class SpringConfigProvider implements ConfigProvider {
 
   private final DeclarativeConfigProperties instrumentationConfig;
 
-  private SpringConfigProvider(
-      OpenTelemetryConfigurationModel model, ComponentLoader componentLoader) {
-    DeclarativeConfigProperties configProperties = toConfigProperties(model, componentLoader);
-    this.instrumentationConfig = configProperties.get("instrumentation/development");
+  private SpringConfigProvider(DeclarativeConfigProperties instrumentationConfig) {
+    this.instrumentationConfig = instrumentationConfig;
   }
 
   private static DeclarativeConfigProperties toConfigProperties(
@@ -53,7 +51,15 @@ final class SpringConfigProvider implements ConfigProvider {
    */
   static SpringConfigProvider create(
       OpenTelemetryConfigurationModel model, ComponentLoader componentLoader) {
-    return new SpringConfigProvider(model, componentLoader);
+    DeclarativeConfigProperties configProperties = toConfigProperties(model, componentLoader);
+    return new SpringConfigProvider(configProperties.get("instrumentation/development"));
+  }
+
+  static SpringConfigProvider create(DeclarativeConfigProperties instrumentationConfig) {
+    return new SpringConfigProvider(
+        SpringDeclarativeConfigProperties.create(
+            DeclarativeConfigProperties.toMap(instrumentationConfig),
+            instrumentationConfig.getComponentLoader()));
   }
 
   @Override

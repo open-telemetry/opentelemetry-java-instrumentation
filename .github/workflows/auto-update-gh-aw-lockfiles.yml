@@ -5,7 +5,7 @@ on:
     branches:
       - 'renovate/**'
     paths:
-      - '.github/workflows/build-common.yml'
+      - '.github/scripts/compile-gh-aw-workflows.sh'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -18,22 +18,14 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Regenerate agentic workflow lockfiles
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          version=$(sed -nE 's/.*gh extension install github\/gh-aw --pin (v[0-9]+\.[0-9]+\.[0-9]+).*/\1/p' \
-            .github/workflows/build-common.yml)
-          if [[ ! $version =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Unable to read a single pinned gh-aw version: $version" >&2
-            exit 1
-          fi
-          gh extension install github/gh-aw --pin "$version"
-          gh aw compile --action-tag "$version" --approve --no-check-update
+        run: .github/scripts/compile-gh-aw-workflows.sh --approve
 
       - name: Create generated-files patch
         run: |
@@ -69,8 +61,7 @@ jobs:
           fi
           while IFS= read -r path; do
             case "$path" in
-              .github/aw/actions-lock.json |
-              .github/workflows/*.lock.yml) ;;
+              .github/aw/actions-lock.json|.github/workflows/*.lock.yml) ;;
               *)
                 echo "Unexpected path in generated patch: $path" >&2
                 exit 1
@@ -89,7 +80,7 @@ jobs:
           permission-contents: write
           permission-workflows: write
 
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: steps.patch.outputs.exists == 'true'
         with:
           persist-credentials: false

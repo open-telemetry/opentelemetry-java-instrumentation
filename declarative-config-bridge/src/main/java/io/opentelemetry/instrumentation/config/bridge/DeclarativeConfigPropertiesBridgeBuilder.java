@@ -24,7 +24,7 @@ import javax.annotation.Nullable;
  * values for properties.
  *
  * @deprecated Use {@link DeclarativeConfigProperties} directly when reading declarative component
- *     configuration, or use {@link ConfigPropertiesBackedConfigProvider} when exposing a {@link
+ *     configuration, or use {@link DeclarativeConfigBridge} when exposing a {@link
  *     io.opentelemetry.api.incubator.config.ConfigProvider} backed by {@link ConfigProperties}.
  *     This class will be removed in 3.0.
  */
