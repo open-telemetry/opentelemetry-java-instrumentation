@@ -8,7 +8,7 @@ groups:
       - id: camel.context
         type: string
         stability: development
-        brief: Camel context
+        brief: Camel context.
         examples:
           - "camel-1"
       - id: camel.route
@@ -552,7 +552,7 @@ groups:
     metric_name: camel.threadpool.task.queue.size
     type: metric
     stability: development
-    brief:  The number of Tasks in the Task Queue.
+    brief: The number of Tasks in the Task Queue.
     unit: "{task}"
     instrument: updowncounter
     attributes:
