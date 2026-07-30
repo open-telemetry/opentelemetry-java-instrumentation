@@ -149,7 +149,7 @@ groups:
     metric_name: wildfly.session.created
     stability: development
     type: metric
-    brief: The total number of sessions created.
+    brief: The number of sessions created.
     unit: "{session}"
     instrument: counter
     attributes:
@@ -159,7 +159,7 @@ groups:
     metric_name: wildfly.session.expired
     stability: development
     type: metric
-    brief: The total number of sessions expired.
+    brief: The number of expired sessions.
     unit: "{session}"
     instrument: counter
     attributes:
@@ -169,7 +169,7 @@ groups:
     metric_name: wildfly.session.rejected
     stability: development
     type: metric
-    brief: The total number of sessions rejected.
+    brief: The number of rejected sessions.
     unit: "{session}"
     instrument: counter
     attributes:
