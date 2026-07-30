@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.redissonmetrics.v2_3;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.redisson.pubsub.AsyncSemaphore;
 
@@ -18,7 +18,7 @@ public class AsyncSemaphoreAccessor {
   @Nullable private static final Field listenersField = findField("listeners");
 
   @Nullable
-  public static IntSupplier availableConnectionsSupplier(Object freeConnectionsCounter) {
+  public static Supplier<Integer> availableConnectionsSupplier(Object freeConnectionsCounter) {
     if (freeConnectionsCounter instanceof AtomicInteger) {
       return ((AtomicInteger) freeConnectionsCounter)::get;
     }
@@ -29,44 +29,50 @@ public class AsyncSemaphoreAccessor {
   }
 
   @Nullable
-  public static IntSupplier pendingRequestsSupplier(Object freeConnectionsCounter) {
+  public static Supplier<Integer> pendingRequestsSupplier(Object freeConnectionsCounter) {
     if (!(freeConnectionsCounter instanceof AsyncSemaphore) || listenersField == null) {
       return null;
     }
     return () -> readPendingRequests((AsyncSemaphore) freeConnectionsCounter);
   }
 
-  private static int readAvailableConnections(AsyncSemaphore semaphore) {
+  @Nullable
+  private static Integer readAvailableConnections(AsyncSemaphore semaphore) {
     if (counterField == null) {
-      return 0;
+      return null;
     }
     try {
-      Object counter = counterField.get(semaphore);
-      if (counter instanceof AtomicInteger) {
-        return ((AtomicInteger) counter).get();
-      }
-      if (counter instanceof Number) {
-        return ((Number) counter).intValue();
+      synchronized (semaphore) {
+        Object counter = counterField.get(semaphore);
+        if (counter instanceof AtomicInteger) {
+          return ((AtomicInteger) counter).get();
+        }
+        if (counter instanceof Number) {
+          return ((Number) counter).intValue();
+        }
       }
     } catch (IllegalAccessException | RuntimeException ignored) {
       // ignored
     }
-    return 0;
+    return null;
   }
 
-  private static int readPendingRequests(AsyncSemaphore semaphore) {
+  @Nullable
+  private static Integer readPendingRequests(AsyncSemaphore semaphore) {
     if (listenersField == null) {
-      return 0;
+      return null;
     }
     try {
-      Object listeners = listenersField.get(semaphore);
-      if (listeners instanceof Collection) {
-        return ((Collection<?>) listeners).size();
+      synchronized (semaphore) {
+        Object listeners = listenersField.get(semaphore);
+        if (listeners instanceof Collection) {
+          return ((Collection<?>) listeners).size();
+        }
       }
     } catch (IllegalAccessException | RuntimeException ignored) {
       // ignored
     }
-    return 0;
+    return null;
   }
 
   @Nullable

@@ -7,16 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.redissonmetrics.v2_3;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.redissonmetrics.v2_3.RedissonConnectionPoolMetrics.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -25,12 +22,19 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.redisson.Redisson;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.StringCodec;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
+import org.redisson.connection.ClientConnectionsEntry;
 import org.testcontainers.containers.GenericContainer;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RedissonConnectionPoolMetricsTest {
+
+  private static final int REGULAR_MIN_IDLE = 5;
+  private static final int REGULAR_MAX = 10;
+  private static final int SUBSCRIPTION_MIN_IDLE = 2;
+  private static final int SUBSCRIPTION_MAX = 4;
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -56,20 +60,30 @@ class RedissonConnectionPoolMetricsTest {
       RBucket<String> bucket = redisson.getBucket("poolMetrics");
       bucket.set("value");
 
-      DbConnectionPoolMetricsAssertions assertions =
-          DbConnectionPoolMetricsAssertions.create(
-                  testing, INSTRUMENTATION_NAME, expectedPoolName())
-              .disableConnectionTimeouts()
-              .disableCreateTime()
-              .disableWaitTime()
-              .disableUseTime();
-
-      if (!testLatestDeps()) {
-        assertions.disablePendingRequests();
-      }
-
       assertConnectionUsageValues();
-      assertions.assertConnectionPoolEmitsMetrics();
+      assertPoolSizeMetric(
+          "db.client.connection.idle.min",
+          "db.client.connections.idle.min",
+          "The minimum number of idle open connections allowed.",
+          REGULAR_MIN_IDLE,
+          expectedSubscriptionMinIdle());
+      assertPoolSizeMetric(
+          "db.client.connection.idle.max",
+          "db.client.connections.idle.max",
+          "The maximum number of idle open connections allowed.",
+          REGULAR_MAX,
+          SUBSCRIPTION_MAX);
+      assertPoolSizeMetric(
+          "db.client.connection.max",
+          "db.client.connections.max",
+          "The maximum number of open connections allowed.",
+          REGULAR_MAX,
+          SUBSCRIPTION_MAX);
+      if (usesAsyncSemaphore()) {
+        assertPendingRequests();
+      } else {
+        assertNoPendingRequests();
+      }
 
       redisson.shutdown();
       redisson = null;
@@ -96,32 +110,31 @@ class RedissonConnectionPoolMetricsTest {
 
   private RedissonClient createRedissonClient() throws ReflectiveOperationException {
     String address = redisAddress();
-    if (testLatestDeps()) {
+    if (usesAsyncSemaphore()) {
       address = "redis://" + address;
     }
 
     Config config = new Config();
+    config.setCodec(StringCodec.INSTANCE);
     SingleServerConfig singleServerConfig = config.useSingleServer();
     singleServerConfig.setAddress(address);
     singleServerConfig.setTimeout(30_000);
-    singleServerConfig.setConnectionPoolSize(10);
-    singleServerConfig.setConnectionMinimumIdleSize(5);
+    singleServerConfig.setConnectionPoolSize(REGULAR_MAX);
+    singleServerConfig.setConnectionMinimumIdleSize(REGULAR_MIN_IDLE);
+    singleServerConfig.setSubscriptionConnectionPoolSize(SUBSCRIPTION_MAX);
+    singleServerConfig.setSubscriptionConnectionMinimumIdleSize(SUBSCRIPTION_MIN_IDLE);
     try {
       singleServerConfig
           .getClass()
           .getMethod("setPingConnectionInterval", int.class)
           .invoke(singleServerConfig, 0);
-    } catch (NoSuchMethodException ignored) {
+    } catch (ReflectiveOperationException | RuntimeException ignored) {
       // ignored
     }
     return Redisson.create(config);
   }
 
   private void assertConnectionUsageValues() {
-    String poolNameKey =
-        emitStableDatabaseSemconv() ? "db.client.connection.pool.name" : "pool.name";
-    String stateKey = emitStableDatabaseSemconv() ? "db.client.connection.state" : "state";
-
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         emitStableDatabaseSemconv() ? "db.client.connection.count" : "db.client.connections.usage",
@@ -129,25 +142,157 @@ class RedissonConnectionPoolMetricsTest {
             metrics.anySatisfy(
                 metric ->
                     assertThat(metric)
+                        .hasUnit(emitStableDatabaseSemconv() ? "{connection}" : "{connections}")
+                        .hasDescription(
+                            "The number of connections that are currently in state described by the state attribute.")
                         .hasLongSumSatisfying(
                             sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(5)
-                                            .hasAttributesSatisfying(
-                                                equalTo(stringKey(poolNameKey), expectedPoolName()),
-                                                equalTo(stringKey(stateKey), "idle")),
-                                    point ->
-                                        point
-                                            .hasValue(0)
-                                            .hasAttributesSatisfying(
-                                                equalTo(stringKey(poolNameKey), expectedPoolName()),
-                                                equalTo(stringKey(stateKey), "used"))))));
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(REGULAR_MIN_IDLE)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(
+                                                        stringKey(poolNameKey()),
+                                                        expectedRegularPoolName()),
+                                                    equalTo(stringKey(stateKey()), "idle")),
+                                        point ->
+                                            point
+                                                .hasValue(0)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(
+                                                        stringKey(poolNameKey()),
+                                                        expectedRegularPoolName()),
+                                                    equalTo(stringKey(stateKey()), "used")),
+                                        point ->
+                                            point
+                                                .hasValue(SUBSCRIPTION_MIN_IDLE)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(
+                                                        stringKey(poolNameKey()),
+                                                        expectedSubscriptionPoolName()),
+                                                    equalTo(stringKey(stateKey()), "idle")),
+                                        point ->
+                                            point
+                                                .hasValue(0)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(
+                                                        stringKey(poolNameKey()),
+                                                        expectedSubscriptionPoolName()),
+                                                    equalTo(stringKey(stateKey()), "used"))))));
   }
 
-  private String expectedPoolName() {
-    return "master-" + redisAddress();
+  private void assertPoolSizeMetric(
+      String stableName,
+      String oldName,
+      String description,
+      int regularValue,
+      int subscriptionValue) {
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        emitStableDatabaseSemconv() ? stableName : oldName,
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit(emitStableDatabaseSemconv() ? "{connection}" : "{connections}")
+                        .hasDescription(description)
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(regularValue)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(
+                                                        stringKey(poolNameKey()),
+                                                        expectedRegularPoolName())),
+                                        point ->
+                                            point
+                                                .hasValue(subscriptionValue)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(
+                                                        stringKey(poolNameKey()),
+                                                        expectedSubscriptionPoolName()))))));
+  }
+
+  private void assertPendingRequests() {
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        emitStableDatabaseSemconv()
+            ? "db.client.connection.pending_requests"
+            : "db.client.connections.pending_requests",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit(emitStableDatabaseSemconv() ? "{request}" : "{requests}")
+                        .hasDescription(
+                            emitStableDatabaseSemconv()
+                                ? "The number of current pending requests for an open connection."
+                                : "The number of pending requests for an open connection, cumulative for the entire pool.")
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(0)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(
+                                                        stringKey(poolNameKey()),
+                                                        expectedRegularPoolName())),
+                                        point ->
+                                            point
+                                                .hasValue(0)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(
+                                                        stringKey(poolNameKey()),
+                                                        expectedSubscriptionPoolName()))))));
+  }
+
+  private static void assertNoPendingRequests() {
+    String pendingRequestsMetricName =
+        emitStableDatabaseSemconv()
+            ? "db.client.connection.pending_requests"
+            : "db.client.connections.pending_requests";
+    assertThat(testing.metrics())
+        .filteredOn(
+            metricData ->
+                metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
+                    && metricData.getName().equals(pendingRequestsMetricName))
+        .isEmpty();
+  }
+
+  private static int expectedSubscriptionMinIdle() throws NoSuchFieldException {
+    // Redisson 2.3.0 passes the regular pool minimum as constructor argument 3 in SingleEntry.
+    return usesAsyncSemaphore() ? SUBSCRIPTION_MIN_IDLE : REGULAR_MIN_IDLE;
+  }
+
+  private static boolean usesAsyncSemaphore() throws NoSuchFieldException {
+    return ClientConnectionsEntry.class
+        .getDeclaredField("freeConnectionsCounter")
+        .getType()
+        .getName()
+        .equals("org.redisson.pubsub.AsyncSemaphore");
+  }
+
+  private static String poolNameKey() {
+    return emitStableDatabaseSemconv() ? "db.client.connection.pool.name" : "pool.name";
+  }
+
+  private static String stateKey() {
+    return emitStableDatabaseSemconv() ? "db.client.connection.state" : "state";
+  }
+
+  private String expectedRegularPoolName() {
+    return "master-regular-" + redisAddress();
+  }
+
+  private String expectedSubscriptionPoolName() {
+    return "master-subscription-" + redisAddress();
   }
 
   private String redisAddress() {

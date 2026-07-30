@@ -16,35 +16,81 @@ import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.redisson.api.NodeType;
 import org.redisson.client.RedisClient;
 
-public final class RedissonConnectionPoolMetrics {
+public class RedissonConnectionPoolMetrics {
 
   static final String INSTRUMENTATION_NAME = "io.opentelemetry.redisson-metrics-2.3";
 
   private static final OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-  private static final Map<IdentityKey, BatchCallback> poolMetrics = new ConcurrentHashMap<>();
+  // RedisClient does not override equals/hashCode, so map keys retain object identity semantics.
+  private static final Map<RedisClient, BatchCallback> regularPoolMetrics =
+      new ConcurrentHashMap<>();
+  private static final Map<RedisClient, BatchCallback> subscriptionPoolMetrics =
+      new ConcurrentHashMap<>();
 
   public static void registerMetrics(
       RedisClient redisClient,
       int minIdleConnections,
       int maxConnections,
       NodeType nodeType,
-      IntSupplier availableConnections,
+      Supplier<Integer> availableConnections,
       Collection<?> idleConnections,
-      @Nullable IntSupplier pendingRequests) {
+      @Nullable Supplier<Integer> pendingRequests) {
+    registerPoolMetrics(
+        regularPoolMetrics,
+        "regular",
+        redisClient,
+        minIdleConnections,
+        maxConnections,
+        nodeType,
+        availableConnections,
+        idleConnections,
+        pendingRequests);
+  }
+
+  public static void registerSubscriptionMetrics(
+      RedisClient redisClient,
+      int minIdleConnections,
+      int maxConnections,
+      NodeType nodeType,
+      Supplier<Integer> availableConnections,
+      Collection<?> idleConnections,
+      @Nullable Supplier<Integer> pendingRequests) {
+    registerPoolMetrics(
+        subscriptionPoolMetrics,
+        "subscription",
+        redisClient,
+        minIdleConnections,
+        maxConnections,
+        nodeType,
+        availableConnections,
+        idleConnections,
+        pendingRequests);
+  }
+
+  private static void registerPoolMetrics(
+      Map<RedisClient, BatchCallback> poolMetrics,
+      String poolKind,
+      RedisClient redisClient,
+      int minIdleConnections,
+      int maxConnections,
+      NodeType nodeType,
+      Supplier<Integer> availableConnections,
+      Collection<?> idleConnections,
+      @Nullable Supplier<Integer> pendingRequests) {
     if (maxConnections <= 0) {
       return;
     }
 
     poolMetrics.computeIfAbsent(
-        new IdentityKey(redisClient),
+        redisClient,
         unused ->
             createCallback(
-                poolName(redisClient, nodeType),
+                poolName(redisClient, nodeType, poolKind),
                 minIdleConnections,
                 maxConnections,
                 availableConnections,
@@ -53,7 +99,11 @@ public final class RedissonConnectionPoolMetrics {
   }
 
   public static void unregisterMetrics(RedisClient redisClient) {
-    BatchCallback callback = poolMetrics.remove(new IdentityKey(redisClient));
+    closeCallback(regularPoolMetrics.remove(redisClient));
+    closeCallback(subscriptionPoolMetrics.remove(redisClient));
+  }
+
+  private static void closeCallback(@Nullable BatchCallback callback) {
     if (callback != null) {
       callback.close();
     }
@@ -63,9 +113,9 @@ public final class RedissonConnectionPoolMetrics {
       String poolName,
       int minIdleConnections,
       int maxConnections,
-      IntSupplier availableConnections,
+      Supplier<Integer> availableConnections,
       Collection<?> idleConnections,
-      @Nullable IntSupplier pendingRequestsSupplier) {
+      @Nullable Supplier<Integer> pendingRequestsSupplier) {
     DbConnectionPoolMetrics metrics =
         DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, poolName);
 
@@ -82,16 +132,20 @@ public final class RedissonConnectionPoolMetrics {
 
     Runnable callback =
         () -> {
-          int availableConnectionPermits = Math.max(0, availableConnections.getAsInt());
-          int idleConnectionCount = Math.max(0, idleConnections.size());
-          connections.record(
-              Math.max(0, maxConnections - availableConnectionPermits), usedAttributes);
-          connections.record(idleConnectionCount, idleAttributes);
+          Integer availableConnectionPermits = availableConnections.get();
+          if (availableConnectionPermits != null) {
+            connections.record(
+                Math.max(0, maxConnections - availableConnectionPermits), usedAttributes);
+          }
+          connections.record(idleConnections.size(), idleAttributes);
           minIdle.record(minIdleConnections, attributes);
           maxIdle.record(maxConnections, attributes);
           max.record(maxConnections, attributes);
-          if (pendingRequestsSupplier != null) {
-            pendingRequests.record(pendingRequestsSupplier.getAsInt(), attributes);
+          if (pendingRequestsSupplier != null && pendingRequests != null) {
+            Integer pendingRequestCount = pendingRequestsSupplier.get();
+            if (pendingRequestCount != null) {
+              pendingRequests.record(pendingRequestCount, attributes);
+            }
           }
         };
 
@@ -101,29 +155,11 @@ public final class RedissonConnectionPoolMetrics {
     return metrics.batchCallback(callback, connections, minIdle, maxIdle, max, pendingRequests);
   }
 
-  private static String poolName(RedisClient redisClient, @Nullable NodeType nodeType) {
+  private static String poolName(
+      RedisClient redisClient, @Nullable NodeType nodeType, String poolKind) {
     String prefix = nodeType == null ? "unknown" : nodeType.name().toLowerCase(Locale.ROOT);
     InetSocketAddress address = redisClient.getAddr();
-    return prefix + "-" + address.getHostString() + ":" + address.getPort();
-  }
-
-  private static final class IdentityKey {
-    private final RedisClient redisClient;
-
-    private IdentityKey(RedisClient redisClient) {
-      this.redisClient = redisClient;
-    }
-
-    @Override
-    @SuppressWarnings("ReferenceEquality")
-    public boolean equals(@Nullable Object other) {
-      return other instanceof IdentityKey && redisClient == ((IdentityKey) other).redisClient;
-    }
-
-    @Override
-    public int hashCode() {
-      return System.identityHashCode(redisClient);
-    }
+    return prefix + "-" + poolKind + "-" + address.getHostString() + ":" + address.getPort();
   }
 
   private RedissonConnectionPoolMetrics() {}

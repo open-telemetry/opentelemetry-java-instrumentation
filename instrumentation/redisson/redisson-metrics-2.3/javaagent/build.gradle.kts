@@ -16,14 +16,33 @@ muzzle {
 dependencies {
   library("org.redisson:redisson:2.3.0")
 
-  testImplementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
+  testImplementation("org.testcontainers:testcontainers")
 
   latestDepTestLibrary("org.redisson:redisson:3.17.+") // documented limitation
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("redisson311Test") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+        }
+      }
+
+      dependencies {
+        compileOnly(project())
+        implementation("org.testcontainers:testcontainers")
+
+        val version = baseVersion("3.11.0").orLatest("3.11.+")
+        implementation("org.redisson:redisson:$version")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     systemProperty("collectMetadata", otelProps.collectMetadata)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
@@ -36,6 +55,6 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, testStableSemconv)
   }
 }

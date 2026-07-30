@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collection;
-import java.util.function.IntSupplier;
+import java.util.function.Supplier;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -41,6 +41,8 @@ class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("org.redisson.client.RedisClient")))
             .and(takesArgument(1, int.class))
             .and(takesArgument(2, int.class))
+            .and(takesArgument(3, int.class))
+            .and(takesArgument(4, int.class))
             .and(takesArgument(5, named("org.redisson.connection.ConnectionManager")))
             .and(takesArgument(6, named("org.redisson.api.NodeType"))),
         getClass().getName() + "$ConstructorAdvice");
@@ -54,23 +56,39 @@ class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) RedisClient redisClient,
         @Advice.Argument(1) int poolMinSize,
         @Advice.Argument(2) int poolMaxSize,
+        @Advice.Argument(3) int subscriptionPoolMinSize,
+        @Advice.Argument(4) int subscriptionPoolMaxSize,
         @Advice.Argument(6) NodeType nodeType,
         @Advice.FieldValue("freeConnectionsCounter") Object freeConnectionsCounter,
-        @Advice.FieldValue("freeConnections") Collection<?> freeConnections) {
-      IntSupplier availableConnections =
+        @Advice.FieldValue("freeConnections") Collection<?> freeConnections,
+        @Advice.FieldValue("freeSubscribeConnectionsCounter")
+            Object freeSubscribeConnectionsCounter,
+        @Advice.FieldValue("freeSubscribeConnections") Collection<?> freeSubscribeConnections) {
+      Supplier<Integer> availableConnections =
           AsyncSemaphoreAccessor.availableConnectionsSupplier(freeConnectionsCounter);
-      if (availableConnections == null) {
-        return;
+      if (availableConnections != null) {
+        RedissonConnectionPoolMetrics.registerMetrics(
+            redisClient,
+            poolMinSize,
+            poolMaxSize,
+            nodeType,
+            availableConnections,
+            freeConnections,
+            AsyncSemaphoreAccessor.pendingRequestsSupplier(freeConnectionsCounter));
       }
 
-      RedissonConnectionPoolMetrics.registerMetrics(
-          redisClient,
-          poolMinSize,
-          poolMaxSize,
-          nodeType,
-          availableConnections,
-          freeConnections,
-          AsyncSemaphoreAccessor.pendingRequestsSupplier(freeConnectionsCounter));
+      Supplier<Integer> availableSubscriptionConnections =
+          AsyncSemaphoreAccessor.availableConnectionsSupplier(freeSubscribeConnectionsCounter);
+      if (availableSubscriptionConnections != null) {
+        RedissonConnectionPoolMetrics.registerSubscriptionMetrics(
+            redisClient,
+            subscriptionPoolMinSize,
+            subscriptionPoolMaxSize,
+            nodeType,
+            availableSubscriptionConnections,
+            freeSubscribeConnections,
+            AsyncSemaphoreAccessor.pendingRequestsSupplier(freeSubscribeConnectionsCounter));
+      }
     }
   }
 }
