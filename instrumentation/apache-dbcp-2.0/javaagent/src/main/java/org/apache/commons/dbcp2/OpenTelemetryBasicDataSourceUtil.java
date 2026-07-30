@@ -10,7 +10,7 @@ import javax.annotation.Nullable;
 import javax.management.ObjectName;
 
 // Helper for accessing non-public BasicDataSource methods from the same package.
-public final class OpenTelemetryBasicDataSourceUtil {
+public class OpenTelemetryBasicDataSourceUtil {
 
   @Nullable
   public static ObjectName getRegisteredJmxName(BasicDataSource dataSource) {

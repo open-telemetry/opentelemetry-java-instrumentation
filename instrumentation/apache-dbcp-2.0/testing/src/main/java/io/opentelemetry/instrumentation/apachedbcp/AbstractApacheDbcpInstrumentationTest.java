@@ -33,7 +33,7 @@ public abstract class AbstractApacheDbcpInstrumentationTest {
   protected abstract void configure(BasicDataSource dataSource, String dataSourceName)
       throws Exception;
 
-  protected abstract void shutdown(BasicDataSource dataSource) throws Exception;
+  protected void shutdown(BasicDataSource dataSource) throws Exception {}
 
   @Test
   void shouldReportMetrics() throws Exception {
@@ -60,7 +60,6 @@ public abstract class AbstractApacheDbcpInstrumentationTest {
     BasicDataSource dataSource = new BasicDataSource();
     dataSource.setDriver(driverMock);
     dataSource.setUrl("db:///url");
-    dataSource.postDeregister();
     return dataSource;
   }
 

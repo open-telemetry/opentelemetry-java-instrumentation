@@ -30,11 +30,6 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
     dataSource.setJmxName("org.apache.commons.dbcp2:type=BasicDataSource,name=" + dataSourceName);
   }
 
-  @Override
-  protected void shutdown(BasicDataSource dataSource) {
-    dataSource.postDeregister();
-  }
-
   @Test
   void shouldUseJdbcUrlForDataSourceNameWhenJmxNameIsNull() throws Exception {
     BasicDataSource dataSource = createDataSource();
@@ -98,7 +93,6 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
       if (mbeanServer.isRegistered(objectName)) {
         mbeanServer.unregisterMBean(objectName);
       }
-      shutdown(dataSource);
     }
 
     assertNoMetrics();
@@ -122,7 +116,30 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
       if (mbeanServer.isRegistered(objectName)) {
         mbeanServer.unregisterMBean(objectName);
       }
-      shutdown(dataSource);
+    }
+
+    assertNoMetrics();
+  }
+
+  @Test
+  void shouldUpdateDataSourceNameWhenMBeanIsRegisteredAfterPoolStart() throws Exception {
+    BasicDataSource dataSource = createDataSource();
+    dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
+    ObjectName objectName =
+        new ObjectName("org.apache.commons.dbcp2:type=BasicDataSource,name=lateRegisteredPool");
+    MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
+
+    try {
+      dataSource.getConnection().close();
+      assertDataSourceMetrics("db.example:5432/orders");
+
+      objectName = mbeanServer.registerMBean(dataSource, objectName).getObjectName();
+      assertDataSourceMetrics("lateRegisteredPool");
+    } finally {
+      dataSource.close();
+      if (mbeanServer.isRegistered(objectName)) {
+        mbeanServer.unregisterMBean(objectName);
+      }
     }
 
     assertNoMetrics();
@@ -147,7 +164,6 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
       if (mbeanServer.isRegistered(objectName)) {
         mbeanServer.unregisterMBean(objectName);
       }
-      shutdown(dataSource);
     }
 
     assertNoMetrics();
@@ -161,7 +177,6 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
       assertDataSourceMetrics(dataSourceName);
     } finally {
       dataSource.close();
-      shutdown(dataSource);
     }
 
     assertNoMetrics();

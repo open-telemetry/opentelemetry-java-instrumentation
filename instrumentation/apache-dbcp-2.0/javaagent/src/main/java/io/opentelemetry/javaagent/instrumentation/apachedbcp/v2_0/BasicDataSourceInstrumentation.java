@@ -35,23 +35,19 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
     typeTransformer.applyAdviceToMethod(
         isPublic().and(named("close")).and(takesArguments(0)),
         getClass().getName() + "$CloseAdvice");
+
+    typeTransformer.applyAdviceToMethod(
+        isPublic().and(named("preRegister")).and(takesArguments(2)),
+        getClass().getName() + "$PreRegisterAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class StartPoolMaintenanceAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This BasicDataSource dataSource) {
-      String dataSourceName = null;
       ObjectName objectName = OpenTelemetryBasicDataSourceUtil.getRegisteredJmxName(dataSource);
-      if (objectName != null) {
-        dataSourceName = objectName.getKeyProperty("name");
-        if (dataSourceName == null) {
-          dataSourceName = objectName.toString();
-        }
-      }
-      if (dataSourceName == null) {
-        dataSourceName = getDataSourceName(dataSource);
-      }
+      String dataSourceName =
+          objectName != null ? getDataSourceName(objectName) : getDataSourceName(dataSource);
       telemetry().registerMetrics(dataSource, dataSourceName);
     }
   }
@@ -61,6 +57,22 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.This BasicDataSource dataSource) {
       telemetry().unregisterMetrics(dataSource);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class PreRegisterAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This BasicDataSource dataSource, @Advice.Return ObjectName objectName) {
+      if (objectName == null) {
+        return;
+      }
+
+      String dataSourceName = getDataSourceName(objectName);
+
+      telemetry().unregisterMetrics(dataSource);
+      telemetry().registerMetrics(dataSource, dataSourceName);
     }
   }
 }
