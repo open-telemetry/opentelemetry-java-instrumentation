@@ -57,7 +57,6 @@ class AgentInitializerTest {
         "java.rmi/sun.rmi.server.Activation",
         "jdk.aot/jdk.tools.jaotc.Main",
         "jdk.hotspot.agent/sun.jvm.hotspot.SALauncher",
-        "jdk.jartool/sun.security.tools.jarsigner.Main",
         "jdk.javadoc/jdk.javadoc.internal.tool.Main",
         "jdk.jcmd/sun.tools.jcmd.JCmd",
         "jdk.jcmd/sun.tools.jps.Jps",

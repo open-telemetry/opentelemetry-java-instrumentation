@@ -288,17 +288,16 @@ public final class AgentInitializer {
     // sun.java.command may be of the form "<module>/<mainClass>" when the main class belongs to a
     // named module, e.g. "jdk.compiler/com.sun.tools.javac.Main"
     int slashIndex = first.indexOf('/');
-    if (slashIndex < 0) {
-
-      // known exception for glassfish/payara application server
-      if (first.startsWith("com.sun.enterprise.glassfish.")) {
-        return false;
-      }
-
-      return first.startsWith("com.sun.") || first.startsWith("sun.") || first.startsWith("jdk.");
-    } else {
+    if (slashIndex >= 0) {
       String moduleName = first.substring(0, slashIndex);
       return moduleName.startsWith("jdk.") || moduleName.startsWith("java.");
     }
+
+    // known exception for glassfish/payara application server
+    if (first.startsWith("com.sun.enterprise.glassfish.")) {
+      return false;
+    }
+
+    return first.startsWith("com.sun.") || first.startsWith("sun.") || first.startsWith("jdk.");
   }
 }
