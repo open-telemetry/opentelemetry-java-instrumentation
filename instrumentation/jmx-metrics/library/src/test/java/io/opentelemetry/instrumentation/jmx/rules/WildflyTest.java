@@ -204,7 +204,7 @@ class WildflyTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "The number of connection requests that had to wait to obtain it")
+                        "The number of connection requests that had to wait to obtain it.")
                     .hasUnit("{request}")
                     .hasDataPointsWithOneAttribute(dataSourceAttribute))
         // transactions
