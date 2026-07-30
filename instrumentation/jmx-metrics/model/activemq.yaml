@@ -32,7 +32,7 @@ groups:
     metric_name: activemq.producer.count
     type: metric
     stability: development
-    brief: The number of producers attached to this destination
+    brief: The number of producers attached to this destination.
     unit: "{producer}"
     instrument: updowncounter
     attributes:
