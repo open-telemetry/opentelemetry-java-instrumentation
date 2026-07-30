@@ -12,6 +12,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler.Detector;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import javax.management.MBeanServerConnection;
@@ -86,7 +88,6 @@ class CassandraCompactionProgressHandlerTest {
 
   @Test
   void skipsEntriesWithValuesExceedingLongRange() throws Exception {
-    // values larger than Long.MAX_VALUE cannot be safely cast to long — entry must be skipped
     String big = "99999999999999999999";
     when(connection.getAttribute(objectName, "Compactions"))
         .thenReturn(singletonList(compactionEntry("COMPACTION", "ks", "cf", big, big)));
@@ -95,6 +96,21 @@ class CassandraCompactionProgressHandlerTest {
         CassandraCompactionProgressHandler.queryCompactions(connection, objectName);
 
     assertThat(groups).isEmpty();
+  }
+
+  @Test
+  void skipsEntriesWithMalformedValues() throws Exception {
+    when(connection.getAttribute(objectName, "Compactions"))
+        .thenReturn(
+            asList(
+                compactionEntry("COMPACTION", "ks1", "cf1", "not-a-number", "100"),
+                compactionEntry("COMPACTION", "ks2", "cf2", "50", "100")));
+
+    Map<Attributes, long[]> groups =
+        CassandraCompactionProgressHandler.queryCompactions(connection, objectName);
+
+    assertThat(groups).hasSize(1);
+    assertThat(groups.get(attrs("COMPACTION", "ks2", "cf2"))).containsExactly(50L, 100L);
   }
 
   @Test
@@ -122,16 +138,20 @@ class CassandraCompactionProgressHandlerTest {
     when(connection.getAttribute(objectName2, "Compactions"))
         .thenReturn(singletonList(compactionEntry("COMPACTION", "ks1", "cf1", "50", "150")));
 
-    Map<Attributes, long[]> first =
-        CassandraCompactionProgressHandler.queryCompactions(connection, objectName);
-    Map<Attributes, long[]> second =
-        CassandraCompactionProgressHandler.queryCompactions(connection, objectName2);
+    Detector detector =
+        new Detector() {
+          @Override
+          public MBeanServerConnection getConnection() {
+            return connection;
+          }
 
-    // Simulate what queryGroups does: merge across ObjectNames using the same merge function
-    Map<Attributes, long[]> merged = new HashMap<>(first);
-    second.forEach(
-        (attrs, values) ->
-            merged.merge(attrs, values, (a, b) -> new long[] {a[0] + b[0], a[1] + b[1]}));
+          @Override
+          public Collection<ObjectName> getObjectNames() {
+            return asList(objectName, objectName2);
+          }
+        };
+
+    Map<Attributes, long[]> merged = CassandraCompactionProgressHandler.queryGroups(() -> detector);
 
     assertThat(merged).hasSize(1);
     assertThat(merged.get(attrs("COMPACTION", "ks1", "cf1"))).containsExactly(150L, 350L);

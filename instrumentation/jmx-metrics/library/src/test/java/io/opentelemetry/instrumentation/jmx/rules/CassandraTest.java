@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.Container;
@@ -60,9 +61,13 @@ class CassandraTest extends TargetSystemTest {
     startTarget(target);
 
     seedCompactionData(target);
-    triggerCompaction(target);
-
-    verifyMetrics(createMetricsVerifier());
+    AtomicBoolean keepCompacting = new AtomicBoolean(true);
+    triggerCompaction(target, keepCompacting);
+    try {
+      verifyMetrics(createMetricsVerifier());
+    } finally {
+      keepCompacting.set(false);
+    }
   }
 
   private static void seedCompactionData(GenericContainer<?> target) {
@@ -113,18 +118,22 @@ class CassandraTest extends TargetSystemTest {
             + "WITH HEADER = false AND MINBATCHSIZE = 1 AND MAXBATCHSIZE = 2;\"");
   }
 
-  private static void triggerCompaction(GenericContainer<?> target) {
+  private static void triggerCompaction(GenericContainer<?> target, AtomicBoolean keepCompacting) {
     Thread compactionThread =
         new Thread(
             () -> {
-              try {
-                nodetool(target, "compact", "--", "test", "data");
-              } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                logger.warning("Background compaction interrupted");
-              } catch (Exception e) {
-                if (target.isRunning()) {
+              while (keepCompacting.get()) {
+                try {
+                  nodetool(target, "compact", "--", "test", "data");
+                } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                  return;
+                } catch (Exception e) {
+                  if (!target.isRunning()) {
+                    return;
+                  }
                   logger.warning("Background compaction failed: " + e.getMessage());
+                  return;
                 }
               }
             },
@@ -261,10 +270,10 @@ class CassandraTest extends TargetSystemTest {
                         errorAttributesGroup("write", "failure"),
                         errorAttributesGroup("write", "unavailable")))
         .add(
-            "cassandra.compaction.progress.bytes",
+            "cassandra.compaction.progress.completed",
             metric ->
                 metric
-                    .hasDescription("Bytes completed for in-flight compactions")
+                    .hasDescription("Bytes completed for in-flight compactions.")
                     .hasUnit("By")
                     .isGauge()
                     .hasDataPointsWithAttributes(
@@ -273,10 +282,10 @@ class CassandraTest extends TargetSystemTest {
                             attribute("cassandra.keyspace", "test"),
                             attribute("cassandra.table", "data"))))
         .add(
-            "cassandra.compaction.progress.total",
+            "cassandra.compaction.progress.size",
             metric ->
                 metric
-                    .hasDescription("Total bytes for in-flight compactions")
+                    .hasDescription("Total bytes for in-flight compactions.")
                     .hasUnit("By")
                     .isGauge()
                     .hasDataPointsWithAttributes(

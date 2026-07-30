@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.internal.handler;
 
-import static java.util.logging.Level.WARNING;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -30,8 +30,8 @@ import javax.management.ObjectName;
  * + keyspace + columnfamily}, and emits two gauges per group:
  *
  * <ul>
- *   <li>{@code cassandra.compaction.progress.bytes} — bytes completed so far
- *   <li>{@code cassandra.compaction.progress.total} — total bytes for the compaction
+ *   <li>{@code cassandra.compaction.progress.completed} — bytes completed so far
+ *   <li>{@code cassandra.compaction.progress.size} — total bytes for the compaction
  * </ul>
  *
  * <p>Both metrics carry {@code cassandra.compaction.task_type}, {@code cassandra.keyspace}, and
@@ -47,8 +47,8 @@ import javax.management.ObjectName;
 public class CassandraCompactionProgressHandler implements ExperimentalJmxMetricHandler {
 
   static final String HANDLER_NAME = "cassandra-compaction-progress";
-  static final String METRIC_CURRENT = "cassandra.compaction.progress.bytes";
-  static final String METRIC_TOTAL = "cassandra.compaction.progress.total";
+  static final String METRIC_CURRENT = "cassandra.compaction.progress.completed";
+  static final String METRIC_TOTAL = "cassandra.compaction.progress.size";
 
   private static final String ATTR_TASK_TYPE = "cassandra.compaction.task_type";
   private static final String ATTR_KEYSPACE = "cassandra.keyspace";
@@ -67,7 +67,7 @@ public class CassandraCompactionProgressHandler implements ExperimentalJmxMetric
     ObservableLongMeasurement currentGauge =
         meter
             .gaugeBuilder(METRIC_CURRENT)
-            .setDescription("Bytes completed for in-flight compactions")
+            .setDescription("Bytes completed for in-flight compactions.")
             .setUnit("By")
             .ofLongs()
             .buildObserver();
@@ -75,7 +75,7 @@ public class CassandraCompactionProgressHandler implements ExperimentalJmxMetric
     ObservableLongMeasurement totalGauge =
         meter
             .gaugeBuilder(METRIC_TOTAL)
-            .setDescription("Total bytes for in-flight compactions")
+            .setDescription("Total bytes for in-flight compactions.")
             .setUnit("By")
             .ofLongs()
             .buildObserver();
@@ -91,7 +91,7 @@ public class CassandraCompactionProgressHandler implements ExperimentalJmxMetric
         totalGauge);
   }
 
-  private static Map<Attributes, long[]> queryGroups(Supplier<Detector> detectorSupplier) {
+  static Map<Attributes, long[]> queryGroups(Supplier<Detector> detectorSupplier) {
     Map<Attributes, long[]> groups = new HashMap<>();
     Detector detector = detectorSupplier.get();
     if (detector == null) {
@@ -131,10 +131,10 @@ public class CassandraCompactionProgressHandler implements ExperimentalJmxMetric
         try {
           completed = parseLong(entry.get("completed"));
           total = parseLong(entry.get("total"));
-        } catch (ArithmeticException e) {
+        } catch (ArithmeticException | NumberFormatException e) {
           logger.log(
-              WARNING,
-              "cassandra.compaction.progress: byte value overflows long range, skipping entry",
+              FINE,
+              "cassandra.compaction.progress: byte value out of range or malformed, skipping entry",
               e);
           continue;
         }
@@ -144,7 +144,7 @@ public class CassandraCompactionProgressHandler implements ExperimentalJmxMetric
             attrs, new long[] {completed, total}, (a, b) -> new long[] {a[0] + b[0], a[1] + b[1]});
       }
     } catch (Exception e) {
-      logger.log(WARNING, "cassandra.compaction.progress: failed to query CompactionManager", e);
+      logger.log(FINE, "cassandra.compaction.progress: failed to query CompactionManager", e);
     }
     return groups;
   }
@@ -153,15 +153,11 @@ public class CassandraCompactionProgressHandler implements ExperimentalJmxMetric
     return unit != null && unit.equalsIgnoreCase("bytes");
   }
 
-  private static long parseLong(@Nullable Object value) {
+  private static long parseLong(@Nullable String value) {
     if (value == null) {
-      return 0;
+      throw new NumberFormatException("null");
     }
-    try {
-      return new BigInteger(value.toString()).longValueExact();
-    } catch (NumberFormatException e) {
-      return 0;
-    }
+    return new BigInteger(value).longValueExact();
   }
 
   private static Attributes buildAttributes(String taskType, String keyspace, String columnFamily) {
