@@ -22,6 +22,7 @@ public interface Trie<V> {
    * will return {@code 10}.
    */
   @Nullable
+  @SuppressWarnings("NullAway") // intentional null sentinel for "no match"
   default V getOrNull(CharSequence str) {
     return getOrDefault(str, null);
   }

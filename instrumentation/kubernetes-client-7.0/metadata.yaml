@@ -12,49 +12,11 @@ configurations:
       `kubernetes-client.name` for Kubernetes API requests.
     type: boolean
     default: false
-  - name: otel.instrumentation.http.known-methods
-    declarative_name: java.common.http.known_methods
-    description: >
-      Configures the instrumentation to recognize an alternative set of HTTP request methods. All
-      other methods will be treated as `_OTHER`.
-    type: list
-    default: "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"
-  - name: otel.instrumentation.http.client.capture-request-headers
-    declarative_name: general.http.client.request_captured_headers
-    description: List of HTTP request headers to capture in HTTP client telemetry.
-    type: list
-    default: ""
-  - name: otel.instrumentation.http.client.capture-response-headers
-    declarative_name: general.http.client.response_captured_headers
-    description: List of HTTP response headers to capture in HTTP client telemetry.
-    type: list
-    default: ""
-  - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.service_peer_mapping
-    description: Used to specify a mapping from host names or IP addresses to peer services.
-    type: map
-    default: ""
-    declarative_type: structured_list
-    declarative_schema:
-      type: object
-      required:
-        - peer
-        - service_name
-      properties:
-        peer:
-          type: string
-          description: Host name or IP address to match against.
-        service_name:
-          type: string
-          description: Peer service name to record for matching peers.
-  - name: otel.instrumentation.http.client.emit-experimental-telemetry
-    declarative_name: java.common.http.client.emit_experimental_telemetry/development
-    description: >
-      Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size`
-      and `http.response.body.size` attributes to spans, and records `http.client.request.size` and
-      `http.client.response.size` metrics.
-    type: boolean
-    default: false
+  - ref: http.known-methods
+  - ref: http.client.capture-request-headers
+  - ref: http.client.capture-response-headers
+  - ref: common.peer-service-mapping
+  - ref: http.client.emit-experimental-telemetry
   - declarative_name: java.common.http.client.url_template_rules
     description: >
       Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs. Only
@@ -78,8 +40,4 @@ configurations:
           type: boolean
           default: false
           description: Whether this rule overrides an already-applied template.
-  - name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    declarative_name: general.sanitization.url.sensitive_query_parameters/development
-    description: List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-    type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
+  - ref: sanitization.url.sensitive-query-parameters
