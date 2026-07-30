@@ -63,8 +63,6 @@ class JettyTest extends TargetSystemTest {
     // Deploy example web application for session-related metrics
     copyTestWebAppToTarget(container, "/var/lib/jetty/webapps/ROOT.war");
 
-    startTarget(container);
-
     List<String> reportedMetrics =
         new ArrayList<>(
             asList(
@@ -94,6 +92,8 @@ class JettyTest extends TargetSystemTest {
                 .checkNothingUnregisteredWithPrefix("jetty.")
                 .checkRegisteredMetrics("jetty.", reportedMetrics, notReportedMetrics)
                 .checkRegisteredAttributes("jetty.", singletonList("jetty.context"), emptyList()));
+
+    startTarget(container);
 
     verifyMetrics(createMetricsVerifier(jettyMajorVersion));
   }
