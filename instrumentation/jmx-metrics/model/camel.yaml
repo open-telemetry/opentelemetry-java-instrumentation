@@ -29,8 +29,10 @@ groups:
         type: string
         stability: development
         brief: Camel destination.
+        note: |
+          The destination is the endpoint URI, it is only available for destination-aware processors.
         examples:
-          - "my-destination"
+          - "direct://inbox"
       - id: camel.threadpool.name
         type: string
         stability: development
