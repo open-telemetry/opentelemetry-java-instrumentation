@@ -54,27 +54,7 @@ public final class AgentInitializer {
       throw new IllegalStateException("agent initializer should be loaded in boot loader");
     }
 
-    // check if running any JDK tool in $JAVA_HOME/bin, as this is common when setting
-    // JAVA_TOOL_OPTIONS or _JAVA_OPTIONS globally, and we don't want to instrument those tools.
-    // opt-in is still possible with an explicit otel.javaagent.enabled=true in system properties,
-    // java agent arguments or the OTEL_JAVAAGENT_ENABLED environment variable
-    Boolean skipJdkTool =
-        doPrivileged(
-            new PrivilegedAction<Boolean>() {
-              @Override
-              public Boolean run() {
-                String enable = System.getProperty("otel.javaagent.enabled");
-                if (enable == null) {
-                  enable = System.getenv("OTEL_JAVAAGENT_ENABLED");
-                }
-                if (Boolean.parseBoolean(enable)) {
-                  return false;
-                }
-                String cmd = System.getProperty("sun.java.command");
-                return isJdkToolMainClass(cmd);
-              }
-            });
-    if (fromPremain && skipJdkTool) {
+    if (fromPremain && skipJdkTool()) {
       System.err.println(
           "JDK tool detected, agent will not be started. To override this behavior, set"
               + " otel.javaagent.enabled=true as an agent argument or system property, or"
@@ -127,6 +107,28 @@ public final class AgentInitializer {
               value = System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_SECURITY_MANAGER_SUPPORT_ENABLED");
             }
             return Boolean.parseBoolean(value);
+          }
+        });
+  }
+
+  private static boolean skipJdkTool() {
+    // check if running any JDK tool in $JAVA_HOME/bin, as this is common when setting
+    // JAVA_TOOL_OPTIONS or _JAVA_OPTIONS globally, and we don't want to instrument those tools.
+    // opt-in is still possible with an explicit otel.javaagent.enabled=true in system properties,
+    // java agent arguments or the OTEL_JAVAAGENT_ENABLED environment variable
+    return doPrivileged(
+        new PrivilegedAction<Boolean>() {
+          @Override
+          public Boolean run() {
+            String enable = System.getProperty("otel.javaagent.enabled");
+            if (enable == null) {
+              enable = System.getenv("OTEL_JAVAAGENT_ENABLED");
+            }
+            if (Boolean.parseBoolean(enable)) {
+              return false;
+            }
+            String cmd = System.getProperty("sun.java.command");
+            return isJdkToolMainClass(cmd);
           }
         });
   }
