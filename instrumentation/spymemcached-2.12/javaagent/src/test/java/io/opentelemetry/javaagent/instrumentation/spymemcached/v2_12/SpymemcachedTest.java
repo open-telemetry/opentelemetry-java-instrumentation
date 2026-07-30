@@ -28,7 +28,6 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import io.opentelemetry.api.trace.SpanKind;
@@ -38,8 +37,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetSocketAddress;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -651,8 +648,8 @@ class SpymemcachedTest {
                             satisfies(
                                 maybeStable(DB_STATEMENT),
                                 val ->
-                                    val.startsWith("append ")
-                                        .endsWith(" " + key("test-append") + " ?")),
+                                    val.startsWith("append " + key("test-append") + " ")
+                                        .endsWith(" ?")),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
                             equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211))),
                 span ->
@@ -704,8 +701,8 @@ class SpymemcachedTest {
                             satisfies(
                                 maybeStable(DB_STATEMENT),
                                 val ->
-                                    val.startsWith("prepend ")
-                                        .endsWith(" " + key("test-prepend") + " ?")),
+                                    val.startsWith("prepend " + key("test-prepend") + " ")
+                                        .endsWith(" ?")),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
                             equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211))),
                 span ->
@@ -803,6 +800,7 @@ class SpymemcachedTest {
         "parent",
         () -> {
           assertThat(memcached.touch(key("test-touch"), EXPIRATION_SECONDS).get()).isTrue();
+          assertThat(memcached.get(key("test-touch"))).isEqualTo("touch test");
         });
 
     testing.waitAndAssertTraces(
@@ -820,17 +818,28 @@ class SpymemcachedTest {
                                 maybeStable(DB_STATEMENT),
                                 "touch " + key("test-touch") + " " + EXPIRATION_SECONDS),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211))),
+                span ->
+                    span.hasName("get")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
+                            equalTo(maybeStable(DB_OPERATION), "get"),
+                            equalTo(maybeStable(DB_STATEMENT), "get " + key("test-touch")),
+                            equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
+                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                            equalTo(stringKey("spymemcached.result"), experimental("hit")))));
   }
 
   @Test
-  void touchNonExistent() throws Exception {
+  void incr() {
     MemcachedClient memcached = getMemcached();
     testing.runWithSpan(
         "parent",
         () -> {
-          assertThat(memcached.touch(key("test-touch-non-existent"), EXPIRATION_SECONDS).get())
-              .isFalse();
+          assertThat(memcached.incr(key("test-incr"), 5, 10, EXPIRATION_SECONDS)).isEqualTo(10);
+          assertThat(memcached.incr(key("test-incr"), 5, 10, EXPIRATION_SECONDS)).isEqualTo(15);
         });
 
     testing.waitAndAssertTraces(
@@ -838,93 +847,39 @@ class SpymemcachedTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
-                    span.hasName("touch")
+                    span.hasName("incr")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "touch"),
+                            equalTo(maybeStable(DB_OPERATION), "incr"),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                "touch "
-                                    + key("test-touch-non-existent")
-                                    + " "
-                                    + EXPIRATION_SECONDS),
+                                "incr " + key("test-incr") + " 5 10 " + EXPIRATION_SECONDS),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
-  }
-
-  @Test
-  void getAndTouch() {
-    MemcachedClient memcached = getMemcached(singletonMap("test-touch", "touch test"));
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          assertThat(memcached.getAndTouch(key("test-touch"), EXPIRATION_SECONDS).getValue())
-              .isEqualTo("touch test");
-        });
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211))),
                 span ->
-                    span.hasName("getAndTouch")
+                    span.hasName("incr")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "getAndTouch"),
+                            equalTo(maybeStable(DB_OPERATION), "incr"),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                "getAndTouch " + key("test-touch") + " " + EXPIRATION_SECONDS),
-                            equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
-  }
-
-  @Test
-  void getAndTouchNonExistent() {
-    MemcachedClient memcached = getMemcached();
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          assertThat(memcached.getAndTouch(key("test-touch-non-existent"), EXPIRATION_SECONDS))
-              .isNull();
-        });
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("getAndTouch")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "getAndTouch"),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                "getAndTouch "
-                                    + key("test-touch-non-existent")
-                                    + " "
-                                    + EXPIRATION_SECONDS),
+                                "incr " + key("test-incr") + " 5 10 " + EXPIRATION_SECONDS),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
                             equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
   }
 
   @Test
   void decr() {
-    MemcachedClient memcached = getMemcached(singletonMap("test-decr", "200"));
+    MemcachedClient memcached = getMemcached();
     testing.runWithSpan(
         "parent",
         () -> {
-          /*
-           Memcached is funny in the way it handles incr/decr operations:
-           it needs values to be strings (with digits in them) and it returns actual long from decr/incr
-          */
-          assertThat(memcached.decr(key("test-decr"), 5)).isEqualTo(195);
-          assertThat(memcached.get(key("test-decr"))).isEqualTo("195");
+          assertThat(memcached.decr(key("test-decr"), 5, 10, EXPIRATION_SECONDS)).isEqualTo(10);
+          assertThat(memcached.decr(key("test-decr"), 5, 10, EXPIRATION_SECONDS)).isEqualTo(5);
         });
 
     testing.waitAndAssertTraces(
@@ -938,9 +893,77 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
                             equalTo(maybeStable(DB_OPERATION), "decr"),
-                            equalTo(maybeStable(DB_STATEMENT), "decr " + key("test-decr") + " 5"),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "decr " + key("test-decr") + " 5 10 " + EXPIRATION_SECONDS),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
                             equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211))),
+                span ->
+                    span.hasName("decr")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
+                            equalTo(maybeStable(DB_OPERATION), "decr"),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "decr " + key("test-decr") + " 5 10 " + EXPIRATION_SECONDS),
+                            equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
+                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+  }
+
+  @Test
+  void asyncIncrDecr() throws Exception {
+    MemcachedClient memcached = getMemcached();
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          assertThat(memcached.asyncIncr(key("test-async-incr"), 5).get()).isEqualTo(-1L);
+          assertThat(memcached.asyncDecr(key("test-async-decr"), 5).get()).isEqualTo(-1L);
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName("incr")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
+                            equalTo(maybeStable(DB_OPERATION), "incr"),
+                            equalTo(
+                                maybeStable(DB_STATEMENT), "incr " + key("test-async-incr") + " 5"),
+                            equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
+                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211))),
+                span ->
+                    span.hasName("decr")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
+                            equalTo(maybeStable(DB_OPERATION), "decr"),
+                            equalTo(
+                                maybeStable(DB_STATEMENT), "decr " + key("test-async-decr") + " 5"),
+                            equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
+                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
+  }
+
+  @Test
+  void flush() throws Exception {
+    MemcachedClient memcached = getMemcached(singletonMap("test-flush", "flush test"));
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          assertThat(memcached.flush().get()).isTrue();
+          assertThat(memcached.get(key("test-flush"))).isNull();
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName("get")
                         .hasKind(SpanKind.CLIENT)
@@ -948,19 +971,20 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
                             equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(maybeStable(DB_STATEMENT), "get " + key("test-decr")),
+                            equalTo(maybeStable(DB_STATEMENT), "get " + key("test-flush")),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), experimental("hit")))));
+                            equalTo(stringKey("spymemcached.result"), experimental("miss")))));
   }
 
   @Test
-  void decrNonExistent() {
+  void testSanitizationDisabled() throws Exception {
     MemcachedClient memcached = getMemcached();
     testing.runWithSpan(
         "parent",
         () -> {
-          assertThat(memcached.decr(key("test-decr-non-existent"), 5)).isEqualTo(-1);
+          assertThat(memcached.set(key("test-sanitization"), EXPIRATION_SECONDS, "secret").get())
+              .isTrue();
         });
 
     testing.waitAndAssertTraces(
@@ -968,143 +992,21 @@ class SpymemcachedTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
-                    span.hasName("decr")
+                    span.hasName("set")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "decr"),
+                            equalTo(maybeStable(DB_OPERATION), "set"),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
-                                "decr " + key("test-decr-non-existent") + " 5"),
+                                "set "
+                                    + key("test-sanitization")
+                                    + " "
+                                    + EXPIRATION_SECONDS
+                                    + " secret"),
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
                             equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
-  }
-
-  @Test
-  void decrException() {
-    MemcachedClient memcached = getMemcached();
-    assertThatThrownBy(() -> memcached.decr(key("long key: " + longString()), 5))
-        .isInstanceOf(IllegalArgumentException.class);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("decr")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(
-                            new IllegalArgumentException("Key is too long (maxlen = 250)"))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                ERROR_TYPE,
-                                emitStableDatabaseSemconv()
-                                    ? "java.lang.IllegalArgumentException"
-                                    : null),
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "decr"),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                "decr " + key("long key: " + longString()) + " 5"))));
-  }
-
-  @Test
-  void incr() {
-    MemcachedClient memcached = getMemcached(singletonMap("test-incr", "100"));
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          /*
-           Memcached is funny in the way it handles incr/decr operations:
-           it needs values to be strings (with digits in them) and it returns actual long from decr/incr
-          */
-          assertThat(memcached.incr(key("test-incr"), 5)).isEqualTo(105);
-          assertThat(memcached.get(key("test-incr"))).isEqualTo("105");
-        });
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("incr")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "incr"),
-                            equalTo(maybeStable(DB_STATEMENT), "incr " + key("test-incr") + " 5"),
-                            equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211))),
-                span ->
-                    span.hasName("get")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(maybeStable(DB_STATEMENT), "get " + key("test-incr")),
-                            equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), experimental("hit")))));
-  }
-
-  @Test
-  void incrNonExistent() {
-    MemcachedClient memcached = getMemcached();
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          assertThat(memcached.incr(key("test-incr-non-existent"), 5)).isEqualTo(-1);
-        });
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("incr")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "incr"),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                "incr " + key("test-incr-non-existent") + " 5"),
-                            equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
-                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
-  }
-
-  @Test
-  void incrException() {
-    MemcachedClient memcached = getMemcached();
-    assertThatThrownBy(() -> memcached.incr(key("long key: " + longString()), 5))
-        .isInstanceOf(IllegalArgumentException.class);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("incr")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(
-                            new IllegalArgumentException("Key is too long (maxlen = 250)"))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                ERROR_TYPE,
-                                emitStableDatabaseSemconv()
-                                    ? "java.lang.IllegalArgumentException"
-                                    : null),
-                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "incr"),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                "incr " + key("long key: " + longString()) + " 5"))));
   }
 
   private static String key(String k) {
@@ -1115,20 +1017,13 @@ class SpymemcachedTest {
     return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 
-  private static String longString() {
-    char[] chars = new char[250];
-    Arrays.fill(chars, 's');
-    return new String(chars);
-  }
-
   private static BlockingQueue<Operation> getLockableQueue(ReentrantLock queueLock) {
     return new ArrayBlockingQueue<Operation>(DefaultConnectionFactory.DEFAULT_OP_QUEUE_LEN) {
-
       @Override
-      public int drainTo(Collection<? super Operation> c, int maxElements) {
+      public boolean offer(Operation o) {
         queueLock.lock();
         try {
-          return super.drainTo(c, maxElements);
+          return super.offer(o);
         } finally {
           queueLock.unlock();
         }

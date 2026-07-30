@@ -52,29 +52,53 @@ final class SpymemcachedQueryText {
 
   private static final String OPERATION_DELETE = "delete";
 
-  static String create(
-      String operationName, Class<?>[] parameterTypes, Object[] args, boolean sanitizationEnabled) {
-    int valueIndex =
-        OPERATIONS_WITH_VALUE.contains(operationName) ? lastArgumentIndex(parameterTypes) : -1;
+  static String create(String operationName, Object[] args, boolean sanitizationEnabled) {
+    int valueIndex = OPERATIONS_WITH_VALUE.contains(operationName) ? lastArgumentIndex(args) : -1;
 
     StringBuilder queryText = new StringBuilder(operationName);
-    for (int i = 0; i < args.length; i++) {
-      Object arg = args[i];
 
-      if (i == valueIndex) {
-        if (!append(queryText, sanitizationEnabled ? MASK : String.valueOf(arg))) {
+    // For append(long cas, String key, T val) and prepend(long cas, String key, T val),
+    // args[0] is the CAS value (Long) and args[1] is the key. Put key first to match
+    // Memcached convention and other operations like cas <key> <cas> <val>.
+    if (isAppendOrPrependWithCas(operationName, args)) {
+      appendArg(queryText, operationName, 1, args[1], valueIndex, sanitizationEnabled);
+      appendArg(queryText, operationName, 0, args[0], valueIndex, sanitizationEnabled);
+      for (int i = 2; i < args.length; i++) {
+        if (!appendArg(queryText, operationName, i, args[i], valueIndex, sanitizationEnabled)) {
           break;
         }
-        continue;
       }
-      if (isIgnored(operationName, parameterTypes, i, arg)) {
-        continue;
-      }
-      if (!appendKeys(queryText, arg)) {
+      return queryText.toString();
+    }
+
+    for (int i = 0; i < args.length; i++) {
+      if (!appendArg(queryText, operationName, i, args[i], valueIndex, sanitizationEnabled)) {
         break;
       }
     }
     return queryText.toString();
+  }
+
+  private static boolean isAppendOrPrependWithCas(String operationName, Object[] args) {
+    return ("append".equals(operationName) || "prepend".equals(operationName))
+        && args.length >= 2
+        && args[0] instanceof Long;
+  }
+
+  private static boolean appendArg(
+      StringBuilder queryText,
+      String operationName,
+      int index,
+      Object arg,
+      int valueIndex,
+      boolean sanitizationEnabled) {
+    if (index == valueIndex) {
+      return append(queryText, sanitizationEnabled ? MASK : String.valueOf(arg));
+    }
+    if (isIgnored(operationName, index, arg)) {
+      return true;
+    }
+    return appendKeys(queryText, arg);
   }
 
   /** Appends {@code arg}, expanding it if it holds the keys of a bulk operation. */
@@ -98,41 +122,23 @@ final class SpymemcachedQueryText {
     return append(queryText, String.valueOf(arg));
   }
 
-  private static boolean isIgnored(
-      String operationName, Class<?>[] parameterTypes, int index, Object arg) {
-    // transcoders are not part of the command that is sent to memcached. Whether a parameter is a
-    // transcoder is determined from the instrumented method's declared parameter type rather than
-    // the runtime value: a Transcoder parameter can legitimately be passed as null, and a stored
-    // value could otherwise happen to implement Transcoder itself, either of which would confuse a
-    // runtime `instanceof` check.
-    if (Transcoder.class.isAssignableFrom(parameterTypes[index])) {
+  private static boolean isIgnored(String operationName, int index, Object arg) {
+    if (arg instanceof Transcoder) {
       return true;
     }
-    // reading the keys of a bulk operation that was given an iterator would consume the iterator
-    // before the instrumented method gets to it, so those keys are left out
     if (arg instanceof Iterator) {
       return true;
     }
     // the deprecated delete(String key, int hold) overload ignores its int argument and delegates
     // to delete(key); the distinct delete(String key, long cas) overload takes a real cas value
     // that is sent to memcached, so only the int-typed parameter is dropped here
-    return OPERATION_DELETE.equals(operationName)
-        && index == 1
-        && parameterTypes[index] == int.class;
+    return OPERATION_DELETE.equals(operationName) && index == 1 && arg instanceof Integer;
   }
 
-  /**
-   * Returns the index of the last argument that ends up in the query text, or {@code -1}.
-   *
-   * <p>Only a trailing {@link Transcoder}-typed parameter is skipped here: operations that carry a
-   * value never legitimately declare an {@link Iterator}-typed parameter for that value, so
-   * treating it as ignorable (as {@link #isIgnored(String, Class[], int, Object)} does for bulk key
-   * operations) would cause the actual value to be mistaken for an earlier argument, e.g. the
-   * expiration in {@code set}.
-   */
-  private static int lastArgumentIndex(Class<?>[] parameterTypes) {
-    for (int i = parameterTypes.length - 1; i >= 0; i--) {
-      if (!Transcoder.class.isAssignableFrom(parameterTypes[i])) {
+  /** Returns the index of the last argument that ends up in the query text, or {@code -1}. */
+  private static int lastArgumentIndex(Object[] args) {
+    for (int i = args.length - 1; i >= 0; i--) {
+      if (args[i] != null && !(args[i] instanceof Transcoder)) {
         return i;
       }
     }

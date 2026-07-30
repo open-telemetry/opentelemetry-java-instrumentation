@@ -21,12 +21,12 @@ public abstract class SpymemcachedRequest {
       DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "spymemcached");
 
   public static SpymemcachedRequest create(
-      MemcachedConnection connection, String methodName, Class<?>[] parameterTypes, Object[] args) {
+      MemcachedConnection connection, String methodName, Object[] args) {
     String operationName = operationName(methodName);
     return new AutoValue_SpymemcachedRequest(
         connection,
         operationName,
-        SpymemcachedQueryText.create(operationName, parameterTypes, args, SANITIZATION_ENABLED));
+        SpymemcachedQueryText.create(operationName, args, SANITIZATION_ENABLED));
   }
 
   public abstract MemcachedConnection getConnection();
