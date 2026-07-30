@@ -60,19 +60,22 @@ public final class KafkaUtil {
       new ClassValue<Optional<Field>>() {
         @Override
         protected Optional<Field> computeValue(Class<?> holderClass) {
-          try {
-            Field field = holderClass.getDeclaredField("metadata");
+          for (Class<?> c = holderClass; c != null; c = c.getSuperclass()) {
             try {
-              field.setAccessible(true);
-            } catch (RuntimeException e) {
-              logReflectionFailureOnce(holderClass, e.toString());
-              return Optional.empty();
+              Field field = c.getDeclaredField("metadata");
+              try {
+                field.setAccessible(true);
+              } catch (RuntimeException e) {
+                logReflectionFailureOnce(holderClass, e.toString());
+                return Optional.empty();
+              }
+              return Optional.of(field);
+            } catch (NoSuchFieldException ignored) {
+              // try superclass
             }
-            return Optional.of(field);
-          } catch (NoSuchFieldException ignored) {
-            logReflectionFailureOnce(holderClass, "no 'metadata' field found");
-            return Optional.empty();
           }
+          logReflectionFailureOnce(holderClass, "no 'metadata' field found");
+          return Optional.empty();
         }
       };
 
@@ -275,6 +278,23 @@ public final class KafkaUtil {
   @Nullable
   private static Field metadataField(Class<?> holderClass) {
     return metadataFieldCache.get(holderClass).orElse(null);
+  }
+
+  @Nullable
+  static Metadata extractMetadataFromHolder(@Nullable Object holder) {
+    if (holder == null) {
+      return null;
+    }
+    Field field = metadataField(holder.getClass());
+    if (field == null) {
+      return null;
+    }
+    try {
+      return (Metadata) field.get(holder);
+    } catch (IllegalAccessException | ClassCastException e) {
+      logReflectionFailureOnce(holder.getClass(), e.toString());
+      return null;
+    }
   }
 
   @Nullable
