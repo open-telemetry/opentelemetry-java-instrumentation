@@ -430,8 +430,6 @@ groups:
       - ref: camel.processor
       - ref: camel.destination
 
-
-
   - id: metric.camel.processor.exchange.processing.duration.max
     metric_name: camel.processor.exchange.processing.duration.max
     type: metric
@@ -444,8 +442,6 @@ groups:
       - ref: camel.route
       - ref: camel.processor
       - ref: camel.destination
-
-
 
   - id: metric.camel.processor.exchange.processing.duration.mean
     metric_name: camel.processor.exchange.processing.duration.mean
@@ -460,8 +456,6 @@ groups:
       - ref: camel.processor
       - ref: camel.destination
 
-
-
   - id: metric.camel.processor.exchange.processing.duration.min
     metric_name: camel.processor.exchange.processing.duration.min
     type: metric
@@ -474,8 +468,6 @@ groups:
       - ref: camel.route
       - ref: camel.processor
       - ref: camel.destination
-
-
 
   - id: metric.camel.processor.exchange.processing.duration.last
     metric_name: camel.processor.exchange.processing.duration.last
@@ -490,8 +482,6 @@ groups:
       - ref: camel.processor
       - ref: camel.destination
 
-
-
   - id: metric.camel.processor.exchange.processing.duration.last_delta
     metric_name: camel.processor.exchange.processing.duration.last_delta
     type: metric
@@ -505,8 +495,6 @@ groups:
       - ref: camel.processor
       - ref: camel.destination
 
-
-
   - id: metric.camel.processor.exchange.processing.duration.sum
     metric_name: camel.processor.exchange.processing.duration.sum
     type: metric
@@ -519,8 +507,6 @@ groups:
       - ref: camel.route
       - ref: camel.processor
       - ref: camel.destination
-
-
 
   # Thread Pool Metrics
 
