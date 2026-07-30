@@ -40,7 +40,8 @@ class KafkaUtilTest {
 
   @Test
   void clusterIdFromMetadata_noClusterId_returnsNull() {
-    // Fresh Metadata with no update — fetch() returns the bootstrap cluster whose clusterId is null.
+    // Fresh Metadata with no update — fetch() returns the bootstrap cluster whose clusterId is
+    // null.
     Metadata metadata = new Metadata(0, Long.MAX_VALUE, false);
     assertThat(KafkaUtil.clusterIdFromMetadata(metadata)).isNull();
   }
