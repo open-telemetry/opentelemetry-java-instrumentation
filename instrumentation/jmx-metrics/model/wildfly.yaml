@@ -24,12 +24,26 @@ groups:
         examples:
           - "app.war"
       - id: wildfly.rollback.cause
-        type: string
+        type:
+          members:
+            - id: application
+              value: application
+              brief: Application rollback cause
+              stability: development
+            - id: resource
+              value: resource
+              brief: Resource rollback cause
+              stability: development
+            - id: system
+              value: system
+              brief: System rollback cause
+              stability: development
         stability: development
         brief: Wildfly transaction rollback cause
         examples:
           - "application"
           - "resource"
+          - "system"
 
   - id: metric.wildfly.network.io
     metric_name: wildfly.network.io
