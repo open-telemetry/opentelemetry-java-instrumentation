@@ -95,6 +95,7 @@ class SpanSuppressionStrategyTest {
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
     when(openTelemetry.getConfigProvider()).thenReturn(configProvider);
     when(configProvider.getInstrumentationConfig("common")).thenReturn(commonConfig);
+    when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
     when(commonConfig.getBoolean("v3_preview")).thenReturn(true);
 
     InstrumenterBuilder<String, String> builder =
