@@ -35,6 +35,10 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
     typeTransformer.applyAdviceToMethod(
         isPublic().and(named("close")).and(takesArguments(0)),
         getClass().getName() + "$CloseAdvice");
+
+    typeTransformer.applyAdviceToMethod(
+        isPublic().and(named("preRegister")).and(takesArguments(2)),
+        getClass().getName() + "$PreRegisterAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -61,6 +65,25 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.This BasicDataSource dataSource) {
       telemetry().unregisterMetrics(dataSource);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class PreRegisterAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This BasicDataSource dataSource, @Advice.Return ObjectName objectName) {
+      if (objectName == null) {
+        return;
+      }
+
+      String dataSourceName = objectName.getKeyProperty("name");
+      if (dataSourceName == null) {
+        dataSourceName = objectName.toString();
+      }
+
+      telemetry().unregisterMetrics(dataSource);
+      telemetry().registerMetrics(dataSource, dataSourceName);
     }
   }
 }
