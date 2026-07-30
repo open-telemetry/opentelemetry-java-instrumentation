@@ -42,9 +42,9 @@ final class TrieImpl<V> implements Trie<V> {
   static final class Node<V> {
     final char[] chars;
     final Node<V>[] children;
-    final V value;
+    @Nullable final V value;
 
-    Node(char[] chars, Node<V>[] children, V value) {
+    Node(char[] chars, Node<V>[] children, @Nullable V value) {
       this.chars = chars;
       this.children = children;
       this.value = value;
@@ -89,7 +89,7 @@ final class TrieImpl<V> implements Trie<V> {
 
   static final class NodeBuilder<V> {
     final Map<Character, NodeBuilder<V>> children = new HashMap<>();
-    V value;
+    @Nullable V value;
 
     Node<V> build() {
       int size = children.size();

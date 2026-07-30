@@ -44,8 +44,12 @@ public class DocGeneratorApplication {
       writer.write("# This file is generated and should not be manually edited.\n");
       writer.write("# The structure and contents are a work in progress and subject to change.\n");
       writer.write(
+          "# Common metrics and configurations are collected in the top-level `definitions` catalog;\n");
+      writer.write(
+          "# each module references them by id via `metric_refs` and `configuration_refs`.\n");
+      writer.write(
           "# For more information see: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13468\n\n");
-      writer.write("file_format: 0.5\n\n");
+      writer.write("file_format: 0.6\n\n");
       YamlHelper.generateInstrumentationYaml(modules, writer);
     }
 
