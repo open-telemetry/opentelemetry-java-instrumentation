@@ -6,9 +6,18 @@ groups:
     brief: ActiveMQ attributes
     attributes:
       - id: activemq.destination.type
-        type: string
+        type:
+          members:
+            - id: queue
+              value: "queue"
+              brief: Queue destination type
+              stability: development
+            - id: topic
+              value: "topic"
+              brief: Topic destination type
+              stability: development
         stability: development
-        brief: ActiveMQ destination type (queue or topic)
+        brief: ActiveMQ destination type
         examples:
           - "queue"
           - "topic"
