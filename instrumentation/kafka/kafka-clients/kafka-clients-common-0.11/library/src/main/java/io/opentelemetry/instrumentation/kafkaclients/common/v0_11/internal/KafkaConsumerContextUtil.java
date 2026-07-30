@@ -5,7 +5,11 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -17,6 +21,10 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
  * any time.
  */
 public final class KafkaConsumerContextUtil {
+  private static final ContextKey<Span> processSpanKey =
+      ContextKey.named("opentelemetry-kafka-process-span");
+  private static final ContextKey<Span> processParentSpanKey =
+      ContextKey.named("opentelemetry-kafka-process-parent-span");
   // these fields can be used for multiple instrumentations because of that we don't use a helper
   // class as field type
   private static final VirtualField<ConsumerRecord<?, ?>, Context> recordContextField =
@@ -27,6 +35,26 @@ public final class KafkaConsumerContextUtil {
       VirtualField.find(ConsumerRecords.class, Context.class);
   private static final VirtualField<ConsumerRecords<?, ?>, String[]> recordsConsumerInfoField =
       VirtualField.find(ConsumerRecords.class, String[].class);
+
+  public static Context withoutLeakedProcessSpan(Context context) {
+    if (!emitStableMessagingSemconv()) {
+      return context;
+    }
+
+    Span currentSpan = Span.fromContext(context);
+    if (currentSpan != context.get(processSpanKey)) {
+      return context;
+    }
+
+    Span parentSpan = context.get(processParentSpanKey);
+    return context.with(parentSpan != null ? parentSpan : Span.getInvalid());
+  }
+
+  public static Context withProcessParentSpan(Context context, Context parentContext) {
+    return context
+        .with(processSpanKey, Span.fromContext(context))
+        .with(processParentSpanKey, Span.fromContext(parentContext));
+  }
 
   public static KafkaConsumerContext get(ConsumerRecord<?, ?> records) {
     Context receiveContext = recordContextField.get(records);
