@@ -8,7 +8,7 @@ groups:
       - id: jetty.context
         type: string
         stability: development
-        brief: Web application context path
+        brief: Web application context path.
         examples:
           - "/myapp"
 
@@ -16,7 +16,7 @@ groups:
     metric_name: jetty.thread.count
     stability: development
     type: metric
-    brief: The current number of threads
+    brief: The current number of threads.
     unit: "{thread}"
     instrument: updowncounter
 
@@ -24,7 +24,7 @@ groups:
     metric_name: jetty.thread.limit
     stability: development
     type: metric
-    brief: The configured maximum number of threads in the pool
+    brief: The configured maximum number of threads in the pool.
     unit: "{thread}"
     instrument: updowncounter
 
@@ -32,7 +32,7 @@ groups:
     metric_name: jetty.thread.idle.count
     stability: development
     type: metric
-    brief: The current number of idle threads
+    brief: The current number of idle threads.
     unit: "{thread}"
     instrument: updowncounter
 
@@ -48,7 +48,7 @@ groups:
     metric_name: jetty.thread.queue.size
     stability: development
     type: metric
-    brief: The current job queue size
+    brief: The current job queue size.
     unit: "{thread}"
     instrument: updowncounter
 
@@ -56,7 +56,7 @@ groups:
     metric_name: jetty.session.created.count
     stability: development
     type: metric
-    brief: The total number of created sessions
+    brief: The total number of created sessions.
     unit: "{session}"
     instrument: counter
     attributes:
@@ -66,7 +66,7 @@ groups:
     metric_name: jetty.session.duration.sum
     stability: development
     type: metric
-    brief: The cumulated session duration
+    brief: The cumulated session duration.
     unit: s
     instrument: counter
     attributes:
@@ -84,7 +84,7 @@ groups:
     metric_name: jetty.session.count
     stability: development
     type: metric
-    brief: Current number of active sessions
+    brief: Current number of active sessions.
     unit: "{session}"
     instrument: updowncounter
     attributes:
