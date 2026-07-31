@@ -37,8 +37,8 @@ public class TomcatConnectionPoolMetrics {
           // otel.scope.name="io.opentelemetry.tomcat-jdbc" continue to work
           : "io.opentelemetry.tomcat-jdbc";
   private static final String DEFAULT_POOL_NAME = "tomcat-jdbc";
-  private static final VirtualField<PoolProperties, String> initialPoolNameField =
-      VirtualField.find(PoolProperties.class, String.class);
+  private static final VirtualField<PoolProperties, Boolean> configuredPoolNameField =
+      VirtualField.find(PoolProperties.class, Boolean.class);
   private static final Meter meter = buildMeter();
 
   // a weak map does not make sense here because each Meter holds a reference to the dataSource
@@ -49,6 +49,10 @@ public class TomcatConnectionPoolMetrics {
 
   public static void registerMetrics(DataSourceProxy dataSource) {
     dataSourceMetrics.computeIfAbsent(dataSource, TomcatConnectionPoolMetrics::createInstruments);
+  }
+
+  public static void markPoolNameAsConfigured(PoolProperties poolProperties) {
+    configuredPoolNameField.set(poolProperties, true);
   }
 
   @SuppressWarnings("deprecation") // deprecated overload keeps the legacy scope by default
@@ -85,8 +89,7 @@ public class TomcatConnectionPoolMetrics {
   private static String getPoolName(DataSourceProxy dataSource) {
     PoolConfiguration poolProperties = dataSource.getPoolProperties();
     String configuredPoolName = dataSource.getPoolName();
-    if (configuredPoolName != null
-        && !isDefaultTomcatPoolName(poolProperties, configuredPoolName)) {
+    if (configuredPoolName != null && isPoolNameConfigured(poolProperties)) {
       return configuredPoolName;
     }
 
@@ -117,14 +120,12 @@ public class TomcatConnectionPoolMetrics {
     return poolName.length() > 0 ? poolName.toString() : DEFAULT_POOL_NAME;
   }
 
-  private static boolean isDefaultTomcatPoolName(
-      PoolConfiguration poolProperties, String poolName) {
+  private static boolean isPoolNameConfigured(PoolConfiguration poolProperties) {
     if (!(poolProperties instanceof PoolProperties)) {
-      return false;
+      return true;
     }
 
-    String initialPoolName = initialPoolNameField.get((PoolProperties) poolProperties);
-    return poolName.equals(initialPoolName);
+    return Boolean.TRUE.equals(configuredPoolNameField.get((PoolProperties) poolProperties));
   }
 
   public static void unregisterMetrics(DataSourceProxy dataSource) {

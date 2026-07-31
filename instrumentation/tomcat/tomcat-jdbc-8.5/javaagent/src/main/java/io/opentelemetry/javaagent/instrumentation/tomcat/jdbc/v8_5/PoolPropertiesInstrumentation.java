@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.jdbc.v8_5;
 
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -25,16 +25,17 @@ class PoolPropertiesInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(
+        isPublic().and(named("setName")).and(takesArguments(String.class)),
+        getClass().getName() + "$SetNameAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class ConstructorAdvice {
+  public static class SetNameAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This PoolProperties poolProperties) {
-      VirtualField.find(PoolProperties.class, String.class)
-          .set(poolProperties, poolProperties.getName());
+      TomcatConnectionPoolMetrics.markPoolNameAsConfigured(poolProperties);
     }
   }
 }

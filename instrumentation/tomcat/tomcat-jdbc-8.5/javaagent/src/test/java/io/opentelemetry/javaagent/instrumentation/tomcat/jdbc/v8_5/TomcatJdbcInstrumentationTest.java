@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetrics
 import java.sql.Connection;
 import java.sql.SQLException;
 import org.apache.tomcat.jdbc.pool.DataSource;
-import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -93,12 +92,9 @@ class TomcatJdbcInstrumentationTest {
   }
 
   @Test
-  void shouldUseConfiguredPoolNameThatMatchesAnotherPoolPropertiesDefaultName()
-      throws SQLException {
+  void shouldUseConfiguredPoolNameThatMatchesDefaultName() throws SQLException {
     DataSource dataSource = newDataSource();
-    String initialPoolName = dataSource.getPoolProperties().getName();
-    String poolName = new PoolProperties().getName();
-    assertThat(poolName).isNotEqualTo(initialPoolName);
+    String poolName = dataSource.getPoolProperties().getName();
 
     dataSource.setName(poolName);
 
@@ -113,12 +109,15 @@ class TomcatJdbcInstrumentationTest {
 
   private static void assertConnectionPoolMetrics(DataSource dataSource, String poolName)
       throws SQLException {
-    dataSource.createPool();
-    Connection connection = dataSource.getConnection();
-    connection.close();
-    assertConnectionPoolMetrics(poolName);
-    dataSource.close();
-    testing.clearData();
+    try {
+      dataSource.createPool();
+      Connection connection = dataSource.getConnection();
+      connection.close();
+      assertConnectionPoolMetrics(poolName);
+    } finally {
+      dataSource.close();
+      testing.clearData();
+    }
     assertNoConnectionPoolMetrics();
   }
 
