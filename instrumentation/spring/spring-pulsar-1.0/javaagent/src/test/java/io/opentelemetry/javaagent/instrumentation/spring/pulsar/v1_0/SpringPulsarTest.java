@@ -38,7 +38,7 @@ class SpringPulsarTest extends AbstractSpringPulsarTest {
                       span.hasName("process " + OTEL_TOPIC)
                           .hasKind(CONSUMER)
                           .hasParent(trace.getSpan(1))
-                          .hasTotalRecordedLinks(0)
+                          .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
                           .hasAttributesSatisfyingExactly(processAttributes()),
                   span -> span.hasName("consumer").hasParent(trace.getSpan(2))),
           trace ->

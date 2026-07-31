@@ -11,6 +11,7 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
 import io.opentelemetry.instrumentation.spring.pulsar.v1_0.AbstractSpringPulsarTest;
+import io.opentelemetry.sdk.trace.data.LinkData;
 
 class SpringPulsarSuppressReceiveSpansTest extends AbstractSpringPulsarTest {
 
@@ -28,15 +29,20 @@ class SpringPulsarSuppressReceiveSpansTest extends AbstractSpringPulsarTest {
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(publishAttributes()),
-                span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process " + OTEL_TOPIC
-                                : OTEL_TOPIC + " process")
-                        .hasKind(CONSUMER)
-                        .hasParent(trace.getSpan(1))
-                        .hasTotalRecordedLinks(0)
-                        .hasAttributesSatisfyingExactly(processAttributes()),
+                span -> {
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "process " + OTEL_TOPIC
+                              : OTEL_TOPIC + " process")
+                      .hasKind(CONSUMER)
+                      .hasParent(trace.getSpan(1))
+                      .hasAttributesSatisfyingExactly(processAttributes());
+                  if (emitStableMessagingSemconv()) {
+                    span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                  } else {
+                    span.hasTotalRecordedLinks(0);
+                  }
+                },
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))),
         trace ->
             trace.hasSpansSatisfyingExactly(
