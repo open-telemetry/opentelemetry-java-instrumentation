@@ -11,7 +11,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_CLIENT_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_NAMESPACE;
 
-import apache.rocketmq.v2.ReceiveMessageRequest;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -20,26 +19,26 @@ import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.message.MessageView;
 
 class RocketMqConsumerReceiveAttributeExtractor
-    implements AttributesExtractor<ReceiveMessageRequest, List<MessageView>> {
+    implements AttributesExtractor<RocketMqReceiveRequest, List<MessageView>> {
 
   @Override
   public void onStart(
-      AttributesBuilder attributes, Context parentContext, ReceiveMessageRequest request) {}
+      AttributesBuilder attributes, Context parentContext, RocketMqReceiveRequest request) {}
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
-      ReceiveMessageRequest request,
+      RocketMqReceiveRequest request,
       @Nullable List<MessageView> messageViews,
       @Nullable Throwable error) {
-    String consumerGroup = request.getGroup().getName();
+    String consumerGroup = request.getRequest().getGroup().getName();
     if (emitStableMessagingSemconv()) {
       attributes.put(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup);
       attributes.put(
           MESSAGING_ROCKETMQ_NAMESPACE,
-          request.getMessageQueue().getTopic().getResourceNamespace());
+          request.getRequest().getMessageQueue().getTopic().getResourceNamespace());
     }
     if (emitOldMessagingSemconv()) {
       attributes.put(MESSAGING_ROCKETMQ_CLIENT_GROUP, consumerGroup);

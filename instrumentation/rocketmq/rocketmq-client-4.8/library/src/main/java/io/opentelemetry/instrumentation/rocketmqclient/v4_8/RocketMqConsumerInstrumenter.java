@@ -49,7 +49,7 @@ final class RocketMqConsumerInstrumenter {
       }
     } else {
       RocketMqConsumerRequest request =
-          new RocketMqConsumerRequest(msgs.get(0), consumerGroup, batchSize, namespace);
+          new RocketMqConsumerRequest(msgs, consumerGroup, batchSize, namespace);
       boolean receiveStarted = batchReceiveInstrumenter.shouldStart(parentContext, request);
       Context receiveContext =
           receiveStarted ? batchReceiveInstrumenter.start(parentContext, request) : parentContext;
