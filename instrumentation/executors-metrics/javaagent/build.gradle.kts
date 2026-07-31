@@ -9,10 +9,10 @@ muzzle {
 }
 
 dependencies {
-  bootstrap(project(":instrumentation:executors:bootstrap"))
+  bootstrap(project(":instrumentation:executors-metrics:bootstrap"))
 
   testImplementation(project(":instrumentation:executors:testing"))
-  testCompileOnly(project(":instrumentation:executors:bootstrap"))
+  testCompileOnly(project(":instrumentation:executors-metrics:bootstrap"))
   testCompileOnly(project(":javaagent-bootstrap"))
 }
 

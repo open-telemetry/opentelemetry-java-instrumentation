@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.javaagent.bootstrap.executors.ThreadPoolExecutorMetrics;
+import io.opentelemetry.javaagent.bootstrap.executors.metrics.ThreadPoolExecutorMetrics;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Set;

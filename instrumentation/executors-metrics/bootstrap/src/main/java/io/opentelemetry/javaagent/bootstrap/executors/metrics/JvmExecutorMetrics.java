@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.bootstrap.executors;
+package io.opentelemetry.javaagent.bootstrap.executors.metrics;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
