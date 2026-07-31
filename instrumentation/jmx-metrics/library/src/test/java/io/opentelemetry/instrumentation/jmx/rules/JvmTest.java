@@ -44,6 +44,8 @@ class JvmTest extends TargetSystemTest {
     // use explicit configuration files for JVM as it's disabled from automatic detection
     // to prevent conflicts with runtime-telemetry
     config.put("otel.jmx.config", yamlFiles.stream().map(path -> "/" + path).collect(joining(",")));
+    // disable auto metrics for JVM otherwise we also get tomcat metrics
+    config.put("otel.jmx.auto.enabled", "false");
 
     jvmArgs.addAll(javaPropertiesToJvmArgs(config));
 
