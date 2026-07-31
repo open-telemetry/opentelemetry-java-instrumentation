@@ -444,11 +444,11 @@ class SemconvStabilityTest {
             preview("messaging"),
             SemconvMode.V1_EXPERIMENTAL),
         argumentSet(
-            "v3 with explicit preview dual emit",
+            "v3 ignores explicit preview dual emit",
             true,
             noStableOptIn(),
             preview("messaging/dup"),
-            SemconvMode.V1_EXPERIMENTAL.withDualEmit()));
+            SemconvMode.V1_EXPERIMENTAL));
   }
 
   @SafeVarargs
