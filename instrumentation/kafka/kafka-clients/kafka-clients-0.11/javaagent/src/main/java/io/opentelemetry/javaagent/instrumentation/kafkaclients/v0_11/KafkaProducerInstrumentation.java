@@ -113,15 +113,15 @@ class KafkaProducerInstrumentation implements TypeInstrumentation {
       String bootstrapServers =
           KafkaUtil.extractBootstrapServers(
               producerConfig.getList(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
-      boolean shouldPropagate =
-          PRODUCER_PROPAGATION_ENABLED && KafkaPropagation.shouldPropagate(apiVersions);
+      // read the mutable api versions state once, so that both decisions below are consistent
+      boolean canPropagateHeaders = KafkaPropagation.shouldPropagate(apiVersions);
+      boolean shouldPropagate = PRODUCER_PROPAGATION_ENABLED && canPropagateHeaders;
       KafkaProducerRequest request =
           KafkaProducerRequest.create(
               record,
               clientId,
               bootstrapServers,
-              PRODUCER_SPAN_CONTEXT_PROPAGATION_ENABLED
-                  && KafkaPropagation.shouldPropagate(apiVersions));
+              PRODUCER_SPAN_CONTEXT_PROPAGATION_ENABLED && canPropagateHeaders);
       AdviceScope adviceScope = AdviceScope.start(request);
       if (adviceScope == null) {
         return new Object[] {null, record, callback};

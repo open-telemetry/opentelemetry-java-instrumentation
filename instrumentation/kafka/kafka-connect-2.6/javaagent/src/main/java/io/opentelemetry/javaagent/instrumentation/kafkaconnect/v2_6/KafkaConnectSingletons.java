@@ -35,7 +35,7 @@ public class KafkaConnectSingletons {
                 MessagingSpanNameExtractor.create(
                     new KafkaConnectAttributesGetter(), MessagingOperationType.PROCESS))
             .addAttributesExtractor(
-                MessagingAttributesExtractor.builderForOperationType(
+                MessagingAttributesExtractor.builder(
                         new KafkaConnectAttributesGetter(), MessagingOperationType.PROCESS)
                     .build())
             .addSpanLinksExtractor(spanLinksExtractor);
