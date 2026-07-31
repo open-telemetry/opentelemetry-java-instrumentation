@@ -293,11 +293,16 @@ public final class AgentInitializer {
       return moduleName.startsWith("jdk.") || moduleName.startsWith("java.");
     }
 
-    // known exception for glassfish/payara application server
-    if (first.startsWith("com.sun.enterprise.glassfish.")) {
-      return false;
-    }
-
-    return first.startsWith("com.sun.") || first.startsWith("sun.") || first.startsWith("jdk.");
+    return first.startsWith("com.sun.tools.")
+        || first.startsWith("com.sun.corba.se.")
+        || first.startsWith("com.sun.javafx.tools.")
+        || first.startsWith("com.sun.java.util.jar.pack.")
+        || first.startsWith("sun.applet.")
+        || first.startsWith("sun.jvm.hotspot.")
+        || first.startsWith("sun.rmi.")
+        || first.startsWith("sun.security.tools.")
+        || first.startsWith("sun.tools.")
+        || first.startsWith("jdk.jfr.internal.tool.")
+        || first.startsWith("jdk.nashorn.tools.");
   }
 }
