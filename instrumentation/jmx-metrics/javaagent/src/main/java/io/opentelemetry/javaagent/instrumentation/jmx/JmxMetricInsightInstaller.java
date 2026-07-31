@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jmx;
 
+import static io.opentelemetry.instrumentation.jmx.internal.JmxTelemetryRules.locateRulesForSystem;
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
@@ -51,9 +52,8 @@ public class JmxMetricInsightInstaller implements AgentListener {
           .map(Paths::get)
           .forEach(path -> addFileRules(path, jmx));
 
-      List<String> targets = config
-          .get("target")
-          .getScalarList("system", String.class, emptyList());
+      List<String> targets =
+          config.get("target").getScalarList("system", String.class, emptyList());
 
       Set<String> rules = new HashSet<>();
 
@@ -61,7 +61,30 @@ public class JmxMetricInsightInstaller implements AgentListener {
       ClassLoader classLoader = JmxTelemetryBuilder.class.getClassLoader();
       targets.stream()
           .map(target -> handleDeprecatedTargets(target, AgentCommonConfig.get().isV3Preview()))
-          .forEach(target -> rules.addAll(JmxTelemetryRules.locateRulesForSystem(classLoader, target, true)));
+          .forEach(
+              target -> {
+                Set<String> resources = locateRulesForSystem(classLoader,
+                    target, true);
+                if (resources.isEmpty()) {
+                  logger.log(SEVERE, "No JMX rules found for target system " + target);
+                }
+                rules.addAll(resources);
+              });
+
+      // load embedded rules if "auto" mode is enabled
+      DeclarativeConfigProperties autoConfig = config.get("auto");
+      boolean autoEnabled =autoConfig.getBoolean("enabled", false);
+      if(autoEnabled){
+        Set<String> allSystems = new HashSet<>(JmxTelemetryRules.getSupportedSystems());
+        // hasn't been moved to library yet, thus not included
+        allSystems.add("experimental-kafka-broker");
+        // should not be included as it overlaps with runtime-telemetry
+        allSystems.remove("jvm");
+
+        allSystems.stream()
+            .map(system -> locateRulesForSystem(classLoader, system, true))
+            .forEach(rules::addAll);
+      }
 
       rules.forEach(rule -> addClasspathRules(classLoader, rule, jmx));
 
@@ -78,7 +101,8 @@ public class JmxMetricInsightInstaller implements AgentListener {
     }
   }
 
-  private static void addClasspathRules(ClassLoader classLoader, String resource, JmxTelemetryBuilder builder) {
+  private static void addClasspathRules(
+      ClassLoader classLoader, String resource, JmxTelemetryBuilder builder) {
     try (InputStream input = classLoader.getResourceAsStream(resource)) {
       if (input == null) {
         logger.log(SEVERE, "JMX configuration not found on classpath " + resource);
@@ -91,8 +115,8 @@ public class JmxMetricInsightInstaller implements AgentListener {
     }
   }
 
-  private static String handleDeprecatedTargets(String target, boolean v3Preview){
-    if(target.equals("kafka-broker") && !v3Preview){
+  private static String handleDeprecatedTargets(String target, boolean v3Preview) {
+    if (target.equals("kafka-broker") && !v3Preview) {
       logger.log(
           WARNING,
           "The kafka-broker JMX target system has been renamed to experimental-kafka-broker.");
