@@ -27,10 +27,7 @@ public final class KafkaProducerRequest {
   public static KafkaProducerRequest create(
       ProducerRecord<?, ?> record, Producer<?, ?> producer, @Nullable String bootstrapServers) {
     return new KafkaProducerRequest(
-        record,
-        extractClientId(producer),
-        bootstrapServers,
-        KafkaUtil.getClusterId(producer));
+        record, extractClientId(producer), bootstrapServers, KafkaUtil.getClusterId(producer));
   }
 
   public static KafkaProducerRequest create(
