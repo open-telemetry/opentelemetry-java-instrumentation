@@ -247,7 +247,7 @@ class SpringRabbitMqTest {
                             ip,
                             true,
                             testHeaders));
-                verifyLink(span, null);
+                verifyLink(span, emitStableMessagingSemconv() ? producerSpan : null);
               },
               // created by spring-rabbit instrumentation
               span -> {
@@ -264,7 +264,7 @@ class SpringRabbitMqTest {
                             null,
                             emitStableMessagingSemconv(),
                             testHeaders));
-                verifyLink(span, null);
+                verifyLink(span, emitStableMessagingSemconv() ? producerSpan : null);
               },
               span -> span.hasName("consumer").hasParent(springProcessSpan));
         },

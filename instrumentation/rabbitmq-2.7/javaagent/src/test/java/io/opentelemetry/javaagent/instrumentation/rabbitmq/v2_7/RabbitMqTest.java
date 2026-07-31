@@ -691,7 +691,13 @@ class RabbitMqTest extends AbstractRabbitMqTest {
 
     span.hasKind(expectedSpanKind(operation));
 
-    verifyParentAndLink(span, parentSpan, linkSpan);
+    SpanData effectiveLinkSpan = linkSpan;
+    if (effectiveLinkSpan == null && emitStableMessagingSemconv() && "process".equals(operation)) {
+      // the process span links the message creation context, which is also its parent here
+      effectiveLinkSpan = parentSpan;
+    }
+
+    verifyParentAndLink(span, parentSpan, effectiveLinkSpan);
 
     if (exception != null) {
       verifyException(span, exception, errorMsg);
