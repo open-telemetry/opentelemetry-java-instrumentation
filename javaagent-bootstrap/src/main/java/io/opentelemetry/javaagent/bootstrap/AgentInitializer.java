@@ -58,10 +58,12 @@ public final class AgentInitializer {
     // JAVA_TOOL_OPTIONS or _JAVA_OPTIONS globally, and we don't want to instrument those tools.
     // opt-in is still possible with an explicit otel.javaagent.enabled=true in system properties,
     // java agent arguments or the OTEL_JAVAAGENT_ENABLED environment variable
-    String jdkToolCommand = fromPremain ? jdkToolCommand() : null;
-    if (fromPremain && isJdkToolMainClass(jdkToolCommand)) {
+    String command = fromPremain ? getJvmCommand() : null;
+    if (fromPremain && isJdkToolMainClass(command)) {
       System.err.println(
-          "JDK tool detected, agent will not be started. To override this behavior, set"
+          "JDK tool detected: "
+              + command
+              + ", agent will not be started. To override this behavior, set"
               + " otel.javaagent.enabled=true as an agent argument or system property, or"
               + " OTEL_JAVAAGENT_ENABLED=true as an environment variable");
       return;
@@ -116,7 +118,13 @@ public final class AgentInitializer {
         });
   }
 
-  private static String jdkToolCommand() {
+  /**
+   * Get the command string that started this JVM.
+   *
+   * @return command string, {@literal null} when unable to retrieve or command check is bypassed
+   */
+  @Nullable
+  private static String getJvmCommand() {
     return doPrivileged(
         new PrivilegedAction<String>() {
           @Override
