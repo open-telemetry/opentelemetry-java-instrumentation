@@ -389,6 +389,7 @@ class TargetSystemTest {
     Set<String> rulesForSystem =
         JmxTelemetryRules.locateRulesForSystem(
             TargetSystemTest.class.getClassLoader(), system, true);
+    assertThat(rulesForSystem).isNotEmpty();
     rulesForSystem.forEach(this::validateYamlSyntax);
     return rulesForSystem;
   }
