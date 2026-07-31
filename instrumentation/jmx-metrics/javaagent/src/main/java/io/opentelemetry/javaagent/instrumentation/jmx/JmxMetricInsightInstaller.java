@@ -15,6 +15,7 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
+import io.opentelemetry.instrumentation.jmx.internal.JmxTelemetryRules;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -23,6 +24,9 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /** An {@link AgentListener} that enables JMX metrics during agent startup. */
@@ -47,10 +51,19 @@ public class JmxMetricInsightInstaller implements AgentListener {
           .map(Paths::get)
           .forEach(path -> addFileRules(path, jmx));
 
-      config
+      List<String> targets = config
           .get("target")
-          .getScalarList("system", String.class, emptyList())
-          .forEach(target -> addClasspathRules(target, jmx));
+          .getScalarList("system", String.class, emptyList());
+
+      Set<String> rules = new HashSet<>();
+
+      // load rules for selected system(s)
+      ClassLoader classLoader = JmxTelemetryBuilder.class.getClassLoader();
+      targets.stream()
+          .map(target -> handleDeprecatedTargets(target, AgentCommonConfig.get().isV3Preview()))
+          .forEach(target -> rules.addAll(JmxTelemetryRules.locateRulesForSystem(classLoader, target, true)));
+
+      rules.forEach(rule -> addClasspathRules(classLoader, rule, jmx));
 
       jmx.build().start();
     }
@@ -65,9 +78,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
     }
   }
 
-  private static void addClasspathRules(String target, JmxTelemetryBuilder builder) {
-    ClassLoader classLoader = JmxTelemetryBuilder.class.getClassLoader();
-    String resource = targetSystemResource(target, AgentCommonConfig.get().isV3Preview());
+  private static void addClasspathRules(ClassLoader classLoader, String resource, JmxTelemetryBuilder builder) {
     try (InputStream input = classLoader.getResourceAsStream(resource)) {
       if (input == null) {
         logger.log(SEVERE, "JMX configuration not found on classpath " + resource);
@@ -80,19 +91,19 @@ public class JmxMetricInsightInstaller implements AgentListener {
     }
   }
 
-  private static String targetSystemResource(String target, boolean v3Preview) {
-    if (target.equals("kafka-broker") && !v3Preview) {
+  private static String handleDeprecatedTargets(String target, boolean v3Preview){
+    if(target.equals("kafka-broker") && !v3Preview){
       logger.log(
           WARNING,
           "The kafka-broker JMX target system has been renamed to experimental-kafka-broker.");
-      return "jmx/rules/experimental-kafka-broker.yaml";
+      return "experimental-kafka-broker";
     }
     if (target.equals("kafka-connect") && !v3Preview) {
       logger.log(
           WARNING,
           "The kafka-connect JMX target system has been renamed to experimental-kafka-connect.");
-      return "jmx/rules/experimental-kafka-connect.yaml";
+      return "experimental-kafka-connect";
     }
-    return String.format("jmx/rules/%s.yaml", target);
+    return target;
   }
 }

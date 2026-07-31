@@ -3,7 +3,6 @@ package io.opentelemetry.instrumentation.jmx.internal;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,6 +14,8 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class JmxTelemetryRulesTest {
+
+  private static final Path YAML_ROOT_FOLDER = Paths.get("src", "main", "resources", "jmx", "rules");
 
   @Test
   public void testGetSupportedSystems() throws IOException {
@@ -47,7 +48,7 @@ public class JmxTelemetryRulesTest {
   }
 
   Set<String> getYamlFilesFromFileSystem() throws IOException {
-    Path rulesRoot = getYamlRootFolder();
+    Path rulesRoot = YAML_ROOT_FOLDER;
     try (Stream<Path> stream = Files.walk(rulesRoot)){
       return stream
           .filter(Files::isRegularFile)
@@ -55,18 +56,5 @@ public class JmxTelemetryRulesTest {
           .map(Path::toString)
           .collect(Collectors.toSet());
     }
-  }
-
-
-  private static Path getYamlRootFolder(){
-    URL resource = JmxTelemetryRulesTest.class.getClassLoader()
-        .getResource(JmxTelemetryRules.class.getName().replace(".", "/") + ".class");
-    assertThat(resource).isNotNull();
-    Path path = Paths.get(resource.getPath());
-    while(path != null && !path.equals(path.getRoot()) && !path.endsWith("library")){
-      path = path.getParent();
-    }
-    assertThat(path).isNotNull();
-    return path.resolve(Paths.get("src", "main", "resources", "jmx", "rules"));
   }
 }
