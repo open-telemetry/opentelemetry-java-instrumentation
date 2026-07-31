@@ -34,8 +34,10 @@ public class MessagingProcessInstrumenterFactory {
             SpanContext producerSpanContext =
                 Span.fromContext(propagator.extract(parentContext, request, getter))
                     .getSpanContext();
-            if (parentSpanContext.isValid()
-                && producerSpanContext.isValid()
+            // the creation context is linked even when it ends up being this span's parent, which
+            // happens when there is no ambient span; semconv asks for a link to the creation
+            // context for every message the span accounts for
+            if (producerSpanContext.isValid()
                 && (!producerSpanContext.getTraceId().equals(parentSpanContext.getTraceId())
                     || !producerSpanContext.getSpanId().equals(parentSpanContext.getSpanId()))) {
               spanLinks.addLink(producerSpanContext);

@@ -53,7 +53,7 @@ class MessagingProcessInstrumenterFactoryTest {
   static final OpenTelemetryExtension otelTesting = OpenTelemetryExtension.create();
 
   @Test
-  void stableUsesProducerAsParentWithoutLink() {
+  void stableUsesProducerAsParentAndLinksIt() {
     assumeTrue(emitStableMessagingSemconv());
     Instrumenter<Map<String, String>, Void> instrumenter =
         MessagingProcessInstrumenterFactory.create(
@@ -78,7 +78,7 @@ class MessagingProcessInstrumenterFactoryTest {
                             .hasKind(SpanKind.CONSUMER)
                             .hasTraceId(producer.getTraceId())
                             .hasParentSpanId(producer.getSpanId())
-                            .hasLinks()));
+                            .hasLinks(LinkData.create(producer))));
   }
 
   @Test
