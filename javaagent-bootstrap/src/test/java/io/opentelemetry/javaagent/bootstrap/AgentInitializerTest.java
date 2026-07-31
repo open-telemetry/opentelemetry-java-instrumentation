@@ -123,7 +123,9 @@ class AgentInitializerTest {
         "myapp/com.example.Main arg1 arg2",
         "/path/to/application.jar arg1",
         // glassfish/payara application server
-        "com.sun.enterprise.glassfish.bootstrap.ASMain"
+        "com.sun.enterprise.glassfish.bootstrap.ASMain",
+        // openmq broker (imqbrokerd), shipped with glassfish/payara
+        "com.sun.messaging.jmq.jmsserver.Broker"
       })
   void isJdkToolMainClass_false(String sunJavaCommand) {
     assertThat(AgentInitializer.isJdkToolMainClass(sunJavaCommand)).isFalse();
