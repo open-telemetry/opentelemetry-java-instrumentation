@@ -16,11 +16,13 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -111,6 +113,54 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                                   equalTo(MESSAGING_DESTINATION_NAME, topic),
                                                   equalTo(SERVER_ADDRESS, brokerHost),
                                                   equalTo(SERVER_PORT, brokerPort))))));
+      testing.waitAndAssertMetrics(
+          INSTRUMENTATION_NAME,
+          "messaging.client.sent.messages",
+          metrics ->
+              metrics.satisfiesExactly(
+                  metric ->
+                      assertThat(metric)
+                          .hasUnit("{message}")
+                          .hasDescription(
+                              "Number of messages producer attempted to send to the broker.")
+                          .hasLongSumSatisfying(
+                              sum ->
+                                  sum.hasPointsSatisfying(
+                                      point ->
+                                          point
+                                              .hasValue(1)
+                                              .hasAttributesSatisfyingExactly(
+                                                  equalTo(MESSAGING_OPERATION_NAME, "publish"),
+                                                  equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                  equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                  equalTo(SERVER_ADDRESS, brokerHost),
+                                                  equalTo(SERVER_PORT, brokerPort))))));
+      // the consumer records this instrument as well, so only the publish point is checked here
+      testing.waitAndAssertMetrics(
+          INSTRUMENTATION_NAME,
+          "messaging.client.operation.duration",
+          metrics ->
+              metrics.satisfiesExactly(
+                  metric ->
+                      assertThat(metric)
+                          .hasUnit("s")
+                          .hasDescription(
+                              "Duration of messaging operation initiated by a producer or consumer client.")
+                          .satisfies(
+                              data ->
+                                  assertThat(data.getHistogramData().getPoints())
+                                      .anySatisfy(
+                                          point ->
+                                              assertThat(point.getAttributes())
+                                                  .isEqualTo(
+                                                      Attributes.builder()
+                                                          .put(MESSAGING_OPERATION_NAME, "publish")
+                                                          .put(MESSAGING_SYSTEM, "pulsar")
+                                                          .put(MESSAGING_DESTINATION_NAME, topic)
+                                                          .put(MESSAGING_OPERATION_TYPE, "send")
+                                                          .put(SERVER_ADDRESS, brokerHost)
+                                                          .put(SERVER_PORT, brokerPort)
+                                                          .build())))));
     }
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
