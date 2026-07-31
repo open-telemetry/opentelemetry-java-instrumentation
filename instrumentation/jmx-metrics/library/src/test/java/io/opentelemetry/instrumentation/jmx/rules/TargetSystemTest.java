@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.rules;
 
+import static io.opentelemetry.instrumentation.jmx.internal.JmxTelemetryRules.locateRulesForSystem;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -19,7 +20,6 @@ import com.linecorp.armeria.testing.junit5.server.ServerExtension;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
-import io.opentelemetry.instrumentation.jmx.internal.JmxTelemetryRules;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
@@ -387,8 +387,7 @@ class TargetSystemTest {
 
   protected Set<String> getAndValidateYamlFilesForSystem(String system) {
     Set<String> rulesForSystem =
-        JmxTelemetryRules.locateRulesForSystem(
-            TargetSystemTest.class.getClassLoader(), system, true);
+        locateRulesForSystem(TargetSystemTest.class.getClassLoader(), system, true);
     assertThat(rulesForSystem).isNotEmpty();
     rulesForSystem.forEach(this::validateYamlSyntax);
     return rulesForSystem;

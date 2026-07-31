@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.jmx.internal;
 
 import static java.util.Arrays.asList;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -17,20 +17,19 @@ import javax.annotation.Nullable;
  */
 public class JmxTelemetryRules {
 
-  private JmxTelemetryRules() {}
-
   private static final Set<String> SUPPORTED_SYSTEMS =
-      new HashSet<>(
-          asList(
-              "activemq",
-              "camel",
-              "experimental-cassandra",
-              "experimental-kafka-connect",
-              "hadoop",
-              "jetty",
-              "jvm",
-              "tomcat",
-              "wildfly"));
+      Collections.unmodifiableSet(
+          new HashSet<>(
+              asList(
+                  "activemq",
+                  "camel",
+                  "experimental-cassandra",
+                  "experimental-kafka-connect",
+                  "hadoop",
+                  "jetty",
+                  "jvm",
+                  "tomcat",
+                  "wildfly")));
 
   public static Set<String> getSupportedSystems() {
     return SUPPORTED_SYSTEMS;
@@ -41,11 +40,11 @@ public class JmxTelemetryRules {
    *
    * @param classLoader class loader
    * @param system system
-   * @param includeInstable ignored for now
+   * @param includeInstable {@literal true} to include unstable metrics definitions
    * @return set of resources path(s) to load JMX rules from, empty if system is not supported
    */
   public static Set<String> locateRulesForSystem(
-      ClassLoader classLoader, @Nullable String system, boolean includeInstable) {
+      ClassLoader classLoader, String system, boolean includeInstable) {
 
     Set<String> result = new HashSet<>();
 
@@ -61,4 +60,6 @@ public class JmxTelemetryRules {
     }
     return result;
   }
+
+  private JmxTelemetryRules() {}
 }
