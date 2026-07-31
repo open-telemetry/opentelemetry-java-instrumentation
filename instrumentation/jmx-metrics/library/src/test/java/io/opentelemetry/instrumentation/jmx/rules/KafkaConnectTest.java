@@ -136,7 +136,7 @@ class KafkaConnectTest extends TargetSystemTest {
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
-    jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
+    jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties()));
 
     Set<String> expectedCreatedMetrics = loadKafkaConnectMetricNames(false);
     Set<String> registeredMetrics = ConcurrentHashMap.newKeySet();

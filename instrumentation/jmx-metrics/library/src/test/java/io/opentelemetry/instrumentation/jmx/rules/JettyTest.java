@@ -30,7 +30,7 @@ class JettyTest extends TargetSystemTest {
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
-    jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
+    jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties()));
 
     Set<String> jettyModules = new HashSet<>(asList("jmx", "http"));
     if (jettyMajorVersion >= 12) {

@@ -28,7 +28,7 @@ class CamelTest extends TargetSystemTest {
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
-    jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
+    jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties()));
 
     GenericContainer<?> target =
         new GenericContainer<>("eclipse-temurin:17.0.18_8-jre")

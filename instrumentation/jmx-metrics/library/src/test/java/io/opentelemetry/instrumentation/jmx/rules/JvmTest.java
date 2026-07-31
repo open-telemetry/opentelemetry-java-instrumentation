@@ -10,12 +10,14 @@ import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAtt
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -37,7 +39,13 @@ class JvmTest extends TargetSystemTest {
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
-    jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
+
+    Map<String, String> config = otelConfigProperties();
+    // use explicit configuration files for JVM as it's disabled from automatic detection
+    // to prevent conflicts with runtime-telemetry
+    config.put("otel.jmx.config", yamlFiles.stream().map(path -> "/" + path).collect(joining(",")));
+
+    jvmArgs.addAll(javaPropertiesToJvmArgs(config));
 
     // testing with a basic tomcat image as test application to capture JVM metrics
     GenericContainer<?> target =

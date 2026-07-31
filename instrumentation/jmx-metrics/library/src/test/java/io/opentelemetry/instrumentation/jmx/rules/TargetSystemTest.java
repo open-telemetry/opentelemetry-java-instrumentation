@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.jmx.rules;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -179,10 +178,9 @@ class TargetSystemTest {
   /**
    * Generates otel configuration for JMX testing with instrumentation agent
    *
-   * @param yamlFiles JMX metrics definitions in YAML
    * @return map of otel configuration properties for JMX testing
    */
-  protected static Map<String, String> otelConfigProperties(Collection<String> yamlFiles) {
+  protected static Map<String, String> otelConfigProperties() {
     Map<String, String> config = new HashMap<>();
     // only export metrics
     config.put("otel.logs.exporter", "none");
@@ -195,10 +193,8 @@ class TargetSystemTest {
     config.put("otel.metric.export.interval", "5s");
     // disable runtime telemetry metrics
     config.put("otel.instrumentation.runtime-telemetry.enabled", "false");
-    // set yaml config files to test
-    config.put(
-        "otel.jmx.config",
-        yamlFiles.stream().map(TargetSystemTest::containerYamlPath).collect(joining(",")));
+    // enable JMX auto metrics to capture all available metrics
+    config.put("otel.jmx.auto.enabled", "true");
     return config;
   }
 
@@ -241,7 +237,7 @@ class TargetSystemTest {
   protected static void copyYamlFilesToTarget(
       GenericContainer<?> target, Collection<String> yamlFiles) {
     for (String resourcePath : yamlFiles) {
-      String destPath = containerYamlPath(resourcePath);
+      String destPath = "/" + resourcePath;
       logger.info("copying yaml from resources {} to container {}", resourcePath, destPath);
       target.withCopyFileToContainer(MountableFile.forClasspathResource(resourcePath), destPath);
     }
@@ -255,10 +251,6 @@ class TargetSystemTest {
 
   protected static void copyTestWebAppToTarget(GenericContainer<?> target, String targetPath) {
     copyTestAppToTarget(testWebAppPath, target, targetPath);
-  }
-
-  private static String containerYamlPath(String yaml) {
-    return "/" + yaml;
   }
 
   /**
