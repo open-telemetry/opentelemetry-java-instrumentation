@@ -136,7 +136,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                     span.hasName("process " + SHARED_TOPIC)
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasLinks()
+                        .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(captureExperimentalSpanAttributes())),
                 span ->
@@ -144,12 +144,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(2)));
             SpanContext spanContext = trace.getSpan(1).getSpanContext();
-            producerSpanContext.set(
-                SpanContext.createFromRemoteParent(
-                    spanContext.getTraceId(),
-                    spanContext.getSpanId(),
-                    spanContext.getTraceFlags(),
-                    spanContext.getTraceState()));
+            producerSpanContext.set(asRemote(spanContext));
           },
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -178,12 +173,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                       .hasAttributesSatisfyingExactly(
                           publishAttributes(captureExperimentalSpanAttributes())));
           SpanContext spanContext = trace.getSpan(1).getSpanContext();
-          producerSpanContext.set(
-              SpanContext.createFromRemoteParent(
-                  spanContext.getTraceId(),
-                  spanContext.getSpanId(),
-                  spanContext.getTraceFlags(),
-                  spanContext.getTraceState()));
+          producerSpanContext.set(asRemote(spanContext));
         },
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -210,6 +200,14 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("producer callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
+  }
+
+  private static SpanContext asRemote(SpanContext spanContext) {
+    return SpanContext.createFromRemoteParent(
+        spanContext.getTraceId(),
+        spanContext.getSpanId(),
+        spanContext.getTraceFlags(),
+        spanContext.getTraceState());
   }
 
   private static List<AttributeAssertion> publishAttributes(boolean experimental) {

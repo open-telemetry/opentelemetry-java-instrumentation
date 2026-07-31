@@ -78,7 +78,7 @@ class WrapperTest extends AbstractWrapperTest {
                     span.hasName("process " + SHARED_TOPIC)
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasLinks()
+                        .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(greeting, testHeaders, testExperimental)),
                 span ->
@@ -90,12 +90,7 @@ class WrapperTest extends AbstractWrapperTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0)));
             SpanContext spanContext = trace.getSpan(1).getSpanContext();
-            producerSpanContext.set(
-                SpanContext.createFromRemoteParent(
-                    spanContext.getTraceId(),
-                    spanContext.getSpanId(),
-                    spanContext.getTraceFlags(),
-                    spanContext.getTraceState()));
+            producerSpanContext.set(asRemote(spanContext));
           },
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -123,12 +118,7 @@ class WrapperTest extends AbstractWrapperTest {
                       .hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0)));
           SpanContext spanContext = trace.getSpan(1).getSpanContext();
-          producerSpanContext.set(
-              SpanContext.createFromRemoteParent(
-                  spanContext.getTraceId(),
-                  spanContext.getSpanId(),
-                  spanContext.getTraceFlags(),
-                  spanContext.getTraceState()));
+          producerSpanContext.set(asRemote(spanContext));
         },
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -149,6 +139,14 @@ class WrapperTest extends AbstractWrapperTest {
                     span.hasName("process child")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(1))));
+  }
+
+  private static SpanContext asRemote(SpanContext spanContext) {
+    return SpanContext.createFromRemoteParent(
+        spanContext.getTraceId(),
+        spanContext.getSpanId(),
+        spanContext.getTraceFlags(),
+        spanContext.getTraceState());
   }
 
   protected static List<AttributeAssertion> sendAttributes(
