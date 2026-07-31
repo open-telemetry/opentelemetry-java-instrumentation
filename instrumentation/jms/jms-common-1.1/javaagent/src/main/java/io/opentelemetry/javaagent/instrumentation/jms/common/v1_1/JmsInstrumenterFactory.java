@@ -105,8 +105,7 @@ public class JmsInstrumenterFactory {
 
   private AttributesExtractor<MessageWithDestination, Void> createMessagingAttributesExtractor(
       MessagingOperationType operationType) {
-    return MessagingAttributesExtractor.builderForOperationType(
-            new JmsMessageAttributesGetter(), operationType)
+    return MessagingAttributesExtractor.builder(new JmsMessageAttributesGetter(), operationType)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }

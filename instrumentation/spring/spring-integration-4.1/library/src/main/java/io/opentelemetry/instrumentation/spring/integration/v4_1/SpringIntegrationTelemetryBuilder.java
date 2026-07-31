@@ -122,7 +122,7 @@ public final class SpringIntegrationTelemetryBuilder {
       MessagingAttributesGetter<MessageWithChannel, Void> getter,
       MessagingOperationType operationType,
       List<String> capturedHeaders) {
-    return MessagingAttributesExtractor.builderForOperationType(getter, operationType)
+    return MessagingAttributesExtractor.builder(getter, operationType)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }

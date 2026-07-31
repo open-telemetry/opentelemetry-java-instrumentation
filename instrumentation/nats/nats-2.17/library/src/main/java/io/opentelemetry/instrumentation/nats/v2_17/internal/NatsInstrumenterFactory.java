@@ -33,7 +33,7 @@ public final class NatsInstrumenterFactory {
                 MessagingSpanNameExtractor.create(
                     new NatsRequestMessagingAttributesGetter(), MessagingOperationType.SEND))
             .addAttributesExtractor(
-                MessagingAttributesExtractor.builderForOperationType(
+                MessagingAttributesExtractor.builder(
                         new NatsRequestMessagingAttributesGetter(), MessagingOperationType.SEND)
                     .setCapturedHeaders(capturedHeaders)
                     .build());
@@ -50,7 +50,7 @@ public final class NatsInstrumenterFactory {
                 MessagingSpanNameExtractor.create(
                     new NatsRequestMessagingAttributesGetter(), MessagingOperationType.PROCESS))
             .addAttributesExtractor(
-                MessagingAttributesExtractor.builderForOperationType(
+                MessagingAttributesExtractor.builder(
                         new NatsRequestMessagingAttributesGetter(), MessagingOperationType.PROCESS)
                     .setCapturedHeaders(capturedHeaders)
                     .build());
