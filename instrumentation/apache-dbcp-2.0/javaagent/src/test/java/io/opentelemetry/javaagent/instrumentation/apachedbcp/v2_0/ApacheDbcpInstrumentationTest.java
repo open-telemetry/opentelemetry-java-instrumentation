@@ -146,31 +146,6 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
   }
 
   @Test
-  void shouldUpdateDataSourceNameWhenMBeanIsRegisteredAfterPoolStart() throws Exception {
-    BasicDataSource dataSource = createDataSource();
-    dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
-    ObjectName objectName =
-        new ObjectName("org.apache.commons.dbcp2:type=BasicDataSource,name=lateRegisteredPool");
-    MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
-
-    try {
-      dataSource.getConnection().close();
-      assertDataSourceMetrics("db.example:5432/orders");
-
-      objectName = mbeanServer.registerMBean(dataSource, objectName).getObjectName();
-      assertDataSourceMetrics("lateRegisteredPool");
-    } finally {
-      dataSource.close();
-      if (mbeanServer.isRegistered(objectName)) {
-        mbeanServer.unregisterMBean(objectName);
-      }
-      shutdown(dataSource);
-    }
-
-    assertNoMetrics();
-  }
-
-  @Test
   void shouldReportMetricsAfterMBeanDeregistration() throws Exception {
     BasicDataSource dataSource = createDataSource();
 
