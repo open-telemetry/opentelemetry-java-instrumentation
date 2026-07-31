@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
 import org.apache.rocketmq.client.apis.ClientException;
 import org.apache.rocketmq.client.apis.ClientServiceProvider;
@@ -187,7 +188,8 @@ abstract class AbstractRocketMqClientTest {
             trace -> {
               if (emitStableMessagingSemconv()) {
                 trace.hasSpansSatisfyingExactly(
-                    span -> assertReceiveSpan(span, NORMAL_TOPIC, CONSUMER_GROUP));
+                    span ->
+                        assertReceiveSpan(span, NORMAL_TOPIC, CONSUMER_GROUP, sendSpanData.get()));
                 return;
               }
               trace.hasSpansSatisfyingExactly(
@@ -269,7 +271,8 @@ abstract class AbstractRocketMqClientTest {
             trace -> {
               if (emitStableMessagingSemconv()) {
                 trace.hasSpansSatisfyingExactly(
-                    span -> assertReceiveSpan(span, NORMAL_TOPIC, CONSUMER_GROUP));
+                    span ->
+                        assertReceiveSpan(span, NORMAL_TOPIC, CONSUMER_GROUP, sendSpanData.get()));
                 return;
               }
               trace.hasSpansSatisfyingExactly(
@@ -358,7 +361,8 @@ abstract class AbstractRocketMqClientTest {
             trace -> {
               if (emitStableMessagingSemconv()) {
                 trace.hasSpansSatisfyingExactly(
-                    span -> assertReceiveSpan(span, NORMAL_TOPIC, CONSUMER_GROUP));
+                    span ->
+                        assertReceiveSpan(span, NORMAL_TOPIC, CONSUMER_GROUP, sendSpanData.get()));
                 return;
               }
               trace.hasSpansSatisfyingExactly(
@@ -444,7 +448,8 @@ abstract class AbstractRocketMqClientTest {
             trace -> {
               if (emitStableMessagingSemconv()) {
                 trace.hasSpansSatisfyingExactly(
-                    span -> assertReceiveSpan(span, FIFO_TOPIC, CONSUMER_GROUP));
+                    span ->
+                        assertReceiveSpan(span, FIFO_TOPIC, CONSUMER_GROUP, sendSpanData.get()));
                 return;
               }
               trace.hasSpansSatisfyingExactly(
@@ -531,7 +536,8 @@ abstract class AbstractRocketMqClientTest {
             trace -> {
               if (emitStableMessagingSemconv()) {
                 trace.hasSpansSatisfyingExactly(
-                    span -> assertReceiveSpan(span, DELAY_TOPIC, CONSUMER_GROUP));
+                    span ->
+                        assertReceiveSpan(span, DELAY_TOPIC, CONSUMER_GROUP, sendSpanData.get()));
                 return;
               }
               trace.hasSpansSatisfyingExactly(
@@ -636,7 +642,8 @@ abstract class AbstractRocketMqClientTest {
             trace -> {
               if (emitStableMessagingSemconv()) {
                 trace.hasSpansSatisfyingExactly(
-                    span -> assertReceiveSpan(span, NORMAL_TOPIC, CONSUMER_GROUP));
+                    span ->
+                        assertReceiveSpan(span, NORMAL_TOPIC, CONSUMER_GROUP, sendSpanData.get()));
                 return;
               }
               trace.hasSpansSatisfyingExactly(
@@ -758,21 +765,34 @@ abstract class AbstractRocketMqClientTest {
 
   private static SpanDataAssert assertReceiveSpan(
       SpanDataAssert span, String topic, String consumerGroup) {
-    return span.hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
-        .hasName(emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
-        .hasStatus(StatusData.unset())
-        .hasAttributesSatisfyingExactly(
-            equalTo(
-                MESSAGING_CONSUMER_GROUP_NAME, emitStableMessagingSemconv() ? consumerGroup : null),
-            equalTo(
-                MESSAGING_ROCKETMQ_CLIENT_GROUP, emitOldMessagingSemconv() ? consumerGroup : null),
-            equalTo(MESSAGING_SYSTEM, "rocketmq"),
-            namespace(),
-            equalTo(MESSAGING_DESTINATION_NAME, topic),
-            oldOperation("receive"),
-            operationName("receive"),
-            operationType("receive"),
-            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
+    return assertReceiveSpan(span, topic, consumerGroup, null);
+  }
+
+  private static SpanDataAssert assertReceiveSpan(
+      SpanDataAssert span, String topic, String consumerGroup, @Nullable SpanData linkedSpan) {
+    SpanDataAssert result =
+        span.hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+            .hasName(emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
+            .hasStatus(StatusData.unset())
+            .hasAttributesSatisfyingExactly(
+                equalTo(
+                    MESSAGING_CONSUMER_GROUP_NAME,
+                    emitStableMessagingSemconv() ? consumerGroup : null),
+                equalTo(
+                    MESSAGING_ROCKETMQ_CLIENT_GROUP,
+                    emitOldMessagingSemconv() ? consumerGroup : null),
+                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                namespace(),
+                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                oldOperation("receive"),
+                operationName("receive"),
+                operationType("receive"),
+                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
+    if (linkedSpan != null) {
+      // one link per received message
+      result.hasLinks(LinkData.create(linkedSpan.getSpanContext()));
+    }
+    return result;
   }
 
   private static SpanDataAssert assertFailedProcessSpan(
@@ -857,9 +877,7 @@ abstract class AbstractRocketMqClientTest {
             .hasName(emitStableMessagingSemconv() ? "process " + topic : topic + " process")
             .hasStatus(status)
             .hasAttributesSatisfyingExactly(attributeAssertions);
-    return emitStableMessagingSemconv()
-        ? result.hasTotalRecordedLinks(0)
-        : result.hasLinks(LinkData.create(linkedSpan.getSpanContext()));
+    return result.hasLinks(LinkData.create(linkedSpan.getSpanContext()));
   }
 
   private static SpanDataAssert assertProcessSpanWithFifoMessage(
@@ -900,9 +918,7 @@ abstract class AbstractRocketMqClientTest {
             .hasName(emitStableMessagingSemconv() ? "process " + topic : topic + " process")
             .hasStatus(StatusData.unset())
             .hasAttributesSatisfyingExactly(attributeAssertions);
-    return emitStableMessagingSemconv()
-        ? result.hasTotalRecordedLinks(0)
-        : result.hasLinks(LinkData.create(linkedSpan.getSpanContext()));
+    return result.hasLinks(LinkData.create(linkedSpan.getSpanContext()));
   }
 
   private static SpanDataAssert assertProcessSpanWithDelayMessage(
@@ -943,9 +959,7 @@ abstract class AbstractRocketMqClientTest {
             .hasName(emitStableMessagingSemconv() ? "process " + topic : topic + " process")
             .hasStatus(StatusData.unset())
             .hasAttributesSatisfyingExactly(attributeAssertions);
-    return emitStableMessagingSemconv()
-        ? result.hasTotalRecordedLinks(0)
-        : result.hasLinks(LinkData.create(linkedSpan.getSpanContext()));
+    return result.hasLinks(LinkData.create(linkedSpan.getSpanContext()));
   }
 
   private static AttributeAssertion oldOperation(String operation) {

@@ -410,25 +410,33 @@ abstract class AbstractRocketMqClientTest {
             trace -> {
               List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
               assertions.add(
-                  span ->
-                      span.hasName(
-                              emitStableMessagingSemconv()
-                                  ? "receive " + sharedTopic
-                                  : "multiple_sources receive")
-                          .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                              namespace(),
-                              consumerGroup(),
-                              equalTo(
-                                  MESSAGING_DESTINATION_NAME,
-                                  emitStableMessagingSemconv() ? sharedTopic : null),
-                              equalTo(
-                                  MESSAGING_BATCH_MESSAGE_COUNT,
-                                  emitStableMessagingSemconv() ? Long.valueOf(2) : null),
-                              oldOperation("receive"),
-                              operationName("receive"),
-                              operationType("receive")));
+                  span -> {
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "receive " + sharedTopic
+                                : "multiple_sources receive")
+                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                            namespace(),
+                            consumerGroup(),
+                            equalTo(
+                                MESSAGING_DESTINATION_NAME,
+                                emitStableMessagingSemconv() ? sharedTopic : null),
+                            equalTo(
+                                MESSAGING_BATCH_MESSAGE_COUNT,
+                                emitStableMessagingSemconv() ? Long.valueOf(2) : null),
+                            oldOperation("receive"),
+                            operationName("receive"),
+                            operationType("receive"));
+                    if (emitStableMessagingSemconv()) {
+                      // one link per received message
+                      span.hasLinksSatisfying(
+                          links(producerSpanContext.get(), producerSpanContext.get()));
+                    } else {
+                      span.hasTotalRecordedLinks(0);
+                    }
+                  });
               if (!emitStableMessagingSemconv()) {
                 assertions.add(
                     span ->
@@ -486,11 +494,7 @@ abstract class AbstractRocketMqClientTest {
                 stringKey("messaging.rocketmq.broker_address"), val -> experimentalString(val)),
             satisfies(longKey("messaging.rocketmq.queue_id"), val -> experimentalLong(val)),
             satisfies(longKey("messaging.rocketmq.queue_offset"), val -> experimentalLong(val)));
-    if (emitStableMessagingSemconv()) {
-      span.hasTotalRecordedLinks(0);
-    } else {
-      span.hasLinksSatisfying(links(producerSpanContext));
-    }
+    span.hasLinksSatisfying(links(producerSpanContext));
   }
 
   @Test

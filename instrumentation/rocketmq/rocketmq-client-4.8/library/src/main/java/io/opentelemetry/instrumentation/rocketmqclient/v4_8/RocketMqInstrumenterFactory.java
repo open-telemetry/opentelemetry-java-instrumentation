@@ -111,6 +111,9 @@ class RocketMqInstrumenterFactory {
     }
     if (emitStableMessagingSemconv()) {
       batchReceiveInstrumenterBuilder
+          .addSpanLinksExtractor(
+              new RocketMqReceiveSpanLinksExtractor(
+                  openTelemetry.getPropagators().getTextMapPropagator()))
           .addAttributesExtractor(constant(MESSAGING_OPERATION_NAME, "receive"))
           .addAttributesExtractor(constant(MESSAGING_OPERATION_TYPE, "receive"))
           .addAttributesExtractor(
@@ -208,7 +211,7 @@ class RocketMqInstrumenterFactory {
       MessagingAttributesGetter<T, R> getter,
       MessagingOperationType operationType,
       List<String> capturedHeaders) {
-    return MessagingAttributesExtractor.builderForOperationType(getter, operationType)
+    return MessagingAttributesExtractor.builder(getter, operationType)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }
