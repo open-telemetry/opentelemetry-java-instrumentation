@@ -52,6 +52,9 @@ public final class KafkaUtil {
   private static final VirtualField<Consumer<?, ?>, KafkaClusterId> consumerClusterIdField =
       VirtualField.find(Consumer.class, KafkaClusterId.class);
 
+  private static final VirtualField<Producer<?, ?>, KafkaClusterId> producerClusterIdField =
+      VirtualField.find(Producer.class, KafkaClusterId.class);
+
   // ClassValue caches the reflective Field for each holder class. computeValue() runs at most once
   // per class — thread-safe and GC-friendly (entry is released when the ClassLoader is collected).
   // Optional.empty() is stored when the field is absent or inaccessible, preventing repeated
@@ -211,7 +214,7 @@ public final class KafkaUtil {
    */
   @Nullable
   public static String getClusterId(@Nullable Consumer<?, ?> consumer) {
-    if (consumer == null || !KafkaConsumer.class.isInstance(consumer)) {
+    if (consumer == null || !(consumer instanceof KafkaConsumer)) {
       return null;
     }
     KafkaClusterId cached = consumerClusterIdField.get(consumer);
@@ -219,9 +222,44 @@ public final class KafkaUtil {
       if (cached == KafkaClusterId.UNAVAILABLE) {
         return null;
       }
-      return clusterIdFromMetadata(cached.metadata);
+      if (cached.clusterId != null) {
+        return cached.clusterId;
+      }
+      // Pending state: cluster id not yet available from broker; retry this span.
+      String id = clusterIdFromMetadata(cached.metadata);
+      if (id != null) {
+        consumerClusterIdField.set(consumer, KafkaClusterId.resolved(id));
+      }
+      return id;
     }
     return resolveAndCache(consumer, consumerClusterIdField, resolveMetadataHolder(consumer));
+  }
+
+  /**
+   * Returns the cluster id for a producer, caching the result on the producer instance. After the
+   * first successful resolution the fast path reads a plain {@code String} field with no lock.
+   */
+  @Nullable
+  public static String getClusterId(@Nullable Producer<?, ?> producer) {
+    if (producer == null || !(producer instanceof KafkaProducer)) {
+      return null;
+    }
+    KafkaClusterId cached = producerClusterIdField.get(producer);
+    if (cached != null) {
+      if (cached == KafkaClusterId.UNAVAILABLE) {
+        return null;
+      }
+      if (cached.clusterId != null) {
+        return cached.clusterId;
+      }
+      // Pending state: cluster id not yet available from broker; retry this span.
+      String id = clusterIdFromMetadata(cached.metadata);
+      if (id != null) {
+        producerClusterIdField.set(producer, KafkaClusterId.resolved(id));
+      }
+      return id;
+    }
+    return resolveAndCache(producer, producerClusterIdField, producer);
   }
 
   /**
@@ -246,11 +284,16 @@ public final class KafkaUtil {
         // Transient: field not yet initialised (shouldn't happen after construction, but be safe).
         return null;
       }
-      // Cache the live Metadata reference. Subsequent spans read cluster id directly from it
-      // without any more reflection, and always see the current cluster (correct after cluster
-      // replacement at the same broker addresses).
-      field.set(client, KafkaClusterId.of(metadata));
-      return clusterIdFromMetadata(metadata);
+      // Try to resolve the cluster id immediately. If the broker response has already arrived
+      // the hot path will never call metadata.fetch() again. If not yet available, store the
+      // Metadata reference in the pending state and retry on the next span.
+      String id = clusterIdFromMetadata(metadata);
+      if (id != null) {
+        field.set(client, KafkaClusterId.resolved(id));
+      } else {
+        field.set(client, KafkaClusterId.of(metadata));
+      }
+      return id;
     } catch (IllegalAccessException | ClassCastException e) {
       logReflectionFailureOnce(holder.getClass(), e.toString());
       field.set(client, KafkaClusterId.UNAVAILABLE);
@@ -314,26 +357,6 @@ public final class KafkaUtil {
       String id = resource.clusterId();
       return (id != null && !id.isEmpty()) ? id : null;
     } catch (RuntimeException ignored) {
-      return null;
-    }
-  }
-
-  /**
-   * Extracts the {@code Metadata} reference from a {@link KafkaProducer} via reflection. Returns
-   * {@code null} for non-{@link KafkaProducer} implementations or if the field is inaccessible.
-   */
-  @Nullable
-  public static Metadata extractProducerMetadata(@Nullable Producer<?, ?> producer) {
-    if (producer == null || !KafkaProducer.class.isInstance(producer)) {
-      return null;
-    }
-    Field field = metadataField(producer.getClass());
-    if (field == null) {
-      return null;
-    }
-    try {
-      return (Metadata) field.get(producer);
-    } catch (IllegalAccessException | ClassCastException ignored) {
       return null;
     }
   }

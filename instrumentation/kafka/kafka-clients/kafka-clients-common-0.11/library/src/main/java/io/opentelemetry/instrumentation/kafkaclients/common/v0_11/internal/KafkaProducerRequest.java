@@ -32,7 +32,7 @@ public final class KafkaProducerRequest {
         extractClientId(producer),
         bootstrapServers,
         true,
-        KafkaUtil.clusterIdFromMetadata(KafkaUtil.extractProducerMetadata(producer)));
+        KafkaUtil.getClusterId(producer));
   }
 
   public static KafkaProducerRequest create(
@@ -45,7 +45,7 @@ public final class KafkaProducerRequest {
         extractClientId(producer),
         bootstrapServers,
         spanContextPropagated,
-        KafkaUtil.clusterIdFromMetadata(KafkaUtil.extractProducerMetadata(producer)));
+        KafkaUtil.getClusterId(producer));
   }
 
   public static KafkaProducerRequest create(
@@ -79,6 +79,7 @@ public final class KafkaProducerRequest {
     return new KafkaProducerRequest(
         record, clientId, bootstrapServers, spanContextPropagated, clusterId);
   }
+
 
   private KafkaProducerRequest(
       ProducerRecord<?, ?> record,
