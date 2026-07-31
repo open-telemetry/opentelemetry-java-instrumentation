@@ -141,7 +141,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   span.hasName("process " + STREAM_PENDING)
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(trace.getSpan(0))
-                      .hasLinks()
+                      .hasLinks(LinkData.create(trace.getSpan(0).getSpanContext()))
                       .hasAttributesSatisfyingExactly(assertions);
                 },
                 span ->
@@ -178,7 +178,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   span.hasName("process " + STREAM_PROCESSED)
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(trace.getSpan(2))
-                      .hasLinks()
+                      .hasLinks(LinkData.create(trace.getSpan(2).getSpanContext()))
                       .hasAttributesSatisfyingExactly(assertions);
                 });
             producerPendingRef.set(trace.getSpan(0));
