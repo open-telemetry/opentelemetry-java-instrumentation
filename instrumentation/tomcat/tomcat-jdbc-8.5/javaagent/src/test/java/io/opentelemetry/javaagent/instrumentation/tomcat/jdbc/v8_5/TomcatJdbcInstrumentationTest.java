@@ -93,10 +93,13 @@ class TomcatJdbcInstrumentationTest {
   }
 
   @Test
-  void shouldUseConfiguredPoolNameThatLooksLikeDefaultTomcatPoolName() throws SQLException {
+  void shouldUseConfiguredPoolNameThatMatchesAnotherPoolPropertiesDefaultName()
+      throws SQLException {
     DataSource dataSource = newDataSource();
-    String poolName =
-        "Tomcat Connection Pool[orders-" + System.identityHashCode(PoolProperties.class) + "]";
+    String initialPoolName = dataSource.getPoolProperties().getName();
+    String poolName = new PoolProperties().getName();
+    assertThat(poolName).isNotEqualTo(initialPoolName);
+
     dataSource.setName(poolName);
 
     assertConnectionPoolMetrics(dataSource, poolName);

@@ -14,6 +14,7 @@ import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoolMetrics;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
@@ -36,9 +37,8 @@ public class TomcatConnectionPoolMetrics {
           // otel.scope.name="io.opentelemetry.tomcat-jdbc" continue to work
           : "io.opentelemetry.tomcat-jdbc";
   private static final String DEFAULT_POOL_NAME = "tomcat-jdbc";
-  private static final String TOMCAT_DEFAULT_POOL_NAME_PREFIX = "Tomcat Connection Pool[";
-  private static final String TOMCAT_DEFAULT_POOL_NAME_SUFFIX =
-      "-" + System.identityHashCode(PoolProperties.class) + "]";
+  private static final VirtualField<PoolProperties, String> initialPoolNameField =
+      VirtualField.find(PoolProperties.class, String.class);
   private static final Meter meter = buildMeter();
 
   // a weak map does not make sense here because each Meter holds a reference to the dataSource
@@ -83,12 +83,13 @@ public class TomcatConnectionPoolMetrics {
   }
 
   private static String getPoolName(DataSourceProxy dataSource) {
+    PoolConfiguration poolProperties = dataSource.getPoolProperties();
     String configuredPoolName = dataSource.getPoolName();
-    if (configuredPoolName != null && !isDefaultTomcatPoolName(configuredPoolName)) {
+    if (configuredPoolName != null
+        && !isDefaultTomcatPoolName(poolProperties, configuredPoolName)) {
       return configuredPoolName;
     }
 
-    PoolConfiguration poolProperties = dataSource.getPoolProperties();
     DbInfo dbInfo =
         JdbcConnectionUrlParser.parse(poolProperties.getUrl(), poolProperties.getDbProperties());
     String serverAddress = dbInfo.getServerAddress();
@@ -116,25 +117,14 @@ public class TomcatConnectionPoolMetrics {
     return poolName.length() > 0 ? poolName.toString() : DEFAULT_POOL_NAME;
   }
 
-  private static boolean isDefaultTomcatPoolName(String poolName) {
-    if (!poolName.startsWith(TOMCAT_DEFAULT_POOL_NAME_PREFIX)
-        || !poolName.endsWith(TOMCAT_DEFAULT_POOL_NAME_SUFFIX)) {
+  private static boolean isDefaultTomcatPoolName(
+      PoolConfiguration poolProperties, String poolName) {
+    if (!(poolProperties instanceof PoolProperties)) {
       return false;
     }
 
-    int counterStart = TOMCAT_DEFAULT_POOL_NAME_PREFIX.length();
-    int counterEnd = poolName.length() - TOMCAT_DEFAULT_POOL_NAME_SUFFIX.length();
-    if (counterStart == counterEnd) {
-      return false;
-    }
-
-    for (int index = counterStart; index < counterEnd; index++) {
-      char character = poolName.charAt(index);
-      if (character < '0' || character > '9') {
-        return false;
-      }
-    }
-    return true;
+    String initialPoolName = initialPoolNameField.get((PoolProperties) poolProperties);
+    return poolName.equals(initialPoolName);
   }
 
   public static void unregisterMetrics(DataSourceProxy dataSource) {
