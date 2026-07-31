@@ -338,6 +338,40 @@ class MessagingConsumerMetricsTest {
 
   @Test
   @SuppressWarnings("deprecation") // using deprecated semconv
+  void endBatchCountWinsOverStartBatchCount() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    OperationListener listener =
+        MessagingConsumerMetrics.getForOperationTypeWithOldMetrics()
+            .create(meterProvider.get("test"));
+
+    Attributes startAttributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "receive" : null)
+            .put(MESSAGING_BATCH_MESSAGE_COUNT, 3)
+            .build();
+    Attributes endAttributes = Attributes.of(MESSAGING_BATCH_MESSAGE_COUNT, 5L);
+
+    Context context = listener.onStart(Context.root(), startAttributes, nanos(100));
+    listener.onEnd(context, endAttributes, nanos(300));
+
+    // the recorded attributes are start merged with end, so end wins there; the counter increment
+    // has to agree with them
+    assertThat(metricReader.collectAllMetrics())
+        .filteredOn(metric -> metric.getName().endsWith(".messages"))
+        .isNotEmpty()
+        .allSatisfy(
+            metric ->
+                assertThat(metric)
+                    .hasLongSumSatisfying(
+                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(5))));
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void operationTypeEntryPointNeverCollectsLegacyMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =

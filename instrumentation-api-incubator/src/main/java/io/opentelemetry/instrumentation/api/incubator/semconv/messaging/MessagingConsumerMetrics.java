@@ -160,7 +160,7 @@ public final class MessagingConsumerMetrics implements OperationListener {
       clientOperationDurationHistogram.record(duration, filteredAttributes, context);
     }
 
-    Long batchMessageCount = getBatchMessageCount(state.startAttributes(), endAttributes);
+    Long batchMessageCount = attributes.get(MESSAGING_BATCH_MESSAGE_COUNT);
     if (receiveMessageCount != null && recordsLegacyReceive) {
       long receiveMessagesCount = batchMessageCount == null ? 1 : batchMessageCount;
       if (!supportsStableSemconv || receiveMessagesCount > 0) {
@@ -175,17 +175,6 @@ public final class MessagingConsumerMetrics implements OperationListener {
         consumedMessagesCounter.add(consumedMessagesCount, filteredAttributes, context);
       }
     }
-  }
-
-  @Nullable
-  private static Long getBatchMessageCount(Attributes... attributesList) {
-    for (Attributes attributes : attributesList) {
-      Long value = attributes.get(MESSAGING_BATCH_MESSAGE_COUNT);
-      if (value != null) {
-        return value;
-      }
-    }
-    return null;
   }
 
   private static long getConsumedMessagesCount(
