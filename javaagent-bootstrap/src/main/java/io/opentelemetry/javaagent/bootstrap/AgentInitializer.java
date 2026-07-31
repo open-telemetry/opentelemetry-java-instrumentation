@@ -60,12 +60,14 @@ public final class AgentInitializer {
     // java agent arguments or the OTEL_JAVAAGENT_ENABLED environment variable
     String command = fromPremain ? getJvmCommand() : null;
     if (fromPremain && isJdkToolMainClass(command)) {
+      if (isDebugEnabled()) {
+        // only log actual command in debug to avoid exposing potential sensitive arguments
+        System.err.println("JDK tool detected for command '" + command + "'");
+      }
       System.err.println(
-          "JDK tool detected: "
-              + command
-              + ", agent will not be started. To override this behavior, set"
-              + " otel.javaagent.enabled=true as an agent argument or system property, or"
-              + " OTEL_JAVAAGENT_ENABLED=true as an environment variable");
+          "JDK tool detected, enable agent debug for details, agent will not be started. "
+              + "To override this behavior, set otel.javaagent.enabled=true as an agent argument "
+              + "or system property, or OTEL_JAVAAGENT_ENABLED=true as an environment variable");
       return;
     }
 
@@ -125,22 +127,37 @@ public final class AgentInitializer {
    */
   @Nullable
   private static String getJvmCommand() {
-    String cmd = doPrivileged(
-        new PrivilegedAction<String>() {
+    String cmd =
+        doPrivileged(
+            new PrivilegedAction<String>() {
+              @Override
+              public String run() {
+                String enable = System.getProperty("otel.javaagent.enabled");
+                if (enable == null) {
+                  enable = System.getenv("OTEL_JAVAAGENT_ENABLED");
+                }
+                if (Boolean.parseBoolean(enable)) {
+                  // using empty string as method should not return null
+                  return "";
+                }
+                return System.getProperty("sun.java.command");
+              }
+            });
+    return cmd.isEmpty() ? null : cmd;
+  }
+
+  private static boolean isDebugEnabled() {
+    return doPrivileged(
+        new PrivilegedAction<Boolean>() {
           @Override
-          public String run() {
-            String enable = System.getProperty("otel.javaagent.enabled");
-            if (enable == null) {
-              enable = System.getenv("OTEL_JAVAAGENT_ENABLED");
+          public Boolean run() {
+            String value = System.getProperty("otel.javaagent.debug");
+            if (value == null) {
+              value = System.getenv("OTEL_JAVAAGENT_DEBUG");
             }
-            if (Boolean.parseBoolean(enable)) {
-              // using empty string as method should not return null
-              return "";
-            }
-            return System.getProperty("sun.java.command");
+            return Boolean.parseBoolean(value);
           }
         });
-    return cmd.isEmpty() ? null : cmd;
   }
 
   @SuppressWarnings("removal") // AccessController is deprecated for removal
