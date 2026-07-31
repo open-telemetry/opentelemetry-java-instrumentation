@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.internal;
 
+import static io.opentelemetry.instrumentation.jmx.internal.JmxTelemetryRules.locateRulesForSystem;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,8 +23,20 @@ public class JmxTelemetryRulesTest {
   private static final Path YAML_ROOT_FOLDER =
       Paths.get("src", "main", "resources", "jmx", "rules");
 
+  private static final ClassLoader CLASS_LOADER = JmxTelemetryRulesTest.class.getClassLoader();
+
   @Test
-  public void testGetSupportedSystems() throws IOException {
+  void locateStableUnstable() {
+    assertThat(locateRulesForSystem(CLASS_LOADER, "fake-rules", false))
+        .containsExactly("jmx/rules/fake-rules.yaml");
+
+    assertThat(locateRulesForSystem(CLASS_LOADER, "fake-rules", true))
+        .containsExactlyInAnyOrder(
+            "jmx/rules/fake-rules.yaml", "jmx/rules/fake-rules_unstable.yaml");
+  }
+
+  @Test
+  void supportedSystems() throws IOException {
     assertThat(JmxTelemetryRules.getSupportedSystems())
         .containsExactlyInAnyOrder(
             "activemq",
@@ -38,11 +51,9 @@ public class JmxTelemetryRulesTest {
 
     Set<String> allRules = new HashSet<>();
     for (String system : JmxTelemetryRules.getSupportedSystems()) {
-      Set<String> rulesForSystem =
-          JmxTelemetryRules.locateRulesForSystem(
-              JmxTelemetryRulesTest.class.getClassLoader(), system, true);
+      Set<String> rulesForSystem = locateRulesForSystem(CLASS_LOADER, system, true);
       assertThat(rulesForSystem)
-          .describedAs("at leat one rule file should be used for system %s", system)
+          .describedAs("at least one rule file should be used for system %s", system)
           .isNotEmpty();
       allRules.addAll(rulesForSystem);
     }

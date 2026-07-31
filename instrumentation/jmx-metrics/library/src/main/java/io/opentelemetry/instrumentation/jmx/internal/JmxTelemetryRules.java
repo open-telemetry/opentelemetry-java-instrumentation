@@ -48,13 +48,17 @@ public class JmxTelemetryRules {
       ClassLoader classLoader, @Nullable String system, boolean includeInstable) {
 
     Set<String> result = new HashSet<>();
-    String path = String.format("jmx/rules/%s.yaml", system);
 
-    // TODO : add extra file(s) when including unstable metrics
+    String path = String.format("jmx/rules/%s.yaml", system);
     if (classLoader.getResource(path) != null) {
       result.add(path);
     }
-
+    if (includeInstable) {
+      path = String.format("jmx/rules/%s_unstable.yaml", system);
+      if (classLoader.getResource(path) != null) {
+        result.add(path);
+      }
+    }
     return result;
   }
 }
