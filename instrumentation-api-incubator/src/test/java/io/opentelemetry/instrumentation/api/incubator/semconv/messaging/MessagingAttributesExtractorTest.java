@@ -79,7 +79,7 @@ class MessagingAttributesExtractorTest {
     request.put("batchMessageCount", "2");
 
     AttributesExtractor<Map<String, String>, String> underTest =
-        MessagingAttributesExtractor.builderForOperationType(TestGetter.INSTANCE, operationType)
+        MessagingAttributesExtractor.builder(TestGetter.INSTANCE, operationType)
             .setOperationName(operationName)
             .build();
 
@@ -212,9 +212,9 @@ class MessagingAttributesExtractorTest {
 
   @Test
   void shouldExtractOperationNameWithoutOperationType() {
-    MessagingOperationType operationType = null;
     AttributesExtractor<Map<String, String>, String> underTest =
-        MessagingAttributesExtractor.builderForOperationType(TestGetter.INSTANCE, operationType)
+        new MessagingAttributesExtractorBuilder<Map<String, String>, String>(
+                TestGetter.INSTANCE, null, true)
             .setOperationName("ack")
             .build();
 
@@ -232,7 +232,8 @@ class MessagingAttributesExtractorTest {
   void shouldRequireOperationNameForStableSemconv() {
     assertThatThrownBy(
             () ->
-                MessagingAttributesExtractor.builderForOperationType(TestGetter.INSTANCE, null)
+                new MessagingAttributesExtractorBuilder<Map<String, String>, String>(
+                        TestGetter.INSTANCE, null, true)
                     .build())
         .isInstanceOf(NullPointerException.class)
         .hasMessage("operationName");
@@ -241,8 +242,7 @@ class MessagingAttributesExtractorTest {
   @Test
   void shouldExtractErrorTypeFromResponse() {
     AttributesExtractor<Map<String, String>, String> underTest =
-        MessagingAttributesExtractor.createForOperationType(
-            TestGetter.INSTANCE, MessagingOperationType.RECEIVE);
+        MessagingAttributesExtractor.create(TestGetter.INSTANCE, MessagingOperationType.RECEIVE);
 
     AttributesBuilder attributes = Attributes.builder();
     underTest.onEnd(attributes, Context.root(), emptyMap(), "failure", null);
@@ -256,9 +256,9 @@ class MessagingAttributesExtractorTest {
   void shouldExtractNoAttributesIfNoneAreAvailable() {
     // given
     AttributesExtractor<Map<String, String>, String> underTest =
-        MessagingAttributesExtractor.create(TestGetter.INSTANCE, null);
+        MessagingAttributesExtractor.create(TestGetter.INSTANCE, (MessageOperation) null);
     AttributesExtractor<Map<String, String>, String> builtUnderTest =
-        MessagingAttributesExtractor.builder(TestGetter.INSTANCE, null).build();
+        MessagingAttributesExtractor.builder(TestGetter.INSTANCE, (MessageOperation) null).build();
 
     Context context = Context.root();
 

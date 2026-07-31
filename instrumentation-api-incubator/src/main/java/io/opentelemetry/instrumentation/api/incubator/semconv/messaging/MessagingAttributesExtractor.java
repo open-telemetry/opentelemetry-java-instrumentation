@@ -67,10 +67,9 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   static final String TEMP_DESTINATION_NAME = "(temporary)";
 
   /** Creates the messaging attributes extractor for the given operation type. */
-  // will be renamed in 3.0 to create()
-  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> createForOperationType(
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessagingOperationType operationType) {
-    return builderForOperationType(getter, operationType).build();
+    return builder(getter, operationType).build();
   }
 
   /** Creates the messaging attributes extractor for the given operation. */
@@ -83,11 +82,8 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
    * Returns a new {@link MessagingAttributesExtractorBuilder} configured for the given operation
    * type.
    */
-  // will be renamed in 3.0 to builder()
-  public static <REQUEST, RESPONSE>
-      MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> builderForOperationType(
-          MessagingAttributesGetter<REQUEST, RESPONSE> getter,
-          @Nullable MessagingOperationType operationType) {
+  public static <REQUEST, RESPONSE> MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessagingOperationType operationType) {
     return new MessagingAttributesExtractorBuilder<>(getter, operationType, true);
   }
 
