@@ -57,24 +57,23 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
       Set<String> rules = new HashSet<>();
 
-      // load rules for selected system(s)
+      // lookup rules for selected system(s)
       ClassLoader classLoader = JmxTelemetryBuilder.class.getClassLoader();
       targets.stream()
           .map(target -> handleDeprecatedTargets(target, AgentCommonConfig.get().isV3Preview()))
           .forEach(
               target -> {
-                Set<String> resources = locateRulesForSystem(classLoader,
-                    target, true);
+                Set<String> resources = locateRulesForSystem(classLoader, target, true);
                 if (resources.isEmpty()) {
                   logger.log(SEVERE, "No JMX rules found for target system " + target);
                 }
                 rules.addAll(resources);
               });
 
-      // load embedded rules if "auto" mode is enabled
+      // lookup embedded rules if "auto" mode is enabled
       DeclarativeConfigProperties autoConfig = config.get("auto");
-      boolean autoEnabled =autoConfig.getBoolean("enabled", false);
-      if(autoEnabled){
+      boolean autoEnabled = autoConfig.getBoolean("enabled", false);
+      if (autoEnabled) {
         Set<String> allSystems = new HashSet<>(JmxTelemetryRules.getSupportedSystems());
         // hasn't been moved to library yet, thus not included
         allSystems.add("experimental-kafka-broker");
