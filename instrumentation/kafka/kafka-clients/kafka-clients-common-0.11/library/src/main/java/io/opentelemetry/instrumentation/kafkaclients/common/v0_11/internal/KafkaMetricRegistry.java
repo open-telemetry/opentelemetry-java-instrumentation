@@ -60,11 +60,6 @@ final class KafkaMetricRegistry {
   }
 
   @Nullable
-  static RegisteredObservable getRegisteredObservable(Meter meter, KafkaMetric kafkaMetric) {
-    return getRegisteredObservable(meter, kafkaMetric, () -> null);
-  }
-
-  @Nullable
   static RegisteredObservable getRegisteredObservable(
       Meter meter, KafkaMetric kafkaMetric, Supplier<String> clusterIdSupplier) {
     // If metric is not a Measurable, we can't map it to an instrument

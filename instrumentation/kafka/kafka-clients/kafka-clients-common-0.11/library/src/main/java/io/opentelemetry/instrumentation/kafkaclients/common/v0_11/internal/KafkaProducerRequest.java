@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 import java.util.Iterator;
 import java.util.Map;
 import javax.annotation.Nullable;
-import org.apache.kafka.clients.Metadata;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.Metric;
@@ -31,12 +30,7 @@ public final class KafkaProducerRequest {
         record,
         extractClientId(producer),
         bootstrapServers,
-        KafkaUtil.clusterIdFromMetadata(KafkaUtil.extractProducerMetadata(producer)));
-  }
-
-  public static KafkaProducerRequest create(
-      ProducerRecord<?, ?> record, @Nullable String clientId, @Nullable String bootstrapServers) {
-    return new KafkaProducerRequest(record, clientId, bootstrapServers, null);
+        KafkaUtil.getClusterId(producer));
   }
 
   public static KafkaProducerRequest create(
@@ -45,15 +39,6 @@ public final class KafkaProducerRequest {
       @Nullable String bootstrapServers,
       @Nullable String clusterId) {
     return new KafkaProducerRequest(record, clientId, bootstrapServers, clusterId);
-  }
-
-  public static KafkaProducerRequest create(
-      ProducerRecord<?, ?> record,
-      @Nullable String clientId,
-      @Nullable String bootstrapServers,
-      @Nullable Metadata kafkaMetadata) {
-    return new KafkaProducerRequest(
-        record, clientId, bootstrapServers, KafkaUtil.clusterIdFromMetadata(kafkaMetadata));
   }
 
   private KafkaProducerRequest(

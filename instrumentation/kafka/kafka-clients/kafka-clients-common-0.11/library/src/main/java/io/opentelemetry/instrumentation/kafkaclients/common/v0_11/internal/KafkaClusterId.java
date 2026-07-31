@@ -14,6 +14,10 @@ import org.apache.kafka.clients.Metadata;
  * cannot collide with other instrumentations that attach a {@code String}-typed {@code
  * VirtualField} to the same {@code Producer}/{@code Consumer} classes — {@code VirtualField} is
  * keyed by target type + value type.
+ *
+ * <p>Lifecycle: {@link #UNAVAILABLE} (reflection failed) → {@link #of(Metadata)} (pending: broker
+ * response not yet received) → {@link #resolved(String)} (cluster id known; hot path returns it
+ * directly without acquiring the Metadata lock).
  */
 final class KafkaClusterId {
 
@@ -21,21 +25,35 @@ final class KafkaClusterId {
       AttributeKey.stringKey("messaging.kafka.cluster.id");
 
   /**
-   * Sentinel cached for clients that can never resolve a cluster id (wrong client type, or no
-   * {@code metadata} field), so the reflective walk is not retried on every span.
+   * Sentinel for clients that can never resolve a cluster id (wrong client type, or no {@code
+   * metadata} field); prevents retrying the reflective walk on every span.
    */
-  static final KafkaClusterId UNAVAILABLE = new KafkaClusterId(null);
+  static final KafkaClusterId UNAVAILABLE = new KafkaClusterId(null, null);
 
-  // The Metadata field is final in KafkaProducer/KafkaConsumer, so this cached reference never
-  // goes stale. Cluster id is read fresh each span via Metadata.fetch() rather than cached as a
-  // String, so it stays current even after a cluster replacement at the same broker addresses.
+  /**
+   * Non-null while the cluster id is still pending (broker response not yet received). Cleared once
+   * the id is resolved and this entry is replaced with {@link #resolved(String)}.
+   */
   @Nullable final Metadata metadata;
 
-  private KafkaClusterId(@Nullable Metadata metadata) {
+  /**
+   * Non-null once the cluster id has been successfully fetched. When present, returned directly on
+   * the hot path — no lock acquisition on {@code Metadata} is required.
+   */
+  @Nullable final String clusterId;
+
+  private KafkaClusterId(@Nullable Metadata metadata, @Nullable String clusterId) {
     this.metadata = metadata;
+    this.clusterId = clusterId;
   }
 
+  /** Creates a pending entry that holds the {@code Metadata} reference for deferred resolution. */
   static KafkaClusterId of(Metadata metadata) {
-    return new KafkaClusterId(metadata);
+    return new KafkaClusterId(metadata, null);
+  }
+
+  /** Creates a fully-resolved entry. Hot-path reads return {@code clusterId} with no lock. */
+  static KafkaClusterId resolved(String clusterId) {
+    return new KafkaClusterId(null, clusterId);
   }
 }

@@ -134,7 +134,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                 equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testSingleListener"),
                 satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer"))));
     processAttributes.add(
-        3, satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+        satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
 
     testing()
         .waitAndAssertTraces(
@@ -318,7 +318,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                 satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     processAttributes.add(
-        3, satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+        satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
 
     testing()
         .waitAndAssertSortedTraces(
