@@ -150,7 +150,7 @@ public class RabbitSingletons {
 
   private static <T, V> AttributesExtractor<T, V> buildMessagingAttributesExtractor(
       MessagingAttributesGetter<T, V> getter, MessagingOperationType operationType) {
-    return MessagingAttributesExtractor.builderForOperationType(getter, operationType)
+    return MessagingAttributesExtractor.builder(getter, operationType)
         .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
         .build();
   }
