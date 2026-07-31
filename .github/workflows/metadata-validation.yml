@@ -4,7 +4,9 @@ on:
   pull_request:
     paths:
       - 'instrumentation-docs/**'
-      - 'instrumentation/*/metadata.yaml'
+      - 'instrumentation/**/metadata.yaml'
+      - '.github/scripts/instrumentations.sh'
+      - '.github/scripts/metadata-ci-validate-tasks.sh'
       - '.github/workflows/metadata-validation.yml'
 
 permissions:
