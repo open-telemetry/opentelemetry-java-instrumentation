@@ -23,8 +23,11 @@ public class RedissonMetricsInstrumentationModule extends InstrumentationModule 
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // added in 2.3.0, removed in 3.18.0 (moved to org.redisson.misc)
-    return hasClassesNamed("org.redisson.pubsub.AsyncSemaphore");
+    return hasClassesNamed(
+        // added in 2.3.0
+        "org.redisson.api.RFuture",
+        // removed in 3.18.0 (moved to org.redisson.misc)
+        "org.redisson.pubsub.AsyncSemaphore");
   }
 
   @Override

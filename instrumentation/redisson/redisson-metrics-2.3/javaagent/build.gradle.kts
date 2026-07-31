@@ -7,7 +7,7 @@ muzzle {
     group.set("org.redisson")
     module.set("redisson")
     versions.set("[2.3.0,3.18.0)")
-    // 0.9.0 exposes matching classes.
+    // Muzzle passes, but classLoaderMatcher() excludes this pre-2.3 release.
     skip("0.9.0")
     assertInverse.set(true)
   }

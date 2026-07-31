@@ -376,4 +376,6 @@ readonly TEST_LATEST_DEPS_INSTRUMENTATIONS=(
   "kafka:kafka-streams-0.11:javaagent:testExperimental"
   "lettuce:lettuce-5.1:javaagent:test"
   "lettuce:lettuce-5.1:javaagent:testStableSemconv"
+  "redisson:redisson-metrics-2.3:javaagent:test"
+  "redisson:redisson-metrics-2.3:javaagent:testStableSemconv"
 )
