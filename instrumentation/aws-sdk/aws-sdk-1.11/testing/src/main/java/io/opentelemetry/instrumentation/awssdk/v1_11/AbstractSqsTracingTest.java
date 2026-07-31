@@ -400,6 +400,12 @@ public abstract class AbstractSqsTracingTest {
                         span.hasName("receive testSdkSqs")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfying(
+                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1))
                             .hasLinksSatisfying(
                                 links ->
                                     assertThat(links)
@@ -418,6 +424,13 @@ public abstract class AbstractSqsTracingTest {
                         span.hasName("process testSdkSqs")
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfying(
+                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                                satisfies(
+                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)))
                             .hasLinksSatisfying(
                                 links ->
                                     assertThat(links)

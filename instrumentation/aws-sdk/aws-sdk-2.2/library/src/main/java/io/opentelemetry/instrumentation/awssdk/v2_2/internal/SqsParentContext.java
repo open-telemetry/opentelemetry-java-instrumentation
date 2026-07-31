@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 import static java.util.Collections.singletonMap;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -109,17 +110,28 @@ public final class SqsParentContext {
       TextMapPropagator messagingPropagator,
       boolean shouldUseXrayPropagator) {
     Context extractedContext = parentContext;
+    boolean extractedCreationContext = false;
 
     if (messagingPropagator != null) {
       extractedContext =
           ofMessageAttributes(parentContext, message.messageAttributes(), messagingPropagator);
+      extractedCreationContext = hasNewSpan(parentContext, extractedContext);
     }
 
-    if (shouldUseXrayPropagator && !Span.fromContext(extractedContext).getSpanContext().isValid()) {
+    // the span in extractedContext can also come from parentContext, which carries an ambient span
+    // when the message is consumed inside another span; that ambient span is not a creation context
+    // and must not suppress the X-Ray fallback
+    if (shouldUseXrayPropagator && !extractedCreationContext) {
       extractedContext = ofSystemAttributes(extractedContext, message.attributesAsStrings());
     }
 
     return extractedContext;
+  }
+
+  private static boolean hasNewSpan(Context parentContext, Context extractedContext) {
+    SpanContext extracted = Span.fromContext(extractedContext).getSpanContext();
+    return extracted.isValid()
+        && !extracted.equals(Span.fromContext(parentContext).getSpanContext());
   }
 
   private SqsParentContext() {}

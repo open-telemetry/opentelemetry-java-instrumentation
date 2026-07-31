@@ -11,6 +11,10 @@ import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
@@ -61,6 +65,28 @@ class SqsParentContextTest {
 
     assertThat(extractedContext.get(TEST_CONTEXT_KEY)).isEqualTo("extracted-value");
     assertThat(Span.fromContext(extractedContext).getSpanContext().isValid()).isTrue();
+  }
+
+  @Test
+  void usesXrayFallbackWhenOnlyAmbientSpanIsPresent() {
+    SpanContext ambient =
+        SpanContext.create(
+            "11111111111111111111111111111111",
+            "1111111111111111",
+            TraceFlags.getSampled(),
+            TraceState.getDefault());
+    Context parentContext = Context.root().with(Span.wrap(ambient));
+
+    Context extractedContext =
+        SqsParentContext.ofMessage(
+            parentContext,
+            messageWithTraceHeader(),
+            W3CTraceContextPropagator.getInstance(),
+            /* shouldUseXrayPropagator= */ true);
+
+    SpanContext extracted = Span.fromContext(extractedContext).getSpanContext();
+    assertThat(extracted.isValid()).isTrue();
+    assertThat(extracted.getTraceId()).isNotEqualTo(ambient.getTraceId());
   }
 
   private static SqsMessage messageWithTraceHeader() {
