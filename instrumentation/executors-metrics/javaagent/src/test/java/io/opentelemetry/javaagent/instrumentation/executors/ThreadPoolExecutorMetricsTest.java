@@ -14,7 +14,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.bootstrap.executors.ThreadPoolExecutorMetrics;
 import java.lang.ref.WeakReference;
 import java.time.Duration;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -30,8 +29,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ThreadPoolExecutorMetricsTest {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.executors";
-  private static final String DEFAULT_OWNER_NAME = "unknown";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.executors-metrics";
   private static final String THREAD_POOL_EXECUTOR_TYPE = ThreadPoolExecutor.class.getName();
   private static final String EXPECTED_THREAD_NAME_NORMALIZATION =
       "test.name-normalization.expected";
@@ -44,7 +42,7 @@ class ThreadPoolExecutorMetricsTest {
     assertThatThrownBy(
             () ->
                 JvmExecutorMetricsAssertions.create(
-                        testing, INSTRUMENTATION_NAME, "executor", "owner", "type")
+                        testing, INSTRUMENTATION_NAME, "executor", "type")
                     .assertExecutorEmitsMetrics())
         .isInstanceOf(IllegalStateException.class);
   }
@@ -81,11 +79,7 @@ class ThreadPoolExecutorMetricsTest {
           .isInstanceOf(RejectedExecutionException.class);
 
       JvmExecutorMetricsAssertions.create(
-              testing,
-              INSTRUMENTATION_NAME,
-              "metrics-pool-*",
-              DEFAULT_OWNER_NAME,
-              THREAD_POOL_EXECUTOR_TYPE)
+              testing, INSTRUMENTATION_NAME, "metrics-pool-*", THREAD_POOL_EXECUTOR_TYPE)
           .withActiveThreads(1)
           .withIdleThreads(0)
           .withCoreThreads(1)
@@ -101,7 +95,7 @@ class ThreadPoolExecutorMetricsTest {
       assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
     }
 
-    assertNoExecutorMetrics("metrics-pool-*", DEFAULT_OWNER_NAME);
+    assertNoExecutorMetrics("metrics-pool-*");
   }
 
   @Test
@@ -110,7 +104,7 @@ class ThreadPoolExecutorMetricsTest {
         new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("scheduled-pool"));
 
     try {
-      assertNoExecutorMetrics("scheduled-pool-*", DEFAULT_OWNER_NAME);
+      assertNoExecutorMetrics("scheduled-pool-*");
     } finally {
       executor.shutdownNow();
     }
@@ -127,7 +121,6 @@ class ThreadPoolExecutorMetricsTest {
               testing,
               INSTRUMENTATION_NAME,
               "unlisted-pool-*",
-              DEFAULT_OWNER_NAME,
               UnlistedThreadPoolExecutor.class.getName())
           .withCoreThreads(0)
           .assertExecutorEmitsMetrics();
@@ -141,7 +134,6 @@ class ThreadPoolExecutorMetricsTest {
               testing,
               INSTRUMENTATION_NAME,
               "unlisted-pool-*",
-              DEFAULT_OWNER_NAME,
               UnlistedThreadPoolExecutor.class.getName())
           .withCoreThreads(0)
           .assertExecutorEmitsMetrics();
@@ -161,7 +153,7 @@ class ThreadPoolExecutorMetricsTest {
         .isInstanceOf(IllegalArgumentException.class);
 
     assertThat(threadFactory.createdThreadCount()).isZero();
-    assertNoExecutorMetrics("failed-pool-*", DEFAULT_OWNER_NAME);
+    assertNoExecutorMetrics("failed-pool-*");
   }
 
   @Test
@@ -172,52 +164,15 @@ class ThreadPoolExecutorMetricsTest {
 
     try {
       assertThat(threadFactory.createdThreadCount()).isZero();
-      assertNoExecutorMetrics("started-pool-*", DEFAULT_OWNER_NAME);
+      assertNoExecutorMetrics("started-pool-*");
 
       assertThat(executor.prestartCoreThread()).isTrue();
       assertThat(threadFactory.createdThreadCount()).isEqualTo(1);
 
       JvmExecutorMetricsAssertions.create(
-              testing,
-              INSTRUMENTATION_NAME,
-              "started-pool-*",
-              DEFAULT_OWNER_NAME,
-              THREAD_POOL_EXECUTOR_TYPE)
+              testing, INSTRUMENTATION_NAME, "started-pool-*", THREAD_POOL_EXECUTOR_TYPE)
           .withCoreThreads(0)
           .assertExecutorEmitsMetrics();
-    } finally {
-      executor.shutdown();
-      assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
-    }
-  }
-
-  @Test
-  void doesNotReregisterAfterUnregister() throws Exception {
-    ThreadPoolExecutor executor =
-        new ThreadPoolExecutor(
-            1,
-            1,
-            1,
-            SECONDS,
-            new ArrayBlockingQueue<>(1),
-            new NamedThreadFactory("reregister-pool"));
-
-    try {
-      executor.prestartCoreThread();
-      JvmExecutorMetricsAssertions.create(
-              testing,
-              INSTRUMENTATION_NAME,
-              "reregister-pool-*",
-              DEFAULT_OWNER_NAME,
-              THREAD_POOL_EXECUTOR_TYPE)
-          .withCoreThreads(1)
-          .assertExecutorEmitsMetrics();
-
-      ThreadPoolExecutorMetrics.unregister(executor);
-      ThreadPoolExecutorMetrics.reregister(executor, "tomcat", "trailing");
-
-      assertNoExecutorMetrics("reregister-pool-*", DEFAULT_OWNER_NAME);
-      assertNoExecutorMetrics("reregister-pool-*", "tomcat");
     } finally {
       executor.shutdown();
       assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
@@ -236,10 +191,10 @@ class ThreadPoolExecutorMetricsTest {
                 new ArrayBlockingQueue<>(1),
                 new NamedThreadFactory("collected-pool")));
 
-    assertNoExecutorMetrics("collected-pool-*", DEFAULT_OWNER_NAME);
+    assertNoExecutorMetrics("collected-pool-*");
     GcUtils.awaitGc(executorRef, Duration.ofSeconds(10));
 
-    assertNoExecutorMetrics("collected-pool-*", DEFAULT_OWNER_NAME);
+    assertNoExecutorMetrics("collected-pool-*");
   }
 
   @Test
@@ -262,11 +217,7 @@ class ThreadPoolExecutorMetricsTest {
       assertThat(executor.prestartCoreThread()).isTrue();
 
       JvmExecutorMetricsAssertions.create(
-              testing,
-              INSTRUMENTATION_NAME,
-              expectedExecutorName,
-              DEFAULT_OWNER_NAME,
-              THREAD_POOL_EXECUTOR_TYPE)
+              testing, INSTRUMENTATION_NAME, expectedExecutorName, THREAD_POOL_EXECUTOR_TYPE)
           .withCoreThreads(1)
           .assertExecutorEmitsMetrics();
     } finally {
@@ -276,7 +227,7 @@ class ThreadPoolExecutorMetricsTest {
   }
 
   @Test
-  void reregistersOwnerAndThreadFactory() throws Exception {
+  void updatesIdentityAfterWorkerFromNewThreadFactoryStarts() throws Exception {
     NamedThreadFactory originalThreadFactory = new NamedThreadFactory("original-pool-42-worker");
     ThreadPoolExecutor executor =
         new ThreadPoolExecutor(
@@ -303,29 +254,19 @@ class ThreadPoolExecutorMetricsTest {
       assertThat(originalWorkerStarted.await(10, SECONDS)).isTrue();
 
       JvmExecutorMetricsAssertions.create(
-              testing,
-              INSTRUMENTATION_NAME,
-              originalExecutorName,
-              DEFAULT_OWNER_NAME,
-              THREAD_POOL_EXECUTOR_TYPE)
+              testing, INSTRUMENTATION_NAME, originalExecutorName, THREAD_POOL_EXECUTOR_TYPE)
           .withCoreThreads(0)
           .assertExecutorEmitsMetrics();
       assertThat(originalThreadFactory.createdThreadCount()).isEqualTo(1);
 
-      ThreadPoolExecutorMetrics.reregister(executor, "tomcat", "trailing");
-
       NamedThreadFactory replacementThreadFactory =
-          new NamedThreadFactory("original-pool-43-worker");
+          new NamedThreadFactory("replacement-pool-43-worker");
       executor.setThreadFactory(replacementThreadFactory);
       assertThat(replacementThreadFactory.createdThreadCount()).isZero();
 
       testing.clearData();
       JvmExecutorMetricsAssertions.create(
-              testing,
-              INSTRUMENTATION_NAME,
-              "original-pool-42-worker-*",
-              "tomcat",
-              THREAD_POOL_EXECUTOR_TYPE)
+              testing, INSTRUMENTATION_NAME, originalExecutorName, THREAD_POOL_EXECUTOR_TYPE)
           .withCoreThreads(0)
           .assertExecutorEmitsMetrics();
 
@@ -336,15 +277,16 @@ class ThreadPoolExecutorMetricsTest {
 
       testing.clearData();
 
+      String replacementExecutorName =
+          "trailing".equals(System.getProperty(EXPECTED_THREAD_NAME_NORMALIZATION, "all"))
+              ? "replacement-pool-43-worker-*"
+              : "replacement-pool-*-worker-*";
       JvmExecutorMetricsAssertions.create(
-              testing,
-              INSTRUMENTATION_NAME,
-              "original-pool-43-worker-*",
-              "tomcat",
-              THREAD_POOL_EXECUTOR_TYPE)
+              testing, INSTRUMENTATION_NAME, replacementExecutorName, THREAD_POOL_EXECUTOR_TYPE)
           .withCoreThreads(0)
           .assertExecutorEmitsMetrics();
       assertThat(replacementThreadFactory.createdThreadCount()).isEqualTo(1);
+      assertNoExecutorMetrics(originalExecutorName);
     } finally {
       releaseOriginalWorker.countDown();
       executor.shutdown();
@@ -375,11 +317,7 @@ class ThreadPoolExecutorMetricsTest {
       assertThat(first.prestartCoreThread()).isTrue();
       assertThat(second.prestartCoreThread()).isTrue();
       JvmExecutorMetricsAssertions.create(
-              testing,
-              INSTRUMENTATION_NAME,
-              "shared-pool-*",
-              DEFAULT_OWNER_NAME,
-              THREAD_POOL_EXECUTOR_TYPE)
+              testing, INSTRUMENTATION_NAME, "shared-pool-*", THREAD_POOL_EXECUTOR_TYPE)
           .withActiveThreads(0)
           .withIdleThreads(0)
           .withMaxThreads(2)
@@ -394,7 +332,7 @@ class ThreadPoolExecutorMetricsTest {
     }
   }
 
-  private static void assertNoExecutorMetrics(String executorName, String ownerName) {
+  private static void assertNoExecutorMetrics(String executorName) {
     testing.clearData();
     testing
         .getOpenTelemetry()
@@ -414,11 +352,7 @@ class ThreadPoolExecutorMetricsTest {
                     .noneMatch(
                         point ->
                             executorName.equals(
-                                    point.getAttributes().get(stringKey("jvm.executor.name")))
-                                && ownerName.equals(
-                                    point
-                                        .getAttributes()
-                                        .get(stringKey("jvm.executor.owner.name")))));
+                                point.getAttributes().get(stringKey("jvm.executor.name")))));
   }
 
   private static final class NamedThreadFactory implements ThreadFactory {

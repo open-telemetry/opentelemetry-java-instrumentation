@@ -12,7 +12,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.bootstrap.executors.ThreadPoolExecutorMetrics;
 import java.lang.ref.WeakReference;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
@@ -26,8 +25,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ThreadPerTaskExecutorMetricsTest {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.executors";
-  private static final String DEFAULT_OWNER_NAME = "unknown";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.executors-metrics";
   private static final String EXECUTOR_NAME = "thread-per-task-*";
   private static final String EXECUTOR_TYPE = "java.util.concurrent.ThreadPerTaskExecutor";
 
@@ -43,7 +41,7 @@ class ThreadPerTaskExecutorMetricsTest {
 
     try {
       assertThat(threadFactory.createdThreadCount()).isZero();
-      assertNoThreadPerTaskMetrics(EXECUTOR_NAME, DEFAULT_OWNER_NAME);
+      assertNoThreadPerTaskMetrics(EXECUTOR_NAME);
 
       Future<?> future =
           executor.submit(
@@ -60,14 +58,14 @@ class ThreadPerTaskExecutorMetricsTest {
       assertThat(started.await(10, SECONDS)).isTrue();
       assertThat(threadFactory.createdThreadCount()).isEqualTo(1);
       JvmExecutorMetricsAssertions.create(
-              testing, INSTRUMENTATION_NAME, EXECUTOR_NAME, DEFAULT_OWNER_NAME, EXECUTOR_TYPE)
+              testing, INSTRUMENTATION_NAME, EXECUTOR_NAME, EXECUTOR_TYPE)
           .withActiveThreads(1)
           .assertExecutorEmitsMetrics();
 
       release.countDown();
       future.get(10, SECONDS);
       JvmExecutorMetricsAssertions.create(
-              testing, INSTRUMENTATION_NAME, EXECUTOR_NAME, DEFAULT_OWNER_NAME, EXECUTOR_TYPE)
+              testing, INSTRUMENTATION_NAME, EXECUTOR_NAME, EXECUTOR_TYPE)
           .withActiveThreads(0)
           .assertExecutorEmitsMetrics();
     } finally {
@@ -76,7 +74,7 @@ class ThreadPerTaskExecutorMetricsTest {
       assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
     }
 
-    assertNoThreadPerTaskMetrics(EXECUTOR_NAME, DEFAULT_OWNER_NAME);
+    assertNoThreadPerTaskMetrics(EXECUTOR_NAME);
   }
 
   @Test
@@ -85,8 +83,7 @@ class ThreadPerTaskExecutorMetricsTest {
 
     try {
       executor.submit(() -> {}).get(10, SECONDS);
-      JvmExecutorMetricsAssertions.create(
-              testing, INSTRUMENTATION_NAME, DEFAULT_OWNER_NAME, DEFAULT_OWNER_NAME, EXECUTOR_TYPE)
+      JvmExecutorMetricsAssertions.create(testing, INSTRUMENTATION_NAME, "unknown", EXECUTOR_TYPE)
           .withActiveThreads(0)
           .assertExecutorEmitsMetrics();
       executor.close();
@@ -94,7 +91,7 @@ class ThreadPerTaskExecutorMetricsTest {
       executor.shutdown();
     }
 
-    assertNoThreadPerTaskMetrics(DEFAULT_OWNER_NAME, DEFAULT_OWNER_NAME);
+    assertNoThreadPerTaskMetrics("unknown");
   }
 
   @Test
@@ -106,33 +103,10 @@ class ThreadPerTaskExecutorMetricsTest {
 
     GcUtils.awaitGc(executorRef, Duration.ofSeconds(10));
 
-    assertNoThreadPerTaskMetrics("collected-thread-per-task-*", DEFAULT_OWNER_NAME);
+    assertNoThreadPerTaskMetrics("collected-thread-per-task-*");
   }
 
-  @Test
-  void reregistersOwnerAndThreadNameNormalization() throws Exception {
-    NamedThreadFactory threadFactory = new NamedThreadFactory("thread-per-task-42-worker");
-    ExecutorService executor = Executors.newThreadPerTaskExecutor(threadFactory);
-
-    try {
-      assertThat(threadFactory.createdThreadCount()).isZero();
-      assertNoThreadPerTaskMetrics("thread-per-task-*-worker-*", DEFAULT_OWNER_NAME);
-
-      ThreadPoolExecutorMetrics.reregister(executor, "tomcat", "trailing");
-      executor.submit(() -> {}).get(10, SECONDS);
-      testing.clearData();
-
-      JvmExecutorMetricsAssertions.create(
-              testing, INSTRUMENTATION_NAME, "thread-per-task-42-worker-*", "tomcat", EXECUTOR_TYPE)
-          .withActiveThreads(0)
-          .assertExecutorEmitsMetrics();
-      assertThat(threadFactory.createdThreadCount()).isEqualTo(1);
-    } finally {
-      executor.shutdown();
-    }
-  }
-
-  private static void assertNoThreadPerTaskMetrics(String executorName, String ownerName) {
+  private static void assertNoThreadPerTaskMetrics(String executorName) {
     testing.clearData();
     testing
         .getOpenTelemetry()
@@ -152,11 +126,7 @@ class ThreadPerTaskExecutorMetricsTest {
                     .noneMatch(
                         point ->
                             executorName.equals(
-                                    point.getAttributes().get(stringKey("jvm.executor.name")))
-                                && ownerName.equals(
-                                    point
-                                        .getAttributes()
-                                        .get(stringKey("jvm.executor.owner.name")))));
+                                point.getAttributes().get(stringKey("jvm.executor.name")))));
   }
 
   private static final class NamedThreadFactory implements ThreadFactory {

@@ -24,11 +24,11 @@ import javax.annotation.Nullable;
 
 public final class ThreadPoolExecutorMetrics {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.executors";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.executors-metrics";
   private static final String UNKNOWN = "unknown";
   private static final String THREAD_NAME_NORMALIZATION =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "executors")
-          .getString("name_normalization", "all");
+      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "executors_metrics")
+          .getString("name_normalization/development", "all");
   private static final Pattern TRAILING_DIGITS_PATTERN = Pattern.compile("\\d+$");
   private static final Pattern ALL_DIGITS_PATTERN = Pattern.compile("\\d+");
 
@@ -40,15 +40,6 @@ public final class ThreadPoolExecutorMetrics {
 
   public static void preRegister(Executor executor, Set<Thread> threads) {
     registrations.computeIfAbsent(executor, ignored -> new Registration(threads));
-  }
-
-  public static void reregister(
-      Executor executor, @Nullable String ownerName, String threadNameNormalization) {
-    String executorOwnerName = ownerName == null ? UNKNOWN : ownerName;
-    Registration registration = registrations.get(executor);
-    if (registration != null) {
-      registration.reregister(executor, executorOwnerName, threadNameNormalization);
-    }
   }
 
   public static void onThreadFactoryChanged(Executor executor) {
@@ -173,13 +164,9 @@ public final class ThreadPoolExecutorMetrics {
 
   private static final class Registration {
     private final WeakReference<Set<Thread>> threadsRef;
-    private String ownerName = UNKNOWN;
-    private String threadNameNormalization = THREAD_NAME_NORMALIZATION;
     @Nullable private AtomicReference<BatchCallback> callback;
     @Nullable private LongCounter rejectedTasks;
     private Attributes attributes = Attributes.empty();
-    private String threadName = UNKNOWN;
-    private String executorName = UNKNOWN;
     private volatile boolean awaitingWorkerThread = true;
     private boolean closed;
 
@@ -211,43 +198,13 @@ public final class ThreadPoolExecutorMetrics {
 
         awaitingWorkerThread = false;
         previous = callback;
-        String newThreadName = thread.getName();
         registerMetrics(
-            executor, threads, newThreadName, executorName(newThreadName, threadNameNormalization));
+            executor, threads, executorName(thread.getName(), THREAD_NAME_NORMALIZATION));
       }
 
       if (previous != null) {
         closeCallback(previous);
       }
-    }
-
-    private void reregister(
-        Executor executor, String newOwnerName, String newThreadNameNormalization) {
-      @Nullable AtomicReference<BatchCallback> previous;
-      synchronized (this) {
-        if (closed) {
-          return;
-        }
-
-        String newExecutorName = executorName(threadName, newThreadNameNormalization);
-        boolean metricsUnchanged =
-            ownerName.equals(newOwnerName) && executorName.equals(newExecutorName);
-        ownerName = newOwnerName;
-        threadNameNormalization = newThreadNameNormalization;
-        if (callback == null || metricsUnchanged) {
-          return;
-        }
-
-        Set<Thread> threads = threadsRef.get();
-        if (threads == null) {
-          return;
-        }
-
-        previous = callback;
-        registerMetrics(executor, threads, threadName, newExecutorName);
-      }
-
-      closeCallback(previous);
     }
 
     private synchronized void recordRejectedTask() {
@@ -272,14 +229,12 @@ public final class ThreadPoolExecutorMetrics {
       }
     }
 
-    private void registerMetrics(
-        Executor executor, Set<Thread> threads, String threadName, String executorName) {
+    private void registerMetrics(Executor executor, Set<Thread> threads, String executorName) {
       JvmExecutorMetrics metrics =
           JvmExecutorMetrics.create(
               GlobalOpenTelemetry.get(),
               INSTRUMENTATION_NAME,
               executorName,
-              ownerName,
               executor.getClass().getName());
 
       if (executor instanceof ThreadPoolExecutor) {
@@ -291,8 +246,6 @@ public final class ThreadPoolExecutorMetrics {
       }
 
       attributes = metrics.attributes();
-      this.threadName = threadName;
-      this.executorName = executorName;
     }
   }
 

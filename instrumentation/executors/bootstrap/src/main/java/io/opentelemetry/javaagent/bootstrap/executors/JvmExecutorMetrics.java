@@ -21,8 +21,6 @@ import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProp
 public final class JvmExecutorMetrics {
 
   private static final AttributeKey<String> EXECUTOR_NAME = stringKey("jvm.executor.name");
-  private static final AttributeKey<String> EXECUTOR_OWNER_NAME_ATTRIBUTE =
-      stringKey("jvm.executor.owner.name");
   private static final AttributeKey<String> EXECUTOR_TYPE = stringKey("jvm.executor.type");
   private static final AttributeKey<String> STATE = stringKey("jvm.executor.state");
 
@@ -33,7 +31,6 @@ public final class JvmExecutorMetrics {
       OpenTelemetry openTelemetry,
       String instrumentationName,
       String executorName,
-      String executorOwnerName,
       String executorType) {
     MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(instrumentationName);
     String instrumentationVersion =
@@ -44,13 +41,7 @@ public final class JvmExecutorMetrics {
 
     return new JvmExecutorMetrics(
         meterBuilder.build(),
-        Attributes.of(
-            EXECUTOR_NAME,
-            executorName,
-            EXECUTOR_OWNER_NAME_ATTRIBUTE,
-            executorOwnerName,
-            EXECUTOR_TYPE,
-            executorType));
+        Attributes.of(EXECUTOR_NAME, executorName, EXECUTOR_TYPE, executorType));
   }
 
   private final Meter meter;

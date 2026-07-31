@@ -23,8 +23,6 @@ import javax.annotation.Nullable;
 public class JvmExecutorMetricsAssertions {
 
   private static final AttributeKey<String> EXECUTOR_NAME_KEY = stringKey("jvm.executor.name");
-  private static final AttributeKey<String> EXECUTOR_OWNER_NAME_KEY =
-      stringKey("jvm.executor.owner.name");
   private static final AttributeKey<String> EXECUTOR_TYPE_KEY = stringKey("jvm.executor.type");
   private static final AttributeKey<String> EXECUTOR_STATE_KEY = stringKey("jvm.executor.state");
 
@@ -32,16 +30,14 @@ public class JvmExecutorMetricsAssertions {
       InstrumentationExtension testing,
       String instrumentationName,
       String executorName,
-      String ownerName,
       String executorType) {
     return new JvmExecutorMetricsAssertions(
-        testing, instrumentationName, executorName, ownerName, executorType);
+        testing, instrumentationName, executorName, executorType);
   }
 
   private final InstrumentationExtension testing;
   private final String instrumentationName;
   private final String executorName;
-  private final String ownerName;
   private final String executorType;
 
   @Nullable private Long expectedActiveThreads;
@@ -57,12 +53,10 @@ public class JvmExecutorMetricsAssertions {
       InstrumentationExtension testing,
       String instrumentationName,
       String executorName,
-      String ownerName,
       String executorType) {
     this.testing = testing;
     this.instrumentationName = instrumentationName;
     this.executorName = executorName;
-    this.ownerName = ownerName;
     this.executorType = executorType;
   }
 
@@ -181,8 +175,6 @@ public class JvmExecutorMetricsAssertions {
             Attributes.of(
                 EXECUTOR_NAME_KEY,
                 executorName,
-                EXECUTOR_OWNER_NAME_KEY,
-                ownerName,
                 EXECUTOR_TYPE_KEY,
                 executorType,
                 EXECUTOR_STATE_KEY,
@@ -298,13 +290,7 @@ public class JvmExecutorMetricsAssertions {
         point ->
             point
                 .hasAttributes(
-                    Attributes.of(
-                        EXECUTOR_NAME_KEY,
-                        executorName,
-                        EXECUTOR_OWNER_NAME_KEY,
-                        ownerName,
-                        EXECUTOR_TYPE_KEY,
-                        executorType))
+                    Attributes.of(EXECUTOR_NAME_KEY, executorName, EXECUTOR_TYPE_KEY, executorType))
                 .hasValue(expectedValue));
   }
 }
