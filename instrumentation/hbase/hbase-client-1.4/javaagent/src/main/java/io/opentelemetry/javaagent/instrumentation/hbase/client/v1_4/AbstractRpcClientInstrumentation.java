@@ -5,12 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.getTableName;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.resetRequestAndContext;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.setRequestAndContext;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientUtil.methodDescriptorName;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientUtil.createRequest;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4.HbaseSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -21,7 +19,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseBatchMetadata;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
 import java.net.InetSocketAddress;
@@ -29,7 +26,6 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.hadoop.hbase.protobuf.generated.ClientProtos;
 import org.apache.hadoop.hbase.security.User;
 
 class AbstractRpcClientInstrumentation implements TypeInstrumentation {
@@ -68,23 +64,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(2) Object param,
         @Advice.Argument(4) User ticket,
         @Advice.Argument(5) InetSocketAddress addr) {
-      String operation = methodDescriptorName(md);
-      Long batchSize = null;
-      if (emitStableDatabaseSemconv() && param instanceof ClientProtos.MultiRequest) {
-        HbaseBatchMetadata batchMetadata =
-            HbaseBatchMetadata.create((ClientProtos.MultiRequest) param);
-        operation = batchMetadata.getOperation();
-        batchSize = batchMetadata.getOperationBatchSize();
-      }
-
-      HbaseRequest request =
-          HbaseRequest.create(
-              operation,
-              getTableName(),
-              ticket.getName(),
-              addr.getHostString(),
-              addr.getPort(),
-              batchSize);
+      HbaseRequest request = createRequest(md, param, ticket, addr);
       Context parentContext = Java8BytecodeBridge.currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;

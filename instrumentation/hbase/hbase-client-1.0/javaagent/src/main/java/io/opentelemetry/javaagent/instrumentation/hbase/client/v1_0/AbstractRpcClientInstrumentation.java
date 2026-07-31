@@ -5,9 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v1_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.getTableName;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientUtil.methodDescriptorName;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientUtil.createRequest;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v1_0.HbaseSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -19,14 +17,12 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseBatchMetadata;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.hadoop.hbase.protobuf.generated.ClientProtos;
 import org.apache.hadoop.hbase.security.User;
 
 class AbstractRpcClientInstrumentation implements TypeInstrumentation {
@@ -66,23 +62,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
 
     @Nullable
     public static AdviceScope start(Object md, Object param, User ticket, InetSocketAddress addr) {
-      String operation = methodDescriptorName(md);
-      Long batchSize = null;
-      if (emitStableDatabaseSemconv() && param instanceof ClientProtos.MultiRequest) {
-        HbaseBatchMetadata batchMetadata =
-            HbaseBatchMetadata.create((ClientProtos.MultiRequest) param);
-        operation = batchMetadata.getOperation();
-        batchSize = batchMetadata.getOperationBatchSize();
-      }
-
-      HbaseRequest request =
-          HbaseRequest.create(
-              operation,
-              getTableName(),
-              ticket.getName(),
-              addr.getHostString(),
-              addr.getPort(),
-              batchSize);
+      HbaseRequest request = createRequest(md, param, ticket, addr);
       Context parentContext = Java8BytecodeBridge.currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
