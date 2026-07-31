@@ -125,7 +125,7 @@ public final class AgentInitializer {
    */
   @Nullable
   private static String getJvmCommand() {
-    return doPrivileged(
+    String cmd = doPrivileged(
         new PrivilegedAction<String>() {
           @Override
           public String run() {
@@ -134,11 +134,13 @@ public final class AgentInitializer {
               enable = System.getenv("OTEL_JAVAAGENT_ENABLED");
             }
             if (Boolean.parseBoolean(enable)) {
-              return null;
+              // using empty string as method should not return null
+              return "";
             }
             return System.getProperty("sun.java.command");
           }
         });
+    return cmd.isEmpty() ? null : cmd;
   }
 
   @SuppressWarnings("removal") // AccessController is deprecated for removal
