@@ -52,9 +52,7 @@ public class JmxTelemetryRulesTest {
     Set<String> allRules = new HashSet<>();
     for (String system : JmxTelemetryRules.getSupportedSystems()) {
       Set<String> rulesForSystem = locateRulesForSystem(CLASS_LOADER, system, true);
-      assertThat(rulesForSystem)
-          .describedAs("at least one rule file should be used for system %s", system)
-          .isNotEmpty();
+      assertThat(rulesForSystem).isNotEmpty();
       allRules.addAll(rulesForSystem);
     }
 

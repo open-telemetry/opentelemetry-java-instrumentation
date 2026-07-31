@@ -132,7 +132,7 @@ class KafkaConnectTest extends TargetSystemTest {
 
   @Test
   void metricsAreReportedFromKafkaConnectContainer() throws Exception {
-    Set<String> yamlFiles = getAndValidateYamlFilesForSystem("experimental-kafka-connect.yaml");
+    Set<String> yamlFiles = getAndValidateYamlFilesForSystem("experimental-kafka-connect");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
