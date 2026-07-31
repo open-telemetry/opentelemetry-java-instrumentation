@@ -35,7 +35,7 @@ public class SpringRabbitSingletons {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operationType))
             .addAttributesExtractor(
-                MessagingAttributesExtractor.builderForOperationType(getter, operationType)
+                MessagingAttributesExtractor.builder(getter, operationType)
                     .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build())
             .addAttributesExtractor(new SpringRabbitExtraAttributesExtractor());
