@@ -347,7 +347,7 @@ public final class KafkaUtil {
     }
     try {
       Cluster cluster = metadata.fetch();
-      if (cluster == null) {
+      if (cluster == null || cluster.isBootstrapConfigured()) {
         return null;
       }
       ClusterResource resource = cluster.clusterResource();
