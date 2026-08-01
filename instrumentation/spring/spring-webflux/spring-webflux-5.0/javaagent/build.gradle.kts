@@ -78,6 +78,7 @@ tasks {
   }
 
   test {
+    // server tests require controller-telemetry, which is off by default
     exclude("**/server/**")
   }
 
@@ -116,7 +117,6 @@ tasks {
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    exclude("**/server/**")
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
     systemProperty(
