@@ -99,24 +99,31 @@ tasks {
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
-  val testV3PreviewReceiveSpansDisabled = register<Test>("testV3PreviewReceiveSpansDisabled") {
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+  }
+
+  val testMessagingPreviewReceiveSpansDisabled = register<Test>("testMessagingPreviewReceiveSpansDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
   test {
@@ -133,8 +140,9 @@ tasks {
       testing.suites,
       testExperimental,
       testReceiveSpansDisabled,
-      testV3Preview,
-      testV3PreviewReceiveSpansDisabled,
+      testMessagingPreview,
+      testBothSemconv,
+      testMessagingPreviewReceiveSpansDisabled,
     )
   }
 }
