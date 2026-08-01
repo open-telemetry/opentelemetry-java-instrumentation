@@ -70,7 +70,7 @@ tasks {
     include("**/Jms1SuppressReceiveSpansTest.*")
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
@@ -78,18 +78,16 @@ tasks {
       excludeTestsMatching("Jms1SuppressReceiveSpansTest")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
-  val testJms2V3Preview = register<Test>("testJms2V3Preview") {
+  val testJms2MessagingPreview = register<Test>("testJms2MessagingPreview") {
     testClassesDirs = sourceSets["jms2Test"].output.classesDirs
     classpath = sourceSets["jms2Test"].runtimeClasspath
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
   val testBothSemconv = register<Test>("testBothSemconv") {
@@ -101,7 +99,6 @@ tasks {
     }
     include("**/Jms1InstrumentationTest.*")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
@@ -122,8 +119,8 @@ tasks {
     dependsOn(
       testing.suites,
       testReceiveSpansDisabled,
-      testV3Preview,
-      testJms2V3Preview,
+      testMessagingPreview,
+      testJms2MessagingPreview,
       testBothSemconv,
     )
   }

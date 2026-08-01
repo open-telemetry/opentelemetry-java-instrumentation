@@ -67,7 +67,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.spring-integration.producer.enabled=true")
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -77,9 +77,22 @@ tasks {
     jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
     jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
     jvmArgs("-Dotel.instrumentation.spring-integration.producer.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("SpringIntegrationAndRabbitTest")
+      excludeTestsMatching("SpringCloudStreamRabbitTest")
+    }
+    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+    jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
+    jvmArgs("-Dotel.instrumentation.spring-integration.producer.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
 
   test {
@@ -92,7 +105,7 @@ tasks {
   }
 
   check {
-    dependsOn(testWithRabbitInstrumentation, testWithProducerInstrumentation, testV3Preview)
+    dependsOn(testWithRabbitInstrumentation, testWithProducerInstrumentation, testMessagingPreview, testBothSemconv)
   }
 
   withType<Test>().configureEach {
