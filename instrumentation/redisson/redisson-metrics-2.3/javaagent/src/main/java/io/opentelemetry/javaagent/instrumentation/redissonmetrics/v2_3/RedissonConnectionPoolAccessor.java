@@ -6,16 +6,17 @@
 package io.opentelemetry.javaagent.instrumentation.redissonmetrics.v2_3;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.redisson.pubsub.AsyncSemaphore;
 
-public class AsyncSemaphoreAccessor {
+public class RedissonConnectionPoolAccessor {
 
-  @Nullable private static final Field counterField = findField("counter");
-  @Nullable private static final Field listenersField = findField("listeners");
+  @Nullable private static final Field counterField = findAsyncSemaphoreField("counter");
+  @Nullable private static final Field listenersField = findAsyncSemaphoreField("listeners");
 
   @Nullable
   public static Supplier<Integer> availableConnectionsSupplier(Object freeConnectionsCounter) {
@@ -34,6 +35,21 @@ public class AsyncSemaphoreAccessor {
       return null;
     }
     return () -> readPendingRequests((AsyncSemaphore) freeConnectionsCounter);
+  }
+
+  static int getSubscriptionMinimumIdleSize(Object connectionManager, int fallback) {
+    try {
+      Object config = connectionManager.getClass().getMethod("getConfig").invoke(connectionManager);
+      Method getter;
+      try {
+        getter = config.getClass().getMethod("getSubscriptionConnectionMinimumIdleSize");
+      } catch (NoSuchMethodException ignored) {
+        getter = config.getClass().getMethod("getSlaveSubscriptionConnectionMinimumIdleSize");
+      }
+      return ((Number) getter.invoke(config)).intValue();
+    } catch (ReflectiveOperationException | RuntimeException ignored) {
+      return fallback;
+    }
   }
 
   @Nullable
@@ -76,7 +92,7 @@ public class AsyncSemaphoreAccessor {
   }
 
   @Nullable
-  private static Field findField(String fieldName) {
+  private static Field findAsyncSemaphoreField(String fieldName) {
     try {
       Field field = AsyncSemaphore.class.getDeclaredField(fieldName);
       field.setAccessible(true);
@@ -86,5 +102,5 @@ public class AsyncSemaphoreAccessor {
     }
   }
 
-  private AsyncSemaphoreAccessor() {}
+  private RedissonConnectionPoolAccessor() {}
 }

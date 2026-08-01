@@ -54,12 +54,18 @@ public class RedissonConnectionPoolMetrics {
 
   public static void registerSubscriptionMetrics(
       RedisClient redisClient,
+      Object connectionManager,
       int minIdleConnections,
       int maxConnections,
       NodeType nodeType,
       Supplier<Integer> availableConnections,
       Collection<?> idleConnections,
       @Nullable Supplier<Integer> pendingRequests) {
+    if (maxConnections > 0) {
+      minIdleConnections =
+          RedissonConnectionPoolAccessor.getSubscriptionMinimumIdleSize(
+              connectionManager, minIdleConnections);
+    }
     registerPoolMetrics(
         subscriptionPoolMetrics,
         "subscription",
@@ -155,9 +161,8 @@ public class RedissonConnectionPoolMetrics {
     return metrics.batchCallback(callback, connections, minIdle, maxIdle, max, pendingRequests);
   }
 
-  private static String poolName(
-      RedisClient redisClient, @Nullable NodeType nodeType, String poolKind) {
-    String prefix = nodeType == null ? "unknown" : nodeType.name().toLowerCase(Locale.ROOT);
+  private static String poolName(RedisClient redisClient, NodeType nodeType, String poolKind) {
+    String prefix = nodeType.name().toLowerCase(Locale.ROOT);
     InetSocketAddress address = redisClient.getAddr();
     return prefix + "-" + poolKind + "-" + address.getHostString() + ":" + address.getPort();
   }

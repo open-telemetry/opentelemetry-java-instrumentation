@@ -58,6 +58,7 @@ class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
         @Advice.Argument(2) int poolMaxSize,
         @Advice.Argument(3) int subscriptionPoolMinSize,
         @Advice.Argument(4) int subscriptionPoolMaxSize,
+        @Advice.Argument(5) Object connectionManager,
         @Advice.Argument(6) NodeType nodeType,
         @Advice.FieldValue("freeConnectionsCounter") Object freeConnectionsCounter,
         @Advice.FieldValue("freeConnections") Collection<?> freeConnections,
@@ -65,7 +66,7 @@ class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
             Object freeSubscribeConnectionsCounter,
         @Advice.FieldValue("freeSubscribeConnections") Collection<?> freeSubscribeConnections) {
       Supplier<Integer> availableConnections =
-          AsyncSemaphoreAccessor.availableConnectionsSupplier(freeConnectionsCounter);
+          RedissonConnectionPoolAccessor.availableConnectionsSupplier(freeConnectionsCounter);
       if (availableConnections != null) {
         RedissonConnectionPoolMetrics.registerMetrics(
             redisClient,
@@ -74,20 +75,23 @@ class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
             nodeType,
             availableConnections,
             freeConnections,
-            AsyncSemaphoreAccessor.pendingRequestsSupplier(freeConnectionsCounter));
+            RedissonConnectionPoolAccessor.pendingRequestsSupplier(freeConnectionsCounter));
       }
 
       Supplier<Integer> availableSubscriptionConnections =
-          AsyncSemaphoreAccessor.availableConnectionsSupplier(freeSubscribeConnectionsCounter);
+          RedissonConnectionPoolAccessor.availableConnectionsSupplier(
+              freeSubscribeConnectionsCounter);
       if (availableSubscriptionConnections != null) {
         RedissonConnectionPoolMetrics.registerSubscriptionMetrics(
             redisClient,
+            connectionManager,
             subscriptionPoolMinSize,
             subscriptionPoolMaxSize,
             nodeType,
             availableSubscriptionConnections,
             freeSubscribeConnections,
-            AsyncSemaphoreAccessor.pendingRequestsSupplier(freeSubscribeConnectionsCounter));
+            RedissonConnectionPoolAccessor.pendingRequestsSupplier(
+                freeSubscribeConnectionsCounter));
       }
     }
   }

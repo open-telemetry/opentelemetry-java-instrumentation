@@ -66,7 +66,7 @@ class RedissonConnectionPoolMetricsTest {
           "db.client.connections.idle.min",
           "The minimum number of idle open connections allowed.",
           REGULAR_MIN_IDLE,
-          expectedSubscriptionMinIdle());
+          SUBSCRIPTION_MIN_IDLE);
       assertPoolSizeMetric(
           "db.client.connection.idle.max",
           "db.client.connections.idle.max",
@@ -128,7 +128,7 @@ class RedissonConnectionPoolMetricsTest {
           .getClass()
           .getMethod("setPingConnectionInterval", int.class)
           .invoke(singleServerConfig, 0);
-    } catch (ReflectiveOperationException | RuntimeException ignored) {
+    } catch (ReflectiveOperationException ignored) {
       // ignored
     }
     return Redisson.create(config);
@@ -264,11 +264,6 @@ class RedissonConnectionPoolMetricsTest {
                 metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
                     && metricData.getName().equals(pendingRequestsMetricName))
         .isEmpty();
-  }
-
-  private static int expectedSubscriptionMinIdle() throws NoSuchFieldException {
-    // Redisson 2.3.0 passes the regular pool minimum as constructor argument 3 in SingleEntry.
-    return usesAsyncSemaphore() ? SUBSCRIPTION_MIN_IDLE : REGULAR_MIN_IDLE;
   }
 
   private static boolean usesAsyncSemaphore() throws NoSuchFieldException {
