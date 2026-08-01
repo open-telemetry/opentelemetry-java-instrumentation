@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -117,7 +118,7 @@ class SpringRabbitMqTest {
                 equalTo(MESSAGING_SYSTEM, "rabbitmq"),
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
-                equalTo(MESSAGING_OPERATION, emitStableMessagingSemconv() ? null : operation),
+                equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null),
                 equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null),
                 equalTo(
                     MESSAGING_OPERATION_TYPE,

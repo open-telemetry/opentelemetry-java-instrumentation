@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -787,7 +788,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                     v -> assertThat(v).isNull(),
                     v -> assertThat(v).isEqualTo(routingKey),
                     v -> assertThat(v).startsWith("amq.gen-"))),
-        equalTo(MESSAGING_OPERATION, emitStableMessagingSemconv() ? null : operation),
+        equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null),
         equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null),
         equalTo(
             MESSAGING_OPERATION_TYPE,
