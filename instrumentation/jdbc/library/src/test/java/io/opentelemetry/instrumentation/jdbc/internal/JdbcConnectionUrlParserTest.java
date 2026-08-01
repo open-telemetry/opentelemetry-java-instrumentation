@@ -199,6 +199,18 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("failover")
             .setHost("::1")
             .setPort(3306)
+            .build(),
+        // Regression test for #14150: MySQL Connector/J's Replication and LoadBalance
+        // connection wrappers report a synthetic, non-URL "**internally_generated**<timestamp>**"
+        // placeholder as their connection URL for the underlying physical connections. This has
+        // no colon, slash, or comma, which previously caused a StringIndexOutOfBoundsException
+        // deep in the non-standard-format parsing path.
+        arg("jdbc:mysql:loadbalance://**internally_generated**1748961526469**")
+            .setShortUrl("mysql:loadbalance://**internally_generated**1748961526469**:3306")
+            .setSystem(MYSQL)
+            .setSubtype("loadbalance")
+            .setHost("**internally_generated**1748961526469**")
+            .setPort(3306)
             .build());
   }
 
