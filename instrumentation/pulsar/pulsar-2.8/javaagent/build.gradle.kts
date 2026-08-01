@@ -48,19 +48,18 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.pulsar.experimental-span-attributes=true")
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
-  val testV3PreviewReceiveSpanDisabled = register<Test>("testV3PreviewReceiveSpanDisabled") {
+  val testMessagingPreviewReceiveSpansDisabled = register<Test>("testMessagingPreviewReceiveSpansDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -68,9 +67,8 @@ tasks {
     }
     include("**/PulsarClientSuppressReceiveSpansTest.*")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
   val testBothSemconv = register<Test>("testBothSemconv") {
@@ -80,7 +78,6 @@ tasks {
       includeTestsMatching("PulsarClientTest.testConsumeNonPartitionedTopic")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
@@ -100,8 +97,8 @@ tasks {
     dependsOn(
       testReceiveSpanDisabled,
       testExperimental,
-      testV3Preview,
-      testV3PreviewReceiveSpanDisabled,
+      testMessagingPreview,
+      testMessagingPreviewReceiveSpansDisabled,
       testBothSemconv,
     )
   }
