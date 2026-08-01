@@ -97,6 +97,7 @@ public final class CommonConfig {
     loggingTraceIdKey =
         getConfig(
             logging,
+            v3Preview,
             "trace_id_key",
             "trace_id",
             "otel.instrumentation.common.logging.trace-id-key",
@@ -105,6 +106,7 @@ public final class CommonConfig {
     loggingSpanIdKey =
         getConfig(
             logging,
+            v3Preview,
             "span_id_key",
             "span_id",
             "otel.instrumentation.common.logging.span-id-key",
@@ -113,6 +115,7 @@ public final class CommonConfig {
     loggingTraceFlagsKey =
         getConfig(
             logging,
+            v3Preview,
             "trace_flags_key",
             "trace_flags",
             "otel.instrumentation.common.logging.trace-flags-key",
@@ -122,6 +125,7 @@ public final class CommonConfig {
 
   private static String getConfig(
       DeclarativeConfigProperties config,
+      boolean v3Preview,
       String newDeclarativeKey,
       String oldDeclarativeKey,
       String newProperty,
@@ -131,18 +135,20 @@ public final class CommonConfig {
     if (value != null) {
       return value;
     }
-    value = config.getString(oldDeclarativeKey);
-    if (value != null) {
-      if (warnedDeprecatedProperties.add(oldProperty)) {
-        logger.warning(
-            "The "
-                + oldProperty
-                + " setting and the equivalent declarative configuration property"
-                + " are deprecated and will be removed in 3.0. Use "
-                + newProperty
-                + " or equivalent declarative configuration instead.");
+    if (!v3Preview) {
+      value = config.getString(oldDeclarativeKey);
+      if (value != null) {
+        if (warnedDeprecatedProperties.add(oldProperty)) {
+          logger.warning(
+              "The "
+                  + oldProperty
+                  + " setting and the equivalent declarative configuration property"
+                  + " are deprecated and will be removed in 3.0. Use "
+                  + newProperty
+                  + " or equivalent declarative configuration instead.");
+        }
+        return value;
       }
-      return value;
     }
     return defaultValue;
   }

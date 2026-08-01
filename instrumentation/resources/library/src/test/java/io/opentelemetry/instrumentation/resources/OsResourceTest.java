@@ -24,8 +24,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.SchemaUrls;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
+@ResourceLock(Resources.SYSTEM_PROPERTIES)
 class OsResourceTest {
 
   @Test

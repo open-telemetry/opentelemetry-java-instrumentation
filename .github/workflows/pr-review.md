@@ -24,7 +24,10 @@ on:
   issue_comment:
     types: [created]
 
-permissions: read-all
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
 
 concurrency:
   group: pr-review-${{ github.event.pull_request.number || github.event.issue.number }}
@@ -39,9 +42,6 @@ strict: false
 engine:
   id: copilot
   model: ${{ needs.dispatch.outputs.model }}
-
-sandbox:
-  agent: false
 
 network:
   allowed:
@@ -60,12 +60,15 @@ tools:
     - "rg:*"
     - "grep:*"
 
-# The finalize job owns review posting directly via `.github/scripts/pr-review/post.py`.
-# This placeholder opts out of gh-aw's default `create_issue` safe output,
-# which would otherwise turn an agent narration or fallback into a separate
-# `[pr-review]` issue instead of the intended findings artifact.
+# Results are exported as an artifact and posted by finalize, not published
+# through safe outputs. The custom job prevents gh-aw from auto-injecting its
+# default `create-issue` output and is intentionally never called. `noop` remains
+# available for an explicit summary-only completion, but must not create an issue.
+# Neither configured path mutates repository content, so threat detection is unnecessary.
 safe-outputs:
   threat-detection: false
+  noop:
+    report-as-issue: false
   jobs:
     suppress_default_create_issue:
       runs-on: ubuntu-latest
@@ -170,11 +173,13 @@ jobs:
       - name: Comment on PR when agent failed
         if: needs.agent.result != 'success'
         env:
+          AGENT_RESULT: ${{ needs.agent.result }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ needs.dispatch.outputs.pr_number }}
         run: |
-          gh pr comment "${{ needs.dispatch.outputs.pr_number }}" \
+          gh pr comment "$PR_NUMBER" \
             --repo "$GITHUB_REPOSITORY" \
-            --body "Automated review did not complete (agent_result=${{ needs.agent.result }}). See workflow run for details."
+            --body "Automated review did not complete (agent_result=${AGENT_RESULT}). See workflow run for details."
 
   # ---- agent job ----
   # The implicit gh-aw agent job is configured by the top-level frontmatter

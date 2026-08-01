@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.core.Future;
 import io.vertx.core.net.NetSocket;
+import io.vertx.redis.client.RedisConnection;
 import io.vertx.redis.client.Request;
 import io.vertx.redis.client.Response;
 import io.vertx.redis.client.impl.RedisStandaloneConnection;
@@ -118,14 +119,36 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class BatchAdvice {
     public static class BatchAdviceScope {
+      private static final boolean VERTX_4_0_X = isVertx40x();
+
       private final VertxRedisClientRequest otelRequest;
       private final Context context;
       private final Scope scope;
+      private final boolean emptyBatch;
 
-      private BatchAdviceScope(VertxRedisClientRequest otelRequest, Context context, Scope scope) {
+      private BatchAdviceScope(
+          VertxRedisClientRequest otelRequest, Context context, Scope scope, boolean emptyBatch) {
         this.otelRequest = otelRequest;
         this.context = context;
         this.scope = scope;
+        this.emptyBatch = emptyBatch;
+      }
+
+      // Vert.x Redis 4.0.0 through 4.0.3 create a promise for an empty batch but never process a
+      // response that could complete it. Version 4.1.0.Beta1 added explicit empty-batch completion.
+      // The same 4.1.0.Beta1 update replaced the connection provider API, so init(RedisConnection)
+      // is a reliable marker for the affected 4.0.x line.
+      private static boolean isVertx40x() {
+        try {
+          return Class.forName(
+                      "io.vertx.redis.client.impl.RedisConnectionManager$RedisConnectionProvider",
+                      false,
+                      RedisStandaloneConnection.class.getClassLoader())
+                  .getDeclaredMethod("init", RedisConnection.class)
+              != null;
+        } catch (ReflectiveOperationException ignored) {
+          return false;
+        }
       }
 
       @Nullable
@@ -147,7 +170,8 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
           return null;
         }
         Context context = instrumenter().start(parentContext, otelRequest);
-        return new BatchAdviceScope(otelRequest, context, context.makeCurrent());
+        return new BatchAdviceScope(
+            otelRequest, context, context.makeCurrent(), requests.isEmpty());
       }
 
       @Nullable
@@ -156,6 +180,12 @@ class RedisStandaloneConnectionInstrumentation implements TypeInstrumentation {
         scope.close();
         if (throwable != null) {
           instrumenter().end(context, otelRequest, null, throwable);
+        } else if (emptyBatch
+            && VERTX_4_0_X
+            && responseFuture != null
+            && !responseFuture.isComplete()) {
+          // Vert.x 4.0.x never completes the promise returned for an empty batch.
+          instrumenter().end(context, otelRequest, null, null);
         } else {
           responseFuture =
               VertxRedisClientSingletons.wrapEndSpan(responseFuture, context, otelRequest);

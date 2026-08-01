@@ -19,8 +19,6 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.springframework.core.env.Environment;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -29,7 +27,6 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 public class SpringConfigProperties implements ConfigProperties {
   private final CachedPropertyResolver environment;
 
-  private final ExpressionParser parser;
   private final OtlpExporterProperties otlpExporterProperties;
   private final OtelResourceProperties resourceProperties;
   private final ConfigProperties otelSdkProperties;
@@ -47,23 +44,16 @@ public class SpringConfigProperties implements ConfigProperties {
       OtelSpringProperties otelSpringProperties,
       ConfigProperties fallback) {
     return new SpringConfigProperties(
-        env,
-        new SpelExpressionParser(),
-        otlpExporterProperties,
-        resourceProperties,
-        otelSpringProperties,
-        fallback);
+        env, otlpExporterProperties, resourceProperties, otelSpringProperties, fallback);
   }
 
   public SpringConfigProperties(
       Environment environment,
-      ExpressionParser parser,
       OtlpExporterProperties otlpExporterProperties,
       OtelResourceProperties resourceProperties,
       OtelSpringProperties otelSpringProperties,
       ConfigProperties otelSdkProperties) {
     this.environment = new CachedPropertyResolver(environment);
-    this.parser = parser;
     this.otlpExporterProperties = otlpExporterProperties;
     this.resourceProperties = resourceProperties;
     this.otelSdkProperties = otelSdkProperties;
@@ -225,7 +215,6 @@ public class SpringConfigProperties implements ConfigProperties {
     return DefaultConfigProperties.createFromMap(singletonMap(name, value)).getDuration(name);
   }
 
-  @SuppressWarnings("unchecked") // reading map loses generic type
   @Override
   public Map<String, String> getMap(String name) {
     Map<String, String> otelSdkMap = otelSdkProperties.getMap(name);
@@ -241,7 +230,7 @@ public class SpringConfigProperties implements ConfigProperties {
     if (value == null) {
       return otelSdkMap;
     }
-    return (Map<String, String>) parser.parseExpression(value).getValue();
+    return DefaultConfigProperties.createFromMap(singletonMap(name, value)).getMap(name);
   }
 
   @Nullable

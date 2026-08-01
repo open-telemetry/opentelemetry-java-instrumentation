@@ -1,0 +1,17 @@
+
+# When testing, we have to use imports to add existing entities and their attributes to the registry.
+# This is not part of the JMX metrics themselves but is reported in the test environment.
+# Adding those here allows us to lower the noise level. Otherwise, related attributes would be reported
+# as errors because they are not part of the JMX registry.
+imports:
+  entities:
+    - service
+    - service.instance
+    - telemetry.sdk
+    - container
+    - os
+    - host
+    - process
+    - process.runtime
+    - process.executable
+    - telemetry.distro

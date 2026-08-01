@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
@@ -153,20 +155,25 @@ class VertxRedisClientRequest {
       }
       String queryText =
           sanitize(commandName.toUpperCase(Locale.ROOT), RequestUtil.getArgs(request));
+      String separator = batchQuerySeparator();
       int newLength = builder.length();
       if (builder.length() > 0) {
-        newLength++;
+        newLength += separator.length();
       }
       newLength += queryText.length();
       if (newLength > BATCH_QUERY_TEXT_LIMIT) {
         break;
       }
       if (builder.length() > 0) {
-        builder.append(';');
+        builder.append(separator);
       }
       builder.append(queryText);
     }
     return builder.toString();
+  }
+
+  private static String batchQuerySeparator() {
+    return emitStableDatabaseSemconv() ? "; " : ";";
   }
 
   @Nullable

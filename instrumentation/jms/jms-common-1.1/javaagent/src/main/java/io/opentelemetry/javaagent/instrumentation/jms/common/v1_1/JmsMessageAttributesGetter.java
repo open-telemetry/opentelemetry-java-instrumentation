@@ -23,6 +23,7 @@ final class JmsMessageAttributesGetter
     return "jms";
   }
 
+  @Nullable
   @Override
   public String getDestination(MessageWithDestination messageWithDestination) {
     return messageWithDestination.destinationName();

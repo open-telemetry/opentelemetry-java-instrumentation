@@ -9,8 +9,4 @@ semantic_conventions:
   - RPC_SERVER_METRICS
 library_link: https://github.com/sofastack/sofa-rpc/
 configurations:
-  - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.service_peer_mapping
-    description: Used to specify a mapping from host names or IP addresses to peer services.
-    type: structured_list
-    default: ''
+  - ref: common.peer-service-mapping

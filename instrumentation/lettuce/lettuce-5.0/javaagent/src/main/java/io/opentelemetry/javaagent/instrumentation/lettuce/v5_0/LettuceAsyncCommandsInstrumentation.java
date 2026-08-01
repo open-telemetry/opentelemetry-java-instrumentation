@@ -10,6 +10,8 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSin
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.lettuce.core.AbstractRedisAsyncCommands;
+import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -44,7 +46,10 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
   public static class DispatchAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter() {
+    public static Scope onEnter(
+        @Advice.This AbstractRedisAsyncCommands<?, ?> commands,
+        @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
+      LettuceSingletons.attachAddress(command, commands.getConnection());
       Context parentContext = currentContext();
       return parentContext.with(COMMAND_CONTEXT_KEY, parentContext).makeCurrent();
     }

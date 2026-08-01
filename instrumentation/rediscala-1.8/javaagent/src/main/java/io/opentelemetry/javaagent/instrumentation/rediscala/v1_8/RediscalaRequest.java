@@ -15,18 +15,29 @@ import scala.collection.immutable.Queue;
 class RediscalaRequest {
   private final String operationName;
   @Nullable private final Long batchSize;
+  @Nullable private final String host;
+  @Nullable private final Integer port;
 
-  static RediscalaRequest create(RedisCommand<?, ?> command) {
-    return new RediscalaRequest(operationName(command), null);
+  static RediscalaRequest create(
+      RedisCommand<?, ?> command, @Nullable String host, @Nullable Integer port) {
+    return new RediscalaRequest(operationName(command), null, host, port);
   }
 
-  static RediscalaRequest createTransaction(Queue<Operation<?, ?>> operations) {
-    return new RediscalaRequest(transactionOperationName(operations), batchSize(operations));
+  static RediscalaRequest createTransaction(
+      Queue<Operation<?, ?>> operations, @Nullable String host, @Nullable Integer port) {
+    return new RediscalaRequest(
+        transactionOperationName(operations), batchSize(operations), host, port);
   }
 
-  private RediscalaRequest(String operationName, @Nullable Long batchSize) {
+  private RediscalaRequest(
+      String operationName,
+      @Nullable Long batchSize,
+      @Nullable String host,
+      @Nullable Integer port) {
     this.operationName = operationName;
     this.batchSize = batchSize;
+    this.host = host;
+    this.port = port;
   }
 
   String getOperationName() {
@@ -36,6 +47,16 @@ class RediscalaRequest {
   @Nullable
   Long getBatchSize() {
     return batchSize;
+  }
+
+  @Nullable
+  String getHost() {
+    return host;
+  }
+
+  @Nullable
+  Integer getPort() {
+    return port;
   }
 
   private static String transactionOperationName(Queue<Operation<?, ?>> operations) {

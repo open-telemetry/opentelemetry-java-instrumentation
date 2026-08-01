@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
+import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.TRANSACTION_ENDPOINT;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -51,7 +52,12 @@ class TransactionInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(TransactionBuilder transactionBuilder) {
         Queue<Operation<?, ?>> operations = transactionBuilder.operations().result();
-        RediscalaRequest request = RediscalaRequest.createTransaction(operations);
+        ServerEndpoint endpoint = TRANSACTION_ENDPOINT.get(transactionBuilder);
+        RediscalaRequest request =
+            RediscalaRequest.createTransaction(
+                operations,
+                endpoint != null ? endpoint.getHost() : null,
+                endpoint != null ? endpoint.getPort() : null);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
