@@ -28,7 +28,7 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
   /** Returns a messaging span name extractor for the given operation. */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       MessagingAttributesGetter<REQUEST, ?> getter, MessageOperation operation) {
-    return builder(getter, operation).build();
+    return new MessagingSpanNameExtractorBuilder<>(getter, operation.type(), false).build();
   }
 
   /**
@@ -38,12 +38,6 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
   public static <REQUEST> MessagingSpanNameExtractorBuilder<REQUEST> builder(
       MessagingAttributesGetter<REQUEST, ?> getter, MessagingOperationType operationType) {
     return new MessagingSpanNameExtractorBuilder<>(getter, operationType, true);
-  }
-
-  /** Returns a messaging span name extractor builder for the given operation. */
-  public static <REQUEST> MessagingSpanNameExtractorBuilder<REQUEST> builder(
-      MessagingAttributesGetter<REQUEST, ?> getter, MessageOperation operation) {
-    return new MessagingSpanNameExtractorBuilder<>(getter, operation.type(), false);
   }
 
   private final MessagingAttributesGetter<REQUEST, ?> getter;
