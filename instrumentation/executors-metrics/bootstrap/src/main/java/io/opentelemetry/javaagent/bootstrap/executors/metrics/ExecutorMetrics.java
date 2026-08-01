@@ -109,9 +109,7 @@ public abstract class ExecutorMetrics {
       return UNKNOWN;
     }
 
-    return ("trailing".equals(threadNameNormalization)
-            ? TRAILING_DIGITS_PATTERN
-            : ALL_DIGITS_PATTERN)
+    return ("all".equals(threadNameNormalization) ? ALL_DIGITS_PATTERN : TRAILING_DIGITS_PATTERN)
         .matcher(threadName)
         .replaceAll("*");
   }

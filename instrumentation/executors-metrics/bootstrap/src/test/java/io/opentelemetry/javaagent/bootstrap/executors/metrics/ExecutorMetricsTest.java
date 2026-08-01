@@ -145,7 +145,8 @@ class ExecutorMetricsTest {
     return Stream.of(
         Arguments.of("all", "pool-12-thread-34", "pool-*-thread-*"),
         Arguments.of("trailing", "pool-12-thread-34", "pool-12-thread-*"),
-        Arguments.of("unsupported", "pool-12-thread-34", "pool-*-thread-*"),
+        Arguments.of("unsupported", "pool-12-thread-34", "pool-12-thread-*"),
+        Arguments.of("", "pool-12-thread-34", "pool-12-thread-*"),
         Arguments.of("all", null, ExecutorMetrics.UNKNOWN),
         Arguments.of("all", "   ", ExecutorMetrics.UNKNOWN));
   }
