@@ -16,7 +16,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoo
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -25,27 +24,29 @@ final class ConnectionPoolMetrics {
   private static final Logger logger = Logger.getLogger(ConnectionPoolMetrics.class.getName());
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.c3p0-0.9";
-  private static final String DEFAULT_POOL_NAME = "c3p0";
-  private static final AtomicInteger idGenerator = new AtomicInteger(1);
 
   // a weak map does not make sense here because each Meter holds a reference to the dataSource
   // PooledDataSource implements equals() & hashCode() in IdentityTokenResolvable,
   // that's why we wrap it with IdentityDataSourceKey that uses identity comparison instead
   private static final Map<IdentityDataSourceKey, BatchCallback> dataSourceMetrics =
       new ConcurrentHashMap<>();
-  private static final Map<IdentityDataSourceKey, String> generatedPoolNames =
-      new ConcurrentHashMap<>();
 
   static void registerMetrics(OpenTelemetry openTelemetry, PooledDataSource dataSource) {
+    registerMetrics(openTelemetry, dataSource, dataSource.getDataSourceName());
+  }
+
+  static void registerMetrics(
+      OpenTelemetry openTelemetry, PooledDataSource dataSource, String dataSourceName) {
     dataSourceMetrics.compute(
         new IdentityDataSourceKey(dataSource),
         (key, existingCallback) ->
-            ConnectionPoolMetrics.createMeters(openTelemetry, key, existingCallback));
+            createMeters(openTelemetry, key, dataSourceName, existingCallback));
   }
 
   private static BatchCallback createMeters(
       OpenTelemetry openTelemetry,
       IdentityDataSourceKey key,
+      String dataSourceName,
       @Nullable BatchCallback existingCallback) {
     // remove old counters from the registry in case they were already there
     removeMetersFromRegistry(existingCallback);
@@ -53,7 +54,7 @@ final class ConnectionPoolMetrics {
     PooledDataSource dataSource = key.dataSource;
 
     DbConnectionPoolMetrics metrics =
-        DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, getPoolName(key));
+        DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, dataSourceName);
 
     ObservableLongMeasurement connections = metrics.connections();
     ObservableLongMeasurement pendingRequestsForConnection = metrics.pendingRequestsForConnection();
@@ -79,20 +80,8 @@ final class ConnectionPoolMetrics {
         pendingRequestsForConnection);
   }
 
-  private static String getPoolName(IdentityDataSourceKey key) {
-    PooledDataSource dataSource = key.dataSource;
-    String dataSourceName = dataSource.getDataSourceName();
-    if (dataSourceName == null || dataSourceName.equals(dataSource.getIdentityToken())) {
-      return generatedPoolNames.computeIfAbsent(
-          key, unused -> DEFAULT_POOL_NAME + "-" + idGenerator.getAndIncrement());
-    }
-    return dataSourceName;
-  }
-
   static void unregisterMetrics(PooledDataSource dataSource) {
-    IdentityDataSourceKey key = new IdentityDataSourceKey(dataSource);
-    BatchCallback callback = dataSourceMetrics.remove(key);
-    generatedPoolNames.remove(key);
+    BatchCallback callback = dataSourceMetrics.remove(new IdentityDataSourceKey(dataSource));
     removeMetersFromRegistry(callback);
   }
 

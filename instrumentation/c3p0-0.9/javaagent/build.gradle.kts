@@ -15,8 +15,21 @@ dependencies {
   library("com.mchange:c3p0:0.9.2")
 
   implementation(project(":instrumentation:c3p0-0.9:library"))
+  bootstrap(project(":instrumentation:jdbc:bootstrap"))
+  compileOnly(
+    project(
+      path = ":instrumentation:jdbc:library",
+      configuration = "shadow",
+    ),
+  )
 
   testImplementation(project(":instrumentation:c3p0-0.9:testing"))
+  testInstrumentation(
+    project(
+      path = ":instrumentation:jdbc:library",
+      configuration = "shadow",
+    ),
+  )
 }
 
 tasks {
