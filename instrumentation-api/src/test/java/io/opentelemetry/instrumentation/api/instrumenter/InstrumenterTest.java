@@ -168,6 +168,23 @@ class InstrumenterTest {
     }
   }
 
+  static class RecordingOperationListener implements OperationListener {
+
+    final AtomicBoolean started = new AtomicBoolean();
+    final AtomicBoolean ended = new AtomicBoolean();
+
+    @Override
+    public Context onStart(Context context, Attributes startAttributes, long startNanos) {
+      started.set(true);
+      return context;
+    }
+
+    @Override
+    public void onEnd(Context context, Attributes endAttributes, long endNanos) {
+      ended.set(true);
+    }
+  }
+
   @RegisterExtension
   static final OpenTelemetryExtension otelTesting = OpenTelemetryExtension.create();
 
@@ -476,35 +493,8 @@ class InstrumenterTest {
 
   @Test
   void operationListenersCanPropagateToDifferentInstrumenterEnd() {
-    AtomicBoolean startingListenerStarted = new AtomicBoolean();
-    AtomicBoolean startingListenerEnded = new AtomicBoolean();
-    AtomicBoolean endingListenerEnded = new AtomicBoolean();
-
-    OperationListener startingListener =
-        new OperationListener() {
-          @Override
-          public Context onStart(Context context, Attributes startAttributes, long startNanos) {
-            startingListenerStarted.set(true);
-            return context;
-          }
-
-          @Override
-          public void onEnd(Context context, Attributes endAttributes, long endNanos) {
-            startingListenerEnded.set(true);
-          }
-        };
-    OperationListener endingListener =
-        new OperationListener() {
-          @Override
-          public Context onStart(Context context, Attributes startAttributes, long startNanos) {
-            return context;
-          }
-
-          @Override
-          public void onEnd(Context context, Attributes endAttributes, long endNanos) {
-            endingListenerEnded.set(true);
-          }
-        };
+    RecordingOperationListener startingListener = new RecordingOperationListener();
+    RecordingOperationListener endingListener = new RecordingOperationListener();
 
     Instrumenter<Map<String, String>, Map<String, String>> startingInstrumenter =
         InstrumenterUtil.propagateOperationListenersToOnEnd(
@@ -521,53 +511,28 @@ class InstrumenterTest {
     Context context = startingInstrumenter.start(Context.root(), REQUEST);
     endingInstrumenter.end(context, REQUEST, RESPONSE, null);
 
-    assertThat(startingListenerStarted).isTrue();
-    assertThat(startingListenerEnded).isTrue();
-    assertThat(endingListenerEnded).isFalse();
+    assertThat(startingListener.started).isTrue();
+    assertThat(startingListener.ended).isTrue();
+    assertThat(endingListener.ended).isFalse();
   }
 
   @Test
-  void operationListenersFromNestedInstrumenterPropagateToDifferentInstrumenterEnd() {
-    AtomicBoolean parentListenerEnded = new AtomicBoolean();
-    AtomicBoolean childListenerStarted = new AtomicBoolean();
-    AtomicBoolean childListenerEnded = new AtomicBoolean();
-
-    OperationListener parentOperationListener =
-        new OperationListener() {
-          @Override
-          public Context onStart(Context context, Attributes startAttributes, long startNanos) {
-            return context;
-          }
-
-          @Override
-          public void onEnd(Context context, Attributes endAttributes, long endNanos) {
-            parentListenerEnded.set(true);
-          }
-        };
-    OperationListener childOperationListener =
-        new OperationListener() {
-          @Override
-          public Context onStart(Context context, Attributes startAttributes, long startNanos) {
-            childListenerStarted.set(true);
-            return context;
-          }
-
-          @Override
-          public void onEnd(Context context, Attributes endAttributes, long endNanos) {
-            childListenerEnded.set(true);
-          }
-        };
+  void nestedInstrumenterOverridesPropagatedOperationListeners() {
+    RecordingOperationListener parentListener = new RecordingOperationListener();
+    RecordingOperationListener childListener = new RecordingOperationListener();
 
     Instrumenter<Map<String, String>, Map<String, String>> parentInstrumenter =
         InstrumenterUtil.propagateOperationListenersToOnEnd(
                 Instrumenter.<Map<String, String>, Map<String, String>>builder(
                         otelTesting.getOpenTelemetry(), "test", unused -> "span")
-                    .addOperationListener(parentOperationListener))
+                    .addOperationListener(parentListener))
             .buildServerInstrumenter(new MapGetter());
+    // The child does not enable propagation itself. It replaces the propagated parent listener
+    // because its parent context already carries operation listeners.
     Instrumenter<Map<String, String>, Map<String, String>> childStartingInstrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
-            .addOperationListener(childOperationListener)
+            .addOperationListener(childListener)
             .buildServerInstrumenter(new MapGetter());
     Instrumenter<Map<String, String>, Map<String, String>> childEndingInstrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
@@ -578,12 +543,12 @@ class InstrumenterTest {
     Context childContext = childStartingInstrumenter.start(parentContext, REQUEST);
     childEndingInstrumenter.end(childContext, REQUEST, RESPONSE, null);
 
-    assertThat(childListenerStarted).isTrue();
-    assertThat(childListenerEnded).isTrue();
-    assertThat(parentListenerEnded).isFalse();
+    assertThat(childListener.started).isTrue();
+    assertThat(childListener.ended).isTrue();
+    assertThat(parentListener.ended).isFalse();
 
     parentInstrumenter.end(parentContext, REQUEST, RESPONSE, null);
-    assertThat(parentListenerEnded).isTrue();
+    assertThat(parentListener.ended).isTrue();
   }
 
   @Test
