@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -98,7 +99,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                       if (emitStableMessagingSemconv()) {
                         attributes.add(equalTo(MESSAGING_OPERATION_NAME, "publish"));
                         attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "send"));
-                      } else {
+                      }
+                      if (emitOldMessagingSemconv()) {
                         attributes.add(equalTo(MESSAGING_OPERATION, "publish"));
                       }
 
@@ -179,7 +181,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                         if (emitStableMessagingSemconv()) {
                           attributes.add(equalTo(MESSAGING_OPERATION_NAME, "receive"));
                           attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "receive"));
-                        } else {
+                        }
+                        if (emitOldMessagingSemconv()) {
                           attributes.add(equalTo(MESSAGING_OPERATION, "receive"));
                         }
 
@@ -240,7 +243,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                         if (emitStableMessagingSemconv()) {
                           attributes.add(equalTo(MESSAGING_OPERATION_NAME, "process"));
                           attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "process"));
-                        } else {
+                        }
+                        if (emitOldMessagingSemconv()) {
                           attributes.add(equalTo(MESSAGING_OPERATION, "process"));
                         }
 
@@ -388,6 +392,9 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                 equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                                 equalTo(MESSAGING_OPERATION_NAME, "publish"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                                equalTo(
+                                    MESSAGING_OPERATION,
+                                    emitOldMessagingSemconv() ? "publish" : null),
                                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 3))));
   }
 

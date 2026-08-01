@@ -38,8 +38,17 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
   }
 
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0.AwsSqsTest")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+  }
+
   check {
-    dependsOn(testMessagingPreview)
+    dependsOn(testMessagingPreview, testBothSemconv)
   }
 }
 

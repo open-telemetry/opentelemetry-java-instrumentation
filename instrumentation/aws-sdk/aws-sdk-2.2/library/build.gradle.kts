@@ -94,6 +94,18 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
   }
 
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("Aws2SqsSuppressReceiveSpansW3cPropagatorTest.testAbandonedIteratorDoesNotParentNextProcessSpan")
+      includeTestsMatching("Aws2SqsDefaultPropagatorTest.testReceiveSpanLinksToProducer")
+      includeTestsMatching("Aws2SqsDefaultPropagatorTest.testBatchSendMessageCount")
+      includeTestsMatching("Aws2SqsDefaultPropagatorTest.testSimpleSqsProducerConsumerServicesWithParentSync")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+  }
+
   val testCoreOnlyStableSemconv = register<Test>("testCoreOnlyStableSemconv") {
     val testCoreOnlySourceSet = sourceSets["testCoreOnly"]
     testClassesDirs = testCoreOnlySourceSet.output.classesDirs
@@ -114,6 +126,7 @@ tasks {
       testing.suites,
       testStableSemconv,
       testMessagingPreview,
+      testBothSemconv,
       testCoreOnlyStableSemconv,
       testExceptionSignalLogs,
     )

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -128,8 +129,7 @@ class AwsSqsTest {
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                             equalTo(
-                                MESSAGING_OPERATION,
-                                emitStableMessagingSemconv() ? null : "publish"),
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
                             equalTo(
                                 MESSAGING_OPERATION_NAME,
                                 emitStableMessagingSemconv() ? "publish" : null),
@@ -166,7 +166,7 @@ class AwsSqsTest {
                           equalTo(MESSAGING_SYSTEM, AWS_SQS),
                           satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                           equalTo(
-                              MESSAGING_OPERATION, emitStableMessagingSemconv() ? null : "process"),
+                              MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
                           equalTo(
                               MESSAGING_OPERATION_NAME,
                               emitStableMessagingSemconv() ? "process" : null),
@@ -175,7 +175,14 @@ class AwsSqsTest {
                               emitStableMessagingSemconv() ? "process" : null),
                           equalTo(MESSAGING_DESTINATION_NAME, "test-queue"));
                   if (emitStableMessagingSemconv()) {
-                    span.hasTotalRecordedLinks(0);
+                    span.hasLinksSatisfying(
+                        links ->
+                            assertThat(links)
+                                .singleElement()
+                                .satisfies(
+                                    link ->
+                                        assertThat(link.getSpanContext().getSpanId())
+                                            .isEqualTo(trace.getSpan(2).getSpanId())));
                   }
                 },
                 span ->

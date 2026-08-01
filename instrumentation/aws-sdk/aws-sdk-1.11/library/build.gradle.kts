@@ -70,6 +70,18 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
   }
 
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("SqsSuppressReceiveSpansTest.testAbandonedIteratorDoesNotParentNextProcessSpan")
+      includeTestsMatching("SqsTracingTest.testReceiveSpanLinksToProducer")
+      includeTestsMatching("SqsTracingTest.testBatchSendMessageCount")
+      includeTestsMatching("SqsTracingTest.testSimpleSqsProducerConsumerServicesWithParentSpan")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+  }
+
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -77,6 +89,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testStableSemconv, testMessagingPreview, testExceptionSignalLogs)
+    dependsOn(testing.suites, testStableSemconv, testMessagingPreview, testBothSemconv, testExceptionSignalLogs)
   }
 }

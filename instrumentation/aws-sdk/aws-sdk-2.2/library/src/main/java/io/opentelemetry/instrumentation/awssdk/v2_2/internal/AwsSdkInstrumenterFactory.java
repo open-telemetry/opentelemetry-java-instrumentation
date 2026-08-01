@@ -184,13 +184,13 @@ public final class AwsSdkInstrumenterFactory {
             SpanContext parentSpanContext = Span.fromContext(parentContext).getSpanContext();
             SpanContext creationSpanContext =
                 Span.fromContext(request.getMessage().getCreationContext()).getSpanContext();
+            // the creation context is linked even when it ends up being this span's parent, which
+            // happens when there is no ambient span; semconv asks for a link to the creation
+            // context for every message the span accounts for
             if (creationSpanContext.isValid()
                 && (!emitStableMessagingSemconv()
-                    || (parentSpanContext.isValid()
-                        && (!creationSpanContext.getTraceId().equals(parentSpanContext.getTraceId())
-                            || !creationSpanContext
-                                .getSpanId()
-                                .equals(parentSpanContext.getSpanId()))))) {
+                    || !creationSpanContext.getTraceId().equals(parentSpanContext.getTraceId())
+                    || !creationSpanContext.getSpanId().equals(parentSpanContext.getSpanId()))) {
               spanLinks.addLink(creationSpanContext);
             }
           });
