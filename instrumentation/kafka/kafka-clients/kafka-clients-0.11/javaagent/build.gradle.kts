@@ -57,22 +57,23 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("KafkaClientDefaultTest.testKafkaProducerAndConsumerSpan")
-      includeTestsMatching("KafkaClientDefaultTest.testAbandonedIteratorDoesNotParentNextProcessSpan")
-      includeTestsMatching("KafkaClientDefaultTest.testReceiveDoesNotParentProcessSpan")
+      excludeTestsMatching("KafkaClientPropagationDisabledTest")
+      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
-  val testMessagingPreviewDup = register<Test>("testMessagingPreviewDup") {
+  val testMessagingPreviewReceiveSpansDisabled = register<Test>("testMessagingPreviewReceiveSpansDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("KafkaClientDefaultTest.testReceiveDoesNotParentProcessSpan")
+      includeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging/dup")
+    include("**/KafkaClientSuppressReceiveSpansTest.*")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
   val testExperimental = register<Test>("testExperimental") {
@@ -89,33 +90,6 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      excludeTestsMatching("KafkaClientPropagationDisabledTest")
-      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
-    }
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    // kafka metrics are disabled by default with v3-preview enabled
-    jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
-  }
-
-  val testV3PreviewReceiveSpansDisabled = register<Test>("testV3PreviewReceiveSpansDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("KafkaClientSuppressReceiveSpansTest")
-    }
-    include("**/KafkaClientSuppressReceiveSpansTest.*")
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
-  }
-
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -125,14 +99,7 @@ tasks {
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    // kafka metrics are disabled by default with v3-preview enabled
-    jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
-
-  check {
-    dependsOn(testV3Preview, testV3PreviewReceiveSpansDisabled, testBothSemconv)
   }
 
   test {
@@ -148,8 +115,9 @@ tasks {
       testPropagationDisabled,
       testReceiveSpansDisabled,
       testMessagingPreview,
-      testMessagingPreviewDup,
+      testMessagingPreviewReceiveSpansDisabled,
       testExperimental,
+      testBothSemconv,
     )
   }
 }

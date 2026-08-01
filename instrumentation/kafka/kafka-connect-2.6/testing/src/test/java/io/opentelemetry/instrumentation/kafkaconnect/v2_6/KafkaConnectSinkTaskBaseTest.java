@@ -60,6 +60,8 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.Producer;
+import org.assertj.core.api.AbstractLongAssert;
+import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -366,7 +368,6 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
   private static String javaToolOptions() {
     StringBuilder options =
         new StringBuilder("-javaagent:/opentelemetry-javaagent.jar -Dotel.javaagent.debug=true");
-    appendSystemProperty(options, "otel.instrumentation.common.v3-preview");
     appendSystemProperty(options, "otel.semconv-stability.preview");
     return options.toString();
   }
@@ -390,7 +391,6 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
 
   private static AttributeAssertion[] processAttributes(
       String destination, long batchSize, boolean hasDestination) {
-    boolean v3Preview = Boolean.getBoolean("otel.instrumentation.common.v3-preview");
     return new AttributeAssertion[] {
       equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize),
       equalTo(MESSAGING_DESTINATION_NAME, hasDestination ? destination : null),
@@ -398,24 +398,8 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
       equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? PROCESS : null),
       equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? PROCESS : null),
       equalTo(MESSAGING_SYSTEM, KAFKA),
-      satisfies(
-          THREAD_ID,
-          val -> {
-            if (v3Preview) {
-              val.isNull();
-            } else {
-              val.isNotZero();
-            }
-          }),
-      satisfies(
-          THREAD_NAME,
-          val -> {
-            if (v3Preview) {
-              val.isNull();
-            } else {
-              val.isNotBlank();
-            }
-          })
+      satisfies(THREAD_ID, AbstractLongAssert::isNotZero),
+      satisfies(THREAD_NAME, AbstractStringAssert::isNotBlank)
     };
   }
 
