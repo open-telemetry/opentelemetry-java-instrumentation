@@ -14,6 +14,8 @@ muzzle {
 dependencies {
   compileOnly("org.apache.tomcat:tomcat-jdbc:8.5.0")
 
+  // JdbcConnectionUrlParser is provided by the shaded JDBC library, and its DbInfo return type is
+  // relocated to the JDBC bootstrap package.
   bootstrap(project(":instrumentation:jdbc:bootstrap"))
   compileOnly(
     project(
@@ -23,6 +25,8 @@ dependencies {
   )
 
   testImplementation("org.apache.tomcat:tomcat-jdbc:8.5.0")
+  // Only JDBC library helpers are used by this instrumentation; loading the JDBC javaagent would
+  // enable unrelated JDBC instrumentation in these tests.
   testInstrumentation(
     project(
       path = ":instrumentation:jdbc:library",

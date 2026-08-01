@@ -14,7 +14,6 @@ import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoolMetrics;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
@@ -22,7 +21,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.tomcat.jdbc.pool.DataSourceProxy;
 import org.apache.tomcat.jdbc.pool.PoolConfiguration;
-import org.apache.tomcat.jdbc.pool.PoolProperties;
 
 public class TomcatConnectionPoolMetrics {
 
@@ -37,8 +35,6 @@ public class TomcatConnectionPoolMetrics {
           // otel.scope.name="io.opentelemetry.tomcat-jdbc" continue to work
           : "io.opentelemetry.tomcat-jdbc";
   private static final String DEFAULT_POOL_NAME = "tomcat-jdbc";
-  private static final VirtualField<PoolProperties, Boolean> configuredPoolNameField =
-      VirtualField.find(PoolProperties.class, Boolean.class);
   private static final Meter meter = buildMeter();
 
   // a weak map does not make sense here because each Meter holds a reference to the dataSource
@@ -49,10 +45,6 @@ public class TomcatConnectionPoolMetrics {
 
   public static void registerMetrics(DataSourceProxy dataSource) {
     dataSourceMetrics.computeIfAbsent(dataSource, TomcatConnectionPoolMetrics::createInstruments);
-  }
-
-  public static void markPoolNameAsConfigured(PoolProperties poolProperties) {
-    configuredPoolNameField.set(poolProperties, true);
   }
 
   @SuppressWarnings("deprecation") // deprecated overload keeps the legacy scope by default
@@ -89,7 +81,7 @@ public class TomcatConnectionPoolMetrics {
   private static String getPoolName(DataSourceProxy dataSource) {
     PoolConfiguration poolProperties = dataSource.getPoolProperties();
     String configuredPoolName = dataSource.getPoolName();
-    if (configuredPoolName != null && isPoolNameConfigured(poolProperties)) {
+    if (configuredPoolName != null && TomcatJdbcSingletons.isPoolNameConfigured(poolProperties)) {
       return configuredPoolName;
     }
 
@@ -118,14 +110,6 @@ public class TomcatConnectionPoolMetrics {
     // equal attributes are aggregated, so multiple pools for the same database can share this pool
     // name.
     return poolName.length() > 0 ? poolName.toString() : DEFAULT_POOL_NAME;
-  }
-
-  private static boolean isPoolNameConfigured(PoolConfiguration poolProperties) {
-    if (!(poolProperties instanceof PoolProperties)) {
-      return true;
-    }
-
-    return Boolean.TRUE.equals(configuredPoolNameField.get((PoolProperties) poolProperties));
   }
 
   public static void unregisterMetrics(DataSourceProxy dataSource) {

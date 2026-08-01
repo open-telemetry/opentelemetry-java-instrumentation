@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -34,8 +35,9 @@ class PoolPropertiesInstrumentation implements TypeInstrumentation {
   public static class SetNameAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This PoolProperties poolProperties) {
-      TomcatConnectionPoolMetrics.markPoolNameAsConfigured(poolProperties);
+    public static void onExit(
+        @Advice.This PoolProperties poolProperties, @Advice.Argument(0) @Nullable String name) {
+      TomcatJdbcSingletons.setPoolNameConfigured(poolProperties, name != null && !name.isEmpty());
     }
   }
 }

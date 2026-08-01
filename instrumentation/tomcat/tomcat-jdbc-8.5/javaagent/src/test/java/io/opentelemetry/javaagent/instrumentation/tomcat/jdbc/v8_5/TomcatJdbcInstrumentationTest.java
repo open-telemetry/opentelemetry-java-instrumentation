@@ -74,11 +74,8 @@ class TomcatJdbcInstrumentationTest {
   }
 
   @Test
-  void shouldUseFixedPoolNameWhenUrlCannotBeParsed() throws SQLException {
+  void shouldUseFixedPoolNameWhenUrlIsMissing() throws SQLException {
     DataSource dataSource = newDataSource();
-
-    // Calling createPool twice must continue to register one metric callback.
-    dataSource.createPool();
 
     assertConnectionPoolMetrics(dataSource, DEFAULT_POOL_NAME);
   }
@@ -101,6 +98,15 @@ class TomcatJdbcInstrumentationTest {
     assertConnectionPoolMetrics(dataSource, poolName);
   }
 
+  @Test
+  void shouldUseFixedPoolNameWhenConfiguredPoolNameIsEmpty() throws SQLException {
+    DataSource dataSource = newDataSource();
+    dataSource.setName("configured");
+    dataSource.setName("");
+
+    assertConnectionPoolMetrics(dataSource, DEFAULT_POOL_NAME);
+  }
+
   private DataSource newDataSource() {
     DataSource dataSource = new DataSource();
     dataSource.setDataSource(dataSourceMock);
@@ -111,10 +117,12 @@ class TomcatJdbcInstrumentationTest {
       throws SQLException {
     try {
       dataSource.createPool();
+      dataSource.createPool();
       Connection connection = dataSource.getConnection();
       connection.close();
       assertConnectionPoolMetrics(poolName);
     } finally {
+      dataSource.close();
       dataSource.close();
       testing.clearData();
     }
