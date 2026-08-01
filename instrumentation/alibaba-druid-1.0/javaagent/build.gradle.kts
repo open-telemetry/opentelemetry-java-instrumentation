@@ -15,8 +15,21 @@ dependencies {
   library("com.alibaba:druid:1.0.0")
 
   implementation(project(":instrumentation:alibaba-druid-1.0:library"))
+  bootstrap(project(":instrumentation:jdbc:bootstrap"))
+  compileOnly(
+    project(
+      path = ":instrumentation:jdbc:library",
+      configuration = "shadow",
+    ),
+  )
 
   testImplementation(project(":instrumentation:alibaba-druid-1.0:testing"))
+  testInstrumentation(
+    project(
+      path = ":instrumentation:jdbc:library",
+      configuration = "shadow",
+    ),
+  )
 }
 
 tasks {

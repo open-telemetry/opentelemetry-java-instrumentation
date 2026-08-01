@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.alibabadruid.v1_0;
 
+import static io.opentelemetry.javaagent.instrumentation.alibabadruid.v1_0.DruidSingletons.getDataSourceName;
 import static io.opentelemetry.javaagent.instrumentation.alibabadruid.v1_0.DruidSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -15,7 +16,6 @@ import com.alibaba.druid.pool.DruidDataSourceMBean;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
-import javax.management.ObjectName;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -46,13 +46,10 @@ class DruidDataSourceInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Argument(0) Object dataSource,
-        @Advice.Argument(1) @Nullable String name,
-        @Advice.Return ObjectName objectName) {
+        @Advice.Argument(0) Object dataSource, @Advice.Argument(1) @Nullable String name) {
       DruidDataSourceMBean druidDataSource = (DruidDataSourceMBean) dataSource;
-      String dataSourceName =
-          objectName.getKeyProperty("type") + "-" + (name == null ? "unknown" : name);
-      telemetry().registerMetrics(druidDataSource, dataSourceName);
+      String poolName = name == null || name.isEmpty() ? getDataSourceName(druidDataSource) : name;
+      telemetry().registerMetrics(druidDataSource, poolName);
     }
   }
 

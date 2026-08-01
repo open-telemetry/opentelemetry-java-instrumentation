@@ -9,7 +9,6 @@ import com.alibaba.druid.pool.DruidDataSource;
 import io.opentelemetry.instrumentation.alibabadruid.AbstractDruidInstrumentationTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import javax.management.ObjectName;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -31,12 +30,8 @@ class DruidInstrumentationTest extends AbstractDruidInstrumentationTest {
   }
 
   @Override
-  protected void configure(DruidDataSource dataSource, String name) throws Exception {
-    String dataSourceName = name == null ? "unknown" : name;
-    ObjectName objectName =
-        new ObjectName("com.alibaba.druid:type=DruidDataSource,id=" + dataSourceName);
-    telemetry.registerMetrics(
-        dataSource, objectName.getKeyProperty("type") + "-" + objectName.getKeyProperty("id"));
+  protected void configure(DruidDataSource dataSource, String name) {
+    telemetry.registerMetrics(dataSource, name);
   }
 
   @Override

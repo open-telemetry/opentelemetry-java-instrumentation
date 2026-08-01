@@ -34,13 +34,54 @@ class DruidInstrumentationTest extends AbstractDruidInstrumentationTest {
   }
 
   @Test
-  void shouldUseUnknownDataSourceNameWhenNameIsNull() throws Exception {
+  void shouldUseJdbcUrlForDataSourceNameWhenNameIsNull() throws Exception {
+    DruidDataSource dataSource = createDataSource();
+    dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
+
+    assertDataSourceName(dataSource, "db.example:5432/orders");
+  }
+
+  @Test
+  void shouldUseConnectPropertiesForDataSourceNameWhenNameIsNull() throws Exception {
+    DruidDataSource dataSource = createDataSource();
+    dataSource.setUrl("jdbc:postgresql:ignored");
+    dataSource.addConnectionProperty("serverName", "properties.example");
+    dataSource.addConnectionProperty("portNumber", "5433");
+    dataSource.addConnectionProperty("databaseName", "inventory");
+
+    assertDataSourceName(dataSource, "properties.example:5433/inventory");
+  }
+
+  @Test
+  void shouldUseServerAddressWhenPortAndNamespaceAreMissing() throws Exception {
+    DruidDataSource dataSource = createDataSource();
+    dataSource.setUrl("jdbc:custom:ignored");
+    dataSource.addConnectionProperty("serverName", "address-only.example");
+
+    assertDataSourceName(dataSource, "address-only.example");
+  }
+
+  @Test
+  void shouldUseDbNamespaceWhenServerAddressIsMissing() throws Exception {
+    DruidDataSource dataSource = createDataSource();
+    dataSource.setUrl("jdbc:h2:mem:orders");
+
+    assertDataSourceName(dataSource, "orders");
+  }
+
+  @Test
+  void shouldUseFixedDataSourceNameWhenConnectionInfoIsMissing() throws Exception {
     DruidDataSource dataSource = createDataSource();
 
+    assertDataSourceName(dataSource, "alibaba-druid");
+  }
+
+  private void assertDataSourceName(DruidDataSource dataSource, String dataSourceName)
+      throws Exception {
     try {
       configure(dataSource, null);
 
-      assertConnectionUsagePoolNames("DruidDataSource-unknown");
+      assertConnectionUsagePoolNames(dataSourceName);
     } finally {
       dataSource.close();
       shutdown(dataSource);

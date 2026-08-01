@@ -48,8 +48,7 @@ public abstract class AbstractDruidInstrumentationTest {
     try {
       configure(dataSource, name);
 
-      DbConnectionPoolMetricsAssertions.create(
-              testing(), INSTRUMENTATION_NAME, "DruidDataSource-" + name)
+      DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, name)
           .disableConnectionTimeouts()
           .disableCreateTime()
           .disableWaitTime()
@@ -72,8 +71,7 @@ public abstract class AbstractDruidInstrumentationTest {
       configure(firstDataSource, "duplicatePool");
       configure(secondDataSource, "duplicatePool");
 
-      assertConnectionUsagePoolNames(
-          "DruidDataSource-duplicatePool", "DruidDataSource-duplicatePool-2");
+      assertConnectionUsagePoolNames("duplicatePool", "duplicatePool-2");
     } finally {
       firstDataSource.close();
       secondDataSource.close();
@@ -90,7 +88,7 @@ public abstract class AbstractDruidInstrumentationTest {
     try {
       configure(firstDataSource, "reusablePool");
 
-      assertConnectionUsagePoolNames("DruidDataSource-reusablePool");
+      assertConnectionUsagePoolNames("reusablePool");
     } finally {
       firstDataSource.close();
       shutdown(firstDataSource);
@@ -102,7 +100,7 @@ public abstract class AbstractDruidInstrumentationTest {
     try {
       configure(secondDataSource, "reusablePool");
 
-      assertConnectionUsagePoolNames("DruidDataSource-reusablePool");
+      assertConnectionUsagePoolNames("reusablePool");
     } finally {
       secondDataSource.close();
       shutdown(secondDataSource);
@@ -122,10 +120,7 @@ public abstract class AbstractDruidInstrumentationTest {
       configure(reservedDataSource, "reservedPool-2");
       configure(secondDataSource, "reservedPool");
 
-      assertConnectionUsagePoolNames(
-          "DruidDataSource-reservedPool",
-          "DruidDataSource-reservedPool-2",
-          "DruidDataSource-reservedPool-3");
+      assertConnectionUsagePoolNames("reservedPool", "reservedPool-2", "reservedPool-3");
     } finally {
       firstDataSource.close();
       reservedDataSource.close();
