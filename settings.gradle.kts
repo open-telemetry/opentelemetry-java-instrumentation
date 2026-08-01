@@ -282,6 +282,8 @@ include(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:javaa
 include(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:testing")
 include(":instrumentation:executors-metrics:bootstrap")
 include(":instrumentation:executors-metrics:javaagent")
+include(":instrumentation:executors-metrics:jdk21-testing")
+include(":instrumentation:executors-metrics:testing")
 include(":instrumentation:executors:bootstrap")
 include(":instrumentation:executors:javaagent")
 include(":instrumentation:executors:jdk21-testing")

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.executors;
+package io.opentelemetry.javaagent.instrumentation.executors.metrics;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -26,15 +26,6 @@ public class JvmExecutorMetricsAssertions {
   private static final AttributeKey<String> EXECUTOR_TYPE_KEY = stringKey("jvm.executor.type");
   private static final AttributeKey<String> EXECUTOR_STATE_KEY = stringKey("jvm.executor.state");
 
-  public static JvmExecutorMetricsAssertions create(
-      InstrumentationExtension testing,
-      String instrumentationName,
-      String executorName,
-      String executorType) {
-    return new JvmExecutorMetricsAssertions(
-        testing, instrumentationName, executorName, executorType);
-  }
-
   private final InstrumentationExtension testing;
   private final String instrumentationName;
   private final String executorName;
@@ -48,6 +39,36 @@ public class JvmExecutorMetricsAssertions {
   @Nullable private Long expectedQueueRemaining;
   @Nullable private Long expectedCompletedTasks;
   @Nullable private Long expectedRejectedTasks;
+
+  public static JvmExecutorMetricsAssertions create(
+      InstrumentationExtension testing,
+      String instrumentationName,
+      String executorName,
+      String executorType) {
+    return new JvmExecutorMetricsAssertions(
+        testing, instrumentationName, executorName, executorType);
+  }
+
+  public static void assertNoExecutorMetrics(
+      InstrumentationExtension testing, String instrumentationName, String executorName) {
+    testing.clearData();
+    testing
+        .getOpenTelemetry()
+        .getMeter("test")
+        .counterBuilder("test.executor.metrics.collection")
+        .build()
+        .add(1);
+    testing.waitAndAssertMetrics(
+        "test", "test.executor.metrics.collection", metrics -> metrics.isNotEmpty());
+
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric ->
+                instrumentationName.equals(metric.getInstrumentationScopeInfo().getName())
+                    && metric.getName().startsWith("jvm.executor."))
+        .flatExtracting(metric -> metric.getLongSumData().getPoints())
+        .noneMatch(point -> executorName.equals(point.getAttributes().get(EXECUTOR_NAME_KEY)));
+  }
 
   JvmExecutorMetricsAssertions(
       InstrumentationExtension testing,

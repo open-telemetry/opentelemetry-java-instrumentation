@@ -36,7 +36,6 @@ tasks.test {
   // needed for VirtualThreadTest
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  jvmArgs("-Dotel.instrumentation.executors-metrics.enabled=true")
   // needed for structured concurrency test
   jvmArgs("--enable-preview")
 }

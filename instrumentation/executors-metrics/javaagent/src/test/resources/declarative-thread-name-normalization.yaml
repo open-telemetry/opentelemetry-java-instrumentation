@@ -10,7 +10,7 @@ meter_provider:
 instrumentation/development:
   java:
     executors_metrics:
-      name_normalization/development: trailing
+      name_normalization/development: all
 
 distribution:
   javaagent:

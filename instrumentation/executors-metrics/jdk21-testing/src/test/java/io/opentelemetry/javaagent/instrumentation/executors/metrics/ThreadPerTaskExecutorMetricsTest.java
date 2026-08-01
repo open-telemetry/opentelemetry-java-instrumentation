@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.executors;
+package io.opentelemetry.javaagent.instrumentation.executors.metrics;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.javaagent.instrumentation.executors.metrics.JvmExecutorMetricsAssertions.assertNoExecutorMetrics;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.ref.WeakReference;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -41,7 +42,7 @@ class ThreadPerTaskExecutorMetricsTest {
 
     try {
       assertThat(threadFactory.createdThreadCount()).isZero();
-      assertNoThreadPerTaskMetrics(EXECUTOR_NAME);
+      assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, EXECUTOR_NAME);
 
       Future<?> future =
           executor.submit(
@@ -74,7 +75,45 @@ class ThreadPerTaskExecutorMetricsTest {
       assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
     }
 
-    assertNoThreadPerTaskMetrics(EXECUTOR_NAME);
+    assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, EXECUTOR_NAME);
+  }
+
+  @Test
+  void retainsInitialNameAfterThreadFactoryChangeNotification() throws Exception {
+    AtomicInteger sequence = new AtomicInteger();
+    ThreadFactory threadFactory =
+        runnable -> {
+          int threadNumber = sequence.incrementAndGet();
+          String namePrefix = threadNumber == 1 ? "initial-thread" : "later-thread";
+          return new Thread(runnable, namePrefix + "-" + threadNumber);
+        };
+    ExecutorService executor = Executors.newThreadPerTaskExecutor(threadFactory);
+
+    try {
+      executor.submit(() -> {}).get(10, SECONDS);
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "initial-thread-*", EXECUTOR_TYPE)
+          .withActiveThreads(0)
+          .assertExecutorEmitsMetrics();
+      testing.clearData();
+
+      Class<?> executorMetrics =
+          Class.forName(
+              "io.opentelemetry.javaagent.bootstrap.executors.metrics.ExecutorMetrics",
+              false,
+              null);
+      executorMetrics.getMethod("onThreadFactoryChanged", Executor.class).invoke(null, executor);
+
+      executor.submit(() -> {}).get(10, SECONDS);
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "initial-thread-*", EXECUTOR_TYPE)
+          .withActiveThreads(0)
+          .assertExecutorEmitsMetrics();
+      assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, "later-thread-*");
+    } finally {
+      executor.shutdown();
+      assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
+    }
   }
 
   @Test
@@ -91,42 +130,30 @@ class ThreadPerTaskExecutorMetricsTest {
       executor.shutdown();
     }
 
-    assertNoThreadPerTaskMetrics("unknown");
+    assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, "unknown");
   }
 
   @Test
   void doesNotRecordMetricsWhenUnclosedExecutorIsCollected() throws Exception {
-    WeakReference<ExecutorService> executorRef =
-        new WeakReference<>(
-            Executors.newThreadPerTaskExecutor(
-                new NamedThreadFactory("collected-thread-per-task")));
+    WeakReference<ExecutorService> executorRef = createCollectableThreadPerTaskExecutor();
 
     GcUtils.awaitGc(executorRef, Duration.ofSeconds(10));
 
-    assertNoThreadPerTaskMetrics("collected-thread-per-task-*");
+    assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, "collected-thread-per-task-*");
   }
 
-  private static void assertNoThreadPerTaskMetrics(String executorName) {
-    testing.clearData();
-    testing
-        .getOpenTelemetry()
-        .getMeter("test")
-        .counterBuilder("test.executor.metrics.collection")
-        .build()
-        .add(1);
-    testing.waitAndAssertMetrics(
-        "test", "test.executor.metrics.collection", metrics -> metrics.isNotEmpty());
+  private static WeakReference<ExecutorService> createCollectableThreadPerTaskExecutor()
+      throws Exception {
+    ExecutorService executor =
+        Executors.newThreadPerTaskExecutor(new NamedThreadFactory("collected-thread-per-task"));
 
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
-        .allSatisfy(
-            metric ->
-                assertThat(metric.getLongSumData().getPoints())
-                    .noneMatch(
-                        point ->
-                            executorName.equals(
-                                point.getAttributes().get(stringKey("jvm.executor.name")))));
+    executor.submit(() -> {}).get(10, SECONDS);
+    JvmExecutorMetricsAssertions.create(
+            testing, INSTRUMENTATION_NAME, "collected-thread-per-task-*", EXECUTOR_TYPE)
+        .withActiveThreads(0)
+        .assertExecutorEmitsMetrics();
+
+    return new WeakReference<>(executor);
   }
 
   private static final class NamedThreadFactory implements ThreadFactory {

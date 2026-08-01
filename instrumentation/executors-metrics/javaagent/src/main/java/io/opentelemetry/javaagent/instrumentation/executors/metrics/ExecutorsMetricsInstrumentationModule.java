@@ -10,12 +10,10 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstrumentationModule;
 import java.util.List;
 
-@AutoService({InstrumentationModule.class, EarlyInstrumentationModule.class})
-public class ExecutorsMetricsInstrumentationModule extends InstrumentationModule
-    implements EarlyInstrumentationModule {
+@AutoService(InstrumentationModule.class)
+public class ExecutorsMetricsInstrumentationModule extends InstrumentationModule {
 
   public ExecutorsMetricsInstrumentationModule() {
     super("executors-metrics");

@@ -11,59 +11,21 @@ muzzle {
 dependencies {
   bootstrap(project(":instrumentation:executors-metrics:bootstrap"))
 
-  testImplementation(project(":instrumentation:executors:testing"))
-  testCompileOnly(project(":instrumentation:executors-metrics:bootstrap"))
-  testCompileOnly(project(":javaagent-bootstrap"))
+  testImplementation(project(":instrumentation:executors-metrics:testing"))
 }
-
-val enablementTest = "ExecutorsMetricsEnablementTest"
 
 tasks {
   withType<Test>().configureEach {
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    jvmArgs("-Djava.awt.headless=true")
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   test {
     jvmArgs("-Dotel.instrumentation.executors-metrics.enabled=true")
     jvmArgs("-Dotel.instrumentation.executors.enabled=false")
-    systemProperty("test.metrics.expected", true)
     systemProperty("metadataConfig", "otel.instrumentation.executors-metrics.enabled=true")
   }
 
-  val testDefaultDisabled = register<Test>("testDefaultDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching(enablementTest)
-    }
-    systemProperty("test.metrics.expected", false)
-  }
-
-  val testExecutorsEnabledOnly = register<Test>("testExecutorsEnabledOnly") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching(enablementTest)
-    }
-    jvmArgs("-Dotel.instrumentation.executors.enabled=true")
-    systemProperty("test.metrics.expected", false)
-  }
-
-  val testMetricsExplicitlyDisabled = register<Test>("testMetricsExplicitlyDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching(enablementTest)
-    }
-    jvmArgs("-Dotel.instrumentation.executors.enabled=true")
-    jvmArgs("-Dotel.instrumentation.executors-metrics.enabled=false")
-    systemProperty("test.metrics.expected", false)
-  }
-
-  val testTrailingThreadNameNormalization = register<Test>("testTrailingThreadNameNormalization") {
+  val testAllThreadNameNormalization = register<Test>("testAllThreadNameNormalization") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -71,13 +33,11 @@ tasks {
     }
     jvmArgs("-Dotel.instrumentation.executors-metrics.enabled=true")
     jvmArgs("-Dotel.instrumentation.executors.enabled=false")
-    jvmArgs(
-      "-Dotel.instrumentation.executors-metrics.experimental.name-normalization=trailing"
-    )
-    systemProperty("test.name-normalization.expected", "trailing")
+    jvmArgs("-Dotel.instrumentation.executors-metrics.experimental.name-normalization=all")
+    systemProperty("test.name-normalization.expected", "all")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.executors-metrics.enabled=true,otel.instrumentation.executors-metrics.experimental.name-normalization=trailing",
+      "otel.instrumentation.executors-metrics.enabled=true,otel.instrumentation.executors-metrics.experimental.name-normalization=all",
     )
   }
 
@@ -91,15 +51,12 @@ tasks {
       jvmArgs(
         "-Dotel.config.file=$projectDir/src/test/resources/declarative-thread-name-normalization.yaml"
       )
-      systemProperty("test.name-normalization.expected", "trailing")
+      systemProperty("test.name-normalization.expected", "all")
     }
 
   check {
     dependsOn(
-      testDefaultDisabled,
-      testExecutorsEnabledOnly,
-      testMetricsExplicitlyDisabled,
-      testTrailingThreadNameNormalization,
+      testAllThreadNameNormalization,
       testDeclarativeThreadNameNormalization,
     )
   }

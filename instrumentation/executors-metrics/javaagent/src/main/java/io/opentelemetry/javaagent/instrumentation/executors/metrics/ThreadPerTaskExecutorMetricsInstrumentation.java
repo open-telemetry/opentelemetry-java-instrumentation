@@ -12,12 +12,14 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.javaagent.bootstrap.executors.metrics.ThreadPoolExecutorMetrics;
+import io.opentelemetry.javaagent.bootstrap.executors.metrics.ExecutorMetrics;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadFactory;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -51,8 +53,10 @@ public class ThreadPerTaskExecutorMetricsInstrumentation implements TypeInstrume
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
-        @Advice.This Executor executor, @Advice.FieldValue("threads") Set<Thread> threads) {
-      ThreadPoolExecutorMetrics.preRegister(executor, threads);
+        @Advice.This Executor executor,
+        @Advice.FieldValue(value = "factory", readOnly = false) ThreadFactory threadFactory,
+        @Advice.FieldValue("threads") Set<Thread> threads) {
+      threadFactory = JdkExecutorMetrics.preRegister(executor, threadFactory, threads);
     }
   }
 
@@ -60,8 +64,12 @@ public class ThreadPerTaskExecutorMetricsInstrumentation implements TypeInstrume
   public static class StartAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.This Executor executor, @Advice.Argument(0) Thread thread) {
-      ThreadPoolExecutorMetrics.onWorkerThreadStarted(executor, thread);
+    public static void onExit(
+        @Advice.This Executor executor,
+        @Advice.FieldValue("factory") ThreadFactory threadFactory,
+        @Advice.Argument(0) @Nullable Thread thread) {
+      ExecutorMetrics.onWorkerThreadStarted(
+          executor, threadFactory, thread == null ? null : thread.getName());
     }
   }
 
@@ -69,9 +77,11 @@ public class ThreadPerTaskExecutorMetricsInstrumentation implements TypeInstrume
   public static class ShutdownAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.This ExecutorService executor) {
+    public static void onExit(
+        @Advice.This ExecutorService executor,
+        @Advice.FieldValue("factory") ThreadFactory threadFactory) {
       if (executor.isShutdown()) {
-        ThreadPoolExecutorMetrics.unregister(executor);
+        ExecutorMetrics.unregister(executor, threadFactory);
       }
     }
   }

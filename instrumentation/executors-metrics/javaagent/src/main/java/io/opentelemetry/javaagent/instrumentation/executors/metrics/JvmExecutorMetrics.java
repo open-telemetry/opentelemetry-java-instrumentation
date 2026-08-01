@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.bootstrap.executors.metrics;
+package io.opentelemetry.javaagent.instrumentation.executors.metrics;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
@@ -11,14 +11,13 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BatchCallback;
-import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.api.metrics.ObservableMeasurement;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 
-public final class JvmExecutorMetrics {
+final class JvmExecutorMetrics {
 
   private static final AttributeKey<String> EXECUTOR_NAME = stringKey("jvm.executor.name");
   private static final AttributeKey<String> EXECUTOR_TYPE = stringKey("jvm.executor.type");
@@ -26,6 +25,11 @@ public final class JvmExecutorMetrics {
 
   private static final String ACTIVE_STATE = "active";
   private static final String IDLE_STATE = "idle";
+
+  private final Meter meter;
+  private final Attributes attributes;
+  private final Attributes activeThreadAttributes;
+  private final Attributes idleThreadAttributes;
 
   static JvmExecutorMetrics create(
       OpenTelemetry openTelemetry,
@@ -44,11 +48,6 @@ public final class JvmExecutorMetrics {
         Attributes.of(EXECUTOR_NAME, executorName, EXECUTOR_TYPE, executorType));
   }
 
-  private final Meter meter;
-  private final Attributes attributes;
-  private final Attributes activeThreadAttributes;
-  private final Attributes idleThreadAttributes;
-
   private JvmExecutorMetrics(Meter meter, Attributes attributes) {
     this.meter = meter;
     this.attributes = attributes;
@@ -56,7 +55,7 @@ public final class JvmExecutorMetrics {
     idleThreadAttributes = attributes.toBuilder().put(STATE, IDLE_STATE).build();
   }
 
-  ObservableLongMeasurement threadCount() {
+  public ObservableLongMeasurement threadCount() {
     return meter
         .upDownCounterBuilder("jvm.executor.thread.count")
         .setUnit("{thread}")
@@ -64,7 +63,7 @@ public final class JvmExecutorMetrics {
         .buildObserver();
   }
 
-  ObservableLongMeasurement coreThreads() {
+  public ObservableLongMeasurement coreThreads() {
     return meter
         .upDownCounterBuilder("jvm.executor.thread.core")
         .setUnit("{thread}")
@@ -72,7 +71,7 @@ public final class JvmExecutorMetrics {
         .buildObserver();
   }
 
-  ObservableLongMeasurement maxThreads() {
+  public ObservableLongMeasurement maxThreads() {
     return meter
         .upDownCounterBuilder("jvm.executor.thread.max")
         .setUnit("{thread}")
@@ -80,7 +79,7 @@ public final class JvmExecutorMetrics {
         .buildObserver();
   }
 
-  ObservableLongMeasurement queueSize() {
+  public ObservableLongMeasurement queueSize() {
     return meter
         .upDownCounterBuilder("jvm.executor.queue.size")
         .setUnit("{task}")
@@ -88,7 +87,7 @@ public final class JvmExecutorMetrics {
         .buildObserver();
   }
 
-  ObservableLongMeasurement queueRemaining() {
+  public ObservableLongMeasurement queueRemaining() {
     return meter
         .upDownCounterBuilder("jvm.executor.queue.remaining")
         .setUnit("{task}")
@@ -96,7 +95,7 @@ public final class JvmExecutorMetrics {
         .buildObserver();
   }
 
-  ObservableLongMeasurement completedTasks() {
+  public ObservableLongMeasurement completedTasks() {
     return meter
         .counterBuilder("jvm.executor.task.completed")
         .setUnit("{task}")
@@ -104,30 +103,30 @@ public final class JvmExecutorMetrics {
         .buildObserver();
   }
 
-  LongCounter rejectedTasks() {
+  public ObservableLongMeasurement observableRejectedTasks() {
     return meter
         .counterBuilder("jvm.executor.task.rejected")
         .setUnit("{task}")
         .setDescription("The number of tasks rejected by the executor.")
-        .build();
+        .buildObserver();
   }
 
-  BatchCallback batchCallback(
+  public BatchCallback batchCallback(
       Runnable callback,
       ObservableMeasurement observableMeasurement,
       ObservableMeasurement... additionalMeasurements) {
     return meter.batchCallback(callback, observableMeasurement, additionalMeasurements);
   }
 
-  Attributes attributes() {
+  public Attributes getAttributes() {
     return attributes;
   }
 
-  Attributes activeThreadAttributes() {
+  public Attributes getActiveThreadAttributes() {
     return activeThreadAttributes;
   }
 
-  Attributes idleThreadAttributes() {
+  public Attributes getIdleThreadAttributes() {
     return idleThreadAttributes;
   }
 }
