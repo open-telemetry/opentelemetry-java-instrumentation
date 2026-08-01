@@ -35,16 +35,15 @@ tasks {
     include("**/RocketMqClientSuppressReceiveSpanTest.*")
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
       excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
   val testBothSemconv = register<Test>("testBothSemconv") {
@@ -55,7 +54,6 @@ tasks {
       includeTestsMatching("RocketMqClientTest.testConsumeFailure")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
@@ -72,7 +70,7 @@ tasks {
   }
 
   check {
-    dependsOn(testReceiveSpanDisabled, testV3Preview, testBothSemconv)
+    dependsOn(testReceiveSpanDisabled, testMessagingPreview, testBothSemconv)
   }
 
   if (otelProps.denyUnsafe) {
