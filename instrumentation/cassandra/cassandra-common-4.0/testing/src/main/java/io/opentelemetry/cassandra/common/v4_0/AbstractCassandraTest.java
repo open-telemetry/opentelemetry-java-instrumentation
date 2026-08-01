@@ -271,6 +271,7 @@ public abstract class AbstractCassandraTest {
                 .buildBatch(session -> BatchStatement.newInstance(DefaultBatchType.LOGGED))
                 .spanName("BATCH")
                 .oldSpanName("DB Query")
+                .querySummary("BATCH")
                 .batchSize(0)
                 .build()),
         argumentSet(

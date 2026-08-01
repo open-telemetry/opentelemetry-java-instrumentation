@@ -15,8 +15,4 @@ configurations:
     type: list
     description: A list of Spring channel name patterns that will be intercepted.
     default: "*"
-  - name: otel.instrumentation.messaging.experimental.capture-headers
-    declarative_name: java.common.messaging.capture_headers/development
-    type: list
-    description: A comma-separated list of header names to capture as span attributes.
-    default: ''
+  - ref: messaging.capture-headers

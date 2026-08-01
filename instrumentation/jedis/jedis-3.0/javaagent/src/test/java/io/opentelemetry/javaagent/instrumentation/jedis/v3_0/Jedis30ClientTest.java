@@ -305,7 +305,10 @@ class Jedis30ClientTest {
                 .addCommand(pipeline -> pipeline.set("batch1", "v1"))
                 .addCommand(pipeline -> pipeline.set("batch2", "v2"))
                 .operationName("PIPELINE SET")
-                .queryText("SET batch1 ?;SET batch2 ?")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; SET batch2 ?"
+                        : "SET batch1 ?;SET batch2 ?")
                 .batchSize(2)
                 .build()),
         argumentSet(
@@ -314,7 +317,10 @@ class Jedis30ClientTest {
                 .addCommand(pipeline -> pipeline.set("batch1", "v1"))
                 .addCommand(pipeline -> pipeline.get("batch1"))
                 .operationName("PIPELINE")
-                .queryText("SET batch1 ?;GET batch1")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; GET batch1"
+                        : "SET batch1 ?;GET batch1")
                 .batchSize(2)
                 .build()));
   }
@@ -336,7 +342,8 @@ class Jedis30ClientTest {
                 .addCommand(transaction -> transaction.set("tx1", "v1"))
                 .addCommand(transaction -> transaction.set("tx2", "v2"))
                 .operationName("MULTI SET")
-                .queryText("SET tx1 ?;SET tx2 ?")
+                .queryText(
+                    emitStableDatabaseSemconv() ? "SET tx1 ?; SET tx2 ?" : "SET tx1 ?;SET tx2 ?")
                 .batchSize(2)
                 .build()),
         argumentSet(
@@ -345,7 +352,7 @@ class Jedis30ClientTest {
                 .addCommand(transaction -> transaction.set("tx1", "v1"))
                 .addCommand(transaction -> transaction.get("tx1"))
                 .operationName("MULTI")
-                .queryText("SET tx1 ?;GET tx1")
+                .queryText(emitStableDatabaseSemconv() ? "SET tx1 ?; GET tx1" : "SET tx1 ?;GET tx1")
                 .batchSize(2)
                 .build()));
   }

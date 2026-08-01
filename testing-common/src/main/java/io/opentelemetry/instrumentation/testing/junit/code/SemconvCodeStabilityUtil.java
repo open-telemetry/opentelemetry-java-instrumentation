@@ -24,7 +24,7 @@ import java.util.List;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 
-// until old code semconv are dropped in 3.0
+// supports asserting on old code semconv, to be removed in 3.0
 public class SemconvCodeStabilityUtil {
 
   public static List<AttributeAssertion> codeFunctionAssertions(Class<?> type, String methodName) {

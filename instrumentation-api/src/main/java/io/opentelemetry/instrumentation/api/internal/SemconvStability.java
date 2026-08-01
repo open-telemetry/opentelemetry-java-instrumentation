@@ -40,7 +40,7 @@ public final class SemconvStability {
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.getOrNoop();
     DeclarativeConfigProperties generalConfig = getGeneralInstrumentationConfig(openTelemetry);
-    v3Preview = resolveV3Preview(openTelemetry);
+    v3Preview = v3Preview(openTelemetry);
     SemconvSelectionResolver semconvSelection =
         new SemconvSelectionResolver(openTelemetry, generalConfig, v3Preview);
 
@@ -65,13 +65,14 @@ public final class SemconvStability {
     emitStableMessagingSemconv = emitStable(messagingSelection);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated config property fallback
-  private static boolean resolveV3Preview(OpenTelemetry openTelemetry) {
+  public static boolean v3Preview(OpenTelemetry openTelemetry) {
     Boolean value = getInstrumentationConfig(openTelemetry, "common").getBoolean("v3_preview");
     if (value != null) {
       return value;
     }
-    return ConfigPropertiesUtil.getBoolean("otel.instrumentation.common.v3-preview", false);
+    // Library instrumentation tests configure this mode using JVM system properties, so a direct
+    // system-property fallback is needed.
+    return SystemProperty.getBoolean("otel.instrumentation.common.v3-preview", false);
   }
 
   public static boolean v3Preview() { // to be removed in 3.0

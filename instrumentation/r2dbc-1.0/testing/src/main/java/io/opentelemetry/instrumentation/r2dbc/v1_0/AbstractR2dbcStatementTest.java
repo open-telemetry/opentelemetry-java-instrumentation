@@ -362,7 +362,7 @@ public abstract class AbstractR2dbcStatementTest {
                   trace.hasSpansSatisfyingExactly(
                       span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                       span ->
-                          span.hasName(DB)
+                          span.hasName(emitStableDatabaseSemconv() ? "BATCH" : DB)
                               .hasKind(SpanKind.CLIENT)
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
@@ -375,7 +375,12 @@ public abstract class AbstractR2dbcStatementTest {
                                   equalTo(
                                       maybeStable(DB_STATEMENT),
                                       emitStableDatabaseSemconv() ? null : ""),
-                                  equalTo(DB_OPERATION_BATCH_SIZE, null),
+                                  equalTo(
+                                      DB_QUERY_SUMMARY,
+                                      emitStableDatabaseSemconv() ? "BATCH" : null),
+                                  equalTo(
+                                      DB_OPERATION_BATCH_SIZE,
+                                      emitStableDatabaseSemconv() ? 0L : null),
                                   equalTo(maybeStablePeerService(), "test-peer-service"),
                                   equalTo(SERVER_ADDRESS, container.getHost()),
                                   equalTo(SERVER_PORT, port),

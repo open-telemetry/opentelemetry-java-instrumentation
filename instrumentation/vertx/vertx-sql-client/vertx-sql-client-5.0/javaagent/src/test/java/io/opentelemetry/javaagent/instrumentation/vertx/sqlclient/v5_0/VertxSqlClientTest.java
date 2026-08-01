@@ -365,8 +365,9 @@ class VertxSqlClientTest {
             BatchScenario.builder()
                 .preparedQuery("insert into batch_test values ($1, $2) returning *")
                 .tuples(emptyList())
-                .stableSpanName("insert batch_test")
-                .querySummary("insert batch_test")
+                .stableSpanName("BATCH insert batch_test")
+                .querySummary("BATCH insert batch_test")
+                .batchSize(0)
                 .errorType("io.vertx.core.VertxException")
                 .build()),
         argumentSet(

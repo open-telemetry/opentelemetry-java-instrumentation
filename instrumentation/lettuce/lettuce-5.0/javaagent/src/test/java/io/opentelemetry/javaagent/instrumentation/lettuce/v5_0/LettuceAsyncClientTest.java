@@ -60,6 +60,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -99,8 +100,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
     syncCommands.set("TESTKEY", "TESTVAL");
 
-    // 1 set + 1 connect trace
-    testing.waitForTraces(2);
+    testing.waitForTraces(connectionTelemetryEnabled() ? 2 : 1);
     testing.clearData();
   }
 
@@ -113,6 +113,9 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
   @SuppressWarnings("deprecation") // RedisURI constructor
   @Test
+  @EnabledIfSystemProperty(
+      named = "otel.instrumentation.lettuce.connection-telemetry.enabled",
+      matches = "true")
   void testConnectUsingGetOnConnectionFuture() {
     RedisClient testConnectionClient = RedisClient.create(embeddedDbUri);
     testConnectionClient.setOptions(CLIENT_OPTIONS);
@@ -141,6 +144,9 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
   @SuppressWarnings("deprecation") // RedisURI constructor
   @Test
+  @EnabledIfSystemProperty(
+      named = "otel.instrumentation.lettuce.connection-telemetry.enabled",
+      matches = "true")
   void testConnectExceptionInsideTheConnectionFuture() {
     RedisClient testConnectionClient = RedisClient.create(dbUriNonExistent);
     testConnectionClient.setOptions(CLIENT_OPTIONS);
@@ -200,9 +206,11 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))));
@@ -231,10 +239,12 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("GET")
+                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY"),
                             equalTo(maybeStable(DB_OPERATION), "GET")),
@@ -288,10 +298,12 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("GET")
+                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY"),
                             equalTo(maybeStable(DB_OPERATION), "GET")),
@@ -331,10 +343,15 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("RANDOMKEY")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "RANDOMKEY " + host + ":" + port
+                                : "RANDOMKEY")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY")),
@@ -378,9 +395,12 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("HMSET")
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "HMSET " + host + ":" + port : "HMSET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
@@ -389,9 +409,14 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("HGETALL")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "HGETALL " + host + ":" + port
+                                : "HGETALL")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM"),
                             equalTo(maybeStable(DB_OPERATION), "HGETALL"))));
@@ -429,6 +454,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
+                equalTo(SERVER_ADDRESS, host),
+                equalTo(SERVER_PORT, port),
                 equalTo(maybeStable(DB_SYSTEM), REDIS),
                 equalTo(maybeStable(DB_STATEMENT), "DEL key1 key2"),
                 equalTo(maybeStable(DB_OPERATION), "DEL")));
@@ -441,7 +468,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("DEL")
+                    span.hasName(emitStableDatabaseSemconv() ? "DEL " + host + ":" + port : "DEL")
                         .hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
                         .hasException(new IllegalStateException("TestException"))
@@ -479,10 +506,12 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasNoParent()
                         .hasTotalAttributeCount(0),
                 span ->
-                    span.hasName("SADD")
+                    span.hasName(emitStableDatabaseSemconv() ? "SADD " + host + ":" + port : "SADD")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SADD SKEY ? ?"),
                             equalTo(maybeStable(DB_OPERATION), "SADD"),
@@ -512,6 +541,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     }
 
     if (scenario.isEmpty()) {
+      // Empty flush writes no Redis commands, so there is no database client request to report.
       assertThat(testing.spans()).isEmpty();
       return;
     }
@@ -520,9 +550,14 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(scenario.operationName)
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? scenario.operationName + " " + host + ":" + port
+                                : scenario.operationName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
                             equalTo(maybeStable(DB_OPERATION), scenario.operationName),
@@ -536,7 +571,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
   private static Stream<Arguments> deferredFlushScenarios() {
     return Stream.of(
-        // empty batch doesn't produce any span
+        // Empty flush writes no Redis commands.
         argumentSet("empty", BatchScenario.builder().build()),
         argumentSet(
             "single",
@@ -551,7 +586,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                 .addCommand(commands -> commands.set("batch1", "v1"))
                 .addCommand(commands -> commands.set("batch2", "v2"))
                 .operationName("PIPELINE SET")
-                .queryText("SET batch1 ?;SET batch2 ?")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; SET batch2 ?"
+                        : "SET batch1 ?;SET batch2 ?")
                 .batchSize(2)
                 .build()),
         argumentSet(
@@ -560,7 +598,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                 .addCommand(commands -> commands.set("batch1", "v1"))
                 .addCommand(commands -> commands.get("batch1"))
                 .operationName("PIPELINE")
-                .queryText("SET batch1 ?;GET batch1")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "SET batch1 ?; GET batch1"
+                        : "SET batch1 ?;GET batch1")
                 .batchSize(2)
                 .build()),
         argumentSet(
@@ -569,7 +610,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                 .addCommand(commands -> commands.configSet("not-a-real-config", "1"))
                 .addCommand(commands -> commands.set("batch-after-error", "v1"))
                 .operationName("PIPELINE")
-                .queryText("CONFIG SET not-a-real-config ?;SET batch-after-error ?")
+                .queryText(
+                    emitStableDatabaseSemconv()
+                        ? "CONFIG SET not-a-real-config ?; SET batch-after-error ?"
+                        : "CONFIG SET not-a-real-config ?;SET batch-after-error ?")
                 .batchSize(2)
                 .errorType("io.lettuce.core.RedisCommandExecutionException")
                 .build()));
@@ -642,43 +686,51 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
   @Test
   void testDebugSegfaultCommandWithNoArgumentShouldProduceSpan() {
-    // Test Causes redis to crash therefore it needs its own container
-    StatefulRedisConnection<String, String> statefulConnection = newContainerConnection();
-    cleanup.deferCleanup(statefulConnection);
+    withIsolatedContainer(
+        (connection, port) -> {
+          RedisAsyncCommands<String, String> commands = connection.async();
+          commands.debugSegfault();
 
-    RedisAsyncCommands<String, String> commands = statefulConnection.async();
-    commands.debugSegfault();
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("DEBUG")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT"),
-                            equalTo(maybeStable(DB_OPERATION), "DEBUG"))));
+          testing.waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName(
+                                  emitStableDatabaseSemconv()
+                                      ? "DEBUG " + host + ":" + port
+                                      : "DEBUG")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, port),
+                                  equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                  equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT"),
+                                  equalTo(maybeStable(DB_OPERATION), "DEBUG"))));
+        });
   }
 
   @Test
   void testShutdownCommandShouldProduceSpan() {
-    // Test Causes redis to crash therefore it needs its own container
-    StatefulRedisConnection<String, String> statefulConnection = newContainerConnection();
-    cleanup.deferCleanup(statefulConnection);
+    withIsolatedContainer(
+        (connection, port) -> {
+          RedisAsyncCommands<String, String> commands = connection.async();
+          commands.shutdown(false);
 
-    RedisAsyncCommands<String, String> commands = statefulConnection.async();
-    commands.shutdown(false);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SHUTDOWN")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE"),
-                            equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"))));
+          testing.waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName(
+                                  emitStableDatabaseSemconv()
+                                      ? "SHUTDOWN " + host + ":" + port
+                                      : "SHUTDOWN")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, port),
+                                  equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                  equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE"),
+                                  equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"))));
+        });
   }
 }

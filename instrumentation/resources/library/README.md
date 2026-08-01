@@ -65,7 +65,13 @@ Implemented attributes:
 
 - `process.pid`
 - `process.executable.path` (note, we assume the `java` binary is located in the `bin` subfolder of `JAVA_HOME`)
+- `process.command_args` (note this includes all system properties and arguments when running)
 - `process.command_line` (note this includes all system properties and arguments when running)
+
+When `otel.instrumentation.common.v3-preview=true` is enabled, `process.command_args` and
+`process.command_line` are only populated when
+`otel.instrumentation.resources.experimental.process-command-attributes.enabled=true` is also
+enabled.
 
 ### Java Runtime
 

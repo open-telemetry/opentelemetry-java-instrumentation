@@ -28,7 +28,10 @@ AUTHOR_FILTER = r"^(?!renovate\[bot\] )"
 SRC_MAIN_JAVA_PATHSPEC = "*/src/main/**/*.java"
 PR_SUFFIX_RE = re.compile(r"\s*\(#(\d+)\)$")
 VERSION_RE = re.compile(r'val stableVersion = "(\d+\.\d+\.\d+)')
-ISSUE_REF_RE = re.compile(r"(?:issues|pull)/(\d+)|(?<![A-Za-z0-9/])#(\d+)\b")
+ISSUE_REF_RE = re.compile(
+    rf"https?://github\.com/{re.escape(REPO)}/(?:issues|pull)/([1-9]\d*)\b"
+    r"|(?<![A-Za-z0-9/])#([1-9]\d*)\b"
+)
 GH_FETCH_WORKERS = 8
 GH_FETCH_RETRIES = 3
 GH_FETCH_RETRY_DELAY = 5.0

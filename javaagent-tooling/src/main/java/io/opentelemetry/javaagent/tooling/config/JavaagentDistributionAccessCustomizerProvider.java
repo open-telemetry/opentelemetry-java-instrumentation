@@ -19,8 +19,13 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigura
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.DistributionModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.DistributionPropertyModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalInstrumentationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalLanguageSpecificInstrumentationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalLanguageSpecificInstrumentationPropertyModel;
 import java.io.IOException;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * Allows access to the Javaagent distribution node, which cannot be accessed using the {@link
@@ -55,12 +60,53 @@ public final class JavaagentDistributionAccessCustomizerProvider
   public void customize(DeclarativeConfigurationCustomizer customizer) {
     customizer.addModelCustomizer(
         model -> {
-          AgentDistributionConfig.set(parseConfig(model.getDistribution()));
+          boolean isV3Preview = isV3Preview(model);
+          AgentDistributionConfig distributionConfig =
+              parseConfig(model.getDistribution(), isV3Preview);
+          AgentDistributionConfig.set(distributionConfig);
           return model;
         });
   }
 
-  private static AgentDistributionConfig parseConfig(DistributionModel distribution) {
+  // to be removed for 3.0.0
+  private static boolean isV3Preview(OpenTelemetryConfigurationModel model) {
+    ExperimentalInstrumentationModel instrumentationDevelopment =
+        model.getInstrumentationDevelopment();
+    if (instrumentationDevelopment == null) {
+      return false;
+    }
+    ExperimentalLanguageSpecificInstrumentationModel java = instrumentationDevelopment.getJava();
+    if (java == null) {
+      return false;
+    }
+    ExperimentalLanguageSpecificInstrumentationPropertyModel common =
+        java.getAdditionalProperties().get("common");
+    if (common == null) {
+      return false;
+    }
+    return Boolean.TRUE.equals(common.getAdditionalProperties().get("v3_preview"));
+  }
+
+  private static AgentDistributionConfig parseConfig(
+      @Nullable DistributionModel distribution, boolean v3Preview) {
+
+    // to be removed for 3.0.0
+    // set 'distribution.javaagent.indy/development' to 'true' for v3 preview
+    if (v3Preview) {
+      // creating distribution.javaagent is required to add indy/development to it
+      DistributionPropertyModel javaagent;
+      if (distribution == null) {
+        distribution = new DistributionModel();
+      }
+      javaagent = distribution.getAdditionalProperties().get("javaagent");
+      if (javaagent == null) {
+        javaagent = new DistributionPropertyModel();
+        distribution.withAdditionalProperty("javaagent", javaagent);
+      }
+      // when v3 preview is enabled, force indy enabled
+      javaagent.withAdditionalProperty("indy/development", true);
+    }
+
     if (distribution != null) {
       DistributionPropertyModel javaagent = distribution.getAdditionalProperties().get("javaagent");
       if (javaagent != null) {
@@ -71,6 +117,7 @@ public final class JavaagentDistributionAccessCustomizerProvider
         }
       }
     }
+
     return AgentDistributionConfig.create();
   }
 }

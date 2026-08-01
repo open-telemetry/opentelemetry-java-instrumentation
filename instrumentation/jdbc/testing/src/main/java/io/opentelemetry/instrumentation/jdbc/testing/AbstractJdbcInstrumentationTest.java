@@ -1887,6 +1887,7 @@ public abstract class AbstractJdbcInstrumentationTest {
             BatchScenario.builder()
                 .spanName("BATCH")
                 .oldSpanName(DATABASE_NAME_LOWER)
+                .summary("BATCH")
                 .batchSize(0)
                 .build()),
         argumentSet(
