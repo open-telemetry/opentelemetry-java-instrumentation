@@ -26,21 +26,19 @@ tasks {
     jvmArgs("-Dotel.instrumentation.rocketmq-client.experimental-span-attributes=true")
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
   }
 
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
   }
 
   check {
-    dependsOn(testV3Preview, testBothSemconv)
+    dependsOn(testMessagingPreview, testBothSemconv)
   }
 }
