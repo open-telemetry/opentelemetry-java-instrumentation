@@ -63,22 +63,19 @@ public final class KafkaUtil {
       new ClassValue<Optional<Field>>() {
         @Override
         protected Optional<Field> computeValue(Class<?> holderClass) {
-          for (Class<?> c = holderClass; c != null; c = c.getSuperclass()) {
+          try {
+            Field field = holderClass.getDeclaredField("metadata");
             try {
-              Field field = c.getDeclaredField("metadata");
-              try {
-                field.setAccessible(true);
-              } catch (RuntimeException e) {
-                logReflectionFailureOnce(holderClass, e.toString());
-                return Optional.empty();
-              }
-              return Optional.of(field);
-            } catch (NoSuchFieldException ignored) {
-              // try superclass
+              field.setAccessible(true);
+            } catch (RuntimeException e) {
+              logReflectionFailureOnce(holderClass, e.toString());
+              return Optional.empty();
             }
+            return Optional.of(field);
+          } catch (NoSuchFieldException e) {
+            logReflectionFailureOnce(holderClass, "no 'metadata' field found");
+            return Optional.empty();
           }
-          logReflectionFailureOnce(holderClass, "no 'metadata' field found");
-          return Optional.empty();
         }
       };
 
