@@ -25,14 +25,7 @@ dependencies {
   )
 
   testImplementation("org.apache.tomcat:tomcat-jdbc:8.5.0")
-  // Only JDBC library helpers are used by this instrumentation; loading the JDBC javaagent would
-  // enable unrelated JDBC instrumentation in these tests.
-  testInstrumentation(
-    project(
-      path = ":instrumentation:jdbc:library",
-      configuration = "shadow",
-    ),
-  )
+  testInstrumentation(project(":instrumentation:jdbc:javaagent"))
 }
 
 tasks {

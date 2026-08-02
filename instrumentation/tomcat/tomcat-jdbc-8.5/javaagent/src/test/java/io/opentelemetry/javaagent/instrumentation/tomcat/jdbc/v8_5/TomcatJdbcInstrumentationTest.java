@@ -47,6 +47,14 @@ class TomcatJdbcInstrumentationTest {
   }
 
   @Test
+  void shouldUseIpv6JdbcUrlForDefaultPoolName() throws SQLException {
+    DataSource dataSource = newDataSource();
+    dataSource.setUrl("jdbc:postgresql://[2001:db8::1]:5432/orders");
+
+    assertConnectionPoolMetrics(dataSource, "[2001:db8::1]:5432/orders");
+  }
+
+  @Test
   void shouldUseConnectionPropertiesForDefaultPoolName() throws SQLException {
     DataSource dataSource = newDataSource();
     dataSource.setUrl("jdbc:postgresql:ignored");
