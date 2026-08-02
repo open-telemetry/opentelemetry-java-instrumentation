@@ -12,12 +12,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import org.apache.rocketmq.common.message.MessageExt;
 
-final class RocketMqReceiveSpanLinksExtractor
+final class RocketMqBatchProcessSpanLinksExtractor
     implements SpanLinksExtractor<RocketMqConsumerRequest> {
 
   private final SpanLinksExtractor<MessageExt> singleMessageLinkExtractor;
 
-  RocketMqReceiveSpanLinksExtractor(TextMapPropagator propagator) {
+  RocketMqBatchProcessSpanLinksExtractor(TextMapPropagator propagator) {
     this.singleMessageLinkExtractor =
         new PropagatorBasedSpanLinksExtractor<>(propagator, new MessageExtractAdapter());
   }

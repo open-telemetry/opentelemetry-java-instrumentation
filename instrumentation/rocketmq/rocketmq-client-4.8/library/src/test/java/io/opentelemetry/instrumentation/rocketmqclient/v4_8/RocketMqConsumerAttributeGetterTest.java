@@ -1,0 +1,57 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
+
+import static java.util.Collections.singletonMap;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
+import org.apache.rocketmq.client.consumer.listener.ConsumeReturnType;
+import org.apache.rocketmq.client.hook.ConsumeMessageContext;
+import org.apache.rocketmq.common.MixAll;
+import org.apache.rocketmq.common.message.MessageExt;
+import org.junit.jupiter.api.Test;
+
+class RocketMqConsumerAttributeGetterTest {
+
+  private final RocketMqConsumerAttributeGetter getter = new RocketMqConsumerAttributeGetter();
+
+  private static RocketMqConsumerRequest request() {
+    return new RocketMqConsumerRequest(mock(MessageExt.class), "consumer-group", 1, null);
+  }
+
+  @Test
+  void doesNotReportErrorTypeOnSuccess() {
+    ConsumeMessageContext response = mock(ConsumeMessageContext.class);
+    when(response.isSuccess()).thenReturn(true);
+
+    assertThat(getter.getErrorType(request(), response, null)).isNull();
+  }
+
+  @Test
+  void reportsConsumeReturnTypeAsErrorType() {
+    // rocketmq reports RECONSUME_LATER as the status even when the listener threw
+    ConsumeMessageContext response = mock(ConsumeMessageContext.class);
+    when(response.isSuccess()).thenReturn(false);
+    when(response.getProps())
+        .thenReturn(singletonMap(MixAll.CONSUME_CONTEXT_TYPE, ConsumeReturnType.EXCEPTION.name()));
+
+    assertThat(getter.getErrorType(request(), response, null))
+        .isEqualTo(ConsumeReturnType.EXCEPTION.name());
+  }
+
+  @Test
+  void fallsBackToConsumeStatusWhenConsumeReturnTypeIsMissing() {
+    ConsumeMessageContext response = mock(ConsumeMessageContext.class);
+    when(response.isSuccess()).thenReturn(false);
+    when(response.getStatus()).thenReturn(ConsumeConcurrentlyStatus.RECONSUME_LATER.name());
+
+    assertThat(getter.getErrorType(request(), response, null))
+        .isEqualTo(ConsumeConcurrentlyStatus.RECONSUME_LATER.name());
+  }
+}

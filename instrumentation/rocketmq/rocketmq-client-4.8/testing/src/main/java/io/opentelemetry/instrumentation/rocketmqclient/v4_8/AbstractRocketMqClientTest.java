@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
@@ -50,7 +49,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
-import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyStatus;
+import org.apache.rocketmq.client.consumer.listener.ConsumeReturnType;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.SendCallback;
@@ -362,9 +361,8 @@ abstract class AbstractRocketMqClientTest {
                       spanContext.getTraceFlags(),
                       spanContext.getTraceState()));
 
-              List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-              assertions.add(span -> span.hasName("parent").hasKind(SpanKind.INTERNAL));
-              assertions.add(
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                   span ->
                       span.hasName(producerSpanName())
                           .hasKind(SpanKind.PRODUCER)
@@ -387,60 +385,45 @@ abstract class AbstractRocketMqClientTest {
                               equalTo(
                                   stringKey("messaging.rocketmq.send_result"),
                                   experimental("SEND_OK"))));
-              if (emitStableMessagingSemconv()) {
-                assertions.add(
-                    span ->
-                        assertBatchProcessSpan(
-                            span,
-                            trace.getSpan(1),
-                            producerSpanContext.get(),
-                            "TagA",
-                            failConsumption));
-                assertions.add(
-                    span ->
-                        assertBatchProcessSpan(
-                            span,
-                            trace.getSpan(1),
-                            producerSpanContext.get(),
-                            "TagB",
-                            failConsumption));
-              }
-              trace.hasSpansSatisfyingExactly(assertions);
             },
             trace -> {
               List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-              assertions.add(
-                  span -> {
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "receive " + sharedTopic
-                                : "multiple_sources receive")
-                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                            namespace(),
-                            consumerGroup(),
-                            equalTo(
-                                MESSAGING_DESTINATION_NAME,
-                                emitStableMessagingSemconv() ? sharedTopic : null),
-                            equalTo(
-                                MESSAGING_BATCH_MESSAGE_COUNT,
-                                emitStableMessagingSemconv() ? Long.valueOf(2) : null),
-                            oldOperation("receive"),
-                            operationName("receive"),
-                            operationType("receive"));
-                    if (emitStableMessagingSemconv()) {
-                      // one link per received message
+              if (emitStableMessagingSemconv()) {
+                // a single process span accounts for the whole batch and links to the creation
+                // context of every message it accounts for
+                assertions.add(
+                    span -> {
+                      span.hasName("process " + sharedTopic)
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasNoParent()
+                          .hasStatus(failConsumption ? StatusData.error() : StatusData.unset())
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                              namespace(),
+                              consumerGroup(),
+                              equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
+                              equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2L),
+                              oldOperation("process"),
+                              operationName("process"),
+                              operationType("process"),
+                              equalTo(
+                                  ERROR_TYPE,
+                                  failConsumption ? ConsumeReturnType.FAILED.name() : null));
+                      // one link per message the span accounts for
                       span.hasLinksSatisfying(
                           links(producerSpanContext.get(), producerSpanContext.get()));
-                    } else {
-                      span.hasTotalRecordedLinks(0);
-                    }
-                  });
-              if (!emitStableMessagingSemconv()) {
+                    });
+              } else {
                 assertions.add(
                     span ->
-                        assertBatchProcessSpan(
+                        span.hasName("multiple_sources receive")
+                            .hasKind(CONSUMER)
+                            .hasTotalRecordedLinks(0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_SYSTEM, "rocketmq"), oldOperation("receive")));
+                assertions.add(
+                    span ->
+                        assertLegacyBatchProcessSpan(
                             span,
                             trace.getSpan(0),
                             producerSpanContext.get(),
@@ -448,7 +431,7 @@ abstract class AbstractRocketMqClientTest {
                             failConsumption));
                 assertions.add(
                     span ->
-                        assertBatchProcessSpan(
+                        assertLegacyBatchProcessSpan(
                             span,
                             trace.getSpan(0),
                             producerSpanContext.get(),
@@ -464,29 +447,20 @@ abstract class AbstractRocketMqClientTest {
             });
   }
 
-  private void assertBatchProcessSpan(
+  private void assertLegacyBatchProcessSpan(
       SpanDataAssert span,
       SpanData parentSpan,
       SpanContext producerSpanContext,
       String messageTag,
       boolean failed) {
-    span.hasName(emitStableMessagingSemconv() ? "process " + sharedTopic : sharedTopic + " process")
+    span.hasName(sharedTopic + " process")
         .hasKind(SpanKind.CONSUMER)
         .hasParent(parentSpan)
         .hasStatus(failed ? StatusData.error() : StatusData.unset())
         .hasAttributesSatisfyingExactly(
             equalTo(MESSAGING_SYSTEM, "rocketmq"),
-            namespace(),
-            consumerGroup(),
             equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
             oldOperation("process"),
-            operationName("process"),
-            operationType("process"),
-            equalTo(
-                ERROR_TYPE,
-                emitStableMessagingSemconv() && failed
-                    ? ConsumeOrderlyStatus.SUSPEND_CURRENT_QUEUE_A_MOMENT.name()
-                    : null),
             satisfies(MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class)),
             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
             equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental(messageTag)),

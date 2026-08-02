@@ -50,6 +50,11 @@ final class RocketMqConsumerRequest {
     return messages;
   }
 
+  /** Returns whether this request accounts for more than one message. */
+  boolean isBatch() {
+    return messages.size() > 1;
+  }
+
   String getConsumerGroup() {
     return consumerGroup;
   }
