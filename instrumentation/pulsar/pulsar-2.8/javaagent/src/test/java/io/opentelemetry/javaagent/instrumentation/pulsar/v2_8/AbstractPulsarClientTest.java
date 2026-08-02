@@ -453,8 +453,13 @@ abstract class AbstractPulsarClientTest {
                 oldOperation("receive"),
                 operationName("receive"),
                 operationType("receive"),
-                equalTo(MESSAGING_MESSAGE_ID, messageId),
-                satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
+                equalTo(MESSAGING_MESSAGE_ID, messageId)));
+    // messaging.message.body.size describes a single message, so the batch span does not report it
+    if (isBatch && emitStableMessagingSemconv()) {
+      assertions.add(equalTo(MESSAGING_MESSAGE_BODY_SIZE, null));
+    } else {
+      assertions.add(satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative));
+    }
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }

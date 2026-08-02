@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
@@ -53,6 +54,11 @@ final class PulsarBatchMessagingAttributesGetter
   @Nullable
   @Override
   public Long getMessageBodySize(PulsarBatchRequest request) {
+    // messaging.message.body.size describes a single message, so the batch total does not belong on
+    // the span representing the whole batch
+    if (emitStableMessagingSemconv()) {
+      return null;
+    }
     long size = 0;
     boolean hasMessages = false;
     for (Message<?> message : request.getMessages()) {
