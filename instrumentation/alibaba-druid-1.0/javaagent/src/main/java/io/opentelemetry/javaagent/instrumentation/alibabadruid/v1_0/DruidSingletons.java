@@ -27,13 +27,14 @@ public class DruidSingletons {
     String serverAddress = dbInfo.getServerAddress();
     Integer serverPort = dbInfo.getServerPort();
     String dbNamespace = dbInfo.getDbNamespace();
-    if (dbNamespace == null) {
-      dbNamespace = dbInfo.getDbName();
-    }
 
     StringBuilder poolName = new StringBuilder();
     if (serverAddress != null) {
-      poolName.append(serverAddress);
+      if (serverAddress.indexOf(':') >= 0 && !serverAddress.startsWith("[")) {
+        poolName.append('[').append(serverAddress).append(']');
+      } else {
+        poolName.append(serverAddress);
+      }
       if (serverPort != null) {
         poolName.append(':').append(serverPort);
       }

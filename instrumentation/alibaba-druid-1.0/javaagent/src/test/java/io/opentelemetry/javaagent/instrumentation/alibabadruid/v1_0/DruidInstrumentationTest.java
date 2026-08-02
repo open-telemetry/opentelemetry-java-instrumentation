@@ -42,6 +42,14 @@ class DruidInstrumentationTest extends AbstractDruidInstrumentationTest {
   }
 
   @Test
+  void shouldUseIpv6JdbcUrlForDataSourceNameWhenNameIsNull() throws Exception {
+    DruidDataSource dataSource = createDataSource();
+    dataSource.setUrl("jdbc:postgresql://[2001:db8::1]:5432/orders");
+
+    assertDataSourceName(dataSource, "[2001:db8::1]:5432/orders");
+  }
+
+  @Test
   void shouldUseConnectPropertiesForDataSourceNameWhenNameIsNull() throws Exception {
     DruidDataSource dataSource = createDataSource();
     dataSource.setUrl("jdbc:postgresql:ignored");

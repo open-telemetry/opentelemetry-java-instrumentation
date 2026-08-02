@@ -24,12 +24,7 @@ dependencies {
   )
 
   testImplementation(project(":instrumentation:alibaba-druid-1.0:testing"))
-  testInstrumentation(
-    project(
-      path = ":instrumentation:jdbc:library",
-      configuration = "shadow",
-    ),
-  )
+  testInstrumentation(project(":instrumentation:jdbc:javaagent"))
 }
 
 tasks {
