@@ -245,6 +245,14 @@ public abstract class AbstractSqsTracingTest {
 
   private static void assertReceiveSpan(
       SpanDataAssert span, SpanData creationContext, boolean captureHeaders) {
+    assertReceiveSpan(span, null, creationContext, captureHeaders);
+  }
+
+  private static void assertReceiveSpan(
+      SpanDataAssert span,
+      @Nullable SpanData parent,
+      SpanData creationContext,
+      boolean captureHeaders) {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             asList(
@@ -280,8 +288,13 @@ public abstract class AbstractSqsTracingTest {
 
     span.hasName(emitStableMessagingSemconv() ? "receive testSdkSqs" : "testSdkSqs receive")
         .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
-        .hasNoParent()
         .hasAttributesSatisfyingExactly(attributes);
+
+    if (parent == null) {
+      span.hasNoParent();
+    } else {
+      span.hasParent(parent);
+    }
 
     if (emitStableMessagingSemconv()) {
       span.hasLinksSatisfying(
@@ -469,49 +482,14 @@ public abstract class AbstractSqsTracingTest {
                       }),
               trace -> {
                 Consumer<SpanDataAssert> receiveSpanAssertion =
-                    span ->
-                        span.hasName("receive testSdkSqs")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfying(
-                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                equalTo(MESSAGING_OPERATION_TYPE, "receive"),
-                                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1))
-                            .hasLinksSatisfying(
-                                links ->
-                                    assertThat(links)
-                                        .singleElement()
-                                        .satisfies(
-                                            link ->
-                                                assertThat(link.getSpanContext().getSpanId())
-                                                    .isEqualTo(producerSpan.get().getSpanId())));
+                    span -> assertReceiveSpan(span, trace.getSpan(0), producerSpan.get(), false);
                 Consumer<SpanDataAssert> sdkSpanAssertion =
                     span ->
                         span.hasName("SQS.ReceiveMessage")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0));
                 Consumer<SpanDataAssert> processSpanAssertion =
-                    span ->
-                        span.hasName("process testSdkSqs")
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfying(
-                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                                satisfies(
-                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)))
-                            .hasLinksSatisfying(
-                                links ->
-                                    assertThat(links)
-                                        .singleElement()
-                                        .satisfies(
-                                            link ->
-                                                assertThat(link.getSpanContext().getSpanId())
-                                                    .isEqualTo(producerSpan.get().getSpanId())));
+                    span -> assertProcessSpan(span, trace.getSpan(0), producerSpan.get(), false);
 
                 List<Consumer<SpanDataAssert>> assertions =
                     new ArrayList<>(

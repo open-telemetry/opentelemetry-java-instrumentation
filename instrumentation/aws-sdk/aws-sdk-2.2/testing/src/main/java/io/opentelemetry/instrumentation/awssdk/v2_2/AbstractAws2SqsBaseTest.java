@@ -177,7 +177,7 @@ public abstract class AbstractAws2SqsBaseTest {
             .credentialsProvider(CREDENTIALS_PROVIDER)
             .build()) {
       client.purgeQueue(PurgeQueueRequest.builder().queueUrl(queueUrl).build());
-    } catch (QueueDoesNotExistException e) {
+    } catch (QueueDoesNotExistException ignored) {
       // the queue is created by the tests, it may not exist
     }
   }
