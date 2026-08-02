@@ -30,7 +30,7 @@ public class DruidSingletons {
 
     StringBuilder poolName = new StringBuilder();
     if (serverAddress != null) {
-      if (serverAddress.indexOf(':') >= 0 && !serverAddress.startsWith("[")) {
+      if (serverAddress.indexOf(':') >= 0) {
         poolName.append('[').append(serverAddress).append(']');
       } else {
         poolName.append(serverAddress);
