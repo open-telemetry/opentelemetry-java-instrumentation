@@ -31,6 +31,8 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     systemProperty("collectMetadata", otelProps.collectMetadata)
+    // The JDBC javaagent supplies the URL parser; its connection advice is not under test here.
+    jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
   }
 
   val testStableSemconv = register<Test>("testStableSemconv") {
