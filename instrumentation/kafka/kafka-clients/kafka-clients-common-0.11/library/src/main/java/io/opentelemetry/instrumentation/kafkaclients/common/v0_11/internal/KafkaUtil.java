@@ -58,24 +58,28 @@ public final class KafkaUtil {
   // ClassValue caches the reflective Field for each holder class. computeValue() runs at most once
   // per class — thread-safe and GC-friendly (entry is released when the ClassLoader is collected).
   // Optional.empty() is stored when the field is absent or inaccessible, preventing repeated
-  // lookups.
+  // lookups. The superclass walk is needed because in Kafka 3.7+ the delegate class may inherit
+  // 'metadata' from a parent rather than declaring it directly.
   private static final ClassValue<Optional<Field>> metadataFieldCache =
       new ClassValue<Optional<Field>>() {
         @Override
         protected Optional<Field> computeValue(Class<?> holderClass) {
-          try {
-            Field field = holderClass.getDeclaredField("metadata");
+          for (Class<?> cls = holderClass; cls != null; cls = cls.getSuperclass()) {
             try {
-              field.setAccessible(true);
-            } catch (RuntimeException e) {
-              logReflectionFailureOnce(holderClass, e.toString());
-              return Optional.empty();
+              Field field = cls.getDeclaredField("metadata");
+              try {
+                field.setAccessible(true);
+              } catch (RuntimeException e) {
+                logReflectionFailureOnce(holderClass, e.toString());
+                return Optional.empty();
+              }
+              return Optional.of(field);
+            } catch (NoSuchFieldException ignored) {
+              // 'metadata' not declared on this class; check superclass
             }
-            return Optional.of(field);
-          } catch (NoSuchFieldException e) {
-            logReflectionFailureOnce(holderClass, "no 'metadata' field found");
-            return Optional.empty();
           }
+          logReflectionFailureOnce(holderClass, "no 'metadata' field found");
+          return Optional.empty();
         }
       };
 
