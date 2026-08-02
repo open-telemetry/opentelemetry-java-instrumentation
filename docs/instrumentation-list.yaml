@@ -12400,6 +12400,7 @@ libraries:
     - jvm.cpu.count-ae176c2b
     - jvm.cpu.recent_utilization-6056df51
     - jvm.cpu.time-e00d5c75
+    - jvm.gc.duration-e20d0032
     - jvm.memory.committed-75750f2f
     - jvm.memory.limit-13513f5f
     - jvm.memory.used-0d769189
