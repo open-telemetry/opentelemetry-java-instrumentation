@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor.constant;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -19,12 +18,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -38,20 +37,12 @@ class RocketMqInstrumenterFactory {
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<String> MESSAGING_CONSUMER_GROUP_NAME =
       AttributeKey.stringKey("messaging.consumer.group.name");
-  private static final AttributeKey<String> MESSAGING_DESTINATION_NAME =
-      AttributeKey.stringKey("messaging.destination.name");
   private static final AttributeKey<String> MESSAGING_OPERATION =
       AttributeKey.stringKey("messaging.operation");
-  private static final AttributeKey<String> MESSAGING_OPERATION_NAME =
-      AttributeKey.stringKey("messaging.operation.name");
-  private static final AttributeKey<String> MESSAGING_OPERATION_TYPE =
-      AttributeKey.stringKey("messaging.operation.type");
   private static final AttributeKey<String> MESSAGING_SYSTEM =
       AttributeKey.stringKey("messaging.system");
   private static final AttributeKey<String> MESSAGING_ROCKETMQ_NAMESPACE =
       AttributeKey.stringKey("messaging.rocketmq.namespace");
-  private static final AttributeKey<Long> MESSAGING_BATCH_MESSAGE_COUNT =
-      AttributeKey.longKey("messaging.batch.message_count");
 
   static Instrumenter<SendMessageContext, Void> createProducerInstrumenter(
       OpenTelemetry openTelemetry,
@@ -101,51 +92,51 @@ class RocketMqInstrumenterFactory {
       List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes) {
 
-    InstrumenterBuilder<RocketMqConsumerRequest, Void> batchReceiveInstrumenterBuilder =
+    // the receive span only exists under the old conventions, where it groups the per-message
+    // process spans of a batch; under the v1.43 conventions a single process span accounts for the
+    // whole batch, and there is no application-initiated receive operation to instrument because
+    // the consume hook wraps a push-based callback
+    Instrumenter<RocketMqConsumerRequest, Void> batchReceiveInstrumenter =
         Instrumenter.<RocketMqConsumerRequest, Void>builder(
-                openTelemetry, INSTRUMENTATION_NAME, RocketMqInstrumenterFactory::spanNameOnReceive)
-            .addAttributesExtractor(constant(MESSAGING_SYSTEM, "rocketmq"));
-    if (emitOldMessagingSemconv()) {
-      batchReceiveInstrumenterBuilder.addAttributesExtractor(
-          constant(MESSAGING_OPERATION, "receive"));
-    }
-    if (emitStableMessagingSemconv()) {
-      batchReceiveInstrumenterBuilder
-          .addSpanLinksExtractor(
-              new RocketMqReceiveSpanLinksExtractor(
-                  openTelemetry.getPropagators().getTextMapPropagator()))
-          .addAttributesExtractor(constant(MESSAGING_OPERATION_NAME, "receive"))
-          .addAttributesExtractor(constant(MESSAGING_OPERATION_TYPE, "receive"))
-          .addAttributesExtractor(
-              new AttributesExtractor<RocketMqConsumerRequest, Void>() {
-                @Override
-                public void onStart(
-                    AttributesBuilder attributes,
-                    Context parentContext,
-                    RocketMqConsumerRequest request) {
-                  attributes.put(MESSAGING_BATCH_MESSAGE_COUNT, request.getBatchSize());
-                  attributes.put(MESSAGING_CONSUMER_GROUP_NAME, request.getConsumerGroup());
-                  attributes.put(MESSAGING_DESTINATION_NAME, request.getMessage().getTopic());
-                  attributes.put(MESSAGING_ROCKETMQ_NAMESPACE, request.getNamespace());
-                }
-
-                @Override
-                public void onEnd(
-                    AttributesBuilder attributes,
-                    Context context,
-                    RocketMqConsumerRequest request,
-                    @Nullable Void unused,
-                    @Nullable Throwable error) {}
-              });
-    }
+                openTelemetry, INSTRUMENTATION_NAME, request -> "multiple_sources receive")
+            .addAttributesExtractor(constant(MESSAGING_SYSTEM, "rocketmq"))
+            .addAttributesExtractor(constant(MESSAGING_OPERATION, "receive"))
+            .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
 
     return new RocketMqConsumerInstrumenter(
         createProcessInstrumenter(
             openTelemetry, capturedHeaders, captureExperimentalSpanAttributes, false),
-        createProcessInstrumenter(
-            openTelemetry, capturedHeaders, captureExperimentalSpanAttributes, true),
-        batchReceiveInstrumenterBuilder.buildInstrumenter(
-            MessagingSpanKindExtractor.create(MessagingOperationType.RECEIVE)));
+        emitStableMessagingSemconv()
+            ? createBatchProcessInstrumenter(openTelemetry, capturedHeaders)
+            : createProcessInstrumenter(
+                openTelemetry, capturedHeaders, captureExperimentalSpanAttributes, true),
+        batchReceiveInstrumenter);
+  }
+
+  private static Instrumenter<RocketMqConsumerRequest, ConsumeMessageContext>
+      createBatchProcessInstrumenter(OpenTelemetry openTelemetry, List<String> capturedHeaders) {
+
+    RocketMqConsumerAttributeGetter getter = new RocketMqConsumerAttributeGetter();
+    MessagingOperationType operationType = MessagingOperationType.PROCESS;
+
+    InstrumenterBuilder<RocketMqConsumerRequest, ConsumeMessageContext> builder =
+        Instrumenter.<RocketMqConsumerRequest, ConsumeMessageContext>builder(
+                openTelemetry,
+                INSTRUMENTATION_NAME,
+                MessagingSpanNameExtractor.create(getter, operationType))
+            .addAttributesExtractor(
+                buildMessagingAttributesExtractor(getter, operationType, capturedHeaders))
+            .addAttributesExtractor(consumerAttributesExtractor())
+            .addSpanLinksExtractor(
+                new RocketMqBatchProcessSpanLinksExtractor(
+                    openTelemetry.getPropagators().getTextMapPropagator()))
+            .setSpanStatusExtractor(consumeStatusExtractor());
+    setMessagingProcessExceptionEventExtractor(builder);
+
+    // a batch has no single message creation context that could be adopted as the span's parent,
+    // so this instrumenter is built directly instead of going through
+    // MessagingProcessInstrumenterFactory
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   private static Instrumenter<RocketMqConsumerRequest, ConsumeMessageContext>
@@ -167,37 +158,12 @@ class RocketMqInstrumenterFactory {
     builder.addAttributesExtractor(
         buildMessagingAttributesExtractor(getter, operationType, capturedHeaders));
     if (emitStableMessagingSemconv()) {
-      builder.addAttributesExtractor(
-          new AttributesExtractor<RocketMqConsumerRequest, ConsumeMessageContext>() {
-            @Override
-            public void onStart(
-                AttributesBuilder attributes,
-                Context parentContext,
-                RocketMqConsumerRequest request) {
-              attributes.put(MESSAGING_CONSUMER_GROUP_NAME, request.getConsumerGroup());
-              attributes.put(MESSAGING_ROCKETMQ_NAMESPACE, request.getNamespace());
-            }
-
-            @Override
-            public void onEnd(
-                AttributesBuilder attributes,
-                Context context,
-                RocketMqConsumerRequest request,
-                @Nullable ConsumeMessageContext response,
-                @Nullable Throwable error) {}
-          });
+      builder.addAttributesExtractor(consumerAttributesExtractor());
     }
     if (captureExperimentalSpanAttributes) {
       builder.addAttributesExtractor(new RocketMqConsumerExperimentalAttributeExtractor());
     }
-    builder.setSpanStatusExtractor(
-        (spanStatusBuilder, request, response, error) -> {
-          if (response != null && !response.isSuccess()) {
-            spanStatusBuilder.setStatus(StatusCode.ERROR);
-          } else {
-            SpanStatusExtractor.getDefault().extract(spanStatusBuilder, request, response, error);
-          }
-        });
+    builder.setSpanStatusExtractor(consumeStatusExtractor());
     setMessagingProcessExceptionEventExtractor(builder);
 
     return MessagingProcessInstrumenterFactory.create(
@@ -207,6 +173,37 @@ class RocketMqInstrumenterFactory {
         batch);
   }
 
+  private static AttributesExtractor<RocketMqConsumerRequest, ConsumeMessageContext>
+      consumerAttributesExtractor() {
+    return new AttributesExtractor<RocketMqConsumerRequest, ConsumeMessageContext>() {
+      @Override
+      public void onStart(
+          AttributesBuilder attributes, Context parentContext, RocketMqConsumerRequest request) {
+        attributes.put(MESSAGING_CONSUMER_GROUP_NAME, request.getConsumerGroup());
+        attributes.put(MESSAGING_ROCKETMQ_NAMESPACE, request.getNamespace());
+      }
+
+      @Override
+      public void onEnd(
+          AttributesBuilder attributes,
+          Context context,
+          RocketMqConsumerRequest request,
+          @Nullable ConsumeMessageContext response,
+          @Nullable Throwable error) {}
+    };
+  }
+
+  private static SpanStatusExtractor<RocketMqConsumerRequest, ConsumeMessageContext>
+      consumeStatusExtractor() {
+    return (spanStatusBuilder, request, response, error) -> {
+      if (response != null && !response.isSuccess()) {
+        spanStatusBuilder.setStatus(StatusCode.ERROR);
+      } else {
+        SpanStatusExtractor.getDefault().extract(spanStatusBuilder, request, response, error);
+      }
+    };
+  }
+
   private static <T, R> AttributesExtractor<T, R> buildMessagingAttributesExtractor(
       MessagingAttributesGetter<T, R> getter,
       MessagingOperationType operationType,
@@ -214,12 +211,6 @@ class RocketMqInstrumenterFactory {
     return MessagingAttributesExtractor.builder(getter, operationType)
         .setCapturedHeaders(capturedHeaders)
         .build();
-  }
-
-  private static String spanNameOnReceive(RocketMqConsumerRequest request) {
-    return emitStableMessagingSemconv()
-        ? "receive " + request.getMessage().getTopic()
-        : "multiple_sources receive";
   }
 
   private RocketMqInstrumenterFactory() {}

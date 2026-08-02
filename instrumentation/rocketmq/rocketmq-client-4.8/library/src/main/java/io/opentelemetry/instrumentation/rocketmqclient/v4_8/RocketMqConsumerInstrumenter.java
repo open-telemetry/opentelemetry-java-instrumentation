@@ -20,8 +20,11 @@ final class RocketMqConsumerInstrumenter {
 
   private final Instrumenter<RocketMqConsumerRequest, ConsumeMessageContext>
       singleProcessInstrumenter;
+  // under the v1.43 conventions this covers the whole batch with a single span; under the old
+  // conventions it covers one message of the batch
   private final Instrumenter<RocketMqConsumerRequest, ConsumeMessageContext>
       batchProcessInstrumenter;
+  // only used under the old conventions, where it groups the per-message process spans
   private final Instrumenter<RocketMqConsumerRequest, Void> batchReceiveInstrumenter;
 
   RocketMqConsumerInstrumenter(
@@ -40,28 +43,37 @@ final class RocketMqConsumerInstrumenter {
       String consumerGroup,
       @Nullable String namespace) {
     int batchSize = msgs.size();
-    if (msgs.size() == 1) {
+    if (batchSize == 1) {
       RocketMqConsumerRequest request =
           new RocketMqConsumerRequest(msgs.get(0), consumerGroup, batchSize, namespace);
       if (singleProcessInstrumenter.shouldStart(parentContext, request)) {
         Context context = singleProcessInstrumenter.start(parentContext, request);
         return new ConsumerContext(context, request, emptyList(), false);
       }
-    } else {
-      RocketMqConsumerRequest request =
-          new RocketMqConsumerRequest(msgs, consumerGroup, batchSize, namespace);
-      boolean receiveStarted = batchReceiveInstrumenter.shouldStart(parentContext, request);
-      Context receiveContext =
-          receiveStarted ? batchReceiveInstrumenter.start(parentContext, request) : parentContext;
-      Context processParentContext = emitStableMessagingSemconv() ? parentContext : receiveContext;
-      List<StartedProcessSpan> processSpans = new ArrayList<>(batchSize);
-      for (MessageExt message : msgs) {
-        createChildSpan(
-            processParentContext, message, consumerGroup, batchSize, namespace, processSpans);
+      return null;
+    }
+
+    RocketMqConsumerRequest request =
+        new RocketMqConsumerRequest(msgs, consumerGroup, batchSize, namespace);
+    if (emitStableMessagingSemconv()) {
+      // a single process span accounts for the whole batch and links to the creation context of
+      // every message it accounts for
+      if (!batchProcessInstrumenter.shouldStart(parentContext, request)) {
+        return null;
       }
-      if (receiveStarted || !processSpans.isEmpty()) {
-        return new ConsumerContext(receiveContext, request, processSpans, receiveStarted);
-      }
+      Context context = batchProcessInstrumenter.start(parentContext, request);
+      return new ConsumerContext(context, request, emptyList(), false);
+    }
+
+    boolean receiveStarted = batchReceiveInstrumenter.shouldStart(parentContext, request);
+    Context receiveContext =
+        receiveStarted ? batchReceiveInstrumenter.start(parentContext, request) : parentContext;
+    List<StartedProcessSpan> processSpans = new ArrayList<>(batchSize);
+    for (MessageExt message : msgs) {
+      createChildSpan(receiveContext, message, consumerGroup, batchSize, namespace, processSpans);
+    }
+    if (receiveStarted || !processSpans.isEmpty()) {
+      return new ConsumerContext(receiveContext, request, processSpans, receiveStarted);
     }
     return null;
   }
@@ -82,18 +94,21 @@ final class RocketMqConsumerInstrumenter {
   }
 
   void end(ConsumerContext consumerContext, ConsumeMessageContext response) {
-    if (consumerContext.getRequest().getBatchSize() == 1) {
-      singleProcessInstrumenter.end(
-          consumerContext.getContext(), consumerContext.getRequest(), response, null);
-    } else {
-      for (StartedProcessSpan processSpan : consumerContext.getProcessSpans()) {
-        batchProcessInstrumenter.end(
-            processSpan.getContext(), processSpan.getRequest(), response, null);
-      }
-      if (consumerContext.isReceiveStarted()) {
-        batchReceiveInstrumenter.end(
-            consumerContext.getContext(), consumerContext.getRequest(), null, null);
-      }
+    RocketMqConsumerRequest request = consumerContext.getRequest();
+    if (request.getBatchSize() == 1) {
+      singleProcessInstrumenter.end(consumerContext.getContext(), request, response, null);
+      return;
+    }
+    if (emitStableMessagingSemconv()) {
+      batchProcessInstrumenter.end(consumerContext.getContext(), request, response, null);
+      return;
+    }
+    for (StartedProcessSpan processSpan : consumerContext.getProcessSpans()) {
+      batchProcessInstrumenter.end(
+          processSpan.getContext(), processSpan.getRequest(), response, null);
+    }
+    if (consumerContext.isReceiveStarted()) {
+      batchReceiveInstrumenter.end(consumerContext.getContext(), request, null, null);
     }
   }
 

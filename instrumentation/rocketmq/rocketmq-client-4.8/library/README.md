@@ -41,3 +41,22 @@ void configure(OpenTelemetry openTelemetry, DefaultMQProducerImpl producer, Defa
   pushConsumer.registerConsumeMessageHook(rocketMqTelemetry.createConsumeMessageHook());
 }
 ```
+
+## Reported errors
+
+When a consume operation does not succeed, the process span is marked as errored and
+`error.type` is set to the [`ConsumeReturnType`][consume-return-type] that RocketMQ computed for
+the operation:
+
+| `error.type` | Meaning                                                                          |
+| ------------ | -------------------------------------------------------------------------------- |
+| `EXCEPTION`  | The message listener threw.                                                       |
+| `RETURNNULL` | The message listener returned `null`.                                             |
+| `TIME_OUT`   | The message listener exceeded the configured consume timeout.                     |
+| `FAILED`     | The message listener returned `RECONSUME_LATER` / `SUSPEND_CURRENT_QUEUE_A_MOMENT`. |
+
+If RocketMQ does not report a consume return type, the consume status is used instead.
+
+`error.type` is only reported when the messaging semantic conventions are enabled.
+
+[consume-return-type]: https://github.com/apache/rocketmq/blob/rocketmq-all-4.8.0/client/src/main/java/org/apache/rocketmq/client/consumer/listener/ConsumeReturnType.java
