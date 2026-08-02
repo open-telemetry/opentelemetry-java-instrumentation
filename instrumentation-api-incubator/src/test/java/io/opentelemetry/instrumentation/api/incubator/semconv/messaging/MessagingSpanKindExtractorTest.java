@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -26,10 +27,21 @@ class MessagingSpanKindExtractorTest {
       SpanKind oldKind,
       SpanKind kind) {
     SpanKind actualKind =
-        MessagingSpanKindExtractor.create(operationType, isSpanContextPropagated)
+        MessagingSpanKindExtractor.<Object>create(operationType, request -> isSpanContextPropagated)
             .extract(new Object());
 
     assertThat(actualKind).isEqualTo(emitStableMessagingSemconv() ? kind : oldKind);
+  }
+
+  @Test
+  void sendEvaluatesPropagationPerRequest() {
+    SpanKindExtractor<String> extractor =
+        MessagingSpanKindExtractor.create(
+            MessagingOperationType.SEND, request -> request.equals("propagated"));
+
+    assertThat(extractor.extract("propagated")).isEqualTo(SpanKind.PRODUCER);
+    assertThat(extractor.extract("not propagated"))
+        .isEqualTo(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.PRODUCER);
   }
 
   @Test

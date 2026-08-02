@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import java.util.function.Predicate;
 
 /** Selects messaging span kinds according to the configured semantic convention version. */
 public final class MessagingSpanKindExtractor {
@@ -17,9 +18,13 @@ public final class MessagingSpanKindExtractor {
    * Returns a span kind extractor following the <a
    * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/messaging/messaging-spans.md#span-kind">v1.43
    * messaging span kind conventions</a>.
+   *
+   * <p>{@link MessagingOperationType#SEND} spans are treated as propagating their span context as
+   * the message creation context; use {@link #create(MessagingOperationType, Predicate)} when that
+   * varies per request.
    */
   public static <REQUEST> SpanKindExtractor<REQUEST> create(MessagingOperationType operationType) {
-    return create(operationType, true);
+    return create(operationType, request -> true);
   }
 
   /**
@@ -27,35 +32,37 @@ public final class MessagingSpanKindExtractor {
    * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/messaging/messaging-spans.md#span-kind">v1.43
    * messaging span kind conventions</a>.
    *
-   * @param isSpanContextPropagated whether the context of a {@link MessagingOperationType#SEND}
+   * @param spanContextPropagated tells whether the context of a {@link MessagingOperationType#SEND}
    *     span is propagated as the message creation context; ignored for other operation types
    */
   public static <REQUEST> SpanKindExtractor<REQUEST> create(
-      MessagingOperationType operationType, boolean isSpanContextPropagated) {
-    SpanKind spanKind;
+      MessagingOperationType operationType, Predicate<REQUEST> spanContextPropagated) {
+    SpanKindExtractor<REQUEST> spanKindExtractor;
     switch (operationType) {
       case CREATE:
-        spanKind = SpanKind.PRODUCER;
+        spanKindExtractor = request -> SpanKind.PRODUCER;
         break;
       case SEND:
-        spanKind =
-            emitStableMessagingSemconv() && !isSpanContextPropagated
-                ? SpanKind.CLIENT
-                : SpanKind.PRODUCER;
+        spanKindExtractor =
+            request ->
+                emitStableMessagingSemconv() && !spanContextPropagated.test(request)
+                    ? SpanKind.CLIENT
+                    : SpanKind.PRODUCER;
         break;
       case RECEIVE:
-        spanKind = emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER;
+        SpanKind receiveKind = emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER;
+        spanKindExtractor = request -> receiveKind;
         break;
       case PROCESS:
-        spanKind = SpanKind.CONSUMER;
+        spanKindExtractor = request -> SpanKind.CONSUMER;
         break;
       case SETTLE:
-        spanKind = SpanKind.CLIENT;
+        spanKindExtractor = request -> SpanKind.CLIENT;
         break;
       default:
         throw new IllegalStateException("Can't possibly happen");
     }
-    return request -> spanKind;
+    return spanKindExtractor;
   }
 
   /** Returns a span kind extractor for the given operation. */
