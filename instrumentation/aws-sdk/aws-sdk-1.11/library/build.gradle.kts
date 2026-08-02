@@ -62,10 +62,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("SqsSuppressReceiveSpansTest.testAbandonedIteratorDoesNotParentNextProcessSpan")
-      includeTestsMatching("SqsTracingTest.testReceiveSpanLinksToProducer")
-      includeTestsMatching("SqsTracingTest.testBatchSendMessageCount")
-      includeTestsMatching("SqsTracingTest.testSimpleSqsProducerConsumerServicesWithParentSpan")
+      includeTestsMatching("*Sqs*")
     }
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
   }
@@ -74,10 +71,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("SqsSuppressReceiveSpansTest.testAbandonedIteratorDoesNotParentNextProcessSpan")
-      includeTestsMatching("SqsTracingTest.testReceiveSpanLinksToProducer")
-      includeTestsMatching("SqsTracingTest.testBatchSendMessageCount")
-      includeTestsMatching("SqsTracingTest.testSimpleSqsProducerConsumerServicesWithParentSpan")
+      includeTestsMatching("*Sqs*")
     }
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
   }

@@ -86,10 +86,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("Aws2SqsSuppressReceiveSpansW3cPropagatorTest.testAbandonedIteratorDoesNotParentNextProcessSpan")
-      includeTestsMatching("Aws2SqsDefaultPropagatorTest.testReceiveSpanLinksToProducer")
-      includeTestsMatching("Aws2SqsDefaultPropagatorTest.testBatchSendMessageCount")
-      includeTestsMatching("Aws2SqsDefaultPropagatorTest.testSimpleSqsProducerConsumerServicesWithParentSync")
+      includeTestsMatching("*Sqs*")
     }
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
   }
@@ -98,10 +95,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("Aws2SqsSuppressReceiveSpansW3cPropagatorTest.testAbandonedIteratorDoesNotParentNextProcessSpan")
-      includeTestsMatching("Aws2SqsDefaultPropagatorTest.testReceiveSpanLinksToProducer")
-      includeTestsMatching("Aws2SqsDefaultPropagatorTest.testBatchSendMessageCount")
-      includeTestsMatching("Aws2SqsDefaultPropagatorTest.testSimpleSqsProducerConsumerServicesWithParentSync")
+      includeTestsMatching("*Sqs*")
     }
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
   }
