@@ -111,9 +111,9 @@ class MessagingAttributesExtractorTest {
       expectedEntries.add(entry(MESSAGING_DESTINATION_ANONYMOUS, true));
     }
     expectedEntries.add(entry(MESSAGING_MESSAGE_CONVERSATION_ID, "42"));
-    expectedEntries.add(entry(MESSAGING_MESSAGE_BODY_SIZE, 100L));
-    expectedEntries.add(entry(MESSAGING_MESSAGE_ENVELOPE_SIZE, 120L));
     if (emitOldMessagingSemconv()) {
+      expectedEntries.add(entry(MESSAGING_MESSAGE_BODY_SIZE, 100L));
+      expectedEntries.add(entry(MESSAGING_MESSAGE_ENVELOPE_SIZE, 120L));
       expectedEntries.add(entry(stringKey("messaging.client_id"), "43"));
       expectedEntries.add(entry(MESSAGING_OPERATION, operationType.defaultOperationName()));
     }

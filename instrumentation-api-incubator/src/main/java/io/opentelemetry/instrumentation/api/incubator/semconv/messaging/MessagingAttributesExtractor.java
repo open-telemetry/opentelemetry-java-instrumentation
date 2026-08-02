@@ -137,8 +137,11 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       attributes.put(MESSAGING_DESTINATION_ANONYMOUS, true);
     }
     attributes.put(MESSAGING_MESSAGE_CONVERSATION_ID, getter.getConversationId(request));
-    attributes.put(MESSAGING_MESSAGE_BODY_SIZE, getter.getMessageBodySize(request));
-    attributes.put(MESSAGING_MESSAGE_ENVELOPE_SIZE, getter.getMessageEnvelopeSize(request));
+    if (emitOldSemconv) {
+      // these attributes are opt-in in the v1.43 messaging semantic conventions
+      attributes.put(MESSAGING_MESSAGE_BODY_SIZE, getter.getMessageBodySize(request));
+      attributes.put(MESSAGING_MESSAGE_ENVELOPE_SIZE, getter.getMessageEnvelopeSize(request));
+    }
     if (emitOldSemconv) {
       attributes.put(MESSAGING_CLIENT_ID_OLD, getter.getClientId(request));
     }
