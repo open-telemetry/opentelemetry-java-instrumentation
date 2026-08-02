@@ -405,7 +405,7 @@
     "org.gwtproject:gwt-servlet#+": "2.13.1",
     "org.gwtproject:gwt-user#+": "2.13.1",
     "org.hibernate.orm:hibernate-core#+": "7.4.5.Final",
-    "org.hibernate.orm:hibernate-core#6.+": "6.6.54.Final",
+    "org.hibernate.orm:hibernate-core#6.+": "6.6.55.Final",
     "org.hibernate.orm:hibernate-core#7.+": "7.4.5.Final",
     "org.hibernate.reactive:hibernate-reactive-core#+": "4.5.2.Final",
     "org.hibernate.reactive:hibernate-reactive-core#1.+": "1.1.9.Final",
