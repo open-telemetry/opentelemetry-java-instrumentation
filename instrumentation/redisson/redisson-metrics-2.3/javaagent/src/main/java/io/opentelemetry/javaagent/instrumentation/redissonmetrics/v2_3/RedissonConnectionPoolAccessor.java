@@ -16,7 +16,23 @@ import org.redisson.pubsub.AsyncSemaphore;
 public class RedissonConnectionPoolAccessor {
 
   @Nullable private static final Field counterField = findAsyncSemaphoreField("counter");
-  @Nullable private static final Field listenersField = findAsyncSemaphoreField("listeners");
+  @Nullable private static final Method queueSizeMethod;
+  @Nullable private static final Field listenersField;
+
+  static {
+    Method method = null;
+    Field field = null;
+    try {
+      method = AsyncSemaphore.class.getMethod("queueSize");
+    } catch (NoSuchMethodException ignored) {
+      // Field fallback is safe only on versions that do not expose queueSize().
+      field = findAsyncSemaphoreField("listeners");
+    } catch (RuntimeException ignored) {
+      // ignored
+    }
+    queueSizeMethod = method;
+    listenersField = field;
+  }
 
   @Nullable
   public static Supplier<Integer> availableConnectionsSupplier(Object freeConnectionsCounter) {
@@ -31,10 +47,17 @@ public class RedissonConnectionPoolAccessor {
 
   @Nullable
   public static Supplier<Integer> pendingRequestsSupplier(Object freeConnectionsCounter) {
-    if (!(freeConnectionsCounter instanceof AsyncSemaphore) || listenersField == null) {
+    if (!(freeConnectionsCounter instanceof AsyncSemaphore)) {
       return null;
     }
-    return () -> readPendingRequests((AsyncSemaphore) freeConnectionsCounter);
+    AsyncSemaphore semaphore = (AsyncSemaphore) freeConnectionsCounter;
+    if (queueSizeMethod != null) {
+      return () -> readQueueSize(semaphore);
+    }
+    if (listenersField != null) {
+      return () -> readListenersSize(semaphore);
+    }
+    return null;
   }
 
   static int getSubscriptionMinimumIdleSize(Object connectionManager, int fallback) {
@@ -74,7 +97,20 @@ public class RedissonConnectionPoolAccessor {
   }
 
   @Nullable
-  private static Integer readPendingRequests(AsyncSemaphore semaphore) {
+  private static Integer readQueueSize(AsyncSemaphore semaphore) {
+    if (queueSizeMethod == null) {
+      return null;
+    }
+    try {
+      Object queueSize = queueSizeMethod.invoke(semaphore);
+      return queueSize instanceof Number ? ((Number) queueSize).intValue() : null;
+    } catch (ReflectiveOperationException | RuntimeException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static Integer readListenersSize(AsyncSemaphore semaphore) {
     if (listenersField == null) {
       return null;
     }

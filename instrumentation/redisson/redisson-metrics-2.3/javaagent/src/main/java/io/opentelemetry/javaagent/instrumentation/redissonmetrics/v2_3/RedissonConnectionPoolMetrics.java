@@ -127,7 +127,6 @@ public class RedissonConnectionPoolMetrics {
 
     ObservableLongMeasurement connections = metrics.connections();
     ObservableLongMeasurement minIdle = metrics.minIdleConnections();
-    ObservableLongMeasurement maxIdle = metrics.maxIdleConnections();
     ObservableLongMeasurement max = metrics.maxConnections();
     ObservableLongMeasurement pendingRequests =
         pendingRequestsSupplier == null ? null : metrics.pendingRequestsForConnection();
@@ -145,7 +144,6 @@ public class RedissonConnectionPoolMetrics {
           }
           connections.record(idleConnections.size(), idleAttributes);
           minIdle.record(minIdleConnections, attributes);
-          maxIdle.record(maxConnections, attributes);
           max.record(maxConnections, attributes);
           if (pendingRequestsSupplier != null && pendingRequests != null) {
             Integer pendingRequestCount = pendingRequestsSupplier.get();
@@ -156,9 +154,9 @@ public class RedissonConnectionPoolMetrics {
         };
 
     if (pendingRequests == null) {
-      return metrics.batchCallback(callback, connections, minIdle, maxIdle, max);
+      return metrics.batchCallback(callback, connections, minIdle, max);
     }
-    return metrics.batchCallback(callback, connections, minIdle, maxIdle, max, pendingRequests);
+    return metrics.batchCallback(callback, connections, minIdle, max, pendingRequests);
   }
 
   private static String poolName(RedisClient redisClient, NodeType nodeType, String poolKind) {

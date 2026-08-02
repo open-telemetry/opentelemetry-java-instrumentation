@@ -10,10 +10,12 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.javaagent.instrumentation.redissonmetrics.v2_3.RedissonConnectionPoolMetrics.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Objects.requireNonNull;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -26,6 +28,7 @@ import org.redisson.client.codec.StringCodec;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
 import org.redisson.connection.ClientConnectionsEntry;
+import org.redisson.pubsub.AsyncSemaphore;
 import org.testcontainers.containers.GenericContainer;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -68,12 +71,6 @@ class RedissonConnectionPoolMetricsTest {
           REGULAR_MIN_IDLE,
           SUBSCRIPTION_MIN_IDLE);
       assertPoolSizeMetric(
-          "db.client.connection.idle.max",
-          "db.client.connections.idle.max",
-          "The maximum number of idle open connections allowed.",
-          REGULAR_MAX,
-          SUBSCRIPTION_MAX);
-      assertPoolSizeMetric(
           "db.client.connection.max",
           "db.client.connections.max",
           "The maximum number of open connections allowed.",
@@ -106,6 +103,26 @@ class RedissonConnectionPoolMetricsTest {
         redisson.shutdown();
       }
     }
+  }
+
+  @Test
+  void shouldReadPendingRequestsAfterListenerRemoval() throws ReflectiveOperationException {
+    AsyncSemaphore semaphore = new AsyncSemaphore(0);
+    Supplier<Integer> pendingRequests =
+        requireNonNull(RedissonConnectionPoolAccessor.pendingRequestsSupplier(semaphore));
+    Runnable listener = () -> {};
+
+    assertThat(pendingRequests.get()).isZero();
+    semaphore.acquire(listener);
+    assertThat(pendingRequests.get()).isEqualTo(1);
+
+    try {
+      semaphore.getClass().getMethod("remove", Runnable.class).invoke(semaphore, listener);
+    } catch (NoSuchMethodException ignored) {
+      // 3.16.1+ no longer exposes remove(); release drains the queued listener.
+      semaphore.release();
+    }
+    assertThat(pendingRequests.get()).isZero();
   }
 
   private RedissonClient createRedissonClient() throws ReflectiveOperationException {

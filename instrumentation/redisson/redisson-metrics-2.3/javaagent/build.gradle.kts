@@ -38,6 +38,20 @@ testing {
         implementation("org.redisson:redisson:$version")
       }
     }
+
+    register<JvmTestSuite>("redisson315Test") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+        }
+      }
+
+      dependencies {
+        compileOnly(project())
+        implementation("org.testcontainers:testcontainers")
+        implementation("org.redisson:redisson:3.15.6")
+      }
+    }
   }
 }
 
