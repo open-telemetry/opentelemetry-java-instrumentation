@@ -45,25 +45,25 @@ public class C3p0Singletons {
     Integer serverPort = dbInfo.getServerPort();
     String dbNamespace = dbInfo.getDbNamespace();
 
-    StringBuilder result = new StringBuilder();
+    StringBuilder poolName = new StringBuilder();
     if (serverAddress != null) {
-      if (serverAddress.indexOf(':') >= 0 && !serverAddress.startsWith("[")) {
-        result.append('[').append(serverAddress).append(']');
+      if (serverAddress.indexOf(':') >= 0) {
+        poolName.append('[').append(serverAddress).append(']');
       } else {
-        result.append(serverAddress);
+        poolName.append(serverAddress);
       }
       if (serverPort != null) {
-        result.append(':').append(serverPort);
+        poolName.append(':').append(serverPort);
       }
     }
     if (dbNamespace != null) {
-      if (result.length() > 0) {
-        result.append('/');
+      if (poolName.length() > 0) {
+        poolName.append('/');
       }
-      result.append(dbNamespace);
+      poolName.append(dbNamespace);
     }
 
-    return result.length() == 0 ? DEFAULT_DATA_SOURCE_NAME : result.toString();
+    return poolName.length() == 0 ? DEFAULT_DATA_SOURCE_NAME : poolName.toString();
   }
 
   private C3p0Singletons() {}
