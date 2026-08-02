@@ -43,12 +43,15 @@ public class C3p0Singletons {
 
     String serverAddress = dbInfo.getServerAddress();
     Integer serverPort = dbInfo.getServerPort();
-    String dbNamespace =
-        dbInfo.getDbNamespace() != null ? dbInfo.getDbNamespace() : dbInfo.getDbName();
+    String dbNamespace = dbInfo.getDbNamespace();
 
     StringBuilder result = new StringBuilder();
     if (serverAddress != null) {
-      result.append(serverAddress);
+      if (serverAddress.indexOf(':') >= 0 && !serverAddress.startsWith("[")) {
+        result.append('[').append(serverAddress).append(']');
+      } else {
+        result.append(serverAddress);
+      }
       if (serverPort != null) {
         result.append(':').append(serverPort);
       }

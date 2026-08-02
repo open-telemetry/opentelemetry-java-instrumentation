@@ -24,12 +24,7 @@ dependencies {
   )
 
   testImplementation(project(":instrumentation:c3p0-0.9:testing"))
-  testInstrumentation(
-    project(
-      path = ":instrumentation:jdbc:library",
-      configuration = "shadow",
-    ),
-  )
+  testInstrumentation(project(":instrumentation:jdbc:javaagent"))
 }
 
 tasks {

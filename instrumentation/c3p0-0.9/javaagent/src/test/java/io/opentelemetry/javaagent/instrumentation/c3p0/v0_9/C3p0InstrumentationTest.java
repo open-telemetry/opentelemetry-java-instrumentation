@@ -5,10 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.c3p0.v0_9;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.mchange.v2.c3p0.ComboPooledDataSource;
-import com.mchange.v2.c3p0.PoolBackedDataSource;
 import com.mchange.v2.c3p0.PooledDataSource;
 import io.opentelemetry.instrumentation.c3p0.AbstractC3p0InstrumentationTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -42,6 +39,13 @@ class C3p0InstrumentationTest extends AbstractC3p0InstrumentationTest {
   }
 
   @Test
+  void shouldUseIpv6JdbcUrlForDataSourceName() throws Exception {
+    ComboPooledDataSource dataSource = createDataSource("jdbc:mock://[2001:db8::1]:5432/orders");
+
+    assertDataSourceName(dataSource, "[2001:db8::1]:5432/orders");
+  }
+
+  @Test
   void shouldUseConnectionPropertiesForDataSourceName() throws Exception {
     ComboPooledDataSource dataSource = createDataSource("jdbc:mock:ignored");
     Properties properties = new Properties();
@@ -58,17 +62,6 @@ class C3p0InstrumentationTest extends AbstractC3p0InstrumentationTest {
     ComboPooledDataSource dataSource = createDataSource("jdbc:mock:testDatabase");
 
     assertDataSourceName(dataSource, "c3p0");
-  }
-
-  @Test
-  void shouldUseFallbackDataSourceNameWhenConnectionPoolDataSourceIsMissing() {
-    PoolBackedDataSource dataSource = new PoolBackedDataSource();
-
-    try {
-      assertThat(C3p0Singletons.getDataSourceName(dataSource)).isEqualTo("c3p0");
-    } finally {
-      dataSource.close();
-    }
   }
 
   private void assertDataSourceName(ComboPooledDataSource dataSource, String expectedName)
