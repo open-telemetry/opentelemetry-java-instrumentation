@@ -210,20 +210,23 @@ class ExecutorMetricsTest {
   }
 
   @Test
-  void doesNotReplaceCallbackForSameNormalizedName() {
+  void staleWorkerDoesNotConsumeThreadFactoryChangeNotification() {
     TestExecutorMetrics metrics = new TestExecutorMetrics();
     ThreadPoolExecutor executor = newExecutor();
     try {
       metrics.preRegister(executor, "all");
-      ExecutorMetrics.onWorkerThreadStarted(executor, "pool-1-thread-1");
+      ExecutorMetrics.onWorkerThreadStarted(executor, "factory-a-thread-1");
+      TestCallback originalCallback = metrics.callbacks.get(0);
 
       ExecutorMetrics.onThreadFactoryChanged(executor);
-      ExecutorMetrics.onWorkerThreadStarted(executor, "pool-2-thread-2");
+      ExecutorMetrics.onWorkerThreadStarted(executor, "factory-a-thread-2");
+      ExecutorMetrics.onWorkerThreadStarted(executor, "factory-b-thread-1");
+      ExecutorMetrics.onWorkerThreadStarted(executor, "factory-a-thread-3");
 
-      assertThat(metrics.executorNames).containsExactly("pool-*-thread-*");
-      assertThat(metrics.callbacks)
-          .singleElement()
-          .satisfies(callback -> assertThat(callback.closeCount).hasValue(0));
+      assertThat(metrics.executorNames).containsExactly("factory-a-thread-*", "factory-b-thread-*");
+      assertThat(metrics.callbacks).hasSize(2);
+      assertThat(originalCallback.closeCount).hasValue(1);
+      assertThat(metrics.callbacks.get(1).closeCount).hasValue(0);
     } finally {
       ExecutorMetrics.unregister(executor);
       executor.shutdownNow();

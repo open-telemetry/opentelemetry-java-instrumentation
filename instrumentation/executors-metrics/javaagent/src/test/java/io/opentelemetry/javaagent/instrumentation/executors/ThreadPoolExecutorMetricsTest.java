@@ -26,6 +26,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -352,6 +353,77 @@ class ThreadPoolExecutorMetricsTest {
   }
 
   @Test
+  void staleWorkerFromOldThreadFactoryDoesNotHideReplacementMetrics() throws Exception {
+    CountDownLatch oldFactoryEntered = new CountDownLatch(1);
+    CountDownLatch releaseOldFactory = new CountDownLatch(1);
+    CountDownLatch initialWorkerStarted = new CountDownLatch(1);
+    CountDownLatch releaseInitialWorker = new CountDownLatch(1);
+    CountDownLatch staleWorkerStarted = new CountDownLatch(1);
+    CountDownLatch releaseStaleWorker = new CountDownLatch(1);
+    BlockingSecondThreadFactory originalThreadFactory =
+        new BlockingSecondThreadFactory("race-factory-a", oldFactoryEntered, releaseOldFactory);
+    ThreadPoolExecutor executor =
+        new ThreadPoolExecutor(
+            0, 3, 0, MILLISECONDS, new SynchronousQueue<>(), originalThreadFactory);
+    AtomicReference<Throwable> submitterFailure = new AtomicReference<>();
+    Thread submitter =
+        new Thread(
+            () -> {
+              try {
+                executor.execute(
+                    () -> {
+                      staleWorkerStarted.countDown();
+                      awaitLatch(releaseStaleWorker);
+                    });
+              } catch (Throwable t) {
+                submitterFailure.set(t);
+              }
+            },
+            "stale-worker-submitter");
+
+    try {
+      executor.execute(
+          () -> {
+            initialWorkerStarted.countDown();
+            awaitLatch(releaseInitialWorker);
+          });
+      assertThat(initialWorkerStarted.await(10, SECONDS)).isTrue();
+
+      submitter.start();
+      assertThat(oldFactoryEntered.await(10, SECONDS)).isTrue();
+
+      NamedThreadFactory replacementThreadFactory = new NamedThreadFactory("race-factory-b");
+      executor.setThreadFactory(replacementThreadFactory);
+
+      releaseOldFactory.countDown();
+      assertThat(staleWorkerStarted.await(10, SECONDS)).isTrue();
+      submitter.join(10_000);
+      assertThat(submitter.isAlive()).isFalse();
+      assertThat(submitterFailure.get()).isNull();
+
+      CountDownLatch replacementWorkerStarted = new CountDownLatch(1);
+      executor.execute(replacementWorkerStarted::countDown);
+      assertThat(replacementWorkerStarted.await(10, SECONDS)).isTrue();
+      assertThat(replacementThreadFactory.createdThreadCount()).isEqualTo(1);
+
+      testing.clearData();
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "race-factory-b-*", THREAD_POOL_EXECUTOR_TYPE)
+          .withCoreThreads(0)
+          .assertExecutorEmitsMetrics();
+      assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, "race-factory-a-*");
+    } finally {
+      releaseOldFactory.countDown();
+      releaseInitialWorker.countDown();
+      releaseStaleWorker.countDown();
+      submitter.join(10_000);
+      executor.shutdownNow();
+      assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
+      assertThat(submitter.isAlive()).isFalse();
+    }
+  }
+
+  @Test
   void recordsMetricsWhenExecutorNamesCollide() throws Exception {
     ThreadPoolExecutor first =
         new ThreadPoolExecutor(
@@ -389,6 +461,21 @@ class ThreadPoolExecutorMetricsTest {
     }
   }
 
+  private static void awaitLatch(CountDownLatch latch) {
+    boolean interrupted = false;
+    while (true) {
+      try {
+        latch.await();
+        break;
+      } catch (InterruptedException ignored) {
+        interrupted = true;
+      }
+    }
+    if (interrupted) {
+      Thread.currentThread().interrupt();
+    }
+  }
+
   private static final class NamedThreadFactory implements ThreadFactory {
     private final String namePrefix;
     private final AtomicInteger sequence = new AtomicInteger();
@@ -404,6 +491,30 @@ class ThreadPoolExecutorMetricsTest {
 
     private int createdThreadCount() {
       return sequence.get();
+    }
+  }
+
+  private static final class BlockingSecondThreadFactory implements ThreadFactory {
+    private final String namePrefix;
+    private final CountDownLatch secondThreadEntered;
+    private final CountDownLatch releaseSecondThread;
+    private final AtomicInteger sequence = new AtomicInteger();
+
+    private BlockingSecondThreadFactory(
+        String namePrefix, CountDownLatch secondThreadEntered, CountDownLatch releaseSecondThread) {
+      this.namePrefix = namePrefix;
+      this.secondThreadEntered = secondThreadEntered;
+      this.releaseSecondThread = releaseSecondThread;
+    }
+
+    @Override
+    public Thread newThread(Runnable runnable) {
+      int threadNumber = sequence.incrementAndGet();
+      if (threadNumber == 2) {
+        secondThreadEntered.countDown();
+        awaitLatch(releaseSecondThread);
+      }
+      return new Thread(runnable, namePrefix + "-" + threadNumber);
     }
   }
 

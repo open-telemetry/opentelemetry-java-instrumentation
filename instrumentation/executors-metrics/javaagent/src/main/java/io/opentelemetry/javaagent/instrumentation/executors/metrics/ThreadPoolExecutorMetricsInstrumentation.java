@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -75,9 +76,14 @@ public class ThreadPoolExecutorMetricsInstrumentation implements TypeInstrumenta
   @SuppressWarnings("unused")
   public static class SetThreadFactoryAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.This ThreadPoolExecutor executor) {
-      if (!(executor instanceof ScheduledThreadPoolExecutor)) {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter(
+        @Advice.This ThreadPoolExecutor executor,
+        @Advice.Argument(0) @Nullable ThreadFactory threadFactory,
+        @Advice.FieldValue("threadFactory") ThreadFactory currentThreadFactory) {
+      if (!(executor instanceof ScheduledThreadPoolExecutor)
+          && threadFactory != null
+          && threadFactory != currentThreadFactory) {
         ExecutorMetrics.onThreadFactoryChanged(executor);
       }
     }

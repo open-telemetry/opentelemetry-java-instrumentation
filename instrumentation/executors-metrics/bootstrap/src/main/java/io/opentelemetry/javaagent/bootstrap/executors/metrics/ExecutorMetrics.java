@@ -119,7 +119,7 @@ public abstract class ExecutorMetrics {
     private final String threadNameNormalization;
     private final LongAdder rejectedTaskCount = new LongAdder();
     @Nullable private BatchCallback callback;
-    @Nullable private String executorName;
+    @Nullable private volatile String executorName;
     private volatile boolean awaitingWorkerThread = true;
     private boolean closed;
 
@@ -139,20 +139,19 @@ public abstract class ExecutorMetrics {
         return;
       }
 
+      String newExecutorName = executorName(threadName, threadNameNormalization);
+      if (newExecutorName.equals(executorName)) {
+        return;
+      }
+
       @Nullable BatchCallback previous;
       synchronized (this) {
-        if (closed || !awaitingWorkerThread) {
+        if (closed || !awaitingWorkerThread || newExecutorName.equals(executorName)) {
           return;
         }
 
         Set<Thread> threads = threadsRef.get();
         if (threads == null) {
-          return;
-        }
-
-        String newExecutorName = executorName(threadName, threadNameNormalization);
-        if (callback != null && newExecutorName.equals(executorName)) {
-          awaitingWorkerThread = false;
           return;
         }
 
