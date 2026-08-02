@@ -34,6 +34,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
@@ -47,6 +48,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -174,6 +176,23 @@ class InstrumenterTest {
     @Override
     public String get(Map<String, String> carrier, String key) {
       return carrier.get(key);
+    }
+  }
+
+  static class RecordingOperationListener implements OperationListener {
+
+    final AtomicBoolean started = new AtomicBoolean();
+    final AtomicBoolean ended = new AtomicBoolean();
+
+    @Override
+    public Context onStart(Context context, Attributes startAttributes, long startNanos) {
+      started.set(true);
+      return context;
+    }
+
+    @Override
+    public void onEnd(Context context, Attributes endAttributes, long endNanos) {
+      ended.set(true);
     }
   }
 
@@ -584,6 +603,66 @@ class InstrumenterTest {
 
     assertThat(startContext.get()).isTrue();
     assertThat(endContext.get()).isTrue();
+  }
+
+  @Test
+  void operationListenersCanPropagateToDifferentInstrumenterEnd() {
+    RecordingOperationListener startingListener = new RecordingOperationListener();
+    RecordingOperationListener endingListener = new RecordingOperationListener();
+
+    Instrumenter<Map<String, String>, Map<String, String>> startingInstrumenter =
+        InstrumenterUtil.propagateOperationListenersToOnEnd(
+                Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                        otelTesting.getOpenTelemetry(), "test", unused -> "span")
+                    .addOperationListener(startingListener))
+            .buildServerInstrumenter(new MapGetter());
+    Instrumenter<Map<String, String>, Map<String, String>> endingInstrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addOperationListener(endingListener)
+            .buildServerInstrumenter(new MapGetter());
+
+    Context context = startingInstrumenter.start(Context.root(), REQUEST);
+    endingInstrumenter.end(context, REQUEST, RESPONSE, null);
+
+    assertThat(startingListener.started).isTrue();
+    assertThat(startingListener.ended).isTrue();
+    assertThat(endingListener.ended).isFalse();
+  }
+
+  @Test
+  void nestedInstrumenterOverridesPropagatedOperationListeners() {
+    RecordingOperationListener parentListener = new RecordingOperationListener();
+    RecordingOperationListener childListener = new RecordingOperationListener();
+
+    Instrumenter<Map<String, String>, Map<String, String>> parentInstrumenter =
+        InstrumenterUtil.propagateOperationListenersToOnEnd(
+                Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                        otelTesting.getOpenTelemetry(), "test", unused -> "span")
+                    .addOperationListener(parentListener))
+            .buildServerInstrumenter(new MapGetter());
+    // The child does not enable propagation itself. It replaces the propagated parent listener
+    // because its parent context already carries operation listeners.
+    Instrumenter<Map<String, String>, Map<String, String>> childStartingInstrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addOperationListener(childListener)
+            .buildServerInstrumenter(new MapGetter());
+    Instrumenter<Map<String, String>, Map<String, String>> childEndingInstrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .buildServerInstrumenter(new MapGetter());
+
+    Context parentContext = parentInstrumenter.start(Context.root(), REQUEST);
+    Context childContext = childStartingInstrumenter.start(parentContext, REQUEST);
+    childEndingInstrumenter.end(childContext, REQUEST, RESPONSE, null);
+
+    assertThat(childListener.started).isTrue();
+    assertThat(childListener.ended).isTrue();
+    assertThat(parentListener.ended).isFalse();
+
+    parentInstrumenter.end(parentContext, REQUEST, RESPONSE, null);
+    assertThat(parentListener.ended).isTrue();
   }
 
   @Test
