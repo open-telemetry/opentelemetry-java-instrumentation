@@ -13,7 +13,6 @@ import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
@@ -107,10 +106,8 @@ public final class KafkaInstrumenterFactory {
     }
     setMessagingSendExceptionEventExtractor(builder);
     return builder.buildInstrumenter(
-        request ->
-            emitStableMessagingSemconv() && !request.isSpanContextPropagated()
-                ? SpanKind.CLIENT
-                : SpanKind.PRODUCER);
+        MessagingSpanKindExtractor.create(
+            operationType, KafkaProducerRequest::isSpanContextPropagated));
   }
 
   public Instrumenter<KafkaReceiveRequest, Void> createConsumerReceiveInstrumenter() {
