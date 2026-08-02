@@ -36,11 +36,6 @@ public class KafkaReceiveRequest extends AbstractKafkaConsumerRequest {
   }
 
   public static KafkaReceiveRequest create(
-      ConsumerRecords<?, ?> records, @Nullable String consumerGroup, @Nullable String clientId) {
-    return new KafkaReceiveRequest(records, consumerGroup, clientId, null);
-  }
-
-  public static KafkaReceiveRequest create(
       ConsumerRecords<?, ?> records,
       @Nullable String consumerGroup,
       @Nullable String clientId,

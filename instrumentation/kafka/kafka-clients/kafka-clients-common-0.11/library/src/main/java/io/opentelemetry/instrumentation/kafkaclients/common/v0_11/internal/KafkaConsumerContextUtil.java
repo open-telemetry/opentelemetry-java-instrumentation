@@ -93,11 +93,6 @@ public final class KafkaConsumerContextUtil {
   }
 
   public static KafkaConsumerContext create(
-      @Nullable Context context, @Nullable String consumerGroup, @Nullable String clientId) {
-    return create(context, consumerGroup, clientId, null);
-  }
-
-  public static KafkaConsumerContext create(
       @Nullable Context context,
       @Nullable String consumerGroup,
       @Nullable String clientId,
@@ -127,14 +122,6 @@ public final class KafkaConsumerContextUtil {
       ConsumerRecord<?, ?> record,
       @Nullable Context context,
       @Nullable String consumerGroup,
-      @Nullable String clientId) {
-    set(record, context, consumerGroup, clientId, null);
-  }
-
-  public static void set(
-      ConsumerRecord<?, ?> record,
-      @Nullable Context context,
-      @Nullable String consumerGroup,
       @Nullable String clientId,
       @Nullable String clusterId) {
     recordContextField.set(record, context);
@@ -148,14 +135,6 @@ public final class KafkaConsumerContextUtil {
         KafkaUtil.getConsumerGroup(consumer),
         KafkaUtil.getClientId(consumer),
         KafkaUtil.getClusterId(consumer));
-  }
-
-  public static void set(
-      ConsumerRecords<?, ?> records,
-      @Nullable Context context,
-      @Nullable String consumerGroup,
-      @Nullable String clientId) {
-    set(records, context, consumerGroup, clientId, null);
   }
 
   public static void set(

@@ -36,21 +36,11 @@ public class KafkaProcessRequest extends AbstractKafkaConsumerRequest {
   }
 
   public static KafkaProcessRequest create(
-      ConsumerRecord<?, ?> record, @Nullable String consumerGroup, @Nullable String clientId) {
-    return new KafkaProcessRequest(record, consumerGroup, clientId, null);
-  }
-
-  public static KafkaProcessRequest create(
       ConsumerRecord<?, ?> record,
       @Nullable String consumerGroup,
       @Nullable String clientId,
       @Nullable String clusterId) {
     return new KafkaProcessRequest(record, consumerGroup, clientId, clusterId);
-  }
-
-  public KafkaProcessRequest(
-      ConsumerRecord<?, ?> record, @Nullable String consumerGroup, @Nullable String clientId) {
-    this(record, consumerGroup, clientId, null);
   }
 
   public KafkaProcessRequest(
