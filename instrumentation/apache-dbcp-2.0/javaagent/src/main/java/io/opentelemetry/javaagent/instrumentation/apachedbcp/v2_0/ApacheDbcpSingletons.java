@@ -38,7 +38,11 @@ public class ApacheDbcpSingletons {
 
     StringBuilder poolName = new StringBuilder();
     if (serverAddress != null) {
-      poolName.append(serverAddress);
+      if (serverAddress.indexOf(':') >= 0) {
+        poolName.append('[').append(serverAddress).append(']');
+      } else {
+        poolName.append(serverAddress);
+      }
       if (serverPort != null) {
         poolName.append(':').append(serverPort);
       }

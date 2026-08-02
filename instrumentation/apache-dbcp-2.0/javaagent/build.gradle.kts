@@ -25,12 +25,7 @@ dependencies {
   )
 
   testImplementation(project(":instrumentation:apache-dbcp-2.0:testing"))
-  testInstrumentation(
-    project(
-      path = ":instrumentation:jdbc:library",
-      configuration = "shadow",
-    ),
-  )
+  testInstrumentation(project(":instrumentation:jdbc:javaagent"))
 }
 
 tasks {

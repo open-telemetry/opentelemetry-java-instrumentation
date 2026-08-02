@@ -39,6 +39,14 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
   }
 
   @Test
+  void shouldBracketIpv6AddressInDataSourceName() throws Exception {
+    BasicDataSource dataSource = createDataSource();
+    dataSource.setUrl("jdbc:postgresql://[2001:db8::1]:5432/orders");
+
+    assertDataSourceName(dataSource, "[2001:db8::1]:5432/orders");
+  }
+
+  @Test
   void shouldUseConnectionPropertiesForDataSourceNameWhenJmxNameIsInvalid() throws Exception {
     BasicDataSource dataSource = createDataSource();
     dataSource.setJmxName("invalid-jmx-name");
