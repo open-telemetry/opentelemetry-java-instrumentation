@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.executors.metrics;
+package io.opentelemetry.javaagent.bootstrap.executors.metrics;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.javaagent.bootstrap.executors.metrics.ExecutorMetrics;
 import java.lang.ref.WeakReference;
 import java.util.Set;
 import java.util.concurrent.Executor;

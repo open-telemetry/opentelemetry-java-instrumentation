@@ -12,6 +12,7 @@ dependencies {
   bootstrap(project(":instrumentation:executors-metrics:bootstrap"))
 
   testImplementation(project(":instrumentation:executors-metrics:testing"))
+  testCompileOnly(project(":instrumentation:executors-metrics:bootstrap"))
 }
 
 tasks {
