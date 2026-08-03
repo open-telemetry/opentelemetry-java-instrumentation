@@ -333,6 +333,8 @@ class SpringRabbitMqTest {
       assertions.add(satisfies(SERVER_PORT, AbstractLongAssert::isNotNegative));
       assertions.add(equalTo(MESSAGING_OPERATION_NAME, "ack"));
       assertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
+      assertions.add(
+          satisfies(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, AbstractLongAssert::isPositive));
       if (emitOldMessagingSemconv()) {
         assertions.add(equalTo(MESSAGING_OPERATION, "settle"));
       }

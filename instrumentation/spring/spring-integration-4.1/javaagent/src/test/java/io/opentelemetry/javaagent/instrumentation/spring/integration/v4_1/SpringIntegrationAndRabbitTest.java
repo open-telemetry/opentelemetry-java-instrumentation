@@ -200,6 +200,7 @@ class SpringIntegrationAndRabbitTest {
       assertions.add(serverPort());
       assertions.add(equalTo(MESSAGING_OPERATION_NAME, "ack"));
       assertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
+      assertions.add(deliveryTag());
       if (emitOldMessagingSemconv()) {
         assertions.add(equalTo(MESSAGING_OPERATION, "settle"));
       }

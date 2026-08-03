@@ -79,13 +79,21 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
                                 "close",
                                 "abort",
                                 "basicGet",
-                                "basicPublish"))))
+                                "basicPublish",
+                                "basicAck",
+                                "basicNack",
+                                "basicReject"))))
             .and(isPublic())
             .and(canThrow(IOException.class).or(canThrow(InterruptedException.class))),
         getClass().getName() + "$ChannelMethodAdvice");
     transformer.applyAdviceToMethod(
         named("basicPublish").and(takesArguments(6)),
         getClass().getName() + "$ChannelPublishAdvice");
+    transformer.applyAdviceToMethod(
+        namedOneOf("basicAck", "basicNack", "basicReject")
+            .and(isPublic())
+            .and(takesArgument(0, long.class)),
+        getClass().getName() + "$ChannelSettleAdvice");
     transformer.applyAdviceToMethod(
         named("basicGet").and(takesArgument(0, String.class)),
         getClass().getName() + "$ChannelGetAdvice");
@@ -117,13 +125,16 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
       }
 
       public static ChannelMethodAdviceScope start(
-          CallDepth callDepth, Channel channel, String method) {
+          CallDepth callDepth, Channel channel, String method, @Nullable Long deliveryTag) {
         if (callDepth.getAndIncrement() > 0) {
           return new ChannelMethodAdviceScope(callDepth, null, null, null);
         }
 
         Context parentContext = Context.current();
-        ChannelAndMethod request = ChannelAndMethod.create(channel, method);
+        ChannelAndMethod request =
+            deliveryTag == null
+                ? ChannelAndMethod.create(channel, method)
+                : ChannelAndMethod.createSettle(channel, method, deliveryTag);
 
         if (!channelInstrumenter(request).shouldStart(parentContext, request)) {
           return new ChannelMethodAdviceScope(callDepth, null, null, null);
@@ -154,13 +165,34 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ChannelMethodAdviceScope onEnter(
         @Advice.This Channel channel, @Advice.Origin("Channel.#m") String method) {
-      return ChannelMethodAdviceScope.start(CallDepth.forClass(Channel.class), channel, method);
+      return ChannelMethodAdviceScope.start(
+          CallDepth.forClass(Channel.class), channel, method, null);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter ChannelMethodAdviceScope adviceScope) {
+      adviceScope.end(throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ChannelSettleAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static ChannelMethodAdvice.ChannelMethodAdviceScope onEnter(
+        @Advice.This Channel channel,
+        @Advice.Origin("Channel.#m") String method,
+        @Advice.Argument(0) long deliveryTag) {
+      return ChannelMethodAdvice.ChannelMethodAdviceScope.start(
+          CallDepth.forClass(Channel.class), channel, method, deliveryTag);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void stopSpan(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter ChannelMethodAdvice.ChannelMethodAdviceScope adviceScope) {
       adviceScope.end(throwable);
     }
   }
