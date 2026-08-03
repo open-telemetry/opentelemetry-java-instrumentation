@@ -168,6 +168,7 @@ public class CassandraCompactionProgressHandler implements ExperimentalJmxMetric
   }
 
   private static Attributes buildAttributes(String taskType, String keyspace, String columnFamily) {
-    return Attributes.of(ATTR_TASK_TYPE, taskType, ATTR_KEYSPACE, keyspace, ATTR_TABLE, columnFamily);
+    return Attributes.of(
+        ATTR_TASK_TYPE, taskType, ATTR_KEYSPACE, keyspace, ATTR_TABLE, columnFamily);
   }
 }
