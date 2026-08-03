@@ -52,7 +52,7 @@ class RocketMqInstrumenterFactoryTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableMessagingSemconv() ? "publish topic" : "topic publish")
+                    span.hasName(emitStableMessagingSemconv() ? "send topic" : "topic publish")
                         .hasKind(PRODUCER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "rocketmq"),
@@ -61,7 +61,7 @@ class RocketMqInstrumenterFactoryTest {
                                 MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
                             equalTo(
                                 MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "publish" : null),
+                                emitStableMessagingSemconv() ? "send" : null),
                             equalTo(
                                 MESSAGING_OPERATION_TYPE,
                                 emitStableMessagingSemconv() ? "send" : null),
