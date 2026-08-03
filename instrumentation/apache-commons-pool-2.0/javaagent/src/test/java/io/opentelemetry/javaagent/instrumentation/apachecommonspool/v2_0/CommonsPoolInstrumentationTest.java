@@ -36,13 +36,13 @@ class CommonsPoolInstrumentationTest extends AbstractCommonsPoolInstrumentationT
   protected void shutdown(GenericKeyedObjectPool<?, ?> pool) {}
 
   @Test
-  void shouldUseJmxNamePrefixWhenJmxNameIsUnavailable() throws Exception {
+  void shouldUseJmxNamePrefix() throws Exception {
     GenericObjectPool<Object> pool = createGenericObjectPool("customPool", false);
     Object borrowed = null;
     try {
       borrowed = pool.borrowObject();
 
-      assertObjectCountPoolNames("GenericObjectPool-customPool");
+      assertObjectCountPoolNames("customPool");
     } finally {
       if (borrowed != null) {
         pool.returnObject(borrowed);
@@ -54,13 +54,31 @@ class CommonsPoolInstrumentationTest extends AbstractCommonsPoolInstrumentationT
   }
 
   @Test
-  void shouldUseUnknownWhenJmxNameAndPrefixAreUnavailable() throws Exception {
+  void shouldUseUnknownWhenJmxNamePrefixIsNull() throws Exception {
     GenericObjectPool<Object> pool = createGenericObjectPool(null, false);
     Object borrowed = null;
     try {
       borrowed = pool.borrowObject();
 
-      assertObjectCountPoolNames("GenericObjectPool-unknown");
+      assertObjectCountPoolNames("unknown");
+    } finally {
+      if (borrowed != null) {
+        pool.returnObject(borrowed);
+      }
+      pool.close();
+    }
+
+    assertNoMetrics();
+  }
+
+  @Test
+  void shouldUseUnknownWhenJmxNamePrefixIsEmpty() throws Exception {
+    GenericObjectPool<Object> pool = createGenericObjectPool("", false);
+    Object borrowed = null;
+    try {
+      borrowed = pool.borrowObject();
+
+      assertObjectCountPoolNames("unknown");
     } finally {
       if (borrowed != null) {
         pool.returnObject(borrowed);

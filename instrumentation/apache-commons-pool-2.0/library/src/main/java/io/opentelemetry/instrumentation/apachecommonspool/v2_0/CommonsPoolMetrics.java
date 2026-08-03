@@ -23,32 +23,32 @@ final class CommonsPoolMetrics {
   // use identity comparison because pools are mutable lifecycle objects
   private static final Map<IdentityPoolKey, BatchCallback> poolMetrics = new ConcurrentHashMap<>();
 
-  static void registerMetrics(OpenTelemetry openTelemetry, Object pool, String poolName) {
-    if (pool instanceof GenericObjectPoolMXBean) {
-      GenericObjectPoolMXBean objectPool = (GenericObjectPoolMXBean) pool;
-      registerMetrics(
-          openTelemetry,
-          objectPool,
-          poolName,
-          objectPool::getNumActive,
-          objectPool::getNumIdle,
-          objectPool::getMinIdle,
-          objectPool::getMaxIdle,
-          objectPool::getMaxTotal,
-          objectPool::getNumWaiters);
-    } else if (pool instanceof GenericKeyedObjectPoolMXBean) {
-      GenericKeyedObjectPoolMXBean<?> keyedPool = (GenericKeyedObjectPoolMXBean<?>) pool;
-      registerMetrics(
-          openTelemetry,
-          keyedPool,
-          poolName,
-          keyedPool::getNumActive,
-          keyedPool::getNumIdle,
-          keyedPool::getMinIdlePerKey,
-          keyedPool::getMaxIdlePerKey,
-          keyedPool::getMaxTotal,
-          keyedPool::getNumWaiters);
-    }
+  static void registerMetrics(
+      OpenTelemetry openTelemetry, GenericObjectPoolMXBean pool, String poolName) {
+    registerMetrics(
+        openTelemetry,
+        pool,
+        poolName,
+        pool::getNumActive,
+        pool::getNumIdle,
+        pool::getMinIdle,
+        pool::getMaxIdle,
+        pool::getMaxTotal,
+        pool::getNumWaiters);
+  }
+
+  static void registerMetrics(
+      OpenTelemetry openTelemetry, GenericKeyedObjectPoolMXBean<?> pool, String poolName) {
+    registerMetrics(
+        openTelemetry,
+        pool,
+        poolName,
+        pool::getNumActive,
+        pool::getNumIdle,
+        null,
+        null,
+        pool::getMaxTotal,
+        pool::getNumWaiters);
   }
 
   private static void registerMetrics(
@@ -57,8 +57,8 @@ final class CommonsPoolMetrics {
       String poolName,
       IntSupplier active,
       IntSupplier idle,
-      IntSupplier minIdle,
-      IntSupplier maxIdle,
+      @Nullable IntSupplier minIdle,
+      @Nullable IntSupplier maxIdle,
       IntSupplier maxTotal,
       IntSupplier waiters) {
     poolMetrics.computeIfAbsent(
@@ -73,8 +73,8 @@ final class CommonsPoolMetrics {
       String poolName,
       IntSupplier active,
       IntSupplier idle,
-      IntSupplier minIdle,
-      IntSupplier maxIdle,
+      @Nullable IntSupplier minIdle,
+      @Nullable IntSupplier maxIdle,
       IntSupplier maxTotal,
       IntSupplier waiters) {
     ObjectPoolMetrics metrics =
@@ -92,8 +92,14 @@ final class CommonsPoolMetrics {
         () -> {
           objects.record(active.getAsInt(), metrics.getUsedObjectsAttributes());
           objects.record(idle.getAsInt(), metrics.getIdleObjectsAttributes());
-          minIdleObjects.record(minIdle.getAsInt(), attributes);
-          maxIdleObjects.record(maxIdle.getAsInt(), attributes);
+
+          if (minIdle != null) {
+            minIdleObjects.record(minIdle.getAsInt(), attributes);
+          }
+          if (maxIdle != null) {
+            maxIdleObjects.record(maxIdle.getAsInt(), attributes);
+          }
+
           maxObjects.record(maxTotal.getAsInt(), attributes);
           pendingRequests.record(waiters.getAsInt(), attributes);
         },

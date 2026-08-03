@@ -25,6 +25,6 @@ public class CommonsPoolInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new BaseGenericObjectPoolInstrumentation());
+    return singletonList(new GenericObjectPoolInstrumentation());
   }
 }

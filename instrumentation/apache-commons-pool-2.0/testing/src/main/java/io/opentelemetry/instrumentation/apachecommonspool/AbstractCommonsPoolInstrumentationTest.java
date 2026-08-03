@@ -59,15 +59,15 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
 
   @Test
   void shouldReusePoolNameAfterShutdown() throws Exception {
-    String poolName = "GenericObjectPool-pool";
-    GenericObjectPool<Object> first = createGenericObjectPool("pool", false);
+    String poolName = "pool";
+    GenericObjectPool<Object> first = createGenericObjectPool(poolName, false);
     Object firstBorrowed = null;
     try {
       configure(first, poolName);
 
       firstBorrowed = first.borrowObject();
 
-      assertPoolMetrics(poolName);
+      assertGenericObjectPoolMetrics(poolName);
     } finally {
       if (firstBorrowed != null) {
         first.returnObject(firstBorrowed);
@@ -78,14 +78,14 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
 
     assertNoMetrics();
 
-    GenericObjectPool<Object> second = createGenericObjectPool("pool", false);
+    GenericObjectPool<Object> second = createGenericObjectPool(poolName, false);
     Object secondBorrowed = null;
     try {
       configure(second, poolName);
 
       secondBorrowed = second.borrowObject();
 
-      assertPoolMetrics(poolName);
+      assertGenericObjectPoolMetrics(poolName);
     } finally {
       if (secondBorrowed != null) {
         second.returnObject(secondBorrowed);
@@ -98,17 +98,15 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
   }
 
   private void testGenericObjectPoolMetrics(boolean jmxEnabled) throws Exception {
-    GenericObjectPool<Object> pool =
-        createGenericObjectPool(jmxEnabled ? "objectPool" : "pool", jmxEnabled);
+    String poolName = jmxEnabled ? "objectPool" : "pool";
+    GenericObjectPool<Object> pool = createGenericObjectPool(poolName, jmxEnabled);
     Object borrowed = null;
     try {
-      String poolName =
-          "GenericObjectPool-" + (jmxEnabled ? pool.getJmxName().getKeyProperty("name") : "pool");
       configure(pool, poolName);
 
       borrowed = pool.borrowObject();
 
-      assertPoolMetrics(poolName);
+      assertGenericObjectPoolMetrics(poolName);
     } finally {
       if (borrowed != null) {
         pool.returnObject(borrowed);
@@ -131,18 +129,17 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
   }
 
   private void testGenericKeyedObjectPoolMetrics(boolean jmxEnabled) throws Exception {
+    String jmxNamePrefix = jmxEnabled ? "keyedObjectPool" : "pool";
+    String poolName = "keyed-" + jmxNamePrefix;
     GenericKeyedObjectPool<String, Object> pool =
-        createGenericKeyedObjectPool(jmxEnabled ? "keyedObjectPool" : "pool", jmxEnabled);
+        createGenericKeyedObjectPool(jmxNamePrefix, jmxEnabled);
     Object borrowed = null;
     try {
-      String poolName =
-          "GenericKeyedObjectPool-"
-              + (jmxEnabled ? pool.getJmxName().getKeyProperty("name") : "pool");
       configure(pool, poolName);
 
       borrowed = pool.borrowObject("key");
 
-      assertPoolMetrics(poolName);
+      assertGenericKeyedObjectPoolMetrics(poolName);
     } finally {
       if (borrowed != null) {
         pool.returnObject("key", borrowed);
@@ -177,12 +174,32 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
     return new GenericKeyedObjectPool<>(new TestKeyedObjectFactory(), config);
   }
 
-  private void assertPoolMetrics(String poolName) {
-    verifyObjectCount(poolName);
+  private void assertGenericObjectPoolMetrics(String poolName) {
+    verifyCommonPoolMetrics(poolName);
     verifyMinIdleObjects(poolName);
     verifyMaxIdleObjects(poolName);
+  }
+
+  private void assertGenericKeyedObjectPoolMetrics(String poolName) {
+    verifyCommonPoolMetrics(poolName);
+    verifyIdleLimitsNotReported();
+  }
+
+  private void verifyCommonPoolMetrics(String poolName) {
+    verifyObjectCount(poolName);
     verifyMaxObjects(poolName);
     verifyPendingRequests(poolName);
+  }
+
+  private void verifyIdleLimitsNotReported() {
+    assertThat(testing().metrics())
+        .filteredOn(
+            metricData ->
+                metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
+        .noneMatch(
+            metricData ->
+                metricData.getName().equals("apache.commons_pool.object.idle.min")
+                    || metricData.getName().equals("apache.commons_pool.object.idle.max"));
   }
 
   private void verifyObjectCount(String poolName) {
