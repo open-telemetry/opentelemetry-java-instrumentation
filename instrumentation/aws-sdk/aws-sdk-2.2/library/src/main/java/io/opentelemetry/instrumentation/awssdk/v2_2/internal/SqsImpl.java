@@ -268,6 +268,7 @@ public final class SqsImpl {
     return null;
   }
 
+  @Nullable
   static Long getBatchMessageCount(SdkRequest request) {
     if (request instanceof SendMessageBatchRequest) {
       return (long) ((SendMessageBatchRequest) request).entries().size();

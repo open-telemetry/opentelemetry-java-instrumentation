@@ -58,6 +58,7 @@ final class SqsAccess {
   }
 
   @NoMuzzle
+  @Nullable
   static Long getBatchMessageCount(SdkRequest request) {
     return enabled ? SqsImpl.getBatchMessageCount(request) : null;
   }
