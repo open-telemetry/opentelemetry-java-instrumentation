@@ -12,8 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import org.apache.rocketmq.client.apis.message.MessageView;
 
-final class RocketMqReceiveSpanLinksExtractor
-    implements SpanLinksExtractor<RocketMqReceiveRequest> {
+class RocketMqReceiveSpanLinksExtractor implements SpanLinksExtractor<RocketMqReceiveRequest> {
 
   private final SpanLinksExtractor<MessageView> singleMessageLinkExtractor;
 

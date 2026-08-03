@@ -683,7 +683,7 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, NORMAL),
-                equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
+                bodySize(body),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 namespace(),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
@@ -715,7 +715,7 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_GROUP, messageGroup),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, FIFO),
-                equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
+                bodySize(body),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 namespace(),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
@@ -747,7 +747,7 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, deliveryTimestamp),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, DELAY),
-                equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
+                bodySize(body),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 namespace(),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
@@ -862,7 +862,7 @@ abstract class AbstractRocketMqClientTest {
                     emitOldMessagingSemconv() ? consumerGroup : null),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
-                equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
+                bodySize(body),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 namespace(),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
@@ -903,7 +903,7 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_GROUP, messageGroup),
-                equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
+                bodySize(body),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 namespace(),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
@@ -944,7 +944,7 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, deliveryTimestamp),
-                equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
+                bodySize(body),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 namespace(),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
@@ -960,6 +960,11 @@ abstract class AbstractRocketMqClientTest {
             .hasStatus(StatusData.unset())
             .hasAttributesSatisfyingExactly(attributeAssertions);
     return result.hasLinks(LinkData.create(linkedSpan.getSpanContext()));
+  }
+
+  private static AttributeAssertion bodySize(byte[] body) {
+    return equalTo(
+        MESSAGING_MESSAGE_BODY_SIZE, emitOldMessagingSemconv() ? (long) body.length : null);
   }
 
   private static AttributeAssertion oldOperation(String operation) {

@@ -48,11 +48,11 @@ When a consume operation does not succeed, the process span is marked as errored
 `error.type` is set to the [`ConsumeReturnType`][consume-return-type] that RocketMQ computed for
 the operation:
 
-| `error.type` | Meaning                                                                          |
-| ------------ | -------------------------------------------------------------------------------- |
-| `EXCEPTION`  | The message listener threw.                                                       |
-| `RETURNNULL` | The message listener returned `null`.                                             |
-| `TIME_OUT`   | The message listener exceeded the configured consume timeout.                     |
+| `error.type` | Meaning                                                                             |
+| ------------ | ----------------------------------------------------------------------------------- |
+| `EXCEPTION`  | The message listener threw.                                                         |
+| `RETURNNULL` | The message listener returned `null`.                                               |
+| `TIME_OUT`   | The message listener exceeded the configured consume timeout.                       |
 | `FAILED`     | The message listener returned `RECONSUME_LATER` / `SUSPEND_CURRENT_QUEUE_A_MOMENT`. |
 
 If RocketMQ does not report a consume return type, the consume status is used instead.
