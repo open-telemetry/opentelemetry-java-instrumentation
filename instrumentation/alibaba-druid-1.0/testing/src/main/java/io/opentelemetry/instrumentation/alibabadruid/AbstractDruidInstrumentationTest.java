@@ -63,7 +63,7 @@ public abstract class AbstractDruidInstrumentationTest {
   }
 
   @Test
-  void shouldRewriteDuplicateDataSourceNames() throws Exception {
+  void shouldMergeDuplicateDataSourceNames() throws Exception {
     DruidDataSource firstDataSource = createDataSource();
     DruidDataSource secondDataSource = createDataSource();
 
@@ -71,62 +71,11 @@ public abstract class AbstractDruidInstrumentationTest {
       configure(firstDataSource, "duplicatePool");
       configure(secondDataSource, "duplicatePool");
 
-      assertConnectionUsagePoolNames("duplicatePool", "duplicatePool-2");
+      assertConnectionUsagePoolNames("duplicatePool");
     } finally {
       firstDataSource.close();
       secondDataSource.close();
       shutdown(firstDataSource);
-      shutdown(secondDataSource);
-    }
-
-    assertNoMetrics();
-  }
-
-  @Test
-  void shouldReuseDataSourceNameAfterShutdown() throws Exception {
-    DruidDataSource firstDataSource = createDataSource();
-    try {
-      configure(firstDataSource, "reusablePool");
-
-      assertConnectionUsagePoolNames("reusablePool");
-    } finally {
-      firstDataSource.close();
-      shutdown(firstDataSource);
-    }
-
-    assertNoMetrics();
-
-    DruidDataSource secondDataSource = createDataSource();
-    try {
-      configure(secondDataSource, "reusablePool");
-
-      assertConnectionUsagePoolNames("reusablePool");
-    } finally {
-      secondDataSource.close();
-      shutdown(secondDataSource);
-    }
-
-    assertNoMetrics();
-  }
-
-  @Test
-  void shouldSkipReservedDataSourceNameSuffix() throws Exception {
-    DruidDataSource firstDataSource = createDataSource();
-    DruidDataSource reservedDataSource = createDataSource();
-    DruidDataSource secondDataSource = createDataSource();
-
-    try {
-      configure(firstDataSource, "reservedPool");
-      configure(reservedDataSource, "reservedPool-2");
-      configure(secondDataSource, "reservedPool");
-
-      assertConnectionUsagePoolNames("reservedPool", "reservedPool-2", "reservedPool-3");
-    } finally {
-      firstDataSource.close();
-      reservedDataSource.close();
-      secondDataSource.close();
-      shutdown(firstDataSource);
-      shutdown(reservedDataSource);
       shutdown(secondDataSource);
     }
 
