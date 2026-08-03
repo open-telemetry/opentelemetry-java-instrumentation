@@ -34,8 +34,8 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
   }
 
   /**
-   * @deprecated Use {@link #create(MessagingAttributesGetter, MessagingOperationType)}. Will be
-   *     removed in 3.0.
+   * @deprecated Use {@link #create(MessagingAttributesGetter, MessagingOperationType, String)}.
+   *     Will be removed in 3.0.
    */
   @Deprecated // to be removed in 3.0
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
