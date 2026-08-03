@@ -19,10 +19,17 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.util.Map;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 public class RabbitInstrumenterHelper {
   static final AttributeKey<String> RABBITMQ_COMMAND = AttributeKey.stringKey("rabbitmq.command");
+
+  // spring-cloud-stream's rabbit binder names the queue of a consumer that doesn't declare a group
+  // "<destination>.anonymous.<base64url uuid>", using the same generator that spring-amqp uses for
+  // the "spring.gen-<base64url uuid>" name of an AnonymousQueue
+  private static final Pattern ANONYMOUS_GROUP_QUEUE_NAME =
+      Pattern.compile("\\.anonymous\\.[A-Za-z0-9_-]{22}$");
 
   static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "rabbitmq")
@@ -84,6 +91,9 @@ public class RabbitInstrumenterHelper {
       return false;
     }
     if (queue.startsWith("amq.gen-") || queue.startsWith("spring.gen-")) {
+      return true;
+    }
+    if (ANONYMOUS_GROUP_QUEUE_NAME.matcher(queue).find()) {
       return true;
     }
     return isCanonicalUuid(queue);

@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
@@ -20,6 +21,12 @@ import org.springframework.amqp.core.MessageProperties;
 class SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<Message, Void> {
 
   @Nullable private static final Method getConsumerQueue = getConsumerQueueMethod();
+
+  // spring-cloud-stream's rabbit binder names the queue of a consumer that doesn't declare a group
+  // "<destination>.anonymous.<base64url uuid>", using the same generator that spring-amqp uses for
+  // the "spring.gen-<base64url uuid>" name of an AnonymousQueue
+  private static final Pattern ANONYMOUS_GROUP_QUEUE_NAME =
+      Pattern.compile("\\.anonymous\\.[A-Za-z0-9_-]{22}$");
 
   @Override
   public String getSystem(Message message) {
@@ -99,6 +106,9 @@ class SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<M
       return false;
     }
     if (queue.startsWith("amq.gen-") || queue.startsWith("spring.gen-")) {
+      return true;
+    }
+    if (ANONYMOUS_GROUP_QUEUE_NAME.matcher(queue).find()) {
       return true;
     }
     return isCanonicalUuid(queue);
