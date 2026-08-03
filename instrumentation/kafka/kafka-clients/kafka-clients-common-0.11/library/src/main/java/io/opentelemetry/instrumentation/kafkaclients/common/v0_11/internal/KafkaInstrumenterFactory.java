@@ -37,6 +37,7 @@ public final class KafkaInstrumenterFactory {
 
   private static final String SEND_OPERATION_NAME = "send";
   private static final String POLL_OPERATION_NAME = "poll";
+  private static final String PROCESS_OPERATION_NAME = "process";
 
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
@@ -92,9 +93,7 @@ public final class KafkaInstrumenterFactory {
         Instrumenter.<KafkaProducerRequest, RecordMetadata>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.builder(getter, operationType)
-                    .setOperationName(SEND_OPERATION_NAME)
-                    .build())
+                MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME))
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, operationType, SEND_OPERATION_NAME, capturedHeaders))
@@ -124,9 +123,7 @@ public final class KafkaInstrumenterFactory {
         Instrumenter.<KafkaReceiveRequest, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.builder(getter, operationType)
-                    .setOperationName(POLL_OPERATION_NAME)
-                    .build())
+                MessagingSpanNameExtractor.create(getter, operationType, POLL_OPERATION_NAME))
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, operationType, POLL_OPERATION_NAME, capturedHeaders))
@@ -156,9 +153,10 @@ public final class KafkaInstrumenterFactory {
         Instrumenter.<KafkaProcessRequest, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
-                buildMessagingAttributesExtractor(getter, operationType, capturedHeaders))
+                buildMessagingAttributesExtractor(
+                    getter, operationType, PROCESS_OPERATION_NAME, capturedHeaders))
             .addAttributesExtractor(new KafkaConsumerAttributesExtractor())
             .addAttributesExtractors(extractors)
             .setErrorCauseExtractor(errorCauseExtractor);
@@ -188,9 +186,10 @@ public final class KafkaInstrumenterFactory {
         Instrumenter.<KafkaReceiveRequest, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
-                buildMessagingAttributesExtractor(getter, operationType, capturedHeaders))
+                buildMessagingAttributesExtractor(
+                    getter, operationType, PROCESS_OPERATION_NAME, capturedHeaders))
             .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
             .addSpanLinksExtractor(
                 new KafkaBatchProcessSpanLinksExtractor(
@@ -206,18 +205,7 @@ public final class KafkaInstrumenterFactory {
           MessagingOperationType operationType,
           String operationName,
           List<String> capturedHeaders) {
-    return MessagingAttributesExtractor.builder(getter, operationType)
-        .setOperationName(operationName)
-        .setCapturedHeaders(capturedHeaders)
-        .build();
-  }
-
-  private static <REQUEST, RESPONSE>
-      AttributesExtractor<REQUEST, RESPONSE> buildMessagingAttributesExtractor(
-          MessagingAttributesGetter<REQUEST, RESPONSE> getter,
-          MessagingOperationType operationType,
-          List<String> capturedHeaders) {
-    return MessagingAttributesExtractor.builder(getter, operationType)
+    return MessagingAttributesExtractor.builder(getter, operationType, operationName)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }

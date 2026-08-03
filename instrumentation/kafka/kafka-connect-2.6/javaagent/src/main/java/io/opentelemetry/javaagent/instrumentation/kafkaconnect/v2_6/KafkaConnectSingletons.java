@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 public class KafkaConnectSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-connect-2.6";
+  private static final String PROCESS_OPERATION_NAME = "process";
   private static final TextMapPropagator propagator =
       GlobalOpenTelemetry.get().getPropagators().getTextMapPropagator();
 
@@ -33,11 +34,14 @@ public class KafkaConnectSingletons {
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
-                    new KafkaConnectAttributesGetter(), MessagingOperationType.PROCESS))
+                    new KafkaConnectAttributesGetter(),
+                    MessagingOperationType.PROCESS,
+                    PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
-                MessagingAttributesExtractor.builder(
-                        new KafkaConnectAttributesGetter(), MessagingOperationType.PROCESS)
-                    .build())
+                MessagingAttributesExtractor.create(
+                    new KafkaConnectAttributesGetter(),
+                    MessagingOperationType.PROCESS,
+                    PROCESS_OPERATION_NAME))
             .addSpanLinksExtractor(spanLinksExtractor);
     setMessagingProcessExceptionEventExtractor(builder);
 
