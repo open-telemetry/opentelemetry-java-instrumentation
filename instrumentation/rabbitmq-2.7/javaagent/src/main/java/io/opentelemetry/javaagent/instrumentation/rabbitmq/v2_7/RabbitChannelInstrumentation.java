@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_CONTEXT;
@@ -174,7 +175,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
 
       if (span.getSpanContext().isValid()) {
         helper().onPublish(span, exchange, routingKey);
-        if (body != null) {
+        if (body != null && emitOldMessagingSemconv()) {
           span.setAttribute(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length);
         }
 
