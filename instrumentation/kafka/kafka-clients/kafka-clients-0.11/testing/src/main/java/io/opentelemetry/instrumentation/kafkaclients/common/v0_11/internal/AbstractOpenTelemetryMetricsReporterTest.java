@@ -422,12 +422,6 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                             ? expectedClusterId.equals(id)
                             : (id != null && !id.isEmpty());
                       }))
-          .as(
-              expectedClusterId != null
-                  ? "Expected a metric point with messaging.kafka.cluster.id = '"
-                      + expectedClusterId
-                      + "'"
-                  : "Expected a metric point with a non-empty messaging.kafka.cluster.id")
           .isTrue();
     } finally {
       testProducer.close();
