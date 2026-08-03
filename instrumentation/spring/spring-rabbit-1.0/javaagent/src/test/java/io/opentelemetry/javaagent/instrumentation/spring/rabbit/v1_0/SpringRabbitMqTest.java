@@ -291,7 +291,7 @@ class SpringRabbitMqTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"anonymousQueue", "legacyAnonymousQueue"})
+  @ValueSource(strings = {"anonymousQueue", "legacyAnonymousQueue", "anonymousGroupQueue"})
   void testAnonymousQueueSpanName(String queueBeanName) throws Exception {
     Connection connection = connectionFactory.newConnection();
     cleanup.deferCleanup(connection);
@@ -340,6 +340,8 @@ class SpringRabbitMqTest {
 
     static final String TEST_QUEUE = "testQueue";
     static final String LEGACY_ANONYMOUS_QUEUE = "123e4567-e89b-12d3-a456-426614174000";
+    // the name that spring-cloud-stream's rabbit binder generates for a consumer without a group
+    static final String ANONYMOUS_GROUP_QUEUE = "testDestination.anonymous.Q_bA0sGiTcyXMWXZMyOHwA";
 
     @Bean
     Queue testQueue() {
@@ -354,6 +356,11 @@ class SpringRabbitMqTest {
     @Bean
     Queue legacyAnonymousQueue() {
       return new Queue(LEGACY_ANONYMOUS_QUEUE);
+    }
+
+    @Bean
+    Queue anonymousGroupQueue() {
+      return new Queue(ANONYMOUS_GROUP_QUEUE);
     }
 
     @RabbitListener(queues = TEST_QUEUE)

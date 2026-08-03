@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_ANONYMOUS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
@@ -113,7 +114,7 @@ class SpringIntegrationAndRabbitTest {
                                 assertThat(spanData.getName())
                                     .matches(
                                         emitStableMessagingSemconv()
-                                            ? "process testTopic:testTopic:testTopic.anonymous.[-\\w]+"
+                                            ? "process"
                                             : "testTopic.anonymous.[-\\w]+ process"))
                         .hasParent(trace.getSpan(6))
                         .hasKind(SpanKind.CONSUMER)
@@ -127,6 +128,7 @@ class SpringIntegrationAndRabbitTest {
                             serverPort(),
                             equalTo(MESSAGING_SYSTEM, "rabbitmq"),
                             consumerDestinationName(),
+                            anonymousDestination(),
                             equalTo(
                                 MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
                             equalTo(
@@ -148,13 +150,14 @@ class SpringIntegrationAndRabbitTest {
                                 assertThat(spanData.getName())
                                     .matches(
                                         emitStableMessagingSemconv()
-                                            ? "process testTopic:testTopic:testTopic.anonymous.[-\\w]+"
+                                            ? "process"
                                             : "testTopic process"))
                         .hasParent(trace.getSpan(6))
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "rabbitmq"),
                             consumerDestinationName(),
+                            anonymousDestination(),
                             equalTo(
                                 MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
                             equalTo(
@@ -239,10 +242,14 @@ class SpringIntegrationAndRabbitTest {
         MESSAGING_DESTINATION_NAME,
         val -> {
           if (emitStableMessagingSemconv()) {
-            val.matches("testTopic:testTopic:testTopic\\.anonymous\\.[-\\w]+");
+            val.matches("testTopic:testTopic:testTopic\\.anonymous\\.[A-Za-z0-9_-]{22}");
           } else {
             val.isEqualTo("testTopic");
           }
         });
+  }
+
+  private static AttributeAssertion anonymousDestination() {
+    return equalTo(MESSAGING_DESTINATION_ANONYMOUS, emitStableMessagingSemconv() ? true : null);
   }
 }
