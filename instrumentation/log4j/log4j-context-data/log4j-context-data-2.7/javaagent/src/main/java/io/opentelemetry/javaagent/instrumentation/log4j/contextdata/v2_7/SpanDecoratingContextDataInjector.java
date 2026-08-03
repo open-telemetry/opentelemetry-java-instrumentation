@@ -51,7 +51,8 @@ public class SpanDecoratingContextDataInjector implements ContextDataInjector {
     Context context = Context.current();
     SpanContext currentContext = Span.fromContext(context).getSpanContext();
     Baggage baggage = Baggage.fromContext(context);
-    if (!currentContext.isValid() && baggage.isEmpty()) {
+    boolean addBaggage = BAGGAGE_ENABLED && !baggage.isEmpty();
+    if (!currentContext.isValid() && !addBaggage) {
       return staticContextData.isEmpty() ? contextData : newContextData(contextData);
     }
 
@@ -62,7 +63,7 @@ public class SpanDecoratingContextDataInjector implements ContextDataInjector {
       newContextData.putValue(TRACE_FLAGS_KEY, currentContext.getTraceFlags().asHex());
     }
 
-    if (BAGGAGE_ENABLED) {
+    if (addBaggage) {
       for (Map.Entry<String, BaggageEntry> entry : baggage.asMap().entrySet()) {
         // prefix all baggage values to avoid clashes with existing context
         newContextData.putValue("baggage." + entry.getKey(), entry.getValue().getValue());
