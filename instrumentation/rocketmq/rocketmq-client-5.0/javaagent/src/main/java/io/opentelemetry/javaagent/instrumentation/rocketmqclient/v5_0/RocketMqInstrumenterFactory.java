@@ -31,6 +31,11 @@ import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 final class RocketMqInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rocketmq-client-5.0";
 
+  // messaging.operation.name values, named after the RocketMQ API operations
+  private static final String SEND_OPERATION_NAME = "send";
+  private static final String RECEIVE_OPERATION_NAME = "receive";
+  private static final String PROCESS_OPERATION_NAME = "process";
+
   private RocketMqInstrumenterFactory() {}
 
   public static Instrumenter<PublishingMessageImpl, SendReceiptImpl> createProducerInstrumenter(
@@ -39,13 +44,14 @@ final class RocketMqInstrumenterFactory {
     MessagingOperationType operationType = MessagingOperationType.SEND;
 
     AttributesExtractor<PublishingMessageImpl, SendReceiptImpl> attributesExtractor =
-        buildMessagingAttributesExtractor(getter, operationType, capturedHeaders);
+        buildMessagingAttributesExtractor(
+            getter, operationType, SEND_OPERATION_NAME, capturedHeaders);
 
     InstrumenterBuilder<PublishingMessageImpl, SendReceiptImpl> instrumenterBuilder =
         Instrumenter.<PublishingMessageImpl, SendReceiptImpl>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME))
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(new RocketMqProducerAttributeExtractor());
     setMessagingSendExceptionEventExtractor(instrumenterBuilder);
@@ -59,13 +65,14 @@ final class RocketMqInstrumenterFactory {
     MessagingOperationType operationType = MessagingOperationType.RECEIVE;
 
     AttributesExtractor<RocketMqReceiveRequest, List<MessageView>> attributesExtractor =
-        buildMessagingAttributesExtractor(getter, operationType, capturedHeaders);
+        buildMessagingAttributesExtractor(
+            getter, operationType, RECEIVE_OPERATION_NAME, capturedHeaders);
 
     InstrumenterBuilder<RocketMqReceiveRequest, List<MessageView>> instrumenterBuilder =
         Instrumenter.<RocketMqReceiveRequest, List<MessageView>>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.create(getter, operationType, RECEIVE_OPERATION_NAME))
             .setEnabled(enabled)
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(new RocketMqConsumerReceiveAttributeExtractor());
@@ -86,13 +93,14 @@ final class RocketMqInstrumenterFactory {
     MessagingOperationType operationType = MessagingOperationType.PROCESS;
 
     AttributesExtractor<MessageView, ConsumeResult> attributesExtractor =
-        buildMessagingAttributesExtractor(getter, operationType, capturedHeaders);
+        buildMessagingAttributesExtractor(
+            getter, operationType, PROCESS_OPERATION_NAME, capturedHeaders);
 
     InstrumenterBuilder<MessageView, ConsumeResult> instrumenterBuilder =
         Instrumenter.<MessageView, ConsumeResult>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(new RocketMqConsumerProcessAttributeExtractor())
             .setSpanStatusExtractor(
@@ -116,8 +124,9 @@ final class RocketMqInstrumenterFactory {
   private static <T, R> AttributesExtractor<T, R> buildMessagingAttributesExtractor(
       MessagingAttributesGetter<T, R> getter,
       MessagingOperationType operationType,
+      String operationName,
       List<String> capturedHeaders) {
-    return MessagingAttributesExtractor.builder(getter, operationType)
+    return MessagingAttributesExtractor.builder(getter, operationType, operationName)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }

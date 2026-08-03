@@ -188,8 +188,8 @@ abstract class AbstractRocketMqClientTest {
                                 namespace(),
                                 equalTo(MESSAGING_DESTINATION_NAME, producerDestination()),
                                 oldOperation("publish"),
-                                operationName("publish"),
-                                operationType("publish"),
+                                operationName("send"),
+                                operationType("send"),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
@@ -259,8 +259,8 @@ abstract class AbstractRocketMqClientTest {
                                 namespace(),
                                 equalTo(MESSAGING_DESTINATION_NAME, producerDestination()),
                                 oldOperation("publish"),
-                                operationName("publish"),
-                                operationType("publish"),
+                                operationName("send"),
+                                operationType("send"),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
@@ -371,8 +371,8 @@ abstract class AbstractRocketMqClientTest {
                                   MESSAGING_BATCH_MESSAGE_COUNT,
                                   emitStableMessagingSemconv() ? Long.valueOf(2) : null),
                               oldOperation("publish"),
-                              operationName("publish"),
-                              operationType("publish"),
+                              operationName("send"),
+                              operationType("send"),
                               satisfies(
                                   MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                               satisfies(
@@ -502,8 +502,8 @@ abstract class AbstractRocketMqClientTest {
                                 namespace(),
                                 equalTo(MESSAGING_DESTINATION_NAME, producerDestination()),
                                 oldOperation("publish"),
-                                operationName("publish"),
-                                operationType("publish"),
+                                operationName("send"),
+                                operationType("send"),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
@@ -573,8 +573,8 @@ abstract class AbstractRocketMqClientTest {
                                 namespace(),
                                 equalTo(MESSAGING_DESTINATION_NAME, producerDestination()),
                                 oldOperation("publish"),
-                                operationName("publish"),
-                                operationType("publish"),
+                                operationName("send"),
+                                operationType("send"),
                                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
                                 satisfies(
                                     stringKey("messaging.rocketmq.broker_address"),
@@ -655,7 +655,7 @@ abstract class AbstractRocketMqClientTest {
 
   private String producerSpanName() {
     return emitStableMessagingSemconv()
-        ? "publish " + sharedTopic
+        ? "send " + sharedTopic
         : producerDestination() + " publish";
   }
 
@@ -674,7 +674,6 @@ abstract class AbstractRocketMqClientTest {
   }
 
   private static AttributeAssertion operationType(String operation) {
-    String operationType = operation.equals("publish") ? "send" : operation;
-    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operationType : null);
+    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
   }
 }

@@ -34,6 +34,10 @@ class RocketMqInstrumenterFactory {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rocketmq-client-4.8";
 
+  // messaging.operation.name values, named after the RocketMQ API operations
+  private static final String SEND_OPERATION_NAME = "send";
+  private static final String PROCESS_OPERATION_NAME = "process";
+
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<String> MESSAGING_CONSUMER_GROUP_NAME =
       AttributeKey.stringKey("messaging.consumer.group.name");
@@ -56,9 +60,10 @@ class RocketMqInstrumenterFactory {
         Instrumenter.<SendMessageContext, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME))
             .addAttributesExtractor(
-                buildMessagingAttributesExtractor(getter, operationType, capturedHeaders));
+                buildMessagingAttributesExtractor(
+                    getter, operationType, SEND_OPERATION_NAME, capturedHeaders));
     if (emitStableMessagingSemconv()) {
       instrumenterBuilder.addAttributesExtractor(
           new AttributesExtractor<SendMessageContext, Void>() {
@@ -123,9 +128,10 @@ class RocketMqInstrumenterFactory {
         Instrumenter.<RocketMqConsumerRequest, ConsumeMessageContext>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
-                buildMessagingAttributesExtractor(getter, operationType, capturedHeaders))
+                buildMessagingAttributesExtractor(
+                    getter, operationType, PROCESS_OPERATION_NAME, capturedHeaders))
             .addAttributesExtractor(consumerAttributesExtractor())
             .addSpanLinksExtractor(
                 new RocketMqBatchProcessSpanLinksExtractor(
@@ -155,10 +161,11 @@ class RocketMqInstrumenterFactory {
         Instrumenter.builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
-            MessagingSpanNameExtractor.create(getter, operationType));
+            MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME));
 
     builder.addAttributesExtractor(
-        buildMessagingAttributesExtractor(getter, operationType, capturedHeaders));
+        buildMessagingAttributesExtractor(
+            getter, operationType, PROCESS_OPERATION_NAME, capturedHeaders));
     if (emitStableMessagingSemconv()) {
       builder.addAttributesExtractor(consumerAttributesExtractor());
     }
@@ -214,8 +221,9 @@ class RocketMqInstrumenterFactory {
   private static <T, R> AttributesExtractor<T, R> buildMessagingAttributesExtractor(
       MessagingAttributesGetter<T, R> getter,
       MessagingOperationType operationType,
+      String operationName,
       List<String> capturedHeaders) {
-    return MessagingAttributesExtractor.builder(getter, operationType)
+    return MessagingAttributesExtractor.builder(getter, operationType, operationName)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }
