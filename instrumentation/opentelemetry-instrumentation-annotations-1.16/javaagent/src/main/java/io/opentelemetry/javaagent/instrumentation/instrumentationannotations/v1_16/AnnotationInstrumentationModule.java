@@ -40,6 +40,9 @@ public class AnnotationInstrumentationModule extends V3PreviewFallbackEnabledIns
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new WithSpanInstrumentation(), new AddingSpanAttributesInstrumentation());
+    return asList(
+        new WithSpanInstrumentation(),
+        new AddingSpanAttributesInstrumentation(),
+        new CountedInstrumentation());
   }
 }
