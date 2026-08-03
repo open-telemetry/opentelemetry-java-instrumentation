@@ -44,7 +44,7 @@ public abstract class Log4j2Test {
     Logger logger = LogManager.getLogger("TestLogger");
 
     Baggage baggage = Baggage.empty().toBuilder().put("baggage_key", "baggage_value").build();
-    try (Scope unusedScope = baggage.makeCurrent()) {
+    try (Scope ignored = baggage.makeCurrent()) {
       logger.info("log message 1");
       logger.info("log message 2");
     }
@@ -78,7 +78,7 @@ public abstract class Log4j2Test {
     Baggage baggage = Baggage.empty().toBuilder().put("baggage_key", "baggage_value").build();
     AtomicReference<Span> spanParent = new AtomicReference<>();
     AtomicReference<Span> spanChild = new AtomicReference<>();
-    try (Scope unusedScope = baggage.makeCurrent()) {
+    try (Scope ignored = baggage.makeCurrent()) {
       getInstrumentationExtension()
           .runWithSpan(
               "test",

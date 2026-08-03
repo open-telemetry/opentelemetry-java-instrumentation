@@ -66,7 +66,7 @@ public final class OpenTelemetryContextDataProvider implements ContextDataProvid
   public Map<String, String> supplyContextData() {
     Context context = Context.current();
     SpanContext spanContext = Span.fromContext(context).getSpanContext();
-    Baggage baggage = Configuration.baggageEnabled ? Baggage.fromContext(context) : Baggage.empty();
+    Baggage baggage = Baggage.fromContext(context);
     if (!spanContext.isValid() && baggage.isEmpty()) {
       return staticContextData;
     }
@@ -84,9 +84,11 @@ public final class OpenTelemetryContextDataProvider implements ContextDataProvid
       contextData.put(contextDataKeys.getTraceFlagsKey(), spanContext.getTraceFlags().asHex());
     }
 
-    for (Map.Entry<String, BaggageEntry> entry : baggage.asMap().entrySet()) {
-      // prefix all baggage values to avoid clashes with existing context
-      contextData.put("baggage." + entry.getKey(), entry.getValue().getValue());
+    if (Configuration.baggageEnabled) {
+      for (Map.Entry<String, BaggageEntry> entry : baggage.asMap().entrySet()) {
+        // prefix all baggage values to avoid clashes with existing context
+        contextData.put("baggage." + entry.getKey(), entry.getValue().getValue());
+      }
     }
 
     return contextData;
