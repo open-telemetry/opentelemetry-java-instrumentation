@@ -23,6 +23,10 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
@@ -31,13 +35,13 @@ import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.Collection;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class MessagingProducerMetricsTest {
 
   private static final double[] DURATION_BUCKETS =
       MessagingMetricsAdvice.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void collectsMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
@@ -66,7 +70,17 @@ class MessagingProducerMetricsTest {
                 emitStableMessagingSemconv() ? IllegalStateException.class.getName() : null)
             .build();
 
-    Context context = listener.onStart(Context.root(), requestAttributes, nanos(100));
+    Context parent =
+        Context.root()
+            .with(
+                Span.wrap(
+                    SpanContext.create(
+                        "ff01020304050600ff0a0b0c0d0e0f00",
+                        "090a0b0c0d0e0f00",
+                        TraceFlags.getSampled(),
+                        TraceState.getDefault())));
+
+    Context context = listener.onStart(parent, requestAttributes, nanos(100));
     listener.onEnd(context, responseAttributes, nanos(250));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
@@ -100,7 +114,13 @@ class MessagingProducerMetricsTest {
                                                       ? IllegalStateException.class.getName()
                                                       : null),
                                               equalTo(SERVER_PORT, 6650),
-                                              equalTo(SERVER_ADDRESS, "localhost")))));
+                                              equalTo(SERVER_ADDRESS, "localhost"))
+                                          .hasExemplarsSatisfying(
+                                              exemplar ->
+                                                  exemplar
+                                                      .hasTraceId(
+                                                          "ff01020304050600ff0a0b0c0d0e0f00")
+                                                      .hasSpanId("090a0b0c0d0e0f00")))));
     }
     if (emitStableMessagingSemconv()) {
       assertThat(metrics)
@@ -128,7 +148,13 @@ class MessagingProducerMetricsTest {
                                                   IllegalStateException.class.getName()),
                                               equalTo(MESSAGING_DESTINATION_PARTITION_ID, "1"),
                                               equalTo(SERVER_ADDRESS, "localhost"),
-                                              equalTo(SERVER_PORT, 6650)))))
+                                              equalTo(SERVER_PORT, 6650))
+                                          .hasExemplarsSatisfying(
+                                              exemplar ->
+                                                  exemplar
+                                                      .hasTraceId(
+                                                          "ff01020304050600ff0a0b0c0d0e0f00")
+                                                      .hasSpanId("090a0b0c0d0e0f00")))))
           .anySatisfy(
               metric ->
                   assertThat(metric)
@@ -156,7 +182,6 @@ class MessagingProducerMetricsTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void createDoesNotCountSentMessages() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
@@ -193,7 +218,6 @@ class MessagingProducerMetricsTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void zeroBatchDoesNotCountSentMessages() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
@@ -216,7 +240,6 @@ class MessagingProducerMetricsTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void operationTypeEntryPointNeverCollectsLegacyMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
@@ -248,7 +271,6 @@ class MessagingProducerMetricsTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void legacyEntryPointAlwaysCollectsLegacyMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =

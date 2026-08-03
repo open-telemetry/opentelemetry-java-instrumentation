@@ -35,13 +35,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class MessagingConsumerMetricsTest {
 
   private static final double[] DURATION_BUCKETS =
       MessagingMetricsAdvice.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void collectsMetricsAndCountsBatchOnce() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
@@ -179,7 +179,6 @@ class MessagingConsumerMetricsTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void failedReceiveWithoutBatchCountCountsNoConsumedMessages() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
@@ -219,7 +218,6 @@ class MessagingConsumerMetricsTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void consumedMessagesOnlyCountsFailedDelivery() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
@@ -266,7 +264,6 @@ class MessagingConsumerMetricsTest {
 
   @ParameterizedTest
   @MethodSource("nonReceiveOperations")
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void selectsStableMetricsByOperationType(String operationType, boolean recordsClientDuration) {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
@@ -308,7 +305,6 @@ class MessagingConsumerMetricsTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void zeroBatchDoesNotCountReceivedMessages() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
@@ -337,7 +333,6 @@ class MessagingConsumerMetricsTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void endBatchCountWinsOverStartBatchCount() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
@@ -371,7 +366,6 @@ class MessagingConsumerMetricsTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void operationTypeEntryPointNeverCollectsLegacyMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
@@ -403,7 +397,6 @@ class MessagingConsumerMetricsTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void legacyEntryPointAlwaysCollectsLegacyMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
