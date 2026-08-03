@@ -113,7 +113,7 @@ public abstract class AbstractSpringPulsarTest {
 
   protected abstract void assertSpringPulsar();
 
-  protected void assertStableProcessMetrics(boolean receiveSpansEnabled) {
+  protected void assertStableProcessMetrics() {
     if (!emitStableMessagingSemconv()) {
       return;
     }
@@ -139,38 +139,38 @@ public abstract class AbstractSpringPulsarTest {
                                                 equalTo(
                                                     MESSAGING_DESTINATION_NAME, OTEL_TOPIC))))));
 
-    if (!receiveSpansEnabled) {
-      testing.waitAndAssertMetrics(
-          "io.opentelemetry.pulsar-2.8",
-          "messaging.client.consumed.messages",
-          metrics ->
-              metrics.satisfiesExactly(
-                  metric ->
-                      assertThat(metric)
-                          .hasUnit("{message}")
-                          .hasDescription(
-                              "Number of messages that were delivered to the application.")
-                          .hasLongSumSatisfying(
-                              sum ->
-                                  sum.hasPointsSatisfying(
-                                      point ->
-                                          point
-                                              .hasValue(1)
-                                              .hasAttributesSatisfyingExactly(
-                                                  equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                                  equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                                  equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
-                                                  equalTo(SERVER_ADDRESS, brokerHost),
-                                                  equalTo(SERVER_PORT, brokerPort))))));
-      assertThat(testing.metrics())
-          .noneMatch(
-              metric ->
-                  metric
-                          .getInstrumentationScopeInfo()
-                          .getName()
-                          .equals("io.opentelemetry.spring-pulsar-1.0")
-                      && metric.getName().equals("messaging.client.consumed.messages"));
-    }
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.pulsar-2.8",
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit("{message}")
+                        .hasDescription(
+                            "Number of messages that were delivered to the application.")
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
+                                                equalTo(SERVER_ADDRESS, brokerHost),
+                                                equalTo(SERVER_PORT, brokerPort))))));
+    // the pulsar client already counts the consumed messages, so spring-pulsar must not count them
+    // a second time
+    assertThat(testing.metrics())
+        .noneMatch(
+            metric ->
+                metric
+                        .getInstrumentationScopeInfo()
+                        .getName()
+                        .equals("io.opentelemetry.spring-pulsar-1.0")
+                    && metric.getName().equals("messaging.client.consumed.messages"));
   }
 
   protected List<AttributeAssertion> publishAttributes() {
@@ -180,7 +180,7 @@ public abstract class AbstractSpringPulsarTest {
         operationName("publish"),
         operationType("publish"),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
-        satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
+        bodySize(),
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
         equalTo(SERVER_ADDRESS, brokerHost),
         equalTo(SERVER_PORT, brokerPort),
@@ -197,9 +197,16 @@ public abstract class AbstractSpringPulsarTest {
         oldOperation("process"),
         operationName("process"),
         operationType("process"),
-        satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
+        bodySize(),
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC));
+  }
+
+  // messaging.message.body.size is opt-in in the v1.43 messaging semantic conventions
+  private static AttributeAssertion bodySize() {
+    return emitOldMessagingSemconv()
+        ? satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)
+        : equalTo(MESSAGING_MESSAGE_BODY_SIZE, null);
   }
 
   protected List<AttributeAssertion> receiveAttributes() {
@@ -214,8 +221,8 @@ public abstract class AbstractSpringPulsarTest {
                 satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isNotNegative),
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort)));
-    // the listener container consumes batches, and messaging.message.body.size describes a single
-    // message, so the batch receive span does not report it
+    // the batch receive span does not report messaging.message.body.size, and the attribute is
+    // opt-in in the v1.43 messaging semantic conventions
     if (emitStableMessagingSemconv()) {
       assertions.add(equalTo(MESSAGING_MESSAGE_BODY_SIZE, null));
     } else {

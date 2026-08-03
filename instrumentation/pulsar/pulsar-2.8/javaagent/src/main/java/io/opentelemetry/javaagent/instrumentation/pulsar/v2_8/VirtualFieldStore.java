@@ -53,6 +53,17 @@ public class VirtualFieldStore {
     }
   }
 
+  public static void clear(Message<?> instance) {
+    if (instance instanceof TopicMessageImpl<?>) {
+      TopicMessageImpl<?> topicMessage = (TopicMessageImpl<?>) instance;
+      instance = topicMessage.getMessage();
+    }
+    if (instance != null) {
+      MSG_FIELD.set(instance, null);
+      MSG_RECEIVE_TELEMETRY_FIELD.set(instance, null);
+    }
+  }
+
   public static void markReceiveTelemetryRecorded(Message<?> instance) {
     if (instance instanceof TopicMessageImpl<?>) {
       TopicMessageImpl<?> topicMessage = (TopicMessageImpl<?>) instance;

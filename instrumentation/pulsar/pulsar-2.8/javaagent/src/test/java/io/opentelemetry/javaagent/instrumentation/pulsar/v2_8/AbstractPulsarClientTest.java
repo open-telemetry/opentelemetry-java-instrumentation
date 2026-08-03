@@ -418,7 +418,7 @@ abstract class AbstractPulsarClientTest {
                 operationName("publish"),
                 operationType("publish"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
-                satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
+                bodySize(),
                 equalTo(stringKey("messaging.pulsar.message.type"), experimental("normal"))));
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
@@ -458,7 +458,7 @@ abstract class AbstractPulsarClientTest {
     if (isBatch && emitStableMessagingSemconv()) {
       assertions.add(equalTo(MESSAGING_MESSAGE_BODY_SIZE, null));
     } else {
-      assertions.add(satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative));
+      assertions.add(bodySize());
     }
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
@@ -485,7 +485,7 @@ abstract class AbstractPulsarClientTest {
                 operationName("process"),
                 operationType("process"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
-                satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
+                bodySize()));
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
@@ -494,6 +494,13 @@ abstract class AbstractPulsarClientTest {
       assertions.add(equalTo(MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(partitionIndex)));
     }
     return assertions;
+  }
+
+  // messaging.message.body.size is opt-in in the v1.43 messaging semantic conventions
+  private static AttributeAssertion bodySize() {
+    return emitOldMessagingSemconv()
+        ? satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)
+        : equalTo(MESSAGING_MESSAGE_BODY_SIZE, null);
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv

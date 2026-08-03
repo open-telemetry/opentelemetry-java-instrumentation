@@ -52,6 +52,6 @@ class SpringPulsarSuppressReceiveSpansTest extends AbstractSpringPulsarTest {
                                 ? "receive " + OTEL_TOPIC
                                 : OTEL_TOPIC + " receive")
                         .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)));
-    assertStableProcessMetrics(false);
+    assertStableProcessMetrics();
   }
 }

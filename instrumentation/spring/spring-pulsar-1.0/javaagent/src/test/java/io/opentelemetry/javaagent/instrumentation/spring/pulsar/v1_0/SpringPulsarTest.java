@@ -48,7 +48,7 @@ class SpringPulsarTest extends AbstractSpringPulsarTest {
                           .hasKind(CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(receiveAttributes())));
-      assertStableProcessMetrics(true);
+      assertStableProcessMetrics();
       return;
     }
 
