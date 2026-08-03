@@ -39,7 +39,6 @@ class ThreadPerTaskExecutorMetricsTest {
     ExecutorService executor = Executors.newThreadPerTaskExecutor(threadFactory);
     CountDownLatch started = new CountDownLatch(1);
     CountDownLatch release = new CountDownLatch(1);
-
     try {
       assertThat(threadFactory.createdThreadCount()).isZero();
       assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, EXECUTOR_NAME);
