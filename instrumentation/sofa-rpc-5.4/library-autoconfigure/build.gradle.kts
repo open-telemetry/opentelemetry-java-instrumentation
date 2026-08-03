@@ -2,6 +2,8 @@ plugins {
   id("otel.library-instrumentation")
 }
 
+base.archivesName.set("${base.archivesName.get()}-autoconfigure")
+
 dependencies {
   implementation(project(":instrumentation:sofa-rpc-5.4:library"))
 
@@ -26,7 +28,7 @@ tasks.withType<Test>().configureEach {
 }
 
 tasks {
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -34,7 +36,7 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
   }
 
-  val testBothSemconv by registering(Test::class) {
+  val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

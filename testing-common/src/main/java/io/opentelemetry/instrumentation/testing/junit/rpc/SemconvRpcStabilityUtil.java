@@ -12,7 +12,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import java.util.HashMap;
 import java.util.Map;
 
-// until old rpc semconv are dropped in 3.0
 @SuppressWarnings("deprecation") // using deprecated semconv
 public class SemconvRpcStabilityUtil {
 

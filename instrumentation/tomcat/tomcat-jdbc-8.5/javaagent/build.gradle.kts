@@ -13,7 +13,19 @@ muzzle {
 
 dependencies {
   compileOnly("org.apache.tomcat:tomcat-jdbc:8.5.0")
+
+  // JdbcConnectionUrlParser is provided by the shaded JDBC library, and its DbInfo return type is
+  // relocated to the JDBC bootstrap package.
+  bootstrap(project(":instrumentation:jdbc:bootstrap"))
+  compileOnly(
+    project(
+      path = ":instrumentation:jdbc:library",
+      configuration = "shadow",
+    ),
+  )
+
   testImplementation("org.apache.tomcat:tomcat-jdbc:8.5.0")
+  testInstrumentation(project(":instrumentation:jdbc:javaagent"))
 }
 
 tasks {
@@ -21,7 +33,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database")

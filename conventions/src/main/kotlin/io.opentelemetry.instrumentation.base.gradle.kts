@@ -1,4 +1,4 @@
-/** Common setup for manual instrumentation of libraries and javaagent instrumentation. */
+// Common setup for manual instrumentation of libraries and javaagent instrumentation.
 
 import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
 import io.opentelemetry.javaagent.muzzle.AcceptableVersions
@@ -44,7 +44,7 @@ fun getPinnedVersions(): Map<String, String> {
   if (!rootProject.extra.has(key)) {
     val file = rootProject.file(".github/config/latest-dep-versions.json")
     if (!file.exists()) {
-      throw GradleException("Pinned latest-dep versions file is missing: ${file}.")
+      throw GradleException("Pinned latest-dep versions file is missing: $file.")
     }
     @Suppress("UNCHECKED_CAST")
     rootProject.extra[key] = groovy.json.JsonSlurper().parse(file) as Map<String, String>
@@ -104,20 +104,20 @@ abstract class TestLatestDepsRule : ComponentMetadataRule {
 }
 
 configurations {
-  val library by creating {
+  val library = configurations.create("library") {
     isCanBeResolved = false
     isCanBeConsumed = false
   }
-  val testLibrary by creating {
+  val testLibrary = configurations.create("testLibrary") {
     isCanBeResolved = false
     isCanBeConsumed = false
   }
-  val latestDepTestLibrary by creating {
+  val latestDepTestLibrary = configurations.create("latestDepTestLibrary") {
     isCanBeResolved = false
     isCanBeConsumed = false
   }
 
-  val testImplementation by getting
+  val testImplementation = configurations.getByName("testImplementation")
 
   // Collect latestDepTestLibrary overrides so we can apply them via resolutionStrategy.
   // This map is populated during configuration and read during resolution.
@@ -253,7 +253,7 @@ if (otelProps.testLatestDeps) {
     }
 
     if (tasks.names.contains("latestDepTest")) {
-      val latestDepTest by tasks.existing
+      val latestDepTest = tasks.named<Test>("latestDepTest")
       tasks.named("test").configure {
         dependsOn(latestDepTest)
       }
@@ -278,7 +278,7 @@ if (otelProps.testLatestDeps) {
 }
 
 tasks {
-  val generateInstrumentationVersionFile by registering {
+  val generateInstrumentationVersionFile = register<DefaultTask>("generateInstrumentationVersionFile") {
     val name = computeInstrumentationName()
     val version = project.version as String
     inputs.property("instrumentation.name", name)

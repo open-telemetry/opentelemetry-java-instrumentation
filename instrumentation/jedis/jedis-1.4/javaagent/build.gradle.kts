@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("redis.clients")
     module.set("jedis")
-    versions.set("[1.4.0,3.0.0)")
+    versions.set("[1.4.0,2.0.0)")
     assertInverse.set(true)
   }
 }
@@ -19,23 +19,14 @@ dependencies {
 
   implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
 
-  testImplementation(project(":instrumentation:jedis:jedis-1.4:testing"))
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  testImplementation("org.testcontainers:testcontainers")
 
+  testInstrumentation(project(":instrumentation:jedis:jedis-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-4.0:javaagent"))
 
-  latestDepTestLibrary("redis.clients:jedis:2.+") // see jedis-3.0 module
-}
-
-testing {
-  suites {
-    val version272 by registering(JvmTestSuite::class) {
-      dependencies {
-        implementation("redis.clients:jedis:2.7.2")
-        implementation(project(":instrumentation:jedis:jedis-1.4:testing"))
-      }
-    }
-  }
+  latestDepTestLibrary("redis.clients:jedis:1.+") // see jedis-2.0 module
 }
 
 tasks {
@@ -44,7 +35,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -53,6 +44,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testStableSemconv)
+    dependsOn(testStableSemconv)
   }
 }

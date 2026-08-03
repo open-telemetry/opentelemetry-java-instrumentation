@@ -8,7 +8,7 @@ plugins {
 val instrumentationVersionClass = extensions.create<InstrumentationVersionClassExtension>("instrumentationVersionClass")
 val generatedInstrumentationVersionClassDir = layout.buildDirectory.dir("generated/sources/instrumentationVersionClass/java/main")
 
-val generateInstrumentationVersionClass by tasks.registering(GenerateInstrumentationVersionClassTask::class) {
+val generateInstrumentationVersionClass = tasks.register<GenerateInstrumentationVersionClassTask>("generateInstrumentationVersionClass") {
   className.set(instrumentationVersionClass.className)
   instrumentationVersion.set(project.version.toString())
   outputDirectory.set(generatedInstrumentationVersionClassDir)

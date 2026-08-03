@@ -19,10 +19,12 @@
   duplicate the same setup.
 - Prefer `@MethodSource` with a private static `Stream<Arguments>` provider for multi-field cases.
   Keep the provider close to the test that uses it.
-- Prefer a human-readable case name as the first parameter so failures identify the scenario
-  without reading the whole row.
-- Each `Arguments.of(...)` entry should describe one coherent scenario. Prefer one expected outcome
-  per row instead of packing several unrelated expectations into a single parameterized case.
+- Use `Arguments.argumentSet(String name, Object... args)` to name each case. This requires no
+  changes to the test method signature and no `name =` attribute on the annotation. Prefer this
+  over passing a `String name` as the first parameter with `@ParameterizedTest(name = "{0}")`.
+- Each `Arguments.argumentSet(...)` entry should describe one coherent scenario. Prefer one
+  expected outcome per row instead of packing several unrelated expectations into a single
+  parameterized case.
 - In the test body, keep the setup and assertion flow the same for every row. If different rows need
   materially different control flow, split them into separate tests instead of forcing everything
   into one parameterized method.
@@ -35,15 +37,15 @@
 Example shape:
 
 ```java
-@ParameterizedTest(name = "{0}")
+@ParameterizedTest
 @MethodSource("testCases")
-void test(String name, Input input, Output expected) {
+void test(Input input, Output expected) {
   assertThat(run(input)).isEqualTo(expected);
 }
 
 private static Stream<Arguments> testCases() {
   return Stream.of(
-      Arguments.of("valid input", new Input("input"), new Output("expected")));
+      Arguments.argumentSet("valid input", new Input("input"), new Output("expected")));
 }
 ```
 

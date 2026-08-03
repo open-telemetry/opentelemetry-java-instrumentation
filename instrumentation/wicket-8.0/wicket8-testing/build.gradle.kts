@@ -23,7 +23,7 @@ if (otelProps.testLatestDeps) {
 }
 
 tasks {
-  val testV3Preview by registering(Test::class) {
+  val testV3Preview = register<Test>("testV3Preview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")

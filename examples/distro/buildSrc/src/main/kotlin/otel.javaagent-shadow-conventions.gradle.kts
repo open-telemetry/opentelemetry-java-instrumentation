@@ -6,17 +6,17 @@ plugins {
 }
 
 // this configuration collects libs that will be placed in the bootstrap classloader
-val bootstrapLibs by configurations.creating {
+val bootstrapLibs = configurations.create("bootstrapLibs") {
   isCanBeResolved = true
   isCanBeConsumed = false
 }
 // this configuration collects libs that will be placed in the agent classloader, isolated from the instrumented application code
-val javaagentLibs by configurations.creating {
+val javaagentLibs = configurations.create("javaagentLibs") {
   isCanBeResolved = true
   isCanBeConsumed = false
 }
 // this configuration stores the upstream agent dep that's extended by this project
-val upstreamAgent by configurations.creating {
+val upstreamAgent = configurations.create("upstreamAgent") {
   isCanBeResolved = true
   isCanBeConsumed = false
 }
@@ -44,7 +44,7 @@ tasks {
   // building the final javaagent jar is done in 3 steps:
 
   // 1. all distro specific javaagent libs are relocated
-  val relocateJavaagentLibs by registering(ShadowJar::class) {
+  val relocateJavaagentLibs = register<ShadowJar>("relocateJavaagentLibs") {
     configurations = listOf(javaagentLibs)
 
     archiveFileName.set("javaagentLibs-relocated.jar")
@@ -74,7 +74,7 @@ tasks {
   // having a separate task for isolating javaagent libs is required to avoid duplicates with the upstream javaagent
   // duplicatesStrategy in shadowJar won't be applied when adding files with with(CopySpec) because each CopySpec has
   // its own duplicatesStrategy
-  val isolateJavaagentLibs by registering(Copy::class) {
+  val isolateJavaagentLibs = register<Copy>("isolateJavaagentLibs") {
     dependsOn(relocateJavaagentLibs)
     with(isolateClasses(relocateJavaagentLibs.get().outputs.files))
 

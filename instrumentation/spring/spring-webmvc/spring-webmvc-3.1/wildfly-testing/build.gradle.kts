@@ -2,8 +2,8 @@ plugins {
   id("otel.javaagent-testing")
 }
 
-val testServer by configurations.creating
-val appLibrary by configurations.creating
+val testServer = configurations.create("testServer")
+val appLibrary = configurations.create("appLibrary")
 
 configurations.named("testCompileOnly") {
   extendsFrom(appLibrary)
@@ -34,7 +34,7 @@ otelJava {
 
 tasks {
   // extract wildfly dist, path is used from arquillian.xml
-  val setupServer by registering(Copy::class) {
+  val setupServer = register<Copy>("setupServer") {
     inputs.files(testServer)
     from({
       zipTree(testServer.singleFile)
@@ -45,7 +45,7 @@ tasks {
   // logback-classic contains /META-INF/services/javax.servlet.ServletContainerInitializer
   // that breaks deploy on embedded wildfly
   // create a copy of logback-classic jar that does not have this file
-  val modifyLogbackJar by registering(Jar::class) {
+  val modifyLogbackJar = register<Jar>("modifyLogbackJar") {
     destinationDirectory.set(layout.buildDirectory.dir("tmp"))
     archiveFileName.set("logback-classic-modified.jar")
     exclude("/META-INF/services/javax.servlet.ServletContainerInitializer")
@@ -56,7 +56,7 @@ tasks {
     })
   }
 
-  val copyDependencies by registering(Copy::class) {
+  val copyDependencies = register<Copy>("copyDependencies") {
     // test looks for spring jars that are bundled inside deployed application from this directory
     from(appLibrary).into(layout.buildDirectory.dir("app-libs"))
   }

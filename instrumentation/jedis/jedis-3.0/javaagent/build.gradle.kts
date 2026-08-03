@@ -20,9 +20,8 @@ dependencies {
 
   implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
 
-  // ensures jedis-1.4 instrumentation does not load with jedis 3.0+ by failing
-  // the tests in the event it does. The tests will end up with double spans
   testInstrumentation(project(":instrumentation:jedis:jedis-1.4:javaagent"))
+  testInstrumentation(project(":instrumentation:jedis:jedis-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-4.0:javaagent"))
 
   latestDepTestLibrary("redis.clients:jedis:3.+") // see jedis-4.0 module
@@ -34,7 +33,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

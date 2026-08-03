@@ -31,7 +31,7 @@ dependencies {
 
 testing {
   suites {
-    val testReceiveSpansDisabled by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testReceiveSpansDisabled") {
       dependencies {
         implementation(project(":instrumentation:spring:spring-pulsar-1.0:testing"))
 

@@ -1,5 +1,9 @@
 display_name: Tomcat JDBC
-description: This instrumentation enables database connection pool metrics for Tomcat JDBC.
+description: >
+  This instrumentation enables database connection pool metrics for Tomcat JDBC. When no pool name
+  is explicitly configured, the JDBC URL and connection properties are used to derive
+  `server.address[:server.port][/db.namespace]`. If no server address or database namespace is
+  available, `tomcat-jdbc` is used.
 library_link: https://tomcat.apache.org/tomcat-8.5-doc/jdbc-pool.html
 semantic_conventions:
   - DATABASE_POOL_METRICS

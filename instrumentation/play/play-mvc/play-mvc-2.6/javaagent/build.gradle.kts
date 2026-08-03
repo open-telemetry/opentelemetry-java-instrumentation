@@ -49,7 +49,7 @@ dependencies {
 
 testing {
   suites {
-    val play28Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("play28Test") {
       dependencies {
         val version = baseVersion("2.8.0").orLatest("2.+")
         implementation("com.typesafe.play:play-java_2.13:$version")
@@ -58,7 +58,7 @@ testing {
       }
     }
 
-    val play3Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("play3Test") {
       dependencies {
         val version = baseVersion("3.0.0").orLatest()
         implementation("org.playframework:play-java_3:$version")

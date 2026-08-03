@@ -16,7 +16,7 @@ dependencies {
 testing {
   suites {
     // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16405
-    val testDemandedContentListener by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testDemandedContentListener") {
       sources {
         java {
           setSrcDirs(listOf("src/test/java"))
@@ -34,7 +34,7 @@ testing {
 }
 
 tasks {
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")

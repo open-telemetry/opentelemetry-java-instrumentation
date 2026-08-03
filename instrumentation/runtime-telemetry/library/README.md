@@ -149,6 +149,13 @@ These metrics are collected via JMX on all Java versions:
 | `jvm.network.io`         | Network I/O bytes      |
 | `jvm.network.time`       | Network I/O time       |
 
+#### JFR-based (Java 19+ only)
+
+| Metric                             | Description                                                        |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `jvm.thread.virtual.pinned`        | Duration of virtual thread pinning (histogram, seconds)            |
+| `jvm.thread.virtual.submit_failed` | Number of times a virtual thread failed to submit to its scheduler |
+
 #### JFR-based (Overlap with JMX)
 
 When `experimental.prefer-jfr=true`, the following metrics are sourced from JFR instead of JMX

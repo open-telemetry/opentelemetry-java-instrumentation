@@ -75,15 +75,17 @@ public final class DbConfig {
       return value;
     }
 
-    // this variant was never a regular (non-declarative) configuration property name
-    Boolean deprecatedValue =
-        commonConfig.get("database").get("sqlcommenter/development").getBoolean("enabled");
-    if (deprecatedValue != null) {
-      warnIfDeprecatedDeclarativeConfigurationUsed(
-          "instrumentation/development: java: common: database:"
-              + " sqlcommenter/development: enabled",
-          "instrumentation/development: java: common: db: sqlcommenter/development: enabled");
-      return deprecatedValue;
+    if (!SemconvStability.v3Preview(openTelemetry)) {
+      // this variant was never a regular (non-declarative) configuration property name
+      Boolean deprecatedValue =
+          commonConfig.get("database").get("sqlcommenter/development").getBoolean("enabled");
+      if (deprecatedValue != null) {
+        warnIfDeprecatedDeclarativeConfigurationUsed(
+            "instrumentation/development: java: common: database:"
+                + " sqlcommenter/development: enabled",
+            "instrumentation/development: java: common: db: sqlcommenter/development: enabled");
+        return deprecatedValue;
+      }
     }
 
     return null;
@@ -99,7 +101,7 @@ public final class DbConfig {
       return value;
     }
 
-    if (!SemconvStability.v3Preview()) {
+    if (!SemconvStability.v3Preview(openTelemetry)) {
       // this variant was never a regular (non-declarative) configuration property name
       Boolean deprecatedStatementSanitizerValue =
           commonConfig.get("database").get("statement_sanitizer").getBoolean("enabled");

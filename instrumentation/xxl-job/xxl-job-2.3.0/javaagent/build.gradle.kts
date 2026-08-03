@@ -33,7 +33,7 @@ dependencies {
 
 testing {
   suites {
-    val xxlJob33Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("xxlJob33Test") {
       dependencies {
         val version = baseVersion("3.3.0").orLatest()
         implementation("com.xuxueli:xxl-job-core:$version")
@@ -51,7 +51,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

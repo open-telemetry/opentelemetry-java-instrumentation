@@ -6,13 +6,7 @@ semantic_conventions:
   - MESSAGING_SPANS
 library_link: https://rocketmq.apache.org/
 configurations:
-  - name: otel.instrumentation.messaging.experimental.capture-headers
-    declarative_name: java.common.messaging.capture_headers/development
-    description: >
-      Enables capturing messaging headers as span attributes. Provide a comma-separated list of
-      header names to capture.
-    type: list
-    default: ''
+  - ref: messaging.capture-headers
   - name: otel.instrumentation.rocketmq-client.experimental-span-attributes
     declarative_name: java.rocketmq_client.experimental_span_attributes/development
     description: >

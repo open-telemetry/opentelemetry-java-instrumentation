@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3P
 import io.opentelemetry.api.common.AttributeKey;
 import java.util.List;
 
-// until message header normalization is dropped in 3.0
+// message header normalization, to be removed in 3.0
 public class MessageHeaderUtil {
 
   public static AttributeKey<List<String>> headerAttributeKey(String headerName) {

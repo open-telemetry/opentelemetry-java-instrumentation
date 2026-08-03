@@ -15,8 +15,16 @@ dependencies {
   library("com.mchange:c3p0:0.9.2")
 
   implementation(project(":instrumentation:c3p0-0.9:library"))
+  bootstrap(project(":instrumentation:jdbc:bootstrap"))
+  compileOnly(
+    project(
+      path = ":instrumentation:jdbc:library",
+      configuration = "shadow",
+    ),
+  )
 
   testImplementation(project(":instrumentation:c3p0-0.9:testing"))
+  testInstrumentation(project(":instrumentation:jdbc:javaagent"))
 }
 
 tasks {
@@ -24,7 +32,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

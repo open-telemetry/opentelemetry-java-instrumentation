@@ -34,17 +34,23 @@ class ProcessResourceTest {
     assertResource(true);
   }
 
-  private static void assertResource(boolean windows) {
-    Resource resource = ProcessResource.buildResource();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+  @Test
+  void commandAttributesDisabledByDefault() {
+    Resource resource = ProcessResource.create();
     Attributes attributes = resource.getAttributes();
 
     assertThat(attributes.get(PROCESS_PID)).isGreaterThan(1);
-    assertThat(attributes.get(PROCESS_EXECUTABLE_PATH))
-        .matches(windows ? ".*[/\\\\]java\\.exe" : ".*[/\\\\]java");
+    assertThat(attributes.get(PROCESS_EXECUTABLE_PATH)).isNotNull();
+    assertThat(attributes.get(PROCESS_COMMAND_LINE)).isNull();
+    assertThat(attributes.get(PROCESS_COMMAND_ARGS)).isNull();
+  }
 
-    boolean java8 = "1.8".equals(System.getProperty("java.specification.version"));
-    if (java8 || IS_WINDOWS) {
+  @Test
+  void commandAttributesEnabled() {
+    Resource resource = ProcessResource.create(true);
+    Attributes attributes = resource.getAttributes();
+
+    if (isJava8() || IS_WINDOWS) {
       assertThat(attributes.get(PROCESS_COMMAND_LINE))
           .contains(attributes.get(PROCESS_EXECUTABLE_PATH))
           .contains("-DtestSecret=***")
@@ -57,5 +63,22 @@ class ProcessResourceTest {
           .contains("-DtestPassword=***")
           .contains("-DtestNotRedacted=test");
     }
+  }
+
+  private static void assertResource(boolean windows) {
+    Resource resource = ProcessResource.create();
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    Attributes attributes = resource.getAttributes();
+
+    assertThat(attributes.get(PROCESS_PID)).isGreaterThan(1);
+    assertThat(attributes.get(PROCESS_EXECUTABLE_PATH))
+        .matches(windows ? ".*[/\\\\]java\\.exe" : ".*[/\\\\]java");
+
+    assertThat(attributes.get(PROCESS_COMMAND_LINE)).isNull();
+    assertThat(attributes.get(PROCESS_COMMAND_ARGS)).isNull();
+  }
+
+  private static boolean isJava8() {
+    return "1.8".equals(System.getProperty("java.specification.version"));
   }
 }

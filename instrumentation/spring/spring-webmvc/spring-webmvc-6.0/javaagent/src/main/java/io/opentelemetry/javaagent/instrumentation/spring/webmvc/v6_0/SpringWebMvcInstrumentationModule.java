@@ -12,13 +12,11 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class SpringWebMvcInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class SpringWebMvcInstrumentationModule extends InstrumentationModule {
 
   public SpringWebMvcInstrumentationModule() {
     super("spring-webmvc", "spring-webmvc-6.0");
@@ -40,11 +38,6 @@ public class SpringWebMvcInstrumentationModule extends InstrumentationModule
   @Override
   public List<String> exposedClassNames() {
     return singletonList("org.springframework.web.servlet.v6_0.OpenTelemetryHandlerMappingFilter");
-  }
-
-  @Override
-  public String getModuleGroup() {
-    return "servlet";
   }
 
   @Override

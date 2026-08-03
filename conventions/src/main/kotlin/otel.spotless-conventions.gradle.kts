@@ -1,3 +1,4 @@
+import com.diffplug.spotless.LineEnding
 import io.opentelemetry.instrumentation.gradle.StaticImportFormatter
 
 plugins {
@@ -5,6 +6,9 @@ plugins {
 }
 
 spotless {
+  // Match .gitattributes without probing source files during configuration.
+  lineEndings = LineEnding.UNIX
+
   java {
     custom("staticImports", StaticImportFormatter())
     googleJavaFormat()
@@ -78,20 +82,6 @@ spotless {
 
 if (project == rootProject) {
   spotless {
-    format("markdown") {
-      target("**/*.md")
-      targetExclude(
-        "**/build/**",
-        "licenses/**"
-      )
-      prettier("3.6.2").config(
-        mapOf(
-          "proseWrap" to "preserve",
-          "embeddedLanguageFormatting" to "off"
-        )
-      )
-    }
-
     format("misc") {
       target(
         ".gitignore",
