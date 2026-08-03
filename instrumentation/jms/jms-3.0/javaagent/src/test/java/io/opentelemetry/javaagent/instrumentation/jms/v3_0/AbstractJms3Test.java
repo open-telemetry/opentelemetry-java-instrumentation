@@ -138,8 +138,8 @@ abstract class AbstractJms3Test {
                     span.hasName(
                             emitStableMessagingSemconv()
                                 ? producerDestinationName.equals("(temporary)")
-                                    ? "publish"
-                                    : "publish " + producerDestinationName
+                                    ? "send"
+                                    : "send " + producerDestinationName
                                 : producerDestinationName + " publish")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
@@ -148,8 +148,8 @@ abstract class AbstractJms3Test {
                             messagingDestinationName(
                                 producerDestinationName, actualDestinationName),
                             oldOperation("publish"),
-                            operationName("publish"),
-                            operationType("publish"),
+                            operationName("send"),
+                            operationType("send"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
@@ -234,8 +234,8 @@ abstract class AbstractJms3Test {
                     span.hasName(
                             emitStableMessagingSemconv()
                                 ? producerDestinationName.equals("(temporary)")
-                                    ? "publish"
-                                    : "publish " + producerDestinationName
+                                    ? "send"
+                                    : "send " + producerDestinationName
                                 : producerDestinationName + " publish")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
@@ -244,8 +244,8 @@ abstract class AbstractJms3Test {
                             messagingDestinationName(
                                 producerDestinationName, actualDestinationName),
                             oldOperation("publish"),
-                            operationName("publish"),
-                            operationType("publish"),
+                            operationName("send"),
+                            operationType("send"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary),
                             equalTo(
@@ -301,8 +301,7 @@ abstract class AbstractJms3Test {
   }
 
   static AttributeAssertion operationType(String operation) {
-    String operationType = operation.equals("publish") ? "send" : operation;
-    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operationType : null);
+    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
   }
 
   private static Stream<Arguments> emptyReceiveArguments() {

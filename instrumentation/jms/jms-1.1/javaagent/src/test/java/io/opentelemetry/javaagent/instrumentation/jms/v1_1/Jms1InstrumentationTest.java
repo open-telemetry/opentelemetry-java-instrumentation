@@ -63,8 +63,8 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                   span.hasName(
                           emitStableMessagingSemconv()
                               ? destinationName.equals("(temporary)")
-                                  ? "publish"
-                                  : "publish " + destinationName
+                                  ? "send"
+                                  : "send " + destinationName
                               : destinationName + " publish")
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
@@ -72,8 +72,8 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                           equalTo(MESSAGING_SYSTEM, "jms"),
                           messagingDestinationName(destinationName, isTemporary),
                           oldOperation("publish"),
-                          operationName("publish"),
-                          operationType("publish"),
+                          operationName("send"),
+                          operationType("send"),
                           equalTo(MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(isTemporary)));
 

@@ -39,7 +39,7 @@ public abstract class AbstractJmsTest {
         producerAttributeAssertions(destinationName, testHeaders);
     span.hasName(
             emitStableMessagingSemconv()
-                ? destinationName.equals("(temporary)") ? "publish" : "publish " + destinationName
+                ? destinationName.equals("(temporary)") ? "send" : "send " + destinationName
                 : destinationName + " publish")
         .hasKind(PRODUCER)
         .hasNoParent()
@@ -54,8 +54,8 @@ public abstract class AbstractJmsTest {
                 equalTo(MESSAGING_SYSTEM, "jms"),
                 messagingDestinationName(destinationName),
                 oldOperation("publish"),
-                operationName("publish"),
-                operationType("publish"),
+                operationName("send"),
+                operationType("send"),
                 satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))));
     if (destinationName.equals("(temporary)")) {
       attributeAssertions.add(equalTo(MESSAGING_DESTINATION_TEMPORARY, true));
@@ -141,7 +141,6 @@ public abstract class AbstractJmsTest {
   }
 
   private static AttributeAssertion operationType(String operation) {
-    String operationType = operation.equals("publish") ? "send" : operation;
-    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operationType : null);
+    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
   }
 }

@@ -156,8 +156,8 @@ class Jms2InstrumentationTest {
                   span.hasName(
                           emitStableMessagingSemconv()
                               ? destinationName.equals("(temporary)")
-                                  ? "publish"
-                                  : "publish " + destinationName
+                                  ? "send"
+                                  : "send " + destinationName
                               : destinationName + " publish")
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
@@ -165,8 +165,8 @@ class Jms2InstrumentationTest {
                           equalTo(MESSAGING_SYSTEM, "jms"),
                           messagingDestinationName(destinationName, isTemporary),
                           oldOperation("publish"),
-                          operationName("publish"),
-                          operationType("publish"),
+                          operationName("send"),
+                          operationType("send"),
                           equalTo(MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(isTemporary)));
 
@@ -233,8 +233,8 @@ class Jms2InstrumentationTest {
                     span.hasName(
                             emitStableMessagingSemconv()
                                 ? destinationName.equals("(temporary)")
-                                    ? "publish"
-                                    : "publish " + destinationName
+                                    ? "send"
+                                    : "send " + destinationName
                                 : destinationName + " publish")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
@@ -242,8 +242,8 @@ class Jms2InstrumentationTest {
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             messagingDestinationName(destinationName, isTemporary),
                             oldOperation("publish"),
-                            operationName("publish"),
-                            operationType("publish"),
+                            operationName("send"),
+                            operationType("send"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
@@ -308,8 +308,7 @@ class Jms2InstrumentationTest {
   }
 
   private static AttributeAssertion operationType(String operation) {
-    String operationType = operation.equals("publish") ? "send" : operation;
-    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operationType : null);
+    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
   }
 
   private static Stream<Arguments> emptyReceiveArguments() {

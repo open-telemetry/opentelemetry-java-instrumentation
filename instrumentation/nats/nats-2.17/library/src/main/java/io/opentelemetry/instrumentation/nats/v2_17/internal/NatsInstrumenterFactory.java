@@ -24,6 +24,10 @@ import java.util.List;
 public final class NatsInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.nats-2.17";
 
+  // messaging.operation.name values, named after the NATS API operations
+  private static final String PUBLISH_OPERATION_NAME = "publish";
+  private static final String PROCESS_OPERATION_NAME = "process";
+
   public static Instrumenter<NatsRequest, NatsRequest> createProducerInstrumenter(
       OpenTelemetry openTelemetry, List<String> capturedHeaders) {
     InstrumenterBuilder<NatsRequest, NatsRequest> builder =
@@ -31,10 +35,14 @@ public final class NatsInstrumenterFactory {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
-                    new NatsRequestMessagingAttributesGetter(), MessagingOperationType.SEND))
+                    new NatsRequestMessagingAttributesGetter(),
+                    MessagingOperationType.SEND,
+                    PUBLISH_OPERATION_NAME))
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builder(
-                        new NatsRequestMessagingAttributesGetter(), MessagingOperationType.SEND)
+                        new NatsRequestMessagingAttributesGetter(),
+                        MessagingOperationType.SEND,
+                        PUBLISH_OPERATION_NAME)
                     .setCapturedHeaders(capturedHeaders)
                     .build());
     setMessagingSendExceptionEventExtractor(builder);
@@ -48,10 +56,14 @@ public final class NatsInstrumenterFactory {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
-                    new NatsRequestMessagingAttributesGetter(), MessagingOperationType.PROCESS))
+                    new NatsRequestMessagingAttributesGetter(),
+                    MessagingOperationType.PROCESS,
+                    PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builder(
-                        new NatsRequestMessagingAttributesGetter(), MessagingOperationType.PROCESS)
+                        new NatsRequestMessagingAttributesGetter(),
+                        MessagingOperationType.PROCESS,
+                        PROCESS_OPERATION_NAME)
                     .setCapturedHeaders(capturedHeaders)
                     .build());
     setMessagingProcessExceptionEventExtractor(builder);

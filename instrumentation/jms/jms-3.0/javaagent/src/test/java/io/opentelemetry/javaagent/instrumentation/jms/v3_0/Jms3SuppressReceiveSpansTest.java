@@ -66,8 +66,8 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
                 span ->
                     span.hasName(
                             producerDestinationName.equals("(temporary)")
-                                ? "publish"
-                                : "publish " + producerDestinationName)
+                                ? "send"
+                                : "send " + producerDestinationName)
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -75,8 +75,8 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
                             messagingDestinationName(
                                 producerDestinationName, actualDestinationName),
                             oldOperation("publish"),
-                            operationName("publish"),
-                            operationType("publish"),
+                            operationName("send"),
+                            operationType("send"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)));
             publishSpan.set(trace.getSpan(1));
@@ -116,8 +116,8 @@ class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
                             messagingDestinationName(
                                 producerDestinationName, actualDestinationName),
                             oldOperation("publish"),
-                            operationName("publish"),
-                            operationType("publish"),
+                            operationName("send"),
+                            operationType("send"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->

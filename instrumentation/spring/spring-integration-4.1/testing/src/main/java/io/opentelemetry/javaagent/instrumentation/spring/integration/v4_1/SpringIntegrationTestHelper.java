@@ -18,25 +18,23 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 
 final class SpringIntegrationTestHelper {
 
-  static AttributeAssertion[] messagingAttributes(String operation, String destinationName) {
-    return messagingAttributes(operation, destinationName, new AttributeAssertion[0]);
+  static AttributeAssertion[] messagingAttributes(String operationName, String destinationName) {
+    return messagingAttributes(operationName, destinationName, new AttributeAssertion[0]);
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   static AttributeAssertion[] messagingAttributes(
-      String operation, String destinationName, AttributeAssertion... additionalAssertions) {
+      String operationName, String destinationName, AttributeAssertion... additionalAssertions) {
+    // the old semantic conventions used "publish" where the stable ones use "send"
+    String oldOperation = operationName.equals("send") ? "publish" : operationName;
     AttributeAssertion[] standard =
         new AttributeAssertion[] {
           equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "spring_integration" : null),
           equalTo(
               MESSAGING_DESTINATION_NAME, emitStableMessagingSemconv() ? destinationName : null),
-          equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null),
-          equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null),
-          equalTo(
-              MESSAGING_OPERATION_TYPE,
-              emitStableMessagingSemconv()
-                  ? operation.equals("publish") ? "send" : operation
-                  : null)
+          equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? oldOperation : null),
+          equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operationName : null),
+          equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operationName : null)
         };
     AttributeAssertion[] result =
         new AttributeAssertion[standard.length + additionalAssertions.length];

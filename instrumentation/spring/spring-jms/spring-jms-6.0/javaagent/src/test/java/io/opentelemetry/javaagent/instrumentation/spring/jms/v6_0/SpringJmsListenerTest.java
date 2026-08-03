@@ -52,7 +52,7 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
               span ->
                   span.hasName(
                           emitStableMessagingSemconv()
-                              ? "publish spring-jms-listener"
+                              ? "send spring-jms-listener"
                               : "spring-jms-listener publish")
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
@@ -60,8 +60,8 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                           equalTo(MESSAGING_SYSTEM, "jms"),
                           equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
                           oldOperation("publish"),
-                          operationName("publish"),
-                          operationType("publish"),
+                          operationName("send"),
+                          operationType("send"),
                           satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank)));
 
           producerSpan.set(trace.getSpan(1));
@@ -141,7 +141,7 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                 span ->
                     span.hasName(
                             emitStableMessagingSemconv()
-                                ? "publish spring-jms-listener"
+                                ? "send spring-jms-listener"
                                 : "spring-jms-listener publish")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
@@ -149,8 +149,8 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                             equalTo(MESSAGING_SYSTEM, "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
                             oldOperation("publish"),
-                            operationName("publish"),
-                            operationType("publish"),
+                            operationName("send"),
+                            operationType("send"),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                             equalTo(
                                 stringArrayKey("messaging.header.Test_Message_Header"),
@@ -212,7 +212,6 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
   }
 
   private static AttributeAssertion operationType(String operation) {
-    String operationType = operation.equals("publish") ? "send" : operation;
-    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operationType : null);
+    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
   }
 }

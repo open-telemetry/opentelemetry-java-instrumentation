@@ -42,12 +42,12 @@ abstract class AbstractSpringCloudStreamProducerTest {
                 span ->
                     span.hasName(
                             emitStableMessagingSemconv()
-                                ? "publish testProducer.output"
+                                ? "send testProducer.output"
                                 : "testProducer.output publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            messagingAttributes("publish", "testProducer.output")),
+                            messagingAttributes("send", "testProducer.output")),
                 span ->
                     span.hasName(
                             emitStableMessagingSemconv()

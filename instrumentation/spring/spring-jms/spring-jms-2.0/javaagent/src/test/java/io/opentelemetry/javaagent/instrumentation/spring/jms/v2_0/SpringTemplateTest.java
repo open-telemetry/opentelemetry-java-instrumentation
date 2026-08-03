@@ -180,13 +180,11 @@ class SpringTemplateTest extends AbstractJmsTest {
     AtomicReference<SpanData> tmpProducerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName(
-            emitStableMessagingSemconv()
-                ? "publish SpringTemplateJms2"
-                : "SpringTemplateJms2 publish",
+            emitStableMessagingSemconv() ? "send SpringTemplateJms2" : "SpringTemplateJms2 publish",
             emitStableMessagingSemconv()
                 ? "receive SpringTemplateJms2"
                 : "SpringTemplateJms2 receive",
-            emitStableMessagingSemconv() ? "publish" : "(temporary) publish",
+            emitStableMessagingSemconv() ? "send" : "(temporary) publish",
             emitStableMessagingSemconv() ? "receive" : "(temporary) receive"),
         trace -> {
           trace.hasSpansSatisfyingExactly(

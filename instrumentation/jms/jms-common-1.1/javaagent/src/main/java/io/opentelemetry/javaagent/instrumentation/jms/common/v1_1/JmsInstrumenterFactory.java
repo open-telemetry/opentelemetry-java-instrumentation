@@ -28,6 +28,11 @@ import java.util.List;
 
 public class JmsInstrumenterFactory {
 
+  // messaging.operation.name values, named after the JMS API operations
+  private static final String SEND_OPERATION_NAME = "send";
+  private static final String RECEIVE_OPERATION_NAME = "receive";
+  private static final String PROCESS_OPERATION_NAME = "process";
+
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
   private List<String> capturedHeaders = emptyList();
@@ -59,8 +64,9 @@ public class JmsInstrumenterFactory {
         Instrumenter.<MessageWithDestination, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operationType))
-            .addAttributesExtractor(createMessagingAttributesExtractor(operationType));
+                MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME))
+            .addAttributesExtractor(
+                createMessagingAttributesExtractor(operationType, SEND_OPERATION_NAME));
     setMessagingSendExceptionEventExtractor(builder);
     return builder.buildProducerInstrumenter(new MessagePropertySetter());
   }
@@ -73,8 +79,9 @@ public class JmsInstrumenterFactory {
         Instrumenter.<MessageWithDestination, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operationType))
-            .addAttributesExtractor(createMessagingAttributesExtractor(operationType));
+                MessagingSpanNameExtractor.create(getter, operationType, RECEIVE_OPERATION_NAME))
+            .addAttributesExtractor(
+                createMessagingAttributesExtractor(operationType, RECEIVE_OPERATION_NAME));
     setMessagingReceiveExceptionEventExtractor(builder);
     // with the stable messaging semantic conventions the producer is always linked, since it is
     // never used as the parent of the receive span
@@ -96,8 +103,9 @@ public class JmsInstrumenterFactory {
         Instrumenter.<MessageWithDestination, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operationType))
-            .addAttributesExtractor(createMessagingAttributesExtractor(operationType));
+                MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
+            .addAttributesExtractor(
+                createMessagingAttributesExtractor(operationType, PROCESS_OPERATION_NAME));
     setMessagingProcessExceptionEventExtractor(builder);
     return MessagingProcessInstrumenterFactory.create(
         builder,
@@ -107,8 +115,9 @@ public class JmsInstrumenterFactory {
   }
 
   private AttributesExtractor<MessageWithDestination, Void> createMessagingAttributesExtractor(
-      MessagingOperationType operationType) {
-    return MessagingAttributesExtractor.builder(new JmsMessageAttributesGetter(), operationType)
+      MessagingOperationType operationType, String operationName) {
+    return MessagingAttributesExtractor.builder(
+            new JmsMessageAttributesGetter(), operationType, operationName)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }
