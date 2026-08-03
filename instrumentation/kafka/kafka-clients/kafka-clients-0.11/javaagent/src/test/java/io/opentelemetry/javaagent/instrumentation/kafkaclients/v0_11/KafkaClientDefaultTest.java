@@ -118,16 +118,12 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     }
 
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(
-            SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
+        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "send " + SHARED_TOPIC
-                              : SHARED_TOPIC + " publish")
+                  span.hasName(SHARED_TOPIC + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(sendAttributes("10", greeting, testHeaders)),
@@ -140,18 +136,12 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "poll " + SHARED_TOPIC
-                                : SHARED_TOPIC + " receive")
-                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                    span.hasName(SHARED_TOPIC + " receive")
+                        .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders)),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process " + SHARED_TOPIC
-                                : SHARED_TOPIC + " process")
+                    span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasParent(trace.getSpan(0))
@@ -277,15 +267,11 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     }
 
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(
-            SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
+        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span ->
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "send " + SHARED_TOPIC
-                              : SHARED_TOPIC + " publish")
+                  span.hasName(SHARED_TOPIC + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasNoParent()
                       .hasAttributesSatisfyingExactly(sendAttributes(null, null, false)));
@@ -294,18 +280,12 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "poll " + SHARED_TOPIC
-                                : SHARED_TOPIC + " receive")
-                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                    span.hasName(SHARED_TOPIC + " receive")
+                        .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(receiveAttributes(false)),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process " + SHARED_TOPIC
-                                : SHARED_TOPIC + " process")
+                    span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasParent(trace.getSpan(0))
@@ -374,15 +354,11 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     }
 
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(
-            SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
+        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span ->
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "send " + SHARED_TOPIC
-                              : SHARED_TOPIC + " publish")
+                  span.hasName(SHARED_TOPIC + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasNoParent()
                       .hasAttributesSatisfyingExactly(sendAttributes(null, greeting, false)));
@@ -391,18 +367,12 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "poll " + SHARED_TOPIC
-                                : SHARED_TOPIC + " receive")
-                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                    span.hasName(SHARED_TOPIC + " receive")
+                        .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(receiveAttributes(false)),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process " + SHARED_TOPIC
-                                : SHARED_TOPIC + " process")
+                    span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasParent(trace.getSpan(0))
@@ -482,16 +452,12 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     }
 
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(
-            SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
+        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "send " + SHARED_TOPIC
-                              : SHARED_TOPIC + " publish")
+                  span.hasName(SHARED_TOPIC + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(sendAttributes("10", greeting, false)),
@@ -504,18 +470,12 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "poll " + SHARED_TOPIC
-                                : SHARED_TOPIC + " receive")
-                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                    span.hasName(SHARED_TOPIC + " receive")
+                        .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(receiveAttributes(false)),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process " + SHARED_TOPIC
-                                : SHARED_TOPIC + " process")
+                    span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasParent(trace.getSpan(0))

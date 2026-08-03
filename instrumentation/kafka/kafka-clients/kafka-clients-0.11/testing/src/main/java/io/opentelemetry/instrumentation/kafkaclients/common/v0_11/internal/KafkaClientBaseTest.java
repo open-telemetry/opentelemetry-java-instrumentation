@@ -273,7 +273,7 @@ public abstract class KafkaClientBaseTest {
     }
     if (messageValue == null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true));
-    } else {
+    } else if (emitOldMessagingSemconv()) {
       assertions.add(equalTo(MESSAGING_MESSAGE_BODY_SIZE, messageValue.getBytes(UTF_8).length));
     }
     if (testHeaders) {

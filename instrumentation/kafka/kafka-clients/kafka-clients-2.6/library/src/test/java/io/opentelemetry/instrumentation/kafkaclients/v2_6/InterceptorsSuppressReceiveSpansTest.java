@@ -105,7 +105,9 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                 equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
                 equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
                 equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
-                equalTo(MESSAGING_MESSAGE_BODY_SIZE, greeting.getBytes(UTF_8).length),
+                equalTo(
+                    MESSAGING_MESSAGE_BODY_SIZE,
+                    emitOldMessagingSemconv() ? (long) greeting.getBytes(UTF_8).length : null),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, emitOldMessagingSemconv() ? "test" : null),
                 equalTo(

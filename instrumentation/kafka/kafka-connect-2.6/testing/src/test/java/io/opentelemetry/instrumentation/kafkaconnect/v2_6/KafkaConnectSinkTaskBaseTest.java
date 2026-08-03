@@ -155,16 +155,6 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
     return kafka.getHost() + ":" + kafkaExposedPort;
   }
 
-  protected static String messagingSpanName(
-      String destinationName, String oldOperationName, String stableOperationName) {
-    if (emitStableMessagingSemconv()) {
-      return destinationName == null
-          ? stableOperationName
-          : stableOperationName + " " + destinationName;
-    }
-    return (destinationName == null ? "unknown" : destinationName) + " " + oldOperationName;
-  }
-
   @SafeVarargs
   @SuppressWarnings("varargs")
   protected final void waitAndAssertTracesIgnoringStableReceive(
