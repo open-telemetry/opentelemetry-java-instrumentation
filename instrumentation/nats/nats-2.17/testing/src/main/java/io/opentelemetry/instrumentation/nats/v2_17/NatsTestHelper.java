@@ -72,7 +72,7 @@ class NatsTestHelper {
         assertions.add(equalTo(MESSAGING_DESTINATION_TEMPORARY, true));
       }
     }
-    assertions.add(equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1));
+    assertions.add(equalTo(MESSAGING_MESSAGE_BODY_SIZE, emitOldMessagingSemconv() ? 1L : null));
     assertions.add(
         equalTo(
             MESSAGING_CLIENT_ID_OLD, emitOldMessagingSemconv() ? String.valueOf(clientId) : null));

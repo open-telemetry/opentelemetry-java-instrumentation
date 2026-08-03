@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jms.common.v1_1;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -75,7 +76,9 @@ public class JmsInstrumenterFactory {
                 MessagingSpanNameExtractor.create(getter, operationType))
             .addAttributesExtractor(createMessagingAttributesExtractor(operationType));
     setMessagingReceiveExceptionEventExtractor(builder);
-    if (messagingReceiveInstrumentationEnabled) {
+    // with the stable messaging semantic conventions the producer is always linked, since it is
+    // never used as the parent of the receive span
+    if (messagingReceiveInstrumentationEnabled || emitStableMessagingSemconv()) {
       builder.addSpanLinksExtractor(
           new PropagatorBasedSpanLinksExtractor<>(
               openTelemetry.getPropagators().getTextMapPropagator(),

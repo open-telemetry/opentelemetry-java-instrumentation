@@ -14,6 +14,9 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.sdk.trace.data.LinkData;
+import io.opentelemetry.sdk.trace.data.SpanData;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
@@ -51,17 +54,57 @@ class Jms1SuppressReceiveSpansTest extends AbstractJms1Test {
 
     String messageId = receivedMessage.getJMSMessageID();
 
+    if (emitStableMessagingSemconv()) {
+      AtomicReference<SpanData> publishSpan = new AtomicReference<>();
+      testing.waitAndAssertTraces(
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("producer parent").hasNoParent(),
+                span ->
+                    span.hasName(
+                            destinationName.equals("(temporary)")
+                                ? "publish"
+                                : "publish " + destinationName)
+                        .hasKind(PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName(destinationName, isTemporary),
+                            oldOperation("publish"),
+                            operationName("publish"),
+                            operationType("publish"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
+                            messagingTempDestination(isTemporary)));
+            publishSpan.set(trace.getSpan(1));
+          },
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("consumer parent").hasNoParent(),
+                  span ->
+                      span.hasName(
+                              destinationName.equals("(temporary)")
+                                  ? "receive"
+                                  : "receive " + destinationName)
+                          .hasKind(CLIENT)
+                          .hasParent(trace.getSpan(0))
+                          .hasLinks(LinkData.create(publishSpan.get().getSpanContext()))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(MESSAGING_SYSTEM, "jms"),
+                              messagingDestinationName(destinationName, isTemporary),
+                              oldOperation("receive"),
+                              operationName("receive"),
+                              operationType("receive"),
+                              equalTo(MESSAGING_MESSAGE_ID, messageId),
+                              messagingTempDestination(isTemporary))));
+      return;
+    }
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("producer parent").hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? destinationName.equals("(temporary)")
-                                    ? "publish"
-                                    : "publish " + destinationName
-                                : destinationName + " publish")
+                    span.hasName(destinationName + " publish")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -73,13 +116,8 @@ class Jms1SuppressReceiveSpansTest extends AbstractJms1Test {
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? destinationName.equals("(temporary)")
-                                    ? "receive"
-                                    : "receive " + destinationName
-                                : destinationName + " receive")
-                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                    span.hasName(destinationName + " receive")
+                        .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasTotalRecordedLinks(0)
                         .hasAttributesSatisfyingExactly(

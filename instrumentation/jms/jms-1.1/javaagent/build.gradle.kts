@@ -70,6 +70,20 @@ tasks {
     include("**/Jms1SuppressReceiveSpansTest.*")
   }
 
+  val testMessagingPreviewReceiveSpansDisabled =
+    register<Test>("testMessagingPreviewReceiveSpansDisabled") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
+      filter {
+        includeTestsMatching("Jms1SuppressReceiveSpansTest")
+      }
+      include("**/Jms1SuppressReceiveSpansTest.*")
+      jvmArgs("-Dotel.semconv-stability.preview=messaging")
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+    }
+
   val testMessagingPreview = register<Test>("testMessagingPreview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -120,6 +134,7 @@ tasks {
       testing.suites,
       testReceiveSpansDisabled,
       testMessagingPreview,
+      testMessagingPreviewReceiveSpansDisabled,
       testJms2MessagingPreview,
       testBothSemconv,
     )
