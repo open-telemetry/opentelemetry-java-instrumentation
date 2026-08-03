@@ -123,10 +123,12 @@ public class RabbitSingletons {
       return emptyMap();
     }
     Map<String, Instrumenter<ChannelAndMethod, Void>> instrumenters = new HashMap<>();
-    instrumenters.put("Channel.basicAck", createChannelSettleInstrumenter(ACK_OPERATION_NAME));
-    instrumenters.put("Channel.basicNack", createChannelSettleInstrumenter(NACK_OPERATION_NAME));
     instrumenters.put(
-        "Channel.basicReject", createChannelSettleInstrumenter(REJECT_OPERATION_NAME));
+        ChannelAndMethod.ACK_METHOD, createChannelSettleInstrumenter(ACK_OPERATION_NAME));
+    instrumenters.put(
+        ChannelAndMethod.NACK_METHOD, createChannelSettleInstrumenter(NACK_OPERATION_NAME));
+    instrumenters.put(
+        ChannelAndMethod.REJECT_METHOD, createChannelSettleInstrumenter(REJECT_OPERATION_NAME));
     return instrumenters;
   }
 
@@ -138,6 +140,7 @@ public class RabbitSingletons {
             true)
         .addAttributesExtractor(
             buildMessagingAttributesExtractor(getter, MessagingOperationType.SETTLE, operationName))
+        .addAttributesExtractor(new RabbitChannelSettleAttributesExtractor())
         .buildInstrumenter(MessagingSpanKindExtractor.create(MessagingOperationType.SETTLE));
   }
 

@@ -586,11 +586,12 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> verifySettleSpan(span, trace.getSpan(0), operation)));
+                span -> verifySettleSpan(span, trace.getSpan(0), operation, deliveryTag)));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  private static void verifySettleSpan(SpanDataAssert span, SpanData parentSpan, String operation) {
+  private static void verifySettleSpan(
+      SpanDataAssert span, SpanData parentSpan, String operation, long deliveryTag) {
     boolean stable = emitStableMessagingSemconv();
     span.hasName(stable ? operation : "basic." + operation)
         .hasKind(SpanKind.CLIENT)
@@ -601,6 +602,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
             equalTo(MESSAGING_OPERATION_NAME, stable ? operation : null),
             equalTo(MESSAGING_OPERATION_TYPE, stable ? "settle" : null),
             equalTo(MESSAGING_OPERATION, stable && emitOldMessagingSemconv() ? "settle" : null),
+            equalTo(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, stable ? deliveryTag : null),
             equalTo(SERVER_ADDRESS, stable ? rabbitMqIp : null),
             satisfies(stringKey("rabbitmq.command"), val -> val.isIn(null, "basic." + operation)));
   }
