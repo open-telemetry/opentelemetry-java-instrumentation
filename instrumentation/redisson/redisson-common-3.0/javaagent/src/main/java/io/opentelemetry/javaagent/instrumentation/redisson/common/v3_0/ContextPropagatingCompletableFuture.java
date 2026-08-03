@@ -50,7 +50,7 @@ public final class ContextPropagatingCompletableFuture<T> extends CompletableFut
   @Override
   public boolean completeExceptionally(Throwable error) {
     if (error instanceof CancellationException) {
-      // Redisson 4.x cancels connection acquisition by completing the future exceptionally.
+      // Redisson 3.26+ cancels connection acquisition by completing the future exceptionally.
       if (!delegate.completeExceptionally(error)) {
         return false;
       }
