@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
-import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
@@ -23,6 +22,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -117,7 +117,15 @@ class SpringRabbitMqTest {
             asList(
                 equalTo(MESSAGING_SYSTEM, "rabbitmq"),
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
-                satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
+                satisfies(
+                    MESSAGING_MESSAGE_BODY_SIZE,
+                    val -> {
+                      if (emitOldMessagingSemconv()) {
+                        val.isNotNegative();
+                      } else {
+                        val.isNull();
+                      }
+                    }),
                 equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null),
                 equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null),
                 equalTo(
@@ -147,7 +155,7 @@ class SpringRabbitMqTest {
     }
     assertions.add(
         satisfies(
-            longKey("messaging.rabbitmq.message.delivery_tag"),
+            MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG,
             val -> {
               if (emitStableMessagingSemconv() && "process".equals(operation)) {
                 val.isNotNegative();

@@ -27,6 +27,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -60,7 +61,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.assertj.core.api.AbstractAssert;
-import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -731,7 +731,15 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                           v -> assertThat(v).isEqualTo("some-routing-key"),
                           v -> assertThat(v).isEqualTo("some-routing-queue"),
                           v -> assertThat(v).startsWith("amq.gen-"))),
-              satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
+              satisfies(
+                  MESSAGING_MESSAGE_BODY_SIZE,
+                  val -> {
+                    if (emitOldMessagingSemconv()) {
+                      val.isNotNegative();
+                    } else {
+                      val.isNull();
+                    }
+                  }),
               satisfies(longKey("rabbitmq.delivery_mode"), val -> val.isIn(null, 2L)));
           break;
         case "basic.get":
@@ -754,7 +762,15 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         case "basic.deliver":
           span.hasAttributesSatisfying(
               equalTo(stringKey("rabbitmq.command"), "basic.deliver"),
-              satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative));
+              satisfies(
+                  MESSAGING_MESSAGE_BODY_SIZE,
+                  val -> {
+                    if (emitOldMessagingSemconv()) {
+                      val.isNotNegative();
+                    } else {
+                      val.isNull();
+                    }
+                  }));
           break;
         default:
           span.hasAttributesSatisfying(
@@ -794,7 +810,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
             MESSAGING_OPERATION_TYPE,
             emitStableMessagingSemconv() ? "publish".equals(operation) ? "send" : operation : null),
         satisfies(
-            longKey("messaging.rabbitmq.message.delivery_tag"),
+            MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG,
             val -> {
               if (emitStableMessagingSemconv()
                   && ("process".equals(operation)
