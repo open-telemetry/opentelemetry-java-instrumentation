@@ -3,39 +3,44 @@ plugins {
 }
 
 otelJava {
-  // HBase 2.0.x test stack is not reliable on JDK 25+.
-  maxJavaVersionForTests.set(JavaVersion.VERSION_24)
+  // HBase 1.0.x does not support Java 9+.
+  maxJavaVersionForTests.set(JavaVersion.VERSION_1_8)
 }
 
 muzzle {
   pass {
     group.set("org.apache.hbase")
     module.set("hbase-client")
-    versions.set("[2.0.0, 2.5.0)")
+    versions.set("[1.0.0,1.4.0)")
     assertInverse.set(true)
   }
 }
 
 dependencies {
-  library("org.apache.hbase:hbase-client:2.0.0")
+  library("org.apache.hbase:hbase-client:1.0.0")
 
   implementation(project(":instrumentation:hbase:hbase-client-common-1.0:javaagent"))
 
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
+  compileOnly("org.apache.hbase:hbase-shaded-client:1.1.0")
 
   testImplementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
-  testInstrumentation(project(":instrumentation:hbase:hbase-client-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:hbase:hbase-client-1.4:javaagent"))
+  testInstrumentation(project(":instrumentation:hbase:hbase-client-2.0:javaagent"))
 
-  latestDepTestLibrary("org.apache.hbase:hbase-client:2.4.+") // native on-by-default instrumentation after this version
+  latestDepTestLibrary("org.apache.hbase:hbase-client:1.3.+") // see hbase-client-1.4 module
 }
+
+configurations
+  .matching { it.name == "testRuntimeClasspath" || it.name == "shadedClientTestRuntimeClasspath" }
+  .configureEach {
+    resolutionStrategy.force("com.google.guava:guava:12.0.1")
+  }
 
 testing {
   suites {
     register<JvmTestSuite>("shadedClientTest") {
       dependencies {
-        implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("2.0.0").orLatest("2.4.+")}")
+        implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("1.2.6").orLatest("1.3.+")}")
         implementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
       }
     }
@@ -56,8 +61,8 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
+  val stableSemconvSuites =
+    testing.suites.withType(JvmTestSuite::class).map { suite ->
       register<Test>("${suite.name}StableSemconv") {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4;
+package io.opentelemetry.javaagent.instrumentation.hbase.client.v1_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseInstrumenterFactory;
@@ -11,7 +11,7 @@ import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseReque
 
 public class HbaseSingletons {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.hbase-client-1.4";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.hbase-client-1.0";
   private static final Instrumenter<HbaseRequest, Void> instrumenter =
       HbaseInstrumenterFactory.create(INSTRUMENTATION_NAME);
 
