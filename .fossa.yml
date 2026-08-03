@@ -600,6 +600,9 @@ targets:
       target: ':instrumentation:jboss-logmanager:jboss-logmanager-mdc-1.1:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:jdbc:jdbc-common:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:jedis:jedis-1.4:javaagent'
     - type: gradle
       path: ./
