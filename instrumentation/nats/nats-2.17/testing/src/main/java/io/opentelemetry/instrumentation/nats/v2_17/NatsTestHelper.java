@@ -51,16 +51,18 @@ class NatsTestHelper {
   }
 
   static AttributeAssertion[] messagingAttributes(String operation, String subject, int clientId) {
+    boolean send = operation.equals("publish") || operation.equals("request");
     List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.add(equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null));
+    // the old conventions did not distinguish request from publish
+    assertions.add(
+        equalTo(
+            MESSAGING_OPERATION, emitOldMessagingSemconv() ? send ? "publish" : operation : null));
     assertions.add(
         equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null));
     assertions.add(
         equalTo(
             MESSAGING_OPERATION_TYPE,
-            emitStableMessagingSemconv()
-                ? operation.equals("publish") ? "send" : operation
-                : null));
+            emitStableMessagingSemconv() ? send ? "send" : operation : null));
     assertions.add(equalTo(MESSAGING_SYSTEM, "nats"));
     if (subject.equals("(temporary)") && emitStableMessagingSemconv()) {
       assertions.add(satisfies(MESSAGING_DESTINATION_NAME, val -> val.startsWith("_INBOX.")));

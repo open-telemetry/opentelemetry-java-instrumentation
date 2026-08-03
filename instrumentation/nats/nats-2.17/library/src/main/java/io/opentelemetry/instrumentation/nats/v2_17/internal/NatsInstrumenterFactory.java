@@ -26,10 +26,21 @@ public final class NatsInstrumenterFactory {
 
   // messaging.operation.name values, named after the NATS API operations
   private static final String PUBLISH_OPERATION_NAME = "publish";
+  private static final String REQUEST_OPERATION_NAME = "request";
   private static final String PROCESS_OPERATION_NAME = "process";
 
-  public static Instrumenter<NatsRequest, NatsRequest> createProducerInstrumenter(
+  public static Instrumenter<NatsRequest, NatsRequest> createPublishInstrumenter(
       OpenTelemetry openTelemetry, List<String> capturedHeaders) {
+    return createProducerInstrumenter(openTelemetry, capturedHeaders, PUBLISH_OPERATION_NAME);
+  }
+
+  public static Instrumenter<NatsRequest, NatsRequest> createRequestInstrumenter(
+      OpenTelemetry openTelemetry, List<String> capturedHeaders) {
+    return createProducerInstrumenter(openTelemetry, capturedHeaders, REQUEST_OPERATION_NAME);
+  }
+
+  private static Instrumenter<NatsRequest, NatsRequest> createProducerInstrumenter(
+      OpenTelemetry openTelemetry, List<String> capturedHeaders, String operationName) {
     InstrumenterBuilder<NatsRequest, NatsRequest> builder =
         Instrumenter.<NatsRequest, NatsRequest>builder(
                 openTelemetry,
@@ -37,12 +48,12 @@ public final class NatsInstrumenterFactory {
                 MessagingSpanNameExtractor.create(
                     new NatsRequestMessagingAttributesGetter(),
                     MessagingOperationType.SEND,
-                    PUBLISH_OPERATION_NAME))
+                    operationName))
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builder(
                         new NatsRequestMessagingAttributesGetter(),
                         MessagingOperationType.SEND,
-                        PUBLISH_OPERATION_NAME)
+                        operationName)
                     .setCapturedHeaders(capturedHeaders)
                     .build());
     setMessagingSendExceptionEventExtractor(builder);
