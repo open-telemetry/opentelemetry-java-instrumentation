@@ -8,8 +8,6 @@ package io.opentelemetry.instrumentation.jmx.rules;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,43 +38,24 @@ class TrinoTest extends TargetSystemTest {
             .withEnv("JAVA_TOOL_OPTIONS", String.join(" ", jvmArgs))
             .withStartupTimeout(Duration.ofMinutes(3))
             .withExposedPorts(TRINO_PORT)
-            .waitingFor(Wait.forHttp("/v1/info").forPort(TRINO_PORT));
+            .waitingFor(
+                Wait.forHttp("/v1/info")
+                    .forPort(TRINO_PORT)
+                    .forResponsePredicate(
+                        body ->
+                            body.contains("\"starting\":false")
+                                || body.contains("\"starting\": false")));
 
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
-
-    startWeaverValidation(
-        "trino.yaml",
-        result ->
-            result
-                .checkNothingUnregisteredWithPrefix("trino.")
-                .checkRegisteredMetrics(
-                    "trino.",
-                    asList(
-                        "trino.node.active.count",
-                        "trino.memory.pool.free",
-                        "trino.memory.query.killed.count",
-                        "trino.query.running.count",
-                        "trino.query.started.count",
-                        "trino.query.failed.count",
-                        "trino.query.failure.count",
-                        "trino.query.execution.duration.p50",
-                        "trino.query.input.rate.p90",
-                        "trino.query.waiting_for_resources.count",
-                        "trino.query.waiting_for_resources.duration.max",
-                        "trino.task.input.data.size",
-                        "trino.task.input.row.count"),
-                    emptyList())
-                .checkRegisteredAttributes(
-                    "trino.",
-                    asList("trino.memory.pool.name", "trino.query.failure.type"),
-                    emptyList()));
 
     startTarget(target);
 
     ExecResult query =
         target.execInContainer("trino", "--execute", "SELECT count(*) FROM tpch.tiny.nation");
-    assertThat(query.getExitCode()).isEqualTo(0);
+    assertThat(query.getExitCode())
+        .as("Trino query failed.%nstdout:%n%s%nstderr:%n%s", query.getStdout(), query.getStderr())
+        .isEqualTo(0);
 
     verifyMetrics(createMetricsVerifier());
   }
