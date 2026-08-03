@@ -232,7 +232,7 @@ public abstract class AbstractVertxKafkaTest {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
     }
     String messageValue = record.value();
-    if (messageValue != null) {
+    if (messageValue != null && emitOldMessagingSemconv()) {
       assertions.add(equalTo(MESSAGING_MESSAGE_BODY_SIZE, messageValue.getBytes(UTF_8).length));
     }
     return assertions;

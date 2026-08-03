@@ -120,8 +120,11 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                       new ArrayList<>(
                           messagingAttributes(
                               STREAM_PENDING, "process", "process", "process", "consumer", false));
-                  assertions.add(
-                      satisfies(MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class)));
+                  if (emitOldMessagingSemconv()) {
+                    assertions.add(
+                        satisfies(
+                            MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class)));
+                  }
                   assertions.add(
                       satisfies(
                           MESSAGING_DESTINATION_PARTITION_ID,
@@ -157,8 +160,11 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                       new ArrayList<>(
                           messagingAttributes(
                               STREAM_PROCESSED, "process", "process", "process", "consumer", true));
-                  assertions.add(
-                      satisfies(MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class)));
+                  if (emitOldMessagingSemconv()) {
+                    assertions.add(
+                        satisfies(
+                            MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class)));
+                  }
                   assertions.add(
                       satisfies(
                           MESSAGING_DESTINATION_PARTITION_ID,
@@ -223,19 +229,14 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
 
     testing.waitAndAssertSortedTraces(
         TelemetryDataUtil.orderByRootSpanName(
-            emitStableMessagingSemconv() ? "send " + STREAM_PENDING : STREAM_PENDING + " publish",
-            emitStableMessagingSemconv() ? "poll " + STREAM_PENDING : STREAM_PENDING + " receive",
-            emitStableMessagingSemconv()
-                ? "poll " + STREAM_PROCESSED
-                : STREAM_PROCESSED + " receive"),
+            STREAM_PENDING + " publish",
+            STREAM_PENDING + " receive",
+            STREAM_PROCESSED + " receive"),
         trace -> {
           trace.hasSpansSatisfyingExactly(
               // kafka-clients PRODUCER
               span ->
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "send " + STREAM_PENDING
-                              : STREAM_PENDING + " publish")
+                  span.hasName(STREAM_PENDING + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasNoParent()
                       .hasAttributesSatisfyingExactly(producerAttributes(STREAM_PENDING, true)));
@@ -253,11 +254,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 if (testLatestDeps()) {
                   addGroupAssertions(assertions, "test-application");
                 }
-                span.hasName(
-                        emitStableMessagingSemconv()
-                            ? "poll " + STREAM_PENDING
-                            : STREAM_PENDING + " receive")
-                    .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                span.hasName(STREAM_PENDING + " receive")
+                    .hasKind(SpanKind.CONSUMER)
                     .hasNoParent()
                     .hasAttributesSatisfyingExactly(assertions);
               },
@@ -286,10 +284,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 if (testLatestDeps()) {
                   addGroupAssertions(assertions, "test-application");
                 }
-                span.hasName(
-                        emitStableMessagingSemconv()
-                            ? "process " + STREAM_PENDING
-                            : STREAM_PENDING + " process")
+                span.hasName(STREAM_PENDING + " process")
                     .hasKind(SpanKind.CONSUMER)
                     .hasParent(trace.getSpan(0))
                     .hasLinks(LinkData.create(producerPendingRef.get().getSpanContext()))
@@ -297,10 +292,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
               },
               // kafka-clients PRODUCER
               span ->
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "send " + STREAM_PROCESSED
-                              : STREAM_PROCESSED + " publish")
+                  span.hasName(STREAM_PROCESSED + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(1))
                       .hasTraceId(receivedContext.getTraceId())
@@ -321,11 +313,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   if (testLatestDeps()) {
                     addGroupAssertions(assertions, "test");
                   }
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "poll " + STREAM_PROCESSED
-                              : STREAM_PROCESSED + " receive")
-                      .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                  span.hasName(STREAM_PROCESSED + " receive")
+                      .hasKind(SpanKind.CONSUMER)
                       .hasNoParent()
                       .hasAttributesSatisfyingExactly(assertions);
                 },
@@ -354,10 +343,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   if (testLatestDeps()) {
                     addGroupAssertions(assertions, "test");
                   }
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "process " + STREAM_PROCESSED
-                              : STREAM_PROCESSED + " process")
+                  span.hasName(STREAM_PROCESSED + " process")
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(trace.getSpan(0))
                       .hasLinks(LinkData.create(producerProcessedRef.get().getSpanContext()))

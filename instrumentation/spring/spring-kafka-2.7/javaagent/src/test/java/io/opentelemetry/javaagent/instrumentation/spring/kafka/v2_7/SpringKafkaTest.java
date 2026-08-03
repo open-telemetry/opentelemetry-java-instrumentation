@@ -596,7 +596,9 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
       String topic, String group, String messageKey) {
     List<AttributeAssertion> assertions =
         messagingAttributes(topic, "process", "process", "process", "consumer");
-    assertions.add(satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative));
+    if (emitOldMessagingSemconv()) {
+      assertions.add(satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative));
+    }
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     addOffsetAssertion(assertions);
     assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
