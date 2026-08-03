@@ -139,8 +139,9 @@ public class RedissonConnectionPoolMetrics {
         () -> {
           Integer availableConnectionPermits = availableConnections.get();
           if (availableConnectionPermits != null) {
-            connections.record(
-                Math.max(0, maxConnections - availableConnectionPermits), usedAttributes);
+            int usedConnections =
+                Math.min(maxConnections, Math.max(0, maxConnections - availableConnectionPermits));
+            connections.record(usedConnections, usedAttributes);
           }
           connections.record(idleConnections.size(), idleAttributes);
           minIdle.record(minIdleConnections, attributes);
