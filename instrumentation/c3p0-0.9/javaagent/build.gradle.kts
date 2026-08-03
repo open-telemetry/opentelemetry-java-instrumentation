@@ -15,6 +15,7 @@ dependencies {
   library("com.mchange:c3p0:0.9.2")
 
   implementation(project(":instrumentation:c3p0-0.9:library"))
+  implementation(project(":instrumentation:jdbc:jdbc-common:javaagent"))
   bootstrap(project(":instrumentation:jdbc:bootstrap"))
   compileOnly(
     project(
@@ -24,7 +25,6 @@ dependencies {
   )
 
   testImplementation(project(":instrumentation:c3p0-0.9:testing"))
-  testInstrumentation(project(":instrumentation:jdbc:javaagent"))
 }
 
 tasks {

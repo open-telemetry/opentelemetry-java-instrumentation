@@ -394,6 +394,7 @@ include(":instrumentation:jboss-logmanager:jboss-logmanager-appender-1.1:javaage
 include(":instrumentation:jboss-logmanager:jboss-logmanager-mdc-1.1:javaagent")
 include(":instrumentation:jdbc:bootstrap")
 include(":instrumentation:jdbc:javaagent")
+include(":instrumentation:jdbc:jdbc-common:javaagent")
 include(":instrumentation:jdbc:library")
 include(":instrumentation:jdbc:testing")
 include(":instrumentation:jedis:jedis-1.4:javaagent")
