@@ -21,6 +21,7 @@ import org.apache.kafka.clients.Metadata;
  */
 final class KafkaClusterId {
 
+  // copied from MessagingIncubatingAttributes
   static final AttributeKey<String> ATTRIBUTE_KEY =
       AttributeKey.stringKey("messaging.kafka.cluster.id");
 
