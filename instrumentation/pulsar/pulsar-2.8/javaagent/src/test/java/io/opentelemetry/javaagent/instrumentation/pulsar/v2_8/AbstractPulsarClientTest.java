@@ -171,8 +171,7 @@ abstract class AbstractPulsarClientTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(
-                          emitStableMessagingSemconv() ? "publish " + topic : topic + " publish")
+                  span.hasName(emitStableMessagingSemconv() ? "send " + topic : topic + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -297,8 +296,7 @@ abstract class AbstractPulsarClientTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(
-                          emitStableMessagingSemconv() ? "publish " + topic : topic + " publish")
+                  span.hasName(emitStableMessagingSemconv() ? "send " + topic : topic + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -415,8 +413,8 @@ abstract class AbstractPulsarClientTest {
                 equalTo(SERVER_PORT, brokerPort),
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
                 oldOperation("publish"),
-                operationName("publish"),
-                operationType("publish"),
+                operationName("send"),
+                operationType("send"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 bodySize(),
                 equalTo(stringKey("messaging.pulsar.message.type"), experimental("normal"))));
@@ -513,8 +511,7 @@ abstract class AbstractPulsarClientTest {
   }
 
   private static AttributeAssertion operationType(String operation) {
-    String operationType = operation.equals("publish") ? "send" : operation;
-    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operationType : null);
+    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
   }
 
   static void acknowledgeMessage(Consumer<String> consumer, Message<String> message) {

@@ -45,6 +45,11 @@ public class PulsarSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.pulsar-2.8";
 
+  // messaging.operation.name values, named after the Pulsar API operations
+  private static final String SEND_OPERATION_NAME = "send";
+  private static final String RECEIVE_OPERATION_NAME = "receive";
+  private static final String PROCESS_OPERATION_NAME = "process";
+
   private static final OpenTelemetry telemetry = GlobalOpenTelemetry.get();
   private static final TextMapPropagator propagator =
       telemetry.getPropagators().getTextMapPropagator();
@@ -79,9 +84,11 @@ public class PulsarSingletons {
         Instrumenter.<PulsarRequest, Void>builder(
                 telemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, MessagingOperationType.RECEIVE))
+                MessagingSpanNameExtractor.create(
+                    getter, MessagingOperationType.RECEIVE, RECEIVE_OPERATION_NAME))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(getter, MessagingOperationType.RECEIVE))
+                createMessagingAttributesExtractor(
+                    getter, MessagingOperationType.RECEIVE, RECEIVE_OPERATION_NAME))
             .addOperationMetrics(MessagingConsumerMetrics.getForOperationTypeWithOldMetrics())
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
@@ -105,9 +112,11 @@ public class PulsarSingletons {
         Instrumenter.<PulsarBatchRequest, Void>builder(
                 telemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, MessagingOperationType.RECEIVE))
+                MessagingSpanNameExtractor.create(
+                    getter, MessagingOperationType.RECEIVE, RECEIVE_OPERATION_NAME))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(getter, MessagingOperationType.RECEIVE))
+                createMessagingAttributesExtractor(
+                    getter, MessagingOperationType.RECEIVE, RECEIVE_OPERATION_NAME))
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
             .addSpanLinksExtractor(new PulsarBatchRequestSpanLinksExtractor(propagator))
@@ -124,9 +133,11 @@ public class PulsarSingletons {
         Instrumenter.<PulsarRequest, Void>builder(
                 telemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, MessagingOperationType.PROCESS))
+                MessagingSpanNameExtractor.create(
+                    getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(getter, MessagingOperationType.PROCESS))
+                createMessagingAttributesExtractor(
+                    getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
             .addOperationMetrics(MessagingProcessMetrics.get());
     if (!receiveInstrumentationEnabled && emitStableMessagingSemconv()) {
       instrumenterBuilder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
@@ -147,9 +158,11 @@ public class PulsarSingletons {
         Instrumenter.<PulsarRequest, Void>builder(
                 telemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, MessagingOperationType.SEND))
+                MessagingSpanNameExtractor.create(
+                    getter, MessagingOperationType.SEND, SEND_OPERATION_NAME))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(getter, MessagingOperationType.SEND))
+                createMessagingAttributesExtractor(
+                    getter, MessagingOperationType.SEND, SEND_OPERATION_NAME))
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
             .addOperationMetrics(MessagingProducerMetrics.getForOperationTypeWithOldMetrics());
@@ -164,8 +177,10 @@ public class PulsarSingletons {
   }
 
   private static <T> AttributesExtractor<T, Void> createMessagingAttributesExtractor(
-      MessagingAttributesGetter<T, Void> getter, MessagingOperationType operationType) {
-    return MessagingAttributesExtractor.builder(getter, operationType)
+      MessagingAttributesGetter<T, Void> getter,
+      MessagingOperationType operationType,
+      String operationName) {
+    return MessagingAttributesExtractor.builder(getter, operationType, operationName)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }

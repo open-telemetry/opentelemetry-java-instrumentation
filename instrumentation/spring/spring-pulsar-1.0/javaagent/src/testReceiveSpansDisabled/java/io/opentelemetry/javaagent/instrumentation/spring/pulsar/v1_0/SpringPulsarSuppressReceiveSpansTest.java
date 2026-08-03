@@ -24,7 +24,7 @@ class SpringPulsarSuppressReceiveSpansTest extends AbstractSpringPulsarTest {
                 span ->
                     span.hasName(
                             emitStableMessagingSemconv()
-                                ? "publish " + OTEL_TOPIC
+                                ? "send " + OTEL_TOPIC
                                 : OTEL_TOPIC + " publish")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))

@@ -135,7 +135,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(spanName("publish", topic))
+                    span.hasName(spanName("send", topic))
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -232,7 +232,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                   span ->
-                      span.hasName(spanName("publish", topic))
+                      span.hasName(spanName("send", topic))
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
@@ -253,7 +253,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(spanName("publish", topic))
+                  span.hasName(spanName("send", topic))
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -311,7 +311,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(spanName("publish", topic))
+                    span.hasName(spanName("send", topic))
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -356,7 +356,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(spanName("publish", topic + "-partition-0"))
+                    span.hasName(spanName("send", topic + "-partition-0"))
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -403,7 +403,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent1").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(spanName("publish", topic1))
+                    span.hasName(spanName("send", topic1))
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -418,7 +418,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(spanName("publish", topic2))
+                    span.hasName(spanName("send", topic2))
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -431,9 +431,11 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                             processAttributes(topic2, msgId2.toString(), false))));
   }
 
-  private static String spanName(String operation, String destination) {
+  private static String spanName(String operationName, String destination) {
+    // the old semantic conventions used "publish" where the stable ones use "send"
+    String oldOperation = operationName.equals("send") ? "publish" : operationName;
     return emitStableMessagingSemconv()
-        ? operation + " " + destination
-        : destination + " " + operation;
+        ? operationName + " " + destination
+        : destination + " " + oldOperation;
   }
 }

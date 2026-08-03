@@ -177,8 +177,8 @@ public abstract class AbstractSpringPulsarTest {
     return asList(
         equalTo(MESSAGING_SYSTEM, "pulsar"),
         oldOperation("publish"),
-        operationName("publish"),
-        operationType("publish"),
+        operationName("send"),
+        operationType("send"),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
         bodySize(),
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
@@ -240,8 +240,7 @@ public abstract class AbstractSpringPulsarTest {
   }
 
   private static AttributeAssertion operationType(String operation) {
-    String operationType = operation.equals("publish") ? "send" : operation;
-    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operationType : null);
+    return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
   }
 
   @SpringBootConfiguration

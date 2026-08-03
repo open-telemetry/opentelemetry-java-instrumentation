@@ -23,6 +23,7 @@ import org.apache.pulsar.client.api.Message;
 
 public class SpringPulsarSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-pulsar-1.0";
+  private static final String PROCESS_OPERATION_NAME = "process";
   private static final Instrumenter<Message<?>, Void> instrumenter;
   private static final Instrumenter<Message<?>, Void> instrumenterWithConsumedMessages;
 
@@ -51,9 +52,9 @@ public class SpringPulsarSingletons {
         Instrumenter.<Message<?>, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
-                MessagingAttributesExtractor.builder(getter, operationType)
+                MessagingAttributesExtractor.builder(getter, operationType, PROCESS_OPERATION_NAME)
                     .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build())
             .addOperationMetrics(MessagingProcessMetrics.get());
