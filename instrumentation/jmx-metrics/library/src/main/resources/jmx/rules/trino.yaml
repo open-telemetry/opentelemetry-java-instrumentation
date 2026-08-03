@@ -1,0 +1,120 @@
+---
+rules:
+  - bean: trino.failuredetector:name=HeartbeatFailureDetector
+    prefix: trino.node.
+    mapping:
+      # trino.node.active.count
+      ActiveCount:
+        metric: active.count
+        type: updowncounter
+        unit: "{node}"
+        desc: The number of active Trino nodes.
+
+  - bean: trino.memory:type=ClusterMemoryPool,name=*
+    prefix: trino.memory.pool.
+    metricAttribute:
+      trino.memory.pool.name: param(name)
+    mapping:
+      # trino.memory.pool.free
+      FreeDistributedBytes:
+        metric: free
+        type: updowncounter
+        unit: By
+        desc: The amount of distributed memory currently free in the memory pool.
+
+  - bean: trino.memory:name=ClusterMemoryManager
+    prefix: trino.memory.query.
+    mapping:
+      # trino.memory.query.killed.count
+      QueriesKilledDueToOutOfMemory:
+        metric: killed.count
+        type: counter
+        unit: "{query}"
+        desc: The number of queries killed due to running out of memory.
+
+  - bean: trino.execution:name=QueryManager
+    prefix: trino.query.
+    mapping:
+      # trino.query.running.count
+      RunningQueries:
+        metric: running.count
+        type: updowncounter
+        unit: "{query}"
+        desc: The number of queries currently running or queued.
+      # trino.query.started.count
+      StartedQueries.FiveMinute.Count:
+        metric: started.count
+        type: gauge
+        unit: "{query}"
+        desc: The number of queries started in the last five minutes.
+      # trino.query.failed.count
+      FailedQueries.FiveMinute.Count:
+        metric: failed.count
+        type: gauge
+        unit: "{query}"
+        desc: The number of failed queries in the last five minutes.
+      # trino.query.failure.count
+      InternalFailures.FiveMinute.Count:
+        metric: &failure_metric failure.count
+        type: &failure_type gauge
+        unit: &failure_unit "{query}"
+        desc: &failure_desc The number of failed queries in the last five minutes by failure type.
+        metricAttribute:
+          trino.query.failure.type: const(internal)
+      # trino.query.failure.count
+      ExternalFailures.FiveMinute.Count:
+        metric: *failure_metric
+        type: *failure_type
+        unit: *failure_unit
+        desc: *failure_desc
+        metricAttribute:
+          trino.query.failure.type: const(external)
+      # trino.query.failure.count
+      UserErrorFailures.FiveMinute.Count:
+        metric: *failure_metric
+        type: *failure_type
+        unit: *failure_unit
+        desc: *failure_desc
+        metricAttribute:
+          trino.query.failure.type: const(user_error)
+      # trino.query.execution.duration.p50
+      ExecutionTime.FiveMinutes.P50:
+        metric: execution.duration.p50
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: The 50th percentile query execution duration over the last five minutes.
+      # trino.query.input.rate.p90
+      WallInputBytesRate.FiveMinutes.P90:
+        metric: input.rate.p90
+        type: gauge
+        unit: By/s
+        desc: The 90th percentile wall-clock input data rate over the last five minutes.
+      # trino.query.waiting_for_resources.count
+      WaitingForResourcesQueries:
+        metric: waiting_for_resources.count
+        type: updowncounter
+        unit: "{query}"
+        desc: The number of queries currently waiting for resources.
+      # trino.query.waiting_for_resources.duration.max
+      WaitingForResourcesMaxAgeInSeconds:
+        metric: waiting_for_resources.duration.max
+        type: gauge
+        unit: s
+        desc: The longest time a query has been waiting for resources.
+
+  - bean: trino.execution:name=SqlTaskManager
+    prefix: trino.task.input.
+    mapping:
+      # trino.task.input.data.size
+      InputDataSize.FiveMinute.Count:
+        metric: data.size
+        type: gauge
+        unit: By
+        desc: The input data size processed by tasks in the last five minutes.
+      # trino.task.input.row.count
+      InputPositions.FiveMinute.Count:
+        metric: row.count
+        type: gauge
+        unit: "{row}"
+        desc: The number of input rows processed by tasks in the last five minutes.
