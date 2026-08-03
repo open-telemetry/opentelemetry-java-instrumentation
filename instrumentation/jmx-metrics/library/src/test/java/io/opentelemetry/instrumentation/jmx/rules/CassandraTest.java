@@ -16,8 +16,9 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -32,7 +33,7 @@ class CassandraTest extends TargetSystemTest {
   private static final int COMPACTION_ROWS_PER_BATCH = 2_500;
   private static final int COMPACTION_VALUE_BYTES = 2_048;
 
-  private static final Logger logger = Logger.getLogger(CassandraTest.class.getName());
+  private static final Logger logger = LoggerFactory.getLogger(CassandraTest.class);
 
   @Test
   void testCassandraMetrics() {
@@ -132,7 +133,7 @@ class CassandraTest extends TargetSystemTest {
                   if (!target.isRunning()) {
                     return;
                   }
-                  logger.warning("Background compaction failed: " + e.getMessage());
+                  logger.warn("Background compaction failed", e);
                   return;
                 }
               }

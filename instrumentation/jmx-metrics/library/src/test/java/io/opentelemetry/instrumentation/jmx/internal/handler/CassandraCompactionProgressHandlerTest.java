@@ -41,16 +41,16 @@ class CassandraCompactionProgressHandlerTest {
     when(connection.getAttribute(objectName, "Compactions"))
         .thenReturn(
             asList(
-                compactionEntry("COMPACTION", "ks1", "cf1", "100", "200"),
-                compactionEntry("COMPACTION", "ks1", "cf1", "50", "150"),
-                compactionEntry("COMPACTION", "ks2", "cf2", "10", "100")));
+                compactionEntry("Compaction", "ks1", "cf1", "100", "200"),
+                compactionEntry("Compaction", "ks1", "cf1", "50", "150"),
+                compactionEntry("Compaction", "ks2", "cf2", "10", "100")));
 
     Map<Attributes, long[]> groups =
         CassandraCompactionProgressHandler.queryCompactions(connection, objectName);
 
     assertThat(groups).hasSize(2);
-    assertThat(groups.get(attrs("COMPACTION", "ks1", "cf1"))).containsExactly(150L, 350L);
-    assertThat(groups.get(attrs("COMPACTION", "ks2", "cf2"))).containsExactly(10L, 100L);
+    assertThat(groups.get(attrs("compaction", "ks1", "cf1"))).containsExactly(150L, 350L);
+    assertThat(groups.get(attrs("compaction", "ks2", "cf2"))).containsExactly(10L, 100L);
   }
 
   @Test
@@ -58,16 +58,16 @@ class CassandraCompactionProgressHandlerTest {
     when(connection.getAttribute(objectName, "Compactions"))
         .thenReturn(
             asList(
-                compactionEntry("COMPACTION", "ks1", "cf1", "10", "100"),
+                compactionEntry("Compaction", "ks1", "cf1", "10", "100"),
                 compactionEntry(null, "ks1", "cf1", "5", "50"),
-                compactionEntry("COMPACTION", null, "cf1", "5", "50"),
-                compactionEntry("COMPACTION", "ks1", null, "5", "50")));
+                compactionEntry("Compaction", null, "cf1", "5", "50"),
+                compactionEntry("Compaction", "ks1", null, "5", "50")));
 
     Map<Attributes, long[]> groups =
         CassandraCompactionProgressHandler.queryCompactions(connection, objectName);
 
     assertThat(groups).hasSize(1);
-    assertThat(groups.get(attrs("COMPACTION", "ks1", "cf1"))).containsExactly(10L, 100L);
+    assertThat(groups.get(attrs("compaction", "ks1", "cf1"))).containsExactly(10L, 100L);
   }
 
   @Test
@@ -75,23 +75,23 @@ class CassandraCompactionProgressHandlerTest {
     when(connection.getAttribute(objectName, "Compactions"))
         .thenReturn(
             asList(
-                compactionEntry("COMPACTION", "ks1", "cf1", "10", "100", "bytes"),
-                compactionEntry("VALIDATION", "ks1", "cf1", "5", "50", "keys"),
-                compactionEntry("ANTICOMPACTION", "ks1", "cf1", "5", "50", "ranges"),
-                compactionEntry("COMPACTION", "ks2", "cf2", "5", "50", null)));
+                compactionEntry("Compaction", "ks1", "cf1", "10", "100", "bytes"),
+                compactionEntry("Validation", "ks1", "cf1", "5", "50", "keys"),
+                compactionEntry("Anti-Compaction", "ks1", "cf1", "5", "50", "ranges"),
+                compactionEntry("Compaction", "ks2", "cf2", "5", "50", null)));
 
     Map<Attributes, long[]> groups =
         CassandraCompactionProgressHandler.queryCompactions(connection, objectName);
 
     assertThat(groups).hasSize(1);
-    assertThat(groups.get(attrs("COMPACTION", "ks1", "cf1"))).containsExactly(10L, 100L);
+    assertThat(groups.get(attrs("compaction", "ks1", "cf1"))).containsExactly(10L, 100L);
   }
 
   @Test
   void skipsEntriesWithValuesExceedingLongRange() throws Exception {
     String big = "99999999999999999999";
     when(connection.getAttribute(objectName, "Compactions"))
-        .thenReturn(singletonList(compactionEntry("COMPACTION", "ks", "cf", big, big)));
+        .thenReturn(singletonList(compactionEntry("Compaction", "ks", "cf", big, big)));
 
     Map<Attributes, long[]> groups =
         CassandraCompactionProgressHandler.queryCompactions(connection, objectName);
@@ -104,14 +104,30 @@ class CassandraCompactionProgressHandlerTest {
     when(connection.getAttribute(objectName, "Compactions"))
         .thenReturn(
             asList(
-                compactionEntry("COMPACTION", "ks1", "cf1", "not-a-number", "100"),
-                compactionEntry("COMPACTION", "ks2", "cf2", "50", "100")));
+                compactionEntry("Compaction", "ks1", "cf1", "not-a-number", "100"),
+                compactionEntry("Compaction", "ks2", "cf2", "50", "100")));
 
     Map<Attributes, long[]> groups =
         CassandraCompactionProgressHandler.queryCompactions(connection, objectName);
 
     assertThat(groups).hasSize(1);
-    assertThat(groups.get(attrs("COMPACTION", "ks2", "cf2"))).containsExactly(50L, 100L);
+    assertThat(groups.get(attrs("compaction", "ks2", "cf2"))).containsExactly(50L, 100L);
+  }
+
+  @Test
+  void normalizesTaskType() throws Exception {
+    when(connection.getAttribute(objectName, "Compactions"))
+        .thenReturn(
+            asList(
+                compactionEntry("Upgrade sstables", "ks1", "cf1", "10", "100"),
+                compactionEntry("Secondary index build", "ks1", "cf2", "20", "200")));
+
+    Map<Attributes, long[]> groups =
+        CassandraCompactionProgressHandler.queryCompactions(connection, objectName);
+
+    assertThat(groups).hasSize(2);
+    assertThat(groups.get(attrs("upgrade_sstables", "ks1", "cf1"))).containsExactly(10L, 100L);
+    assertThat(groups.get(attrs("secondary_index_build", "ks1", "cf2"))).containsExactly(20L, 200L);
   }
 
   @Test
@@ -135,9 +151,9 @@ class CassandraCompactionProgressHandlerTest {
   void mergesGroupsAcrossMultipleObjectNames() throws Exception {
     ObjectName objectName2 = new ObjectName("org.apache.cassandra.db:type=CompactionManager,id=2");
     when(connection.getAttribute(objectName, "Compactions"))
-        .thenReturn(singletonList(compactionEntry("COMPACTION", "ks1", "cf1", "100", "200")));
+        .thenReturn(singletonList(compactionEntry("Compaction", "ks1", "cf1", "100", "200")));
     when(connection.getAttribute(objectName2, "Compactions"))
-        .thenReturn(singletonList(compactionEntry("COMPACTION", "ks1", "cf1", "50", "150")));
+        .thenReturn(singletonList(compactionEntry("Compaction", "ks1", "cf1", "50", "150")));
 
     Detector detector =
         new Detector() {
@@ -155,7 +171,7 @@ class CassandraCompactionProgressHandlerTest {
     Map<Attributes, long[]> merged = CassandraCompactionProgressHandler.queryGroups(() -> detector);
 
     assertThat(merged).hasSize(1);
-    assertThat(merged.get(attrs("COMPACTION", "ks1", "cf1"))).containsExactly(150L, 350L);
+    assertThat(merged.get(attrs("compaction", "ks1", "cf1"))).containsExactly(150L, 350L);
   }
 
   private static Map<String, String> compactionEntry(

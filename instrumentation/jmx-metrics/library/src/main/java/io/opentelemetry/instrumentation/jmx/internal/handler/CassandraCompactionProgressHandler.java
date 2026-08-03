@@ -7,14 +7,15 @@ package io.opentelemetry.instrumentation.jmx.internal.handler;
 
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
@@ -50,9 +51,11 @@ public class CassandraCompactionProgressHandler implements ExperimentalJmxMetric
   private static final String METRIC_CURRENT = "cassandra.compaction.progress.completed";
   private static final String METRIC_TOTAL = "cassandra.compaction.progress.size";
 
-  private static final String ATTR_TASK_TYPE = "cassandra.compaction.task_type";
-  private static final String ATTR_KEYSPACE = "cassandra.keyspace";
-  private static final String ATTR_TABLE = "cassandra.table";
+  private static final AttributeKey<String> ATTR_TASK_TYPE =
+      AttributeKey.stringKey("cassandra.compaction.task_type");
+  private static final AttributeKey<String> ATTR_KEYSPACE =
+      AttributeKey.stringKey("cassandra.keyspace");
+  private static final AttributeKey<String> ATTR_TABLE = AttributeKey.stringKey("cassandra.table");
 
   private static final Logger logger =
       Logger.getLogger(CassandraCompactionProgressHandler.class.getName());
@@ -139,7 +142,7 @@ public class CassandraCompactionProgressHandler implements ExperimentalJmxMetric
           continue;
         }
 
-        Attributes attrs = buildAttributes(taskType, keyspace, columnFamily);
+        Attributes attrs = buildAttributes(normalizeTaskType(taskType), keyspace, columnFamily);
         groups.merge(
             attrs, new long[] {completed, total}, (a, b) -> new long[] {a[0] + b[0], a[1] + b[1]});
       }
@@ -147,6 +150,10 @@ public class CassandraCompactionProgressHandler implements ExperimentalJmxMetric
       logger.log(FINE, "cassandra.compaction.progress: failed to query CompactionManager", e);
     }
     return groups;
+  }
+
+  private static String normalizeTaskType(String taskType) {
+    return taskType.toLowerCase(Locale.ROOT).replace(' ', '_');
   }
 
   private static boolean isByteUnit(@Nullable String unit) {
@@ -161,10 +168,6 @@ public class CassandraCompactionProgressHandler implements ExperimentalJmxMetric
   }
 
   private static Attributes buildAttributes(String taskType, String keyspace, String columnFamily) {
-    AttributesBuilder builder = Attributes.builder();
-    builder.put(ATTR_TASK_TYPE, taskType);
-    builder.put(ATTR_KEYSPACE, keyspace);
-    builder.put(ATTR_TABLE, columnFamily);
-    return builder.build();
+    return Attributes.of(ATTR_TASK_TYPE, taskType, ATTR_KEYSPACE, keyspace, ATTR_TABLE, columnFamily);
   }
 }
