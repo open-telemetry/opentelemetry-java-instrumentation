@@ -58,6 +58,13 @@ final class KafkaProducerAttributesExtractor
       @Nullable RecordMetadata recordMetadata,
       @Nullable Throwable error) {
 
+    if (request.getClusterId() == null) {
+      String resolved = KafkaUtil.getClusterId(request.getProducer());
+      if (resolved != null) {
+        attributes.put(KafkaClusterId.ATTRIBUTE_KEY, resolved);
+      }
+    }
+
     if (recordMetadata != null) {
       attributes.put(
           MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(recordMetadata.partition()));

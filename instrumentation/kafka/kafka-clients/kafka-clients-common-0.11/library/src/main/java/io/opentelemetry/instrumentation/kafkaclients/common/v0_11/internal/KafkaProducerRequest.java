@@ -24,6 +24,8 @@ public final class KafkaProducerRequest {
   @Nullable private final String bootstrapServers;
   private final boolean spanContextPropagated;
   @Nullable private final String clusterId;
+  // Retained so onEnd() can retry the cluster-id lookup when it was null at send() time.
+  @Nullable private final Producer<?, ?> producer;
 
   public static KafkaProducerRequest create(
       ProducerRecord<?, ?> record, Producer<?, ?> producer, @Nullable String bootstrapServers) {
@@ -32,7 +34,8 @@ public final class KafkaProducerRequest {
         extractClientId(producer),
         bootstrapServers,
         true,
-        KafkaUtil.getClusterId(producer));
+        KafkaUtil.getClusterId(producer),
+        producer);
   }
 
   public static KafkaProducerRequest create(
@@ -45,12 +48,13 @@ public final class KafkaProducerRequest {
         extractClientId(producer),
         bootstrapServers,
         spanContextPropagated,
-        KafkaUtil.getClusterId(producer));
+        KafkaUtil.getClusterId(producer),
+        producer);
   }
 
   public static KafkaProducerRequest create(
       ProducerRecord<?, ?> record, @Nullable String clientId, @Nullable String bootstrapServers) {
-    return new KafkaProducerRequest(record, clientId, bootstrapServers, true, null);
+    return new KafkaProducerRequest(record, clientId, bootstrapServers, true, null, null);
   }
 
   public static KafkaProducerRequest create(
@@ -59,7 +63,7 @@ public final class KafkaProducerRequest {
       @Nullable String bootstrapServers,
       boolean spanContextPropagated) {
     return new KafkaProducerRequest(
-        record, clientId, bootstrapServers, spanContextPropagated, null);
+        record, clientId, bootstrapServers, spanContextPropagated, null, null);
   }
 
   public static KafkaProducerRequest create(
@@ -67,7 +71,16 @@ public final class KafkaProducerRequest {
       @Nullable String clientId,
       @Nullable String bootstrapServers,
       @Nullable String clusterId) {
-    return new KafkaProducerRequest(record, clientId, bootstrapServers, true, clusterId);
+    return new KafkaProducerRequest(record, clientId, bootstrapServers, true, clusterId, null);
+  }
+
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      @Nullable String clusterId,
+      @Nullable Producer<?, ?> producer) {
+    return new KafkaProducerRequest(record, clientId, bootstrapServers, true, clusterId, producer);
   }
 
   public static KafkaProducerRequest create(
@@ -77,7 +90,18 @@ public final class KafkaProducerRequest {
       boolean spanContextPropagated,
       @Nullable String clusterId) {
     return new KafkaProducerRequest(
-        record, clientId, bootstrapServers, spanContextPropagated, clusterId);
+        record, clientId, bootstrapServers, spanContextPropagated, clusterId, null);
+  }
+
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      boolean spanContextPropagated,
+      @Nullable String clusterId,
+      @Nullable Producer<?, ?> producer) {
+    return new KafkaProducerRequest(
+        record, clientId, bootstrapServers, spanContextPropagated, clusterId, producer);
   }
 
 
@@ -86,12 +110,14 @@ public final class KafkaProducerRequest {
       @Nullable String clientId,
       @Nullable String bootstrapServers,
       boolean spanContextPropagated,
-      @Nullable String clusterId) {
+      @Nullable String clusterId,
+      @Nullable Producer<?, ?> producer) {
     this.record = record;
     this.clientId = clientId;
     this.bootstrapServers = bootstrapServers;
     this.spanContextPropagated = spanContextPropagated;
     this.clusterId = clusterId;
+    this.producer = producer;
   }
 
   public ProducerRecord<?, ?> getRecord() {
@@ -115,6 +141,11 @@ public final class KafkaProducerRequest {
   @Nullable
   public String getClusterId() {
     return clusterId;
+  }
+
+  @Nullable
+  Producer<?, ?> getProducer() {
+    return producer;
   }
 
   @Nullable
