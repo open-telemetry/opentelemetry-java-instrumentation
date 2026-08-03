@@ -59,8 +59,8 @@ public final class OpenTelemetryContextDataProvider implements ContextDataProvid
   /**
    * Returns context from the current span and baggage when available.
    *
-   * @return A map containing string versions of the traceId, spanId, traceFlags and baggage entries,
-   *     which can then be accessed from layout components
+   * @return A map containing string versions of the traceId, spanId, traceFlags and baggage
+   *     entries, which can then be accessed from layout components
    */
   @Override
   public Map<String, String> supplyContextData() {
