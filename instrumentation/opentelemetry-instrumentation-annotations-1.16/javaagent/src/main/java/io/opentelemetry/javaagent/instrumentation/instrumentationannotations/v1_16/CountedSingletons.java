@@ -11,8 +11,9 @@ import static java.util.logging.Level.FINE;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.MeterBuilder;
+import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,11 +21,8 @@ import java.util.logging.Logger;
 
 public final class CountedSingletons {
 
-  private static final String COUNTED_ANNOTATION_NAME =
-      "io.opentelemetry.instrumentation.annotations.Counted";
-
   private static final Logger logger = Logger.getLogger(CountedSingletons.class.getName());
-  private static final Meter meter = GlobalOpenTelemetry.get().getMeter(INSTRUMENTATION_NAME);
+  private static final Meter meter = createMeter();
   private static final ClassValue<Map<Method, LongCounter>> counters =
       new ClassValue<Map<Method, LongCounter>>() {
         @Override
@@ -49,20 +47,23 @@ public final class CountedSingletons {
     return meter.counterBuilder(metricName).build();
   }
 
+  private static Meter createMeter() {
+    MeterBuilder meterBuilder =
+        GlobalOpenTelemetry.get().getMeterProvider().meterBuilder(INSTRUMENTATION_NAME);
+    String version = EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME);
+    if (version != null) {
+      meterBuilder.setInstrumentationVersion(version);
+    }
+    return meterBuilder.build();
+  }
+
   private static String createMetricName(Method method) {
-    for (Annotation annotation : method.getDeclaredAnnotations()) {
-      Class<? extends Annotation> annotationType = annotation.annotationType();
-      if (annotationType.getName().equals(COUNTED_ANNOTATION_NAME)) {
-        try {
-          String name = (String) annotationType.getMethod("value").invoke(annotation);
-          if (!name.isEmpty()) {
-            return name;
-          }
-        } catch (ReflectiveOperationException e) {
-          logger.log(FINE, "failed to read @Counted value() for " + method, e);
-        }
-        break;
-      }
+    application.io.opentelemetry.instrumentation.annotations.Counted annotation =
+        method.getDeclaredAnnotation(
+            application.io.opentelemetry.instrumentation.annotations.Counted.class);
+    String metricName = annotation.value();
+    if (!metricName.isEmpty()) {
+      return metricName;
     }
     // This is odd, indeed...but the naming rules are the same so we reuse it.
     return SpanNames.fromMethod(method);
