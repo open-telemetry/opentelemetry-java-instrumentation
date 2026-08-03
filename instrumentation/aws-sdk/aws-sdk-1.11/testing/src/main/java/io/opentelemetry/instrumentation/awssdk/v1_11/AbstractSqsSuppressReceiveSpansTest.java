@@ -150,11 +150,11 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                     span -> span.hasName("SQS.CreateQueue").hasNoParent()),
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("publish testSdkSqs").hasNoParent(),
+                    span -> span.hasName("send testSdkSqs").hasNoParent(),
                     span -> span.hasName("process testSdkSqs").hasParent(trace.getSpan(0))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("publish testSdkSqs").hasNoParent(),
+                    span -> span.hasName("send testSdkSqs").hasNoParent(),
                     span -> span.hasName("process testSdkSqs").hasParent(trace.getSpan(0))));
   }
 
@@ -249,7 +249,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
   }
 
   private static void publishSpan(SpanDataAssert span) {
-    span.hasName(emitStableMessagingSemconv() ? "publish testSdkSqs" : "testSdkSqs publish")
+    span.hasName(emitStableMessagingSemconv() ? "send testSdkSqs" : "testSdkSqs publish")
         .hasKind(SpanKind.PRODUCER)
         .hasNoParent()
         .hasAttributesSatisfyingExactly(
@@ -267,7 +267,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
             equalTo(MESSAGING_SYSTEM, AWS_SQS),
             equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
             equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "publish" : null),
+            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
             equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));

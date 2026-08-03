@@ -305,7 +305,7 @@ public abstract class AbstractAws2SqsBaseTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   SpanDataAssert publishSpan(
       SpanDataAssert span, String queueUrl, String rpcMethod, Long batchMessageCount) {
-    return span.hasName(emitStableMessagingSemconv() ? "publish testSdkSqs" : "testSdkSqs publish")
+    return span.hasName(emitStableMessagingSemconv() ? "send testSdkSqs" : "testSdkSqs publish")
         .hasKind(SpanKind.PRODUCER)
         .hasNoParent()
         .hasAttributesSatisfyingExactly(
@@ -325,7 +325,7 @@ public abstract class AbstractAws2SqsBaseTest {
             equalTo(MESSAGING_SYSTEM, AWS_SQS),
             equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
             equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
-            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "publish" : null),
+            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
             equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
             equalTo(
                 MESSAGING_BATCH_MESSAGE_COUNT,

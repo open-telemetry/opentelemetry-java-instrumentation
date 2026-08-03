@@ -400,7 +400,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                   satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                   equalTo(MESSAGING_SYSTEM, AWS_SQS))));
       if (emitStableMessagingSemconv()) {
-        attributes.add(equalTo(MESSAGING_OPERATION_NAME, "publish"));
+        attributes.add(equalTo(MESSAGING_OPERATION_NAME, "send"));
         attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "send"));
       }
       if (emitOldMessagingSemconv()) {
@@ -451,7 +451,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     String evaluatedOperation;
     SpanKind operationKind;
     if (operation.equals("SendMessage")) {
-      evaluatedOperation = emitStableMessagingSemconv() ? "publish somequeue" : "somequeue publish";
+      evaluatedOperation = emitStableMessagingSemconv() ? "send somequeue" : "somequeue publish";
       operationKind = SpanKind.PRODUCER;
     } else {
       operationKind = SpanKind.CLIENT;

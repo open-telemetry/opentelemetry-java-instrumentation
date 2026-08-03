@@ -53,6 +53,11 @@ import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 public final class AwsSdkInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
 
+  // messaging.operation.name values, named after the SQS API operations
+  private static final String SEND_OPERATION_NAME = "send";
+  private static final String RECEIVE_OPERATION_NAME = "receive";
+  private static final String PROCESS_OPERATION_NAME = "process";
+
   private static final AttributesExtractor<ExecutionAttributes, Response> rpcAttributesExtractor =
       RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter());
   private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
@@ -129,8 +134,10 @@ public final class AwsSdkInstrumenterFactory {
   }
 
   private <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> messagingAttributesExtractor(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessagingOperationType operationType) {
-    return MessagingAttributesExtractor.builder(getter, operationType)
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter,
+      MessagingOperationType operationType,
+      String operationName) {
+    return MessagingAttributesExtractor.builder(getter, operationType, operationName)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }
@@ -139,11 +146,11 @@ public final class AwsSdkInstrumenterFactory {
     MessagingOperationType operationType = MessagingOperationType.RECEIVE;
     SqsReceiveRequestAttributesGetter getter = new SqsReceiveRequestAttributesGetter();
     AttributesExtractor<SqsReceiveRequest, Response> messagingAttributeExtractor =
-        messagingAttributesExtractor(getter, operationType);
+        messagingAttributesExtractor(getter, operationType, RECEIVE_OPERATION_NAME);
 
     return createInstrumenter(
         openTelemetry,
-        MessagingSpanNameExtractor.create(getter, operationType),
+        MessagingSpanNameExtractor.create(getter, operationType, RECEIVE_OPERATION_NAME),
         MessagingSpanKindExtractor.create(operationType),
         toSqsRequestExtractors(consumerAttributesExtractors()),
         singletonList(messagingAttributeExtractor),
@@ -173,9 +180,10 @@ public final class AwsSdkInstrumenterFactory {
         Instrumenter.<SqsProcessRequest, Response>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractors(toSqsRequestExtractors(consumerAttributesExtractors()))
-            .addAttributesExtractor(messagingAttributesExtractor(getter, operationType));
+            .addAttributesExtractor(
+                messagingAttributesExtractor(getter, operationType, PROCESS_OPERATION_NAME));
     setMessagingProcessExceptionEventExtractor(builder);
 
     if (emitStableMessagingSemconv() || messagingReceiveInstrumentationEnabled) {
@@ -240,11 +248,11 @@ public final class AwsSdkInstrumenterFactory {
     MessagingOperationType operationType = MessagingOperationType.SEND;
     SqsAttributesGetter getter = new SqsAttributesGetter();
     AttributesExtractor<ExecutionAttributes, Response> messagingAttributeExtractor =
-        messagingAttributesExtractor(getter, operationType);
+        messagingAttributesExtractor(getter, operationType, SEND_OPERATION_NAME);
 
     return createInstrumenter(
         openTelemetry,
-        MessagingSpanNameExtractor.create(getter, operationType),
+        MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME),
         SpanKindExtractor.alwaysProducer(),
         attributesExtractors(),
         singletonList(messagingAttributeExtractor),

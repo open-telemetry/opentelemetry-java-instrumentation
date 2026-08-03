@@ -108,9 +108,7 @@ class AwsSqsTest {
                             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "publish test-queue"
-                                : "test-queue publish")
+                            emitStableMessagingSemconv() ? "send test-queue" : "test-queue publish")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -132,7 +130,7 @@ class AwsSqsTest {
                                 MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
                             equalTo(
                                 MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "publish" : null),
+                                emitStableMessagingSemconv() ? "send" : null),
                             equalTo(
                                 MESSAGING_OPERATION_TYPE,
                                 emitStableMessagingSemconv() ? "send" : null),

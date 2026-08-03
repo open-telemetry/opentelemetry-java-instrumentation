@@ -184,7 +184,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                 satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))));
 
     if (emitStableMessagingSemconv()) {
-      attributes.add(equalTo(MESSAGING_OPERATION_NAME, "publish"));
+      attributes.add(equalTo(MESSAGING_OPERATION_NAME, "send"));
       attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "send"));
     }
     if (emitOldMessagingSemconv()) {
@@ -198,7 +198,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
               val -> val.isEqualTo(ImmutableList.of("test"))));
     }
 
-    span.hasName(emitStableMessagingSemconv() ? "publish testSdkSqs" : "testSdkSqs publish")
+    span.hasName(emitStableMessagingSemconv() ? "send testSdkSqs" : "testSdkSqs publish")
         .hasKind(SpanKind.PRODUCER)
         .hasNoParent()
         .hasAttributesSatisfyingExactly(attributes);
@@ -365,7 +365,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                 trace.hasSpansSatisfyingExactly(
                     span -> {
                       publishSpan.set(trace.getSpan(0));
-                      span.hasName("publish testSdkSqs").hasKind(SpanKind.PRODUCER);
+                      span.hasName("send testSdkSqs").hasKind(SpanKind.PRODUCER);
                     }),
             trace ->
                 trace.hasSpansSatisfyingExactly(
@@ -401,7 +401,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("publish testSdkSqs")
+                        span.hasName("send testSdkSqs")
                             .hasKind(SpanKind.PRODUCER)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
@@ -423,7 +423,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                 equalTo(SERVER_PORT, sqsPort),
                                 equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                 equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                equalTo(MESSAGING_OPERATION_NAME, "publish"),
+                                equalTo(MESSAGING_OPERATION_NAME, "send"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                 equalTo(
                                     MESSAGING_OPERATION,
