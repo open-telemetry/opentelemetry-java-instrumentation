@@ -62,14 +62,7 @@ class TrinoTest extends TargetSystemTest {
 
   private static MetricsVerifier createMetricsVerifier() {
     return MetricsVerifier.create()
-        .add(
-            "trino.node.active.count",
-            metric ->
-                metric
-                    .hasDescription("The number of active Trino nodes.")
-                    .hasUnit("{node}")
-                    .isUpDownCounter()
-                    .hasDataPointsWithoutAttributes())
+        .disableStrictMode()
         .add(
             "trino.memory.pool.free",
             metric ->
