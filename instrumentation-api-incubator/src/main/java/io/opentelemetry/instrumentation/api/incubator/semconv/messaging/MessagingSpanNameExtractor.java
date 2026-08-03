@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
@@ -16,28 +17,28 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
    * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/messaging/messaging-spans.md#span-name">
    * messaging semantic conventions</a>.
    *
+   * @param operationName the system-specific name of the operation, used as the {@code <operation
+   *     name>} part of the span name, e.g. {@code send}, {@code poll} or {@code ack}.
    * @see MessagingAttributesGetter#getDestination(Object) used to extract {@code <destination
    *     name>}.
-   * @see MessagingOperationType used to extract {@code <operation name>}.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      MessagingAttributesGetter<REQUEST, ?> getter, MessagingOperationType operationType) {
-    return builder(getter, operationType).build();
+      MessagingAttributesGetter<REQUEST, ?> getter,
+      MessagingOperationType operationType,
+      String operationName) {
+    return new MessagingSpanNameExtractor<>(
+        getter,
+        requireNonNull(operationType, "operationType"),
+        requireNonNull(operationName, "operationName"),
+        true);
   }
 
   /** Returns a messaging span name extractor for the given operation. */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       MessagingAttributesGetter<REQUEST, ?> getter, MessageOperation operation) {
-    return new MessagingSpanNameExtractorBuilder<>(getter, operation.type(), false).build();
-  }
-
-  /**
-   * Returns a new {@link MessagingSpanNameExtractorBuilder} that can be used to configure the
-   * messaging span name extractor.
-   */
-  public static <REQUEST> MessagingSpanNameExtractorBuilder<REQUEST> builder(
-      MessagingAttributesGetter<REQUEST, ?> getter, MessagingOperationType operationType) {
-    return new MessagingSpanNameExtractorBuilder<>(getter, operationType, true);
+    MessagingOperationType operationType = operation.type();
+    return new MessagingSpanNameExtractor<>(
+        getter, operationType, operationType.legacyOperationName(), false);
   }
 
   private final MessagingAttributesGetter<REQUEST, ?> getter;
@@ -76,6 +77,6 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
       destinationName = "unknown";
     }
 
-    return destinationName + " " + operationType.defaultOperationName();
+    return destinationName + " " + operationType.legacyOperationName();
   }
 }
