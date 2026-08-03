@@ -7,9 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.CHANNEL_AND_METHOD_CONTEXT_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_ANONYMOUS;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
+import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableSet;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Command;
@@ -18,12 +17,17 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 public class RabbitInstrumenterHelper {
   static final AttributeKey<String> RABBITMQ_COMMAND = AttributeKey.stringKey("rabbitmq.command");
+
+  private static final Set<String> SETTLE_COMMANDS =
+      unmodifiableSet(new HashSet<>(asList("basic.ack", "basic.nack", "basic.reject")));
 
   // spring-cloud-stream's rabbit binder names the queue of a consumer that doesn't declare a group
   // "<destination>.anonymous.<base64url uuid>", using the same generator that spring-amqp uses for
@@ -41,29 +45,6 @@ public class RabbitInstrumenterHelper {
     return helper;
   }
 
-  public void onPublish(Span span, String exchange, String routingKey) {
-    String exchangeName = normalizeExchangeName(exchange);
-    if (emitStableMessagingSemconv()) {
-      String destinationName = producerDestinationName(exchange, routingKey);
-      span.setAttribute(MESSAGING_DESTINATION_NAME, destinationName);
-      boolean anonymousDestination =
-          isDefaultExchange(exchange) && isGeneratedQueueName(routingKey);
-      if (anonymousDestination) {
-        span.setAttribute(MESSAGING_DESTINATION_ANONYMOUS, true);
-      }
-      span.updateName(anonymousDestination ? "publish" : "publish " + destinationName);
-    } else {
-      span.setAttribute(MESSAGING_DESTINATION_NAME, exchangeName);
-      span.updateName(exchangeName + " publish");
-    }
-    if (routingKey != null && !routingKey.isEmpty()) {
-      span.setAttribute(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
-    }
-    if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-      span.setAttribute(RABBITMQ_COMMAND, "basic.publish");
-    }
-  }
-
   public void onProps(Context context, Span span, AMQP.BasicProperties props) {
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       Integer deliveryMode = props.getDeliveryMode();
@@ -78,11 +59,11 @@ public class RabbitInstrumenterHelper {
     }
   }
 
-  private static String normalizeExchangeName(String exchange) {
+  static String normalizeExchangeName(@Nullable String exchange) {
     return isDefaultExchange(exchange) ? "<default>" : exchange;
   }
 
-  private static boolean isDefaultExchange(@Nullable String exchange) {
+  static boolean isDefaultExchange(@Nullable String exchange) {
     return exchange == null || exchange.isEmpty();
   }
 
@@ -116,7 +97,7 @@ public class RabbitInstrumenterHelper {
     return true;
   }
 
-  static String producerDestinationName(String exchange, String routingKey) {
+  static String producerDestinationName(@Nullable String exchange, @Nullable String routingKey) {
     StringBuilder destination = new StringBuilder();
     appendDestinationPart(destination, exchange);
     appendDestinationPart(destination, routingKey);
@@ -134,7 +115,7 @@ public class RabbitInstrumenterHelper {
     return destination.length() == 0 ? null : destination.toString();
   }
 
-  private static void appendDestinationPart(StringBuilder destination, String part) {
+  private static void appendDestinationPart(StringBuilder destination, @Nullable String part) {
     if (part == null || part.isEmpty()) {
       return;
     }
@@ -147,7 +128,10 @@ public class RabbitInstrumenterHelper {
   public static void onCommand(Span span, Command command) {
     String name = command.getMethod().protocolMethodName();
 
-    if (!name.equals("basic.publish")) {
+    // the publish and settle spans are named by their span name extractor, from the messaging
+    // semantic conventions
+    if (!name.equals("basic.publish")
+        && !(emitStableMessagingSemconv() && SETTLE_COMMANDS.contains(name))) {
       span.updateName(name);
     }
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {

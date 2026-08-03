@@ -25,12 +25,15 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -177,15 +180,31 @@ class SpringIntegrationAndRabbitTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("basic.ack")
+                    span.hasName(emitStableMessagingSemconv() ? "ack" : "basic.ack")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            satisfies(
-                                NETWORK_PEER_ADDRESS,
-                                val -> val.isIn("127.0.0.1", "0:0:0:0:0:0:0:1", null)),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
-                            equalTo(MESSAGING_SYSTEM, "rabbitmq"))));
+                        .hasAttributesSatisfyingExactly(ackAssertions())));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private static List<AttributeAssertion> ackAssertions() {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                satisfies(
+                    NETWORK_PEER_ADDRESS, val -> val.isIn("127.0.0.1", "0:0:0:0:0:0:0:1", null)),
+                satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
+                equalTo(MESSAGING_SYSTEM, "rabbitmq")));
+    if (emitStableMessagingSemconv()) {
+      assertions.add(serverAddress());
+      assertions.add(serverPort());
+      assertions.add(equalTo(MESSAGING_OPERATION_NAME, "ack"));
+      assertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
+      if (emitOldMessagingSemconv()) {
+        assertions.add(equalTo(MESSAGING_OPERATION, "settle"));
+      }
+    }
+    return assertions;
   }
 
   private static AttributeAssertion serverAddress() {

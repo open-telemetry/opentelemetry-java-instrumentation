@@ -278,15 +278,7 @@ class SpringRabbitMqTest {
               span -> span.hasName("consumer").hasParent(springProcessSpan));
         },
         trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("basic.ack")
-                      .hasKind(SpanKind.CLIENT)
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(NETWORK_TYPE, "ipv4"),
-                          equalTo(NETWORK_PEER_ADDRESS, ip),
-                          satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
-                          equalTo(MESSAGING_SYSTEM, "rabbitmq")));
+          trace.hasSpansSatisfyingExactly(span -> verifyAckSpan(span));
         });
   }
 
@@ -323,7 +315,31 @@ class SpringRabbitMqTest {
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.qos")),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.consume")),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.cancel")),
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.ack")));
+        trace -> trace.hasSpansSatisfyingExactly(span -> verifyAckSpan(span)));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private static void verifyAckSpan(SpanDataAssert span) {
+    boolean stable = emitStableMessagingSemconv();
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(NETWORK_TYPE, "ipv4"),
+                equalTo(NETWORK_PEER_ADDRESS, ip),
+                satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
+                equalTo(MESSAGING_SYSTEM, "rabbitmq")));
+    if (stable) {
+      assertions.add(equalTo(SERVER_ADDRESS, ip));
+      assertions.add(satisfies(SERVER_PORT, AbstractLongAssert::isNotNegative));
+      assertions.add(equalTo(MESSAGING_OPERATION_NAME, "ack"));
+      assertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
+      if (emitOldMessagingSemconv()) {
+        assertions.add(equalTo(MESSAGING_OPERATION, "settle"));
+      }
+    }
+    span.hasName(stable ? "ack" : "basic.ack")
+        .hasKind(SpanKind.CLIENT)
+        .hasAttributesSatisfyingExactly(assertions);
   }
 
   private static void verifyLink(SpanDataAssert span, SpanData linkSpan) {

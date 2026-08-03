@@ -22,6 +22,8 @@ public class SpringRabbitSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-rabbit-1.0";
 
+  private static final String PROCESS_OPERATION_NAME = "process";
+
   private static final Instrumenter<Message, Void> instrumenter;
 
   static {
@@ -33,9 +35,9 @@ public class SpringRabbitSingletons {
         Instrumenter.<Message, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operationType))
+                MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
-                MessagingAttributesExtractor.builder(getter, operationType)
+                MessagingAttributesExtractor.builder(getter, operationType, PROCESS_OPERATION_NAME)
                     .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build())
             .addAttributesExtractor(new SpringRabbitExtraAttributesExtractor());
