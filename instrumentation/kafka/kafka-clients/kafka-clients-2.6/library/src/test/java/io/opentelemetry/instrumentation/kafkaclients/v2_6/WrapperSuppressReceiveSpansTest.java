@@ -77,7 +77,8 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
-    assertions.add(satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (testExperimental) {
       assertions.add(
           satisfies(
@@ -100,7 +101,8 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                 equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                 satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer"))));
-    assertions.add(satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
