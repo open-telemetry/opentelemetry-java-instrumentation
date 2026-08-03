@@ -69,6 +69,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.aggregator.ArgumentsAccessor;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Queue;
@@ -554,6 +555,54 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                 }),
         trace ->
             trace.hasSpansSatisfyingExactly(span -> verifySpan(trace, span, 0, "basic.consume")));
+  }
+
+  @ParameterizedTest(name = "test rabbit {0}")
+  @ValueSource(strings = {"ack", "nack", "reject"})
+  void testRabbitSettle(String operation) throws IOException {
+    String queueName = channel.queueDeclare().getQueue();
+    channel.basicPublish("", queueName, null, "Hello, world!".getBytes(Charset.defaultCharset()));
+    GetResponse response = channel.basicGet(queueName, false);
+    long deliveryTag = response.getEnvelope().getDeliveryTag();
+    testing.clearData();
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          switch (operation) {
+            case "ack":
+              channel.basicAck(deliveryTag, false);
+              break;
+            case "nack":
+              channel.basicNack(deliveryTag, false, false);
+              break;
+            default:
+              channel.basicReject(deliveryTag, false);
+              break;
+          }
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> verifySettleSpan(span, trace.getSpan(0), operation)));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private static void verifySettleSpan(SpanDataAssert span, SpanData parentSpan, String operation) {
+    boolean stable = emitStableMessagingSemconv();
+    span.hasName(stable ? operation : "basic." + operation)
+        .hasKind(SpanKind.CLIENT)
+        .hasParent(parentSpan)
+        .hasAttributesSatisfying(
+            equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+            equalTo(MESSAGING_DESTINATION_NAME, null),
+            equalTo(MESSAGING_OPERATION_NAME, stable ? operation : null),
+            equalTo(MESSAGING_OPERATION_TYPE, stable ? "settle" : null),
+            equalTo(MESSAGING_OPERATION, stable && emitOldMessagingSemconv() ? "settle" : null),
+            equalTo(SERVER_ADDRESS, stable ? rabbitMqIp : null),
+            satisfies(stringKey("rabbitmq.command"), val -> val.isIn(null, "basic." + operation)));
   }
 
   private static Stream<Arguments> provideParametersForMessageCountAndTimestamp() {
