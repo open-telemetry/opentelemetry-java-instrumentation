@@ -129,8 +129,10 @@ class RocketMqInstrumenterFactory {
             .addAttributesExtractor(consumerAttributesExtractor())
             .addSpanLinksExtractor(
                 new RocketMqBatchProcessSpanLinksExtractor(
-                    openTelemetry.getPropagators().getTextMapPropagator()))
-            .setSpanStatusExtractor(consumeStatusExtractor());
+                    openTelemetry.getPropagators().getTextMapPropagator()));
+    if (emitStableMessagingSemconv()) {
+      builder.setSpanStatusExtractor(consumeStatusExtractor());
+    }
     setMessagingProcessExceptionEventExtractor(builder);
 
     // a batch has no single message creation context that could be adopted as the span's parent,
@@ -163,7 +165,9 @@ class RocketMqInstrumenterFactory {
     if (captureExperimentalSpanAttributes) {
       builder.addAttributesExtractor(new RocketMqConsumerExperimentalAttributeExtractor());
     }
-    builder.setSpanStatusExtractor(consumeStatusExtractor());
+    if (emitStableMessagingSemconv()) {
+      builder.setSpanStatusExtractor(consumeStatusExtractor());
+    }
     setMessagingProcessExceptionEventExtractor(builder);
 
     return MessagingProcessInstrumenterFactory.create(
@@ -193,6 +197,9 @@ class RocketMqInstrumenterFactory {
     };
   }
 
+  // rocketmq 4.8 leaves the span status unset when the consumer asks for a redelivery, unless the
+  // stable messaging semconv are enabled; rocketmq 5.0 has always reported ERROR for
+  // ConsumeResult.FAILURE, so the divergence between the two versions is deliberate
   private static SpanStatusExtractor<RocketMqConsumerRequest, ConsumeMessageContext>
       consumeStatusExtractor() {
     return (spanStatusBuilder, request, response, error) -> {

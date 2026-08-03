@@ -9,7 +9,7 @@ import apache.rocketmq.v2.ReceiveMessageRequest;
 import java.util.List;
 import org.apache.rocketmq.client.apis.message.MessageView;
 
-public final class RocketMqReceiveRequest {
+public class RocketMqReceiveRequest {
 
   private final ReceiveMessageRequest request;
   private final List<MessageView> messages;

@@ -214,9 +214,7 @@ abstract class AbstractRocketMqClientTest {
                                 oldOperation("process"),
                                 operationName("process"),
                                 operationType("process"),
-                                satisfies(
-                                    MESSAGING_MESSAGE_BODY_SIZE,
-                                    val -> val.isInstanceOf(Long.class)),
+                                bodySize(),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
@@ -287,9 +285,7 @@ abstract class AbstractRocketMqClientTest {
                                 oldOperation("process"),
                                 operationName("process"),
                                 operationType("process"),
-                                satisfies(
-                                    MESSAGING_MESSAGE_BODY_SIZE,
-                                    val -> val.isInstanceOf(Long.class)),
+                                bodySize(),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
@@ -396,7 +392,10 @@ abstract class AbstractRocketMqClientTest {
                       span.hasName("process " + sharedTopic)
                           .hasKind(SpanKind.CONSUMER)
                           .hasNoParent()
-                          .hasStatus(failConsumption ? StatusData.error() : StatusData.unset())
+                          .hasStatus(
+                              failConsumption && emitStableMessagingSemconv()
+                                  ? StatusData.error()
+                                  : StatusData.unset())
                           .hasAttributesSatisfyingExactly(
                               equalTo(MESSAGING_SYSTEM, "rocketmq"),
                               namespace(),
@@ -456,12 +455,12 @@ abstract class AbstractRocketMqClientTest {
     span.hasName(sharedTopic + " process")
         .hasKind(SpanKind.CONSUMER)
         .hasParent(parentSpan)
-        .hasStatus(failed ? StatusData.error() : StatusData.unset())
+        .hasStatus(failed && emitStableMessagingSemconv() ? StatusData.error() : StatusData.unset())
         .hasAttributesSatisfyingExactly(
             equalTo(MESSAGING_SYSTEM, "rocketmq"),
             equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
             oldOperation("process"),
-            satisfies(MESSAGING_MESSAGE_BODY_SIZE, val -> val.isInstanceOf(Long.class)),
+            bodySize(),
             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
             equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental(messageTag)),
             satisfies(
@@ -532,9 +531,7 @@ abstract class AbstractRocketMqClientTest {
                                 oldOperation("process"),
                                 operationName("process"),
                                 operationType("process"),
-                                satisfies(
-                                    MESSAGING_MESSAGE_BODY_SIZE,
-                                    val -> val.isInstanceOf(Long.class)),
+                                bodySize(),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
@@ -597,9 +594,7 @@ abstract class AbstractRocketMqClientTest {
                                 oldOperation("process"),
                                 operationName("process"),
                                 operationType("process"),
-                                satisfies(
-                                    MESSAGING_MESSAGE_BODY_SIZE,
-                                    val -> val.isInstanceOf(Long.class)),
+                                bodySize(),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
@@ -635,6 +630,18 @@ abstract class AbstractRocketMqClientTest {
                 });
       }
     };
+  }
+
+  private static AttributeAssertion bodySize() {
+    return satisfies(
+        MESSAGING_MESSAGE_BODY_SIZE,
+        val -> {
+          if (emitOldMessagingSemconv()) {
+            val.isInstanceOf(Long.class);
+          } else {
+            val.isNull();
+          }
+        });
   }
 
   private static AttributeAssertion oldOperation(String operation) {
