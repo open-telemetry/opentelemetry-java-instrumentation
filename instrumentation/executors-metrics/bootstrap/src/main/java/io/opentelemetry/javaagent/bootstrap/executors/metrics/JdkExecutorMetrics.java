@@ -60,7 +60,7 @@ public final class JdkExecutorMetrics extends ExecutorMetrics {
     ObservableLongMeasurement queueSize = metrics.queueSize();
     ObservableLongMeasurement queueRemaining = metrics.queueRemaining();
     ObservableLongMeasurement completedTasks = metrics.completedTasks();
-    ObservableLongMeasurement rejectedTasks = metrics.observableRejectedTasks();
+    ObservableLongMeasurement rejectedTasks = metrics.rejectedTasks();
 
     WeakReference<ThreadPoolExecutor> executorRef = new WeakReference<>(executor);
     AtomicReference<BatchCallback> callbackRef = new AtomicReference<>();

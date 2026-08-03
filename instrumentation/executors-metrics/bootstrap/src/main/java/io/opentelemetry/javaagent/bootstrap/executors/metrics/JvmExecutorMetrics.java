@@ -103,7 +103,7 @@ final class JvmExecutorMetrics {
         .buildObserver();
   }
 
-  public ObservableLongMeasurement observableRejectedTasks() {
+  public ObservableLongMeasurement rejectedTasks() {
     return meter
         .counterBuilder("jvm.executor.task.rejected")
         .setUnit("{task}")
