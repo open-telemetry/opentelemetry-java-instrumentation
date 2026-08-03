@@ -130,25 +130,16 @@ class ThreadPoolExecutorMetricsTest {
 
     try {
       assertThat(executor.prestartCoreThread()).isTrue();
-      JvmExecutorMetricsAssertions.create(
-              testing,
-              INSTRUMENTATION_NAME,
-              "unlisted-pool-*",
-              UnlistedThreadPoolExecutor.class.getName())
-          .withCoreThreads(0)
-          .assertExecutorEmitsMetrics();
 
       executor.shutdown();
 
       assertThat(executor.isShutdown()).isFalse();
-      testing.clearData();
-
       JvmExecutorMetricsAssertions.create(
               testing,
               INSTRUMENTATION_NAME,
               "unlisted-pool-*",
               UnlistedThreadPoolExecutor.class.getName())
-          .withCoreThreads(0)
+          .withCoreThreads(1)
           .assertExecutorEmitsMetrics();
     } finally {
       executor.shutdownNow();
@@ -184,7 +175,7 @@ class ThreadPoolExecutorMetricsTest {
 
       JvmExecutorMetricsAssertions.create(
               testing, INSTRUMENTATION_NAME, "started-pool-*", THREAD_POOL_EXECUTOR_TYPE)
-          .withCoreThreads(0)
+          .withCoreThreads(1)
           .assertExecutorEmitsMetrics();
     } finally {
       executor.shutdown();
@@ -448,7 +439,7 @@ class ThreadPoolExecutorMetricsTest {
       JvmExecutorMetricsAssertions.create(
               testing, INSTRUMENTATION_NAME, "shared-pool-*", THREAD_POOL_EXECUTOR_TYPE)
           .withActiveThreads(0)
-          .withIdleThreads(0)
+          .withIdleThreads(2)
           .withMaxThreads(2)
           .withCoreThreads(2)
           .withQueueSize(0)

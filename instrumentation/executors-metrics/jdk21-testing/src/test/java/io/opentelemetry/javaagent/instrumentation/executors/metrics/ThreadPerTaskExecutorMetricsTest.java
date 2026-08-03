@@ -44,17 +44,7 @@ class ThreadPerTaskExecutorMetricsTest {
       assertThat(threadFactory.createdThreadCount()).isZero();
       assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, EXECUTOR_NAME);
 
-      Future<?> future =
-          executor.submit(
-              () -> {
-                started.countDown();
-                try {
-                  release.await(10, SECONDS);
-                } catch (InterruptedException e) {
-                  Thread.currentThread().interrupt();
-                  throw new AssertionError(e);
-                }
-              });
+      Future<?> future = submitBlockingTask(executor, started, release);
 
       assertThat(started.await(10, SECONDS)).isTrue();
       assertThat(threadFactory.createdThreadCount()).isEqualTo(1);
@@ -88,12 +78,17 @@ class ThreadPerTaskExecutorMetricsTest {
           return new Thread(runnable, namePrefix + "-" + threadNumber);
         };
     ExecutorService executor = Executors.newThreadPerTaskExecutor(threadFactory);
+    CountDownLatch firstStarted = new CountDownLatch(1);
+    CountDownLatch secondStarted = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
 
     try {
-      executor.submit(() -> {}).get(10, SECONDS);
+      Future<?> firstFuture = submitBlockingTask(executor, firstStarted, release);
+
+      assertThat(firstStarted.await(10, SECONDS)).isTrue();
       JvmExecutorMetricsAssertions.create(
               testing, INSTRUMENTATION_NAME, "initial-thread-*", EXECUTOR_TYPE)
-          .withActiveThreads(0)
+          .withActiveThreads(1)
           .assertExecutorEmitsMetrics();
       testing.clearData();
 
@@ -104,13 +99,20 @@ class ThreadPerTaskExecutorMetricsTest {
               null);
       executorMetrics.getMethod("onThreadFactoryChanged", Executor.class).invoke(null, executor);
 
-      executor.submit(() -> {}).get(10, SECONDS);
+      Future<?> secondFuture = submitBlockingTask(executor, secondStarted, release);
+
+      assertThat(secondStarted.await(10, SECONDS)).isTrue();
       JvmExecutorMetricsAssertions.create(
               testing, INSTRUMENTATION_NAME, "initial-thread-*", EXECUTOR_TYPE)
-          .withActiveThreads(0)
+          .withActiveThreads(1)
           .assertExecutorEmitsMetrics();
       assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, "later-thread-*");
+
+      release.countDown();
+      firstFuture.get(10, SECONDS);
+      secondFuture.get(10, SECONDS);
     } finally {
+      release.countDown();
       executor.shutdown();
       assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
     }
@@ -119,15 +121,24 @@ class ThreadPerTaskExecutorMetricsTest {
   @Test
   void unregistersOnClose() throws Exception {
     ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+    CountDownLatch started = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
 
     try {
-      executor.submit(() -> {}).get(10, SECONDS);
+      Future<?> future = submitBlockingTask(executor, started, release);
+
+      assertThat(started.await(10, SECONDS)).isTrue();
       JvmExecutorMetricsAssertions.create(testing, INSTRUMENTATION_NAME, "unknown", EXECUTOR_TYPE)
-          .withActiveThreads(0)
+          .withActiveThreads(1)
           .assertExecutorEmitsMetrics();
+
+      release.countDown();
+      future.get(10, SECONDS);
       executor.close();
     } finally {
+      release.countDown();
       executor.shutdown();
+      assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
     }
 
     assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, "unknown");
@@ -140,6 +151,20 @@ class ThreadPerTaskExecutorMetricsTest {
     GcUtils.awaitGc(executorRef, Duration.ofSeconds(10));
 
     assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, "collected-thread-per-task-*");
+  }
+
+  private static Future<?> submitBlockingTask(
+      ExecutorService executor, CountDownLatch started, CountDownLatch release) {
+    return executor.submit(
+        () -> {
+          started.countDown();
+          try {
+            release.await(10, SECONDS);
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError(e);
+          }
+        });
   }
 
   private static WeakReference<ExecutorService> createCollectableThreadPerTaskExecutor()
