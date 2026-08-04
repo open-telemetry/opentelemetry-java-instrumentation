@@ -16,6 +16,12 @@ import javax.annotation.Nullable;
 final class NatsRequestMessagingAttributesGetter
     implements MessagingAttributesGetter<NatsRequest, Object> {
 
+  private final boolean boundJetStreamAckDestination;
+
+  NatsRequestMessagingAttributesGetter(boolean boundJetStreamAckDestination) {
+    this.boundJetStreamAckDestination = boundJetStreamAckDestination;
+  }
+
   @Override
   public String getSystem(NatsRequest request) {
     return "nats";
@@ -23,6 +29,9 @@ final class NatsRequestMessagingAttributesGetter
 
   @Override
   public String getDestination(NatsRequest request) {
+    if (boundJetStreamAckDestination && NatsSubject.isJetStreamAck(request.getSubject())) {
+      return NatsSubject.JETSTREAM_ACK_SUBJECT;
+    }
     return request.getSubject();
   }
 

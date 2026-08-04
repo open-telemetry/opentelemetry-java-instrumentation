@@ -97,6 +97,40 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
     assertTraceparentHeader(subscription);
   }
 
+  @Test
+  void testPublishJetStreamAckSubjects() {
+    String firstAckSubject =
+        "$JS.ACK.ingestion-stream.partition-a.1.18822351.18675175.1785834929935121483.14757";
+    String secondAckSubject =
+        "$JS.ACK.ingestion-stream.partition-a.2.18822352.18675176.1785834929935121484.14756";
+
+    // ACK and NACK operations use generated subjects with per-message values in them.
+    testing()
+        .runWithSpan(
+            "parent",
+            () -> {
+              connection.publish(firstAckSubject, new byte[] {0});
+              connection.publish(secondAckSubject, new byte[] {0});
+            });
+
+    int clientId = connection.getServerInfo().getClientId();
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasNoParent(),
+                    span ->
+                        span.hasName("nats.ack")
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                messagingAttributes("publish", "$JS.ACK", clientId)),
+                    span ->
+                        span.hasName("nats.ack")
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                messagingAttributes("publish", "$JS.ACK", clientId))));
+  }
+
   private void assertPublishSpan() {
     testing()
         .waitAndAssertTraces(
