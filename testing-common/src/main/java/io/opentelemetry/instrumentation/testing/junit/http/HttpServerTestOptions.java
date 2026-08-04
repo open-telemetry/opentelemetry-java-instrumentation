@@ -20,7 +20,6 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import javax.annotation.Nullable;
 
 public class HttpServerTestOptions {
 
@@ -241,6 +240,6 @@ public class HttpServerTestOptions {
   @FunctionalInterface
   public interface SpanNameMapper {
 
-    String apply(ServerEndpoint endpoint, String method, @Nullable String route);
+    String apply(ServerEndpoint endpoint, String method, String route);
   }
 }

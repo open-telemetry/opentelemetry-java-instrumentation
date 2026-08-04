@@ -11,7 +11,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -60,8 +59,7 @@ class AgentSpanTestingInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable AdviceScope adviceScope) {
+        @Advice.Thrown Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
       if (adviceScope != null) {
         adviceScope.end();
         AgentSpanTestingInstrumenter.endHttpServer(adviceScope.getContext(), throwable);
@@ -80,8 +78,7 @@ class AgentSpanTestingInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable AdviceScope adviceScope) {
+        @Advice.Thrown Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
       if (adviceScope != null) {
         adviceScope.end();
         AgentSpanTestingInstrumenter.end(adviceScope.getContext(), throwable);

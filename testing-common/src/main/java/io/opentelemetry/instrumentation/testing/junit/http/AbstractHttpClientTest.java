@@ -72,7 +72,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
-import javax.annotation.Nullable;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -1092,11 +1091,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   protected SpanDataAssert assertClientSpan(
-      SpanDataAssert span,
-      URI uri,
-      String method,
-      @Nullable Integer responseCode,
-      @Nullable Integer resendCount) {
+      SpanDataAssert span, URI uri, String method, Integer responseCode, Integer resendCount) {
     Set<AttributeKey<?>> httpClientAttributes = options.getHttpAttributes().apply(uri);
     return span.hasName(options.getExpectedClientSpanNameMapper().apply(uri, method))
         .hasKind(SpanKind.CLIENT)

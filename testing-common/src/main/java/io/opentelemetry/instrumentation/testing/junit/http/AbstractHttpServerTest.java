@@ -117,7 +117,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -1263,8 +1262,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return span;
   }
 
-  public String expectedServerSpanName(
-      ServerEndpoint endpoint, String method, @Nullable String route) {
+  public String expectedServerSpanName(ServerEndpoint endpoint, String method, String route) {
     return HttpServerTestOptions.DEFAULT_EXPECTED_SERVER_SPAN_NAME_MAPPER.apply(
         endpoint, method, route);
   }

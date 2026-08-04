@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
-import javax.annotation.Nullable;
 
 public class AgentSpanTestingInstrumenter {
 
@@ -43,7 +42,7 @@ public class AgentSpanTestingInstrumenter {
     return context;
   }
 
-  public static void endHttpServer(Context context, @Nullable Throwable error) {
+  public static void endHttpServer(Context context, Throwable error) {
     httpServerInstrumenter.end(context, context.get(REQUEST_CONTEXT_KEY), null, error);
   }
 
@@ -56,7 +55,7 @@ public class AgentSpanTestingInstrumenter {
     return context;
   }
 
-  public static void end(Context context, @Nullable Throwable error) {
+  public static void end(Context context, Throwable error) {
     instrumenter.end(context, context.get(REQUEST_CONTEXT_KEY), null, error);
   }
 

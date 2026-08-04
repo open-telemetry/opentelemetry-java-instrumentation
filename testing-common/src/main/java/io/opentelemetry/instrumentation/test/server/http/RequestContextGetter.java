@@ -13,13 +13,12 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.testing.internal.armeria.server.ServiceRequestContext;
 import io.opentelemetry.testing.internal.io.netty.util.AsciiString;
 import java.util.Iterator;
-import javax.annotation.Nullable;
 
 public enum RequestContextGetter implements TextMapGetter<ServiceRequestContext> {
   INSTANCE;
 
   @Override
-  public Iterable<String> keys(@Nullable ServiceRequestContext carrier) {
+  public Iterable<String> keys(ServiceRequestContext carrier) {
     if (carrier == null) {
       return emptyList();
     }
@@ -29,8 +28,7 @@ public enum RequestContextGetter implements TextMapGetter<ServiceRequestContext>
   }
 
   @Override
-  @Nullable
-  public String get(@Nullable ServiceRequestContext carrier, String key) {
+  public String get(ServiceRequestContext carrier, String key) {
     if (carrier == null) {
       return null;
     }
@@ -38,7 +36,7 @@ public enum RequestContextGetter implements TextMapGetter<ServiceRequestContext>
   }
 
   @Override
-  public Iterator<String> getAll(@Nullable ServiceRequestContext carrier, String key) {
+  public Iterator<String> getAll(ServiceRequestContext carrier, String key) {
     if (carrier == null) {
       return emptyIterator();
     }

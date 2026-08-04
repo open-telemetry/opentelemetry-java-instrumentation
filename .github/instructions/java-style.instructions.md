@@ -41,4 +41,9 @@ Follow `docs/contributing/style-guide.md`.
   constants locally as `private static final` with a `// copied from <Class>`
   comment; do not depend on the semconv incubating artifact. In
   `javaagent/src/main/` and tests, use semconv constants directly.
-- **`@Nullable` in tests**: do not add it to test code.
+- **`@Nullable` in tests**: do not add it to test code (paths under `src/test/`
+  or modules whose name starts/ends with `testing` or `tests`). This includes
+  `src/main/` of a test-support module, which is test code despite the path.
+  Keep it only where ErrorProne demands it — `ReturnsNullCollection` on a
+  collection-returning method and `AutoValueBoxedValues` on a boxed `@AutoValue`
+  property, where the annotation is load-bearing rather than documentation.

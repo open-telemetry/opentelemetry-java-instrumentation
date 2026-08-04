@@ -161,7 +161,15 @@ Annotate all parameters and fields that can be `null` with `@Nullable`
 
 `@NonNull` is unnecessary as it is the default.
 
-**Test code**: Do not add `@Nullable` annotations in test code.
+**Test code**: Do not add `@Nullable` annotations in test code, meaning paths under `src/test/` and
+modules whose name starts or ends with `testing` or `tests`. Test-support modules count even for
+their `src/main/` sources, which are test code despite the path. Note that
+`otel.nullaway-conventions` only skips compile tasks whose name contains "test" (e.g.
+`compileTestJava`), so it does not enforce this in test-support modules.
+
+Keep `@Nullable` where ErrorProne requires it, since there the annotation is load-bearing rather
+than documentation: `ReturnsNullCollection` on a method with a collection return type that can
+return `null`, and `AutoValueBoxedValues` on a boxed `@AutoValue` property.
 
 **Defensive programming**: Public APIs should still check for `null` parameters even if not
 annotated with `@Nullable`. Internal APIs do not need these checks.

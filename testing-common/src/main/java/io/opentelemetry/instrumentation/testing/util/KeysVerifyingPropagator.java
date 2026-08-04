@@ -12,7 +12,6 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import java.util.Collection;
-import javax.annotation.Nullable;
 
 /**
  * A TextMapPropagator that verifies TextMapGetter methods can be called without errors.
@@ -42,7 +41,7 @@ public class KeysVerifyingPropagator implements TextMapPropagator {
 
   @Override
   @SuppressWarnings("OtelCanIgnoreReturnValueSuggester")
-  public <C> Context extract(Context context, @Nullable C carrier, TextMapGetter<C> getter) {
+  public <C> Context extract(Context context, C carrier, TextMapGetter<C> getter) {
     // Exercise methods to verify no errors
     getter.keys(carrier).forEach(key -> getter.get(carrier, key));
 

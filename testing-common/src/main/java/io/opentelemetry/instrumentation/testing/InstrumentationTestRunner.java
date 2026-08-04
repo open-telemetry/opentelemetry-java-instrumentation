@@ -40,7 +40,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-import javax.annotation.Nullable;
 import org.assertj.core.api.ListAssert;
 import org.awaitility.core.ConditionFactory;
 import org.awaitility.core.ConditionTimeoutException;
@@ -58,7 +57,7 @@ public abstract class InstrumentationTestRunner {
   // Lazy initialized so that test runners can load without triggering Instrumenter construction
   // in the OpenTelemetry API bridging tests where some of the newer OpenTelemetry APIs used by
   // Instrumenter are absent.
-  @Nullable private TestInstrumenters testInstrumenters;
+  private TestInstrumenters testInstrumenters;
   protected Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope = new HashMap<>();
   protected Set<InstrumentationScopeInfo> instrumentationScopes = new HashSet<>();
 
@@ -139,7 +138,7 @@ public abstract class InstrumentationTestRunner {
   }
 
   private <T extends Consumer<TraceAssert>> void waitAndAssertTraces(
-      @Nullable Comparator<List<SpanData>> traceComparator,
+      Comparator<List<SpanData>> traceComparator,
       Iterable<T> assertions,
       boolean verifyScopeVersion) {
     List<T> assertionsList = new ArrayList<>();
@@ -149,7 +148,7 @@ public abstract class InstrumentationTestRunner {
   }
 
   private <T extends Consumer<TraceAssert>> void doAssertTraces(
-      @Nullable Comparator<List<SpanData>> traceComparator,
+      Comparator<List<SpanData>> traceComparator,
       List<T> assertionsList,
       boolean verifyScopeVersion) {
     List<List<SpanData>> traces = waitForTraces(assertionsList.size());

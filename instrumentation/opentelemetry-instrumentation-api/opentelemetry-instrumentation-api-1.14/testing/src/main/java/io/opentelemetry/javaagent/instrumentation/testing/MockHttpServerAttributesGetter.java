@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.List;
-import javax.annotation.Nullable;
 
 // only needed so that HttpServerAttributesExtractor can be added to the HTTP server instrumenter,
 // and http.route is properly set
@@ -25,9 +24,8 @@ class MockHttpServerAttributesGetter implements HttpServerAttributesGetter<Strin
     return emptyList();
   }
 
-  @Nullable
   @Override
-  public Integer getHttpResponseStatusCode(String s, Void unused, @Nullable Throwable error) {
+  public Integer getHttpResponseStatusCode(String s, Void unused, Throwable error) {
     return null;
   }
 
@@ -36,19 +34,16 @@ class MockHttpServerAttributesGetter implements HttpServerAttributesGetter<Strin
     return emptyList();
   }
 
-  @Nullable
   @Override
   public String getUrlScheme(String s) {
     return null;
   }
 
-  @Nullable
   @Override
   public String getUrlPath(String s) {
     return null;
   }
 
-  @Nullable
   @Override
   public String getUrlQuery(String s) {
     return null;

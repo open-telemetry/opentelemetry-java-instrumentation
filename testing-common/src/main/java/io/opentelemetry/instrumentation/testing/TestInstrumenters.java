@@ -26,7 +26,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import java.util.List;
-import javax.annotation.Nullable;
 
 /** {@link Instrumenter}s to use when executing test code. */
 class TestInstrumenters {
@@ -124,11 +123,7 @@ class TestInstrumenters {
 
     @Override
     public void onEnd(
-        AttributesBuilder attributes,
-        Context context,
-        String s,
-        @Nullable Void unused,
-        @Nullable Throwable error) {}
+        AttributesBuilder attributes, Context context, String s, Void unused, Throwable error) {}
 
     @Override
     public SpanKey internalGetSpanKey() {
@@ -149,10 +144,8 @@ class TestInstrumenters {
       return emptyList();
     }
 
-    @Nullable
     @Override
-    public Integer getHttpResponseStatusCode(
-        String unused, Void unused2, @Nullable Throwable error) {
+    public Integer getHttpResponseStatusCode(String unused, Void unused2, Throwable error) {
       return null;
     }
 
@@ -161,19 +154,16 @@ class TestInstrumenters {
       return emptyList();
     }
 
-    @Nullable
     @Override
     public String getUrlScheme(String unused) {
       return null;
     }
 
-    @Nullable
     @Override
     public String getUrlPath(String s) {
       return null;
     }
 
-    @Nullable
     @Override
     public String getUrlQuery(String s) {
       return null;
