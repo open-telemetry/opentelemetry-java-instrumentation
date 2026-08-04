@@ -47,6 +47,14 @@ class CountedInstrumentationTest {
     assertCounter("exception.count", 1);
   }
 
+  @SuppressWarnings("UnicodeInCode")
+  @Test
+  void testUnicodeMethod() {
+    CountedMethods countedMethods = new CountedMethods();
+    countedMethods.ünicödeMethödNamë();
+    assertCounter("CountedMethods._nic_deMeth_dNam_", 1);
+  }
+
   private static void assertCounter(String metricName, long expectedValue) {
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,

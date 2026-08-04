@@ -12,12 +12,13 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
+import io.opentelemetry.instrumentation.api.internal.ClassNames;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
-import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 public class CountedSingletons {
 
@@ -30,6 +31,7 @@ public class CountedSingletons {
           return new ConcurrentHashMap<>();
         }
       };
+  private static final Pattern INVALID_CHARACTERS = Pattern.compile("[^a-zA-Z0-9_./-]");
 
   public static void increment(Method method) {
     try {
@@ -65,8 +67,12 @@ public class CountedSingletons {
     if (!metricName.isEmpty()) {
       return metricName;
     }
-    // This is odd, indeed...but the naming rules are the same so we reuse it.
-    return SpanNames.fromMethod(method);
+    return buildDefaultMetricName(method);
+  }
+
+  private static String buildDefaultMetricName(Method method) {
+    String metricName = ClassNames.simpleName(method.getDeclaringClass()) + "." + method.getName();
+    return INVALID_CHARACTERS.matcher(metricName).replaceAll("_");
   }
 
   private CountedSingletons() {}
