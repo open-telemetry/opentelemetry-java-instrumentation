@@ -96,22 +96,6 @@ public abstract class AbstractPrometheusModeTest {
                                         .hasCount(2)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(stringKey("tag"), "value")))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testPrometheusSummary.items.max")
-                    .hasDescription("This is a test summary")
-                    .hasUnit("items")
-                    .hasDoubleGaugeSatisfying(
-                        gauge ->
-                            gauge.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(42)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
   }
 
   @Test
@@ -310,22 +294,6 @@ public abstract class AbstractPrometheusModeTest {
                                     point
                                         .hasSum(16.789)
                                         .hasCount(3)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testPrometheusTimer.seconds.max")
-                    .hasDescription("This is a test timer")
-                    .hasUnit("s")
-                    .hasDoubleGaugeSatisfying(
-                        gauge ->
-                            gauge.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(10.789)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(stringKey("tag"), "value")))));
   }

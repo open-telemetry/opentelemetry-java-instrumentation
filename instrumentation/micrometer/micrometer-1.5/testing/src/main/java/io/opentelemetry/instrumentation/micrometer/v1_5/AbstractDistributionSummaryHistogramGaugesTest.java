@@ -65,21 +65,6 @@ public abstract class AbstractDistributionSummaryHistogramGaugesTest {
             INSTRUMENTATION_NAME,
             metric ->
                 metric
-                    .hasName("testSummary.max")
-                    .hasDescription("This is a test distribution summary")
-                    .hasDoubleGaugeSatisfying(
-                        gauge ->
-                            gauge.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(500)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metric ->
-                metric
                     .hasName("testSummary.histogram")
                     .hasDoubleGaugeSatisfying(
                         gauge ->
@@ -141,21 +126,6 @@ public abstract class AbstractDistributionSummaryHistogramGaugesTest {
                                     point
                                         .hasSum(150)
                                         .hasCount(2)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testSummary.max")
-                    .hasDescription("This is a test distribution summary")
-                    .hasDoubleGaugeSatisfying(
-                        gauge ->
-                            gauge.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(100)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(stringKey("tag"), "value")))));
     testing()

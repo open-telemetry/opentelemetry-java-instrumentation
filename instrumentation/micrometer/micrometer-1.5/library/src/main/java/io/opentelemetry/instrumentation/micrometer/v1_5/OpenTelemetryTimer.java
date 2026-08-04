@@ -24,7 +24,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.ObservableDoubleGauge;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.DoubleAdder;
@@ -39,7 +38,6 @@ final class OpenTelemetryTimer extends AbstractTimer
   // TODO: use bound instruments when they're available
   private final DoubleHistogram otelHistogram;
   private final Attributes attributes;
-  private final ObservableDoubleGauge observableMax;
 
   private volatile boolean removed = false;
 
@@ -78,13 +76,6 @@ final class OpenTelemetryTimer extends AbstractTimer
             .setUnit(TimeUnitHelper.getUnitString(baseTimeUnit));
     setExplicitBucketsIfConfigured(otelHistogramBuilder, distributionStatisticConfig, baseTimeUnit);
     this.otelHistogram = otelHistogramBuilder.build();
-    this.observableMax =
-        otelMeter
-            .gaugeBuilder(name + ".max")
-            .setDescription(Bridging.description(id))
-            .setUnit(TimeUnitHelper.getUnitString(baseTimeUnit))
-            .buildWithCallback(
-                new DoubleMeasurementRecorder<>(max, m -> m.poll(baseTimeUnit), attributes));
   }
 
   boolean isUsingMicrometerHistograms() {
@@ -126,7 +117,6 @@ final class OpenTelemetryTimer extends AbstractTimer
   @Override
   public void onRemove() {
     removed = true;
-    observableMax.close();
   }
 
   private interface Measurements {

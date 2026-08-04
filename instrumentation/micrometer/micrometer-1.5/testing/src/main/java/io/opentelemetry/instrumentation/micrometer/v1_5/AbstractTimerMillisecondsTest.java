@@ -54,22 +54,6 @@ public abstract class AbstractTimerMillisecondsTest {
                                         .hasCount(3)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(stringKey("tag"), "value")))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testTimerMilliseconds.max")
-                    .hasDescription("This is a test timer")
-                    .hasUnit("ms")
-                    .hasDoubleGaugeSatisfying(
-                        gauge ->
-                            gauge.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(12_345)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
 
     // when
     Metrics.globalRegistry.remove(timer);

@@ -66,21 +66,6 @@ public abstract class AbstractTimerHistogramGaugesTest {
             INSTRUMENTATION_NAME,
             metric ->
                 metric
-                    .hasName("testTimer.max")
-                    .hasDescription("This is a test timer")
-                    .hasDoubleGaugeSatisfying(
-                        gauge ->
-                            gauge.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(500)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metric ->
-                metric
                     .hasName("testTimer.histogram")
                     .hasDoubleGaugeSatisfying(
                         gauge ->
@@ -141,21 +126,6 @@ public abstract class AbstractTimerHistogramGaugesTest {
                                     point
                                         .hasSum(0.55)
                                         .hasCount(2)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("testTimer.max")
-                    .hasDescription("This is a test timer")
-                    .hasDoubleGaugeSatisfying(
-                        gauge ->
-                            gauge.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(0.5)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(stringKey("tag"), "value")))));
     testing()

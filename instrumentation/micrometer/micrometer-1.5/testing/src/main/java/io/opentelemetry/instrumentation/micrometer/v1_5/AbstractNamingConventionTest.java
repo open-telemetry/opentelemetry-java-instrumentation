@@ -92,18 +92,6 @@ public abstract class AbstractNamingConventionTest {
                                 point ->
                                     point.hasAttributesSatisfyingExactly(
                                         equalTo(stringKey("test.tag"), "test.value")))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("test.renamedSummary.max")
-                    .hasDoubleGaugeSatisfying(
-                        gauge ->
-                            gauge.hasPointsSatisfying(
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("test.tag"), "test.value")))));
   }
 
   @Test
@@ -238,18 +226,6 @@ public abstract class AbstractNamingConventionTest {
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("test.tag"), "test.value")))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("test.renamedTimer.max")
-                    .hasDoubleGaugeSatisfying(
-                        gauge ->
-                            gauge.hasPointsSatisfying(
                                 point ->
                                     point.hasAttributesSatisfyingExactly(
                                         equalTo(stringKey("test.tag"), "test.value")))));
