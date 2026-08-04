@@ -19,6 +19,8 @@ import java.util.function.BiFunction;
  */
 public class MessagingProcessContextCustomizer<REQUEST> implements ContextCustomizer<REQUEST> {
 
+  private final BiFunction<Context, REQUEST, Context> producerContextExtractor;
+
   public static <REQUEST> ContextCustomizer<REQUEST> create(
       TextMapPropagator propagator, TextMapGetter<REQUEST> getter) {
     return create((parentContext, request) -> propagator.extract(parentContext, request, getter));
@@ -28,8 +30,6 @@ public class MessagingProcessContextCustomizer<REQUEST> implements ContextCustom
       BiFunction<Context, REQUEST, Context> producerContextExtractor) {
     return new MessagingProcessContextCustomizer<>(producerContextExtractor);
   }
-
-  private final BiFunction<Context, REQUEST, Context> producerContextExtractor;
 
   private MessagingProcessContextCustomizer(
       BiFunction<Context, REQUEST, Context> producerContextExtractor) {
