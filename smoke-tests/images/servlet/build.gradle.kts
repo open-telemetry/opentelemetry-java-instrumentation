@@ -325,9 +325,9 @@ fun configureImage(
       when (jdk) {
         "8" -> "ibm-semeru-runtimes:open-8u472-b08-jdk@sha256:779c0c1133ebac0d599012c5a908e67adaa993352072eac21d7ced8d6a47f14d"
         "11" -> "ibm-semeru-runtimes:open-11.0.29_7-jdk@sha256:00bbefbb2cf3690546338c0e4ba4cf85ec658f40de5b292e77774b55e8267d66"
-        "17" -> "ibm-semeru-runtimes:open-17-jdk@sha256:82de886dad5f1546dbe4589335dcdddd8d8a3a2eef0e504d99bb4a917504abf8"
+        "17" -> "ibm-semeru-runtimes:open-17-jdk@sha256:06ceb986efd74122cada5092aaec3a3f4720abc397d84adc09d4b1138d4fcb84"
         "21" -> "ibm-semeru-runtimes:open-21.0.9_10-jdk@sha256:2edabc89c49cfa2b9f0c051aced57ca6dee81c2e6b8820a1257182e779b58a48"
-        "25" -> "ibm-semeru-runtimes:open-25-jdk@sha256:9ecdbb9e06828e391ed1dde149e6a834f4c1bdadcb5d95dcd3006045db72d760"
+        "25" -> "ibm-semeru-runtimes:open-25-jdk@sha256:17e2c234b60aa34ce8c7621513639a8e1de0810d12962c243714aa48afa16ec6"
         else -> throw GradleException("Unexpected jdk version for openj9: $jdk")
       }
     }
