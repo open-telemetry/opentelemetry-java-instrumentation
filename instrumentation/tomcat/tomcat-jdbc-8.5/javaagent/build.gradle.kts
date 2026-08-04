@@ -13,7 +13,19 @@ muzzle {
 
 dependencies {
   compileOnly("org.apache.tomcat:tomcat-jdbc:8.5.0")
+
+  // JdbcConnectionUrlParser is provided by the shaded JDBC library, and its DbInfo return type is
+  // relocated to the JDBC bootstrap package.
+  bootstrap(project(":instrumentation:jdbc:bootstrap"))
+  compileOnly(
+    project(
+      path = ":instrumentation:jdbc:library",
+      configuration = "shadow",
+    ),
+  )
+
   testImplementation("org.apache.tomcat:tomcat-jdbc:8.5.0")
+  testInstrumentation(project(":instrumentation:jdbc:javaagent"))
 }
 
 tasks {

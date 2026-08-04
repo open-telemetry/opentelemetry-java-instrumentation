@@ -8,8 +8,18 @@ muzzle {
     module.set("azure-core")
     versions.set("[1.36.0,1.53.0)")
     assertInverse.set(true)
-    // our advice helper bridges an explicitly supplied application parent context to the agent
-    // context, so it references io.opentelemetry.context.{Context,Scope}
+    // this module bridges an explicitly supplied application parent context, so it references the
+    // application's io.opentelemetry.context.{Context,Scope} and only applies when the application
+    // uses the OpenTelemetry API itself; it is verified separately below
+    excludeInstrumentationName("azure-core-1.36-context")
+  }
+
+  pass {
+    name.set("Application using the OpenTelemetry API")
+    group.set("com.azure")
+    module.set("azure-core")
+    versions.set("[1.36.0,1.53.0)")
+    assertInverse.set(true)
     extraDependency("io.opentelemetry:opentelemetry-api:1.27.0")
   }
 }
