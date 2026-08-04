@@ -118,6 +118,7 @@ class RocketMqInstrumenterFactory {
         batchReceiveInstrumenter);
   }
 
+  // only used under the v1.43 conventions, where a single process span accounts for the whole batch
   private static Instrumenter<RocketMqConsumerRequest, ConsumeMessageContext>
       createBatchProcessInstrumenter(OpenTelemetry openTelemetry, List<String> capturedHeaders) {
 
@@ -135,10 +136,8 @@ class RocketMqInstrumenterFactory {
             .addAttributesExtractor(consumerAttributesExtractor())
             .addSpanLinksExtractor(
                 new RocketMqBatchProcessSpanLinksExtractor(
-                    openTelemetry.getPropagators().getTextMapPropagator()));
-    if (emitStableMessagingSemconv()) {
-      builder.setSpanStatusExtractor(consumeStatusExtractor());
-    }
+                    openTelemetry.getPropagators().getTextMapPropagator()))
+            .setSpanStatusExtractor(consumeStatusExtractor());
     setMessagingProcessExceptionEventExtractor(builder);
 
     // a batch has no single message creation context that could be adopted as the span's parent,

@@ -443,6 +443,14 @@ abstract class AbstractRocketMqClientTest {
                           .hasParent(trace.getSpan(0))
                           .hasKind(SpanKind.INTERNAL));
               trace.hasSpansSatisfyingExactly(assertions);
+              if (!emitStableMessagingSemconv()) {
+                // rocketmq 4.8's consume hook only fires once per batch, so there is no per-message
+                // timing; the per-message process spans are instantaneous markers instead of each
+                // claiming the duration of the whole batch
+                long listenerStart = trace.getSpan(3).getStartEpochNanos();
+                assertThat(trace.getSpan(1).getEndEpochNanos()).isLessThan(listenerStart);
+                assertThat(trace.getSpan(2).getEndEpochNanos()).isLessThan(listenerStart);
+              }
             });
   }
 
