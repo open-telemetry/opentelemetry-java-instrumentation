@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 
 import io.nats.client.Dispatcher;
@@ -18,6 +19,10 @@ import io.nats.client.impl.Headers;
 import io.nats.client.impl.NatsMessage;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil;
+import io.opentelemetry.sdk.trace.data.LinkData;
+import io.opentelemetry.sdk.trace.data.SpanData;
+import java.util.List;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -114,7 +119,8 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
                     span ->
                         span.hasName(emitStableMessagingSemconv() ? "process sub" : "sub process")
                             .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(1))));
+                            .hasParent(trace.getSpan(1))
+                            .hasLinksSatisfying(expectedProcessLinks(trace.getSpan(1)))));
   }
 
   void publishAndAssertTraceAndSpans() {
@@ -148,7 +154,8 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
                     span ->
                         span.hasName(emitStableMessagingSemconv() ? "process sub" : "sub process")
                             .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(1)),
+                            .hasParent(trace.getSpan(1))
+                            .hasLinksSatisfying(expectedProcessLinks(trace.getSpan(1))),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -161,6 +168,7 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
                         span.hasName(emitStableMessagingSemconv() ? "process sub" : "sub process")
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(4))
+                            .hasLinksSatisfying(expectedProcessLinks(trace.getSpan(4)))
                             .hasAttributesSatisfyingExactly(
                                 messagingAttributes("process", "sub", clientId)),
                     span ->
@@ -171,5 +179,28 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
 
   void addChildSpan() {
     testing().runWithSpan("child", () -> {});
+  }
+
+  /**
+   * Returns an assertion for the links expected on a process span whose message was published by
+   * {@code publishSpan}. The new conventions ask for a link to the message creation context, the
+   * old ones do not use links at all.
+   */
+  private static Consumer<List<? extends LinkData>> expectedProcessLinks(SpanData publishSpan) {
+    return links -> {
+      if (!emitStableMessagingSemconv()) {
+        assertThat(links).isEmpty();
+        return;
+      }
+      assertThat(links)
+          .singleElement()
+          .satisfies(
+              link -> {
+                assertThat(link.getSpanContext().getTraceId())
+                    .isEqualTo(publishSpan.getSpanContext().getTraceId());
+                assertThat(link.getSpanContext().getSpanId())
+                    .isEqualTo(publishSpan.getSpanContext().getSpanId());
+              });
+    };
   }
 }

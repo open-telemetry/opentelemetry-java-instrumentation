@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.messagingAttributes;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -55,6 +56,19 @@ abstract class AbstractSpringCloudStreamProducerTest {
                                 : "testConsumer.input process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
+                        .hasLinksSatisfying(
+                            links -> {
+                              if (emitStableMessagingSemconv()) {
+                                assertThat(links)
+                                    .singleElement()
+                                    .satisfies(
+                                        link ->
+                                            assertThat(link.getSpanContext().getSpanId())
+                                                .isEqualTo(trace.getSpan(1).getSpanId()));
+                              } else {
+                                assertThat(links).isEmpty();
+                              }
+                            })
                         .hasAttributesSatisfyingExactly(
                             messagingAttributes("process", "testConsumer.input")),
                 span ->
