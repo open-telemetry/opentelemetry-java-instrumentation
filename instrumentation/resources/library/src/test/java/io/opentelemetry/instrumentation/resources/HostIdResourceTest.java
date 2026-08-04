@@ -227,8 +227,8 @@ class HostIdResourceTest {
   @Test
   @DisabledOnOs(OS.WINDOWS)
   void runCommandLargeOutputDoesNotDeadlock() {
-    // more output than fits in the pipe buffer: the command can only exit once the output is
-    // drained, so this deadlocks unless the draining happens off the calling thread
+    // more output than fits in the pipe buffer: waiting for the process to exit before reading
+    // its output would deadlock here
     assertThat(HostIdResource.runCommand(asList("/bin/sh", "-c", "seq 1 50000"), 30_000))
         .hasSize(50_000);
   }
