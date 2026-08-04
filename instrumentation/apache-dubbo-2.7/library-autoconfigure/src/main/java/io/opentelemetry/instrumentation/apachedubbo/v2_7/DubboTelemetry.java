@@ -16,6 +16,7 @@ public final class DubboTelemetry {
 
   static {
     DubboInternalHelper.setServerInstrumenterExtractor(t -> t.serverInstrumenter);
+    DubboInternalHelper.setUnknownServiceRequestFactory(DubboRequest::createForUnknownService);
   }
 
   private final Instrumenter<DubboRequest, Result> serverInstrumenter;

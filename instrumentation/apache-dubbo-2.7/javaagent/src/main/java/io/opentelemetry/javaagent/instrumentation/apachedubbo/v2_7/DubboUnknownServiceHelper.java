@@ -12,6 +12,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
+import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboInternalHelper;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import java.io.IOException;
@@ -24,6 +25,7 @@ import java.util.Collection;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.apache.dubbo.remoting.Channel;
+import org.apache.dubbo.remoting.RemotingException;
 import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcInvocation;
 
@@ -107,7 +109,7 @@ public final class DubboUnknownServiceHelper {
     }
 
     DubboRequest request =
-        DubboRequest.createForUnknownService(
+        DubboInternalHelper.createForUnknownService(
             rpcInvocation, buildOriginalFullMethodName(rpcInvocation), remoteAddress);
 
     Context parentContext =
@@ -150,7 +152,7 @@ public final class DubboUnknownServiceHelper {
     }
 
     DubboRequest request =
-        DubboRequest.createForUnknownService(
+        DubboInternalHelper.createForUnknownService(
             rpcInvocation, buildOriginalFullMethodName(rpcInvocation), remoteAddress);
 
     startAndEndSpan(serverInstrumenter(), Context.root(), request, throwable, startTimeMillis);
@@ -172,7 +174,6 @@ public final class DubboUnknownServiceHelper {
    * @param throwable the exception thrown (HttpStatusException with 404 for not-found)
    * @param startTimeMillis timestamp when the method was entered
    */
-  @SuppressWarnings("deprecation") // Dubbo 2.7 API: setAttachment()
   public static void createUnknownServiceSpanFromTriple(
       Object requestObj, Throwable throwable, long startTimeMillis) {
 
@@ -198,14 +199,11 @@ public final class DubboUnknownServiceHelper {
     String fullMethodName = parseFullMethodName(uri);
 
     RpcInvocation rpcInvocation = new RpcInvocation();
-    String[] parts = parseServiceAndMethod(uri);
-    rpcInvocation.setAttachment("path", parts[0]);
-    rpcInvocation.setMethodName(parts[1]);
 
     InetSocketAddress remoteAddress = buildRemoteSocketAddress(access, requestObj);
 
     DubboRequest request =
-        DubboRequest.createForUnknownService(rpcInvocation, fullMethodName, remoteAddress);
+        DubboInternalHelper.createForUnknownService(rpcInvocation, fullMethodName, remoteAddress);
 
     Context parentContext =
         GlobalOpenTelemetry.getPropagators()
@@ -232,6 +230,9 @@ public final class DubboUnknownServiceHelper {
    * not find the requested service in the exporter map.
    */
   static boolean isUnknownServiceInvokerFailure(Throwable throwable) {
+    if (!(throwable instanceof RemotingException)) {
+      return false;
+    }
     String message = throwable.getMessage();
     return message != null && message.contains("Not found exported service");
   }
@@ -264,19 +265,6 @@ public final class DubboUnknownServiceHelper {
       return uri.substring(1);
     }
     return uri;
-  }
-
-  /**
-   * Parses service name and method name from a Triple/gRPC URI path. Input: {@code
-   * /com.example.Service/method} Output: {@code ["com.example.Service", "method"]}
-   */
-  private static String[] parseServiceAndMethod(String uri) {
-    String path = uri.startsWith("/") ? uri.substring(1) : uri;
-    int slash = path.lastIndexOf('/');
-    if (slash > 0) {
-      return new String[] {path.substring(0, slash), path.substring(slash + 1)};
-    }
-    return new String[] {path, "unknown"};
   }
 
   @Nullable

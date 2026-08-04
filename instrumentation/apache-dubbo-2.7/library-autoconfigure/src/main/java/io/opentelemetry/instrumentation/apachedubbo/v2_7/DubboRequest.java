@@ -30,7 +30,7 @@ public abstract class DubboRequest {
         null);
   }
 
-  public static DubboRequest createForUnknownService(
+  static DubboRequest createForUnknownService(
       RpcInvocation invocation,
       String originalFullMethodName,
       @Nullable InetSocketAddress remoteAddress) {
