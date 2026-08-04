@@ -21,9 +21,9 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
  * any time.
  */
 public final class KafkaConsumerContextUtil {
-  private static final ContextKey<Span> processSpanKey =
+  private static final ContextKey<Span> PROCESS_SPAN_KEY =
       ContextKey.named("opentelemetry-kafka-process-span");
-  private static final ContextKey<Span> processParentSpanKey =
+  private static final ContextKey<Span> PROCESS_PARENT_SPAN_KEY =
       ContextKey.named("opentelemetry-kafka-process-parent-span");
   // these fields can be used for multiple instrumentations because of that we don't use a helper
   // class as field type
@@ -42,18 +42,18 @@ public final class KafkaConsumerContextUtil {
     }
 
     Span currentSpan = Span.fromContext(context);
-    if (currentSpan != context.get(processSpanKey)) {
+    if (currentSpan != context.get(PROCESS_SPAN_KEY)) {
       return context;
     }
 
-    Span parentSpan = context.get(processParentSpanKey);
+    Span parentSpan = context.get(PROCESS_PARENT_SPAN_KEY);
     return context.with(parentSpan != null ? parentSpan : Span.getInvalid());
   }
 
   public static Context withProcessParentSpan(Context context, Context parentContext) {
     return context
-        .with(processSpanKey, Span.fromContext(context))
-        .with(processParentSpanKey, Span.fromContext(parentContext));
+        .with(PROCESS_SPAN_KEY, Span.fromContext(context))
+        .with(PROCESS_PARENT_SPAN_KEY, Span.fromContext(parentContext));
   }
 
   public static KafkaConsumerContext get(ConsumerRecord<?, ?> records) {
