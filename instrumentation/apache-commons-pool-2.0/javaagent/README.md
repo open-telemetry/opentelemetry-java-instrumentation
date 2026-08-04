@@ -6,7 +6,7 @@ for [Apache Commons Pool](https://commons.apache.org/proper/commons-pool/).
 This instrumentation is disabled by default because its metrics do not currently follow
 OpenTelemetry semantic conventions.
 
-The `apache.commons_pool.pool.name` attribute uses the configured JMX name prefix. An `unknown`
+The `apache_commons_pool.pool.name` attribute uses the configured JMX name prefix. An `unknown`
 fallback is used when the prefix is null or empty. Keyed pool names use the `keyed-` prefix.
 Applications with multiple pools should configure unique JMX name prefixes.
 

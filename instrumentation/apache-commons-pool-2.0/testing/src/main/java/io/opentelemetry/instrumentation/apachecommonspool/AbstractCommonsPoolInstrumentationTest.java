@@ -32,9 +32,9 @@ import org.junit.jupiter.api.Test;
 public abstract class AbstractCommonsPoolInstrumentationTest {
 
   protected static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-commons-pool-2.0";
-  private static final AttributeKey<String> POOL_NAME = stringKey("apache.commons_pool.pool.name");
+  private static final AttributeKey<String> POOL_NAME = stringKey("apache_commons_pool.pool.name");
   private static final AttributeKey<String> OBJECT_STATE =
-      stringKey("apache.commons_pool.object.state");
+      stringKey("apache_commons_pool.object.state");
 
   protected abstract InstrumentationExtension testing();
 
@@ -198,15 +198,15 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
                 metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
         .noneMatch(
             metricData ->
-                metricData.getName().equals("apache.commons_pool.object.idle.min")
-                    || metricData.getName().equals("apache.commons_pool.object.idle.max"));
+                metricData.getName().equals("apache_commons_pool.object.idle.min")
+                    || metricData.getName().equals("apache_commons_pool.object.idle.max"));
   }
 
   private void verifyObjectCount(String poolName) {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "apache.commons_pool.object.count",
+            "apache_commons_pool.object.count",
             metrics -> metrics.anySatisfy(metric -> verifyObjectCountMetric(metric, poolName)));
   }
 
@@ -226,7 +226,7 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "apache.commons_pool.object.count",
+            "apache_commons_pool.object.count",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
@@ -256,7 +256,7 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "apache.commons_pool.object.idle.min",
+            "apache_commons_pool.object.idle.min",
             metrics -> metrics.anySatisfy(metric -> verifyMinIdleObjectsMetric(metric, poolName)));
   }
 
@@ -271,7 +271,7 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "apache.commons_pool.object.idle.max",
+            "apache_commons_pool.object.idle.max",
             metrics -> metrics.anySatisfy(metric -> verifyMaxIdleObjectsMetric(metric, poolName)));
   }
 
@@ -286,7 +286,7 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "apache.commons_pool.object.max",
+            "apache_commons_pool.object.max",
             metrics -> metrics.anySatisfy(metric -> verifyMaxObjectsMetric(metric, poolName)));
   }
 
@@ -301,7 +301,7 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
-            "apache.commons_pool.object.pending_requests",
+            "apache_commons_pool.object.pending_requests",
             metrics -> metrics.anySatisfy(metric -> verifyPendingRequestsMetric(metric, poolName)));
   }
 

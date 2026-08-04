@@ -18,9 +18,9 @@ import io.opentelemetry.api.metrics.ObservableMeasurement;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 
 final class ObjectPoolMetrics {
-  private static final AttributeKey<String> POOL_NAME = stringKey("apache.commons_pool.pool.name");
+  private static final AttributeKey<String> POOL_NAME = stringKey("apache_commons_pool.pool.name");
   private static final AttributeKey<String> OBJECT_STATE =
-      stringKey("apache.commons_pool.object.state");
+      stringKey("apache_commons_pool.object.state");
 
   private static final String STATE_IDLE = "idle";
   private static final String STATE_USED = "used";
@@ -49,7 +49,7 @@ final class ObjectPoolMetrics {
 
   ObservableLongMeasurement objects() {
     return meter
-        .upDownCounterBuilder("apache.commons_pool.object.count")
+        .upDownCounterBuilder("apache_commons_pool.object.count")
         .setUnit("{object}")
         .setDescription(
             "The number of objects currently in the state described by the state attribute.")
@@ -58,7 +58,7 @@ final class ObjectPoolMetrics {
 
   ObservableLongMeasurement minIdleObjects() {
     return meter
-        .upDownCounterBuilder("apache.commons_pool.object.idle.min")
+        .upDownCounterBuilder("apache_commons_pool.object.idle.min")
         .setUnit("{object}")
         .setDescription("The minimum number of idle objects allowed in the pool.")
         .buildObserver();
@@ -66,7 +66,7 @@ final class ObjectPoolMetrics {
 
   ObservableLongMeasurement maxIdleObjects() {
     return meter
-        .upDownCounterBuilder("apache.commons_pool.object.idle.max")
+        .upDownCounterBuilder("apache_commons_pool.object.idle.max")
         .setUnit("{object}")
         .setDescription("The maximum number of idle objects allowed in the pool.")
         .buildObserver();
@@ -74,7 +74,7 @@ final class ObjectPoolMetrics {
 
   ObservableLongMeasurement maxObjects() {
     return meter
-        .upDownCounterBuilder("apache.commons_pool.object.max")
+        .upDownCounterBuilder("apache_commons_pool.object.max")
         .setUnit("{object}")
         .setDescription("The maximum number of objects allowed in the pool.")
         .buildObserver();
@@ -82,7 +82,7 @@ final class ObjectPoolMetrics {
 
   ObservableLongMeasurement pendingRequestsForObject() {
     return meter
-        .upDownCounterBuilder("apache.commons_pool.object.pending_requests")
+        .upDownCounterBuilder("apache_commons_pool.object.pending_requests")
         .setUnit("{request}")
         .setDescription("The number of requests currently waiting for an object from the pool.")
         .buildObserver();

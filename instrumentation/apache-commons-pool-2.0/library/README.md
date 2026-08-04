@@ -44,8 +44,8 @@ These metrics are Apache Commons Pool specific and do not currently follow OpenT
 
 | Metric                                        | Description                                                                                    | Unit        |
 | --------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------- |
-| `apache.commons_pool.object.count`            | The number of objects currently in the state described by the state attribute.                 | `{object}`  |
-| `apache.commons_pool.object.idle.min`         | The minimum number of idle objects allowed in the pool. Only reported for `GenericObjectPool`. | `{object}`  |
-| `apache.commons_pool.object.idle.max`         | The maximum number of idle objects allowed in the pool. Only reported for `GenericObjectPool`. | `{object}`  |
-| `apache.commons_pool.object.max`              | The maximum number of objects allowed in the pool.                                             | `{object}`  |
-| `apache.commons_pool.object.pending_requests` | The number of requests currently waiting for an object from the pool.                          | `{request}` |
+| `apache_commons_pool.object.count`            | The number of objects currently in the state described by the state attribute.                 | `{object}`  |
+| `apache_commons_pool.object.idle.min`         | The minimum number of idle objects allowed in the pool. Only reported for `GenericObjectPool`. | `{object}`  |
+| `apache_commons_pool.object.idle.max`         | The maximum number of idle objects allowed in the pool. Only reported for `GenericObjectPool`. | `{object}`  |
+| `apache_commons_pool.object.max`              | The maximum number of objects allowed in the pool.                                             | `{object}`  |
+| `apache_commons_pool.object.pending_requests` | The number of requests currently waiting for an object from the pool.                          | `{request}` |
