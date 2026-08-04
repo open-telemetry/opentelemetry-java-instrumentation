@@ -125,6 +125,8 @@ final class KafkaMetricRegistry {
       InstrumentDescriptor instrumentDescriptor,
       KafkaMetric kafkaMetric,
       Supplier<String> clusterIdSupplier) {
+    // The cluster id is not known until the first metadata response, so early data points are
+    // recorded without it and the metric changes attribute set mid-stream. See the library README.
     Consumer<ObservableDoubleMeasurement> callback =
         observableMeasurement -> {
           String clusterId = clusterIdSupplier.get();
