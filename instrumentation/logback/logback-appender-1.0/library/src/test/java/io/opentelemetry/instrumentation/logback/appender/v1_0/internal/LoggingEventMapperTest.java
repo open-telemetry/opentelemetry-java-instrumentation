@@ -98,7 +98,6 @@ class LoggingEventMapperTest {
 
     // then
     verify(builder).setAttribute(stringKey("key1"), "value1");
-    verify(builder, never()).setAttribute(stringKey("key2"), "value2");
     verifyNoMoreInteractions(builder);
   }
 
