@@ -212,19 +212,11 @@ public class AgentInstaller {
     return config == null ? EmptyConfigProperties.INSTANCE : config;
   }
 
-  /**
-   * Loads classes that could otherwise get loaded from inside a {@link
-   * java.lang.instrument.ClassFileTransformer} callback while they are already being loaded, which
-   * makes the jvm fail their resolution with {@link ClassCircularityError}. Because resolution
-   * errors are permanent, see JVMS 5.4.3, such a failure poisons every later use of the class in
-   * the jvm, not just the agent.
-   *
-   * @see <a href="https://bugs.openjdk.org/browse/JDK-8164165">JDK-8164165</a>
-   */
   private static void preloadClasses() {
     // preload ThreadLocalRandom to avoid occasional
     // java.lang.ClassCircularityError: java/util/concurrent/ThreadLocalRandom
-    // see https://github.com/raphw/byte-buddy/issues/1666
+    // see https://github.com/raphw/byte-buddy/issues/1666 and
+    // https://bugs.openjdk.org/browse/JDK-8164165
     ThreadLocalRandom.current();
 
     // preload the anonymous class used by MethodHandle.customize() to avoid
