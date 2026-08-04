@@ -341,6 +341,7 @@ class SpringRabbitMqTest {
       assertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
       assertions.add(
           satisfies(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, AbstractLongAssert::isPositive));
+      assertions.add(equalTo(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, queue));
       if (emitOldMessagingSemconv()) {
         assertions.add(equalTo(MESSAGING_OPERATION, "settle"));
       }
