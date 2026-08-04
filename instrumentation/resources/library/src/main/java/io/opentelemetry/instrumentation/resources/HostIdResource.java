@@ -311,24 +311,11 @@ public final class HostIdResource {
 
     int exitedValue = process.waitFor();
     if (abandoned.get()) {
-      // the timeout has already been reported, but whatever the command managed to print before it
-      // was killed is the most useful clue about where it got stuck
-      if (!output.isEmpty()) {
-        logger.fine(
-            "Output of command " + command + " before it was killed: " + String.join("\n", output));
-      }
-
       return emptyList();
     }
 
     if (exitedValue != 0) {
-      logger.fine(
-          "Failed to run command "
-              + command
-              + ". Exit code: "
-              + exitedValue
-              + " Output: "
-              + String.join("\n", output));
+      logger.fine("Failed to run command " + command + ". Exit code: " + exitedValue);
 
       return emptyList();
     }
