@@ -4,17 +4,17 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.5.4"
     id("com.gradle.plugin-publish") version "2.1.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.4.0"
+    id("org.jetbrains.kotlin.jvm") version "2.4.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.1"
-    id("org.graalvm.buildtools.native") version "1.1.6"
+    id("org.graalvm.buildtools.native") version "1.1.7"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
 }
 
 plugins {
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.7.0"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.8.0"
   id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
@@ -306,10 +306,11 @@ include(":instrumentation:grpc-1.6:testing")
 include(":instrumentation:guava-10.0:javaagent")
 include(":instrumentation:guava-10.0:library")
 include(":instrumentation:gwt-2.0:javaagent")
+include(":instrumentation:hbase:hbase-client-1.0:javaagent")
 include(":instrumentation:hbase:hbase-client-1.4:javaagent")
 include(":instrumentation:hbase:hbase-client-2.0:javaagent")
-include(":instrumentation:hbase:hbase-client-common-1.4:javaagent")
-include(":instrumentation:hbase:hbase-client-common-1.4:testing")
+include(":instrumentation:hbase:hbase-client-common-1.0:javaagent")
+include(":instrumentation:hbase:hbase-client-common-1.0:testing")
 include(":instrumentation:helidon-4.3:javaagent")
 include(":instrumentation:helidon-4.3:library")
 include(":instrumentation:helidon-4.3:testing")
