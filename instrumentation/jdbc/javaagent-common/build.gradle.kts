@@ -5,6 +5,8 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
+base.archivesName.set("${base.archivesName.get()}-common")
+
 sourceSets {
   main {
     val shadedDep = project(":instrumentation:jdbc:library")

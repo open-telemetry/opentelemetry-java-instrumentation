@@ -11,7 +11,7 @@ muzzle {
 
 dependencies {
   bootstrap(project(":instrumentation:jdbc:bootstrap"))
-  implementation(project(":instrumentation:jdbc:jdbc-common:javaagent"))
+  implementation(project(":instrumentation:jdbc:javaagent-common"))
   compileOnly(
     project(
       path = ":instrumentation:jdbc:library",
