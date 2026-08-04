@@ -114,11 +114,7 @@ public class AgentInstaller {
     EmbeddedInstrumentationProperties.setPropertiesLoader(extensionClassLoader);
     setDefineClassHandler();
     FieldBackedImplementationConfiguration.configure();
-    // preload ThreadLocalRandom to avoid occasional
-    // java.lang.ClassCircularityError: java/util/concurrent/ThreadLocalRandom
-    // see https://github.com/raphw/byte-buddy/issues/1666 and
-    // https://bugs.openjdk.org/browse/JDK-8164165
-    ThreadLocalRandom.current();
+    preloadClasses();
 
     AgentBuilder agentBuilder =
         newAgentBuilder(
@@ -214,6 +210,33 @@ public class AgentInstaller {
   private static ConfigProperties getConfig(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
     ConfigProperties config = AutoConfigureUtil.getConfig(autoConfiguredSdk);
     return config == null ? EmptyConfigProperties.INSTANCE : config;
+  }
+
+  /**
+   * Loads classes that could otherwise get loaded from inside a {@link
+   * java.lang.instrument.ClassFileTransformer} callback while they are already being loaded, which
+   * makes the jvm fail their resolution with {@link ClassCircularityError}. Because resolution
+   * errors are permanent, see JVMS 5.4.3, such a failure poisons every later use of the class in
+   * the jvm, not just the agent.
+   *
+   * @see <a href="https://bugs.openjdk.org/browse/JDK-8164165">JDK-8164165</a>
+   */
+  private static void preloadClasses() {
+    // preload ThreadLocalRandom to avoid occasional
+    // java.lang.ClassCircularityError: java/util/concurrent/ThreadLocalRandom
+    // see https://github.com/raphw/byte-buddy/issues/1666
+    ThreadLocalRandom.current();
+
+    // preload the anonymous class used by MethodHandle.customize() to avoid
+    // java.lang.ClassCircularityError: java/lang/invoke/MethodHandle$1
+    // on jdk 17, which breaks all further invokedynamic call site linking in the jvm.
+    // MethodHandle.customize() only runs after a number of call sites have been linked, so linking
+    // a single call site here would not reliably trigger the load.
+    try {
+      Class.forName("java.lang.invoke.MethodHandle$1", false, null);
+    } catch (ClassNotFoundException ignored) {
+      // this class does not exist on all jdk versions
+    }
   }
 
   private static AgentBuilder newAgentBuilder(ByteBuddy byteBuddy) {
