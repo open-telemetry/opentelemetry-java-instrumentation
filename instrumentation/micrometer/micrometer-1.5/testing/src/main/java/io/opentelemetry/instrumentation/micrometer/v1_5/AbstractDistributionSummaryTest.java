@@ -67,6 +67,11 @@ public abstract class AbstractDistributionSummaryTest {
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME, "testSummary.histogram", AbstractIterableAssert::isEmpty);
 
+    // micrometer max gauge is not emitted
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME, "testSummary.max", AbstractIterableAssert::isEmpty);
+
     // when
     Metrics.globalRegistry.remove(summary);
 

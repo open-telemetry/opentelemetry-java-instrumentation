@@ -68,6 +68,11 @@ public abstract class AbstractTimerTest {
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME, "testTimer.histogram", AbstractIterableAssert::isEmpty);
 
+    // micrometer max gauge is not emitted
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME, "testTimer.max", AbstractIterableAssert::isEmpty);
+
     // when
     Metrics.globalRegistry.remove(timer);
     testing().clearData();
