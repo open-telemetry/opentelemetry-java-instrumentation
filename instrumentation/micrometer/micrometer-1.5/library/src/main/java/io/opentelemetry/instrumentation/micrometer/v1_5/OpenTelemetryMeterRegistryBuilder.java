@@ -23,13 +23,13 @@ import java.util.concurrent.TimeUnit;
 /** A builder of {@link OpenTelemetryMeterRegistry}. */
 public final class OpenTelemetryMeterRegistryBuilder {
 
+  // Visible for testing
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";
+
   static {
     Experimental.internalSetMicrometerHistogramGaugesEnabled(
         (builder, enabled) -> builder.histogramGaugesEnabled = enabled);
   }
-
-  // Visible for testing
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";
 
   private final OpenTelemetry openTelemetry;
   private Clock clock = Clock.SYSTEM;
