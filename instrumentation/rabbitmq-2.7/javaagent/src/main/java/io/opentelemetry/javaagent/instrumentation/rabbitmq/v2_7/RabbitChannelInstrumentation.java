@@ -91,9 +91,13 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         named("basicPublish").and(takesArguments(6)),
         getClass().getName() + "$ChannelPublishAdvice");
     transformer.applyAdviceToMethod(
-        namedOneOf("basicAck", "basicNack", "basicReject")
+        namedOneOf("basicAck", "basicNack")
             .and(isPublic())
-            .and(takesArgument(0, long.class)),
+            .and(takesArgument(0, long.class))
+            .and(takesArgument(1, boolean.class)),
+        getClass().getName() + "$ChannelMultipleSettleAdvice");
+    transformer.applyAdviceToMethod(
+        named("basicReject").and(isPublic()).and(takesArgument(0, long.class)),
         getClass().getName() + "$ChannelSettleAdvice");
     transformer.applyAdviceToMethod(
         named("basicGet").and(takesArgument(0, String.class)),
@@ -127,6 +131,15 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
 
       public static ChannelMethodAdviceScope start(
           CallDepth callDepth, Channel channel, String method, @Nullable Long deliveryTag) {
+        return start(callDepth, channel, method, deliveryTag, false);
+      }
+
+      public static ChannelMethodAdviceScope start(
+          CallDepth callDepth,
+          Channel channel,
+          String method,
+          @Nullable Long deliveryTag,
+          boolean multiple) {
         if (callDepth.getAndIncrement() > 0) {
           return new ChannelMethodAdviceScope(callDepth, null, null, null);
         }
@@ -135,7 +148,12 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         ChannelAndMethod request =
             deliveryTag == null
                 ? ChannelAndMethod.create(channel, method)
-                : ChannelAndMethod.createSettle(channel, method, deliveryTag);
+                : ChannelAndMethod.createSettle(
+                    channel,
+                    method,
+                    deliveryTag,
+                    multiple,
+                    DeliveredMessages.settle(channel, deliveryTag, multiple));
 
         if (!channelInstrumenter(request).shouldStart(parentContext, request)) {
           return new ChannelMethodAdviceScope(callDepth, null, null, null);
@@ -188,6 +206,27 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) long deliveryTag) {
       return ChannelMethodAdvice.ChannelMethodAdviceScope.start(
           CallDepth.forClass(Channel.class), channel, method, deliveryTag);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void stopSpan(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter ChannelMethodAdvice.ChannelMethodAdviceScope adviceScope) {
+      adviceScope.end(throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ChannelMultipleSettleAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static ChannelMethodAdvice.ChannelMethodAdviceScope onEnter(
+        @Advice.This Channel channel,
+        @Advice.Origin("Channel.#m") String method,
+        @Advice.Argument(0) long deliveryTag,
+        @Advice.Argument(1) boolean multiple) {
+      return ChannelMethodAdvice.ChannelMethodAdviceScope.start(
+          CallDepth.forClass(Channel.class), channel, method, deliveryTag, multiple);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -271,6 +310,19 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
       ChannelPublishAdviceScope adviceScope =
           ChannelPublishAdviceScope.start(channel, exchange, routingKey);
 
+      try {
+        return new Object[] {adviceScope, addHeaders(adviceScope, originalProps, body)};
+      } catch (Throwable t) {
+        // the advice suppresses throwables, so a failure here would leave the scope, the call depth
+        // and the current rabbit context behind; publish the message without headers instead
+        return new Object[] {adviceScope, originalProps};
+      }
+    }
+
+    public static AMQP.BasicProperties addHeaders(
+        ChannelPublishAdviceScope adviceScope,
+        @Nullable AMQP.BasicProperties originalProps,
+        @Nullable byte[] body) {
       // when the span was not started, e.g. because it was suppressed, fall back to the current
       // context so that the message headers still get injected
       Context context = adviceScope.getContext();
@@ -315,12 +367,15 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
                 props.getClusterId());
       }
 
-      return new Object[] {adviceScope, props};
+      return props;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterArgs) {
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
+      if (enterArgs == null) {
+        return;
+      }
       ((ChannelPublishAdviceScope) enterArgs[0]).end(throwable);
     }
   }
