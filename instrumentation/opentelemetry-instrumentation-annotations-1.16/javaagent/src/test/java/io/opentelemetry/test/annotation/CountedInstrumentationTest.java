@@ -5,6 +5,7 @@
 
 package io.opentelemetry.test.annotation;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.common.Attributes;
@@ -53,6 +54,28 @@ class CountedInstrumentationTest {
     CountedMethods countedMethods = new CountedMethods();
     countedMethods.ünicödeMethödNamë();
     assertCounter("CountedMethods._nic_deMeth_dNam_", 1);
+  }
+
+  @Test
+  void doesNotDoubleCountBridgeMethod() {
+    CountedMethods.GenericMethods<String> methods = new CountedMethods.StringCountedMethods();
+    methods.customGeneric("foo");
+    assertTotalCounterValue("custom.generic", 1);
+  }
+
+  private static void assertTotalCounterValue(String metricName, long expectedValue) {
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        metricName,
+        metrics ->
+            metrics.satisfies(
+                actualMetrics ->
+                    assertThat(
+                            actualMetrics.stream()
+                                .flatMap(metric -> metric.getLongSumData().getPoints().stream())
+                                .mapToLong(point -> point.getValue())
+                                .sum())
+                        .isEqualTo(expectedValue)));
   }
 
   private static void assertCounter(String metricName, long expectedValue) {
