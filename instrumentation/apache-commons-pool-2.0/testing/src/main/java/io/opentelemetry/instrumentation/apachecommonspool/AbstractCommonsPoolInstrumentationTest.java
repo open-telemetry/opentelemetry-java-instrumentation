@@ -215,11 +215,11 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
     for (String poolName : poolNames) {
       assertions.add(
           point ->
-              point.hasAttributesSatisfying(
+              point.hasAttributesSatisfyingExactly(
                   equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "idle")));
       assertions.add(
           point ->
-              point.hasAttributesSatisfying(
+              point.hasAttributesSatisfyingExactly(
                   equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "used")));
     }
 
@@ -245,10 +245,10 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
                 sum.isNotMonotonic()
                     .hasPointsSatisfying(
                         point ->
-                            point.hasAttributesSatisfying(
+                            point.hasAttributesSatisfyingExactly(
                                 equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "idle")),
                         point ->
-                            point.hasAttributesSatisfying(
+                            point.hasAttributesSatisfyingExactly(
                                 equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "used"))));
   }
 
