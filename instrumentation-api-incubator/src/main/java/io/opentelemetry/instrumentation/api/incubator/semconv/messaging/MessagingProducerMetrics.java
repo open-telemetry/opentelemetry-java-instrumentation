@@ -60,7 +60,7 @@ public final class MessagingProducerMetrics implements OperationListener {
     boolean emitStableSemconv = supportsStableSemconv && emitStableMessagingSemconv();
     publishDurationHistogram = emitOldSemconv ? buildPublishDuration(meter) : null;
     clientOperationDurationHistogram =
-        emitStableSemconv ? buildClientOperationDuration(meter) : null;
+        emitStableSemconv ? MessagingMetricsAdvice.buildClientOperationDuration(meter) : null;
     sentMessagesCounter = emitStableSemconv ? buildSentMessages(meter) : null;
     enabled =
         publishDurationHistogram != null
@@ -158,18 +158,6 @@ public final class MessagingProducerMetrics implements OperationListener {
             .setExplicitBucketBoundariesAdvice(MessagingMetricsAdvice.DURATION_SECONDS_BUCKETS)
             .setUnit("s");
     MessagingMetricsAdvice.applyOldDurationAdvice(builder);
-    return builder.build();
-  }
-
-  private static DoubleHistogram buildClientOperationDuration(Meter meter) {
-    DoubleHistogramBuilder builder =
-        meter
-            .histogramBuilder("messaging.client.operation.duration")
-            .setDescription(
-                "Duration of messaging operation initiated by a producer or consumer client.")
-            .setExplicitBucketBoundariesAdvice(MessagingMetricsAdvice.DURATION_SECONDS_BUCKETS)
-            .setUnit("s");
-    MessagingMetricsAdvice.applyClientOperationDurationAdvice(builder);
     return builder.build();
   }
 

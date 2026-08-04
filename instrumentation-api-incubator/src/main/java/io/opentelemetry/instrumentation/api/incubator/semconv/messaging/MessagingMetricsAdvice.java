@@ -15,8 +15,10 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.api.incubator.metrics.ExtendedLongCounterBuilder;
+import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.LongCounterBuilder;
+import io.opentelemetry.api.metrics.Meter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -101,6 +103,18 @@ final class MessagingMetricsAdvice {
       return attributes;
     }
     return attributes.toBuilder().remove(MESSAGING_DESTINATION_NAME).build();
+  }
+
+  static DoubleHistogram buildClientOperationDuration(Meter meter) {
+    DoubleHistogramBuilder builder =
+        meter
+            .histogramBuilder("messaging.client.operation.duration")
+            .setDescription(
+                "Duration of messaging operation initiated by a producer or consumer client.")
+            .setExplicitBucketBoundariesAdvice(DURATION_SECONDS_BUCKETS)
+            .setUnit("s");
+    applyClientOperationDurationAdvice(builder);
+    return builder.build();
   }
 
   static void applyOldDurationAdvice(DoubleHistogramBuilder builder) {

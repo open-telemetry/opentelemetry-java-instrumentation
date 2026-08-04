@@ -67,7 +67,9 @@ public final class MessagingConsumerMetrics implements OperationListener {
     receiveMessageCount =
         !consumedMessagesOnly && emitOldSemconv ? buildReceiveMessages(meter) : null;
     clientOperationDurationHistogram =
-        !consumedMessagesOnly && emitStableSemconv ? buildClientOperationDuration(meter) : null;
+        !consumedMessagesOnly && emitStableSemconv
+            ? MessagingMetricsAdvice.buildClientOperationDuration(meter)
+            : null;
     consumedMessagesCounter = emitStableSemconv ? buildConsumedMessages(meter) : null;
     enabled =
         receiveDurationHistogram != null
@@ -203,18 +205,6 @@ public final class MessagingConsumerMetrics implements OperationListener {
             .setDescription("Measures the number of received messages.")
             .setUnit("{message}");
     MessagingMetricsAdvice.applyOldMessagesAdvice(builder);
-    return builder.build();
-  }
-
-  private static DoubleHistogram buildClientOperationDuration(Meter meter) {
-    DoubleHistogramBuilder builder =
-        meter
-            .histogramBuilder("messaging.client.operation.duration")
-            .setDescription(
-                "Duration of messaging operation initiated by a producer or consumer client.")
-            .setExplicitBucketBoundariesAdvice(MessagingMetricsAdvice.DURATION_SECONDS_BUCKETS)
-            .setUnit("s");
-    MessagingMetricsAdvice.applyClientOperationDurationAdvice(builder);
     return builder.build();
   }
 
