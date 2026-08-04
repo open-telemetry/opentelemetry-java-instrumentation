@@ -20,7 +20,7 @@ class CountedMethods {
     throw new IllegalStateException("boom");
   }
 
-  @SuppressWarnings("UnicodeInCode")
+  @SuppressWarnings({"UnicodeInCode", "checkstyle:MethodName"})
   @Counted
   void ünicödeMethödNamë() {}
 
