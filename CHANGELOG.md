@@ -11,7 +11,7 @@
   standard experimental surface ahead of stabilization. Behavior and the
   `otel.instrumentation.micrometer.histogram-gauges.enabled` config property are unchanged. The
   deprecated builder method will be removed in the next release.
-  ([#PR](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/PR))
+  ([#19404](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19404))
 
 ## Version 2.30.0 (2026-07-22)
 
