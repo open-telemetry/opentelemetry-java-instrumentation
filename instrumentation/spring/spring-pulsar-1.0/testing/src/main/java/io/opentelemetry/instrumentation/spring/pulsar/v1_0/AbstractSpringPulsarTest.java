@@ -24,6 +24,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -64,6 +65,11 @@ public abstract class AbstractSpringPulsarTest {
       DockerImageName.parse("apachepulsar/pulsar:4.0.2");
   private static final String OTEL_SUBSCRIPTION = "otel-subscription";
   protected static final String OTEL_TOPIC = "persistent://public/default/otel-topic";
+
+  // messaging.destination.subscription.name only exists in the v1.43 messaging semantic conventions
+  private static final AttributeKey<String> MESSAGING_DESTINATION_SUBSCRIPTION_NAME =
+      stringKey("messaging.destination.subscription.name");
+
   private static PulsarContainer pulsarContainer;
   private static ConfigurableApplicationContext applicationContext;
   private static PulsarTemplate<String> pulsarTemplate;
@@ -158,6 +164,9 @@ public abstract class AbstractSpringPulsarTest {
                                                 equalTo(MESSAGING_OPERATION_NAME, "receive"),
                                                 equalTo(MESSAGING_SYSTEM, "pulsar"),
                                                 equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
+                                                equalTo(
+                                                    MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                    OTEL_SUBSCRIPTION),
                                                 equalTo(SERVER_ADDRESS, brokerHost),
                                                 equalTo(SERVER_PORT, brokerPort))))));
     // the pulsar client already counts the consumed messages, so spring-pulsar must not count them
@@ -218,7 +227,15 @@ public abstract class AbstractSpringPulsarTest {
         satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isNotNegative),
         equalTo(SERVER_ADDRESS, brokerHost),
         equalTo(SERVER_PORT, brokerPort),
+        subscriptionName(),
         bodySize());
+  }
+
+  // messaging.destination.subscription.name only exists in the v1.43 messaging semantic conventions
+  private static AttributeAssertion subscriptionName() {
+    return equalTo(
+        MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+        emitStableMessagingSemconv() ? OTEL_SUBSCRIPTION : null);
   }
 
   private static AttributeAssertion oldOperation(String operation) {
