@@ -1,6 +1,5 @@
 plugins {
   java
-  id("com.diffplug.spotless")
 }
 
 version = rootProject.version
@@ -10,14 +9,6 @@ repositories {
   maven {
     name = "sonatype"
     url = uri("https://central.sonatype.com/repository/maven-snapshots/")
-  }
-}
-
-spotless {
-  java {
-    googleJavaFormat()
-    licenseHeaderFile(rootProject.file("../../buildscripts/spotless.license.java"), "(package|import|public)")
-    target("src/**/*.java")
   }
 }
 
