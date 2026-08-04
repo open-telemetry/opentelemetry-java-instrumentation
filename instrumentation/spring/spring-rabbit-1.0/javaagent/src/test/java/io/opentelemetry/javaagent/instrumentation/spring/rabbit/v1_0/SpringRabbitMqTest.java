@@ -278,7 +278,8 @@ class SpringRabbitMqTest {
               span -> span.hasName("consumer").hasParent(springProcessSpan));
         },
         trace -> {
-          trace.hasSpansSatisfyingExactly(span -> verifyAckSpan(span));
+          trace.hasSpansSatisfyingExactly(
+              span -> verifyAckSpan(span, ConsumerConfig.TEST_QUEUE, false));
         });
   }
 
@@ -315,11 +316,12 @@ class SpringRabbitMqTest {
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.qos")),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.consume")),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.cancel")),
-        trace -> trace.hasSpansSatisfyingExactly(span -> verifyAckSpan(span)));
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> verifyAckSpan(span, anonymousQueueName, true)));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  private static void verifyAckSpan(SpanDataAssert span) {
+  private static void verifyAckSpan(SpanDataAssert span, String queue, boolean anonymousQueue) {
     boolean stable = emitStableMessagingSemconv();
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -331,6 +333,10 @@ class SpringRabbitMqTest {
     if (stable) {
       assertions.add(equalTo(SERVER_ADDRESS, ip));
       assertions.add(satisfies(SERVER_PORT, AbstractLongAssert::isNotNegative));
+      assertions.add(equalTo(MESSAGING_DESTINATION_NAME, queue));
+      if (anonymousQueue) {
+        assertions.add(equalTo(MESSAGING_DESTINATION_ANONYMOUS, true));
+      }
       assertions.add(equalTo(MESSAGING_OPERATION_NAME, "ack"));
       assertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
       assertions.add(
@@ -339,7 +345,7 @@ class SpringRabbitMqTest {
         assertions.add(equalTo(MESSAGING_OPERATION, "settle"));
       }
     }
-    span.hasName(stable ? "ack" : "basic.ack")
+    span.hasName(stable ? (anonymousQueue ? "ack" : "ack " + queue) : "basic.ack")
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfyingExactly(assertions);
   }

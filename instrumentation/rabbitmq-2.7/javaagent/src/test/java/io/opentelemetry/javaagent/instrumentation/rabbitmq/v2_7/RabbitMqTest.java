@@ -21,6 +21,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_ANONYMOUS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -586,19 +587,25 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> verifySettleSpan(span, trace.getSpan(0), operation, deliveryTag)));
+                span ->
+                    verifySettleSpan(span, trace.getSpan(0), operation, queueName, deliveryTag)));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static void verifySettleSpan(
-      SpanDataAssert span, SpanData parentSpan, String operation, long deliveryTag) {
+      SpanDataAssert span,
+      SpanData parentSpan,
+      String operation,
+      String queueName,
+      long deliveryTag) {
     boolean stable = emitStableMessagingSemconv();
     span.hasName(stable ? operation : "basic." + operation)
         .hasKind(SpanKind.CLIENT)
         .hasParent(parentSpan)
         .hasAttributesSatisfying(
             equalTo(MESSAGING_SYSTEM, "rabbitmq"),
-            equalTo(MESSAGING_DESTINATION_NAME, null),
+            equalTo(MESSAGING_DESTINATION_NAME, stable ? queueName : null),
+            equalTo(MESSAGING_DESTINATION_ANONYMOUS, stable ? true : null),
             equalTo(MESSAGING_OPERATION_NAME, stable ? operation : null),
             equalTo(MESSAGING_OPERATION_TYPE, stable ? "settle" : null),
             equalTo(MESSAGING_OPERATION, stable && emitOldMessagingSemconv() ? "settle" : null),
