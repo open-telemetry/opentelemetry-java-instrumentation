@@ -270,7 +270,12 @@
       "name": "otel.exporter.zipkin.endpoint",
       "type": "java.lang.String",
       "description": "The Zipkin endpoint to connect to.<br/>Currently only HTTP is supported.",
-      "defaultValue": "http://localhost:9411/api/v2/spans"
+      "defaultValue": "http://localhost:9411/api/v2/spans",
+      "deprecation": {
+        "level": "warning",
+        "reason": "The Zipkin exporter is removed in 3.0.",
+        "replacement": "otel.exporter.otlp.traces.endpoint"
+      }
     },
     {
       "name": "otel.instrumentation.annotations.enabled",
@@ -871,7 +876,7 @@
         },
         {
           "value": "zipkin",
-          "description": "Zipkin exporter."
+          "description": "Zipkin exporter. Deprecated, removed in 3.0; use \"otlp\" instead."
         }
       ]
     },
