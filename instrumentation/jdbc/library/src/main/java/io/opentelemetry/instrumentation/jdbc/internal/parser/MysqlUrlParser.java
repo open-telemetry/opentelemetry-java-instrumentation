@@ -91,22 +91,21 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     int typeEndLoc = jdbcUrl.indexOf(':');
     int portLoc = jdbcUrl.indexOf(":", typeEndLoc + 1);
     int dbLoc = jdbcUrl.indexOf("/", typeEndLoc);
-    int paramLoc = jdbcUrl.indexOf("?", dbLoc);
+    int paramLoc = dbLoc > 0 ? jdbcUrl.indexOf("?", dbLoc) : -1;
 
     // Extract database name
-    String databaseName;
     if (paramLoc > 0) {
-      databaseName = jdbcUrl.substring(dbLoc + 1, paramLoc);
-    } else {
-      databaseName = jdbcUrl.substring(dbLoc + 1);
+      ctx.databaseName(jdbcUrl.substring(dbLoc + 1, paramLoc));
+    } else if (dbLoc != -1) {
+      ctx.databaseName(jdbcUrl.substring(dbLoc + 1));
     }
-    ctx.databaseName(databaseName);
 
     // Host and port from URL
     int hostEndLoc;
+    int effectiveDbLoc = dbLoc != -1 ? dbLoc : jdbcUrl.length();
     if (portLoc > 0) {
       hostEndLoc = portLoc;
-      Integer parsedPort = parsePort(jdbcUrl.substring(portLoc + 1, dbLoc));
+      Integer parsedPort = parsePort(jdbcUrl.substring(portLoc + 1, effectiveDbLoc));
       if (parsedPort != null) {
         ctx.port(parsedPort);
       }

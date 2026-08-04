@@ -207,6 +207,12 @@ class JdbcConnectionUrlParserTest {
             .setHost("::1")
             .setPort(3306)
             .setName("mydb")
+            .build(),
+        arg("jdbc:mysql:host:3306")
+            .setShortUrl("mysql://host:3306")
+            .setSystem(MYSQL)
+            .setHost("host")
+            .setPort(3306)
             .build());
   }
 
