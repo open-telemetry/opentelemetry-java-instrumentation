@@ -11,6 +11,7 @@ import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.logging.Level.FINE;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -267,9 +268,6 @@ public final class HostIdResource {
       ProcessBuilder processBuilder = new ProcessBuilder(command);
       processBuilder.redirectErrorStream(true);
       process = processBuilder.start();
-      // none of these commands read stdin; closing it means a command that would otherwise wait
-      // for input sees EOF and exits instead of running until the timeout
-      process.getOutputStream().close();
 
       long deadlineNanos = System.nanoTime() + MILLISECONDS.toNanos(timeoutMillis);
       // the output has to be drained on another thread: reading to EOF on this thread is unbounded,
@@ -321,16 +319,8 @@ public final class HostIdResource {
   }
 
   private static List<String> getProcessOutput(InputStream processOutput) throws IOException {
-    List<String> result = new ArrayList<>();
-
-    try (BufferedReader processOutputReader =
-        new BufferedReader(new InputStreamReader(processOutput, UTF_8))) {
-      String readLine;
-
-      while ((readLine = processOutputReader.readLine()) != null) {
-        result.add(readLine);
-      }
+    try (BufferedReader reader = new BufferedReader(new InputStreamReader(processOutput, UTF_8))) {
+      return reader.lines().collect(toList());
     }
-    return result;
   }
 }
