@@ -1,8 +1,10 @@
 import aQute.bnd.gradle.Bundle
 import aQute.bnd.gradle.Resolve
 import aQute.bnd.gradle.TestOSGi
+import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
 import org.gradle.api.artifacts.ExternalModuleDependency
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.jvm.toolchain.JavaLanguageVersion
 import java.util.jar.JarFile
 
 plugins {
@@ -58,12 +60,6 @@ class OsgiSuiteDependencies(private val sourceSet: SourceSet, private val handle
  *
  * @param extraRunrequires `bnd.identity` entries added to `-runrequires` to force bundles into the
  *   Felix runtime that the BND resolver won't pull in automatically.
- * @param extraRunsystempackages Package prefixes of non-OSGi classpath libraries to expose via
- *   `-runsystempackages`. Versions are resolved dynamically from the runtime classpath.
- * @param serviceLoaderProvides SPI types that the testing bundle provides via META-INF/services
- *   (noop test implementations). Generates Provide-Capability + Require-Capability registrar so
- *   SPI Fly picks them up.
- * @param minJavaVersion If set, skips the suite when `testJavaVersion` is below this value.
  * @param resolveOnly When true, the suite stops at BND resolution (proving the bundle's OSGi wiring
  *   is satisfiable) and does not boot the container. Use when the instrumented library's own OSGi
  *   bundles have runtime packaging quirks that are provided/handled by the target platform.
@@ -71,9 +67,6 @@ class OsgiSuiteDependencies(private val sourceSet: SourceSet, private val handle
 fun registerOsgiSuite(
   suiteName: String,
   extraRunrequires: List<String> = emptyList(),
-  extraRunsystempackages: List<String> = emptyList(),
-  serviceLoaderProvides: List<String> = emptyList(),
-  minJavaVersion: Int? = null,
   resolveOnly: Boolean = false,
   configureDependencies: OsgiSuiteDependencies.() -> Unit = {},
 ): TaskProvider<out Task> {
@@ -87,12 +80,6 @@ fun registerOsgiSuite(
   // propagate to custom source set compile classpaths, so we add it directly.
   dependencies.add(sourceSet.compileOnlyConfigurationName, "org.osgi:osgi.core")
 
-  if (minJavaVersion != null) {
-    configurations[sourceSet.runtimeClasspathConfigurationName].attributes {
-      attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, minJavaVersion)
-    }
-  }
-
   val bsn = "opentelemetry-osgi-testing-$suiteName"
 
   val bundleTask = tasks.register<Bundle>("${suiteName}TestingBundle") {
@@ -103,23 +90,32 @@ fun registerOsgiSuite(
       // @Testable annotation to populate Test-Cases). Without this, testImplementation dependencies
       // like junit-jupiter are invisible to BND, causing Test-Cases to be empty and 0 tests to run.
       classpath(sourceSet.runtimeClasspath)
-      val bndArgs = mutableListOf(
+      bnd(
         "Bundle-SymbolicName: $bsn",
         "Test-Cases: \${classes;HIERARCHY_INDIRECTLY_ANNOTATED;org.junit.platform.commons.annotation.Testable;CONCRETE}",
       )
-      if (serviceLoaderProvides.isNotEmpty()) {
-        bndArgs.add("Provide-Capability: ${serviceLoaderProvides.joinToString(",") { "osgi.serviceloader;osgi.serviceloader=\"$it\"" }}")
-        bndArgs.add("Require-Capability: osgi.extender;filter:=\"(osgi.extender=osgi.serviceloader.registrar)\"")
-      }
-      bnd(*bndArgs.toTypedArray())
     }
   }
 
-  val runee = "JavaSE-${java.toolchain.languageVersion.get()}"
+  // Run the OSGi container on -PtestJavaVersion (falling back to the build toolchain) and derive
+  // -runee from it, so the java-version test matrix actually exercises OSGi resolution on each
+  // target execution environment instead of always using the build JVM. otelProps.testJavaVersion
+  // is normalized (e.g. "25-deny-unsafe" -> 25).
+  val suiteJavaVersion = the<OtelPropsExtension>().testJavaVersion?.majorVersion?.toInt()
+    ?: java.toolchain.languageVersion.get().asInt()
+  // The bnd OSGi launcher (biz.aQute.launcher 7.3.0) is compiled for Java 17, so the container can
+  // only boot on Java 17+ - below that it fails with UnsupportedClassVersionError. (Java 8 also
+  // can't resolve the bundle set, which needs a JavaSE>=9 EE.) Skip the suites below 17; the matrix
+  // still exercises 17, 21, 25 and 26.
+  val suiteEnabledForJavaVersion = suiteJavaVersion >= 17
+  val runee = "JavaSE-$suiteJavaVersion"
+  val suiteJavaLauncher = javaToolchains.launcherFor {
+    languageVersion.set(JavaLanguageVersion.of(suiteJavaVersion))
+  }
 
   // opentelemetry-instrumentation-api imports io.opentelemetry.semconv, but the upstream semconv
   // jar is not an OSGi bundle, so expose it as a system package for every suite.
-  val effectiveRunsystempackages = extraRunsystempackages + "io.opentelemetry.semconv|opentelemetry-semconv"
+  val effectiveRunsystempackages = listOf("io.opentelemetry.semconv|opentelemetry-semconv")
 
   // Build the "-runpath" / "-runsystempackages" bndrun lines that expose non-OSGi jars (e.g. the
   // upstream semconv jar) to the OSGi runtime. Resolved lazily at execution time (configuration-cache
@@ -196,6 +192,7 @@ fun registerOsgiSuite(
     dependsOn(bundleTask, generateBndrunTask)
     description = "Resolve $suiteName OSGi suite"
     group = JavaBasePlugin.VERIFICATION_GROUP
+    enabled = suiteEnabledForJavaVersion
     bndrun = inputBndrun.get().asFile
     outputBndrun = resolvedBndrun
     bundles = files(sourceSet.runtimeClasspath, bundleTask.get().archiveFile)
@@ -213,10 +210,10 @@ fun registerOsgiSuite(
     group = JavaBasePlugin.VERIFICATION_GROUP
     bndrun = resolveTask.flatMap { it.outputBndrun }
     bundles = files(sourceSet.runtimeClasspath, bundleTask.get().archiveFile)
-    if (minJavaVersion != null) {
-      val testJavaVersion: String? by project
-      enabled = testJavaVersion == null || testJavaVersion!!.toInt() >= minJavaVersion
-    }
+    enabled = suiteEnabledForJavaVersion
+    // Boot the container on the same JVM the -runee targets (see suiteJavaVersion above) so the
+    // java-version matrix runs the OSGi tests on each target Java version.
+    javaLauncher.set(suiteJavaLauncher)
     // BND reports success when zero tests ran (e.g. if bundles failed to start). Fail explicitly.
     val testResultsDir = layout.buildDirectory.dir("test-results/$name")
     doLast {
