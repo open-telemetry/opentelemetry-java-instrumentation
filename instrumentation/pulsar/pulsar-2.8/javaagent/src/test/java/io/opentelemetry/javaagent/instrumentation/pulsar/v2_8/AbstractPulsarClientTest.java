@@ -29,6 +29,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -74,6 +75,10 @@ abstract class AbstractPulsarClientTest {
   private static final Logger logger = LoggerFactory.getLogger(AbstractPulsarClientTest.class);
 
   static final String INSTRUMENTATION_NAME = "io.opentelemetry.pulsar-2.8";
+
+  // messaging.destination.subscription.name only exists in the v1.43 messaging semantic conventions
+  static final AttributeKey<String> MESSAGING_DESTINATION_SUBSCRIPTION_NAME =
+      stringKey("messaging.destination.subscription.name");
 
   private static final DockerImageName DEFAULT_IMAGE_NAME =
       DockerImageName.parse("apachepulsar/pulsar:2.8.0");
@@ -452,6 +457,7 @@ abstract class AbstractPulsarClientTest {
                 operationName("receive"),
                 operationType("receive"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
+                subscriptionName(),
                 bodySize()));
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
@@ -478,6 +484,7 @@ abstract class AbstractPulsarClientTest {
                 operationName("process"),
                 operationType("process"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
+                subscriptionName(),
                 bodySize()));
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
@@ -487,6 +494,12 @@ abstract class AbstractPulsarClientTest {
       assertions.add(equalTo(MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(partitionIndex)));
     }
     return assertions;
+  }
+
+  // messaging.destination.subscription.name only exists in the v1.43 messaging semantic conventions
+  private static AttributeAssertion subscriptionName() {
+    return equalTo(
+        MESSAGING_DESTINATION_SUBSCRIPTION_NAME, emitStableMessagingSemconv() ? "test_sub" : null);
   }
 
   // messaging.message.body.size is opt-in in the v1.43 messaging semantic conventions

@@ -92,6 +92,9 @@ public class PulsarSingletons {
             .addOperationMetrics(MessagingConsumerMetrics.getForOperationTypeWithOldMetrics())
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
+    if (emitStableMessagingSemconv()) {
+      instrumenterBuilder.addAttributesExtractor(new PulsarSubscriptionAttributesExtractor<>());
+    }
     setMessagingReceiveExceptionEventExtractor(instrumenterBuilder);
 
     if (emitStableMessagingSemconv() || receiveInstrumentationEnabled) {
@@ -121,6 +124,9 @@ public class PulsarSingletons {
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
             .addSpanLinksExtractor(new PulsarBatchRequestSpanLinksExtractor(propagator))
             .addOperationMetrics(MessagingConsumerMetrics.getForOperationTypeWithOldMetrics());
+    if (emitStableMessagingSemconv()) {
+      instrumenterBuilder.addAttributesExtractor(new PulsarSubscriptionAttributesExtractor<>());
+    }
     setMessagingReceiveExceptionEventExtractor(instrumenterBuilder);
     return instrumenterBuilder.buildInstrumenter(
         MessagingSpanKindExtractor.create(MessagingOperationType.RECEIVE));
@@ -139,6 +145,9 @@ public class PulsarSingletons {
                 createMessagingAttributesExtractor(
                     getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
             .addOperationMetrics(MessagingProcessMetrics.get());
+    if (emitStableMessagingSemconv()) {
+      instrumenterBuilder.addAttributesExtractor(new PulsarSubscriptionAttributesExtractor<>());
+    }
     if (!receiveInstrumentationEnabled && emitStableMessagingSemconv()) {
       instrumenterBuilder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     }
@@ -196,7 +205,7 @@ public class PulsarSingletons {
       return null;
     }
     String brokerUrl = VirtualFieldStore.extract(consumer);
-    PulsarRequest request = PulsarRequest.create(message, brokerUrl);
+    PulsarRequest request = PulsarRequest.create(message, brokerUrl, consumer);
     if (!consumerReceiveInstrumenter.shouldStart(parent, request)) {
       return null;
     }
@@ -238,7 +247,7 @@ public class PulsarSingletons {
       return null;
     }
     String brokerUrl = VirtualFieldStore.extract(consumer);
-    PulsarBatchRequest request = PulsarBatchRequest.create(messages, brokerUrl);
+    PulsarBatchRequest request = PulsarBatchRequest.create(messages, brokerUrl, consumer);
     if (!consumerBatchReceiveInstrumenter.shouldStart(parent, request)) {
       return null;
     }

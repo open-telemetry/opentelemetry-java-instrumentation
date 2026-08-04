@@ -74,6 +74,9 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                                                   equalTo(MESSAGING_SYSTEM, "pulsar"),
                                                   equalTo(MESSAGING_DESTINATION_NAME, topic),
                                                   equalTo(
+                                                      MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                      "test_sub"),
+                                                  equalTo(
                                                       ERROR_TYPE,
                                                       IllegalStateException.class.getName()))))));
     }
@@ -127,7 +130,10 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                                               .hasAttributesSatisfyingExactly(
                                                   equalTo(MESSAGING_OPERATION_NAME, "process"),
                                                   equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                                  equalTo(MESSAGING_DESTINATION_NAME, topic))))));
+                                                  equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                  equalTo(
+                                                      MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                      "test_sub"))))));
     }
 
     testing.waitAndAssertTraces(

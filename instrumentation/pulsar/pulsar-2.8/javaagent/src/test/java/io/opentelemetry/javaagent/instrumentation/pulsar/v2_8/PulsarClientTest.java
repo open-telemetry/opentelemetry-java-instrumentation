@@ -87,7 +87,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                               .hasAttributesSatisfyingExactly(
                                                   equalTo(MESSAGING_OPERATION_NAME, "process"),
                                                   equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                                  equalTo(MESSAGING_DESTINATION_NAME, topic))
+                                                  equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                  equalTo(
+                                                      MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                      "test_sub"))
                                               .hasBucketBoundaries(DURATION_BUCKETS)))));
       testing.waitAndAssertMetrics(
           INSTRUMENTATION_NAME,
@@ -111,6 +114,9 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                                   equalTo(MESSAGING_OPERATION_NAME, "receive"),
                                                   equalTo(MESSAGING_SYSTEM, "pulsar"),
                                                   equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                  equalTo(
+                                                      MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                      "test_sub"),
                                                   equalTo(SERVER_ADDRESS, brokerHost),
                                                   equalTo(SERVER_PORT, brokerPort))))));
       testing.waitAndAssertMetrics(
