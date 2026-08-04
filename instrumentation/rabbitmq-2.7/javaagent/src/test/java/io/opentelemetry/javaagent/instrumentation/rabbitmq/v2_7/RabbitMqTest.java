@@ -21,6 +21,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_ANONYMOUS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
@@ -588,7 +589,43 @@ class RabbitMqTest extends AbstractRabbitMqTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    verifySettleSpan(span, trace.getSpan(0), operation, queueName, deliveryTag)));
+                    verifySettleSpan(
+                        span, trace.getSpan(0), operation, queueName, deliveryTag, null)));
+  }
+
+  @ParameterizedTest(name = "test rabbit {0} multiple")
+  @ValueSource(strings = {"ack", "nack"})
+  void testRabbitSettleMultiple(String operation) throws IOException {
+    String queueName = channel.queueDeclare().getQueue();
+    for (int i = 0; i < 3; i++) {
+      channel.basicPublish(
+          "", queueName, null, ("message " + i).getBytes(Charset.defaultCharset()));
+    }
+    long deliveryTag = 0;
+    for (int i = 0; i < 3; i++) {
+      GetResponse response = channel.basicGet(queueName, false);
+      deliveryTag = response.getEnvelope().getDeliveryTag();
+    }
+    testing.clearData();
+
+    long lastDeliveryTag = deliveryTag;
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          if ("ack".equals(operation)) {
+            channel.basicAck(lastDeliveryTag, true);
+          } else {
+            channel.basicNack(lastDeliveryTag, true, false);
+          }
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    verifySettleSpan(
+                        span, trace.getSpan(0), operation, queueName, lastDeliveryTag, 3L)));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -597,7 +634,8 @@ class RabbitMqTest extends AbstractRabbitMqTest {
       SpanData parentSpan,
       String operation,
       String queueName,
-      long deliveryTag) {
+      long deliveryTag,
+      Long batchMessageCount) {
     boolean stable = emitStableMessagingSemconv();
     span.hasName(stable ? operation : "basic." + operation)
         .hasKind(SpanKind.CLIENT)
@@ -610,6 +648,8 @@ class RabbitMqTest extends AbstractRabbitMqTest {
             equalTo(MESSAGING_OPERATION_TYPE, stable ? "settle" : null),
             equalTo(MESSAGING_OPERATION, stable && emitOldMessagingSemconv() ? "settle" : null),
             equalTo(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, stable ? deliveryTag : null),
+            equalTo(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, stable ? queueName : null),
+            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, stable ? batchMessageCount : null),
             equalTo(SERVER_ADDRESS, stable ? rabbitMqIp : null),
             satisfies(stringKey("rabbitmq.command"), val -> val.isIn(null, "basic." + operation)));
   }

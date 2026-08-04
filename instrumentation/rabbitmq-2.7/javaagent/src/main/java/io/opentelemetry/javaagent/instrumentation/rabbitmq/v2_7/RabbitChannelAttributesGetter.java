@@ -10,7 +10,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.DeliveredMessages.DeliveredMessage;
+import io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.DeliveredMessages.SettledMessages;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -31,8 +31,8 @@ final class RabbitChannelAttributesGetter
               channelAndMethod.getExchange(), channelAndMethod.getRoutingKey())
           : RabbitInstrumenterHelper.normalizeExchangeName(channelAndMethod.getExchange());
     }
-    DeliveredMessage message = settledMessage(channelAndMethod);
-    return message != null ? message.getDestination() : null;
+    SettledMessages messages = channelAndMethod.getSettledMessages();
+    return messages != null ? messages.getDestination() : null;
   }
 
   @Nullable
@@ -55,21 +55,8 @@ final class RabbitChannelAttributesGetter
       return RabbitInstrumenterHelper.isDefaultExchange(channelAndMethod.getExchange())
           && RabbitInstrumenterHelper.isGeneratedQueueName(channelAndMethod.getRoutingKey());
     }
-    DeliveredMessage message = settledMessage(channelAndMethod);
-    return message != null && message.isAnonymousDestination();
-  }
-
-  /**
-   * Returns the message that a {@code basicAck}, {@code basicNack} or {@code basicReject} call
-   * settles, or {@code null} for any other method or when the delivery is no longer remembered.
-   */
-  @Nullable
-  private static DeliveredMessage settledMessage(ChannelAndMethod channelAndMethod) {
-    Long deliveryTag = channelAndMethod.getDeliveryTag();
-    if (deliveryTag == null) {
-      return null;
-    }
-    return DeliveredMessages.get(channelAndMethod.getChannel(), deliveryTag);
+    SettledMessages messages = channelAndMethod.getSettledMessages();
+    return messages != null && messages.isAnonymousDestination();
   }
 
   @Nullable
@@ -105,7 +92,12 @@ final class RabbitChannelAttributesGetter
   @Nullable
   @Override
   public Long getBatchMessageCount(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
-    return null;
+    if (!channelAndMethod.isMultipleSettle()) {
+      return null;
+    }
+    SettledMessages messages = channelAndMethod.getSettledMessages();
+    // the count is only known for deliveries that are still remembered
+    return messages == null || messages.getCount() == 0 ? null : (long) messages.getCount();
   }
 
   @Override
