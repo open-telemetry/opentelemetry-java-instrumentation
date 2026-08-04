@@ -26,7 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AzureContextInstrumentationModule extends InstrumentationModule {
 
   public AzureContextInstrumentationModule() {
-    super("azure-core", "azure-core-1.53");
+    super("azure-core", "azure-core-1.53", "azure-core-1.53-context");
   }
 
   @Override
