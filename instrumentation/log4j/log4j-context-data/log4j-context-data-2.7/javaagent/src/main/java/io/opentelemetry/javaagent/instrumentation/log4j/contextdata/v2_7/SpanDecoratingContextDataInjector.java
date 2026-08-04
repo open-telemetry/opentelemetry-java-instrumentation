@@ -50,8 +50,8 @@ public class SpanDecoratingContextDataInjector implements ContextDataInjector {
 
     Context context = Context.current();
     SpanContext currentContext = Span.fromContext(context).getSpanContext();
-    Baggage baggage = Baggage.fromContext(context);
-    boolean addBaggage = BAGGAGE_ENABLED && !baggage.isEmpty();
+    Baggage baggage = BAGGAGE_ENABLED ? Baggage.fromContext(context) : Baggage.empty();
+    boolean addBaggage = !baggage.isEmpty();
     if (!currentContext.isValid() && !addBaggage) {
       return staticContextData.isEmpty() ? contextData : newContextData(contextData);
     }
