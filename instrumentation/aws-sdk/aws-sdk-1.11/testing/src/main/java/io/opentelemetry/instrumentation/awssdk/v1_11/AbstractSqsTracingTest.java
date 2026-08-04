@@ -58,7 +58,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import javax.annotation.Nullable;
 import org.assertj.core.api.AbstractStringAssert;
 import org.elasticmq.rest.sqs.SQSRestServer;
 import org.elasticmq.rest.sqs.SQSRestServerBuilder;
@@ -249,10 +248,7 @@ public abstract class AbstractSqsTracingTest {
   }
 
   private static void assertReceiveSpan(
-      SpanDataAssert span,
-      @Nullable SpanData parent,
-      SpanData creationContext,
-      boolean captureHeaders) {
+      SpanDataAssert span, SpanData parent, SpanData creationContext, boolean captureHeaders) {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             asList(
@@ -309,10 +305,7 @@ public abstract class AbstractSqsTracingTest {
   }
 
   private static void assertProcessSpan(
-      SpanDataAssert span,
-      SpanData parent,
-      @Nullable SpanData creationContext,
-      boolean captureHeaders) {
+      SpanDataAssert span, SpanData parent, SpanData creationContext, boolean captureHeaders) {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             asList(

@@ -46,7 +46,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.SqsClientBuilder;
@@ -256,10 +255,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
   }
 
   private void assertProcessSpan(
-      SpanDataAssert span,
-      @Nullable SpanData parent,
-      @Nullable SpanData creationContext,
-      boolean captureHeaders) {
+      SpanDataAssert span, SpanData parent, SpanData creationContext, boolean captureHeaders) {
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             asList(
