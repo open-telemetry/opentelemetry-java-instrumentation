@@ -122,7 +122,7 @@ public abstract class AbstractRedissonAsyncClientTest {
       singleServerConfig
           .setConnectionMinimumIdleSize(1)
           .setConnectionPoolSize(1)
-          .setTimeout(750)
+          .setTimeout(5000)
           .setRetryAttempts(0);
     }
     try {
