@@ -30,7 +30,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -210,25 +209,16 @@ public abstract class AbstractSpringPulsarTest {
   }
 
   protected List<AttributeAssertion> receiveAttributes() {
-    List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            asList(
-                equalTo(MESSAGING_SYSTEM, "pulsar"),
-                oldOperation("receive"),
-                operationName("receive"),
-                operationType("receive"),
-                equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
-                satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isNotNegative),
-                equalTo(SERVER_ADDRESS, brokerHost),
-                equalTo(SERVER_PORT, brokerPort)));
-    // the batch receive span does not report messaging.message.body.size, and the attribute is
-    // opt-in in the v1.43 messaging semantic conventions
-    if (emitStableMessagingSemconv()) {
-      assertions.add(equalTo(MESSAGING_MESSAGE_BODY_SIZE, null));
-    } else {
-      assertions.add(satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative));
-    }
-    return assertions;
+    return asList(
+        equalTo(MESSAGING_SYSTEM, "pulsar"),
+        oldOperation("receive"),
+        operationName("receive"),
+        operationType("receive"),
+        equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
+        satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isNotNegative),
+        equalTo(SERVER_ADDRESS, brokerHost),
+        equalTo(SERVER_PORT, brokerPort),
+        bodySize());
   }
 
   private static AttributeAssertion oldOperation(String operation) {
