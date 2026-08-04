@@ -110,7 +110,7 @@ public final class MysqlUrlParser implements JdbcUrlParser {
         ctx.port(parsedPort);
       }
     } else {
-      hostEndLoc = dbLoc;
+      hostEndLoc = effectiveDbLoc;
     }
     ctx.host(jdbcUrl.substring(typeEndLoc + 1, hostEndLoc));
 
