@@ -15,10 +15,11 @@ muzzle {
   }
 
   pass {
-    name.set("with application using the OpenTelemetry API")
+    name.set("Application using the OpenTelemetry API")
     group.set("com.azure")
     module.set("azure-core")
     versions.set("[1.53.0,)")
+    assertInverse.set(true)
     extraDependency("io.opentelemetry:opentelemetry-api:1.27.0")
   }
 }
