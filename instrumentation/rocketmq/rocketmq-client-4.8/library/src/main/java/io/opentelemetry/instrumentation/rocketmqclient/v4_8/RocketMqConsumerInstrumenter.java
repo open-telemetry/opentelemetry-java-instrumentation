@@ -6,11 +6,9 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static java.util.Collections.emptyList;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.ConsumeMessageContext;
@@ -48,7 +46,7 @@ final class RocketMqConsumerInstrumenter {
           new RocketMqConsumerRequest(msgs.get(0), consumerGroup, batchSize, namespace);
       if (singleProcessInstrumenter.shouldStart(parentContext, request)) {
         Context context = singleProcessInstrumenter.start(parentContext, request);
-        return new ConsumerContext(context, request, emptyList(), false);
+        return new ConsumerContext(context, request, false);
       }
       return null;
     }
@@ -62,35 +60,40 @@ final class RocketMqConsumerInstrumenter {
         return null;
       }
       Context context = batchProcessInstrumenter.start(parentContext, request);
-      return new ConsumerContext(context, request, emptyList(), false);
+      return new ConsumerContext(context, request, false);
     }
 
     boolean receiveStarted = batchReceiveInstrumenter.shouldStart(parentContext, request);
     Context receiveContext =
         receiveStarted ? batchReceiveInstrumenter.start(parentContext, request) : parentContext;
-    List<StartedProcessSpan> processSpans = new ArrayList<>(batchSize);
+    boolean processStarted = false;
     for (MessageExt message : msgs) {
-      createChildSpan(receiveContext, message, consumerGroup, batchSize, namespace, processSpans);
+      processStarted |=
+          createChildSpan(receiveContext, message, consumerGroup, batchSize, namespace);
     }
-    if (receiveStarted || !processSpans.isEmpty()) {
-      return new ConsumerContext(receiveContext, request, processSpans, receiveStarted);
+    if (receiveStarted || processStarted) {
+      return new ConsumerContext(receiveContext, request, receiveStarted);
     }
     return null;
   }
 
-  private void createChildSpan(
+  // rocketmq 4.8's ConsumeMessageHook only fires once per batch, so there is no per-message timing
+  // to report; the per-message process spans of the old conventions are emitted as instantaneous
+  // markers rather than all claiming the duration of the whole batch
+  private boolean createChildSpan(
       Context parentContext,
       MessageExt msg,
       String consumerGroup,
       int batchSize,
-      @Nullable String namespace,
-      List<StartedProcessSpan> processSpans) {
+      @Nullable String namespace) {
     RocketMqConsumerRequest request =
         new RocketMqConsumerRequest(msg, consumerGroup, batchSize, namespace);
-    if (batchProcessInstrumenter.shouldStart(parentContext, request)) {
-      Context context = batchProcessInstrumenter.start(parentContext, request);
-      processSpans.add(new StartedProcessSpan(context, request));
+    if (!batchProcessInstrumenter.shouldStart(parentContext, request)) {
+      return false;
     }
+    Context context = batchProcessInstrumenter.start(parentContext, request);
+    batchProcessInstrumenter.end(context, request, null, null);
+    return true;
   }
 
   void end(ConsumerContext consumerContext, ConsumeMessageContext response) {
@@ -103,10 +106,6 @@ final class RocketMqConsumerInstrumenter {
       batchProcessInstrumenter.end(consumerContext.getContext(), request, response, null);
       return;
     }
-    for (StartedProcessSpan processSpan : consumerContext.getProcessSpans()) {
-      batchProcessInstrumenter.end(
-          processSpan.getContext(), processSpan.getRequest(), response, null);
-    }
     if (consumerContext.isReceiveStarted()) {
       batchReceiveInstrumenter.end(consumerContext.getContext(), request, null, null);
     }
@@ -115,17 +114,12 @@ final class RocketMqConsumerInstrumenter {
   static final class ConsumerContext {
     private final Context context;
     private final RocketMqConsumerRequest request;
-    private final List<StartedProcessSpan> processSpans;
     private final boolean receiveStarted;
 
     private ConsumerContext(
-        Context context,
-        RocketMqConsumerRequest request,
-        List<StartedProcessSpan> processSpans,
-        boolean receiveStarted) {
+        Context context, RocketMqConsumerRequest request, boolean receiveStarted) {
       this.context = context;
       this.request = request;
-      this.processSpans = processSpans;
       this.receiveStarted = receiveStarted;
     }
 
@@ -137,30 +131,8 @@ final class RocketMqConsumerInstrumenter {
       return request;
     }
 
-    private List<StartedProcessSpan> getProcessSpans() {
-      return processSpans;
-    }
-
     private boolean isReceiveStarted() {
       return receiveStarted;
-    }
-  }
-
-  private static final class StartedProcessSpan {
-    private final Context context;
-    private final RocketMqConsumerRequest request;
-
-    private StartedProcessSpan(Context context, RocketMqConsumerRequest request) {
-      this.context = context;
-      this.request = request;
-    }
-
-    Context getContext() {
-      return context;
-    }
-
-    RocketMqConsumerRequest getRequest() {
-      return request;
     }
   }
 }

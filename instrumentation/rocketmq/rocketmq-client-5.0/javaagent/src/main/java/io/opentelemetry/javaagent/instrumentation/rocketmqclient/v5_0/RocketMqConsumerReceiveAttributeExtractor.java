@@ -21,18 +21,10 @@ import org.apache.rocketmq.client.apis.message.MessageView;
 class RocketMqConsumerReceiveAttributeExtractor
     implements AttributesExtractor<RocketMqReceiveRequest, List<MessageView>> {
 
-  @Override
-  public void onStart(
-      AttributesBuilder attributes, Context parentContext, RocketMqReceiveRequest request) {}
-
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
-  public void onEnd(
-      AttributesBuilder attributes,
-      Context context,
-      RocketMqReceiveRequest request,
-      @Nullable List<MessageView> messageViews,
-      @Nullable Throwable error) {
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, RocketMqReceiveRequest request) {
     String consumerGroup = request.getRequest().getGroup().getName();
     if (emitStableMessagingSemconv()) {
       attributes.put(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup);
@@ -44,4 +36,12 @@ class RocketMqConsumerReceiveAttributeExtractor
       attributes.put(MESSAGING_ROCKETMQ_CLIENT_GROUP, consumerGroup);
     }
   }
+
+  @Override
+  public void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      RocketMqReceiveRequest request,
+      @Nullable List<MessageView> messageViews,
+      @Nullable Throwable error) {}
 }

@@ -96,13 +96,18 @@ class RocketMqConsumerInstrumenterTest {
                 asList(mock(MessageExt.class), mock(MessageExt.class)),
                 "consumer-group",
                 "namespace"));
+
+    // the per-message process spans are instantaneous markers, so they are already ended by the
+    // time the batch starts being consumed
+    verify(batchProcessInstrumenter, times(2)).start(same(parentContext), any());
+    verify(batchProcessInstrumenter, times(2))
+        .end(same(processContext), any(), same(null), same(null));
+
     ConsumeMessageContext response = mock(ConsumeMessageContext.class);
     instrumenter.end(consumerContext, response);
 
     assertThat(consumerContext.getContext()).isSameAs(parentContext);
-    verify(batchProcessInstrumenter, times(2)).start(same(parentContext), any());
-    verify(batchProcessInstrumenter, times(2))
-        .end(same(processContext), any(), same(response), same(null));
+    verify(batchProcessInstrumenter, never()).end(any(), any(), same(response), any());
     verify(batchReceiveInstrumenter, never()).start(any(), any());
     verify(batchReceiveInstrumenter, never()).end(any(), any(), any(), any());
     verifyNoInteractions(singleProcessInstrumenter);
