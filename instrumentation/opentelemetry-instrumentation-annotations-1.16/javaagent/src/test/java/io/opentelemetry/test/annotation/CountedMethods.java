@@ -23,4 +23,19 @@ class CountedMethods {
   @SuppressWarnings("UnicodeInCode")
   @Counted
   void ünicödeMethödNamë() {}
+
+  static class GenericMethods<T> {
+    T customGeneric(T result) {
+      return result;
+    }
+  }
+
+  static class StringCountedMethods extends GenericMethods<String> {
+
+    @Override
+    @Counted("custom.generic")
+    String customGeneric(String result) {
+      return result;
+    }
+  }
 }
