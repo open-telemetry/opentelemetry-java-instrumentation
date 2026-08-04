@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -82,7 +83,7 @@ class MessagingProcessInstrumenterFactoryTest {
   }
 
   @Test
-  void stableDoesNotLinkAmbientParent() {
+  void stableLinksCreationContextEvenWhenItIsTheAmbientParent() {
     assumeTrue(emitStableMessagingSemconv());
     SpanContext localProducer =
         SpanContext.create(
@@ -113,6 +114,34 @@ class MessagingProcessInstrumenterFactoryTest {
                             .hasKind(SpanKind.CONSUMER)
                             .hasTraceId(producer.getTraceId())
                             .hasParentSpanId(producer.getSpanId())
+                            .hasLinks(LinkData.create(producer))));
+  }
+
+  @Test
+  void stableDoesNotLinkWhenCarrierHasNoCreationContext() {
+    assumeTrue(emitStableMessagingSemconv());
+    Instrumenter<Map<String, String>, Void> instrumenter =
+        MessagingProcessInstrumenterFactory.create(
+            Instrumenter.<Map<String, String>, Void>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "process"),
+            W3CTraceContextPropagator.getInstance(),
+            getter,
+            false);
+
+    Map<String, String> carrier = emptyMap();
+    Context context = instrumenter.start(Context.root().with(Span.wrap(ambientParent)), carrier);
+    instrumenter.end(context, carrier, null, null);
+
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("process")
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasTraceId(ambientParent.getTraceId())
+                            .hasParentSpanId(ambientParent.getSpanId())
                             .hasLinks()));
   }
 

@@ -7,8 +7,6 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging.interna
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -35,21 +33,11 @@ public class MessagingProcessInstrumenterFactory {
       // the second extraction for a thread local lookup, a map operation and a capturing lambda,
       // which is not obviously cheaper than extracting a single header again, so the extraction is
       // deliberately repeated instead.
-      builder.addSpanLinksExtractor(
-          (spanLinks, parentContext, request) -> {
-            SpanContext parentSpanContext = Span.fromContext(parentContext).getSpanContext();
-            SpanContext producerSpanContext =
-                Span.fromContext(propagator.extract(parentContext, request, getter))
-                    .getSpanContext();
-            // the creation context is linked even when it ends up being this span's parent, which
-            // happens when there is no ambient span; semconv asks for a link to the creation
-            // context for every message the span accounts for
-            if (producerSpanContext.isValid()
-                && (!producerSpanContext.getTraceId().equals(parentSpanContext.getTraceId())
-                    || !producerSpanContext.getSpanId().equals(parentSpanContext.getSpanId()))) {
-              spanLinks.addLink(producerSpanContext);
-            }
-          });
+      //
+      // the creation context is linked even when it ends up being this span's parent, which happens
+      // when there is no ambient span; semconv asks for a link to the creation context for every
+      // message the span accounts for
+      builder.addSpanLinksExtractor(new PropagatorBasedSpanLinksExtractor<>(propagator, getter));
       builder.addContextCustomizer(MessagingProcessContextCustomizer.create(propagator, getter));
       return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
     }
