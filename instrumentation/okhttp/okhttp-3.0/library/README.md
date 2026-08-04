@@ -1,6 +1,6 @@
 # Library Instrumentation for OkHttp version 3.0 and higher
 
-Provides OpenTelemetry instrumentation for [okhttp3](https://github.com/lysine-dev/okhttp/).
+Provides OpenTelemetry instrumentation for [okhttp3](https://lysine.dev/okhttp/).
 
 ## Quickstart
 
