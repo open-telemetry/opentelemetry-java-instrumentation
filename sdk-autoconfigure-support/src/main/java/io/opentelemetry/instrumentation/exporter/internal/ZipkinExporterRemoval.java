@@ -18,8 +18,8 @@ final class ZipkinExporterRemoval {
 
   static final String ERROR_MESSAGE =
       "The zipkin span exporter is not supported when "
-          + "otel.instrumentation.common.v3-preview is enabled, because zipkin support is removed "
-          + "in 3.0. Use the otlp exporter instead.";
+          + "otel.instrumentation.common.v3-preview is enabled, because zipkin support will be "
+          + "removed in 3.0. Use the otlp exporter instead.";
 
   private ZipkinExporterRemoval() {}
 }

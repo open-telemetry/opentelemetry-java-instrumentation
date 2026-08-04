@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
 
 /**
  * Fails declarative configuration when the Zipkin span exporter is configured while the v3 preview
- * is enabled, since Zipkin support is removed in 3.0.
+ * is enabled, since Zipkin support will be removed in 3.0.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.

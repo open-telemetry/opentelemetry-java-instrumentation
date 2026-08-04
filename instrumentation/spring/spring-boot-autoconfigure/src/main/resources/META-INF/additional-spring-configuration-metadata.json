@@ -273,7 +273,7 @@
       "defaultValue": "http://localhost:9411/api/v2/spans",
       "deprecation": {
         "level": "warning",
-        "reason": "The Zipkin exporter is removed in 3.0.",
+        "reason": "The Zipkin exporter will be removed in 3.0.",
         "replacement": "otel.exporter.otlp.traces.endpoint"
       }
     },
@@ -876,7 +876,7 @@
         },
         {
           "value": "zipkin",
-          "description": "Zipkin exporter. Deprecated, removed in 3.0; use \"otlp\" instead."
+          "description": "Zipkin exporter. Deprecated, will be removed in 3.0; use \"otlp\" instead."
         }
       ]
     },
