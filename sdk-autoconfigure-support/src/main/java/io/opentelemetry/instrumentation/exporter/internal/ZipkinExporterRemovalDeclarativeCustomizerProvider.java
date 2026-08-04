@@ -38,6 +38,13 @@ public class ZipkinExporterRemovalDeclarativeCustomizerProvider
         });
   }
 
+  @Override
+  public int order() {
+    // make sure it runs AFTER all the user-provided customizers, so that the final model is
+    // validated
+    return Integer.MAX_VALUE;
+  }
+
   static void checkZipkinExporter(OpenTelemetryConfigurationModel model) {
     if (!DeclarativeConfigV3Preview.isEnabled(model)) {
       return;

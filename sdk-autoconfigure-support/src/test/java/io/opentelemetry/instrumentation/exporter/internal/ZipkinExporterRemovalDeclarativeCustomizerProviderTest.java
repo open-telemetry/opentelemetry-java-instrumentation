@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.exporter.internal;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -60,6 +61,12 @@ class ZipkinExporterRemovalDeclarativeCustomizerProviderTest {
   @Test
   void allowsMissingTracerProviderWhenV3PreviewEnabled() {
     assertThatCode(() -> check(V3_PREVIEW)).doesNotThrowAnyException();
+  }
+
+  @Test
+  void runsAfterUserProvidedCustomizers() {
+    assertThat(new ZipkinExporterRemovalDeclarativeCustomizerProvider().order())
+        .isEqualTo(Integer.MAX_VALUE);
   }
 
   private static void check(String yaml) {
