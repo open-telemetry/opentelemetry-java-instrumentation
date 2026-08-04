@@ -5,6 +5,7 @@ import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
 import org.gradle.api.artifacts.ExternalModuleDependency
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.jvm.toolchain.JvmImplementation
 import java.util.jar.JarFile
 
 plugins {
@@ -109,8 +110,12 @@ fun registerOsgiSuite(
   // still exercises 17, 21, 25 and 26.
   val suiteEnabledForJavaVersion = suiteJavaVersion >= 17
   val runee = "JavaSE-$suiteJavaVersion"
+  // Honor -PtestJavaVM too, so in the openj9 matrix job the container boots on J9 like the rest of
+  // the suite, not on a HotSpot JDK.
+  val useJ9 = the<OtelPropsExtension>().testJavaVM == "openj9"
   val suiteJavaLauncher = javaToolchains.launcherFor {
     languageVersion.set(JavaLanguageVersion.of(suiteJavaVersion))
+    implementation.set(if (useJ9) JvmImplementation.J9 else JvmImplementation.VENDOR_SPECIFIC)
   }
 
   // opentelemetry-instrumentation-api imports io.opentelemetry.semconv, but the upstream semconv

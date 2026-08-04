@@ -125,8 +125,6 @@ val DEPENDENCIES = listOf(
   "org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.7",
   "org.osgi:osgi.core:8.0.0",
   "org.osgi:org.osgi.test.junit5:1.3.0",
-  "org.osgi:org.osgi.test.assertj.framework:1.3.0",
-  "biz.aQute.bnd:biz.aQute.tester.junit-platform:7.3.0",
   "org.junit.jupiter:junit-jupiter:5.14.4",
   "org.junit.platform:junit-platform-launcher:1.14.4"
 )
