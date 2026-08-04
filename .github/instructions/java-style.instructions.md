@@ -46,4 +46,4 @@ Follow `docs/contributing/style-guide.md`.
   `src/main/` of a test-support module, which is test code despite the path.
   Keep it only where ErrorProne demands it — `ReturnsNullCollection` on a
   collection-returning method and `AutoValueBoxedValues` on a boxed `@AutoValue`
-  property, where the annotation is load-bearing rather than documentation.
+  property.
