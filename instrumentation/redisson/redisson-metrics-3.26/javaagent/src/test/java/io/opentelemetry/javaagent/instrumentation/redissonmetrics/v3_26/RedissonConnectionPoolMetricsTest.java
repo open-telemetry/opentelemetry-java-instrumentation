@@ -9,19 +9,15 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.redissonmetrics.v3_26.RedissonConnectionPoolMetrics.INSTRUMENTATION_NAME;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.awaitility.Awaitility.await;
 
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
-import io.opentelemetry.sdk.metrics.data.LongPointData;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collection;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -79,8 +75,7 @@ class RedissonConnectionPoolMetricsTest {
 
       String regularPool = "master-regular-" + endpoint;
       String subscriptionPool = "master-subscription-" + endpoint;
-      assertConnectionPoolMetrics(regularPool);
-      assertConnectionPoolMetrics(subscriptionPool);
+      assertConnectionPoolMetrics(regularPool, subscriptionPool);
       assertMetricNotEmitted(maxIdleMetricName());
 
       ConnectionsHolder<?> holder = getMasterConnectionsHolder((Redisson) redisson);
@@ -90,7 +85,7 @@ class RedissonConnectionPoolMetricsTest {
       semaphore.acquire().join();
       try {
         // Acquiring a permit alone does not open or remove a connection from the idle queue.
-        assertUsageMetricUnchanged(regularPool, subscriptionPool);
+        assertUsageMetric(regularPool, 0, 0, subscriptionPool, 0, 0);
       } finally {
         semaphore.release();
       }
@@ -134,59 +129,142 @@ class RedissonConnectionPoolMetricsTest {
     return Redisson.create(config);
   }
 
-  private static void assertConnectionPoolMetrics(String poolName) {
-    DbConnectionPoolMetricsAssertions.create(testing, INSTRUMENTATION_NAME, poolName)
-        .disableMaxIdleConnections()
-        .disableConnectionTimeouts()
-        .disableCreateTime()
-        .disableWaitTime()
-        .disableUseTime()
-        .assertConnectionPoolEmitsMetrics();
+  private static void assertConnectionPoolMetrics(String regularPool, String subscriptionPool) {
+    assertUsageMetric(regularPool, REGULAR_MIN_IDLE, 0, subscriptionPool, SUBSCRIPTION_MIN_IDLE, 0);
+    assertPoolSizeMetric(
+        "db.client.connection.idle.min",
+        "db.client.connections.idle.min",
+        "The minimum number of idle open connections allowed.",
+        regularPool,
+        REGULAR_MIN_IDLE,
+        subscriptionPool,
+        SUBSCRIPTION_MIN_IDLE);
+    assertPoolSizeMetric(
+        "db.client.connection.max",
+        "db.client.connections.max",
+        "The maximum number of open connections allowed.",
+        regularPool,
+        REGULAR_MAX,
+        subscriptionPool,
+        SUBSCRIPTION_MAX);
+    assertPendingRequests(regularPool, subscriptionPool);
   }
 
-  private static void assertUsageMetricUnchanged(String regularPool, String subscriptionPool) {
-    AttributeKey<String> poolNameKey =
-        stringKey(emitStableDatabaseSemconv() ? "db.client.connection.pool.name" : "pool.name");
-    AttributeKey<String> stateKey =
-        stringKey(emitStableDatabaseSemconv() ? "db.client.connection.state" : "state");
-
-    await()
-        .untilAsserted(
-            () ->
-                assertThat(testing.metrics())
-                    .filteredOn(
-                        metric ->
-                            metric
-                                    .getInstrumentationScopeInfo()
-                                    .getName()
-                                    .equals(INSTRUMENTATION_NAME)
-                                && metric.getName().equals(usageMetricName()))
-                    .hasSizeGreaterThanOrEqualTo(2)
-                    .allSatisfy(
-                        metric -> {
-                          Collection<LongPointData> points = metric.getLongSumData().getPoints();
-                          assertThat(points).hasSize(4);
-                          assertPoint(points, poolNameKey, regularPool, stateKey, "idle", 0);
-                          assertPoint(points, poolNameKey, regularPool, stateKey, "used", 0);
-                          assertPoint(points, poolNameKey, subscriptionPool, stateKey, "idle", 0);
-                          assertPoint(points, poolNameKey, subscriptionPool, stateKey, "used", 0);
-                        }));
+  private static void assertUsageMetric(
+      String regularPool,
+      long regularIdle,
+      long regularUsed,
+      String subscriptionPool,
+      long subscriptionIdle,
+      long subscriptionUsed) {
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        usageMetricName(),
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit(emitStableDatabaseSemconv() ? "{connection}" : "{connections}")
+                        .hasDescription(
+                            "The number of connections that are currently in state described by the state attribute.")
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(regularIdle)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey(poolNameKey()), regularPool),
+                                                    equalTo(stringKey(stateKey()), "idle")),
+                                        point ->
+                                            point
+                                                .hasValue(regularUsed)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey(poolNameKey()), regularPool),
+                                                    equalTo(stringKey(stateKey()), "used")),
+                                        point ->
+                                            point
+                                                .hasValue(subscriptionIdle)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(
+                                                        stringKey(poolNameKey()), subscriptionPool),
+                                                    equalTo(stringKey(stateKey()), "idle")),
+                                        point ->
+                                            point
+                                                .hasValue(subscriptionUsed)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(
+                                                        stringKey(poolNameKey()), subscriptionPool),
+                                                    equalTo(stringKey(stateKey()), "used"))))));
   }
 
-  private static void assertPoint(
-      Collection<LongPointData> points,
-      AttributeKey<String> poolNameKey,
-      String poolName,
-      AttributeKey<String> stateKey,
-      String state,
-      long expectedValue) {
-    assertThat(points)
-        .anySatisfy(
-            point -> {
-              assertThat(point.getValue()).isEqualTo(expectedValue);
-              assertThat(point.getAttributes())
-                  .isEqualTo(Attributes.of(poolNameKey, poolName, stateKey, state));
-            });
+  private static void assertPoolSizeMetric(
+      String stableName,
+      String legacyName,
+      String description,
+      String regularPool,
+      long regularValue,
+      String subscriptionPool,
+      long subscriptionValue) {
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        emitStableDatabaseSemconv() ? stableName : legacyName,
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit(emitStableDatabaseSemconv() ? "{connection}" : "{connections}")
+                        .hasDescription(description)
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(regularValue)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey(poolNameKey()), regularPool)),
+                                        point ->
+                                            point
+                                                .hasValue(subscriptionValue)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(
+                                                        stringKey(poolNameKey()),
+                                                        subscriptionPool))))));
+  }
+
+  private static void assertPendingRequests(String regularPool, String subscriptionPool) {
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        emitStableDatabaseSemconv()
+            ? "db.client.connection.pending_requests"
+            : "db.client.connections.pending_requests",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit(emitStableDatabaseSemconv() ? "{request}" : "{requests}")
+                        .hasDescription(
+                            emitStableDatabaseSemconv()
+                                ? "The number of current pending requests for an open connection."
+                                : "The number of pending requests for an open connection, cumulative for the entire pool.")
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(0)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(stringKey(poolNameKey()), regularPool)),
+                                        point ->
+                                            point
+                                                .hasValue(0)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(
+                                                        stringKey(poolNameKey()),
+                                                        subscriptionPool))))));
   }
 
   private static void assertMetricNotEmitted(String metricName) {
@@ -221,5 +299,13 @@ class RedissonConnectionPoolMetricsTest {
     return emitStableDatabaseSemconv()
         ? "db.client.connection.idle.max"
         : "db.client.connections.idle.max";
+  }
+
+  private static String poolNameKey() {
+    return emitStableDatabaseSemconv() ? "db.client.connection.pool.name" : "pool.name";
+  }
+
+  private static String stateKey() {
+    return emitStableDatabaseSemconv() ? "db.client.connection.state" : "state";
   }
 }
