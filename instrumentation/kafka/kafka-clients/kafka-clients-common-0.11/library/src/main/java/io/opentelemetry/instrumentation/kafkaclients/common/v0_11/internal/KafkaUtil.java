@@ -55,11 +55,8 @@ public final class KafkaUtil {
   private static final VirtualField<Producer<?, ?>, KafkaClusterId> producerClusterIdField =
       VirtualField.find(Producer.class, KafkaClusterId.class);
 
-  // ClassValue caches the reflective Field for each holder class. computeValue() runs at most once
-  // per class — thread-safe and GC-friendly (entry is released when the ClassLoader is collected).
-  // Optional.empty() is stored when the field is absent or inaccessible, preventing repeated
-  // lookups. The superclass walk is needed because in Kafka 3.7+ the delegate class may inherit
-  // 'metadata' from a parent rather than declaring it directly.
+  // ClassValue: thread-safe per-class cache; Optional.empty() prevents repeated failed lookups.
+  // Superclass walk needed: Kafka 3.7+ delegate classes may inherit 'metadata' from a parent.
   private static final ClassValue<Optional<Field>> metadataFieldCache =
       new ClassValue<Optional<Field>>() {
         @Override
@@ -101,11 +98,8 @@ public final class KafkaUtil {
       Class<?> consumerGroupMetadata =
           Class.forName("org.apache.kafka.clients.consumer.ConsumerGroupMetadata");
 
-      // Consumer.groupMetadata() and ConsumerGroupMetadata exist only in Kafka 2.4+. Using
-      // Class.forName + MethodHandles (rather than direct calls) lets this file compile against
-      // the Kafka 0.11 baseline; ClassNotFoundException/NoSuchMethodException in the catch block
-      // sets GET_GROUP_METADATA to null so consumer-group extraction is silently skipped on
-      // older Kafka versions.
+      // Class.forName + MethodHandles lets this compile against Kafka 0.11; consumer-group
+      // extraction is silently skipped on older versions via ClassNotFoundException catch.
       MethodHandles.Lookup lookup = MethodHandles.publicLookup();
       getGroupMetadata =
           lookup.findVirtual(
@@ -209,10 +203,7 @@ public final class KafkaUtil {
     return serversConfig.stream().map(Object::toString).collect(joining(","));
   }
 
-  /**
-   * Reads cluster id from the consumer's already-fetched {@code Metadata}. Handles pre-3.7
-   * consumers (own {@code metadata} field) and Kafka 3.7+ (delegate holds {@code metadata}).
-   */
+  /** Pre-3.7: reads consumer's own {@code metadata} field; Kafka 3.7+: reads via delegate. */
   @Nullable
   public static String getClusterId(@Nullable Consumer<?, ?> consumer) {
     if (consumer == null || !(consumer instanceof KafkaConsumer)) {
@@ -236,10 +227,6 @@ public final class KafkaUtil {
     return resolveAndCache(consumer, consumerClusterIdField, resolveMetadataHolder(consumer));
   }
 
-  /**
-   * Returns the cluster id for a producer, caching the result on the producer instance. After the
-   * first successful resolution the fast path reads a plain {@code String} field with no lock.
-   */
   @Nullable
   public static String getClusterId(@Nullable Producer<?, ?> producer) {
     if (producer == null || !(producer instanceof KafkaProducer)) {
@@ -263,10 +250,6 @@ public final class KafkaUtil {
     return resolveAndCache(producer, producerClusterIdField, producer);
   }
 
-  /**
-   * Once resolved, subsequent spans skip reflection entirely. On any failure the client is marked
-   * {@link KafkaClusterId#UNAVAILABLE} so the walk is not retried.
-   */
   @Nullable
   private static <T> String resolveAndCache(
       T client, VirtualField<T, KafkaClusterId> field, @Nullable Object holder) {
@@ -285,9 +268,6 @@ public final class KafkaUtil {
         // Transient: field not yet initialised (shouldn't happen after construction, but be safe).
         return null;
       }
-      // Try to resolve the cluster id immediately. If the broker response has already arrived
-      // the hot path will never call metadata.fetch() again. If not yet available, store the
-      // Metadata reference in the pending state and retry on the next span.
       String id = clusterIdFromMetadata(metadata);
       if (id != null) {
         field.set(client, KafkaClusterId.resolved(id));
@@ -302,11 +282,6 @@ public final class KafkaUtil {
     }
   }
 
-  /**
-   * Returns the object that owns the {@code metadata} field. For Kafka 3.7+ the public {@link
-   * KafkaConsumer} wraps an internal delegate (held in the {@code delegate} field); for earlier
-   * versions the consumer owns {@code metadata} directly.
-   */
   private static Object resolveMetadataHolder(Consumer<?, ?> consumer) {
     if (DELEGATE_FIELD == null) {
       return consumer;

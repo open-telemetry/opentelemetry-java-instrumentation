@@ -25,22 +25,10 @@ final class KafkaClusterId {
   static final AttributeKey<String> ATTRIBUTE_KEY =
       AttributeKey.stringKey("messaging.kafka.cluster.id");
 
-  /**
-   * Sentinel for clients that can never resolve a cluster id (wrong client type, or no {@code
-   * metadata} field); prevents retrying the reflective walk on every span.
-   */
+  // Prevents retrying reflection on clients that can't provide a cluster id.
   static final KafkaClusterId UNAVAILABLE = new KafkaClusterId(null, null);
 
-  /**
-   * Non-null while the cluster id is still pending (broker response not yet received). Cleared once
-   * the id is resolved and this entry is replaced with {@link #resolved(String)}.
-   */
   @Nullable final Metadata metadata;
-
-  /**
-   * Non-null once the cluster id has been successfully fetched. When present, returned directly on
-   * the hot path — no lock acquisition on {@code Metadata} is required.
-   */
   @Nullable final String clusterId;
 
   private KafkaClusterId(@Nullable Metadata metadata, @Nullable String clusterId) {
@@ -48,12 +36,10 @@ final class KafkaClusterId {
     this.clusterId = clusterId;
   }
 
-  /** Creates a pending entry that holds the {@code Metadata} reference for deferred resolution. */
   static KafkaClusterId of(Metadata metadata) {
     return new KafkaClusterId(metadata, null);
   }
 
-  /** Creates a fully-resolved entry. Hot-path reads return {@code clusterId} with no lock. */
   static KafkaClusterId resolved(String clusterId) {
     return new KafkaClusterId(null, clusterId);
   }
