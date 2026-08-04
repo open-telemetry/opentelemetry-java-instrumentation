@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
-public final class CountedSingletons {
+public class CountedSingletons {
 
   private static final Logger logger = Logger.getLogger(CountedSingletons.class.getName());
   private static final Meter meter = createMeter();
