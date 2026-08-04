@@ -2,11 +2,6 @@
 
 ## Unreleased
 
-### 📈 Enhancements
-
-- When `otel.instrumentation.common.v3-preview` is enabled, the Zipkin span exporter is no longer
-  supported and configuring it fails at startup. Zipkin support will be removed in 3.0.
-
 ### 🚫 Deprecations
 
 - Deprecate the `opentelemetry-zipkin-spring-boot-starter` artifact. Use
