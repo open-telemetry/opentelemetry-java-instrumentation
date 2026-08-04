@@ -582,3 +582,4 @@ hbase-client-common-1.4:javaagent
 hbase-client-common-1.4:testing
 hbase-client-1.0:javaagent
 hbase-client-common-1.0:javaagent
+hbase-client-common-1.0:testing
