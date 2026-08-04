@@ -43,8 +43,13 @@ public class ReceiveSpanFinishingCallback implements FutureCallback<ReceiveMessa
     Instrumenter<RocketMqReceiveRequest, List<MessageView>> receiveInstrumenter =
         consumerReceiveInstrumenter();
     Context parentContext = Context.current();
-    for (MessageView messageView : messageViews) {
-      VirtualFieldStore.setContextByMessage(messageView, parentContext);
+    if (emitStableMessagingSemconv()) {
+      // the process span parents to the context that the messages were received in, and links to
+      // the producer that the message headers point at; the receive span, when there is one, is
+      // only linked from the process span
+      for (MessageView messageView : messageViews) {
+        VirtualFieldStore.setContextByMessage(messageView, parentContext);
+      }
     }
     RocketMqReceiveRequest receiveRequest = RocketMqReceiveRequest.create(request, messageViews);
     if (receiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
