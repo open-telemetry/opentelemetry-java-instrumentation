@@ -25,15 +25,14 @@ public final class NatsInstrumenterFactory {
 
   public static Instrumenter<NatsRequest, NatsRequest> createProducerInstrumenter(
       OpenTelemetry openTelemetry, List<String> capturedHeaders) {
+    NatsRequestMessagingAttributesGetter getter = new NatsRequestMessagingAttributesGetter(true);
     InstrumenterBuilder<NatsRequest, NatsRequest> builder =
         Instrumenter.<NatsRequest, NatsRequest>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(
-                    new NatsRequestMessagingAttributesGetter(), MessageOperation.PUBLISH))
+                NatsSpanNameExtractor.create(getter, MessageOperation.PUBLISH))
             .addAttributesExtractor(
-                MessagingAttributesExtractor.builder(
-                        new NatsRequestMessagingAttributesGetter(), MessageOperation.PUBLISH)
+                MessagingAttributesExtractor.builder(getter, MessageOperation.PUBLISH)
                     .setCapturedHeaders(capturedHeaders)
                     .build());
     setMessagingSendExceptionEventExtractor(builder);
@@ -42,15 +41,14 @@ public final class NatsInstrumenterFactory {
 
   public static Instrumenter<NatsRequest, Void> createConsumerProcessInstrumenter(
       OpenTelemetry openTelemetry, List<String> capturedHeaders) {
+    NatsRequestMessagingAttributesGetter getter = new NatsRequestMessagingAttributesGetter(false);
     InstrumenterBuilder<NatsRequest, Void> builder =
         Instrumenter.<NatsRequest, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(
-                    new NatsRequestMessagingAttributesGetter(), MessageOperation.PROCESS))
+                MessagingSpanNameExtractor.create(getter, MessageOperation.PROCESS))
             .addAttributesExtractor(
-                MessagingAttributesExtractor.builder(
-                        new NatsRequestMessagingAttributesGetter(), MessageOperation.PROCESS)
+                MessagingAttributesExtractor.builder(getter, MessageOperation.PROCESS)
                     .setCapturedHeaders(capturedHeaders)
                     .build());
     setMessagingProcessExceptionEventExtractor(builder);
