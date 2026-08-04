@@ -29,6 +29,9 @@ public final class IncludeExcludePredicate implements Predicate<String> {
   /**
    * Creates a case-sensitive pattern matching include/exclude predicate. Excludes take precedence
    * over includes. {@code *} matches zero or more characters and {@code ?} matches one character.
+   *
+   * <p>An empty or {@code null} {@code included} collection matches <b>everything</b>. Callers that
+   * treat an empty include list as "capture nothing" must handle that case themselves.
    */
   public static Predicate<String> createPatternMatching(
       @Nullable Collection<String> included, @Nullable Collection<String> excluded) {
