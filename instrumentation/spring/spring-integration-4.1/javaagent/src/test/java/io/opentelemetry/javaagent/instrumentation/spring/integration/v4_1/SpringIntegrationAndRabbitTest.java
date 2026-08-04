@@ -198,6 +198,8 @@ class SpringIntegrationAndRabbitTest {
     if (emitStableMessagingSemconv()) {
       assertions.add(serverAddress());
       assertions.add(serverPort());
+      assertions.add(consumerDestinationName());
+      assertions.add(anonymousDestination());
       assertions.add(equalTo(MESSAGING_OPERATION_NAME, "ack"));
       assertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
       assertions.add(deliveryTag());

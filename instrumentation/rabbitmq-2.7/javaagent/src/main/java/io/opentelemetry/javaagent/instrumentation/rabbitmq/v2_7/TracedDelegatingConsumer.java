@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.deliverInstrumenter;
 
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.Envelope;
@@ -24,11 +26,14 @@ public class TracedDelegatingConsumer implements Consumer {
 
   private final String queue;
   private final Consumer delegate;
+  private final Channel channel;
   private final Connection connection;
 
-  public TracedDelegatingConsumer(String queue, Consumer delegate, Connection connection) {
+  public TracedDelegatingConsumer(
+      String queue, Consumer delegate, Channel channel, Connection connection) {
     this.queue = queue;
     this.delegate = delegate;
+    this.channel = channel;
     this.connection = connection;
   }
 
@@ -61,6 +66,9 @@ public class TracedDelegatingConsumer implements Consumer {
   public void handleDelivery(
       String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
       throws IOException {
+    if (emitStableMessagingSemconv()) {
+      DeliveredMessages.record(channel, envelope, queue);
+    }
     Context parentContext = Context.current();
     DeliveryRequest request = DeliveryRequest.create(queue, envelope, connection, properties, body);
 
