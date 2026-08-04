@@ -35,24 +35,28 @@ public final class NatsInstrumenterFactory {
 
   public static Instrumenter<NatsRequest, NatsRequest> createPublishInstrumenter(
       OpenTelemetry openTelemetry, IncludeExclude headers) {
-    return createProducerInstrumenter(openTelemetry, headers, PUBLISH_OPERATION_NAME);
+    return createProducerInstrumenter(
+        openTelemetry, headers, PUBLISH_OPERATION_NAME, true);
   }
 
   public static Instrumenter<NatsRequest, NatsRequest> createRequestInstrumenter(
       OpenTelemetry openTelemetry, IncludeExclude headers) {
-    return createProducerInstrumenter(openTelemetry, headers, REQUEST_OPERATION_NAME);
+    return createProducerInstrumenter(
+        openTelemetry, headers, REQUEST_OPERATION_NAME, false);
   }
 
   private static Instrumenter<NatsRequest, NatsRequest> createProducerInstrumenter(
-      OpenTelemetry openTelemetry, IncludeExclude headers, String operationName) {
+      OpenTelemetry openTelemetry,
+      IncludeExclude headers,
+      String operationName,
+      boolean boundJetStreamAckDestination) {
+    NatsRequestMessagingAttributesGetter getter =
+        new NatsRequestMessagingAttributesGetter(boundJetStreamAckDestination);
     InstrumenterBuilder<NatsRequest, NatsRequest> builder =
         Instrumenter.<NatsRequest, NatsRequest>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(
-                    new NatsRequestMessagingAttributesGetter(),
-                    MessagingOperationType.SEND,
-                    operationName))
+                NatsSpanNameExtractor.create(getter, MessagingOperationType.SEND, operationName))
             .addAttributesExtractor(
                 messagingAttributesExtractor(MessagingOperationType.SEND, operationName, headers))
             .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
@@ -62,12 +66,13 @@ public final class NatsInstrumenterFactory {
 
   public static Instrumenter<NatsRequest, Void> createConsumerProcessInstrumenter(
       OpenTelemetry openTelemetry, IncludeExclude headers) {
+    NatsRequestMessagingAttributesGetter getter = new NatsRequestMessagingAttributesGetter(false);
     InstrumenterBuilder<NatsRequest, Void> builder =
         Instrumenter.<NatsRequest, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
-                    new NatsRequestMessagingAttributesGetter(),
+                    getter,
                     MessagingOperationType.PROCESS,
                     PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
@@ -87,7 +92,7 @@ public final class NatsInstrumenterFactory {
   private static AttributesExtractor<NatsRequest, Object> messagingAttributesExtractor(
       MessagingOperationType operationType, String operationName, IncludeExclude headers) {
     return MessagingAttributesExtractor.builder(
-            new NatsRequestMessagingAttributesGetter(), operationType, operationName)
+            new NatsRequestMessagingAttributesGetter(false), operationType, operationName)
         .setHeaders(headers)
         .build();
   }
