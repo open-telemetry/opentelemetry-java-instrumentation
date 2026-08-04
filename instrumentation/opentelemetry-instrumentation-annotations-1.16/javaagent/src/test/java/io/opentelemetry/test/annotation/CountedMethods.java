@@ -19,4 +19,8 @@ class CountedMethods {
   void throwsException() {
     throw new IllegalStateException("boom");
   }
+
+  @SuppressWarnings("UnicodeInCode")
+  @Counted
+  void ünicödeMethödNamë() {}
 }
