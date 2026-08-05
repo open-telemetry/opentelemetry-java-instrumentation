@@ -11,6 +11,7 @@ import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.lang.ref.WeakReference;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -54,11 +55,15 @@ public final class JdkExecutorMetrics extends ExecutorMetrics {
 
   private static BatchCallback createBatchCallback(
       JvmExecutorMetrics metrics, ThreadPoolExecutor executor, LongAdder rejectedTaskCount) {
+    BlockingQueue<Runnable> queue = executor.getQueue();
+    long queueCapacityValue = (long) queue.size() + queue.remainingCapacity();
+
     ObservableLongMeasurement threadCount = metrics.threadCount();
     ObservableLongMeasurement coreThreads = metrics.coreThreads();
     ObservableLongMeasurement maxThreads = metrics.maxThreads();
     ObservableLongMeasurement queueSize = metrics.queueSize();
-    ObservableLongMeasurement queueRemaining = metrics.queueRemaining();
+    ObservableLongMeasurement queueCapacity =
+        queueCapacityValue < Integer.MAX_VALUE ? metrics.queueCapacity() : null;
     ObservableLongMeasurement completedTasks = metrics.completedTasks();
     ObservableLongMeasurement rejectedTasks = metrics.rejectedTasks();
 
@@ -81,8 +86,9 @@ public final class JdkExecutorMetrics extends ExecutorMetrics {
               coreThreads.record(threadPoolExecutor.getCorePoolSize(), metrics.getAttributes());
               maxThreads.record(threadPoolExecutor.getMaximumPoolSize(), metrics.getAttributes());
               queueSize.record(threadPoolExecutor.getQueue().size(), metrics.getAttributes());
-              queueRemaining.record(
-                  threadPoolExecutor.getQueue().remainingCapacity(), metrics.getAttributes());
+              if (queueCapacity != null) {
+                queueCapacity.record(queueCapacityValue, metrics.getAttributes());
+              }
               completedTasks.record(
                   threadPoolExecutor.getCompletedTaskCount(), metrics.getAttributes());
               long rejected = rejectedTaskCount.sum();
@@ -94,7 +100,7 @@ public final class JdkExecutorMetrics extends ExecutorMetrics {
             coreThreads,
             maxThreads,
             queueSize,
-            queueRemaining,
+            queueCapacity,
             completedTasks,
             rejectedTasks);
     callbackRef.set(callback);

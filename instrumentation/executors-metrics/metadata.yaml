@@ -2,6 +2,8 @@ display_name: Java Executors Metrics
 description: >
   This instrumentation emits JVM executor metrics for ThreadPoolExecutor and supported JDK executor
   implementations.
+semantic_conventions:
+  - JVM_RUNTIME_METRICS
 disabled_by_default: true
 library_link: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ThreadPoolExecutor.html
 configurations:

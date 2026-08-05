@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.executors;
 
+import static io.opentelemetry.javaagent.instrumentation.executors.metrics.JvmExecutorMetricsAssertions.assertNoExecutorMetric;
 import static io.opentelemetry.javaagent.instrumentation.executors.metrics.JvmExecutorMetricsAssertions.assertNoExecutorMetrics;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -20,6 +21,7 @@ import java.lang.ref.WeakReference;
 import java.time.Duration;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.SynchronousQueue;
@@ -88,7 +90,7 @@ class ThreadPoolExecutorMetricsTest {
           .withCoreThreads(1)
           .withMaxThreads(1)
           .withQueueSize(1)
-          .withQueueRemaining(0)
+          .withQueueCapacity(1)
           .withCompletedTasks(0)
           .withRejectedTasks(1)
           .assertExecutorEmitsMetrics();
@@ -109,6 +111,41 @@ class ThreadPoolExecutorMetricsTest {
     }
 
     assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, "metrics-pool-*");
+  }
+
+  @Test
+  void doesNotExportQueueCapacityForUnboundedQueue() throws Exception {
+    ThreadPoolExecutor executor =
+        new ThreadPoolExecutor(
+            1,
+            1,
+            0,
+            MILLISECONDS,
+            new LinkedBlockingQueue<>(),
+            new NamedThreadFactory("unbounded-pool"));
+    CountDownLatch started = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
+
+    try {
+      executor.execute(
+          () -> {
+            started.countDown();
+            awaitLatch(release);
+          });
+      assertThat(started.await(10, SECONDS)).isTrue();
+      executor.execute(() -> {});
+
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "unbounded-pool-*", THREAD_POOL_EXECUTOR_TYPE)
+          .withQueueSize(1)
+          .assertExecutorEmitsMetrics();
+      assertNoExecutorMetric(
+          testing, INSTRUMENTATION_NAME, "jvm.executor.queue.capacity", "unbounded-pool-*");
+    } finally {
+      release.countDown();
+      executor.shutdown();
+      assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
+    }
   }
 
   @Test

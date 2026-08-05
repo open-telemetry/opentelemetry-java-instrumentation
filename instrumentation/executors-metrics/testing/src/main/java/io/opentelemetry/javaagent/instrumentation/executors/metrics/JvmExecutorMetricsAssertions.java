@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.executors.metrics;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.LongPointAssert;
@@ -24,7 +24,8 @@ public class JvmExecutorMetricsAssertions {
 
   private static final AttributeKey<String> EXECUTOR_NAME_KEY = stringKey("jvm.executor.name");
   private static final AttributeKey<String> EXECUTOR_TYPE_KEY = stringKey("jvm.executor.type");
-  private static final AttributeKey<String> EXECUTOR_STATE_KEY = stringKey("jvm.executor.state");
+  private static final AttributeKey<String> EXECUTOR_THREAD_STATE_KEY =
+      stringKey("jvm.executor.thread.state");
 
   private final InstrumentationExtension testing;
   private final String instrumentationName;
@@ -36,7 +37,7 @@ public class JvmExecutorMetricsAssertions {
   @Nullable private Long expectedCoreThreads;
   @Nullable private Long expectedMaxThreads;
   @Nullable private Long expectedQueueSize;
-  @Nullable private Long expectedQueueRemaining;
+  @Nullable private Long expectedQueueCapacity;
   @Nullable private Long expectedCompletedTasks;
   @Nullable private Long expectedRejectedTasks;
 
@@ -66,6 +67,20 @@ public class JvmExecutorMetricsAssertions {
             metric ->
                 instrumentationName.equals(metric.getInstrumentationScopeInfo().getName())
                     && metric.getName().startsWith("jvm.executor."))
+        .flatExtracting(metric -> metric.getLongSumData().getPoints())
+        .noneMatch(point -> executorName.equals(point.getAttributes().get(EXECUTOR_NAME_KEY)));
+  }
+
+  public static void assertNoExecutorMetric(
+      InstrumentationExtension testing,
+      String instrumentationName,
+      String metricName,
+      String executorName) {
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric ->
+                instrumentationName.equals(metric.getInstrumentationScopeInfo().getName())
+                    && metricName.equals(metric.getName()))
         .flatExtracting(metric -> metric.getLongSumData().getPoints())
         .noneMatch(point -> executorName.equals(point.getAttributes().get(EXECUTOR_NAME_KEY)));
   }
@@ -112,8 +127,8 @@ public class JvmExecutorMetricsAssertions {
   }
 
   @CanIgnoreReturnValue
-  public JvmExecutorMetricsAssertions withQueueRemaining(long value) {
-    expectedQueueRemaining = value;
+  public JvmExecutorMetricsAssertions withQueueCapacity(long value) {
+    expectedQueueCapacity = value;
     return this;
   }
 
@@ -135,7 +150,7 @@ public class JvmExecutorMetricsAssertions {
         && expectedCoreThreads == null
         && expectedMaxThreads == null
         && expectedQueueSize == null
-        && expectedQueueRemaining == null
+        && expectedQueueCapacity == null
         && expectedCompletedTasks == null
         && expectedRejectedTasks == null) {
       throw new IllegalStateException("At least one expected executor metric value must be set.");
@@ -153,8 +168,8 @@ public class JvmExecutorMetricsAssertions {
     if (expectedQueueSize != null) {
       verifyQueueSize(expectedQueueSize);
     }
-    if (expectedQueueRemaining != null) {
-      verifyQueueRemaining(expectedQueueRemaining);
+    if (expectedQueueCapacity != null) {
+      verifyQueueCapacity(expectedQueueCapacity);
     }
     if (expectedCompletedTasks != null) {
       verifyCompletedTasks(expectedCompletedTasks);
@@ -185,21 +200,18 @@ public class JvmExecutorMetricsAssertions {
       MetricData metric, List<Consumer<LongPointAssert>> pointAssertions) {
     assertThat(metric)
         .hasUnit("{thread}")
-        .hasDescription("The number of executor threads that are currently in the described state.")
+        .hasDescription(
+            "The number of executor threads that are currently in the state described by the jvm.executor.thread.state attribute.")
         .hasLongSumSatisfying(
             sum -> sum.isNotMonotonic().containsPointsSatisfying(pointAssertions));
   }
 
   private void verifyThreadCountPoint(LongPointAssert point, String state, long expectedValue) {
     point
-        .hasAttributes(
-            Attributes.of(
-                EXECUTOR_NAME_KEY,
-                executorName,
-                EXECUTOR_TYPE_KEY,
-                executorType,
-                EXECUTOR_STATE_KEY,
-                state))
+        .hasAttributesSatisfyingExactly(
+            equalTo(EXECUTOR_NAME_KEY, executorName),
+            equalTo(EXECUTOR_TYPE_KEY, executorType),
+            equalTo(EXECUTOR_THREAD_STATE_KEY, state))
         .hasValue(expectedValue);
   }
 
@@ -213,7 +225,7 @@ public class JvmExecutorMetricsAssertions {
                     verifyExecutorMetric(
                         metric,
                         "{thread}",
-                        "The core number of threads configured for the executor.",
+                        "The number of core threads configured for the executor.",
                         false,
                         expectedValue)));
   }
@@ -248,17 +260,17 @@ public class JvmExecutorMetricsAssertions {
                         expectedValue)));
   }
 
-  private void verifyQueueRemaining(long expectedValue) {
+  private void verifyQueueCapacity(long expectedValue) {
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "jvm.executor.queue.remaining",
+        "jvm.executor.queue.capacity",
         metrics ->
             metrics.anySatisfy(
                 metric ->
                     verifyExecutorMetric(
                         metric,
                         "{task}",
-                        "The remaining task capacity of the executor queue.",
+                        "The maximum number of tasks the executor queue can hold.",
                         false,
                         expectedValue)));
   }
@@ -310,8 +322,9 @@ public class JvmExecutorMetricsAssertions {
     sum.containsPointsSatisfying(
         point ->
             point
-                .hasAttributes(
-                    Attributes.of(EXECUTOR_NAME_KEY, executorName, EXECUTOR_TYPE_KEY, executorType))
+                .hasAttributesSatisfyingExactly(
+                    equalTo(EXECUTOR_NAME_KEY, executorName),
+                    equalTo(EXECUTOR_TYPE_KEY, executorType))
                 .hasValue(expectedValue));
   }
 }

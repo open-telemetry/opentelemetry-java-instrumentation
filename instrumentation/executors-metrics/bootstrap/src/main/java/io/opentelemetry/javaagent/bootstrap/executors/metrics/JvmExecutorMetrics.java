@@ -21,7 +21,7 @@ final class JvmExecutorMetrics {
 
   private static final AttributeKey<String> EXECUTOR_NAME = stringKey("jvm.executor.name");
   private static final AttributeKey<String> EXECUTOR_TYPE = stringKey("jvm.executor.type");
-  private static final AttributeKey<String> STATE = stringKey("jvm.executor.state");
+  private static final AttributeKey<String> THREAD_STATE = stringKey("jvm.executor.thread.state");
 
   private static final String ACTIVE_STATE = "active";
   private static final String IDLE_STATE = "idle";
@@ -51,15 +51,16 @@ final class JvmExecutorMetrics {
   private JvmExecutorMetrics(Meter meter, Attributes attributes) {
     this.meter = meter;
     this.attributes = attributes;
-    activeThreadAttributes = attributes.toBuilder().put(STATE, ACTIVE_STATE).build();
-    idleThreadAttributes = attributes.toBuilder().put(STATE, IDLE_STATE).build();
+    activeThreadAttributes = attributes.toBuilder().put(THREAD_STATE, ACTIVE_STATE).build();
+    idleThreadAttributes = attributes.toBuilder().put(THREAD_STATE, IDLE_STATE).build();
   }
 
   public ObservableLongMeasurement threadCount() {
     return meter
         .upDownCounterBuilder("jvm.executor.thread.count")
         .setUnit("{thread}")
-        .setDescription("The number of executor threads that are currently in the described state.")
+        .setDescription(
+            "The number of executor threads that are currently in the state described by the jvm.executor.thread.state attribute.")
         .buildObserver();
   }
 
@@ -67,7 +68,7 @@ final class JvmExecutorMetrics {
     return meter
         .upDownCounterBuilder("jvm.executor.thread.core")
         .setUnit("{thread}")
-        .setDescription("The core number of threads configured for the executor.")
+        .setDescription("The number of core threads configured for the executor.")
         .buildObserver();
   }
 
@@ -87,11 +88,11 @@ final class JvmExecutorMetrics {
         .buildObserver();
   }
 
-  public ObservableLongMeasurement queueRemaining() {
+  public ObservableLongMeasurement queueCapacity() {
     return meter
-        .upDownCounterBuilder("jvm.executor.queue.remaining")
+        .upDownCounterBuilder("jvm.executor.queue.capacity")
         .setUnit("{task}")
-        .setDescription("The remaining task capacity of the executor queue.")
+        .setDescription("The maximum number of tasks the executor queue can hold.")
         .buildObserver();
   }
 
