@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/open-telemetry/weaver/v0.24.2/schemas/semconv.schema.json
+# yaml-language-server: $schema=https://raw.githubusercontent.com/open-telemetry/weaver/v0.25.1/schemas/semconv.schema.json
 
 imports:
   metrics:

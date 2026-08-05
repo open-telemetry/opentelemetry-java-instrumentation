@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.rules;
 
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -43,7 +44,10 @@ class WeaverContainer extends GenericContainer<WeaverContainer> {
   @Nullable private JsonNode result = null;
 
   WeaverContainer(Path registryRoot, String... registryFiles) {
-    super("otel/weaver:v0.24.2");
+    super(
+        requireNonNull(
+            System.getProperty("io.opentelemetry.weaver.image"),
+            "io.opentelemetry.weaver.image system property must be set"));
 
     super.withExposedPorts(OTLP_PORT, ADMIN_PORT);
     super.waitingFor(Wait.forListeningPorts(OTLP_PORT, ADMIN_PORT));

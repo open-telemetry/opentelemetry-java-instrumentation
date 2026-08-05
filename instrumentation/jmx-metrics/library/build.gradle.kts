@@ -23,6 +23,10 @@ tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
+    // pinned in the root gradle.properties so that renovate can keep it up to date
+    // (renovate ignores everything under instrumentation/)
+    systemProperty("io.opentelemetry.weaver.image", project.property("weaverImage") as String)
+
     val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar")
     val testAppTask = project(":instrumentation:jmx-metrics:testing-apps:testing-webapp").tasks.named<War>("war")
     val camelTestAppTask = project(":instrumentation:jmx-metrics:testing-apps:camel-testing-app").tasks.named<Jar>("camelTestAppJar")

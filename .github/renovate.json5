@@ -463,5 +463,16 @@
         'npx (?<depName>[^@]+)@(?<currentValue>[^\\s]+)',
       ],
     },
+    {
+      // weaver image used by the jmx-metrics registry validation tests
+      customType: 'regex',
+      datasourceTemplate: 'docker',
+      managerFilePatterns: [
+        'gradle.properties',
+      ],
+      matchStrings: [
+        'weaverImage=(?<depName>[^:\\s]+):(?<currentValue>[^\\s]+)',
+      ],
+    },
   ],
 }
