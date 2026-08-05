@@ -9,9 +9,6 @@
   ignorePaths: [
     // instrumentation modules intentionally pin old library versions in order to test the oldest
     // supported version, so renovate must not update their build files
-    //
-    // this is scoped to build files (instead of all of instrumentation/) so that renovate can still
-    // see test container image pins, see the weaver custom manager below
     'instrumentation/**/*.gradle.kts',
   ],
   packageRules: [
