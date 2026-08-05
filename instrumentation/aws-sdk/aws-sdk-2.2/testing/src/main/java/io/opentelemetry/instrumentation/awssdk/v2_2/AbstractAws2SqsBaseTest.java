@@ -180,6 +180,8 @@ public abstract class AbstractAws2SqsBaseTest {
     } catch (QueueDoesNotExistException ignored) {
       // the queue is created by the tests, it may not exist
     }
+    // under the javaagent the purge call itself is instrumented, drop the telemetry it produced
+    getTesting().clearData();
   }
 
   @Test
