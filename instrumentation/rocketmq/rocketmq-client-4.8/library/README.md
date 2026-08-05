@@ -44,18 +44,19 @@ void configure(OpenTelemetry openTelemetry, DefaultMQProducerImpl producer, Defa
 
 ## Reported errors
 
-When a consume operation does not succeed, the process span is marked as errored and
-`error.type` is set to the [`ConsumeReturnType`][consume-return-type] that RocketMQ computed for
-the operation:
+When RocketMQ reports a [`ConsumeReturnType`][consume-return-type] other than `SUCCESS` for a
+consume operation, the process span is marked as errored and `error.type` is set to that consume
+return type:
 
 | `error.type` | Meaning                                                                             |
 | ------------ | ----------------------------------------------------------------------------------- |
 | `EXCEPTION`  | The message listener threw.                                                         |
 | `RETURNNULL` | The message listener returned `null`.                                               |
-| `TIME_OUT`   | The message listener exceeded the configured consume timeout.                       |
+| `TIME_OUT`   | The message listener exceeded the configured consume timeout, even if it eventually returned a success status. |
 | `FAILED`     | The message listener returned `RECONSUME_LATER` / `SUSPEND_CURRENT_QUEUE_A_MOMENT`. |
 
-If RocketMQ does not report a consume return type, the consume status is used instead.
+If RocketMQ does not report a consume return type, the consume status is used instead, and the
+process span is marked as errored when that status is not a success.
 
 `error.type` is only reported when the messaging semantic conventions are enabled. The process span
 is likewise only marked as errored when they are enabled.

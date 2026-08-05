@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import org.apache.rocketmq.client.consumer.listener.ConsumeReturnType;
 import org.apache.rocketmq.client.hook.ConsumeMessageContext;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.message.MessageExt;
@@ -94,15 +95,27 @@ final class RocketMqConsumerAttributeGetter
       RocketMqConsumerRequest request,
       @Nullable ConsumeMessageContext response,
       @Nullable Throwable error) {
-    if (response == null || response.isSuccess()) {
+    return getErrorType(response);
+  }
+
+  /** Returns the error type of the consume operation, or {@code null} if it did not fail. */
+  @Nullable
+  static String getErrorType(@Nullable ConsumeMessageContext response) {
+    if (response == null) {
       return null;
     }
-    // rocketmq coerces a null consume status to RECONSUME_LATER before invoking the hook, so the
-    // status alone cannot tell a listener that threw or returned null apart from one that asked
-    // for redelivery; the consume return type keeps that distinction
+    // the consume return type is inspected before the consume status because it carries
+    // distinctions that the status loses: rocketmq coerces a null consume status to
+    // RECONSUME_LATER before invoking the hook, so the status alone cannot tell a listener that
+    // threw or returned null apart from one that asked for redelivery, and it reports TIME_OUT for
+    // a listener that exceeded the configured consume timeout even when that listener eventually
+    // returned a success status
     Map<String, String> props = response.getProps();
     String consumeReturnType = props == null ? null : props.get(MixAll.CONSUME_CONTEXT_TYPE);
-    return consumeReturnType != null ? consumeReturnType : response.getStatus();
+    if (consumeReturnType != null) {
+      return ConsumeReturnType.SUCCESS.name().equals(consumeReturnType) ? null : consumeReturnType;
+    }
+    return response.isSuccess() ? null : response.getStatus();
   }
 
   @Override
