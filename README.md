@@ -59,7 +59,7 @@ for the full list of configuration items. For example:
 ```
 java -javaagent:path/to/opentelemetry-javaagent.jar \
      -Dotel.resource.attributes=service.name=your-service-name \
-     -Dotel.traces.exporter=zipkin \
+     -Dotel.traces.exporter=console \
      -jar myapp.jar
 ```
 
