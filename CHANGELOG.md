@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### 🚫 Deprecations
+
+- For library instrumentation users, deprecate configuring span suppression using the
+  `otel.instrumentation.experimental.span-suppression-strategy` system property in favor of
+  `Experimental.setSpanSuppressionStrategy(...)` or declarative instrumentation configuration.
+  The Java agent continues to support the system property through its declarative config bridge.
+  ([#19180](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19180))
+
 ## Version 2.30.0 (2026-07-22)
 
 This release targets the OpenTelemetry SDK 1.64.0.
