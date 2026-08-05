@@ -23,7 +23,6 @@ import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleGauge;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.concurrent.atomic.DoubleAdder;
 import java.util.concurrent.atomic.LongAdder;
@@ -50,6 +49,7 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
       DistributionStatisticConfig distributionStatisticConfig,
       DistributionStatisticConfigModifier modifier,
       double scale,
+      boolean emitMaxGauge,
       Meter otelMeter) {
     super(id, clock, modifier.modify(distributionStatisticConfig), scale, false);
 
@@ -71,14 +71,14 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
     setExplicitBucketsIfConfigured(otelHistogramBuilder, distributionStatisticConfig);
     this.otelHistogram = otelHistogramBuilder.build();
     this.observableMax =
-        SemconvStability.v3Preview()
-            ? null
-            : otelMeter
+        emitMaxGauge
+            ? otelMeter
                 .gaugeBuilder(name + ".max")
                 .setDescription(Bridging.description(id))
                 .setUnit(baseUnit(id))
                 .buildWithCallback(
-                    new DoubleMeasurementRecorder<>(max, TimeWindowMax::poll, attributes));
+                    new DoubleMeasurementRecorder<>(max, TimeWindowMax::poll, attributes))
+            : null;
   }
 
   boolean isUsingMicrometerHistograms() {
