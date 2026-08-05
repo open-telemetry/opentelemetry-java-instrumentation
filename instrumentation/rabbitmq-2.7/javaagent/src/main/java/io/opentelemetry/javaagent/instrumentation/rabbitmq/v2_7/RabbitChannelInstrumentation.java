@@ -312,7 +312,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
 
       try {
         return new Object[] {adviceScope, addHeaders(adviceScope, originalProps, body)};
-      } catch (Throwable t) {
+      } catch (Throwable ignored) {
         // the advice suppresses throwables, so a failure here would leave the scope, the call depth
         // and the current rabbit context behind; publish the message without headers instead
         return new Object[] {adviceScope, originalProps};
