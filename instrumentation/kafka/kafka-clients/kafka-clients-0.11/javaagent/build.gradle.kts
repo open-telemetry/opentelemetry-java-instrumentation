@@ -76,6 +76,18 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
+  val testMessagingPreviewPropagationDisabled = register<Test>("testMessagingPreviewPropagationDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("KafkaClientPropagationDisabledTest")
+    }
+    include("**/KafkaClientPropagationDisabledTest.*")
+    jvmArgs("-Dotel.instrumentation.kafka.producer-propagation.enabled=false")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -116,6 +128,7 @@ tasks {
       testReceiveSpansDisabled,
       testMessagingPreview,
       testMessagingPreviewReceiveSpansDisabled,
+      testMessagingPreviewPropagationDisabled,
       testExperimental,
       testBothSemconv,
     )
