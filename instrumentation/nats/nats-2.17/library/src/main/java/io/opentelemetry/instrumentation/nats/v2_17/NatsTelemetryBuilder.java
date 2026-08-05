@@ -39,6 +39,7 @@ public final class NatsTelemetryBuilder {
   public NatsTelemetry build() {
     return new NatsTelemetry(
         NatsInstrumenterFactory.createProducerInstrumenter(openTelemetry, capturedHeaders),
+        NatsInstrumenterFactory.createSettleInstrumenter(openTelemetry, capturedHeaders),
         NatsInstrumenterFactory.createConsumerProcessInstrumenter(openTelemetry, capturedHeaders));
   }
 }

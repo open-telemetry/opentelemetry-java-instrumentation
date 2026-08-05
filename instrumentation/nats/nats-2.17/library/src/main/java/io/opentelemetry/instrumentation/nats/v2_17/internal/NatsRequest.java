@@ -50,6 +50,11 @@ public abstract class NatsRequest {
 
   public abstract String getSubject();
 
+  /** Returns whether this request targets a JetStream message settlement subject. */
+  public final boolean isJetStreamAck() {
+    return NatsSubject.isJetStreamAck(getSubject());
+  }
+
   @Nullable
   public abstract Headers getHeaders();
 

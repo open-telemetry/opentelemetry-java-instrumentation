@@ -27,27 +27,31 @@ final class OpenTelemetryConnection implements InvocationHandler {
 
   private final Connection delegate;
   private final Instrumenter<NatsRequest, NatsRequest> producerInstrumenter;
+  private final Instrumenter<NatsRequest, NatsRequest> settleInstrumenter;
   private final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter;
 
   private OpenTelemetryConnection(
       Connection connection,
       Instrumenter<NatsRequest, NatsRequest> producerInstrumenter,
+      Instrumenter<NatsRequest, NatsRequest> settleInstrumenter,
       Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     this.delegate = connection;
     this.producerInstrumenter = producerInstrumenter;
+    this.settleInstrumenter = settleInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
 
   static Connection wrap(
       Connection connection,
       Instrumenter<NatsRequest, NatsRequest> producerInstrumenter,
+      Instrumenter<NatsRequest, NatsRequest> settleInstrumenter,
       Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     return (Connection)
         Proxy.newProxyInstance(
             OpenTelemetryConnection.class.getClassLoader(),
             new Class<?>[] {Connection.class},
             new OpenTelemetryConnection(
-                connection, producerInstrumenter, consumerProcessInstrumenter));
+                connection, producerInstrumenter, settleInstrumenter, consumerProcessInstrumenter));
   }
 
   @Override
@@ -142,12 +146,16 @@ final class OpenTelemetryConnection implements InvocationHandler {
       natsRequest = NatsRequest.create(delegate, subject, replyTo, headers, body);
     }
 
-    if (natsRequest == null || !producerInstrumenter.shouldStart(parentContext, natsRequest)) {
+    Instrumenter<NatsRequest, NatsRequest> instrumenter =
+        natsRequest != null && natsRequest.isJetStreamAck()
+            ? settleInstrumenter
+            : producerInstrumenter;
+    if (natsRequest == null || !instrumenter.shouldStart(parentContext, natsRequest)) {
       invokeMethod(method, delegate, args);
       return;
     }
 
-    Context context = producerInstrumenter.start(parentContext, natsRequest);
+    Context context = instrumenter.start(parentContext, natsRequest);
     Throwable throwable = null;
     try (Scope ignored = context.makeCurrent()) {
       delegate.publish(subject, replyTo, headers, body);
@@ -155,7 +163,7 @@ final class OpenTelemetryConnection implements InvocationHandler {
       throwable = t;
       throw t;
     } finally {
-      producerInstrumenter.end(context, natsRequest, null, throwable);
+      instrumenter.end(context, natsRequest, null, throwable);
     }
   }
 
