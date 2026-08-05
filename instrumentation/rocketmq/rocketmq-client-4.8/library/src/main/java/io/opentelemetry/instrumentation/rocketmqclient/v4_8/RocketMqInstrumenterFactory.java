@@ -209,7 +209,9 @@ class RocketMqInstrumenterFactory {
   private static SpanStatusExtractor<RocketMqConsumerRequest, ConsumeMessageContext>
       consumeStatusExtractor() {
     return (spanStatusBuilder, request, response, error) -> {
-      if (response != null && !response.isSuccess()) {
+      // the consume return type, and not just the consume status, decides whether the operation
+      // failed, so that the span status stays consistent with the reported error.type
+      if (RocketMqConsumerAttributeGetter.getErrorType(response) != null) {
         spanStatusBuilder.setStatus(StatusCode.ERROR);
       } else {
         SpanStatusExtractor.getDefault().extract(spanStatusBuilder, request, response, error);

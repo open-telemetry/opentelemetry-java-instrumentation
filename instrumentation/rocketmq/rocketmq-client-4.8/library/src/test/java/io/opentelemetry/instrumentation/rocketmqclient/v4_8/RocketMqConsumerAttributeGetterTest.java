@@ -47,6 +47,28 @@ class RocketMqConsumerAttributeGetterTest {
   }
 
   @Test
+  void reportsTimedOutConsumeReturnTypeAsErrorTypeWhenConsumeStatusIsSuccess() {
+    // rocketmq derives the consume return type from the duration of the consume operation as well
+    // as from its outcome, so a listener that exceeds the configured consume timeout is reported as
+    // TIME_OUT even when it eventually returns a success status
+    ConsumeMessageContext response = mock(ConsumeMessageContext.class);
+    when(response.getProps())
+        .thenReturn(singletonMap(MixAll.CONSUME_CONTEXT_TYPE, ConsumeReturnType.TIME_OUT.name()));
+
+    assertThat(getter.getErrorType(request(), response, null))
+        .isEqualTo(ConsumeReturnType.TIME_OUT.name());
+  }
+
+  @Test
+  void doesNotReportErrorTypeOnSuccessfulConsumeReturnType() {
+    ConsumeMessageContext response = mock(ConsumeMessageContext.class);
+    when(response.getProps())
+        .thenReturn(singletonMap(MixAll.CONSUME_CONTEXT_TYPE, ConsumeReturnType.SUCCESS.name()));
+
+    assertThat(getter.getErrorType(request(), response, null)).isNull();
+  }
+
+  @Test
   void fallsBackToConsumeStatusWhenConsumeReturnTypeIsMissing() {
     ConsumeMessageContext response = mock(ConsumeMessageContext.class);
     when(response.isSuccess()).thenReturn(false);
