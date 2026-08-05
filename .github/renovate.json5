@@ -466,7 +466,6 @@
       ],
     },
     {
-      // weaver image used by the jmx-metrics registry validation tests
       customType: 'regex',
       datasourceTemplate: 'docker',
       managerFilePatterns: [
