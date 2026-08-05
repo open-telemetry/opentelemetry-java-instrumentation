@@ -90,6 +90,26 @@ final class DeliveredMessages {
     return SettledMessages.of(settled, incomplete);
   }
 
+  /**
+   * Forgets every outstanding delivery on a channel, as {@code basicRecover} and {@code
+   * basicRecoverAsync} do: they requeue all unacknowledged deliveries, which the broker then
+   * redelivers under new, higher delivery tags. Without this the old tags would linger and a later
+   * multiple settle, which covers every tag up to the one it names, would settle them a second
+   * time.
+   */
+  static void clear(Channel channel) {
+    DeliveredMessages messages = FIELD.get(channel);
+    if (messages == null) {
+      return;
+    }
+    synchronized (messages) {
+      // the eviction flag is deliberately left alone: every remembered delivery was unacknowledged,
+      // so an empty map is an accurate view of what is outstanding after a recover, no matter what
+      // was forgotten before it
+      messages.messagesByDeliveryTag.clear();
+    }
+  }
+
   private static DeliveredMessages getOrCreate(Channel channel) {
     DeliveredMessages messages = FIELD.get(channel);
     return messages != null ? messages : create(channel);

@@ -52,6 +52,8 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
@@ -170,6 +172,98 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                         null,
                         null,
                         false)));
+  }
+
+  @Test
+  void testRabbitPublishGetWithByteBufferBody() throws Exception {
+    Method byteBufferPublish = byteBufferPublishMethod();
+    assumeTrue(
+        byteBufferPublish != null,
+        "the ByteBuffer basicPublish overload needs amqp-client 5.30.0+");
+
+    String exchangeName = "some-exchange";
+    String routingKey = "some-routing-key";
+
+    String queueName =
+        testing.runWithSpan(
+            "producer parent",
+            () -> {
+              channel.exchangeDeclare(exchangeName, "direct", false);
+              String internalQueueName = channel.queueDeclare().getQueue();
+              channel.queueBind(internalQueueName, exchangeName, routingKey);
+              byteBufferPublish.invoke(
+                  channel,
+                  exchangeName,
+                  routingKey,
+                  false,
+                  false,
+                  null,
+                  ByteBuffer.wrap("Hello, world!".getBytes(Charset.defaultCharset())),
+                  null);
+              return internalQueueName;
+            });
+    GetResponse response =
+        testing.runWithSpan("consumer parent", () -> channel.basicGet(queueName, true));
+
+    assertThat(new String(response.getBody(), Charset.defaultCharset())).isEqualTo("Hello, world!");
+
+    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("producer parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> verifySpan(trace, span, 1, "exchange.declare", trace.getSpan(0)),
+                span -> verifySpan(trace, span, 2, "queue.declare", trace.getSpan(0)),
+                span -> verifySpan(trace, span, 3, "queue.bind", trace.getSpan(0)),
+                span -> {
+                  verifySpan(
+                      trace,
+                      span,
+                      4,
+                      exchangeName,
+                      routingKey,
+                      "publish",
+                      exchangeName,
+                      trace.getSpan(0));
+                  producerSpan.set(trace.getSpan(4));
+                }),
+        // the consumer side linking back to the producer span proves that the ByteBuffer overload
+        // also injected the trace context into the message headers
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("consumer parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    verifySpan(
+                        trace,
+                        span,
+                        1,
+                        exchangeName,
+                        routingKey,
+                        "receive",
+                        queueName,
+                        trace.getSpan(0),
+                        producerSpan.get(),
+                        null,
+                        null,
+                        false)));
+  }
+
+  @Nullable
+  private static Method byteBufferPublishMethod() {
+    try {
+      return Channel.class.getMethod(
+          "basicPublish",
+          String.class,
+          String.class,
+          boolean.class,
+          boolean.class,
+          AMQP.BasicProperties.class,
+          ByteBuffer.class,
+          Class.forName("com.rabbitmq.client.WriteListener"));
+    } catch (NoSuchMethodException | ClassNotFoundException e) {
+      return null;
+    }
   }
 
   @Test
@@ -692,6 +786,42 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                 span ->
                     verifySettleSpan(
                         span, trace.getSpan(0), "ack", queueName, true, lastDeliveryTag, 2L)));
+  }
+
+  @Test
+  void testRabbitSettleMultipleAfterRecover() throws IOException {
+    assumeTrue(emitStableMessagingSemconv());
+
+    String queueName = channel.queueDeclare().getQueue();
+    for (int i = 0; i < 3; i++) {
+      channel.basicPublish(
+          "", queueName, null, ("message " + i).getBytes(Charset.defaultCharset()));
+    }
+    for (int i = 0; i < 3; i++) {
+      channel.basicGet(queueName, false);
+    }
+    // requeues the three unacknowledged deliveries, which the broker then redelivers under new,
+    // higher delivery tags
+    channel.basicRecover(true);
+    long deliveryTag = 0;
+    for (int i = 0; i < 3; i++) {
+      GetResponse response = channel.basicGet(queueName, false);
+      deliveryTag = response.getEnvelope().getDeliveryTag();
+    }
+    testing.clearData();
+
+    long lastDeliveryTag = deliveryTag;
+    testing.runWithSpan("parent", () -> channel.basicAck(lastDeliveryTag, true));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                // only the redelivered messages are settled; the delivery tags that the recover
+                // invalidated are not counted a second time
+                span ->
+                    verifySettleSpan(
+                        span, trace.getSpan(0), "ack", queueName, true, lastDeliveryTag, 3L)));
   }
 
   @Test

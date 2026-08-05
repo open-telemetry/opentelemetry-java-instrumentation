@@ -80,6 +80,12 @@ public class RabbitInstrumenterHelper {
     return isCanonicalUuid(queue);
   }
 
+  /**
+   * Spring AMQP names anonymous queues with a bare UUID, which would blow up the cardinality of the
+   * destination name and of every span name derived from it. The known false positive is a queue
+   * that an application deliberately declared under a stable name that happens to be a canonical
+   * UUID: it is reported as anonymous and loses its name.
+   */
   private static boolean isCanonicalUuid(String value) {
     if (value.length() != 36) {
       return false;
