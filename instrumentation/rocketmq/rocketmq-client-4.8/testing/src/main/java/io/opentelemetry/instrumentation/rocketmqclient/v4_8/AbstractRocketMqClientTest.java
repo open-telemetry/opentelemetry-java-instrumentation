@@ -373,8 +373,10 @@ abstract class AbstractRocketMqClientTest {
                               oldOperation("publish"),
                               operationName("send"),
                               operationType("send"),
-                              satisfies(
-                                  MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                              emitStableMessagingSemconv()
+                                  ? equalTo(MESSAGING_MESSAGE_ID, null)
+                                  : satisfies(
+                                      MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                               satisfies(
                                   stringKey("messaging.rocketmq.broker_address"),
                                   val -> experimentalString(val)),

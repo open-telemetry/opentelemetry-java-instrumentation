@@ -57,6 +57,7 @@ the operation:
 
 If RocketMQ does not report a consume return type, the consume status is used instead.
 
-`error.type` is only reported when the messaging semantic conventions are enabled.
+`error.type` is only reported when the messaging semantic conventions are enabled. The process span
+is likewise only marked as errored when they are enabled.
 
 [consume-return-type]: https://github.com/apache/rocketmq/blob/rocketmq-all-4.8.0/client/src/main/java/org/apache/rocketmq/client/consumer/listener/ConsumeReturnType.java

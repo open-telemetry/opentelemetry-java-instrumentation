@@ -75,6 +75,11 @@ final class RocketMqProducerAttributeGetter
   @Nullable
   @Override
   public String getMessageId(SendMessageContext request, @Nullable Void unused) {
+    // the send result of a batch carries the concatenated ids of every message it contains, which
+    // is not a per-message id, so it is not reported
+    if (isBatch(request)) {
+      return null;
+    }
     SendResult sendResult = request.getSendResult();
     return sendResult == null ? null : sendResult.getMsgId();
   }
@@ -88,15 +93,18 @@ final class RocketMqProducerAttributeGetter
   @Nullable
   @Override
   public Long getBatchMessageCount(SendMessageContext request, @Nullable Void unused) {
-    Message message = request.getMessage();
-    if (emitStableMessagingSemconv() && message instanceof Iterable<?>) {
-      long batchSize = 0;
-      for (Object ignored : (Iterable<?>) message) {
-        batchSize++;
-      }
-      return batchSize;
+    if (!isBatch(request)) {
+      return null;
     }
-    return null;
+    long batchSize = 0;
+    for (Object ignored : (Iterable<?>) request.getMessage()) {
+      batchSize++;
+    }
+    return batchSize;
+  }
+
+  private static boolean isBatch(SendMessageContext request) {
+    return emitStableMessagingSemconv() && request.getMessage() instanceof Iterable<?>;
   }
 
   @Override
