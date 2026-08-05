@@ -759,6 +759,30 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   }
 
   @Test
+  void testRabbitSettleMultipleAcrossAnonymousQueues() throws IOException {
+    assumeTrue(emitStableMessagingSemconv());
+
+    String firstQueueName = channel.queueDeclare().getQueue();
+    String secondQueueName = channel.queueDeclare().getQueue();
+    channel.basicPublish("", firstQueueName, null, "message 1".getBytes(Charset.defaultCharset()));
+    channel.basicPublish("", secondQueueName, null, "message 2".getBytes(Charset.defaultCharset()));
+    channel.basicGet(firstQueueName, false);
+    long deliveryTag = channel.basicGet(secondQueueName, false).getEnvelope().getDeliveryTag();
+    testing.clearData();
+
+    testing.runWithSpan("parent", () -> channel.basicAck(deliveryTag, true));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                // the two queues are different destinations, so no destination is reported, but
+                // both of them are server generated, so the settled messages agree on anonymity
+                span ->
+                    verifySettleSpan(span, trace.getSpan(0), "ack", null, true, deliveryTag, 2L)));
+  }
+
+  @Test
   void testRabbitSettleMultipleIgnoresAutomaticallyAcknowledgedDeliveries() throws IOException {
     assumeTrue(emitStableMessagingSemconv());
 

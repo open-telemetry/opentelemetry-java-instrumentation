@@ -203,9 +203,12 @@ final class DeliveredMessages {
       boolean anonymousDestination = first.anonymousDestination;
       String routingKey = first.routingKey;
       for (DeliveredMessage message : messages) {
-        // attributes that don't apply to every settled message are not reported at all
+        // each attribute is aggregated on its own, and one that doesn't apply to every settled
+        // message is not reported at all
         if (!Objects.equals(destination, message.destination)) {
           destination = null;
+        }
+        if (anonymousDestination != message.anonymousDestination) {
           anonymousDestination = false;
         }
         if (!Objects.equals(routingKey, message.routingKey)) {
