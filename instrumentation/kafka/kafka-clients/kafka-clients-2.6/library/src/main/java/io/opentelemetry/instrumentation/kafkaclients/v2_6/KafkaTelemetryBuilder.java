@@ -34,9 +34,21 @@ public final class KafkaTelemetryBuilder {
   private boolean captureExperimentalSpanAttributes = false;
   private boolean propagationEnabled = true;
   private boolean messagingReceiveInstrumentationEnabled = false;
+  private String metricDropFilterConfig = null;
 
   KafkaTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = requireNonNull(openTelemetry);
+  }
+
+  /**
+   * Sets the configuration used to drop bridged metrics.
+   *
+   * @param metricDropFilters A collection of exact metric names or wildcard prefixes.
+   */
+  @CanIgnoreReturnValue
+  public KafkaTelemetryBuilder setMetricBridgeFilter(Collection<String> metricDropFilters) {
+    this.metricDropFilterConfig = String.join(",", metricDropFilters);
+    return this;
   }
 
   @CanIgnoreReturnValue
@@ -121,6 +133,7 @@ public final class KafkaTelemetryBuilder {
         instrumenterFactory.createProducerInstrumenter(producerAttributesExtractors),
         instrumenterFactory.createConsumerReceiveInstrumenter(consumerReceiveAttributesExtractors),
         instrumenterFactory.createConsumerProcessInstrumenter(consumerProcessAttributesExtractors),
-        propagationEnabled);
+        propagationEnabled,
+        metricDropFilterConfig);
   }
 }

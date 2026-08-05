@@ -26,6 +26,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +35,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -103,8 +105,18 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
 
   @AfterEach
   void tearDown() {
+    List<MetricsReporter> staticReporters = new ArrayList<>();
+    if (producer != null) {
+      staticReporters.addAll(getMetricsReporters(producer));
+    }
+    if (consumer != null) {
+      staticReporters.addAll(getMetricsReporters(consumer));
+    }
+
     for (OpenTelemetryMetricsReporter metricsReporter : metricsReporters) {
-      metricsReporter.resetForTest();
+      if (!staticReporters.contains(metricsReporter)) {
+        metricsReporter.resetForTest();
+      }
     }
   }
 
@@ -384,6 +396,50 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
 
     // Print mapping table
     printMappingTable();
+  }
+
+  @Test
+  void metricDropFilterEndToEnd() throws ExecutionException, InterruptedException {
+    testing().clearData();
+
+    Map<String, Object> config = new HashMap<>(producerConfig());
+    config.put(ProducerConfig.CLIENT_ID_CONFIG, "drop-filter-test-client");
+
+    config.put(
+        OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_METRIC_DROP_FILTER,
+        "kafka.producer.byte_total");
+
+    try (KafkaProducer<byte[], byte[]> testProducer = new KafkaProducer<>(config)) {
+      testProducer
+          .send(
+              new ProducerRecord<>(
+                  TOPICS.get(0),
+                  0,
+                  System.currentTimeMillis(),
+                  "key".getBytes(UTF_8),
+                  "value".getBytes(UTF_8)))
+          .get();
+
+      testProducer.flush();
+
+      List<MetricData> metrics = testing().metrics();
+      AttributeKey<String> clientIdKey = AttributeKey.stringKey("client-id");
+
+      Set<String> testClientMetrics =
+          metrics.stream()
+              .filter(
+                  metric ->
+                      metric.getData().getPoints().stream()
+                          .anyMatch(
+                              point ->
+                                  "drop-filter-test-client"
+                                      .equals(point.getAttributes().get(clientIdKey))))
+              .map(MetricData::getName)
+              .collect(toSet());
+
+      assertThat(testClientMetrics).contains("kafka.producer.byte_rate");
+      assertThat(testClientMetrics).doesNotContain("kafka.producer.byte_total");
+    }
   }
 
   private static void produceRecords() {
