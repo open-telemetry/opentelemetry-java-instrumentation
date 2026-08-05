@@ -865,6 +865,45 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                     verifySettleSpan(span, trace.getSpan(0), "ack", null, false, lastTag, null)));
   }
 
+  @Test
+  void testRabbitSettleMultipleAfterRecoverWithForgottenDeliveries() throws IOException {
+    assumeTrue(emitStableMessagingSemconv());
+
+    // more outstanding deliveries than are remembered, so the oldest ones are forgotten
+    int messageCount = 1001;
+    String queueName = channel.queueDeclare().getQueue();
+    for (int i = 0; i < messageCount; i++) {
+      channel.basicPublish(
+          "", queueName, null, ("message " + i).getBytes(Charset.defaultCharset()));
+    }
+    for (int i = 0; i < messageCount; i++) {
+      channel.basicGet(queueName, false);
+    }
+    // requeues every unacknowledged delivery, the forgotten ones included, so the deliveries below
+    // are the only ones the settle that follows can cover
+    channel.basicRecover(true);
+
+    long deliveryTag = 0;
+    for (int i = 0; i < 3; i++) {
+      GetResponse response = channel.basicGet(queueName, false);
+      deliveryTag = response.getEnvelope().getDeliveryTag();
+    }
+    testing.clearData();
+
+    long lastDeliveryTag = deliveryTag;
+    testing.runWithSpan("parent", () -> channel.basicAck(lastDeliveryTag, true));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                // the recover left nothing forgotten outstanding, so the destination and the batch
+                // message count are reported again
+                span ->
+                    verifySettleSpan(
+                        span, trace.getSpan(0), "ack", queueName, true, lastDeliveryTag, 3L)));
+  }
+
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static void verifySettleSpan(
       SpanDataAssert span,

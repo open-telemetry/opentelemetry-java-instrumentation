@@ -103,9 +103,9 @@ final class DeliveredMessages {
       return;
     }
     synchronized (messages) {
-      // the eviction flag is deliberately left alone: every remembered delivery was unacknowledged,
-      // so an empty map is an accurate view of what is outstanding after a recover, no matter what
-      // was forgotten before it
+      // this forgets the eviction flag too: every remembered delivery was unacknowledged, so
+      // whatever was evicted is requeued along with them, and the deliveries that follow, which are
+      // all remembered from the start, are the only ones a later multiple settle can cover
       messages.messagesByDeliveryTag.clear();
     }
   }
@@ -139,6 +139,12 @@ final class DeliveredMessages {
       }
       evicted = true;
       return true;
+    }
+
+    @Override
+    public void clear() {
+      super.clear();
+      evicted = false;
     }
 
     /** Returns and clears whether any delivery has been forgotten since the last call. */
