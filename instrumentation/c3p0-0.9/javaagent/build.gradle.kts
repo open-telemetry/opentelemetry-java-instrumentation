@@ -17,12 +17,6 @@ dependencies {
   implementation(project(":instrumentation:c3p0-0.9:library"))
   implementation(project(":instrumentation:jdbc:javaagent-common"))
   bootstrap(project(":instrumentation:jdbc:bootstrap"))
-  compileOnly(
-    project(
-      path = ":instrumentation:jdbc:library",
-      configuration = "shadow",
-    ),
-  )
 
   testImplementation(project(":instrumentation:c3p0-0.9:testing"))
 }

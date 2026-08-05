@@ -18,12 +18,6 @@ dependencies {
   implementation(project(":instrumentation:jdbc:javaagent-common"))
 
   bootstrap(project(":instrumentation:jdbc:bootstrap"))
-  compileOnly(
-    project(
-      path = ":instrumentation:jdbc:library",
-      configuration = "shadow",
-    ),
-  )
 
   testImplementation(project(":instrumentation:apache-dbcp-2.0:testing"))
 }

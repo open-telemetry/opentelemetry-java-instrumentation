@@ -17,12 +17,6 @@ dependencies {
   implementation(project(":instrumentation:alibaba-druid-1.0:library"))
   implementation(project(":instrumentation:jdbc:javaagent-common"))
   bootstrap(project(":instrumentation:jdbc:bootstrap"))
-  compileOnly(
-    project(
-      path = ":instrumentation:jdbc:library",
-      configuration = "shadow",
-    ),
-  )
 
   testImplementation(project(":instrumentation:alibaba-druid-1.0:testing"))
 }

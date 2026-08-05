@@ -16,12 +16,6 @@ dependencies {
 
   implementation(project(":instrumentation:jdbc:javaagent-common"))
   bootstrap(project(":instrumentation:jdbc:bootstrap"))
-  compileOnly(
-    project(
-      path = ":instrumentation:jdbc:library",
-      configuration = "shadow",
-    ),
-  )
 
   testImplementation("org.apache.tomcat:tomcat-jdbc:8.5.0")
 }
