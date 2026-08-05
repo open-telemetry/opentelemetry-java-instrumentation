@@ -32,6 +32,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -62,6 +63,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -590,7 +592,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
                     verifySettleSpan(
-                        span, trace.getSpan(0), operation, queueName, deliveryTag, null)));
+                        span, trace.getSpan(0), operation, queueName, true, deliveryTag, null)));
   }
 
   @ParameterizedTest(name = "test rabbit {0} multiple")
@@ -625,7 +627,112 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
                     verifySettleSpan(
-                        span, trace.getSpan(0), operation, queueName, lastDeliveryTag, 3L)));
+                        span, trace.getSpan(0), operation, queueName, true, lastDeliveryTag, 3L)));
+  }
+
+  @ParameterizedTest(name = "test rabbit {0} multiple with delivery tag zero")
+  @ValueSource(strings = {"ack", "nack"})
+  void testRabbitSettleMultipleWithDeliveryTagZero(String operation) throws IOException {
+    String queueName = channel.queueDeclare().getQueue();
+    for (int i = 0; i < 3; i++) {
+      channel.basicPublish(
+          "", queueName, null, ("message " + i).getBytes(Charset.defaultCharset()));
+    }
+    for (int i = 0; i < 3; i++) {
+      channel.basicGet(queueName, false);
+    }
+    testing.clearData();
+
+    // a delivery tag of zero settles every outstanding delivery
+    long deliveryTag = 0;
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          if ("ack".equals(operation)) {
+            channel.basicAck(deliveryTag, true);
+          } else {
+            channel.basicNack(deliveryTag, true, false);
+          }
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    verifySettleSpan(
+                        span, trace.getSpan(0), operation, queueName, true, deliveryTag, 3L)));
+  }
+
+  @Test
+  void testRabbitSettleMultipleIgnoresAutomaticallyAcknowledgedDeliveries() throws IOException {
+    assumeTrue(emitStableMessagingSemconv());
+
+    String queueName = channel.queueDeclare().getQueue();
+    for (int i = 0; i < 3; i++) {
+      channel.basicPublish(
+          "", queueName, null, ("message " + i).getBytes(Charset.defaultCharset()));
+    }
+    // this delivery is acknowledged automatically, so it is not settled by the basicAck below
+    channel.basicGet(queueName, true);
+    long deliveryTag = 0;
+    for (int i = 0; i < 2; i++) {
+      GetResponse response = channel.basicGet(queueName, false);
+      deliveryTag = response.getEnvelope().getDeliveryTag();
+    }
+    testing.clearData();
+
+    long lastDeliveryTag = deliveryTag;
+    testing.runWithSpan("parent", () -> channel.basicAck(lastDeliveryTag, true));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    verifySettleSpan(
+                        span, trace.getSpan(0), "ack", queueName, true, lastDeliveryTag, 2L)));
+  }
+
+  @Test
+  void testRabbitSettleMultipleWithForgottenDeliveries() throws Exception {
+    assumeTrue(emitStableMessagingSemconv());
+
+    // more outstanding deliveries than are remembered, so the oldest ones are forgotten
+    int messageCount = 1001;
+    String queueName = channel.queueDeclare().getQueue();
+    for (int i = 0; i < messageCount; i++) {
+      channel.basicPublish(
+          "", queueName, null, ("message " + i).getBytes(Charset.defaultCharset()));
+    }
+
+    CountDownLatch latch = new CountDownLatch(messageCount);
+    AtomicReference<Long> lastDeliveryTag = new AtomicReference<>(0L);
+    channel.basicConsume(
+        queueName,
+        false,
+        new DefaultConsumer(channel) {
+          @Override
+          public void handleDelivery(
+              String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
+            lastDeliveryTag.set(envelope.getDeliveryTag());
+            latch.countDown();
+          }
+        });
+    assertThat(latch.await(60, SECONDS)).isTrue();
+    testing.clearData();
+
+    long lastTag = lastDeliveryTag.get();
+    testing.runWithSpan("parent", () -> channel.basicAck(lastTag, true));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                // deliveries were forgotten, so the destination and the batch message count, which
+                // both have to describe every settled message, are not reported
+                span ->
+                    verifySettleSpan(span, trace.getSpan(0), "ack", null, false, lastTag, null)));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -633,7 +740,8 @@ class RabbitMqTest extends AbstractRabbitMqTest {
       SpanDataAssert span,
       SpanData parentSpan,
       String operation,
-      String queueName,
+      @Nullable String destination,
+      boolean anonymousDestination,
       long deliveryTag,
       Long batchMessageCount) {
     boolean stable = emitStableMessagingSemconv();
@@ -642,13 +750,14 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         .hasParent(parentSpan)
         .hasAttributesSatisfying(
             equalTo(MESSAGING_SYSTEM, "rabbitmq"),
-            equalTo(MESSAGING_DESTINATION_NAME, stable ? queueName : null),
-            equalTo(MESSAGING_DESTINATION_ANONYMOUS, stable ? true : null),
+            equalTo(MESSAGING_DESTINATION_NAME, stable ? destination : null),
+            equalTo(
+                MESSAGING_DESTINATION_ANONYMOUS, (stable && anonymousDestination) ? true : null),
             equalTo(MESSAGING_OPERATION_NAME, stable ? operation : null),
             equalTo(MESSAGING_OPERATION_TYPE, stable ? "settle" : null),
             equalTo(MESSAGING_OPERATION, stable && emitOldMessagingSemconv() ? "settle" : null),
             equalTo(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, stable ? deliveryTag : null),
-            equalTo(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, stable ? queueName : null),
+            equalTo(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, stable ? destination : null),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, stable ? batchMessageCount : null),
             equalTo(SERVER_ADDRESS, stable ? rabbitMqIp : null),
             satisfies(stringKey("rabbitmq.command"), val -> val.isIn(null, "basic." + operation)));

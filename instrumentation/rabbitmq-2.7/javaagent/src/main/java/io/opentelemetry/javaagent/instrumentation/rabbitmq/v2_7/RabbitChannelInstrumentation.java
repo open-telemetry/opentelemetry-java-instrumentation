@@ -100,11 +100,12 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         named("basicReject").and(isPublic()).and(takesArgument(0, long.class)),
         getClass().getName() + "$ChannelSettleAdvice");
     transformer.applyAdviceToMethod(
-        named("basicGet").and(takesArgument(0, String.class)),
+        named("basicGet").and(takesArgument(0, String.class)).and(takesArgument(1, boolean.class)),
         getClass().getName() + "$ChannelGetAdvice");
     transformer.applyAdviceToMethod(
         named("basicConsume")
             .and(takesArgument(0, String.class))
+            .and(takesArgument(1, boolean.class))
             .and(takesArgument(6, named("com.rabbitmq.client.Consumer"))),
         getClass().getName() + "$ChannelConsumeAdvice");
   }
@@ -402,13 +403,16 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
       public void end(
           Channel channel,
           String queue,
+          boolean autoAck,
           @Nullable GetResponse response,
           @Nullable Throwable throwable) {
         if (callDepth.decrementAndGet() > 0) {
           return;
         }
 
-        if (response != null && emitStableMessagingSemconv()) {
+        // automatically acknowledged deliveries are never settled by the application, so
+        // remembering them would only pollute the deliveries settled by a later multiple settle
+        if (response != null && !autoAck && emitStableMessagingSemconv()) {
           DeliveredMessages.record(channel, response.getEnvelope(), queue);
         }
 
@@ -440,10 +444,11 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
     public static void extractAndStartSpan(
         @Advice.This Channel channel,
         @Advice.Argument(0) String queue,
+        @Advice.Argument(1) boolean autoAck,
         @Advice.Return @Nullable GetResponse response,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter ChannelGetAdviceScope adviceScope) {
-      adviceScope.end(channel, queue, response, throwable);
+      adviceScope.end(channel, queue, autoAck, response, throwable);
     }
   }
 
@@ -455,10 +460,12 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
     public static Object wrapConsumer(
         @Advice.This Channel channel,
         @Advice.Argument(0) String queue,
+        @Advice.Argument(1) boolean autoAck,
         @Advice.Argument(6) Consumer consumer) {
       // We have to save off the queue name here because it isn't available to the consumer later.
       if (consumer != null && !(consumer instanceof TracedDelegatingConsumer)) {
-        return new TracedDelegatingConsumer(queue, consumer, channel, channel.getConnection());
+        return new TracedDelegatingConsumer(
+            queue, consumer, autoAck, channel, channel.getConnection());
       }
 
       return consumer;
