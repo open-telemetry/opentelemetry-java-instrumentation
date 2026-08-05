@@ -403,7 +403,7 @@ If a new module is added, verify all of the following:
 1. `metadata.yaml` includes required fields and config metadata.
 2. `build.gradle.kts` custom test tasks follow `gradle-conventions.md`.
 3. `testExperimental` task exists when module emits experimental span attributes.
-4. `instrumentation-docs/instrumentations.sh` includes all test-task variants.
+4. `.github/scripts/instrumentations.sh` includes all test-task variants.
 5. `settings.gradle.kts` includes all subprojects in alphabetical order.
 6. `docs/supported-libraries.md` has an entry (`Auto-instrumented versions` is `N/A` for
    library-only).
