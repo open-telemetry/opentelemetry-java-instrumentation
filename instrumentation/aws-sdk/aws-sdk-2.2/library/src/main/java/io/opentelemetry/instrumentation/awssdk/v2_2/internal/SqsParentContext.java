@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 import static java.util.Collections.singletonMap;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -109,29 +108,31 @@ public final class SqsParentContext {
       SqsMessage message,
       TextMapPropagator messagingPropagator,
       boolean shouldUseXrayPropagator) {
-    Context extractedContext = parentContext;
-    boolean extractedCreationContext = false;
+    // extract against a context without the ambient span, so that a span in the extracted context
+    // is known to have come from the message instead of being inherited from parentContext. an
+    // ambient span is not a creation context and must not suppress the X-Ray fallback
+    Span ambientSpan = Span.fromContext(parentContext);
+    Context extractedContext = parentContext.with(Span.getInvalid());
 
     if (messagingPropagator != null) {
       extractedContext =
-          ofMessageAttributes(parentContext, message.messageAttributes(), messagingPropagator);
-      extractedCreationContext = hasNewSpan(parentContext, extractedContext);
+          ofMessageAttributes(extractedContext, message.messageAttributes(), messagingPropagator);
     }
 
-    // the span in extractedContext can also come from parentContext, which carries an ambient span
-    // when the message is consumed inside another span; that ambient span is not a creation context
-    // and must not suppress the X-Ray fallback
-    if (shouldUseXrayPropagator && !extractedCreationContext) {
+    if (shouldUseXrayPropagator && !hasSpan(extractedContext)) {
       extractedContext = ofSystemAttributes(extractedContext, message.attributesAsStrings());
+    }
+
+    // the message did not carry a creation context, restore the ambient span
+    if (!hasSpan(extractedContext)) {
+      extractedContext = extractedContext.with(ambientSpan);
     }
 
     return extractedContext;
   }
 
-  private static boolean hasNewSpan(Context parentContext, Context extractedContext) {
-    SpanContext extracted = Span.fromContext(extractedContext).getSpanContext();
-    return extracted.isValid()
-        && !extracted.equals(Span.fromContext(parentContext).getSpanContext());
+  private static boolean hasSpan(Context context) {
+    return Span.fromContext(context).getSpanContext().isValid();
   }
 
   private SqsParentContext() {}

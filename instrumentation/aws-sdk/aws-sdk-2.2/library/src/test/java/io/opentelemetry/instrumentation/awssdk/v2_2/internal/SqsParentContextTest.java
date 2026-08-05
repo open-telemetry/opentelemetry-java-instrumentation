@@ -22,6 +22,7 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
@@ -89,7 +90,54 @@ class SqsParentContextTest {
     assertThat(extracted.getTraceId()).isNotEqualTo(ambient.getTraceId());
   }
 
+  @Test
+  void usesMessagingPropagatorWhenItExtractsTheAmbientSpan() {
+    SpanContext ambient =
+        SpanContext.create(
+            "11111111111111111111111111111111",
+            "1111111111111111",
+            TraceFlags.getSampled(),
+            TraceState.getDefault());
+    Context parentContext = Context.root().with(Span.wrap(ambient));
+
+    // the message carries the ambient span as its creation context, which can happen when the
+    // message is produced and consumed inside the same span
+    Context extractedContext =
+        SqsParentContext.ofMessage(
+            parentContext,
+            messageWithTraceHeader(traceParent(ambient)),
+            W3CTraceContextPropagator.getInstance(),
+            /* shouldUseXrayPropagator= */ true);
+
+    // the X-Ray fallback must not replace the creation context extracted from the message
+    SpanContext extracted = Span.fromContext(extractedContext).getSpanContext();
+    assertThat(extracted.getTraceId()).isEqualTo(ambient.getTraceId());
+    assertThat(extracted.getSpanId()).isEqualTo(ambient.getSpanId());
+  }
+
+  private static String traceParent(SpanContext spanContext) {
+    return "00-"
+        + spanContext.getTraceId()
+        + "-"
+        + spanContext.getSpanId()
+        + "-"
+        + spanContext.getTraceFlags().asHex();
+  }
+
   private static SqsMessage messageWithTraceHeader() {
+    return messageWithTraceHeader(null);
+  }
+
+  private static SqsMessage messageWithTraceHeader(@Nullable String traceParent) {
+    Map<String, MessageAttributeValue> messageAttributes =
+        traceParent == null
+            ? emptyMap()
+            : singletonMap(
+                "traceparent",
+                MessageAttributeValue.builder()
+                    .dataType("String")
+                    .stringValue(traceParent)
+                    .build());
     return new SqsMessage() {
       @Override
       public Context getCreationContext() {
@@ -98,7 +146,7 @@ class SqsParentContextTest {
 
       @Override
       public Map<String, MessageAttributeValue> messageAttributes() {
-        return emptyMap();
+        return messageAttributes;
       }
 
       @Override
