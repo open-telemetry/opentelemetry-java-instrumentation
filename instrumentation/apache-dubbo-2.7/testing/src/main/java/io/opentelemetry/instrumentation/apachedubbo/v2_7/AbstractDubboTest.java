@@ -577,15 +577,9 @@ public abstract class AbstractDubboTest {
                                   equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
                                   equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                   equalTo(RPC_METHOD, "_OTHER"),
-                                  satisfies(
+                                  equalTo(
                                       RPC_METHOD_ORIGINAL,
-                                      val ->
-                                          val.satisfiesAnyOf(
-                                              v ->
-                                                  assertThat(v)
-                                                      .contains(
-                                                          "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
-                                              v -> assertThat(v).contains("MiddleService"))),
+                                      "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/$invoke"),
                                   satisfies(ERROR_TYPE, val -> val.isNotNull()),
                                   satisfies(
                                       NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
@@ -612,15 +606,9 @@ public abstract class AbstractDubboTest {
                                   equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
                                   equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                   equalTo(RPC_METHOD, "_OTHER"),
-                                  satisfies(
+                                  equalTo(
                                       RPC_METHOD_ORIGINAL,
-                                      val ->
-                                          val.satisfiesAnyOf(
-                                              v ->
-                                                  assertThat(v)
-                                                      .contains(
-                                                          "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
-                                              v -> assertThat(v).contains("MiddleService"))),
+                                      "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/$invoke"),
                                   satisfies(ERROR_TYPE, val -> val.isNotNull()),
                                   satisfies(
                                       NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
@@ -728,15 +716,9 @@ public abstract class AbstractDubboTest {
                                 equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
                                 equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                 equalTo(RPC_METHOD, "_OTHER"),
-                                satisfies(
+                                equalTo(
                                     RPC_METHOD_ORIGINAL,
-                                    val ->
-                                        val.satisfiesAnyOf(
-                                            v ->
-                                                assertThat(v)
-                                                    .contains(
-                                                        "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
-                                            v -> assertThat(v).contains("MiddleService"))),
+                                    "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/$invoke"),
                                 satisfies(ERROR_TYPE, val -> val.isNotNull()),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),

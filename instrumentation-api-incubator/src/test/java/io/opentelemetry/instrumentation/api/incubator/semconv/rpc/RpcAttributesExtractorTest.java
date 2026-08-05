@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.RPC_METHOD_ORIGINAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -63,6 +64,11 @@ class RpcAttributesExtractorTest {
       return service + "/" + method;
     }
 
+    @Override
+    public String getRpcMethodOriginal(Map<String, String> request) {
+      return request.get("originalMethod");
+    }
+
     @Nullable
     @Override
     public String getErrorType(
@@ -89,6 +95,7 @@ class RpcAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("service", "my.Service");
     request.put("method", "Method");
+    request.put("originalMethod", "my.Service/OriginalMethod");
 
     Context context = Context.root();
 
@@ -101,6 +108,7 @@ class RpcAttributesExtractorTest {
     if (emitStableRpcSemconv()) {
       expectedEntries.add(entry(RPC_SYSTEM_NAME, "test"));
       expectedEntries.add(entry(RPC_METHOD, "my.Service/Method"));
+      expectedEntries.add(entry(RPC_METHOD_ORIGINAL, "my.Service/OriginalMethod"));
     }
 
     if (emitOldRpcSemconv()) {
