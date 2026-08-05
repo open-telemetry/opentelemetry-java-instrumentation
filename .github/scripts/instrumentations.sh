@@ -181,6 +181,7 @@ readonly INSTRUMENTATIONS=(
   "jetty-httpclient:jetty-httpclient-9.2:javaagent:test"
   "jetty-httpclient:jetty-httpclient-9.2:javaagent:testStableSemconv"
   "jms:jms-1.1:javaagent:test"
+  "jms:jms-1.1:javaagent:testMessagingPreview"
   "jodd-http-4.2:javaagent:test"
   "jodd-http-4.2:javaagent:testStableSemconv"
   "jsf:jsf-mojarra-1.2:javaagent:mojarra2Test"
@@ -223,6 +224,7 @@ readonly INSTRUMENTATIONS=(
   "mongo:mongo-async-3.3:javaagent:testStableSemconv"
   "mybatis-3.2:javaagent:test"
   "nats:nats-2.17:javaagent:test"
+  "nats:nats-2.17:javaagent:testMessagingPreview"
   "netty:netty-3.8:javaagent:test"
   "netty:netty-3.8:javaagent:testStableSemconv"
   "netty:netty-4.0:javaagent:test"
@@ -292,9 +294,11 @@ readonly INSTRUMENTATIONS=(
   "spring:spring-batch-3.0:javaagent:testExperimental"
   "spring:spring-data:spring-data-1.8:javaagent:test"
   "spring:spring-integration-4.1:javaagent:test"
+  "spring:spring-integration-4.1:javaagent:testMessagingPreview"
   "spring:spring-integration-4.1:javaagent:testWithProducerInstrumentation"
   "spring:spring-integration-4.1:javaagent:testWithRabbitInstrumentation"
   "spring:spring-jms:spring-jms-2.0:javaagent:test"
+  "spring:spring-jms:spring-jms-2.0:javaagent:testMessagingPreview"
   "spring:spring-kafka-2.7:javaagent:test"
   "spring:spring-kafka-2.7:javaagent:testExperimental"
   "spring:spring-kafka-2.7:javaagent:testMessagingPreview"
@@ -372,7 +376,9 @@ readonly COLIMA_INSTRUMENTATIONS=(
   "elasticsearch:elasticsearch-rest-6.4:javaagent:test"
   "elasticsearch:elasticsearch-rest-6.4:javaagent:testStableSemconv"
   "jms:jms-3.0:javaagent:test"
+  "jms:jms-3.0:javaagent:testMessagingPreview"
   "spring:spring-jms:spring-jms-6.0:javaagent:test"
+  "spring:spring-jms:spring-jms-6.0:javaagent:testMessagingPreview"
 )
 
 # Some instrumentation test suites need to run with -PtestLatestDeps=true to collect
