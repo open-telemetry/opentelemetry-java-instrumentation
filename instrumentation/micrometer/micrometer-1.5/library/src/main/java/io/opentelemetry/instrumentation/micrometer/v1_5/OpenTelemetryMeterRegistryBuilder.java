@@ -18,6 +18,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental;
 import java.util.concurrent.TimeUnit;
 
 /** A builder of {@link OpenTelemetryMeterRegistry}. */
@@ -25,6 +26,11 @@ public final class OpenTelemetryMeterRegistryBuilder {
 
   // Visible for testing
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";
+
+  static {
+    Experimental.internalSetMicrometerHistogramGaugesEnabled(
+        (builder, enabled) -> builder.histogramGaugesEnabled = enabled);
+  }
 
   private final OpenTelemetry openTelemetry;
   private Clock clock = Clock.SYSTEM;
@@ -76,7 +82,12 @@ public final class OpenTelemetryMeterRegistryBuilder {
    *
    * <p>This is disabled by default, set this to {@code true} to enable gauge-based Micrometer
    * histograms.
+   *
+   * @deprecated Use {@link
+   *     io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder,
+   *     boolean)} instead. This method will be removed in the next release.
    */
+  @Deprecated // will be removed in the next release
   @CanIgnoreReturnValue
   public OpenTelemetryMeterRegistryBuilder setMicrometerHistogramGaugesEnabled(
       boolean histogramGaugesEnabled) {

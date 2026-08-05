@@ -10564,7 +10564,7 @@ libraries:
   semantic_conventions:
   - HTTP_CLIENT_SPANS
   - HTTP_CLIENT_METRICS
-  library_link: https://square.github.io/okhttp/
+  library_link: https://lysine.dev/okhttp/
   source_path: instrumentation/okhttp/okhttp-3.0
   scope:
     name: io.opentelemetry.okhttp-3.0

@@ -17,6 +17,7 @@ class TimerHistogramGaugesTest extends AbstractTimerHistogramGaugesTest {
   @RegisterExtension
   static final MicrometerTestingExtension micrometerExtension =
       new MicrometerTestingExtension(testing) {
+        @SuppressWarnings("deprecation") // testing the deprecated builder method
         @Override
         OpenTelemetryMeterRegistryBuilder configureOtelRegistry(
             OpenTelemetryMeterRegistryBuilder registry) {
