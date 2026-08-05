@@ -41,6 +41,7 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -90,6 +91,13 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("basicPublish").and(takesArguments(6)),
         getClass().getName() + "$ChannelPublishAdvice");
+    // amqp-client 5.30.0 added a ByteBuffer overload that ChannelN implements directly instead of
+    // delegating to the byte array one, so it needs its own advice; the trailing WriteListener
+    // argument is deliberately neither bound nor referenced, so that this stays loadable on the
+    // older versions that the instrumentation still supports
+    transformer.applyAdviceToMethod(
+        named("basicPublish").and(takesArguments(7)).and(takesArgument(5, ByteBuffer.class)),
+        getClass().getName() + "$ChannelPublishByteBufferAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("basicAck", "basicNack")
             .and(isPublic())
@@ -99,6 +107,9 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("basicReject").and(isPublic()).and(takesArgument(0, long.class)),
         getClass().getName() + "$ChannelSettleAdvice");
+    transformer.applyAdviceToMethod(
+        namedOneOf("basicRecover", "basicRecoverAsync").and(isPublic()),
+        getClass().getName() + "$ChannelRecoverAdvice");
     transformer.applyAdviceToMethod(
         named("basicGet").and(takesArgument(0, String.class)).and(takesArgument(1, boolean.class)),
         getClass().getName() + "$ChannelGetAdvice");
@@ -149,6 +160,11 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         ChannelAndMethod request =
             deliveryTag == null
                 ? ChannelAndMethod.create(channel, method)
+                // the settled deliveries are removed here, before the call to the broker, so that
+                // two threads settling on the same channel can never report the same delivery
+                // twice; the cost is that a settle that throws, or that is rolled back on a
+                // transactional channel, leaves its deliveries untracked, and a retry of it then
+                // produces a settle span without a destination or a batch message count
                 : ChannelAndMethod.createSettle(
                     channel,
                     method,
@@ -312,7 +328,10 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
           ChannelPublishAdviceScope.start(channel, exchange, routingKey);
 
       try {
-        return new Object[] {adviceScope, addHeaders(adviceScope, originalProps, body)};
+        return new Object[] {
+          adviceScope,
+          addHeaders(adviceScope, originalProps, body == null ? null : (long) body.length)
+        };
       } catch (Throwable ignored) {
         // the advice suppresses throwables, so a failure here would leave the scope, the call depth
         // and the current rabbit context behind; publish the message without headers instead
@@ -323,7 +342,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
     public static AMQP.BasicProperties addHeaders(
         ChannelPublishAdviceScope adviceScope,
         @Nullable AMQP.BasicProperties originalProps,
-        @Nullable byte[] body) {
+        @Nullable Long bodySize) {
       // when the span was not started, e.g. because it was suppressed, fall back to the current
       // context so that the message headers still get injected
       Context context = adviceScope.getContext();
@@ -334,8 +353,8 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
       AMQP.BasicProperties props = originalProps;
 
       if (span.getSpanContext().isValid()) {
-        if (body != null && emitOldMessagingSemconv()) {
-          span.setAttribute(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length);
+        if (bodySize != null && emitOldMessagingSemconv()) {
+          span.setAttribute(MESSAGING_MESSAGE_BODY_SIZE, bodySize);
         }
 
         // This is the internal behavior when props are null.  We're just doing it earlier now.
@@ -378,6 +397,75 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         return;
       }
       ((ChannelPublishAdviceScope) enterArgs[0]).end(throwable);
+    }
+  }
+
+  /**
+   * Instruments the {@link ByteBuffer} overload of {@code basicPublish} that amqp-client 5.30.0
+   * added. {@code Channel} declares it as a default method that delegates to the byte array
+   * overload, but {@code ChannelN} overrides it and publishes directly, so it would otherwise get
+   * no span and no context propagation.
+   */
+  @SuppressWarnings("unused")
+  public static class ChannelPublishByteBufferAdvice {
+
+    @Advice.AssignReturned.ToArguments(
+        @Advice.AssignReturned.ToArguments.ToArgument(value = 4, index = 1))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Object[] setSpanNameAddHeaders(
+        @Advice.This Channel channel,
+        @Advice.Argument(0) String exchange,
+        @Advice.Argument(1) String routingKey,
+        @Advice.Argument(4) AMQP.BasicProperties originalProps,
+        @Advice.Argument(5) ByteBuffer body) {
+      ChannelPublishAdvice.ChannelPublishAdviceScope adviceScope =
+          ChannelPublishAdvice.ChannelPublishAdviceScope.start(channel, exchange, routingKey);
+
+      try {
+        // remaining() reports the body size without consuming the buffer
+        Long bodySize = body == null ? null : (long) body.remaining();
+        return new Object[] {
+          adviceScope, ChannelPublishAdvice.addHeaders(adviceScope, originalProps, bodySize)
+        };
+      } catch (Throwable ignored) {
+        // the advice suppresses throwables, so a failure here would leave the scope, the call depth
+        // and the current rabbit context behind; publish the message without headers instead
+        return new Object[] {adviceScope, originalProps};
+      }
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void stopSpan(
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
+      if (enterArgs == null) {
+        return;
+      }
+      ((ChannelPublishAdvice.ChannelPublishAdviceScope) enterArgs[0]).end(throwable);
+    }
+  }
+
+  /**
+   * {@code basicRecover} and {@code basicRecoverAsync} requeue every unacknowledged delivery on the
+   * channel, so the broker redelivers them under new delivery tags and the old ones must not be
+   * settled again.
+   */
+  @SuppressWarnings("unused")
+  public static class ChannelRecoverAdvice {
+
+    public static class ChannelRecoverAdviceScope {
+
+      public static void end(Channel channel) {
+        if (emitStableMessagingSemconv()) {
+          DeliveredMessages.clear(channel);
+        }
+      }
+
+      private ChannelRecoverAdviceScope() {}
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Channel channel) {
+      ChannelRecoverAdviceScope.end(channel);
     }
   }
 
