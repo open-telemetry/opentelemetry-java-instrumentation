@@ -299,6 +299,7 @@ readonly INSTRUMENTATIONS=(
   "spring:spring-integration-4.1:javaagent:testMessagingPreview"
   "spring:spring-integration-4.1:javaagent:testWithProducerInstrumentation"
   "spring:spring-integration-4.1:javaagent:testWithRabbitInstrumentation"
+  "spring:spring-integration-4.1:javaagent:testWithRabbitInstrumentationMessagingPreview"
   "spring:spring-jms:spring-jms-2.0:javaagent:test"
   "spring:spring-jms:spring-jms-2.0:javaagent:testMessagingPreview"
   "spring:spring-kafka-2.7:javaagent:test"
