@@ -159,6 +159,14 @@ class JdbcConnectionUrlParserTest {
             .setHost("localhost")
             .setPort(1234)
             .build(),
+        arg("jdbc:mysql:failover://my.host?user=domain:user")
+            .setShortUrl("mysql:failover://my.host:3306")
+            .setSystem(MYSQL)
+            .setSubtype("failover")
+            .setUser("domain:user")
+            .setHost("my.host")
+            .setPort(3306)
+            .build(),
         arg("jdbc:mysql:loadbalance://127.0.0.1,127.0.0.1:3306/mdbdb?user=mdbuser&password=PW")
             .setShortUrl("mysql:loadbalance://127.0.0.1:3306")
             .setSystem(MYSQL)
@@ -238,6 +246,12 @@ class JdbcConnectionUrlParserTest {
             .setShortUrl("mysql://my.host:3306")
             .setSystem(MYSQL)
             .setUser("myuser")
+            .setHost("my.host")
+            .setPort(3306)
+            .build(),
+        arg("jdbc:mysql:my.host?socket=/tmp/mysql.sock")
+            .setShortUrl("mysql://my.host:3306")
+            .setSystem(MYSQL)
             .setHost("my.host")
             .setPort(3306)
             .build());

@@ -87,11 +87,35 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     }
   }
 
+  private static int indexOf(String string, int start, char... chars) {
+    for (int i = start; i < string.length(); i++) {
+      char c = string.charAt(i);
+      for (char match : chars) {
+        if (c == match) {
+          return i;
+        }
+      }
+    }
+    return -1;
+  }
+
   private static void parseNonStandardUrl(String jdbcUrl, ParseContext ctx) {
     int typeEndLoc = jdbcUrl.indexOf(':');
-    int portLoc = jdbcUrl.indexOf(":", typeEndLoc + 1);
-    int dbLoc = jdbcUrl.indexOf("/", typeEndLoc);
-    int paramLoc = dbLoc > 0 ? jdbcUrl.indexOf("?", dbLoc) : -1;
+    int sectionEnd = indexOf(jdbcUrl, typeEndLoc + 1, ':', '/', '?');
+    int portLoc = -1;
+    if (sectionEnd != -1 && jdbcUrl.charAt(sectionEnd) == ':') {
+      portLoc = sectionEnd;
+      sectionEnd = indexOf(jdbcUrl, sectionEnd + 1, '/', '?');
+    }
+    int dbLoc = -1;
+    if (sectionEnd != -1 && jdbcUrl.charAt(sectionEnd) == '/') {
+      dbLoc = sectionEnd;
+      sectionEnd = indexOf(jdbcUrl, sectionEnd + 1, '?');
+    }
+    int paramLoc = -1;
+    if (dbLoc != -1 && sectionEnd != -1 && jdbcUrl.charAt(sectionEnd) == '?') {
+      paramLoc = sectionEnd;
+    }
 
     // Extract database name
     if (paramLoc > 0) {
@@ -122,13 +146,33 @@ public final class MysqlUrlParser implements JdbcUrlParser {
 
   private static void parseMariaSubProtocol(String jdbcUrl, ParseContext ctx) {
     int hostEndLoc;
-    int clusterSepLoc = jdbcUrl.indexOf(",");
     int ipv6End = jdbcUrl.startsWith("[") ? jdbcUrl.indexOf("]") : -1;
-    int portLoc = jdbcUrl.indexOf(":", Math.max(0, ipv6End));
-    portLoc = clusterSepLoc != -1 && clusterSepLoc < portLoc ? -1 : portLoc;
-    int dbLoc = jdbcUrl.indexOf("/", Math.max(portLoc, clusterSepLoc));
-
-    int paramLoc = dbLoc != -1 ? jdbcUrl.indexOf("?", dbLoc) : -1;
+    int sectionEnd = indexOf(jdbcUrl, Math.max(0, ipv6End), ':', '/', '?', ',');
+    int clusterSepLoc = -1;
+    if (sectionEnd != -1 && jdbcUrl.charAt(sectionEnd) == ',') {
+      clusterSepLoc = sectionEnd;
+      // port will be skipped if cluster separator was found
+      sectionEnd = indexOf(jdbcUrl, sectionEnd + 1, '/', '?');
+    }
+    int portLoc = -1;
+    if (clusterSepLoc == -1 && sectionEnd != -1 && jdbcUrl.charAt(sectionEnd) == ':') {
+      portLoc = sectionEnd;
+      sectionEnd = indexOf(jdbcUrl, sectionEnd + 1, '/', '?', ',');
+    }
+    // when there are multiple addresses we only care about the first one
+    if (portLoc != -1 && sectionEnd != -1 && jdbcUrl.charAt(sectionEnd) == ',') {
+      clusterSepLoc = sectionEnd;
+      sectionEnd = indexOf(jdbcUrl, sectionEnd + 1, '/', '?');
+    }
+    int dbLoc = -1;
+    if (sectionEnd != -1 && jdbcUrl.charAt(sectionEnd) == '/') {
+      dbLoc = sectionEnd;
+      sectionEnd = indexOf(jdbcUrl, sectionEnd + 1, '?');
+    }
+    int paramLoc = -1;
+    if (dbLoc != -1 && sectionEnd != -1 && jdbcUrl.charAt(sectionEnd) == '?') {
+      paramLoc = sectionEnd;
+    }
 
     if (paramLoc > 0) {
       ctx.databaseName(jdbcUrl.substring(dbLoc + 1, paramLoc));
