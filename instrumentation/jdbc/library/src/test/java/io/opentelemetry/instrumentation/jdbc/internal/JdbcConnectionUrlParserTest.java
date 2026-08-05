@@ -194,6 +194,14 @@ class JdbcConnectionUrlParserTest {
             .setPort(3306)
             .setName("mdbdb")
             .build(),
+        arg("jdbc:mysql:replication://address=(host=::1)(port=33)/mydb")
+            .setShortUrl("mysql:replication://[::1]:33")
+            .setSystem(MYSQL)
+            .setSubtype("replication")
+            .setHost("::1")
+            .setPort(33)
+            .setName("mydb")
+            .build(),
         arg("jdbc:mysql:loadbalance://localhost")
             .setShortUrl("mysql:loadbalance://localhost:3306")
             .setSystem(MYSQL)
