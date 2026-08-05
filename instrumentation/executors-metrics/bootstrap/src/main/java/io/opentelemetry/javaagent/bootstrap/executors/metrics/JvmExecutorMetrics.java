@@ -10,16 +10,20 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.api.metrics.ObservableMeasurement;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import javax.annotation.Nullable;
 
 final class JvmExecutorMetrics {
 
   private static final AttributeKey<String> EXECUTOR_NAME = stringKey("jvm.executor.name");
+  private static final AttributeKey<String> EXECUTOR_OWNER_NAME =
+      stringKey("jvm.executor.owner.name");
   private static final AttributeKey<String> EXECUTOR_TYPE = stringKey("jvm.executor.type");
   private static final AttributeKey<String> THREAD_STATE = stringKey("jvm.executor.thread.state");
 
@@ -35,6 +39,7 @@ final class JvmExecutorMetrics {
       OpenTelemetry openTelemetry,
       String instrumentationName,
       String executorName,
+      @Nullable String executorOwnerName,
       String executorType) {
     MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(instrumentationName);
     String instrumentationVersion =
@@ -43,9 +48,13 @@ final class JvmExecutorMetrics {
       meterBuilder.setInstrumentationVersion(instrumentationVersion);
     }
 
-    return new JvmExecutorMetrics(
-        meterBuilder.build(),
-        Attributes.of(EXECUTOR_NAME, executorName, EXECUTOR_TYPE, executorType));
+    AttributesBuilder attributes =
+        Attributes.builder().put(EXECUTOR_NAME, executorName).put(EXECUTOR_TYPE, executorType);
+    if (executorOwnerName != null) {
+      attributes.put(EXECUTOR_OWNER_NAME, executorOwnerName);
+    }
+
+    return new JvmExecutorMetrics(meterBuilder.build(), attributes.build());
   }
 
   private JvmExecutorMetrics(Meter meter, Attributes attributes) {

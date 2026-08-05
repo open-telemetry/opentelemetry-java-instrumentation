@@ -10,6 +10,7 @@ import static java.util.Collections.emptySet;
 import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.lang.ref.WeakReference;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
@@ -47,7 +48,19 @@ public abstract class ExecutorMetrics {
   }
 
   protected abstract BatchCallback registerMetrics(
-      Executor executor, Set<Thread> threads, String executorName, LongAdder rejectedTaskCount);
+      Executor executor,
+      Set<Thread> threads,
+      String executorName,
+      @Nullable String ownerName,
+      LongAdder rejectedTaskCount);
+
+  public static void reregister(
+      Executor executor, @Nullable String ownerName, String threadNameNormalization) {
+    Registration registration = registrations.get(executor);
+    if (registration != null) {
+      registration.reregister(executor, ownerName, threadNameNormalization);
+    }
+  }
 
   public static void onThreadFactoryChanged(Executor executor) {
     Registration registration = registrations.get(executor);
@@ -116,10 +129,12 @@ public abstract class ExecutorMetrics {
 
   private final class Registration {
     private final WeakReference<Set<Thread>> threadsRef;
-    private final String threadNameNormalization;
     private final LongAdder rejectedTaskCount = new LongAdder();
+    @Nullable private String ownerName;
+    private String threadNameNormalization;
+    @Nullable private String threadName;
+    @Nullable private String executorName;
     @Nullable private BatchCallback callback;
-    @Nullable private volatile String executorName;
     private volatile boolean awaitingWorkerThread = true;
     private boolean closed;
 
@@ -156,11 +171,45 @@ public abstract class ExecutorMetrics {
         }
 
         BatchCallback newCallback =
-            registerMetrics(executor, threads, newExecutorName, rejectedTaskCount);
+            registerMetrics(executor, threads, newExecutorName, ownerName, rejectedTaskCount);
         previous = callback;
         callback = newCallback;
         executorName = newExecutorName;
+        this.threadName = threadName;
         awaitingWorkerThread = false;
+      }
+
+      if (previous != null) {
+        previous.close();
+      }
+    }
+
+    private void reregister(
+        Executor executor, @Nullable String newOwnerName, String newThreadNameNormalization) {
+      @Nullable BatchCallback previous;
+      synchronized (this) {
+        if (closed) {
+          return;
+        }
+
+        String newExecutorName = executorName(threadName, newThreadNameNormalization);
+        boolean metricsUnchanged =
+            Objects.equals(ownerName, newOwnerName) && newExecutorName.equals(executorName);
+
+        Set<Thread> threads = threadsRef.get();
+        if (callback == null || threads == null || metricsUnchanged) {
+          ownerName = newOwnerName;
+          threadNameNormalization = newThreadNameNormalization;
+          return;
+        }
+
+        BatchCallback newCallback =
+            registerMetrics(executor, threads, newExecutorName, newOwnerName, rejectedTaskCount);
+        previous = callback;
+        callback = newCallback;
+        ownerName = newOwnerName;
+        threadNameNormalization = newThreadNameNormalization;
+        executorName = newExecutorName;
       }
 
       if (previous != null) {

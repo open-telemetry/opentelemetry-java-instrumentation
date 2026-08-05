@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.executors;
 
 import static io.opentelemetry.javaagent.instrumentation.executors.metrics.JvmExecutorMetricsAssertions.assertNoExecutorMetric;
 import static io.opentelemetry.javaagent.instrumentation.executors.metrics.JvmExecutorMetricsAssertions.assertNoExecutorMetrics;
+import static io.opentelemetry.javaagent.instrumentation.executors.metrics.JvmExecutorMetricsAssertions.assertNoExecutorMetricsWithOwner;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,6 +17,7 @@ import static org.awaitility.Awaitility.await;
 import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.bootstrap.executors.metrics.ExecutorMetrics;
 import io.opentelemetry.javaagent.instrumentation.executors.metrics.JvmExecutorMetricsAssertions;
 import java.lang.ref.WeakReference;
 import java.time.Duration;
@@ -313,7 +315,7 @@ class ThreadPoolExecutorMetricsTest {
   }
 
   @Test
-  void updatesIdentityAfterWorkerFromNewThreadFactoryStarts() throws Exception {
+  void reregistersOwnerAndUpdatesIdentityAfterThreadFactoryChange() throws Exception {
     NamedThreadFactory originalThreadFactory = new NamedThreadFactory("original-pool-42-worker");
     ThreadPoolExecutor executor =
         new ThreadPoolExecutor(
@@ -345,6 +347,19 @@ class ThreadPoolExecutorMetricsTest {
           .assertExecutorEmitsMetrics();
       assertThat(originalThreadFactory.createdThreadCount()).isEqualTo(1);
 
+      ExecutorMetrics.reregister(executor, "tomcat", "trailing");
+
+      testing.clearData();
+      JvmExecutorMetricsAssertions.create(
+              testing,
+              INSTRUMENTATION_NAME,
+              "original-pool-42-worker-*",
+              "tomcat",
+              THREAD_POOL_EXECUTOR_TYPE)
+          .withCoreThreads(0)
+          .assertExecutorEmitsMetrics();
+      assertNoExecutorMetricsWithOwner(testing, INSTRUMENTATION_NAME, originalExecutorName, null);
+
       NamedThreadFactory replacementThreadFactory =
           new NamedThreadFactory("replacement-pool-43-worker");
       executor.setThreadFactory(replacementThreadFactory);
@@ -352,7 +367,11 @@ class ThreadPoolExecutorMetricsTest {
 
       testing.clearData();
       JvmExecutorMetricsAssertions.create(
-              testing, INSTRUMENTATION_NAME, originalExecutorName, THREAD_POOL_EXECUTOR_TYPE)
+              testing,
+              INSTRUMENTATION_NAME,
+              "original-pool-42-worker-*",
+              "tomcat",
+              THREAD_POOL_EXECUTOR_TYPE)
           .withCoreThreads(0)
           .assertExecutorEmitsMetrics();
 
@@ -368,11 +387,28 @@ class ThreadPoolExecutorMetricsTest {
               ? "replacement-pool-43-worker-*"
               : "replacement-pool-*-worker-*";
       JvmExecutorMetricsAssertions.create(
-              testing, INSTRUMENTATION_NAME, replacementExecutorName, THREAD_POOL_EXECUTOR_TYPE)
+              testing,
+              INSTRUMENTATION_NAME,
+              replacementExecutorName,
+              "tomcat",
+              THREAD_POOL_EXECUTOR_TYPE)
           .withCoreThreads(0)
           .assertExecutorEmitsMetrics();
       assertThat(replacementThreadFactory.createdThreadCount()).isEqualTo(1);
       assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, originalExecutorName);
+
+      ExecutorMetrics.reregister(executor, null, "trailing");
+
+      testing.clearData();
+      JvmExecutorMetricsAssertions.create(
+              testing,
+              INSTRUMENTATION_NAME,
+              "replacement-pool-43-worker-*",
+              THREAD_POOL_EXECUTOR_TYPE)
+          .withCoreThreads(0)
+          .assertExecutorEmitsMetrics();
+      assertNoExecutorMetricsWithOwner(
+          testing, INSTRUMENTATION_NAME, "replacement-pool-43-worker-*", "tomcat");
     } finally {
       releaseOriginalWorker.countDown();
       executor.shutdown();

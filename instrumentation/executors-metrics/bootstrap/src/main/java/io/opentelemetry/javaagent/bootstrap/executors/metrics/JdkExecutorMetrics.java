@@ -17,6 +17,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
+import javax.annotation.Nullable;
 
 public final class JdkExecutorMetrics extends ExecutorMetrics {
 
@@ -39,12 +40,17 @@ public final class JdkExecutorMetrics extends ExecutorMetrics {
 
   @Override
   protected BatchCallback registerMetrics(
-      Executor executor, Set<Thread> threads, String executorName, LongAdder rejectedTaskCount) {
+      Executor executor,
+      Set<Thread> threads,
+      String executorName,
+      @Nullable String ownerName,
+      LongAdder rejectedTaskCount) {
     JvmExecutorMetrics metrics =
         JvmExecutorMetrics.create(
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
             executorName,
+            ownerName,
             executor.getClass().getName());
 
     if (executor instanceof ThreadPoolExecutor) {

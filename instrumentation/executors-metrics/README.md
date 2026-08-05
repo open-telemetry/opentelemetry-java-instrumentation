@@ -4,6 +4,10 @@ The `jvm.executor.name` metric attribute is derived from the worker thread name 
 executor metrics are registered. Empty thread names are reported as `unknown`; otherwise, the
 configured `trailing` or `all` normalization rule is applied.
 
+The optional `jvm.executor.owner.name` attribute is omitted by default. Instrumentations that know
+the logical component owning an executor can provide or update it through
+`ExecutorMetrics.reregister`; passing a null owner removes the attribute.
+
 | System property                                                          | Type    | Default    | Description                                                                                                                                   |
 | ------------------------------------------------------------------------ | ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `otel.instrumentation.executors-metrics.enabled`                         | Boolean | `false`    | Enables executor metrics instrumentation.                                                                                                     |

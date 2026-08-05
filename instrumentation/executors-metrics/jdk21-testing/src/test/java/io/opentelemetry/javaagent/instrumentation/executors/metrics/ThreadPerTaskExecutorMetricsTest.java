@@ -118,6 +118,30 @@ class ThreadPerTaskExecutorMetricsTest {
   }
 
   @Test
+  void reregistersOwnerAndNormalizationBeforeFirstWorker() throws Exception {
+    NamedThreadFactory threadFactory = new NamedThreadFactory("thread-per-task-42-worker");
+    ExecutorService executor = Executors.newThreadPerTaskExecutor(threadFactory);
+
+    try {
+      assertThat(threadFactory.createdThreadCount()).isZero();
+      assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, "thread-per-task-*-worker-*");
+
+      reregister(executor, "tomcat", "all");
+      executor.submit(() -> {}).get(10, SECONDS);
+      testing.clearData();
+
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "thread-per-task-*-worker-*", "tomcat", EXECUTOR_TYPE)
+          .withActiveThreads(0)
+          .assertExecutorEmitsMetrics();
+      assertThat(threadFactory.createdThreadCount()).isEqualTo(1);
+    } finally {
+      executor.shutdown();
+      assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
+    }
+  }
+
+  @Test
   void unregistersOnClose() throws Exception {
     ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
     CountDownLatch started = new CountDownLatch(1);
@@ -164,6 +188,16 @@ class ThreadPerTaskExecutorMetricsTest {
             throw new AssertionError(e);
           }
         });
+  }
+
+  private static void reregister(
+      Executor executor, String ownerName, String threadNameNormalization) throws Exception {
+    Class<?> executorMetrics =
+        Class.forName(
+            "io.opentelemetry.javaagent.bootstrap.executors.metrics.ExecutorMetrics", false, null);
+    executorMetrics
+        .getMethod("reregister", Executor.class, String.class, String.class)
+        .invoke(null, executor, ownerName, threadNameNormalization);
   }
 
   private static WeakReference<ExecutorService> createCollectableThreadPerTaskExecutor()

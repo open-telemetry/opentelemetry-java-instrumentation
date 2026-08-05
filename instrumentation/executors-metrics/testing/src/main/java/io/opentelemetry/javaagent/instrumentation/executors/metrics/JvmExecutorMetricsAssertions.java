@@ -13,16 +13,20 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.LongPointAssert;
 import io.opentelemetry.sdk.testing.assertj.LongSumAssert;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 public class JvmExecutorMetricsAssertions {
 
   private static final AttributeKey<String> EXECUTOR_NAME_KEY = stringKey("jvm.executor.name");
+  private static final AttributeKey<String> EXECUTOR_OWNER_NAME_KEY =
+      stringKey("jvm.executor.owner.name");
   private static final AttributeKey<String> EXECUTOR_TYPE_KEY = stringKey("jvm.executor.type");
   private static final AttributeKey<String> EXECUTOR_THREAD_STATE_KEY =
       stringKey("jvm.executor.thread.state");
@@ -30,6 +34,7 @@ public class JvmExecutorMetricsAssertions {
   private final InstrumentationExtension testing;
   private final String instrumentationName;
   private final String executorName;
+  @Nullable private final String executorOwnerName;
   private final String executorType;
 
   @Nullable private Long expectedActiveThreads;
@@ -47,7 +52,17 @@ public class JvmExecutorMetricsAssertions {
       String executorName,
       String executorType) {
     return new JvmExecutorMetricsAssertions(
-        testing, instrumentationName, executorName, executorType);
+        testing, instrumentationName, executorName, null, executorType);
+  }
+
+  public static JvmExecutorMetricsAssertions create(
+      InstrumentationExtension testing,
+      String instrumentationName,
+      String executorName,
+      String ownerName,
+      String executorType) {
+    return new JvmExecutorMetricsAssertions(
+        testing, instrumentationName, executorName, ownerName, executorType);
   }
 
   public static void assertNoExecutorMetrics(
@@ -71,6 +86,34 @@ public class JvmExecutorMetricsAssertions {
         .noneMatch(point -> executorName.equals(point.getAttributes().get(EXECUTOR_NAME_KEY)));
   }
 
+  public static void assertNoExecutorMetricsWithOwner(
+      InstrumentationExtension testing,
+      String instrumentationName,
+      String executorName,
+      @Nullable String ownerName) {
+    testing.clearData();
+    testing
+        .getOpenTelemetry()
+        .getMeter("test")
+        .counterBuilder("test.executor.metrics.collection")
+        .build()
+        .add(1);
+    testing.waitAndAssertMetrics(
+        "test", "test.executor.metrics.collection", metrics -> metrics.isNotEmpty());
+
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric ->
+                instrumentationName.equals(metric.getInstrumentationScopeInfo().getName())
+                    && metric.getName().startsWith("jvm.executor."))
+        .flatExtracting(metric -> metric.getLongSumData().getPoints())
+        .noneMatch(
+            point ->
+                executorName.equals(point.getAttributes().get(EXECUTOR_NAME_KEY))
+                    && Objects.equals(
+                        ownerName, point.getAttributes().get(EXECUTOR_OWNER_NAME_KEY)));
+  }
+
   public static void assertNoExecutorMetric(
       InstrumentationExtension testing,
       String instrumentationName,
@@ -89,10 +132,12 @@ public class JvmExecutorMetricsAssertions {
       InstrumentationExtension testing,
       String instrumentationName,
       String executorName,
+      @Nullable String executorOwnerName,
       String executorType) {
     this.testing = testing;
     this.instrumentationName = instrumentationName;
     this.executorName = executorName;
+    this.executorOwnerName = executorOwnerName;
     this.executorType = executorType;
   }
 
@@ -207,12 +252,9 @@ public class JvmExecutorMetricsAssertions {
   }
 
   private void verifyThreadCountPoint(LongPointAssert point, String state, long expectedValue) {
-    point
-        .hasAttributesSatisfyingExactly(
-            equalTo(EXECUTOR_NAME_KEY, executorName),
-            equalTo(EXECUTOR_TYPE_KEY, executorType),
-            equalTo(EXECUTOR_THREAD_STATE_KEY, state))
-        .hasValue(expectedValue);
+    List<AttributeAssertion> assertions = executorAttributeAssertions();
+    assertions.add(equalTo(EXECUTOR_THREAD_STATE_KEY, state));
+    point.hasAttributesSatisfyingExactly(assertions).hasValue(expectedValue);
   }
 
   private void verifyCoreThreads(long expectedValue) {
@@ -322,9 +364,17 @@ public class JvmExecutorMetricsAssertions {
     sum.containsPointsSatisfying(
         point ->
             point
-                .hasAttributesSatisfyingExactly(
-                    equalTo(EXECUTOR_NAME_KEY, executorName),
-                    equalTo(EXECUTOR_TYPE_KEY, executorType))
+                .hasAttributesSatisfyingExactly(executorAttributeAssertions())
                 .hasValue(expectedValue));
+  }
+
+  private List<AttributeAssertion> executorAttributeAssertions() {
+    List<AttributeAssertion> assertions = new ArrayList<>(3);
+    assertions.add(equalTo(EXECUTOR_NAME_KEY, executorName));
+    if (executorOwnerName != null) {
+      assertions.add(equalTo(EXECUTOR_OWNER_NAME_KEY, executorOwnerName));
+    }
+    assertions.add(equalTo(EXECUTOR_TYPE_KEY, executorType));
+    return assertions;
   }
 }
