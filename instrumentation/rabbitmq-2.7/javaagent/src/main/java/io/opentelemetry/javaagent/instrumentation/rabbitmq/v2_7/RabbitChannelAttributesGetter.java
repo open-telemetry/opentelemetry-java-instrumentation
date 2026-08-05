@@ -96,8 +96,8 @@ final class RabbitChannelAttributesGetter
       return null;
     }
     SettledMessages messages = channelAndMethod.getSettledMessages();
-    // the count is only known for deliveries that are still remembered, and it is only reported
-    // when more than one delivery was actually settled
+    // the count is only known when every settled delivery is still remembered, and it is only
+    // reported when more than one delivery was actually settled
     return messages == null || messages.getCount() <= 1 ? null : (long) messages.getCount();
   }
 

@@ -26,13 +26,15 @@ public class TracedDelegatingConsumer implements Consumer {
 
   private final String queue;
   private final Consumer delegate;
+  private final boolean autoAck;
   private final Channel channel;
   private final Connection connection;
 
   public TracedDelegatingConsumer(
-      String queue, Consumer delegate, Channel channel, Connection connection) {
+      String queue, Consumer delegate, boolean autoAck, Channel channel, Connection connection) {
     this.queue = queue;
     this.delegate = delegate;
+    this.autoAck = autoAck;
     this.channel = channel;
     this.connection = connection;
   }
@@ -66,7 +68,9 @@ public class TracedDelegatingConsumer implements Consumer {
   public void handleDelivery(
       String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
       throws IOException {
-    if (emitStableMessagingSemconv()) {
+    // automatically acknowledged deliveries are never settled by the application, so remembering
+    // them would only pollute the deliveries settled by a later multiple settle
+    if (!autoAck && emitStableMessagingSemconv()) {
       DeliveredMessages.record(channel, envelope, queue);
     }
     Context parentContext = Context.current();

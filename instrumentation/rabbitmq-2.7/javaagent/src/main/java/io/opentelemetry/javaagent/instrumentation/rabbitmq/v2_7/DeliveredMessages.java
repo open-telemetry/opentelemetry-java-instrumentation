@@ -26,15 +26,17 @@ import javax.annotation.Nullable;
  */
 final class DeliveredMessages {
 
-  // an application using automatic acknowledgement never settles anything, so the number of
-  // remembered deliveries has to be capped; when a delivery is evicted its settle span simply
-  // doesn't get a destination
+  // a channel can have any number of deliveries outstanding at once, and an application that is
+  // slow to settle them, or that never settles them at all, would grow this map for the lifetime
+  // of the channel, so the number of remembered deliveries has to be capped; when deliveries are
+  // evicted the settle span that would have covered them doesn't get a destination or a batch
+  // message count, because those have to describe every settled message
   private static final int CAPACITY = 1000;
 
   private static final VirtualField<Channel, DeliveredMessages> FIELD =
       VirtualField.find(Channel.class, DeliveredMessages.class);
 
-  private final Map<Long, DeliveredMessage> messagesByDeliveryTag = new BoundedMap();
+  private final BoundedMap messagesByDeliveryTag = new BoundedMap();
 
   static void record(Channel channel, Envelope envelope, String queue) {
     DeliveredMessage message =
@@ -60,8 +62,13 @@ final class DeliveredMessages {
     }
 
     List<DeliveredMessage> settled = new ArrayList<>();
+    boolean incomplete = false;
     synchronized (messages) {
       if (multiple) {
+        // a multiple settle covers every outstanding delivery from the start of the channel, so
+        // whatever was evicted is part of what it settles; the flag is consumed here so that the
+        // settles that follow, which can only cover deliveries remembered since, stay accurate
+        incomplete = messages.messagesByDeliveryTag.consumeEvicted();
         Iterator<Map.Entry<Long, DeliveredMessage>> iterator =
             messages.messagesByDeliveryTag.entrySet().iterator();
         while (iterator.hasNext()) {
@@ -72,13 +79,15 @@ final class DeliveredMessages {
           }
         }
       } else {
+        // a single settle resolves exactly one delivery, so it is either remembered or not; the
+        // eviction flag is deliberately left alone for a later multiple settle
         DeliveredMessage message = messages.messagesByDeliveryTag.remove(deliveryTag);
         if (message != null) {
           settled.add(message);
         }
       }
     }
-    return SettledMessages.of(settled);
+    return SettledMessages.of(settled, incomplete);
   }
 
   private static DeliveredMessages getOrCreate(Channel channel) {
@@ -101,9 +110,22 @@ final class DeliveredMessages {
 
     private static final long serialVersionUID = 1L;
 
+    private boolean evicted;
+
     @Override
     protected boolean removeEldestEntry(Map.Entry<Long, DeliveredMessage> eldest) {
-      return size() > CAPACITY;
+      if (size() <= CAPACITY) {
+        return false;
+      }
+      evicted = true;
+      return true;
+    }
+
+    /** Returns and clears whether any delivery has been forgotten since the last call. */
+    boolean consumeEvicted() {
+      boolean result = evicted;
+      evicted = false;
+      return result;
     }
   }
 
@@ -143,8 +165,11 @@ final class DeliveredMessages {
       this.count = count;
     }
 
-    private static SettledMessages of(List<DeliveredMessage> messages) {
-      if (messages.isEmpty()) {
+    private static SettledMessages of(List<DeliveredMessage> messages, boolean incomplete) {
+      // when deliveries have been forgotten the settled messages are only a subset of what was
+      // actually settled, and attributes that have to describe every settled message, as well as
+      // their count, would be wrong
+      if (messages.isEmpty() || incomplete) {
         return EMPTY;
       }
       DeliveredMessage first = messages.get(0);
