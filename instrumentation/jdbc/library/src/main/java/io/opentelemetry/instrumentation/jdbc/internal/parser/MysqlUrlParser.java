@@ -102,7 +102,9 @@ public final class MysqlUrlParser implements JdbcUrlParser {
 
     // Host and port from URL
     int hostEndLoc;
-    int effectiveDbLoc = dbLoc != -1 ? dbLoc : jdbcUrl.length();
+    // without a database the host/port segment ends at the query string, if any
+    int urlEndLoc = dbLoc != -1 ? dbLoc : jdbcUrl.indexOf('?');
+    int effectiveDbLoc = urlEndLoc != -1 ? urlEndLoc : jdbcUrl.length();
     if (portLoc > 0) {
       hostEndLoc = portLoc;
       Integer parsedPort = parsePort(jdbcUrl.substring(portLoc + 1, effectiveDbLoc));
@@ -141,7 +143,9 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       return;
     }
 
-    int effectiveDbLoc = dbLoc != -1 ? dbLoc : jdbcUrl.length();
+    // without a database the host/port segment ends at the query string, if any
+    int urlEndLoc = dbLoc != -1 ? dbLoc : jdbcUrl.indexOf('?');
+    int effectiveDbLoc = urlEndLoc != -1 ? urlEndLoc : jdbcUrl.length();
     if (portLoc > 0) {
       hostEndLoc = portLoc;
       int portEndLoc = clusterSepLoc > 0 ? clusterSepLoc : effectiveDbLoc;
