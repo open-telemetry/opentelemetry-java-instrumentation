@@ -120,12 +120,12 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
                     span ->
-                        span.hasName("nats.ack")
+                        span.hasName("nats.settle")
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 messagingAttributes("publish", "$JS.ACK", clientId)),
                     span ->
-                        span.hasName("nats.ack")
+                        span.hasName("nats.settle")
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 messagingAttributes("publish", "$JS.ACK", clientId))));

@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
 final class NatsSpanNameExtractor implements SpanNameExtractor<NatsRequest> {
-  private static final String JETSTREAM_ACK_SPAN_NAME = "nats.ack";
+  private static final String JETSTREAM_SETTLE_SPAN_NAME = "nats.settle";
 
   private final SpanNameExtractor<NatsRequest> delegate;
 
@@ -30,7 +30,7 @@ final class NatsSpanNameExtractor implements SpanNameExtractor<NatsRequest> {
   @Override
   public String extract(NatsRequest request) {
     if (NatsSubject.isJetStreamAck(request.getSubject())) {
-      return JETSTREAM_ACK_SPAN_NAME;
+      return JETSTREAM_SETTLE_SPAN_NAME;
     }
     return delegate.extract(request);
   }
