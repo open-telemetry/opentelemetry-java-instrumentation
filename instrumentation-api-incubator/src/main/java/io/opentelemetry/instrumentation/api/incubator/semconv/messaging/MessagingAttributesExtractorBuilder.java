@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static java.util.Collections.emptyList;
-import static java.util.Objects.requireNonNull;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -20,29 +19,19 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   final MessagingAttributesGetter<REQUEST, RESPONSE> getter;
   @Nullable private final MessagingOperationType operationType;
-  @Nullable private String operationName;
+  @Nullable private final String operationName;
   private final boolean supportsStableSemconv;
   List<String> capturedHeaders = emptyList();
 
   MessagingAttributesExtractorBuilder(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter,
       @Nullable MessagingOperationType operationType,
+      @Nullable String operationName,
       boolean supportsStableSemconv) {
     this.getter = getter;
     this.operationType = operationType;
-    this.operationName = operationType == null ? null : operationType.defaultOperationName();
+    this.operationName = operationName;
     this.supportsStableSemconv = supportsStableSemconv;
-  }
-
-  /** Configures the system-specific operation name emitted as {@code messaging.operation.name}. */
-  @CanIgnoreReturnValue
-  public MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> setOperationName(
-      String operationName) {
-    if (!supportsStableSemconv) {
-      throw new IllegalStateException("Operation name is not configurable for legacy builders");
-    }
-    this.operationName = requireNonNull(operationName, "operationName");
-    return this;
   }
 
   /**
@@ -66,9 +55,6 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * MessagingAttributesExtractorBuilder}.
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
-    if (supportsStableSemconv) {
-      requireNonNull(operationName, "operationName");
-    }
     return new MessagingAttributesExtractor<>(
         getter, operationType, operationName, supportsStableSemconv, capturedHeaders);
   }

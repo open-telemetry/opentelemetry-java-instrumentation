@@ -7,7 +7,9 @@
     ':semanticCommits',
   ],
   ignorePaths: [
-    'instrumentation/**',
+    // instrumentation modules intentionally pin old library versions in order to test the oldest
+    // supported version, so renovate must not update their build files
+    'instrumentation/**/*.gradle.kts',
   ],
   packageRules: [
 
@@ -461,6 +463,16 @@
       ],
       matchStrings: [
         'npx (?<depName>[^@]+)@(?<currentValue>[^\\s]+)',
+      ],
+    },
+    {
+      customType: 'regex',
+      datasourceTemplate: 'docker',
+      managerFilePatterns: [
+        '**/*.java',
+      ],
+      matchStrings: [
+        '"(?<depName>otel/weaver):(?<currentValue>[^"]+)"',
       ],
     },
   ],

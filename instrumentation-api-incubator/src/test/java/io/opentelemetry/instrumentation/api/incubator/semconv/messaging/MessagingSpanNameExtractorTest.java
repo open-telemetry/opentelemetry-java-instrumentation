@@ -72,9 +72,7 @@ class MessagingSpanNameExtractorTest {
     }
 
     SpanNameExtractor<Message> underTest =
-        MessagingSpanNameExtractor.builder(getter, operationType)
-            .setOperationName(operationName)
-            .build();
+        MessagingSpanNameExtractor.create(getter, operationType, operationName);
 
     // when
     String actualSpanName = underTest.extract(message);
@@ -90,7 +88,7 @@ class MessagingSpanNameExtractorTest {
   static Stream<Arguments> spanNameParams() {
     return Stream.of(
         argumentSet(
-            "operation name override",
+            "send operation",
             false,
             false,
             "destination",

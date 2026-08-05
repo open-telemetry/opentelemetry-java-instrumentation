@@ -4,6 +4,8 @@
 
 ### 🚫 Deprecations
 
+- Deprecate the `opentelemetry-zipkin-spring-boot-starter` artifact. Use
+  `opentelemetry-spring-boot-starter` with the OTLP exporter instead. It will be removed in 3.0.
 - Deprecate `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)` in the
   Micrometer 1.5 library in favor of
   `io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`.
