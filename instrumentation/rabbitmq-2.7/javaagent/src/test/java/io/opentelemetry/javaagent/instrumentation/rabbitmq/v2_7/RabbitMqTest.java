@@ -65,7 +65,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -249,7 +248,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                         false)));
   }
 
-  @Nullable
   private static Method byteBufferPublishMethod() {
     try {
       return Channel.class.getMethod(
@@ -261,7 +259,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
           AMQP.BasicProperties.class,
           ByteBuffer.class,
           Class.forName("com.rabbitmq.client.WriteListener"));
-    } catch (NoSuchMethodException | ClassNotFoundException e) {
+    } catch (ReflectiveOperationException ignored) {
       return null;
     }
   }
@@ -933,7 +931,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
       SpanDataAssert span,
       SpanData parentSpan,
       String operation,
-      @Nullable String destination,
+      String destination,
       boolean anonymousDestination,
       long deliveryTag,
       Long batchMessageCount) {
