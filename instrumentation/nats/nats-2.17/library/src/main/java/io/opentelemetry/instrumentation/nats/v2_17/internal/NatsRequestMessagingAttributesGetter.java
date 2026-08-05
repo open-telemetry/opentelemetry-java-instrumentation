@@ -38,6 +38,9 @@ final class NatsRequestMessagingAttributesGetter
   @Nullable
   @Override
   public String getDestinationTemplate(NatsRequest request) {
+    if (NatsSubject.isJetStreamAck(request.getSubject())) {
+      return NatsSubject.JETSTREAM_ACK_SUBJECT;
+    }
     if (isTemporaryDestination(request)) {
       return request.getInboxPrefix();
     }
