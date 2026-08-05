@@ -45,8 +45,8 @@ public class ReceiveSpanFinishingCallback implements FutureCallback<ReceiveMessa
     Context parentContext = Context.current();
     if (emitStableMessagingSemconv()) {
       // the process span parents to the context that the messages were received in, and links to
-      // the producer that the message headers point at; the receive span, when there is one, is
-      // only linked from the process span
+      // the producer context that the message headers point at; the receive span links to that
+      // same producer context, and its own context is deliberately not handed to the process span
       for (MessageView messageView : messageViews) {
         VirtualFieldStore.setContextByMessage(messageView, parentContext);
       }
