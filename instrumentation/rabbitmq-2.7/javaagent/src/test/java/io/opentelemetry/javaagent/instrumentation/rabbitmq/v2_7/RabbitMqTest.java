@@ -939,7 +939,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     span.hasName(stable ? operation : "basic." + operation)
         .hasKind(SpanKind.CLIENT)
         .hasParent(parentSpan)
-        .hasAttributesSatisfying(
+        .hasAttributesSatisfyingExactly(
             equalTo(MESSAGING_SYSTEM, "rabbitmq"),
             equalTo(MESSAGING_DESTINATION_NAME, stable ? destination : null),
             equalTo(
@@ -950,7 +950,19 @@ class RabbitMqTest extends AbstractRabbitMqTest {
             equalTo(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, stable ? deliveryTag : null),
             equalTo(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, stable ? destination : null),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, stable ? batchMessageCount : null),
+            satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(rabbitMqIp, null)),
+            satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
+            satisfies(NETWORK_PEER_PORT, AbstractAssert::isNotNull),
             equalTo(SERVER_ADDRESS, stable ? rabbitMqIp : null),
+            satisfies(
+                SERVER_PORT,
+                val -> {
+                  if (stable) {
+                    val.isNotNull();
+                  } else {
+                    val.isNull();
+                  }
+                }),
             satisfies(stringKey("rabbitmq.command"), val -> val.isIn(null, "basic." + operation)));
   }
 
