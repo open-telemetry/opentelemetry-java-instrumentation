@@ -30,8 +30,9 @@ class TimerTest extends AbstractTimerTest {
     return testing;
   }
 
-  // the decaying max is no longer exported, but it must still be readable through the micrometer
-  // api for consumers such as spring boot actuator
+  // the decaying max is not exported under the v3 preview, but it must still be readable through
+  // the
+  // micrometer api for consumers such as spring boot actuator
   @Test
   void testMaxIsStillReadable() {
     Timer timer = Timer.builder("testMaxTimer").register(Metrics.globalRegistry);

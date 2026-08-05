@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.MaxGaugeAssertions.assertMaxGauge;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -62,16 +63,26 @@ public abstract class AbstractTimerTest {
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(stringKey("tag"), "value"))
                                         .hasBucketBoundaries(NO_BUCKETS))));
+    assertMaxGauge(
+        testing(),
+        "testTimer.max",
+        metric ->
+            metric
+                .hasName("testTimer.max")
+                .hasDescription("This is a test timer")
+                .hasDoubleGaugeSatisfying(
+                    gauge ->
+                        gauge.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasValue(42)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("tag"), "value")))));
 
     // micrometer gauge histogram is not emitted
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME, "testTimer.histogram", AbstractIterableAssert::isEmpty);
-
-    // micrometer max gauge is not emitted
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME, "testTimer.max", AbstractIterableAssert::isEmpty);
 
     // when
     Metrics.globalRegistry.remove(timer);
@@ -107,6 +118,16 @@ public abstract class AbstractTimerTest {
                                         .hasSum(0.001234)
                                         .hasCount(1)
                                         .hasAttributes(Attributes.empty()))));
+    assertMaxGauge(
+        testing(),
+        "testNanoTimer.max",
+        metric ->
+            metric
+                .hasName("testNanoTimer.max")
+                .hasDoubleGaugeSatisfying(
+                    gauge ->
+                        gauge.hasPointsSatisfying(
+                            point -> point.hasValue(0.001234).hasAttributes(Attributes.empty()))));
   }
 
   @Test

@@ -24,10 +24,13 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.ObservableDoubleGauge;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.DoubleAdder;
 import java.util.concurrent.atomic.LongAdder;
+import javax.annotation.Nullable;
 
 final class OpenTelemetryTimer extends AbstractTimer
     implements RemovableMeter, OpenTelemetryInstrument {
@@ -38,6 +41,9 @@ final class OpenTelemetryTimer extends AbstractTimer
   // TODO: use bound instruments when they're available
   private final DoubleHistogram otelHistogram;
   private final Attributes attributes;
+  // the <name> / <name>.max pair violates the metric naming rules, and OpenTelemetry histograms
+  // already carry a max, so this gauge is not emitted in the v3 preview (to be removed in 3.0)
+  @Nullable private final ObservableDoubleGauge observableMax;
 
   private volatile boolean removed = false;
 
@@ -76,6 +82,15 @@ final class OpenTelemetryTimer extends AbstractTimer
             .setUnit(TimeUnitHelper.getUnitString(baseTimeUnit));
     setExplicitBucketsIfConfigured(otelHistogramBuilder, distributionStatisticConfig, baseTimeUnit);
     this.otelHistogram = otelHistogramBuilder.build();
+    this.observableMax =
+        SemconvStability.v3Preview()
+            ? null
+            : otelMeter
+                .gaugeBuilder(name + ".max")
+                .setDescription(Bridging.description(id))
+                .setUnit(TimeUnitHelper.getUnitString(baseTimeUnit))
+                .buildWithCallback(
+                    new DoubleMeasurementRecorder<>(max, m -> m.poll(baseTimeUnit), attributes));
   }
 
   boolean isUsingMicrometerHistograms() {
@@ -117,6 +132,9 @@ final class OpenTelemetryTimer extends AbstractTimer
   @Override
   public void onRemove() {
     removed = true;
+    if (observableMax != null) {
+      observableMax.close();
+    }
   }
 
   private interface Measurements {

@@ -2,11 +2,12 @@
 
 ## Unreleased
 
-### ⚠️ Breaking changes to non-stable APIs
+### 📈 Enhancements
 
 - The Micrometer bridge no longer emits the decaying `<name>.max` gauge for `Timer` and
-  `DistributionSummary`. OpenTelemetry histograms already expose a non-decaying max, and the
-  `<name>` / `<name>.max` pair violates the OpenTelemetry metric naming rules.
+  `DistributionSummary` when `otel.instrumentation.common.v3-preview` is enabled. OpenTelemetry
+  histograms already expose a non-decaying max, and the `<name>` / `<name>.max` pair violates the
+  OpenTelemetry metric naming rules.
   ([#19397](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19397))
 
 ## Version 2.30.0 (2026-07-22)
