@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.nats.v2_17;
 import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory.createConsumerProcessInstrumenter;
 import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory.createPublishInstrumenter;
 import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory.createRequestInstrumenter;
+import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory.createSettleInstrumenter;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
@@ -25,6 +26,9 @@ class NatsSingletons {
   private static final Instrumenter<NatsRequest, NatsRequest> requestInstrumenter =
       createRequestInstrumenter(GlobalOpenTelemetry.get(), headers);
 
+  private static final Instrumenter<NatsRequest, NatsRequest> settleInstrumenter =
+      createSettleInstrumenter(GlobalOpenTelemetry.get(), headers);
+
   private static final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter =
       createConsumerProcessInstrumenter(GlobalOpenTelemetry.get(), headers);
 
@@ -34,6 +38,10 @@ class NatsSingletons {
 
   static Instrumenter<NatsRequest, NatsRequest> requestInstrumenter() {
     return requestInstrumenter;
+  }
+
+  static Instrumenter<NatsRequest, NatsRequest> settleInstrumenter() {
+    return settleInstrumenter;
   }
 
   static Instrumenter<NatsRequest, Void> consumerProcessInstrumenter() {

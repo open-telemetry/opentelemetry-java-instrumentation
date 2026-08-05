@@ -6,8 +6,10 @@
 package io.opentelemetry.instrumentation.nats.v2_17;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.assertTraceparentHeader;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.nats.client.Subscription;
 import io.nats.client.impl.Headers;
@@ -98,7 +100,7 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
   }
 
   @Test
-  void testPublishJetStreamAckSubjects() {
+  void testSettleJetStreamAckSubjects() {
     String firstAckSubject =
         "$JS.ACK.ingestion-stream.partition-a.1.18822351.18675175.1785834929935121483.14757";
     String secondAckSubject =
@@ -120,15 +122,27 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
                     span ->
-                        span.hasName("nats.settle")
+                        span.hasName("$JS.ACK settle")
+                            .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                messagingAttributes("publish", "$JS.ACK", clientId)),
+                                messagingAttributes(
+                                    "settle",
+                                    "$JS.ACK",
+                                    clientId,
+                                    equalTo(
+                                        stringKey("messaging.destination.template"), "$JS.ACK"))),
                     span ->
-                        span.hasName("nats.settle")
+                        span.hasName("$JS.ACK settle")
+                            .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                messagingAttributes("publish", "$JS.ACK", clientId))));
+                                messagingAttributes(
+                                    "settle",
+                                    "$JS.ACK",
+                                    clientId,
+                                    equalTo(
+                                        stringKey("messaging.destination.template"), "$JS.ACK")))));
   }
 
   private void assertPublishSpan() {
