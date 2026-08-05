@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### 🚫 Deprecations
+
+- Deprecate the `opentelemetry-zipkin-spring-boot-starter` artifact. Use
+  `opentelemetry-spring-boot-starter` with the OTLP exporter instead. It will be removed in 3.0.
+- Deprecate `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)` in the
+  Micrometer 1.5 library in favor of
+  `io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`.
+  Histogram/percentile gauges are experimental compatibility behavior, and this moves the API to the
+  standard experimental surface ahead of stabilization. Behavior and the
+  `otel.instrumentation.micrometer.histogram-gauges.enabled` config property are unchanged. The
+  deprecated builder method will be removed in the next release.
+  ([#19404](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19404))
+
 ## Version 2.30.0 (2026-07-22)
 
 This release targets the OpenTelemetry SDK 1.64.0.
