@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -53,5 +54,29 @@ class RocketMqConsumerAttributeGetterTest {
 
     assertThat(getter.getErrorType(request(), response, null))
         .isEqualTo(ConsumeConcurrentlyStatus.RECONSUME_LATER.name());
+  }
+
+  @Test
+  void reportsMessageHeaderOfSingleMessage() {
+    MessageExt message = mock(MessageExt.class);
+    when(message.getProperties()).thenReturn(singletonMap("test-header", "test-value"));
+
+    RocketMqConsumerRequest request =
+        new RocketMqConsumerRequest(message, "consumer-group", 1, null);
+
+    assertThat(getter.getMessageHeader(request, "test-header")).containsExactly("test-value");
+  }
+
+  @Test
+  void doesNotReportMessageHeadersOfBatch() {
+    MessageExt first = mock(MessageExt.class);
+    MessageExt second = mock(MessageExt.class);
+
+    RocketMqConsumerRequest request =
+        new RocketMqConsumerRequest(asList(first, second), "consumer-group", 2, null);
+
+    // merging the headers of every message into one attribute would lose which message each value
+    // came from, so they belong on the span links instead
+    assertThat(getter.getMessageHeader(request, "test-header")).isEmpty();
   }
 }

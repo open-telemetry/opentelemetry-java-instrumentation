@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.ArrayList;
 import java.util.List;
@@ -105,6 +107,12 @@ final class RocketMqConsumerAttributeGetter
 
   @Override
   public List<String> getMessageHeader(RocketMqConsumerRequest request, String name) {
+    if (request.isBatch()) {
+      // per-message attributes that vary across a batch belong on the span links; merging the
+      // headers of every message into one multi-valued attribute would lose which message each
+      // value came from
+      return emptyList();
+    }
     List<String> values = new ArrayList<>();
     for (MessageExt message : request.getMessages()) {
       String value = message.getProperties().get(name);
