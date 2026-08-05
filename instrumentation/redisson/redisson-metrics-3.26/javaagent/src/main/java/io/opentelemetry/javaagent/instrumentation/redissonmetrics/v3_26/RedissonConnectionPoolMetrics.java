@@ -10,7 +10,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoolMetrics;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Locale;
 import java.util.Map;
@@ -127,9 +126,7 @@ public class RedissonConnectionPoolMetrics {
       return name.append("unknown").toString();
     }
 
-    InetAddress resolvedAddress = address.getAddress();
-    String host =
-        resolvedAddress == null ? address.getHostString() : resolvedAddress.getHostAddress();
+    String host = address.getHostString();
     if (host.indexOf(':') >= 0) {
       name.append('[').append(host).append(']');
     } else {

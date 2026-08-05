@@ -16,8 +16,6 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.Field;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -54,11 +52,11 @@ class RedissonConnectionPoolMetricsTest {
   private String endpoint;
 
   @BeforeAll
-  void startRedis() throws UnknownHostException {
+  void startRedis() {
     redisServer.start();
     cleanup.deferAfterAll(redisServer::stop);
 
-    String host = InetAddress.getByName(redisServer.getHost()).getHostAddress();
+    String host = redisServer.getHost();
     if (host.indexOf(':') >= 0) {
       host = "[" + host + "]";
     }
