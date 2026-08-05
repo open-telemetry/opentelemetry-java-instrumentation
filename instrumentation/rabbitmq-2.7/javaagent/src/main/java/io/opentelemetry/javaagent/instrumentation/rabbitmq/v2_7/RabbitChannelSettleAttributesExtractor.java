@@ -23,7 +23,10 @@ class RabbitChannelSettleAttributesExtractor
     attributes.put(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, channelAndMethod.getDeliveryTag());
     SettledMessages messages = channelAndMethod.getSettledMessages();
     if (messages != null) {
-      attributes.put(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, messages.getRoutingKey());
+      String routingKey = messages.getRoutingKey();
+      if (routingKey != null && !routingKey.isEmpty()) {
+        attributes.put(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
+      }
     }
   }
 
