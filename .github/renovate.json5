@@ -469,7 +469,7 @@
       customType: 'regex',
       datasourceTemplate: 'docker',
       managerFilePatterns: [
-        'instrumentation/jmx-metrics/**/WeaverContainer.java',
+        '**/*.java',
       ],
       matchStrings: [
         '"(?<depName>otel/weaver):(?<currentValue>[^"]+)"',
