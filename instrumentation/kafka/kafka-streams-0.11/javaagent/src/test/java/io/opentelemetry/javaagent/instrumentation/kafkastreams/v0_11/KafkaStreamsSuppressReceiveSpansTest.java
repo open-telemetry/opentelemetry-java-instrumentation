@@ -33,6 +33,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.StringAssertConsumer;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -114,6 +115,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                       span.hasName("process " + STREAM_PENDING)
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(0))
+                          .hasLinks(LinkData.create(trace.getSpan(0).getSpanContext()))
                           .hasAttributesSatisfyingExactly(
                               processAttributes(
                                   STREAM_PENDING,
@@ -133,6 +135,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                       span.hasName("process " + STREAM_PROCESSED)
                           .hasKind(SpanKind.CONSUMER)
                           .hasParent(trace.getSpan(2))
+                          .hasLinks(LinkData.create(trace.getSpan(2).getSpanContext()))
                           .hasAttributesSatisfyingExactly(
                               processAttributes(
                                   STREAM_PROCESSED,
