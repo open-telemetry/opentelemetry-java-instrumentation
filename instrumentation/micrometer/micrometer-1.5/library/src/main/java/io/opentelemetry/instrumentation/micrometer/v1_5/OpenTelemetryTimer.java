@@ -86,7 +86,7 @@ final class OpenTelemetryTimer extends AbstractTimer
         emitMaxGauge
             ? otelMeter
                 .gaugeBuilder(name + ".max")
-                .setDescription(Bridging.description(otelMeter, name, id))
+                .setDescription(Bridging.description(otelMeter, name + ".max", id))
                 .setUnit(TimeUnitHelper.getUnitString(baseTimeUnit))
                 .buildWithCallback(
                     new DoubleMeasurementRecorder<>(max, m -> m.poll(baseTimeUnit), attributes))
