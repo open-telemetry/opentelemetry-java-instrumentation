@@ -16,13 +16,16 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.Field;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.RedisConnection;
 import org.redisson.client.codec.StringCodec;
+import org.redisson.client.protocol.RedisCommands;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
 import org.redisson.connection.ClientConnectionsEntry;
@@ -76,17 +79,32 @@ class RedissonConnectionPoolMetricsTest {
       assertConnectionPoolMetrics(regularPool, subscriptionPool);
       assertMetricNotEmitted(maxIdleMetricName());
 
-      ConnectionsHolder<?> holder = getMasterConnectionsHolder((Redisson) redisson);
+      MasterSlaveEntry entry = getMasterSlaveEntry((Redisson) redisson);
+      ConnectionsHolder<RedisConnection> holder = getMasterConnectionsHolder(entry);
       AsyncSemaphore semaphore = holder.getFreeConnectionsCounter();
 
       testing.clearData();
-      semaphore.acquire().join();
+      RedisConnection connection = entry.connectionWriteOp(RedisCommands.PING).join();
       try {
-        // Acquiring a permit alone does not open or remove a connection from the idle queue.
-        assertUsageMetric(regularPool, 0, 0, subscriptionPool, 0, 0);
+        // Delta temporality reports one fewer idle connection and one used connection.
+        assertUsageMetric(regularPool, -1, 1, subscriptionPool, 0, 0);
       } finally {
-        semaphore.release();
+        entry.releaseWrite(connection);
       }
+
+      testing.clearData();
+      for (int i = 0; i < REGULAR_MAX; i++) {
+        semaphore.acquire().join();
+      }
+      CompletableFuture<Void> queued = semaphore.acquire();
+      try {
+        assertPendingRequests(regularPool, 1, subscriptionPool, 0);
+      } finally {
+        for (int i = 0; i <= REGULAR_MAX; i++) {
+          semaphore.release();
+        }
+      }
+      queued.join();
 
       redisson.shutdown();
       redisson = null;
@@ -145,7 +163,7 @@ class RedissonConnectionPoolMetricsTest {
         REGULAR_MAX,
         subscriptionPool,
         SUBSCRIPTION_MAX);
-    assertPendingRequests(regularPool, subscriptionPool);
+    assertPendingRequests(regularPool, 0, subscriptionPool, 0);
   }
 
   private static void assertUsageMetric(
@@ -232,7 +250,8 @@ class RedissonConnectionPoolMetricsTest {
                                                         subscriptionPool))))));
   }
 
-  private static void assertPendingRequests(String regularPool, String subscriptionPool) {
+  private static void assertPendingRequests(
+      String regularPool, long regularPending, String subscriptionPool, long subscriptionPending) {
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         emitStableDatabaseSemconv()
@@ -253,12 +272,12 @@ class RedissonConnectionPoolMetricsTest {
                                     .hasPointsSatisfying(
                                         point ->
                                             point
-                                                .hasValue(0)
+                                                .hasValue(regularPending)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(stringKey(poolNameKey()), regularPool)),
                                         point ->
                                             point
-                                                .hasValue(0)
+                                                .hasValue(subscriptionPending)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(
                                                         stringKey(poolNameKey()),
@@ -274,13 +293,16 @@ class RedissonConnectionPoolMetricsTest {
         .isEmpty();
   }
 
-  private static ConnectionsHolder<?> getMasterConnectionsHolder(Redisson redisson)
+  private static MasterSlaveEntry getMasterSlaveEntry(Redisson redisson)
       throws ReflectiveOperationException {
     Field connectionManagerField = Redisson.class.getDeclaredField("connectionManager");
     connectionManagerField.setAccessible(true);
     ConnectionManager connectionManager = (ConnectionManager) connectionManagerField.get(redisson);
-    MasterSlaveEntry entry = connectionManager.getEntrySet().iterator().next();
+    return connectionManager.getEntrySet().iterator().next();
+  }
 
+  private static ConnectionsHolder<RedisConnection> getMasterConnectionsHolder(
+      MasterSlaveEntry entry) throws ReflectiveOperationException {
     Field masterEntryField = MasterSlaveEntry.class.getDeclaredField("masterEntry");
     masterEntryField.setAccessible(true);
     ClientConnectionsEntry masterEntry = (ClientConnectionsEntry) masterEntryField.get(entry);
