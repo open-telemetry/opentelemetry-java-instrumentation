@@ -37,7 +37,7 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
   void testWrappers(boolean testHeaders, boolean testExperimental) throws InterruptedException {
     KafkaTelemetryBuilder telemetryBuilder =
         KafkaTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedHeaders(singletonList("Test-Message-Header"))
+            .setCaptureHeaders(singletonList("Test-Message-Header"))
             .setCaptureExperimentalSpanAttributes(testExperimental);
     configure(telemetryBuilder);
     KafkaTelemetry telemetry = telemetryBuilder.build();

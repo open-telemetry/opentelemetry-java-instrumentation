@@ -52,9 +52,18 @@ public final class KafkaInstrumenterFactory {
   }
 
   @CanIgnoreReturnValue
-  public KafkaInstrumenterFactory setCapturedHeaders(Collection<String> capturedHeaders) {
+  public KafkaInstrumenterFactory setCaptureHeaders(Collection<String> capturedHeaders) {
     this.capturedHeaders = new ArrayList<>(capturedHeaders);
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public KafkaInstrumenterFactory setCapturedHeaders(Collection<String> capturedHeaders) {
+    return setCaptureHeaders(capturedHeaders);
   }
 
   @CanIgnoreReturnValue
@@ -183,7 +192,7 @@ public final class KafkaInstrumenterFactory {
           MessageOperation operation,
           List<String> capturedHeaders) {
     return MessagingAttributesExtractor.builder(getter, operation)
-        .setCapturedHeaders(capturedHeaders)
+        .setCaptureHeaders(capturedHeaders)
         .build();
   }
 }

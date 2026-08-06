@@ -30,9 +30,18 @@ public final class SpringKafkaTelemetryBuilder {
   }
 
   @CanIgnoreReturnValue
-  public SpringKafkaTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
+  public SpringKafkaTelemetryBuilder setCaptureHeaders(Collection<String> capturedHeaders) {
     this.capturedHeaders = new ArrayList<>(capturedHeaders);
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public SpringKafkaTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
+    return setCaptureHeaders(capturedHeaders);
   }
 
   @CanIgnoreReturnValue
@@ -62,7 +71,7 @@ public final class SpringKafkaTelemetryBuilder {
   public SpringKafkaTelemetry build() {
     KafkaInstrumenterFactory factory =
         new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
-            .setCapturedHeaders(capturedHeaders)
+            .setCaptureHeaders(capturedHeaders)
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
             .setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled)
             .setErrorCauseExtractor(new SpringKafkaErrorCauseExtractor());

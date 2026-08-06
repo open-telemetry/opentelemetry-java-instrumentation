@@ -26,7 +26,7 @@ class NatsDispatcherTest extends AbstractNatsDispatcherTest {
   void wrapConnection() {
     connection =
         NatsTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedHeaders(singletonList("Test-Message-Header"))
+            .setCaptureHeaders(singletonList("Test-Message-Header"))
             .build()
             .wrap(connection);
   }

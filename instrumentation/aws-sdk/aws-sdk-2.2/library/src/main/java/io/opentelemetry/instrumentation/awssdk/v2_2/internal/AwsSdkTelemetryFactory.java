@@ -42,7 +42,7 @@ public final class AwsSdkTelemetryFactory {
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "aws_sdk");
 
     return AwsSdkTelemetry.builder(openTelemetry)
-        .setCapturedHeaders(
+        .setCaptureHeaders(
             messaging.getScalarList(
                 "capture_headers/development",
                 String.class,

@@ -37,7 +37,7 @@ public class JmsInstrumenterFactory {
   }
 
   @CanIgnoreReturnValue
-  public JmsInstrumenterFactory setCapturedHeaders(Collection<String> capturedHeaders) {
+  public JmsInstrumenterFactory setCaptureHeaders(Collection<String> capturedHeaders) {
     this.capturedHeaders = new ArrayList<>(capturedHeaders);
     return this;
   }
@@ -108,7 +108,7 @@ public class JmsInstrumenterFactory {
   private AttributesExtractor<MessageWithDestination, Void> createMessagingAttributesExtractor(
       MessageOperation operation) {
     return MessagingAttributesExtractor.builder(new JmsMessageAttributesGetter(), operation)
-        .setCapturedHeaders(capturedHeaders)
+        .setCaptureHeaders(capturedHeaders)
         .build();
   }
 }

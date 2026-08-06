@@ -30,7 +30,7 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
         .getDefaultMQProducerImpl()
         .registerSendMessageHook(
             RocketMqTelemetry.builder(testing.getOpenTelemetry())
-                .setCapturedHeaders(singletonList("Test-Message-Header"))
+                .setCaptureHeaders(singletonList("Test-Message-Header"))
                 .setCaptureExperimentalSpanAttributes(true)
                 .build()
                 .createSendMessageHook());
@@ -42,7 +42,7 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
         .getDefaultMQPushConsumerImpl()
         .registerConsumeMessageHook(
             RocketMqTelemetry.builder(testing.getOpenTelemetry())
-                .setCapturedHeaders(singletonList("Test-Message-Header"))
+                .setCaptureHeaders(singletonList("Test-Message-Header"))
                 .setCaptureExperimentalSpanAttributes(true)
                 .build()
                 .createConsumeMessageHook());

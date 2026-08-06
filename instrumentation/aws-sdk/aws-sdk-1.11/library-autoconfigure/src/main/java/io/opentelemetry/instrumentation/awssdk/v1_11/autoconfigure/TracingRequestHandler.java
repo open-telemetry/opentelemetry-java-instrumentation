@@ -46,7 +46,7 @@ public final class TracingRequestHandler extends RequestHandler2 {
                     SystemProperty.getBoolean(
                         "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
                         false)))
-        .setCapturedHeaders(
+        .setCaptureHeaders(
             messaging.getScalarList(
                 "capture_headers/development",
                 String.class,

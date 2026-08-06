@@ -98,7 +98,7 @@ public final class AwsSdkInstrumenterFactory {
   private <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> messagingAttributesExtractor(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
     return MessagingAttributesExtractor.builder(getter, operation)
-        .setCapturedHeaders(capturedHeaders)
+        .setCaptureHeaders(capturedHeaders)
         .build();
   }
 
