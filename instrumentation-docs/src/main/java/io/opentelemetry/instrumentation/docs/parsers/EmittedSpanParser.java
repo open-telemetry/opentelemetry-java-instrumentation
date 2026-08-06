@@ -41,7 +41,7 @@ public class EmittedSpanParser {
   public static Map<String, EmittedSpans> getSpansByScopeFromFiles(
       String rootDir, String instrumentationDirectory) throws JsonProcessingException {
     Map<String, StringBuilder> spansByScope = new HashMap<>();
-    Path telemetryDir = Paths.get(rootDir + "/" + instrumentationDirectory, ".telemetry");
+    Path telemetryDir = Paths.get(rootDir).resolve(instrumentationDirectory).resolve(".telemetry");
 
     if (Files.exists(telemetryDir) && Files.isDirectory(telemetryDir)) {
       try (Stream<Path> files = Files.list(telemetryDir)) {

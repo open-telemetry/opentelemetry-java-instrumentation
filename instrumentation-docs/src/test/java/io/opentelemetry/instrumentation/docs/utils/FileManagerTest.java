@@ -33,7 +33,26 @@ class FileManagerTest {
         Files.createDirectories(tempDir.resolve("instrumentation/my-instrumentation/javaagent"));
     List<InstrumentationPath> paths = fileManager.getInstrumentationPaths();
     assertThat(paths).hasSize(1);
-    assertThat(paths.get(0).srcPath()).isEqualTo(validDir.toString());
+    // paths always use forward slashes, even on Windows, so that they can be made relative to the
+    // repository root via string manipulation
+    assertThat(paths.get(0).srcPath())
+        .isEqualTo(validDir.toString().replace('\\', '/'))
+        .doesNotContain("\\");
+  }
+
+  @Test
+  void testGetMetaDataFileWithMixedSeparatorRootDir() throws IOException {
+    // on Windows tempDir uses backslashes while the module path uses forward slashes
+    Path moduleDir = Files.createDirectories(tempDir.resolve("instrumentation/my-instrumentation"));
+    Files.writeString(moduleDir.resolve("metadata.yaml"), "description: test\n");
+
+    assertThat(fileManager.getMetaDataFile("instrumentation/my-instrumentation"))
+        .isEqualTo("description: test\n");
+  }
+
+  @Test
+  void testGetMetaDataFileReturnsNullWhenMissing() {
+    assertThat(fileManager.getMetaDataFile("instrumentation/my-instrumentation")).isNull();
   }
 
   @Test
@@ -72,14 +91,19 @@ class FileManagerTest {
     List<String> gradleFiles =
         fileManager.findBuildGradleFiles("instrumentation/runtime-telemetry");
 
-    assertThat(gradleFiles).hasSize(2);
+    // paths always use forward slashes, even on Windows, so that downstream consumers can match on
+    // "/javaagent/" and "/library/" segments
     assertThat(gradleFiles)
         .containsExactlyInAnyOrder(
-            javaagent.resolve("build.gradle.kts").toString(),
-            library.resolve("build.gradle.kts").toString());
+            normalized(javaagent.resolve("build.gradle.kts")),
+            normalized(library.resolve("build.gradle.kts")));
     assertThat(gradleFiles)
         .doesNotContain(
-            nestedJava17.resolve("build.gradle.kts").toString(),
-            nestedJava8.resolve("build.gradle.kts").toString());
+            normalized(nestedJava17.resolve("build.gradle.kts")),
+            normalized(nestedJava8.resolve("build.gradle.kts")));
+  }
+
+  private static String normalized(Path path) {
+    return path.toString().replace('\\', '/');
   }
 }

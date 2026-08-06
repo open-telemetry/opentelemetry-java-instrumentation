@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.docs.parsers;
 
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
+import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,7 +50,13 @@ public class ModuleParser {
 
   // visible for testing
   public static String sanitizePathName(String rootPath, String path) {
-    return path.replace(rootPath, "").replace("/javaagent", "").replace("/library", "");
+    // both sides are normalized so that the replacements also match on Windows, where the root path
+    // and the instrumentation path may use different separators
+    String normalizedRootPath = FileManager.normalizeSeparators(rootPath);
+    return FileManager.normalizeSeparators(path)
+        .replace(normalizedRootPath, "")
+        .replace("/javaagent", "")
+        .replace("/library", "");
   }
 
   private ModuleParser() {}

@@ -139,7 +139,7 @@ public class EmittedScopeParser {
    */
   public static Set<EmittedScope.Scope> getScopesFromFiles(
       String rootDir, String instrumentationDirectory) {
-    Path telemetryDir = Paths.get(rootDir + "/" + instrumentationDirectory, ".telemetry");
+    Path telemetryDir = Paths.get(rootDir).resolve(instrumentationDirectory).resolve(".telemetry");
 
     Set<EmittedScope.Scope> allScopes = new HashSet<>();
 

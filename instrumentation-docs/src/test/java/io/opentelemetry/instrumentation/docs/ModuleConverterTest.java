@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.docs;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -57,5 +58,35 @@ class ModuleConverterTest {
 
     sanitized = ModuleParser.sanitizePathName("/root", "/root/other");
     assertThat(sanitized).isEqualTo("/other");
+  }
+
+  @Test
+  void testSanitizePathNameHandlesWindowsSeparators() {
+    // the root path comes from the basePath system property and mixes separators on Windows
+    String sanitized =
+        ModuleParser.sanitizePathName(
+            "C:\\Users\\me\\repo/", "C:\\Users\\me\\repo\\instrumentation\\camel-2.20\\javaagent");
+    assertThat(sanitized).isEqualTo("instrumentation/camel-2.20");
+
+    sanitized =
+        ModuleParser.sanitizePathName(
+            "C:\\Users\\me\\repo/", "C:/Users/me/repo/instrumentation/camel-2.20/library");
+    assertThat(sanitized).isEqualTo("instrumentation/camel-2.20");
+  }
+
+  @Test
+  void testConvertToModulesHandlesWindowsSeparators() {
+    InstrumentationPath path = mock(InstrumentationPath.class);
+    when(path.group()).thenReturn("camel");
+    when(path.namespace()).thenReturn("camel");
+    when(path.instrumentationName()).thenReturn("camel-2.20");
+    when(path.srcPath()).thenReturn("C:/Users/me/repo/instrumentation/camel-2.20/javaagent");
+
+    List<InstrumentationModule> modules =
+        ModuleParser.convertToModules("C:\\Users\\me\\repo/", singletonList(path));
+
+    assertThat(modules)
+        .extracting(InstrumentationModule::getSrcPath)
+        .containsExactly("instrumentation/camel-2.20");
   }
 }

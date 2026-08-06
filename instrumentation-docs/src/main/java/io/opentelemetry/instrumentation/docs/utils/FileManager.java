@@ -22,7 +22,7 @@ public record FileManager(String rootDir) {
   private static final Logger logger = Logger.getLogger(FileManager.class.getName());
 
   public List<InstrumentationPath> getInstrumentationPaths() throws IOException {
-    Path rootPath = Paths.get(rootDir + "instrumentation");
+    Path rootPath = resolveFromRoot("instrumentation");
 
     try (Stream<Path> walk = Files.walk(rootPath)) {
       return walk.filter(Files::isDirectory)
@@ -52,7 +52,9 @@ public record FileManager(String rootDir) {
     String name = parts[parts.length - 2];
     String namespace = name.contains("-") ? name.split("-")[0] : name;
 
-    return new InstrumentationPath(name, filePath, namespace, namespace, instrumentationType);
+    // the normalized path is stored so that downstream string manipulation (e.g. making the path
+    // relative to the repository root) behaves the same on Windows as it does on other platforms
+    return new InstrumentationPath(name, normalized, namespace, namespace, instrumentationType);
   }
 
   public static boolean isValidInstrumentationPath(String filePath) {
@@ -79,12 +81,13 @@ public record FileManager(String rootDir) {
     return normalized.endsWith("javaagent") || normalized.endsWith("library");
   }
 
-  private static String normalizeSeparators(String filePath) {
+  /** Converts Windows path separators to forward slashes, leaving other platforms untouched. */
+  public static String normalizeSeparators(String filePath) {
     return filePath.replace('\\', '/');
   }
 
   public List<String> findBuildGradleFiles(String instrumentationDirectory) {
-    Path rootPath = Paths.get(rootDir + instrumentationDirectory);
+    Path rootPath = resolveFromRoot(instrumentationDirectory);
 
     try (Stream<Path> walk = Files.walk(rootPath)) {
       return walk.filter(Files::isRegularFile)
@@ -93,7 +96,7 @@ public record FileManager(String rootDir) {
                   path.getFileName().toString().equals("build.gradle.kts")
                       && !normalizeSeparators(path.toString()).contains("/testing/")
                       && !isInNestedInstrumentationModule(path, rootPath))
-          .map(Path::toString)
+          .map(path -> normalizeSeparators(path.toString()))
           .collect(toList());
     } catch (IOException e) {
       logger.severe("Error traversing directory: " + e.getMessage());
@@ -126,11 +129,15 @@ public record FileManager(String rootDir) {
 
   @Nullable
   public String getMetaDataFile(String instrumentationDirectory) {
-    String metadataFile = rootDir + instrumentationDirectory + "/metadata.yaml";
-    if (Files.exists(Paths.get(metadataFile))) {
-      return readFileToString(metadataFile);
+    Path metadataFile = resolveFromRoot(instrumentationDirectory).resolve("metadata.yaml");
+    if (Files.exists(metadataFile)) {
+      return readFileToString(metadataFile.toString());
     }
     return null;
+  }
+
+  private Path resolveFromRoot(String relativePath) {
+    return Paths.get(rootDir).resolve(relativePath);
   }
 
   @Nullable

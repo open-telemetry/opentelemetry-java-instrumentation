@@ -41,7 +41,7 @@ public class EmittedMetricsParser {
    */
   public static Map<String, EmittedMetrics> getMetricsFromFiles(
       String rootDir, String instrumentationDirectory) {
-    Path telemetryDir = Paths.get(rootDir + "/" + instrumentationDirectory, ".telemetry");
+    Path telemetryDir = Paths.get(rootDir).resolve(instrumentationDirectory).resolve(".telemetry");
 
     Map<String, List<EmittedMetrics.MetricsByScope>> metricsByWhen =
         parseAllMetricFiles(telemetryDir);
