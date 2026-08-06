@@ -14,6 +14,7 @@ import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoolMetrics;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
@@ -87,33 +88,7 @@ public class TomcatConnectionPoolMetrics {
 
     DbInfo dbInfo =
         JdbcConnectionUrlParser.parse(poolProperties.getUrl(), poolProperties.getDbProperties());
-    String serverAddress = dbInfo.getServerAddress();
-    Integer serverPort = dbInfo.getServerPort();
-    String dbNamespace = dbInfo.getDbNamespace();
-
-    StringBuilder poolName = new StringBuilder();
-    if (serverAddress != null) {
-      if (serverAddress.indexOf(':') >= 0) {
-        poolName.append('[').append(serverAddress).append(']');
-      } else {
-        poolName.append(serverAddress);
-      }
-      if (serverPort != null) {
-        poolName.append(':').append(serverPort);
-      }
-    }
-    if (dbNamespace != null) {
-      if (poolName.length() > 0) {
-        poolName.append('/');
-      }
-      poolName.append(dbNamespace);
-    }
-
-    // The derived name is intentionally not made unique with a numeric suffix: sequence numbers
-    // are unstable across restarts and initialization order. Asynchronous metric observations with
-    // equal attributes are aggregated, so multiple pools for the same database can share this pool
-    // name.
-    return poolName.length() > 0 ? poolName.toString() : DEFAULT_POOL_NAME;
+    return JdbcConnectionPoolNameUtil.poolName(dbInfo, DEFAULT_POOL_NAME);
   }
 
   public static void unregisterMetrics(DataSourceProxy dataSource) {
