@@ -11,12 +11,17 @@ import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 final class Bridging {
 
-  private static final ConcurrentMap<String, String> descriptionsCache = new ConcurrentHashMap<>();
+  // Scoped to the OpenTelemetry Meter, since that is where a description conflict would occur, and
+  // so that entries become collectable together with the meter provider. Registries sharing a meter
+  // provider deliberately share a cache.
+  private static final Cache<io.opentelemetry.api.metrics.Meter, ConcurrentMap<String, String>>
+      descriptionCaches = Cache.weak();
 
   static Attributes tagsAsAttributes(Meter.Id id, NamingConvention namingConvention) {
     Iterable<Tag> tags = id.getTagsAsIterable();
@@ -43,13 +48,16 @@ final class Bridging {
   // So the first description seen for an instrument name wins, which is also what Micrometer's own
   // PrometheusMeterRegistry does. Note this is keyed on the name after the naming convention has
   // been applied, since that is the name the conflict would occur on.
-  static String description(String conventionName, Meter.Id id) {
-    return descriptionsCache.computeIfAbsent(
-        conventionName,
-        n -> {
-          String description = id.getDescription();
-          return description != null ? description : "";
-        });
+  static String description(
+      io.opentelemetry.api.metrics.Meter otelMeter, String conventionName, Meter.Id id) {
+    return descriptionCaches
+        .computeIfAbsent(otelMeter, meter -> new ConcurrentHashMap<>())
+        .computeIfAbsent(
+            conventionName,
+            n -> {
+              String description = id.getDescription();
+              return description != null ? description : "";
+            });
   }
 
   static String baseUnit(Meter.Id id) {
