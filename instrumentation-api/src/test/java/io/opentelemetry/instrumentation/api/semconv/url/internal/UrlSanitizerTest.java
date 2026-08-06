@@ -35,20 +35,21 @@ class UrlSanitizerTest {
     "user1:secret@github.com, user1:secret@github.com",
     "https://github.com@, https://github.com@",
     "https://service.com?paramA=valA&paramB=valB, https://service.com?paramA=valA&paramB=valB",
-    "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7, https://service.com?AWSAccessKeyId=REDACTED",
-    "https://service.com?Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0%3A377, https://service.com?Signature=REDACTED",
+    "https://service.com?X-Amz-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, https://service.com?X-Amz-Signature=REDACTED",
+    "https://service.com?X-Amz-Credential=AKIAIOSFODNN7%2F20260101%2Fus-east-1%2Fs3%2Faws4_request, https://service.com?X-Amz-Credential=REDACTED",
+    "https://service.com?X-Amz-Security-Token=FwoGZXIvYXdzEBYaDG, https://service.com?X-Amz-Security-Token=REDACTED",
     "https://service.com?sig=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, https://service.com?sig=REDACTED",
     "https://service.com?X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, https://service.com?X-Goog-Signature=REDACTED",
-    "https://service.com?paramA=valA&AWSAccessKeyId=AKIAIOSFODNN7&paramB=valB, https://service.com?paramA=valA&AWSAccessKeyId=REDACTED&paramB=valB",
-    "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&paramA=valA, https://service.com?AWSAccessKeyId=REDACTED&paramA=valA",
-    "https://service.com?paramA=valA&AWSAccessKeyId=AKIAIOSFODNN7, https://service.com?paramA=valA&AWSAccessKeyId=REDACTED",
-    "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&AWSAccessKeyId=ZGIAIOSFODNN7, https://service.com?AWSAccessKeyId=REDACTED&AWSAccessKeyId=REDACTED",
-    "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7#ref, https://service.com?AWSAccessKeyId=REDACTED#ref",
-    "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&aa&bb, https://service.com?AWSAccessKeyId=REDACTED&aa&bb",
-    "https://service.com?aa&bb&AWSAccessKeyId=AKIAIOSFODNN7, https://service.com?aa&bb&AWSAccessKeyId=REDACTED",
-    "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&&, https://service.com?AWSAccessKeyId=REDACTED&&",
-    "https://service.com?&&AWSAccessKeyId=AKIAIOSFODNN7, https://service.com?&&AWSAccessKeyId=REDACTED",
-    "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&a&b#fragment, https://service.com?AWSAccessKeyId=REDACTED&a&b#fragment"
+    "https://service.com?paramA=valA&X-Amz-Signature=AKIAIOSFODNN7&paramB=valB, https://service.com?paramA=valA&X-Amz-Signature=REDACTED&paramB=valB",
+    "https://service.com?X-Amz-Signature=AKIAIOSFODNN7&paramA=valA, https://service.com?X-Amz-Signature=REDACTED&paramA=valA",
+    "https://service.com?paramA=valA&X-Amz-Signature=AKIAIOSFODNN7, https://service.com?paramA=valA&X-Amz-Signature=REDACTED",
+    "https://service.com?X-Amz-Signature=AKIAIOSFODNN7&X-Amz-Signature=ZGIAIOSFODNN7, https://service.com?X-Amz-Signature=REDACTED&X-Amz-Signature=REDACTED",
+    "https://service.com?X-Amz-Signature=AKIAIOSFODNN7#ref, https://service.com?X-Amz-Signature=REDACTED#ref",
+    "https://service.com?X-Amz-Signature=AKIAIOSFODNN7&aa&bb, https://service.com?X-Amz-Signature=REDACTED&aa&bb",
+    "https://service.com?aa&bb&X-Amz-Signature=AKIAIOSFODNN7, https://service.com?aa&bb&X-Amz-Signature=REDACTED",
+    "https://service.com?X-Amz-Signature=AKIAIOSFODNN7&&, https://service.com?X-Amz-Signature=REDACTED&&",
+    "https://service.com?&&X-Amz-Signature=AKIAIOSFODNN7, https://service.com?&&X-Amz-Signature=REDACTED",
+    "https://service.com?X-Amz-Signature=AKIAIOSFODNN7&a&b#fragment, https://service.com?X-Amz-Signature=REDACTED&a&b#fragment"
   })
   void shouldRedactUserInfoAndQueryParameters(String url, String expectedResult) {
     assertThat(UrlSanitizer.sanitizeUrl(url, HttpConstants.SENSITIVE_QUERY_PARAMETERS))

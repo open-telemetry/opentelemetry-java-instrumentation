@@ -572,7 +572,7 @@
       "name": "otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters",
       "type": "java.util.List<java.lang.String>",
       "description": "List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.",
-      "defaultValue": "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
+      "defaultValue": "X-Amz-Signature,X-Amz-Credential,X-Amz-Security-Token,sig,X-Goog-Signature"
     },
     {
       "name": "otel.instrumentation.spring-web.enabled",

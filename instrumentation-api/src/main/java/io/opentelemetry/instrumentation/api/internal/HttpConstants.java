@@ -26,7 +26,13 @@ public final class HttpConstants {
 
   public static final Set<String> SENSITIVE_QUERY_PARAMETERS =
       unmodifiableSet(
-          new HashSet<>(asList("AWSAccessKeyId", "Signature", "sig", "X-Goog-Signature")));
+          new HashSet<>(
+              asList(
+                  "X-Amz-Signature",
+                  "X-Amz-Credential",
+                  "X-Amz-Security-Token",
+                  "sig",
+                  "X-Goog-Signature")));
 
   public static final String _OTHER = "_OTHER";
 
