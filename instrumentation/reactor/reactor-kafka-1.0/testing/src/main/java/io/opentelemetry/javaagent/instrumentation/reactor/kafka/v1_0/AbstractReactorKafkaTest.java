@@ -184,6 +184,7 @@ public abstract class AbstractReactorKafkaTest {
                     span.hasName(spanName("testTopic", "process", "process"))
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
+                        .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
                         .hasAttributesSatisfyingExactly(processAttributes(record)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
 
@@ -239,11 +240,15 @@ public abstract class AbstractReactorKafkaTest {
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(sendAttributes(record)),
-                span ->
-                    span.hasName(spanName("testTopic", "process", "process"))
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(processAttributes(record)),
+                span -> {
+                  span.hasName(spanName("testTopic", "process", "process"))
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasParent(trace.getSpan(1))
+                      .hasAttributesSatisfyingExactly(processAttributes(record));
+                  if (emitStableMessagingSemconv()) {
+                    span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                  }
+                },
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
