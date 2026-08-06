@@ -100,6 +100,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                     span.hasName(spanName("testSingleTopic", "process", "process"))
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
+                        .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             singleProcessAttributes("testSingleTopic", "testSingleListener", "10")),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
@@ -517,6 +518,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
           span.hasName(spanName("testSingleTopic", "process", "process"))
               .hasKind(SpanKind.CONSUMER)
               .hasParent(trace.getSpan(1))
+              .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
               .hasAttributesSatisfyingExactly(withErrorType(processAttributes, failed));
           if (failed) {
             span.hasStatus(StatusData.error()).hasException(new IllegalArgumentException("boom"));

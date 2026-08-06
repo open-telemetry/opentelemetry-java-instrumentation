@@ -32,6 +32,7 @@ import static java.util.Arrays.asList;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
@@ -73,13 +74,17 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 sendAttributes("testSingleTopic", "10")),
-                    span ->
-                        span.hasName(spanName("testSingleTopic", "process", "process"))
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfyingExactly(
-                                singleProcessAttributes(
-                                    "testSingleTopic", "testSingleListener", "10")),
+                    span -> {
+                      span.hasName(spanName("testSingleTopic", "process", "process"))
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasAttributesSatisfyingExactly(
+                              singleProcessAttributes(
+                                  "testSingleTopic", "testSingleListener", "10"));
+                      if (emitStableMessagingSemconv()) {
+                        span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                      }
+                    },
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
@@ -112,14 +117,18 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
                                       sendAttributes("testSingleTopic", "10")),
-                          span ->
-                              span.hasName(spanName("testSingleTopic", "process", "process"))
-                                  .hasKind(SpanKind.CONSUMER)
-                                  .hasParent(trace.getSpan(1))
-                                  .hasStatus(StatusData.error())
-                                  .hasException(new IllegalArgumentException("boom"))
-                                  .hasAttributesSatisfyingExactly(
-                                      withErrorType(processAttributes, true)),
+                          span -> {
+                            span.hasName(spanName("testSingleTopic", "process", "process"))
+                                .hasKind(SpanKind.CONSUMER)
+                                .hasParent(trace.getSpan(1))
+                                .hasStatus(StatusData.error())
+                                .hasException(new IllegalArgumentException("boom"))
+                                .hasAttributesSatisfyingExactly(
+                                    withErrorType(processAttributes, true));
+                            if (emitStableMessagingSemconv()) {
+                              span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                            }
+                          },
                           span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
               if (testLatestDeps()) {
                 assertions.add(
@@ -127,14 +136,17 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
               }
               assertions.addAll(
                   asList(
-                      span ->
-                          span.hasName(spanName("testSingleTopic", "process", "process"))
-                              .hasKind(SpanKind.CONSUMER)
-                              .hasParent(trace.getSpan(1))
-                              .hasStatus(StatusData.error())
-                              .hasException(new IllegalArgumentException("boom"))
-                              .hasAttributesSatisfyingExactly(
-                                  withErrorType(processAttributes, true)),
+                      span -> {
+                        span.hasName(spanName("testSingleTopic", "process", "process"))
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasParent(trace.getSpan(1))
+                            .hasStatus(StatusData.error())
+                            .hasException(new IllegalArgumentException("boom"))
+                            .hasAttributesSatisfyingExactly(withErrorType(processAttributes, true));
+                        if (emitStableMessagingSemconv()) {
+                          span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                        }
+                      },
                       span ->
                           span.hasName("consumer")
                               .hasParent(trace.getSpan(testLatestDeps() ? 5 : 4))));
@@ -144,12 +156,16 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
               }
               assertions.addAll(
                   asList(
-                      span ->
-                          span.hasName(spanName("testSingleTopic", "process", "process"))
-                              .hasKind(SpanKind.CONSUMER)
-                              .hasParent(trace.getSpan(1))
-                              .hasStatus(StatusData.unset())
-                              .hasAttributesSatisfyingExactly(processAttributes),
+                      span -> {
+                        span.hasName(spanName("testSingleTopic", "process", "process"))
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasParent(trace.getSpan(1))
+                            .hasStatus(StatusData.unset())
+                            .hasAttributesSatisfyingExactly(processAttributes);
+                        if (emitStableMessagingSemconv()) {
+                          span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                        }
+                      },
                       span ->
                           span.hasName("consumer")
                               .hasParent(trace.getSpan(testLatestDeps() ? 8 : 6))));
