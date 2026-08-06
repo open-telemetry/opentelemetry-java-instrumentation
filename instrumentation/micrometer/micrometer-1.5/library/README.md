@@ -142,12 +142,15 @@ applied, meters that share a Micrometer name but map onto different instrument n
 
 Prometheus mode approximates the naming behavior of Micrometer's `PrometheusMeterRegistry` and is
 intended for users exporting with the Prometheus exporter. It forces the base time unit to seconds
-and appends the unit to the instrument name: `Timer` and `LongTaskTimer` names get `.seconds`, while
-`Counter`, `DistributionSummary`, and `Gauge` names get their base unit appended when they have a
-non-empty one. Other meter types are left unchanged.
+and appends the unit to the instrument name. The naming convention keys off the Micrometer meter
+type, so `Timer`, `FunctionTimer`, and `LongTaskTimer` names get `.seconds`, while `Counter`,
+`FunctionCounter`, `DistributionSummary`, and `Gauge` names get their base unit appended when they
+have a non-empty one. Only custom `Meter` instruments are left unchanged.
 
-So a `Timer` named `my.timer` produces the OpenTelemetry instrument `my.timer.seconds`, and a
-`DistributionSummary` named `my.summary` with the base unit `bytes` produces `my.summary.bytes`.
+Any suffix from the table above is appended afterwards, so a `Timer` named `my.timer` produces the
+OpenTelemetry instrument `my.timer.seconds`, a `DistributionSummary` named `my.summary` with the
+base unit `bytes` produces `my.summary.bytes`, and a `FunctionTimer` named `my.function` produces
+`my.function.seconds.count` and `my.function.seconds.sum`.
 These are the OpenTelemetry instrument names; replacing `.` with `_` and appending `_total` to
 counters is left to the Prometheus exporter, so the final Prometheus series names differ. Encoding
 the unit in the metric name is contrary to the OpenTelemetry naming rules, so this mode is disabled
