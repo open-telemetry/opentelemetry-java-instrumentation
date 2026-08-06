@@ -46,6 +46,7 @@ readonly INSTRUMENTATIONS=(
   "aws-sdk:aws-sdk-2.2:javaagent:test"
   "aws-sdk:aws-sdk-2.2:javaagent:testBedrockRuntime"
   "aws-sdk:aws-sdk-2.2:javaagent:testStableSemconv"
+  "azure-functions-worker-2.0:javaagent:test"
   "c3p0-0.9:javaagent:test"
   "c3p0-0.9:javaagent:testStableSemconv"
   "camel-2.20:javaagent:test"

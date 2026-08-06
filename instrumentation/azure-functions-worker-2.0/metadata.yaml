@@ -1,0 +1,9 @@
+display_name: Azure Functions
+description: >
+  This instrumentation adopts the trace context that the Azure Functions host passes to the Java
+  worker, so that telemetry emitted by the function is correlated with the incoming request. It
+  does not emit any telemetry on its own.
+library_link: https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference-java
+classification: library
+features:
+  - CONTEXT_PROPAGATION
