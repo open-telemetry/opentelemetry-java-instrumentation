@@ -94,8 +94,9 @@ class InstrumentationAnalyzer {
   }
 
   private Set<String> getVersionInformation(InstrumentationModule module) {
+    Path moduleRoot = fileManager.rootDir().resolve(module.getSrcPath());
     List<Path> gradleFiles = fileManager.findBuildGradleFiles(module.getSrcPath());
-    return GradleParser.extractVersions(gradleFiles, module);
+    return GradleParser.extractVersions(moduleRoot, gradleFiles, module);
   }
 
   /**

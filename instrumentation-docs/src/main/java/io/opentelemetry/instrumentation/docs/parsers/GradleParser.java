@@ -182,20 +182,21 @@ public class GradleParser {
     return null;
   }
 
-  public static Set<String> extractVersions(List<Path> gradleFiles, InstrumentationModule module) {
+  public static Set<String> extractVersions(
+      Path moduleRoot, List<Path> gradleFiles, InstrumentationModule module) {
     Set<String> allVersions = new HashSet<>();
-    gradleFiles.forEach(file -> processGradleFile(file, allVersions, module));
+    gradleFiles.forEach(file -> processGradleFile(moduleRoot, file, allVersions, module));
     return allVersions;
   }
 
   private static void processGradleFile(
-      Path filePath, Set<String> versions, InstrumentationModule module) {
+      Path moduleRoot, Path filePath, Set<String> versions, InstrumentationModule module) {
     String fileContents = FileManager.readFileToString(filePath);
     if (fileContents == null) {
       return;
     }
 
-    Optional<InstrumentationType> type = determineInstrumentationType(filePath);
+    Optional<InstrumentationType> type = determineInstrumentationType(moduleRoot, filePath);
     if (type.isEmpty()) {
       return;
     }
@@ -216,16 +217,24 @@ public class GradleParser {
     }
   }
 
-  private static Optional<InstrumentationType> determineInstrumentationType(Path filePath) {
-    // matching on path elements rather than substrings keeps this working on Windows, where
-    // Path#toString uses backslashes
-    for (Path element : filePath) {
-      String segment = element.toString();
-      if (segment.equals("javaagent")) {
-        return Optional.of(InstrumentationType.JAVAAGENT);
-      } else if (segment.equals("library")) {
-        return Optional.of(InstrumentationType.LIBRARY);
-      }
+  /**
+   * Determines the instrumentation type from the first segment of the build file's path relative to
+   * the module root. Resolving against the module root rather than scanning the absolute path keeps
+   * an ancestor checkout directory named {@code javaagent} or {@code library} from being mistaken
+   * for the module's own type.
+   */
+  private static Optional<InstrumentationType> determineInstrumentationType(
+      Path moduleRoot, Path filePath) {
+    Path relativePath = moduleRoot.relativize(filePath);
+    if (relativePath.getNameCount() < 2) {
+      return Optional.empty();
+    }
+
+    String type = relativePath.getName(0).toString();
+    if (type.equals("javaagent")) {
+      return Optional.of(InstrumentationType.JAVAAGENT);
+    } else if (type.equals("library")) {
+      return Optional.of(InstrumentationType.LIBRARY);
     }
     return Optional.empty();
   }
