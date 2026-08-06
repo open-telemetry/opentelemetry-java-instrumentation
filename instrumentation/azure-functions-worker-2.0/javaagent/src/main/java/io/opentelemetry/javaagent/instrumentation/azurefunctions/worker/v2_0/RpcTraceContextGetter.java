@@ -12,7 +12,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.List;
 import javax.annotation.Nullable;
 
-public enum RpcTraceContextGetter implements TextMapGetter<RpcTraceContext> {
+enum RpcTraceContextGetter implements TextMapGetter<RpcTraceContext> {
   INSTANCE;
 
   // the host only ever sends w3c trace context
