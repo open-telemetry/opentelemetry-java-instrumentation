@@ -10,6 +10,7 @@ import com.mchange.v2.c3p0.WrapperConnectionPoolDataSource;
 import com.mchange.v2.c3p0.impl.AbstractPoolBackedDataSource;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.c3p0.v0_9.C3p0Telemetry;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import javax.sql.ConnectionPoolDataSource;
@@ -40,30 +41,7 @@ public class C3p0Singletons {
     DbInfo dbInfo =
         JdbcConnectionUrlParser.parse(
             driverManagerDataSource.getJdbcUrl(), driverManagerDataSource.getProperties());
-
-    String serverAddress = dbInfo.getServerAddress();
-    Integer serverPort = dbInfo.getServerPort();
-    String dbNamespace = dbInfo.getDbNamespace();
-
-    StringBuilder poolName = new StringBuilder();
-    if (serverAddress != null) {
-      if (serverAddress.indexOf(':') >= 0) {
-        poolName.append('[').append(serverAddress).append(']');
-      } else {
-        poolName.append(serverAddress);
-      }
-      if (serverPort != null) {
-        poolName.append(':').append(serverPort);
-      }
-    }
-    if (dbNamespace != null) {
-      if (poolName.length() > 0) {
-        poolName.append('/');
-      }
-      poolName.append(dbNamespace);
-    }
-
-    return poolName.length() == 0 ? DEFAULT_DATA_SOURCE_NAME : poolName.toString();
+    return JdbcConnectionPoolNameUtil.poolName(dbInfo, DEFAULT_DATA_SOURCE_NAME);
   }
 
   private C3p0Singletons() {}

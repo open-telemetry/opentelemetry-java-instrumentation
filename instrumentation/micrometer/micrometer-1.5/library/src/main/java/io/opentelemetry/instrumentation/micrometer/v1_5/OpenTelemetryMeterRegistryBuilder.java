@@ -17,6 +17,7 @@ import io.micrometer.core.instrument.config.NamingConvention;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental;
 import java.util.concurrent.TimeUnit;
 
@@ -114,6 +115,11 @@ public final class OpenTelemetryMeterRegistryBuilder {
       meterBuilder.setInstrumentationVersion(version);
     }
     return new OpenTelemetryMeterRegistry(
-        clock, baseTimeUnit, namingConvention, modifier, meterBuilder.build());
+        clock,
+        baseTimeUnit,
+        namingConvention,
+        modifier,
+        !SemconvStability.v3Preview(openTelemetry),
+        meterBuilder.build());
   }
 }

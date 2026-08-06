@@ -186,6 +186,9 @@ targets:
       target: ':instrumentation:jdbc:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:jdbc:javaagent-common'
+    - type: gradle
+      path: ./
       target: ':instrumentation:jdbc:library'
     - type: gradle
       path: ./
