@@ -66,6 +66,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                         span.hasName(spanName("testSingleTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(1))
+                            .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
                             .hasAttributesSatisfyingExactly(processAttributes(record)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
 
@@ -141,6 +142,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                         span.hasName(spanName("testSingleTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(1))
+                            .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
                             .hasAttributesSatisfyingExactly(

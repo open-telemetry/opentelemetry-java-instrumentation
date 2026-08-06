@@ -5,10 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import java.util.concurrent.CountDownLatch;
@@ -54,11 +56,15 @@ public abstract class AbstractSingleRecordNoReceiveTelemetryVertxKafkaTest
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(sendAttributes(record)),
-                    span ->
-                        span.hasName(spanName("testSingleTopic", "process", "process"))
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfyingExactly(processAttributes(record)),
+                    span -> {
+                      span.hasName(spanName("testSingleTopic", "process", "process"))
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasAttributesSatisfyingExactly(processAttributes(record));
+                      if (emitStableMessagingSemconv()) {
+                        span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                      }
+                    },
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
@@ -82,14 +88,17 @@ public abstract class AbstractSingleRecordNoReceiveTelemetryVertxKafkaTest
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(sendAttributes(record)),
-                    span ->
-                        span.hasName(spanName("testSingleTopic", "process", "process"))
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(1))
-                            .hasStatus(StatusData.error())
-                            .hasException(new IllegalArgumentException("boom"))
-                            .hasAttributesSatisfyingExactly(
-                                withErrorType(processAttributes(record))),
+                    span -> {
+                      span.hasName(spanName("testSingleTopic", "process", "process"))
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasStatus(StatusData.error())
+                          .hasException(new IllegalArgumentException("boom"))
+                          .hasAttributesSatisfyingExactly(withErrorType(processAttributes(record)));
+                      if (emitStableMessagingSemconv()) {
+                        span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                      }
+                    },
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 }
