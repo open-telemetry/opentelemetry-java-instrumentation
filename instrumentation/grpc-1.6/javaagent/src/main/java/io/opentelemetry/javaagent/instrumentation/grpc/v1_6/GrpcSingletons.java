@@ -61,8 +61,8 @@ public class GrpcSingletons {
         GrpcTelemetry.builder(GlobalOpenTelemetry.get())
             .setEmitMessageEvents(emitMessageEvents)
             .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes)
-            .setCapturedClientRequestMetadata(clientRequestMetadata)
-            .setCapturedServerRequestMetadata(serverRequestMetadata)
+            .setCaptureClientRequestMetadata(clientRequestMetadata)
+            .setCaptureServerRequestMetadata(serverRequestMetadata)
             .build();
 
     clientInterceptor = telemetry.createClientInterceptor();

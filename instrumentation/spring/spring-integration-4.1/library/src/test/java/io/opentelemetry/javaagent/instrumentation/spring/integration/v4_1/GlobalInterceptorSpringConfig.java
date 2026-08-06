@@ -21,7 +21,7 @@ class GlobalInterceptorSpringConfig {
   @Bean
   ChannelInterceptor otelInterceptor() {
     return SpringIntegrationTelemetry.builder(GlobalOpenTelemetry.get())
-        .setCapturedHeaders(singletonList("Test-Message-Header"))
+        .setCaptureHeaders(singletonList("Test-Message-Header"))
         .build()
         .createChannelInterceptor();
   }

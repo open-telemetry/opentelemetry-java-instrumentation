@@ -118,7 +118,7 @@ class RocketMqInstrumenterFactory {
       MessageOperation operation,
       List<String> capturedHeaders) {
     return MessagingAttributesExtractor.builder(getter, operation)
-        .setCapturedHeaders(capturedHeaders)
+        .setCaptureHeaders(capturedHeaders)
         .build();
   }
 

@@ -48,7 +48,7 @@ public class KafkaInstrumentationAutoConfiguration {
                 .get("messaging")
                 .get("receive_telemetry/development")
                 .getBoolean("enabled", false))
-        .setCapturedHeaders(
+        .setCaptureHeaders(
             commonConfig
                 .get("messaging")
                 .getScalarList("capture_headers/development", String.class, emptyList()))

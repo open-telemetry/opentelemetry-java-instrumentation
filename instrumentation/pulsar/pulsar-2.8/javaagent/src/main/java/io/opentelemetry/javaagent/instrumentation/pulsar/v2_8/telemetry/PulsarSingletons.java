@@ -160,7 +160,7 @@ public class PulsarSingletons {
   private static <T> AttributesExtractor<T, Void> createMessagingAttributesExtractor(
       MessagingAttributesGetter<T, Void> getter, MessageOperation operation) {
     return MessagingAttributesExtractor.builder(getter, operation)
-        .setCapturedHeaders(capturedHeaders)
+        .setCaptureHeaders(capturedHeaders)
         .build();
   }
 

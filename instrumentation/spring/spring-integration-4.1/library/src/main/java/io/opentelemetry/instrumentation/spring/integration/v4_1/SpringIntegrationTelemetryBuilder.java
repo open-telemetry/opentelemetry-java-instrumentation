@@ -55,9 +55,18 @@ public final class SpringIntegrationTelemetryBuilder {
    * @param capturedHeaders A list of messaging header names.
    */
   @CanIgnoreReturnValue
-  public SpringIntegrationTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
+  public SpringIntegrationTelemetryBuilder setCaptureHeaders(Collection<String> capturedHeaders) {
     this.capturedHeaders = new ArrayList<>(capturedHeaders);
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public SpringIntegrationTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
+    return setCaptureHeaders(capturedHeaders);
   }
 
   /**
@@ -124,7 +133,7 @@ public final class SpringIntegrationTelemetryBuilder {
       MessageOperation operation,
       List<String> capturedHeaders) {
     return MessagingAttributesExtractor.builder(getter, operation)
-        .setCapturedHeaders(capturedHeaders)
+        .setCaptureHeaders(capturedHeaders)
         .build();
   }
 }

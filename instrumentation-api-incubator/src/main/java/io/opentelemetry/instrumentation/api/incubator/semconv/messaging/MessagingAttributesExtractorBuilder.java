@@ -44,10 +44,20 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * @param capturedHeaders A list of messaging header names.
    */
   @CanIgnoreReturnValue
-  public MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedHeaders(
+  public MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> setCaptureHeaders(
       Collection<String> capturedHeaders) {
     this.capturedHeaders = new ArrayList<>(capturedHeaders);
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedHeaders(
+      Collection<String> capturedHeaders) {
+    return setCaptureHeaders(capturedHeaders);
   }
 
   /**

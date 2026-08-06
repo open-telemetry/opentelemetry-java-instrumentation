@@ -66,9 +66,18 @@ public final class KafkaTelemetryBuilder {
    * @param capturedHeaders A list of messaging header names.
    */
   @CanIgnoreReturnValue
-  public KafkaTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
+  public KafkaTelemetryBuilder setCaptureHeaders(Collection<String> capturedHeaders) {
     this.capturedHeaders = new ArrayList<>(capturedHeaders);
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public KafkaTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
+    return setCaptureHeaders(capturedHeaders);
   }
 
   /**
@@ -112,7 +121,7 @@ public final class KafkaTelemetryBuilder {
   public KafkaTelemetry build() {
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
-            .setCapturedHeaders(capturedHeaders)
+            .setCaptureHeaders(capturedHeaders)
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
             .setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled);
 

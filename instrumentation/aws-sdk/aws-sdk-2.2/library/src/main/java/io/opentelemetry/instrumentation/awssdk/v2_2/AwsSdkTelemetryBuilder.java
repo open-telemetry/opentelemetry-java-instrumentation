@@ -36,9 +36,18 @@ public final class AwsSdkTelemetryBuilder {
    * @param capturedHeaders A list of messaging header names.
    */
   @CanIgnoreReturnValue
-  public AwsSdkTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
+  public AwsSdkTelemetryBuilder setCaptureHeaders(Collection<String> capturedHeaders) {
     this.capturedHeaders = new ArrayList<>(capturedHeaders);
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public AwsSdkTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
+    return setCaptureHeaders(capturedHeaders);
   }
 
   /**

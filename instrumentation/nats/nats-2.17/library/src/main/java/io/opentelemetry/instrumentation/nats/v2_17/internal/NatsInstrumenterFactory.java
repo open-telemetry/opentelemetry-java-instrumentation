@@ -34,7 +34,7 @@ public final class NatsInstrumenterFactory {
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builder(
                         new NatsRequestMessagingAttributesGetter(), MessageOperation.PUBLISH)
-                    .setCapturedHeaders(capturedHeaders)
+                    .setCaptureHeaders(capturedHeaders)
                     .build());
     setMessagingSendExceptionEventExtractor(builder);
     return builder.buildProducerInstrumenter(new NatsRequestTextMapSetter());
@@ -51,7 +51,7 @@ public final class NatsInstrumenterFactory {
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builder(
                         new NatsRequestMessagingAttributesGetter(), MessageOperation.PROCESS)
-                    .setCapturedHeaders(capturedHeaders)
+                    .setCaptureHeaders(capturedHeaders)
                     .build());
     setMessagingProcessExceptionEventExtractor(builder);
 

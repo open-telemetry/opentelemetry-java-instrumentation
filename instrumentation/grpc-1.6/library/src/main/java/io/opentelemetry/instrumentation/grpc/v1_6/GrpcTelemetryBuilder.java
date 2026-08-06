@@ -139,18 +139,38 @@ public final class GrpcTelemetryBuilder {
 
   /** Sets which metadata request values should be captured as span attributes on client spans. */
   @CanIgnoreReturnValue
-  public GrpcTelemetryBuilder setCapturedClientRequestMetadata(
+  public GrpcTelemetryBuilder setCaptureClientRequestMetadata(
       List<String> capturedClientRequestMetadata) {
     this.capturedClientRequestMetadata = capturedClientRequestMetadata;
     return this;
   }
 
+  /**
+   * @deprecated Use {@link #setCaptureClientRequestMetadata(List)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public GrpcTelemetryBuilder setCapturedClientRequestMetadata(
+      List<String> capturedClientRequestMetadata) {
+    return setCaptureClientRequestMetadata(capturedClientRequestMetadata);
+  }
+
   /** Sets which metadata request values should be captured as span attributes on server spans. */
   @CanIgnoreReturnValue
-  public GrpcTelemetryBuilder setCapturedServerRequestMetadata(
+  public GrpcTelemetryBuilder setCaptureServerRequestMetadata(
       List<String> capturedServerRequestMetadata) {
     this.capturedServerRequestMetadata = capturedServerRequestMetadata;
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureServerRequestMetadata(List)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public GrpcTelemetryBuilder setCapturedServerRequestMetadata(
+      List<String> capturedServerRequestMetadata) {
+    return setCaptureServerRequestMetadata(capturedServerRequestMetadata);
   }
 
   /** Returns a new {@link GrpcTelemetry} with the settings of this {@link GrpcTelemetryBuilder}. */
