@@ -53,6 +53,18 @@ class FileManagerTest {
   }
 
   @Test
+  void testGetInstrumentationPathsWithExcludedWordInRootDir() throws IOException {
+    // the checkout directory contains "build", which the exclusion rules match on
+    Path rootDir = tempDir.resolve("build/repo");
+    Files.createDirectories(rootDir.resolve("instrumentation/my-instrumentation/javaagent"));
+
+    List<InstrumentationPath> paths = new FileManager(rootDir).getInstrumentationPaths();
+
+    assertThat(paths).hasSize(1);
+    assertThat(paths.get(0).srcPath()).isEqualTo("instrumentation/my-instrumentation");
+  }
+
+  @Test
   void testGetMetaDataFileWithMixedSeparatorRootDir() throws IOException {
     // on Windows tempDir uses backslashes while the module path uses forward slashes
     Path moduleDir = Files.createDirectories(tempDir.resolve("instrumentation/my-instrumentation"));

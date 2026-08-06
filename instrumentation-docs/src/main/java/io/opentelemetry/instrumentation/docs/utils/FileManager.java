@@ -28,7 +28,10 @@ public record FileManager(Path rootDir) {
 
     try (Stream<Path> walk = Files.walk(instrumentationRoot)) {
       return walk.filter(Files::isDirectory)
-          .filter(dir -> isValidInstrumentationPath(dir.toString()))
+          // the exclusion rules are written against repository-relative paths, so a checkout
+          // directory that happens to contain something like "build" or "-common-" does not
+          // exclude every module
+          .filter(dir -> isValidInstrumentationPath(rootDir.relativize(dir).toString()))
           .map(this::parseInstrumentationPath)
           .collect(toList());
     }
