@@ -36,7 +36,7 @@ final class OpenTelemetryCounter extends AbstractMeter
     this.otelCounter =
         otelMeter
             .counterBuilder(conventionName)
-            .setDescription(Bridging.description(conventionName, id))
+            .setDescription(Bridging.description(otelMeter, conventionName, id))
             .setUnit(baseUnit(id))
             .ofDoubles()
             .build();

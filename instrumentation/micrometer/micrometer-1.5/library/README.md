@@ -131,11 +131,12 @@ the SDK would emit duplicate registration warnings and export the tag sets as se
 streams instead of aggregating them into one. Micrometer's own `PrometheusMeterRegistry` resolves
 this the same way, by keeping one description per metric.
 
-The deduplication is process-wide rather than per-registry, so the description that wins depends on
-registration order. Because the key is the name after the naming convention has been applied, meters
-that share a Micrometer name but map onto different instrument names — for example a `Counter` and a
-`Timer` named `foo` in [prometheus mode](#prometheus-mode), which become `foo` and `foo.seconds` —
-each keep their own description.
+The deduplication is scoped to the OpenTelemetry `MeterProvider` rather than to the Micrometer
+registry, so the description that wins depends on registration order, and registries sharing a
+`MeterProvider` share descriptions. Because the key is the name after the naming convention has been
+applied, meters that share a Micrometer name but map onto different instrument names — for example a
+`Counter` and a `Timer` named `foo` in [prometheus mode](#prometheus-mode), which become `foo` and
+`foo.seconds` — each keep their own description.
 
 ### Prometheus mode
 

@@ -37,7 +37,7 @@ final class OpenTelemetryGauge<T> extends AbstractMeter
     observableGauge =
         otelMeter
             .gaugeBuilder(name)
-            .setDescription(Bridging.description(name, id))
+            .setDescription(Bridging.description(otelMeter, name, id))
             .setUnit(baseUnit(id))
             .buildWithCallback(
                 new DoubleMeasurementRecorder<>(
