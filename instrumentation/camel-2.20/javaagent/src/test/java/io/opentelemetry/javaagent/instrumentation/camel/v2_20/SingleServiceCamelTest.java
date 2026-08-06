@@ -109,4 +109,35 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
       clientContext.stop();
     }
   }
+
+  @Test
+  void userInfoIsRedacted() throws Exception {
+    CamelContext clientContext = new DefaultCamelContext();
+    clientContext.addRoutes(
+        new RouteBuilder() {
+          @Override
+          public void configure() {
+            from("direct:userInfoInput")
+                .to("http://user:secret@localhost:" + port + "/camelService");
+          }
+        });
+    clientContext.start();
+    try {
+      clientContext.createProducerTemplate().sendBody("direct:userInfoInput", "testContent");
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("userInfoInput").hasKind(SpanKind.INTERNAL),
+                  span ->
+                      span.hasName("POST")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttribute(
+                              URL_FULL,
+                              "http://REDACTED:REDACTED@localhost:" + port + "/camelService"),
+                  span -> span.hasName("POST /camelService").hasKind(SpanKind.SERVER)));
+    } finally {
+      clientContext.stop();
+    }
+  }
 }

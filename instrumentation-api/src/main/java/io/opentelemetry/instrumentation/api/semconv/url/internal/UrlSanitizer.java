@@ -12,11 +12,9 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class UrlSanitizer {
+public class UrlSanitizer {
 
   private static final String REDACTED = "REDACTED";
-
-  private UrlSanitizer() {}
 
   /**
    * Removes the credentials that the semantic conventions require to be absent from {@code
@@ -76,4 +74,6 @@ public final class UrlSanitizer {
         + REDACTED
         + url.substring(atIndex);
   }
+
+  private UrlSanitizer() {}
 }
