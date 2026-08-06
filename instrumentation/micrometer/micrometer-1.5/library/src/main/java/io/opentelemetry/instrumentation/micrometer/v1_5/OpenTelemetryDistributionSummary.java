@@ -74,7 +74,7 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
         emitMaxGauge
             ? otelMeter
                 .gaugeBuilder(name + ".max")
-                .setDescription(Bridging.description(otelMeter, name, id))
+                .setDescription(Bridging.description(otelMeter, name + ".max", id))
                 .setUnit(baseUnit(id))
                 .buildWithCallback(
                     new DoubleMeasurementRecorder<>(max, TimeWindowMax::poll, attributes))

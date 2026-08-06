@@ -46,14 +46,14 @@ final class Bridging {
   // unchanged would turn a single Micrometer metric into conflicting OpenTelemetry instruments that
   // share a name, which the SDK exports as separate metric streams instead of aggregating into one.
   // So the first description seen for an instrument name wins, which is also what Micrometer's own
-  // PrometheusMeterRegistry does. Note this is keyed on the name after the naming convention has
-  // been applied, since that is the name the conflict would occur on.
+  // PrometheusMeterRegistry does. Callers must pass the name the instrument is actually emitted
+  // under, including any suffix such as ".max", since that is the name a conflict would occur on.
   static String description(
-      io.opentelemetry.api.metrics.Meter otelMeter, String conventionName, Meter.Id id) {
+      io.opentelemetry.api.metrics.Meter otelMeter, String instrumentName, Meter.Id id) {
     return descriptionCaches
         .computeIfAbsent(otelMeter, meter -> new ConcurrentHashMap<>())
         .computeIfAbsent(
-            conventionName,
+            instrumentName,
             n -> {
               String description = id.getDescription();
               return description != null ? description : "";
