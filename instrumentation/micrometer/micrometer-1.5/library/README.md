@@ -41,7 +41,7 @@ MeterRegistry meterRegistry = OpenTelemetryMeterRegistry.builder(openTelemetry).
 
 `<name>` below is the Micrometer meter name after the registry's
 [naming convention](https://docs.micrometer.io/micrometer/reference/concepts/naming.html) has been
-applied. The default naming convention passes the name through unchanged; see
+applied. The default convention passes the name through unchanged; see
 [Prometheus mode](#prometheus-mode) for the exception.
 
 | Micrometer instrument | OpenTelemetry instrument(s)                                            | Name(s)                            | Unit                           |
@@ -55,73 +55,35 @@ applied. The default naming convention passes the name through unchanged; see
 | `FunctionTimer`       | asynchronous long counter, asynchronous double counter                 | `<name>.count`, `<name>.sum`       | `{invocation}`, base time unit |
 | `Meter` (custom)      | one instrument per `Measurement`, see below                            | `<name>.<statistic>`               | base unit                      |
 
-The suffixes above are appended after the naming convention has been applied, except for a custom
-`Meter`, where the convention is applied to the already-suffixed name.
+Notes:
 
-Tags become attributes and the meter description becomes the instrument description; see [Names,
-tags, and descriptions](#names-tags-and-descriptions). Instruments configured with percentiles or
-service level objectives can emit additional gauges; see [Histograms](#histograms).
-
-For a custom `Meter`, each measurement's `Statistic` determines the instrument type: `COUNT`,
-`TOTAL`, and `TOTAL_TIME` become asynchronous double counters, `ACTIVE_TASKS` becomes an
-asynchronous double up-down counter, and `DURATION`, `MAX`, `VALUE`, and `UNKNOWN` become
-asynchronous double gauges. The suffix is the statistic's Micrometer tag value, so `ACTIVE_TASKS`
-produces `<name>.active`, not `<name>.active_tasks`.
-
-### Units
-
-The Micrometer base unit is used verbatim as the OpenTelemetry instrument unit, and meters
-registered without one have an empty unit. Base units are not translated to
-[UCUM](https://ucum.org/), which OpenTelemetry semantic conventions use, so the base unit `bytes`
-produces the unit `bytes` rather than `By`.
-
-Timing instruments use the registry's base time unit, which is seconds by default and can be changed
-with `OpenTelemetryMeterRegistryBuilder.setBaseTimeUnit(TimeUnit)`. It is reported as `ns`, `us`,
-`ms`, `s`, `min`, `h`, or `d`.
-
-### Histograms
-
-Only Micrometer's service level objectives become the OpenTelemetry histogram's explicit bucket
-boundaries advice. `publishPercentileHistogram()`, `minimumExpectedValue`, and
-`maximumExpectedValue` do **not** contribute boundaries, so a `Timer` or `DistributionSummary`
-without service level objectives leaves bucket selection to the OpenTelemetry SDK.
-
-Micrometer percentiles cannot be represented as an OpenTelemetry histogram at all. Enabling
-`io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental#setMicrometerHistogramGaugesEnabled`,
-which is experimental and may change at any time, additionally emits Micrometer's own gauges:
-`<name>.percentile` with a `phi` attribute and `<name>.histogram` with an `le` attribute.
-
-The decaying `<name>.max` gauge emitted alongside the `Timer` and `DistributionSummary` histograms
-is deprecated and will be removed in 3.0, since OpenTelemetry histograms already carry a max. It is
-no longer emitted when `otel.instrumentation.common.v3-preview` is enabled.
-
-### Names, tags, and descriptions
-
-Metrics are emitted under the instrumentation scope `io.opentelemetry.micrometer-1.5`.
-
-Tag keys and values are passed through the registry's naming convention before becoming attribute
-keys and values.
-
-Meter descriptions are deduplicated by the emitted OpenTelemetry instrument name, because in
-OpenTelemetry the description is one of an instrument's identifying fields: the first description
-registered for a name is reused by every instrument that later shares it, and a `null` description
-becomes an empty description.
+- Micrometer tags become OpenTelemetry attributes. Meter names and tag keys both pass through the
+  registry's naming convention, and metrics are emitted under the instrumentation scope
+  `io.opentelemetry.micrometer-1.5`.
+- Base units are used verbatim rather than translated to [UCUM](https://ucum.org/), so a base unit
+  of `bytes` stays `bytes` rather than becoming `By`. The base time unit defaults to seconds and can
+  be changed with `OpenTelemetryMeterRegistryBuilder.setBaseTimeUnit(TimeUnit)`.
+- Only Micrometer's service level objectives become explicit bucket boundaries advice;
+  `publishPercentileHistogram()`, `minimumExpectedValue`, and `maximumExpectedValue` do not.
+  Micrometer percentiles cannot be represented as an OpenTelemetry histogram at all, but percentiles
+  and service level objectives can additionally be emitted as `<name>.percentile` and
+  `<name>.histogram` gauges by enabling the experimental
+  `Experimental#setMicrometerHistogramGaugesEnabled`.
+- Descriptions are deduplicated by instrument name, because in OpenTelemetry the description is one
+  of an instrument's identifying fields. The first description registered for a name wins.
+- The `<name>.max` gauge is deprecated and will be removed in 3.0. It is no longer emitted when
+  `otel.instrumentation.common.v3-preview` is enabled.
+- For a custom `Meter`, each measurement's `Statistic` determines the instrument type, and the name
+  suffix is the statistic's Micrometer tag value.
 
 ### Prometheus mode
 
 Prometheus mode approximates the naming behavior of Micrometer's `PrometheusMeterRegistry`, for
 users exporting with the Prometheus exporter. It forces the base time unit to seconds and appends
-the unit to the instrument name, keying off the Micrometer meter type: `Timer`, `FunctionTimer`, and
-`LongTaskTimer` get `.seconds`, while `Counter`, `FunctionCounter`, `DistributionSummary`, and
-`Gauge` get their base unit when they have a non-empty one. Only custom `Meter` instruments are
-unchanged.
-
-Any suffix from the table above is appended afterwards, so `my.timer` (a `Timer`) becomes
-`my.timer.seconds`, `my.summary` (a `DistributionSummary` with the base unit `bytes`) becomes
-`my.summary.bytes`, and `my.function` (a `FunctionTimer`) becomes `my.function.seconds.count` and
-`my.function.seconds.sum`. Encoding the unit in the metric name is contrary to the OpenTelemetry
-naming rules, so this mode is disabled by default and should only be enabled for Prometheus
-compatibility.
+the unit to the instrument name, so a `Timer` named `my.timer` becomes `my.timer.seconds` and a
+`DistributionSummary` named `my.summary` with the base unit `bytes` becomes `my.summary.bytes`.
+Encoding the unit in the metric name is contrary to the OpenTelemetry naming rules, so this mode is
+disabled by default and should only be enabled for Prometheus compatibility.
 
 ```java
 MeterRegistry meterRegistry =
@@ -131,16 +93,9 @@ MeterRegistry meterRegistry =
 ### Reading measurements is mostly not supported
 
 The bridge forwards measurements to OpenTelemetry rather than keeping them readable through the
-Micrometer API, and it logs a warning the first time an unsupported read is attempted.
-
-`Meter#measure()` returns an empty list for every bridged instrument. `Counter#count()`,
-`FunctionCounter#count()`, `Gauge#value()`, `FunctionTimer#count()`, `FunctionTimer#totalTime()`,
-and `FunctionTimer#mean()` return `Double.NaN`.
-`Timer` and `DistributionSummary` only track `count()` and `totalTime()` / `totalAmount()` locally
-when the meter is configured with percentiles or service level objectives *and* gauge-based
-Micrometer histograms are enabled; otherwise `count()` returns `0` and the totals return
-`Double.NaN`. Their `max()` is always tracked. `LongTaskTimer` is the one instrument whose reads
-mostly work, because it only overrides `measure()`.
+Micrometer API. Most read methods, such as `Counter#count()` and `Gauge#value()`, return
+`Double.NaN`, and `Meter#measure()` returns an empty list. A warning is logged the first time an
+unsupported read is attempted. `LongTaskTimer` is the one instrument whose reads mostly work.
 
 Code that reads values back from the registry, such as a Micrometer-based health check or test
 assertion, should read from the OpenTelemetry SDK instead.
