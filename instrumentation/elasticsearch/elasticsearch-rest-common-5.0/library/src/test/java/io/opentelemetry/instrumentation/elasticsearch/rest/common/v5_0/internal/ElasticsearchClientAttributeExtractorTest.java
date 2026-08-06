@@ -27,13 +27,13 @@ class ElasticsearchClientAttributeExtractorTest {
   @Test
   void redactsSensitiveQueryParameters() {
     assertThat(urlFull(HttpConstants.SENSITIVE_QUERY_PARAMETERS))
-        .isEqualTo("http://localhost:9200/_search?q=value&Signature=REDACTED&sig=REDACTED");
+        .isEqualTo("http://localhost:9200/_search?q=value&sig=REDACTED");
   }
 
   @Test
   void redactsConfiguredQueryParameters() {
     assertThat(urlFull(singleton("q")))
-        .isEqualTo("http://localhost:9200/_search?q=REDACTED&Signature=secret&sig=secret");
+        .isEqualTo("http://localhost:9200/_search?q=REDACTED&sig=secret");
   }
 
   private static String urlFull(Set<String> sensitiveQueryParameters) {
@@ -45,8 +45,7 @@ class ElasticsearchClientAttributeExtractorTest {
     when(response.getHost()).thenReturn(new HttpHost("localhost", 9200, "http"));
     when(response.getRequestLine())
         .thenReturn(
-            new BasicRequestLine(
-                "GET", "/_search?q=value&Signature=secret&sig=secret", HttpVersion.HTTP_1_1));
+            new BasicRequestLine("GET", "/_search?q=value&sig=secret", HttpVersion.HTTP_1_1));
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onEnd(

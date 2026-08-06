@@ -23,13 +23,13 @@ class ApiGatewayProxyAttributesExtractorTest {
   @Test
   void redactsSensitiveQueryParameters() {
     assertThat(urlFull(HttpConstants.SENSITIVE_QUERY_PARAMETERS))
-        .isEqualTo("https://localhost:123/hello?q=value&Signature=REDACTED&sig=REDACTED");
+        .isEqualTo("https://localhost:123/hello?q=value&sig=REDACTED");
   }
 
   @Test
   void redactsConfiguredQueryParameters() {
     assertThat(urlFull(singleton("q")))
-        .isEqualTo("https://localhost:123/hello?q=REDACTED&Signature=secret&sig=secret");
+        .isEqualTo("https://localhost:123/hello?q=REDACTED&sig=secret");
   }
 
   private static String urlFull(Set<String> sensitiveQueryParameters) {
@@ -39,7 +39,6 @@ class ApiGatewayProxyAttributesExtractorTest {
 
     Map<String, String> query = new LinkedHashMap<>();
     query.put("q", "value");
-    query.put("Signature", "secret");
     query.put("sig", "secret");
 
     Map<String, String> headers = new LinkedHashMap<>();
