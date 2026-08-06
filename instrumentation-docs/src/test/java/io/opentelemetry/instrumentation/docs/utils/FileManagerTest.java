@@ -7,9 +7,11 @@ package io.opentelemetry.instrumentation.docs.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,20 +26,30 @@ class FileManagerTest {
 
   @BeforeEach
   void setUp() {
-    fileManager = new FileManager(tempDir.toString() + "/");
+    fileManager = new FileManager(tempDir);
   }
 
   @Test
   void testGetInstrumentationPaths() throws IOException {
-    Path validDir =
-        Files.createDirectories(tempDir.resolve("instrumentation/my-instrumentation/javaagent"));
+    Files.createDirectories(tempDir.resolve("instrumentation/my-instrumentation/javaagent"));
     List<InstrumentationPath> paths = fileManager.getInstrumentationPaths();
     assertThat(paths).hasSize(1);
-    // paths always use forward slashes, even on Windows, so that they can be made relative to the
-    // repository root via string manipulation
-    assertThat(paths.get(0).srcPath())
-        .isEqualTo(validDir.toString().replace('\\', '/'))
-        .doesNotContain("\\");
+    assertThat(paths.get(0).instrumentationName()).isEqualTo("my-instrumentation");
+    assertThat(paths.get(0).type()).isEqualTo(InstrumentationType.JAVAAGENT);
+    // src paths are relative to the repository root and always use forward slashes, even on Windows
+    assertThat(paths.get(0).srcPath()).isEqualTo("instrumentation/my-instrumentation");
+  }
+
+  @Test
+  void testGetInstrumentationPathsWithTrailingSeparatorRootDir() throws IOException {
+    Files.createDirectories(tempDir.resolve("instrumentation/my-instrumentation/library"));
+    // a root dir with a trailing separator, as produced by appending "/" to the basePath property
+    FileManager trailingSeparator = new FileManager(Paths.get(tempDir + "/"));
+
+    List<InstrumentationPath> paths = trailingSeparator.getInstrumentationPaths();
+
+    assertThat(paths).hasSize(1);
+    assertThat(paths.get(0).srcPath()).isEqualTo("instrumentation/my-instrumentation");
   }
 
   @Test
@@ -88,22 +100,13 @@ class FileManagerTest {
     Files.createFile(nestedJava17.resolve("build.gradle.kts"));
     Files.createFile(nestedJava8.resolve("build.gradle.kts"));
 
-    List<String> gradleFiles =
-        fileManager.findBuildGradleFiles("instrumentation/runtime-telemetry");
+    List<Path> gradleFiles = fileManager.findBuildGradleFiles("instrumentation/runtime-telemetry");
 
-    // paths always use forward slashes, even on Windows, so that downstream consumers can match on
-    // "/javaagent/" and "/library/" segments
     assertThat(gradleFiles)
         .containsExactlyInAnyOrder(
-            normalized(javaagent.resolve("build.gradle.kts")),
-            normalized(library.resolve("build.gradle.kts")));
+            javaagent.resolve("build.gradle.kts"), library.resolve("build.gradle.kts"));
     assertThat(gradleFiles)
         .doesNotContain(
-            normalized(nestedJava17.resolve("build.gradle.kts")),
-            normalized(nestedJava8.resolve("build.gradle.kts")));
-  }
-
-  private static String normalized(Path path) {
-    return path.toString().replace('\\', '/');
+            nestedJava17.resolve("build.gradle.kts"), nestedJava8.resolve("build.gradle.kts"));
   }
 }

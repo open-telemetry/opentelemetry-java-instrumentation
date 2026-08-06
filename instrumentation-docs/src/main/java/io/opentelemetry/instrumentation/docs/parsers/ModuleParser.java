@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.docs.parsers;
 
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
-import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,17 +18,15 @@ public class ModuleParser {
   /**
    * Converts a list of {@link InstrumentationPath} into a list of {@link InstrumentationModule}.
    *
-   * @param rootPath the root path for sanitization
    * @param paths the list of {@link InstrumentationPath} objects to be converted
    * @return a list of {@link InstrumentationModule} objects
    */
-  public static List<InstrumentationModule> convertToModules(
-      String rootPath, List<InstrumentationPath> paths) {
+  public static List<InstrumentationModule> convertToModules(List<InstrumentationPath> paths) {
     Map<String, InstrumentationModule> moduleMap = new HashMap<>();
 
     for (InstrumentationPath path : paths) {
       String moduleKey = createModuleKey(path);
-      moduleMap.computeIfAbsent(moduleKey, k -> createModule(rootPath, path));
+      moduleMap.computeIfAbsent(moduleKey, k -> createModule(path));
     }
 
     return new ArrayList<>(moduleMap.values());
@@ -39,24 +36,13 @@ public class ModuleParser {
     return String.join(":", path.group(), path.namespace(), path.instrumentationName());
   }
 
-  private static InstrumentationModule createModule(String rootPath, InstrumentationPath path) {
+  private static InstrumentationModule createModule(InstrumentationPath path) {
     return new InstrumentationModule.Builder()
-        .srcPath(sanitizePathName(rootPath, path.srcPath()))
+        .srcPath(path.srcPath())
         .instrumentationName(path.instrumentationName())
         .namespace(path.namespace())
         .group(path.group())
         .build();
-  }
-
-  // visible for testing
-  public static String sanitizePathName(String rootPath, String path) {
-    // both sides are normalized so that the replacements also match on Windows, where the root path
-    // and the instrumentation path may use different separators
-    String normalizedRootPath = FileManager.normalizeSeparators(rootPath);
-    return FileManager.normalizeSeparators(path)
-        .replace(normalizedRootPath, "")
-        .replace("/javaagent", "")
-        .replace("/library", "");
   }
 
   private ModuleParser() {}

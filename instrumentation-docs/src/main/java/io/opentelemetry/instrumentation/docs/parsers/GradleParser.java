@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.docs.internal.DependencyInfo;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -181,15 +182,14 @@ public class GradleParser {
     return null;
   }
 
-  public static Set<String> extractVersions(
-      List<String> gradleFiles, InstrumentationModule module) {
+  public static Set<String> extractVersions(List<Path> gradleFiles, InstrumentationModule module) {
     Set<String> allVersions = new HashSet<>();
     gradleFiles.forEach(file -> processGradleFile(file, allVersions, module));
     return allVersions;
   }
 
   private static void processGradleFile(
-      String filePath, Set<String> versions, InstrumentationModule module) {
+      Path filePath, Set<String> versions, InstrumentationModule module) {
     String fileContents = FileManager.readFileToString(filePath);
     if (fileContents == null) {
       return;
@@ -216,11 +216,16 @@ public class GradleParser {
     }
   }
 
-  private static Optional<InstrumentationType> determineInstrumentationType(String filePath) {
-    if (filePath.contains("/javaagent/")) {
-      return Optional.of(InstrumentationType.JAVAAGENT);
-    } else if (filePath.contains("/library/")) {
-      return Optional.of(InstrumentationType.LIBRARY);
+  private static Optional<InstrumentationType> determineInstrumentationType(Path filePath) {
+    // matching on path elements rather than substrings keeps this working on Windows, where
+    // Path#toString uses backslashes
+    for (Path element : filePath) {
+      String segment = element.toString();
+      if (segment.equals("javaagent")) {
+        return Optional.of(InstrumentationType.JAVAAGENT);
+      } else if (segment.equals("library")) {
+        return Optional.of(InstrumentationType.LIBRARY);
+      }
     }
     return Optional.empty();
   }

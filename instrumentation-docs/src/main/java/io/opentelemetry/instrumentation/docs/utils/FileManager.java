@@ -5,56 +5,51 @@
 
 package io.opentelemetry.instrumentation.docs.utils;
 
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
-public record FileManager(String rootDir) {
+public record FileManager(Path rootDir) {
   private static final Logger logger = Logger.getLogger(FileManager.class.getName());
 
   public List<InstrumentationPath> getInstrumentationPaths() throws IOException {
-    Path rootPath = resolveFromRoot("instrumentation");
+    Path instrumentationRoot = rootDir.resolve("instrumentation");
 
-    try (Stream<Path> walk = Files.walk(rootPath)) {
+    try (Stream<Path> walk = Files.walk(instrumentationRoot)) {
       return walk.filter(Files::isDirectory)
           .filter(dir -> isValidInstrumentationPath(dir.toString()))
-          .map(dir -> parseInstrumentationPath(dir.toString()))
+          .map(this::parseInstrumentationPath)
           .collect(toList());
     }
   }
 
-  @Nullable
-  private static InstrumentationPath parseInstrumentationPath(String filePath) {
-    if (filePath == null || filePath.isEmpty()) {
-      return null;
-    }
-
-    String normalized = normalizeSeparators(filePath);
-    String instrumentationSegment = "/instrumentation/";
-    int startIndex = normalized.indexOf(instrumentationSegment) + instrumentationSegment.length();
-    String[] parts = normalized.substring(startIndex).split("/");
-
-    if (parts.length < 2) {
-      return null;
-    }
-
+  private InstrumentationPath parseInstrumentationPath(Path directory) {
     InstrumentationType instrumentationType =
-        InstrumentationType.fromString(parts[parts.length - 1]);
-    String name = parts[parts.length - 2];
+        InstrumentationType.fromString(directory.getFileName().toString());
+
+    // the directory is known to end with a javaagent/library segment nested under
+    // instrumentation/, so it always has a parent
+    Path moduleDirectory = requireNonNull(directory.getParent());
+    String name = moduleDirectory.getFileName().toString();
     String namespace = name.contains("-") ? name.split("-")[0] : name;
 
-    // the normalized path is stored so that downstream string manipulation (e.g. making the path
-    // relative to the repository root) behaves the same on Windows as it does on other platforms
-    return new InstrumentationPath(name, normalized, namespace, namespace, instrumentationType);
+    return new InstrumentationPath(
+        name,
+        toUnixString(rootDir.relativize(moduleDirectory)),
+        namespace,
+        namespace,
+        instrumentationType);
   }
 
   public static boolean isValidInstrumentationPath(String filePath) {
@@ -81,22 +76,30 @@ public record FileManager(String rootDir) {
     return normalized.endsWith("javaagent") || normalized.endsWith("library");
   }
 
-  /** Converts Windows path separators to forward slashes, leaving other platforms untouched. */
-  public static String normalizeSeparators(String filePath) {
+  private static String normalizeSeparators(String filePath) {
     return filePath.replace('\\', '/');
   }
 
-  public List<String> findBuildGradleFiles(String instrumentationDirectory) {
-    Path rootPath = resolveFromRoot(instrumentationDirectory);
+  /**
+   * Renders a relative path using forward slashes on every platform, so that generated
+   * documentation is identical regardless of the operating system it was generated on.
+   */
+  private static String toUnixString(Path relativePath) {
+    return StreamSupport.stream(relativePath.spliterator(), false)
+        .map(Path::toString)
+        .collect(joining("/"));
+  }
 
-    try (Stream<Path> walk = Files.walk(rootPath)) {
+  public List<Path> findBuildGradleFiles(String instrumentationDirectory) {
+    Path modulePath = rootDir.resolve(instrumentationDirectory);
+
+    try (Stream<Path> walk = Files.walk(modulePath)) {
       return walk.filter(Files::isRegularFile)
           .filter(
               path ->
                   path.getFileName().toString().equals("build.gradle.kts")
-                      && !normalizeSeparators(path.toString()).contains("/testing/")
-                      && !isInNestedInstrumentationModule(path, rootPath))
-          .map(path -> normalizeSeparators(path.toString()))
+                      && !containsElement(modulePath.relativize(path), "testing")
+                      && !isInNestedInstrumentationModule(path, modulePath))
           .collect(toList());
     } catch (IOException e) {
       logger.severe("Error traversing directory: " + e.getMessage());
@@ -127,23 +130,28 @@ public record FileManager(String rootDir) {
     return false;
   }
 
+  private static boolean containsElement(Path path, String element) {
+    for (Path segment : path) {
+      if (segment.toString().equals(element)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @Nullable
   public String getMetaDataFile(String instrumentationDirectory) {
-    Path metadataFile = resolveFromRoot(instrumentationDirectory).resolve("metadata.yaml");
+    Path metadataFile = rootDir.resolve(instrumentationDirectory).resolve("metadata.yaml");
     if (Files.exists(metadataFile)) {
-      return readFileToString(metadataFile.toString());
+      return readFileToString(metadataFile);
     }
     return null;
   }
 
-  private Path resolveFromRoot(String relativePath) {
-    return Paths.get(rootDir).resolve(relativePath);
-  }
-
   @Nullable
-  public static String readFileToString(String filePath) {
+  public static String readFileToString(Path filePath) {
     try {
-      return Files.readString(Paths.get(filePath));
+      return Files.readString(filePath);
     } catch (IOException e) {
       logger.severe("Error reading file: " + e.getMessage());
       return null;

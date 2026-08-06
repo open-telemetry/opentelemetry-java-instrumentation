@@ -25,65 +25,37 @@ class ModuleConverterTest {
     when(path1.group()).thenReturn("g1");
     when(path1.namespace()).thenReturn("n1");
     when(path1.instrumentationName()).thenReturn("i1");
-    when(path1.srcPath()).thenReturn("/root/javaagent/foo");
+    when(path1.srcPath()).thenReturn("instrumentation/foo");
 
     InstrumentationPath path2 = mock(InstrumentationPath.class);
     when(path2.group()).thenReturn("g1");
     when(path2.namespace()).thenReturn("n1");
     when(path2.instrumentationName()).thenReturn("i1");
-    when(path2.srcPath()).thenReturn("/root/library/bar");
+    when(path2.srcPath()).thenReturn("instrumentation/foo");
 
     InstrumentationPath path3 = mock(InstrumentationPath.class);
     when(path3.group()).thenReturn("g2");
     when(path3.namespace()).thenReturn("n2");
     when(path3.instrumentationName()).thenReturn("i2");
-    when(path3.srcPath()).thenReturn("/root/javaagent/baz");
+    when(path3.srcPath()).thenReturn("instrumentation/bar");
 
     List<InstrumentationModule> modules =
-        ModuleParser.convertToModules("/root", asList(path1, path2, path3));
+        ModuleParser.convertToModules(asList(path1, path2, path3));
 
-    assertThat(modules.size()).isEqualTo(2);
     assertThat(modules)
         .extracting(InstrumentationModule::getGroup)
         .containsExactlyInAnyOrder("g1", "g2");
   }
 
   @Test
-  void testSanitizePathNameRemovesRootAndKnownFolders() throws Exception {
-    String sanitized = ModuleParser.sanitizePathName("/root", "/root/javaagent/foo/bar");
-    assertThat(sanitized).isEqualTo("/foo/bar");
-
-    sanitized = ModuleParser.sanitizePathName("/root", "/root/library/baz");
-    assertThat(sanitized).isEqualTo("/baz");
-
-    sanitized = ModuleParser.sanitizePathName("/root", "/root/other");
-    assertThat(sanitized).isEqualTo("/other");
-  }
-
-  @Test
-  void testSanitizePathNameHandlesWindowsSeparators() {
-    // the root path comes from the basePath system property and mixes separators on Windows
-    String sanitized =
-        ModuleParser.sanitizePathName(
-            "C:\\Users\\me\\repo/", "C:\\Users\\me\\repo\\instrumentation\\camel-2.20\\javaagent");
-    assertThat(sanitized).isEqualTo("instrumentation/camel-2.20");
-
-    sanitized =
-        ModuleParser.sanitizePathName(
-            "C:\\Users\\me\\repo/", "C:/Users/me/repo/instrumentation/camel-2.20/library");
-    assertThat(sanitized).isEqualTo("instrumentation/camel-2.20");
-  }
-
-  @Test
-  void testConvertToModulesHandlesWindowsSeparators() {
+  void testConvertToModulesKeepsSrcPath() {
     InstrumentationPath path = mock(InstrumentationPath.class);
     when(path.group()).thenReturn("camel");
     when(path.namespace()).thenReturn("camel");
     when(path.instrumentationName()).thenReturn("camel-2.20");
-    when(path.srcPath()).thenReturn("C:/Users/me/repo/instrumentation/camel-2.20/javaagent");
+    when(path.srcPath()).thenReturn("instrumentation/camel-2.20");
 
-    List<InstrumentationModule> modules =
-        ModuleParser.convertToModules("C:\\Users\\me\\repo/", singletonList(path));
+    List<InstrumentationModule> modules = ModuleParser.convertToModules(singletonList(path));
 
     assertThat(modules)
         .extracting(InstrumentationModule::getSrcPath)
