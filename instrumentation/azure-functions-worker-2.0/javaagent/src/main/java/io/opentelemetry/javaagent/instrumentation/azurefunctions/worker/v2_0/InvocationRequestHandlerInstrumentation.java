@@ -53,32 +53,50 @@ class InvocationRequestHandlerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
+    public static class AdviceScope {
+      private final Scope scope;
+
+      private AdviceScope(Scope scope) {
+        this.scope = scope;
+      }
+
+      @Nullable
+      public static AdviceScope start(InvocationRequest request) {
+        RpcTraceContext traceContext = request.getTraceContext();
+        if (traceContext == null) {
+          return null;
+        }
+
+        Context extractedContext =
+            GlobalOpenTelemetry.getPropagators()
+                .getTextMapPropagator()
+                .extract(Context.root(), traceContext, RpcTraceContextGetter.INSTANCE);
+        SpanContext spanContext = Span.fromContext(extractedContext).getSpanContext();
+        if (!spanContext.isValid()) {
+          return null;
+        }
+
+        // the sampling decision from the host is used as is, it reflects both the decision of the
+        // caller that triggered the function and the decision of the host when it starts a new
+        // trace
+        return new AdviceScope(Context.current().with(Span.wrap(spanContext)).makeCurrent());
+      }
+
+      public void end() {
+        scope.close();
+      }
+    }
+
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter(@Advice.Argument(0) InvocationRequest request) {
-      RpcTraceContext traceContext = request.getTraceContext();
-      if (traceContext == null) {
-        return null;
-      }
-
-      Context extractedContext =
-          GlobalOpenTelemetry.getPropagators()
-              .getTextMapPropagator()
-              .extract(Context.root(), traceContext, RpcTraceContextGetter.INSTANCE);
-      SpanContext spanContext = Span.fromContext(extractedContext).getSpanContext();
-      if (!spanContext.isValid()) {
-        return null;
-      }
-
-      // the sampling decision from the host is used as is, it reflects both the decision of the
-      // caller that triggered the function and the decision of the host when it starts a new trace
-      return Context.current().with(Span.wrap(spanContext)).makeCurrent();
+    public static AdviceScope onEnter(@Advice.Argument(0) InvocationRequest request) {
+      return AdviceScope.start(request);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Scope scope) {
-      if (scope != null) {
-        scope.close();
+    public static void onExit(@Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end();
       }
     }
   }

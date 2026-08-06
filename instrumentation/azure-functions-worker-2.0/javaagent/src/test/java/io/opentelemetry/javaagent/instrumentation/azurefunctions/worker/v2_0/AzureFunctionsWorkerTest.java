@@ -23,8 +23,9 @@ class AzureFunctionsWorkerTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final String TRACE_ID = "00000000000000000000000000000123";
-  // the testing framework treats this span id as a remote parent that is not expected to show up
-  // in the exported trace
+  // the parent span here belongs to the Azure Functions host and is never exported, so the trace
+  // has no root span. TelemetryDataUtil.isCompleted() special cases this span id, without it
+  // waitAndAssertTraces would time out waiting for a root span that never arrives.
   private static final String SPAN_ID = "0000000000000456";
 
   @Test
