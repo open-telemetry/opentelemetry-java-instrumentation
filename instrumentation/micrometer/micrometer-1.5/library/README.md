@@ -65,8 +65,8 @@ Notes:
   be changed with `OpenTelemetryMeterRegistryBuilder.setBaseTimeUnit(TimeUnit)`.
 - Only Micrometer's service level objectives become explicit bucket boundaries advice;
   `publishPercentileHistogram()`, `minimumExpectedValue`, and `maximumExpectedValue` do not.
-  Micrometer percentiles cannot be represented as an OpenTelemetry histogram at all, but percentiles
-  and service level objectives can additionally be emitted as `<name>.percentile` and
+  Micrometer percentiles cannot be represented as an OpenTelemetry histogram, but percentiles and
+  service level objectives can additionally be emitted as `<name>.percentile` and
   `<name>.histogram` gauges by enabling the experimental
   `Experimental#setMicrometerHistogramGaugesEnabled`.
 - Descriptions are deduplicated by instrument name, because in OpenTelemetry the description is one
