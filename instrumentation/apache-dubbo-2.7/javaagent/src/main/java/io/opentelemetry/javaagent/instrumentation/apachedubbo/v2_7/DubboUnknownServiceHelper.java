@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboInternalHelper;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -79,10 +80,8 @@ public final class DubboUnknownServiceHelper {
         }
       };
 
-  // "_otel" prefix avoids collisions with application-level Dubbo attachments;
-  // "unknown_svc" = unknown service; used to deduplicate when getInvoker() is called
-  // multiple times for a single request.
-  private static final String DEDUP_ATTACHMENT_KEY = "_otel_unknown_svc_span";
+  private static final VirtualField<RpcInvocation, Boolean> unknownServiceSpanRecorded =
+      VirtualField.find(RpcInvocation.class, Boolean.class);
 
   /**
    * Creates an unknown service span when {@code DubboProtocol.getInvoker()} throws because the
@@ -282,12 +281,11 @@ public final class DubboUnknownServiceHelper {
     return null;
   }
 
-  @SuppressWarnings("deprecation") // Dubbo 2.7 API
   private static boolean isAlreadyRecorded(RpcInvocation rpcInvocation) {
-    if (rpcInvocation.getAttachment(DEDUP_ATTACHMENT_KEY) != null) {
+    if (Boolean.TRUE.equals(unknownServiceSpanRecorded.get(rpcInvocation))) {
       return true;
     }
-    rpcInvocation.setAttachment(DEDUP_ATTACHMENT_KEY, "true");
+    unknownServiceSpanRecorded.set(rpcInvocation, true);
     return false;
   }
 

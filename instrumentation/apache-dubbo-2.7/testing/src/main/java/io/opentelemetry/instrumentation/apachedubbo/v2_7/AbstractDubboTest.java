@@ -45,6 +45,7 @@ import org.apache.dubbo.config.ReferenceConfig;
 import org.apache.dubbo.config.RegistryConfig;
 import org.apache.dubbo.config.ServiceConfig;
 import org.apache.dubbo.config.bootstrap.DubboBootstrap;
+import org.apache.dubbo.rpc.RpcContext;
 import org.apache.dubbo.rpc.service.GenericService;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.AbstractStringAssert;
@@ -521,10 +522,15 @@ public abstract class AbstractDubboTest {
     ReferenceConfig<GenericService> reference = (ReferenceConfig) unknownRef;
     GenericService genericService = reference.get();
 
+    // Server-side attachments are populated from client-controlled metadata. A client-provided
+    // value must not be able to suppress the unknown-service span deduplication protects.
+    RpcContext.getContext().setAttachment("_otel_unknown_svc_span", "true");
     try {
       genericService.$invoke("hello", new String[] {String.class.getName()}, new Object[] {"test"});
     } catch (Throwable ignored) {
       // expected: service not exported on provider
+    } finally {
+      RpcContext.getContext().removeAttachment("_otel_unknown_svc_span");
     }
 
     Consumer<SpanDataAssert> clientSpanAssert =
