@@ -89,13 +89,3 @@ disabled by default and should only be enabled for Prometheus compatibility.
 MeterRegistry meterRegistry =
     OpenTelemetryMeterRegistry.builder(openTelemetry).setPrometheusMode(true).build();
 ```
-
-### Reading measurements is mostly not supported
-
-The bridge forwards measurements to OpenTelemetry rather than keeping them readable through the
-Micrometer API. Most read methods, such as `Counter#count()` and `Gauge#value()`, return
-`Double.NaN`, and `Meter#measure()` returns an empty list. A warning is logged the first time an
-unsupported read is attempted. `LongTaskTimer` is the one instrument whose reads mostly work.
-
-Code that reads values back from the registry, such as a Micrometer-based health check or test
-assertion, should read from the OpenTelemetry SDK instead.
