@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.springai.v1_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -12,8 +13,10 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -22,6 +25,11 @@ import org.springframework.ai.chat.prompt.Prompt;
 import reactor.core.publisher.Flux;
 
 class ChatModelInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("org.springframework.ai.chat.model.ChatModel");
+  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -44,32 +52,53 @@ class ChatModelInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class CallAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Context onEnter(
-        @Advice.This Object chatModel, @Advice.Argument(0) Prompt prompt) {
-      SpringAiRequest request = SpringAiRequest.create(prompt, chatModel);
-      Context parentContext = Context.current();
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return null;
+
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
+      private final SpringAiRequest request;
+
+      private AdviceScope(Context context, SpringAiRequest request) {
+        this.context = context;
+        this.scope = context.makeCurrent();
+        this.request = request;
       }
-      Context context = instrumenter().start(parentContext, request);
-      SpringAiMessageAttributes.setInputMessages(context, request);
-      SpringAiMessageEvents.emitPromptEvents(context, request);
-      return context;
+
+      @Nullable
+      public static AdviceScope start(Object chatModel, Prompt prompt) {
+        SpringAiRequest request = SpringAiRequest.create(prompt, chatModel);
+        Context parentContext = Context.current();
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+        Context context = instrumenter().start(parentContext, request);
+        SpringAiMessageAttributes.setInputMessages(context, request);
+        SpringAiMessageEvents.emitPromptEvents(context, request);
+        return new AdviceScope(context, request);
+      }
+
+      public void end(@Nullable ChatResponse response, @Nullable Throwable throwable) {
+        scope.close();
+        SpringAiMessageAttributes.setOutputMessages(context, response, null);
+        SpringAiMessageEvents.emitResponseEvents(context, request, response, null);
+        instrumenter().end(context, request, response, throwable);
+      }
+    }
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope onEnter(
+        @Advice.This Object chatModel, @Advice.Argument(0) Prompt prompt) {
+      return AdviceScope.start(chatModel, prompt);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Enter Context context,
-        @Advice.This Object chatModel,
-        @Advice.Argument(0) Prompt prompt,
-        @Advice.Return ChatResponse response,
-        @Advice.Thrown Throwable throwable) {
-      if (context != null) {
-        SpringAiRequest request = SpringAiRequest.create(prompt, chatModel);
-        SpringAiMessageAttributes.setOutputMessages(context, response, null);
-        SpringAiMessageEvents.emitResponseEvents(context, request, response, null);
-        instrumenter().end(context, request, response, throwable);
+        @Advice.Return @Nullable ChatResponse response,
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(response, throwable);
       }
     }
   }

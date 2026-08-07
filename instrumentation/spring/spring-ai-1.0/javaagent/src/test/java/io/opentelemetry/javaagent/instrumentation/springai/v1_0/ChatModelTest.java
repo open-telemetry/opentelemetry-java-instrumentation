@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
@@ -20,7 +21,6 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_OUTPUT_TOKENS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues.CHAT;
 import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
@@ -28,10 +28,8 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.springai.v1_0.app.TestChatModel;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.DefaultChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 
@@ -39,20 +37,21 @@ import org.springframework.ai.chat.prompt.Prompt;
 class ChatModelTest {
 
   private static final String MODEL = "test-model";
-  private static final boolean CAPTURE_MESSAGE_CONTENT_AS_SPAN_ATTRIBUTES =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean(
           "otel.instrumentation.spring-ai.experimental.capture-message-content-as-span-attributes.enabled");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private final ChatModel chatModel = new TestChatModel();
+  private final TestChatModel chatModel = new TestChatModel();
 
   @Test
   void call() {
     testing.runWithSpan("parent", () -> chatModel.call(prompt()));
 
     SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
+    assertCurrentSpanContext(chatModel.getLastSpanContext(), spanContext);
     assertTraces();
     assertMessageEvents(spanContext);
   }
@@ -62,6 +61,7 @@ class ChatModelTest {
     testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
 
     SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
+    assertCurrentSpanContext(chatModel.getLastSpanContext(), spanContext);
     assertTraces();
     assertMessageEvents(spanContext);
   }
@@ -158,8 +158,12 @@ class ChatModelTest {
     return content.toString();
   }
 
-  @Nullable
+  private static void assertCurrentSpanContext(SpanContext current, SpanContext expected) {
+    assertThat(current.getTraceId()).isEqualTo(expected.getTraceId());
+    assertThat(current.getSpanId()).isEqualTo(expected.getSpanId());
+  }
+
   private static <T> T messageSpanAttribute(T value) {
-    return CAPTURE_MESSAGE_CONTENT_AS_SPAN_ATTRIBUTES ? value : null;
+    return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 }

@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.springai.v1_0.app;
 
 import static java.util.Collections.singletonList;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.metadata.ChatGenerationMetadata;
 import org.springframework.ai.chat.metadata.ChatResponseMetadata;
@@ -19,14 +21,25 @@ import reactor.core.publisher.Flux;
 
 @SuppressWarnings("PublicApiNamedStreamShouldReturnStream")
 public class TestChatModel implements ChatModel {
+  private SpanContext lastSpanContext;
+
   @Override
   public ChatResponse call(Prompt prompt) {
+    lastSpanContext = Span.current().getSpanContext();
     return response();
   }
 
   @Override
   public Flux<ChatResponse> stream(Prompt prompt) {
-    return Flux.just(response());
+    return Flux.defer(
+        () -> {
+          lastSpanContext = Span.current().getSpanContext();
+          return Flux.just(response());
+        });
+  }
+
+  public SpanContext getLastSpanContext() {
+    return lastSpanContext;
   }
 
   private static ChatResponse response() {
