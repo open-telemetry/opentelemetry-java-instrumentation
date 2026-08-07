@@ -11,6 +11,8 @@ import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventH
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
@@ -29,6 +31,15 @@ public final class ContainerConfigurationHandler implements RecordedEventHandler
   private final String metricName;
 
   private volatile long value = 0L;
+
+  @Nullable
+  public static ContainerConfigurationHandler create(
+      Meter meter, Predicate<String> metricNamePredicate, boolean useLegacyMetric) {
+    String metricName = useLegacyMetric ? LEGACY_METRIC_NAME : METRIC_NAME;
+    return metricNamePredicate.test(metricName)
+        ? new ContainerConfigurationHandler(meter, useLegacyMetric)
+        : null;
+  }
 
   public ContainerConfigurationHandler(Meter meter, boolean useLegacyMetric) {
     metricName = useLegacyMetric ? LEGACY_METRIC_NAME : METRIC_NAME;

@@ -142,7 +142,6 @@ public class JfrConfig {
       Set<String> metricNames = new HashSet<>();
       handlers.stream()
           .flatMap(handler -> handler.getMetricNames().stream())
-          .filter(metricNamePredicate)
           .forEach(metricNames::add);
       return new JfrRuntimeMetrics(handlers, metricNames);
     }

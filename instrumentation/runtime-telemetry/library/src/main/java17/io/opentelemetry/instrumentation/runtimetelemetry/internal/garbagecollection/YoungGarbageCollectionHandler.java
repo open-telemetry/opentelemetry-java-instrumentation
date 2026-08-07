@@ -14,6 +14,8 @@ import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventH
 import java.time.Duration;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
@@ -25,6 +27,14 @@ public final class YoungGarbageCollectionHandler implements RecordedEventHandler
 
   private final DoubleHistogram histogram;
   private final Attributes attributes;
+
+  @Nullable
+  public static YoungGarbageCollectionHandler create(
+      Meter meter, Predicate<String> metricNamePredicate, String gc) {
+    return metricNamePredicate.test(Constants.METRIC_NAME_GC_DURATION)
+        ? new YoungGarbageCollectionHandler(meter, gc)
+        : null;
+  }
 
   public YoungGarbageCollectionHandler(Meter meter, String gc) {
     histogram =

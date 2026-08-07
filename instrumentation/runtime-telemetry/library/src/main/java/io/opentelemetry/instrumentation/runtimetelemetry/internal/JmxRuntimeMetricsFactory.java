@@ -20,19 +20,26 @@ public class JmxRuntimeMetricsFactory {
       boolean captureGcCause,
       Predicate<String> metricNamePredicate,
       Meter meter) {
-    Meter filteringMeter = new FilteringMeter(meter, metricNamePredicate);
     List<AutoCloseable> observables = new ArrayList<>();
-    observables.addAll(Classes.registerObservers(filteringMeter));
-    observables.addAll(Cpu.registerObservers(filteringMeter));
-    observables.addAll(CpuCount.registerObservers(filteringMeter));
-    observables.addAll(GarbageCollector.registerObservers(filteringMeter, captureGcCause));
-    observables.addAll(MemoryPools.registerObservers(filteringMeter));
-    observables.addAll(Threads.registerObservers(filteringMeter));
+    observables.addAll(Classes.registerObservers(meter, metricNamePredicate));
+    observables.addAll(Cpu.registerObservers(meter, metricNamePredicate));
+    if (metricNamePredicate.test("jvm.cpu.count")) {
+      observables.addAll(CpuCount.registerObservers(meter));
+    }
+    if (metricNamePredicate.test("jvm.gc.duration")) {
+      observables.addAll(GarbageCollector.registerObservers(meter, captureGcCause));
+    }
+    observables.addAll(MemoryPools.registerObservers(meter, metricNamePredicate));
+    if (metricNamePredicate.test("jvm.thread.count")) {
+      observables.addAll(Threads.registerObservers(meter));
+    }
     if (emitExperimentalTelemetry) {
-      observables.addAll(BufferPools.registerObservers(filteringMeter));
-      observables.addAll(SystemCpu.registerObservers(filteringMeter));
-      observables.addAll(MemoryInit.registerObservers(filteringMeter));
-      observables.addAll(FileDescriptor.registerObservers(filteringMeter));
+      observables.addAll(BufferPools.registerObservers(meter, metricNamePredicate));
+      observables.addAll(SystemCpu.registerObservers(meter, metricNamePredicate));
+      if (metricNamePredicate.test("jvm.memory.init")) {
+        observables.addAll(MemoryInit.registerObservers(meter));
+      }
+      observables.addAll(FileDescriptor.registerObservers(meter, metricNamePredicate));
     }
     return observables;
   }

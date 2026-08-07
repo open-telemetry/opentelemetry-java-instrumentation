@@ -14,6 +14,8 @@ import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventH
 import java.time.Duration;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
@@ -27,6 +29,12 @@ public final class VirtualThreadPinnedHandler implements RecordedEventHandler {
 
   private final DoubleHistogram histogram;
   private final Attributes attributes;
+
+  @Nullable
+  public static VirtualThreadPinnedHandler create(
+      Meter meter, Predicate<String> metricNamePredicate) {
+    return metricNamePredicate.test(METRIC_NAME) ? new VirtualThreadPinnedHandler(meter) : null;
+  }
 
   public VirtualThreadPinnedHandler(Meter meter) {
     histogram =

@@ -54,7 +54,30 @@ class RuntimeTelemetryBuilderTest {
         (JfrConfig.JfrRuntimeMetrics) runtimeTelemetry.getJfrTelemetry();
     assertThat(jfrRuntimeMetrics.getMetricNames()).containsExactly("jvm.cpu.longlock");
     assertThat(jfrRuntimeMetrics.getRecordedEventHandlers())
-        .allSatisfy(handler -> assertThat(handler.getMetricNames()).contains("jvm.cpu.longlock"));
+        .singleElement()
+        .satisfies(
+            handler -> {
+              assertThat(handler.getEventName()).isEqualTo("jdk.JavaMonitorWait");
+              assertThat(handler.getMetricNames()).containsExactly("jvm.cpu.longlock");
+            });
+  }
+
+  @Test
+  void setJfrMetricsSelectsMetricWithinSharedHandler() {
+    RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
+    Experimental.setJfrMetrics(builder, singletonList("jvm.cpu.recent_utilization"));
+    RuntimeTelemetry runtimeTelemetry = builder.build();
+    cleanup.deferCleanup(runtimeTelemetry);
+
+    JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
+        (JfrConfig.JfrRuntimeMetrics) runtimeTelemetry.getJfrTelemetry();
+    assertThat(jfrRuntimeMetrics.getRecordedEventHandlers())
+        .singleElement()
+        .satisfies(
+            handler -> {
+              assertThat(handler.getEventName()).isEqualTo("jdk.CPULoad");
+              assertThat(handler.getMetricNames()).containsExactly("jvm.cpu.recent_utilization");
+            });
   }
 
   @Test
