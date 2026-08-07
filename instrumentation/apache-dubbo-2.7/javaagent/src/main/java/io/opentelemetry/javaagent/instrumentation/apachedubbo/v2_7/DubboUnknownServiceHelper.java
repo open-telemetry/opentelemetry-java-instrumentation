@@ -30,9 +30,9 @@ import org.apache.dubbo.remoting.RemotingException;
 import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcInvocation;
 
-public final class DubboUnknownServiceHelper {
+public class DubboUnknownServiceHelper {
 
-  private static final TextMapGetter<Map<String, String>> MAP_GETTER =
+  private static final TextMapGetter<Map<String, String>> mapGetter =
       new TextMapGetter<Map<String, String>>() {
         @Override
         public Iterable<String> keys(Map<String, String> carrier) {
@@ -46,7 +46,7 @@ public final class DubboUnknownServiceHelper {
         }
       };
 
-  private static final TextMapGetter<Object> HTTP_REQUEST_GETTER =
+  private static final TextMapGetter<Object> httpRequestGetter =
       new TextMapGetter<Object>() {
         @Override
         @SuppressWarnings("unchecked") // headerNames() returns Collection<String> at runtime
@@ -80,7 +80,7 @@ public final class DubboUnknownServiceHelper {
         }
       };
 
-  private static final VirtualField<RpcInvocation, Boolean> unknownServiceSpanRecorded =
+  private static final VirtualField<RpcInvocation, Boolean> UNKNOWN_SERVICE_SPAN_RECORDED =
       VirtualField.find(RpcInvocation.class, Boolean.class);
 
   /**
@@ -99,7 +99,8 @@ public final class DubboUnknownServiceHelper {
       RpcInvocation rpcInvocation,
       @Nullable InetSocketAddress remoteAddress,
       Throwable throwable,
-      long startTimeMillis) {
+      Instant startTime,
+      Instant endTime) {
 
     if (serverInstrumenter() == null
         || !isUnknownServiceInvokerFailure(throwable)
@@ -114,9 +115,9 @@ public final class DubboUnknownServiceHelper {
     Context parentContext =
         GlobalOpenTelemetry.getPropagators()
             .getTextMapPropagator()
-            .extract(Context.root(), rpcInvocation.getAttachments(), MAP_GETTER);
+            .extract(Context.root(), rpcInvocation.getAttachments(), mapGetter);
 
-    startAndEndSpan(serverInstrumenter(), parentContext, request, throwable, startTimeMillis);
+    startAndEndSpan(serverInstrumenter(), parentContext, request, throwable, startTime, endTime);
   }
 
   /**
@@ -134,7 +135,11 @@ public final class DubboUnknownServiceHelper {
    * read when the decode fails. The resulting span will be a root span (disconnected trace).
    */
   public static void createUnknownServiceSpanFromDecode(
-      RpcInvocation rpcInvocation, Object channelObj, Throwable throwable, long startTimeMillis) {
+      RpcInvocation rpcInvocation,
+      Object channelObj,
+      Throwable throwable,
+      Instant startTime,
+      Instant endTime) {
 
     if (serverInstrumenter() == null
         || !isUnknownServiceDecodeFailure(throwable)
@@ -154,7 +159,7 @@ public final class DubboUnknownServiceHelper {
         DubboInternalHelper.createForUnknownService(
             rpcInvocation, buildOriginalFullMethodName(rpcInvocation), remoteAddress);
 
-    startAndEndSpan(serverInstrumenter(), Context.root(), request, throwable, startTimeMillis);
+    startAndEndSpan(serverInstrumenter(), Context.root(), request, throwable, startTime, endTime);
   }
 
   /**
@@ -171,10 +176,11 @@ public final class DubboUnknownServiceHelper {
    *
    * @param requestObj the HttpRequest object from GrpcRequestHandlerMapping.getRequestHandler()
    * @param throwable the exception thrown (HttpStatusException with 404 for not-found)
-   * @param startTimeMillis timestamp when the method was entered
+   * @param startTime timestamp when the method was entered
+   * @param endTime timestamp when the method exited
    */
   public static void createUnknownServiceSpanFromTriple(
-      Object requestObj, Throwable throwable, long startTimeMillis) {
+      Object requestObj, Throwable throwable, Instant startTime, Instant endTime) {
 
     if (serverInstrumenter() == null || !isTripleNotFoundFailure(throwable)) {
       return;
@@ -207,9 +213,9 @@ public final class DubboUnknownServiceHelper {
     Context parentContext =
         GlobalOpenTelemetry.getPropagators()
             .getTextMapPropagator()
-            .extract(Context.root(), requestObj, HTTP_REQUEST_GETTER);
+            .extract(Context.root(), requestObj, httpRequestGetter);
 
-    startAndEndSpan(serverInstrumenter(), parentContext, request, throwable, startTimeMillis);
+    startAndEndSpan(serverInstrumenter(), parentContext, request, throwable, startTime, endTime);
   }
 
   /**
@@ -282,10 +288,10 @@ public final class DubboUnknownServiceHelper {
   }
 
   private static boolean isAlreadyRecorded(RpcInvocation rpcInvocation) {
-    if (Boolean.TRUE.equals(unknownServiceSpanRecorded.get(rpcInvocation))) {
+    if (Boolean.TRUE.equals(UNKNOWN_SERVICE_SPAN_RECORDED.get(rpcInvocation))) {
       return true;
     }
-    unknownServiceSpanRecorded.set(rpcInvocation, true);
+    UNKNOWN_SERVICE_SPAN_RECORDED.set(rpcInvocation, true);
     return false;
   }
 
@@ -301,16 +307,11 @@ public final class DubboUnknownServiceHelper {
       Context parentContext,
       DubboRequest request,
       Throwable throwable,
-      long startTimeMillis) {
+      Instant startTime,
+      Instant endTime) {
     if (instrumenter.shouldStart(parentContext, request)) {
       InstrumenterUtil.startAndEnd(
-          instrumenter,
-          parentContext,
-          request,
-          null,
-          throwable,
-          Instant.ofEpochMilli(startTimeMillis),
-          Instant.now());
+          instrumenter, parentContext, request, null, throwable, startTime, endTime);
     }
   }
 
@@ -325,7 +326,7 @@ public final class DubboUnknownServiceHelper {
    * from the runtime class to avoid per-call reflection overhead. The HttpRequest class (from
    * dubbo-remoting-http12) is not available at compile time against Dubbo 2.7.
    */
-  private static final class HttpRequestAccess {
+  private static class HttpRequestAccess {
     private static final Object UNAVAILABLE = new Object();
     private static volatile Object instance;
 
@@ -350,7 +351,7 @@ public final class DubboUnknownServiceHelper {
       if (ref == null) {
         try {
           ref = new HttpRequestAccess(requestObj.getClass());
-        } catch (Throwable t) {
+        } catch (Throwable ignored) {
           ref = UNAVAILABLE;
         }
         instance = ref;

@@ -8,9 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.net.InetSocketAddress;
+import java.time.Instant;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -31,18 +34,19 @@ public class DubboProtocolInstrumentation implements TypeInstrumentation {
         named("getInvoker")
             .and(takesArgument(0, named("org.apache.dubbo.remoting.Channel")))
             .and(takesArgument(1, named("org.apache.dubbo.rpc.Invocation"))),
-        DubboProtocolInstrumentation.class.getName() + "$GetInvokerAdvice");
+        getClass().getName() + "$GetInvokerAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class GetInvokerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static long onEnter() {
+    @Nullable
+    public static Timer onEnter() {
       if (!DubboUnknownServiceHelper.isEnabled()) {
-        return 0;
+        return null;
       }
-      return System.currentTimeMillis();
+      return Timer.start();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -50,10 +54,13 @@ public class DubboProtocolInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Object channelObj,
         @Advice.Argument(1) Invocation inv,
         @Advice.Thrown Throwable throwable,
-        @Advice.Enter long startTimeMillis) {
-      if (throwable == null || startTimeMillis == 0 || !(inv instanceof RpcInvocation)) {
+        @Advice.Enter @Nullable Timer timer) {
+      if (throwable == null || timer == null || !(inv instanceof RpcInvocation)) {
         return;
       }
+
+      Instant startTime = timer.startTime();
+      Instant endTime = timer.now();
 
       InetSocketAddress remoteAddress = null;
       try {
@@ -64,7 +71,7 @@ public class DubboProtocolInstrumentation implements TypeInstrumentation {
       }
 
       DubboUnknownServiceHelper.createUnknownServiceSpan(
-          (RpcInvocation) inv, remoteAddress, throwable, startTimeMillis);
+          (RpcInvocation) inv, remoteAddress, throwable, startTime, endTime);
     }
   }
 }

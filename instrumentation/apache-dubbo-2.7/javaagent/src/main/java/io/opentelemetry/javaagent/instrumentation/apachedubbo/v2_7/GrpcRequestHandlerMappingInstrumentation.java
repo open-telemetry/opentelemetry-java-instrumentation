@@ -8,8 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.time.Instant;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -34,31 +37,34 @@ public class GrpcRequestHandlerMappingInstrumentation implements TypeInstrumenta
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("getRequestHandler").and(takesArguments(3)),
-        GrpcRequestHandlerMappingInstrumentation.class.getName() + "$GetRequestHandlerAdvice");
+        getClass().getName() + "$GetRequestHandlerAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class GetRequestHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static long onEnter() {
+    @Nullable
+    public static Timer onEnter() {
       if (!DubboUnknownServiceHelper.isEnabled()) {
-        return 0;
+        return null;
       }
-      return System.currentTimeMillis();
+      return Timer.start();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Argument(1) Object requestObj,
         @Advice.Thrown Throwable throwable,
-        @Advice.Enter long startTimeMillis) {
-      if (throwable == null || startTimeMillis == 0) {
+        @Advice.Enter @Nullable Timer timer) {
+      if (throwable == null || timer == null) {
         return;
       }
 
+      Instant startTime = timer.startTime();
+      Instant endTime = timer.now();
       DubboUnknownServiceHelper.createUnknownServiceSpanFromTriple(
-          requestObj, throwable, startTimeMillis);
+          requestObj, throwable, startTime, endTime);
     }
   }
 }

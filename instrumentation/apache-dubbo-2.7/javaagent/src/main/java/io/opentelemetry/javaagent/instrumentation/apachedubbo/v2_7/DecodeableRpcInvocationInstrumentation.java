@@ -8,8 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.time.Instant;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -37,18 +40,19 @@ public class DecodeableRpcInvocationInstrumentation implements TypeInstrumentati
         named("decode")
             .and(takesArgument(0, named("org.apache.dubbo.remoting.Channel")))
             .and(takesArgument(1, named("java.io.InputStream"))),
-        DecodeableRpcInvocationInstrumentation.class.getName() + "$DecodeAdvice");
+        getClass().getName() + "$DecodeAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class DecodeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static long onEnter() {
+    @Nullable
+    public static Timer onEnter() {
       if (!DubboUnknownServiceHelper.isEnabled()) {
-        return 0;
+        return null;
       }
-      return System.currentTimeMillis();
+      return Timer.start();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -56,13 +60,15 @@ public class DecodeableRpcInvocationInstrumentation implements TypeInstrumentati
         @Advice.This RpcInvocation invocation,
         @Advice.Argument(0) Object channelObj,
         @Advice.Thrown Throwable throwable,
-        @Advice.Enter long startTimeMillis) {
-      if (throwable == null || startTimeMillis == 0) {
+        @Advice.Enter @Nullable Timer timer) {
+      if (throwable == null || timer == null) {
         return;
       }
 
+      Instant startTime = timer.startTime();
+      Instant endTime = timer.now();
       DubboUnknownServiceHelper.createUnknownServiceSpanFromDecode(
-          invocation, channelObj, throwable, startTimeMillis);
+          invocation, channelObj, throwable, startTime, endTime);
     }
   }
 }
