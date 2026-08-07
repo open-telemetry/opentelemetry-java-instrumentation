@@ -8,7 +8,9 @@ package io.opentelemetry.instrumentation.resources;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.logging.Level.FINE;
+import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -16,6 +18,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -23,6 +26,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
@@ -75,6 +82,9 @@ public final class HostIdResource {
   private static final String WINDOWS_ROOT_FALLBACK = "C:\\Windows";
   private static final List<String> WINDOWS_REGISTRY_QUERY_ARGS =
       asList("query", "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography", "/v", "MachineGuid");
+
+  // Bound how long a host id lookup command may run to avoid locking SDK startup
+  private static final long COMMAND_TIMEOUT_MILLIS = 2000;
 
   private static final HostIdResource INSTANCE =
       new HostIdResource(
@@ -248,46 +258,74 @@ public final class HostIdResource {
   }
 
   private static List<String> runCommand(List<String> command) {
+    return runCommand(command, COMMAND_TIMEOUT_MILLIS);
+  }
+
+  // Visible for testing
+  static List<String> runCommand(List<String> command, long timeoutMillis) {
+    Process process = null;
+    // set once this method stops caring about the result, so that the thread below can tell a
+    // command that failed on its own from one that was killed on the way out
+    AtomicBoolean abandoned = new AtomicBoolean();
     try {
       ProcessBuilder processBuilder = new ProcessBuilder(command);
       processBuilder.redirectErrorStream(true);
-      Process process = processBuilder.start();
+      process = processBuilder.start();
 
-      List<String> output = getProcessOutput(process);
-      int exitedValue = process.waitFor();
-      if (exitedValue != 0) {
-        logger.fine(
-            "Failed to run command "
-                + command
-                + ". Exit code: "
-                + exitedValue
-                + " Output: "
-                + String.join("\n", output));
+      // reading the output to EOF and waiting for the process to exit are both unbounded, so they
+      // run on another thread that the timeout below can walk away from. draining the output also
+      // has to happen before waiting for exit, otherwise a chatty command deadlocks on a full pipe
+      // buffer.
+      Process startedProcess = process;
+      FutureTask<List<String>> commandOutput =
+          new FutureTask<>(() -> getCommandOutput(startedProcess, command, abandoned));
+      Thread readerThread = new Thread(commandOutput, "otel-host-id-lookup");
+      readerThread.setDaemon(true);
+      readerThread.start();
 
-        return emptyList();
-      }
-
-      return output;
-    } catch (IOException | InterruptedException e) {
-      if (e instanceof InterruptedException) {
-        Thread.currentThread().interrupt();
-      }
+      return commandOutput.get(timeoutMillis, MILLISECONDS);
+    } catch (TimeoutException e) {
+      logger.log(FINE, "Timed out running command {0}", command);
+      return emptyList();
+    } catch (IOException | ExecutionException e) {
       logger.log(FINE, "Failed to run command " + command, e);
       return emptyList();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      logger.log(FINE, "Interrupted running command " + command, e);
+      return emptyList();
+    } finally {
+      abandoned.set(true);
+      if (process != null) {
+        // no-op if the process already exited, otherwise this both stops the stray child and
+        // unblocks the reader thread
+        process.destroyForcibly();
+      }
     }
   }
 
-  private static List<String> getProcessOutput(Process process) throws IOException {
-    List<String> result = new ArrayList<>();
+  private static List<String> getCommandOutput(
+      Process process, List<String> command, AtomicBoolean abandoned)
+      throws IOException, InterruptedException {
+    List<String> output = getProcessOutput(process.getInputStream());
 
-    try (BufferedReader processOutputReader =
-        new BufferedReader(new InputStreamReader(process.getInputStream(), UTF_8))) {
-      String readLine;
-
-      while ((readLine = processOutputReader.readLine()) != null) {
-        result.add(readLine);
-      }
+    int exitedValue = process.waitFor();
+    if (abandoned.get()) {
+      return emptyList();
     }
-    return result;
+
+    if (exitedValue != 0) {
+      logger.fine("Failed to run command " + command + ". Exit code: " + exitedValue);
+
+      return emptyList();
+    }
+
+    return output;
+  }
+
+  private static List<String> getProcessOutput(InputStream processOutput) throws IOException {
+    try (BufferedReader reader = new BufferedReader(new InputStreamReader(processOutput, UTF_8))) {
+      return reader.lines().collect(toList());
+    }
   }
 }
