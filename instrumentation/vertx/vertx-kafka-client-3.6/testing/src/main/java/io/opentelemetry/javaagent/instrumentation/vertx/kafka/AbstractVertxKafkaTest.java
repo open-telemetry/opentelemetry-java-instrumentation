@@ -94,6 +94,16 @@ public abstract class AbstractVertxKafkaTest {
     cleanup.deferAfterAll(() -> closeVertx(vertx));
     kafkaProducer = KafkaProducer.create(vertx, producerProps());
     cleanup.deferAfterAll(() -> closeKafkaProducer(kafkaProducer));
+    // Trigger metadata fetch so cluster id is available before the first send.
+    CountDownLatch primed = new CountDownLatch(1);
+    try {
+      kafkaProducer.partitionsFor("testSingleTopic", ar -> primed.countDown());
+      primed.await(10, SECONDS);
+    } catch (NoSuchMethodError ignored) {
+      // Vert.x 5 removed the Handler-based overload; priming is skipped (best-effort).
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
     kafkaConsumer = KafkaConsumer.create(vertx, consumerProps());
     cleanup.deferAfterAll(() -> closeKafkaConsumer(kafkaConsumer));
   }
@@ -175,6 +185,8 @@ public abstract class AbstractVertxKafkaTest {
                 satisfies(stringKey("messaging.client_id"), val -> val.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(
@@ -206,6 +218,8 @@ public abstract class AbstractVertxKafkaTest {
                 equalTo(MESSAGING_OPERATION, operation),
                 satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive)));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (hasConsumerGroup()) {
       assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
     }
@@ -223,6 +237,8 @@ public abstract class AbstractVertxKafkaTest {
                 satisfies(stringKey("messaging.client_id"), val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));

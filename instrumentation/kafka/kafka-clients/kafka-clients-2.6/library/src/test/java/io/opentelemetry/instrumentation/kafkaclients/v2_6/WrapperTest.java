@@ -84,7 +84,8 @@ class WrapperTest extends AbstractWrapperTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasLinksSatisfying(links -> assertThat(links).isEmpty())
-                        .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders)),
+                        .hasAttributesSatisfyingExactly(
+                            receiveAttributes(testHeaders, testExperimental)),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
@@ -114,6 +115,8 @@ class WrapperTest extends AbstractWrapperTest {
           equalTo(
               MessageHeaderUtil.headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (testExperimental) {
       assertions.add(
           satisfies(
@@ -136,6 +139,8 @@ class WrapperTest extends AbstractWrapperTest {
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                 equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                 satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer"))));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (testHeaders) {
       assertions.add(
           equalTo(
@@ -148,7 +153,8 @@ class WrapperTest extends AbstractWrapperTest {
     return assertions;
   }
 
-  protected static List<AttributeAssertion> receiveAttributes(boolean testHeaders) {
+  protected static List<AttributeAssertion> receiveAttributes(
+      boolean testHeaders, boolean testExperimental) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -158,6 +164,8 @@ class WrapperTest extends AbstractWrapperTest {
                 equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                 satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (testHeaders) {
       assertions.add(
           equalTo(

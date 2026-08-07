@@ -41,6 +41,7 @@ final class KafkaProducerAttributesExtractor
     if (request.getRecord().value() == null) {
       attributes.put(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
+    attributes.put(KafkaClusterId.ATTRIBUTE_KEY, request.getClusterId());
   }
 
   private static boolean canSerialize(Class<?> keyClass) {
@@ -56,6 +57,10 @@ final class KafkaProducerAttributesExtractor
       KafkaProducerRequest request,
       @Nullable RecordMetadata recordMetadata,
       @Nullable Throwable error) {
+
+    if (request.getClusterId() == null) {
+      attributes.put(KafkaClusterId.ATTRIBUTE_KEY, KafkaUtil.getClusterId(request.getProducer()));
+    }
 
     if (recordMetadata != null) {
       attributes.put(

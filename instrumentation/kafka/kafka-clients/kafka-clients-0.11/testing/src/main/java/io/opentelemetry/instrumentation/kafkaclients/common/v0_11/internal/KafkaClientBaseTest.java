@@ -112,6 +112,10 @@ public abstract class KafkaClientBaseTest {
 
     producer = new KafkaProducer<>(producerProps());
     cleanup.deferAfterAll(producer);
+    // Trigger metadata fetch so cluster id is available before the first send. Without this,
+    // KafkaUtil.getClusterId returns null on the very first send because the broker has not yet
+    // responded with a metadata message containing the cluster resource.
+    producer.partitionsFor(SHARED_TOPIC);
 
     consumer = new KafkaConsumer<>(consumerProps());
     cleanup.deferAfterAll(consumer);
@@ -199,6 +203,8 @@ public abstract class KafkaClientBaseTest {
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(
@@ -225,6 +231,8 @@ public abstract class KafkaClientBaseTest {
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     return assertions;
   }
 
@@ -239,6 +247,8 @@ public abstract class KafkaClientBaseTest {
                 equalTo(MESSAGING_OPERATION, "process"),
                 satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty)));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));

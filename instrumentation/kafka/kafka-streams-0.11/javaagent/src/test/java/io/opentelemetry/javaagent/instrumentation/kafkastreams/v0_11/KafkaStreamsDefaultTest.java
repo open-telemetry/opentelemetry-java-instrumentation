@@ -116,6 +116,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                           equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
                           equalTo(MESSAGING_OPERATION, "publish"),
                           satisfies(
+                              stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()),
+                          satisfies(
                               stringKey("messaging.client_id"), val -> val.startsWith("producer")),
                           satisfies(
                               MESSAGING_DESTINATION_PARTITION_ID,
@@ -140,6 +142,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                             satisfies(
                                 stringKey("messaging.client_id"), val -> val.endsWith("consumer")),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
+                assertions.add(
+                    satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
                 if (testLatestDeps()) {
                   assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test-application"));
                 }
@@ -167,6 +171,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                             equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                             equalTo(stringKey("asdf"), "testing")));
 
+                assertions.add(
+                    satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
                 if (EXPERIMENTAL_ATTRIBUTES) {
                   assertions.add(
                       satisfies(
@@ -184,25 +190,35 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                     .hasAttributesSatisfyingExactly(assertions);
               },
               // kafka-clients PRODUCER
-              span ->
-                  span.hasName(STREAM_PROCESSED + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(1))
-                      .hasTraceId(receivedContext.getTraceId())
-                      .hasSpanId(receivedContext.getSpanId())
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, KAFKA),
-                          equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
-                          equalTo(MESSAGING_OPERATION, "publish"),
-                          satisfies(
-                              stringKey("messaging.client_id"), val -> val.endsWith("producer")),
-                          satisfies(
-                              MESSAGING_DESTINATION_PARTITION_ID,
-                              val -> val.isInstanceOf(String.class)),
-                          equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
-                          equalTo(
-                              stringKey("messaging.kafka.bootstrap.servers"),
-                              EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null)));
+              span -> {
+                List<AttributeAssertion> processedPublishAttrs =
+                    new ArrayList<>(
+                        asList(
+                            equalTo(MESSAGING_SYSTEM, KAFKA),
+                            equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
+                            equalTo(MESSAGING_OPERATION, "publish"),
+                            satisfies(
+                                stringKey("messaging.client_id"), val -> val.endsWith("producer")),
+                            satisfies(
+                                MESSAGING_DESTINATION_PARTITION_ID,
+                                val -> val.isInstanceOf(String.class)),
+                            equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
+                            equalTo(
+                                stringKey("messaging.kafka.bootstrap.servers"),
+                                EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null)));
+                // cluster.id: best-effort; Streams internal producer may lack it on first send.
+                if (trace.getSpan(2).getAttributes().get(stringKey("messaging.kafka.cluster.id"))
+                    != null) {
+                  processedPublishAttrs.add(
+                      satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+                }
+                span.hasName(STREAM_PROCESSED + " publish")
+                    .hasKind(SpanKind.PRODUCER)
+                    .hasParent(trace.getSpan(1))
+                    .hasTraceId(receivedContext.getTraceId())
+                    .hasSpanId(receivedContext.getSpanId())
+                    .hasAttributesSatisfyingExactly(processedPublishAttrs);
+              });
 
           producerProcessedRef.set(trace.getSpan(2));
         },
@@ -220,6 +236,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                                   stringKey("messaging.client_id"),
                                   val -> val.startsWith("consumer")),
                               equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
+                  assertions.add(
+                      satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
                   if (testLatestDeps()) {
                     assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
                   }
@@ -247,6 +265,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                               equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
                               equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                               equalTo(longKey("testing"), 123)));
+                  assertions.add(
+                      satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
                   if (EXPERIMENTAL_ATTRIBUTES) {
                     assertions.add(
                         satisfies(

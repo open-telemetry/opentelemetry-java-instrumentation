@@ -63,7 +63,11 @@ public class KafkaConsumerTelemetry {
   public <K, V> Context buildAndFinishSpan(
       ConsumerRecords<K, V> records, Consumer<K, V> consumer, Timer timer) {
     return buildAndFinishSpan(
-        records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer), timer);
+        records,
+        KafkaUtil.getConsumerGroup(consumer),
+        KafkaUtil.getClientId(consumer),
+        KafkaUtil.getClusterId(consumer),
+        timer);
   }
 
   @Nullable
@@ -71,12 +75,14 @@ public class KafkaConsumerTelemetry {
       ConsumerRecords<K, V> records,
       @Nullable String consumerGroup,
       @Nullable String clientId,
+      @Nullable String clusterId,
       Timer timer) {
     if (records.isEmpty()) {
       return null;
     }
     Context parentContext = Context.current();
-    KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumerGroup, clientId);
+    KafkaReceiveRequest request =
+        KafkaReceiveRequest.create(records, consumerGroup, clientId, clusterId);
     Context context = null;
     if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
       context =
@@ -103,7 +109,10 @@ public class KafkaConsumerTelemetry {
     ConsumerRecords<K, V> records = new ConsumerRecords<>(emptyMap());
     KafkaReceiveRequest request =
         KafkaReceiveRequest.create(
-            records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
+            records,
+            KafkaUtil.getConsumerGroup(consumer),
+            KafkaUtil.getClientId(consumer),
+            KafkaUtil.getClusterId(consumer));
     if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
       InstrumenterUtil.startAndEnd(
           consumerReceiveInstrumenter,

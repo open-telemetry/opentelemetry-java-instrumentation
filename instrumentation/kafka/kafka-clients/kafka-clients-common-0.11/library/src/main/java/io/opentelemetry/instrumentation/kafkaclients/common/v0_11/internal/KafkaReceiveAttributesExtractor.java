@@ -22,6 +22,7 @@ final class KafkaReceiveAttributesExtractor
   public void onStart(
       AttributesBuilder attributes, Context parentContext, KafkaReceiveRequest request) {
     attributes.put(MESSAGING_KAFKA_CONSUMER_GROUP, request.getConsumerGroup());
+    attributes.put(KafkaClusterId.ATTRIBUTE_KEY, request.getClusterId());
   }
 
   @Override
