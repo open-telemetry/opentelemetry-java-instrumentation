@@ -9,12 +9,12 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
@@ -85,8 +85,8 @@ public final class DirectBufferStatisticsHandler implements RecordedEventHandler
   }
 
   @Override
-  public JfrFeature getFeature() {
-    return JfrFeature.BUFFER_METRICS;
+  public Set<String> getMetricNames() {
+    return Set.of(METRIC_NAME_USAGE, METRIC_NAME_LIMIT, METRIC_NAME_COUNT);
   }
 
   @Override

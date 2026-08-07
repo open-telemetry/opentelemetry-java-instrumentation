@@ -5,12 +5,17 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetryBuilder;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -27,15 +32,11 @@ public final class Internal {
 
   private static final Logger logger = Logger.getLogger(Internal.class.getName());
 
-  @Nullable
-  private static volatile BiConsumer<RuntimeTelemetryBuilder, Boolean> setEnableAllJfrFeatures;
-
-  @Nullable
-  private static volatile BiConsumer<RuntimeTelemetryBuilder, Boolean> setDisableAllJfrFeatures;
+  @Nullable private static volatile BiConsumer<RuntimeTelemetryBuilder, List<String>> setJfrMetrics;
 
   @Nullable
   private static volatile BiConsumer<RuntimeTelemetryBuilder, Boolean>
-      setEnableExperimentalJfrFeatures;
+      setSuppressOverlappingJmxMetrics;
 
   @Nullable private static volatile BiConsumer<RuntimeTelemetryBuilder, Boolean> setCaptureGcCause;
 
@@ -49,64 +50,35 @@ public final class Internal {
   @Nullable
   private static volatile BiConsumer<RuntimeTelemetryBuilder, String> setJfrInstrumentationName;
 
-  @Nullable private static volatile BiConsumer<RuntimeTelemetryBuilder, String> setEnableJfrFeature;
-
-  @Nullable
-  private static volatile BiConsumer<RuntimeTelemetryBuilder, String> setDisableJfrFeature;
-
   @Nullable private static volatile BiConsumer<RuntimeTelemetryBuilder, Boolean> setDisableJmx;
 
   /**
-   * Sets whether all JFR features should be enabled. This is used for backward compatibility with
-   * the {@code runtime_telemetry_java17.enable_all} configuration option.
-   *
-   * <p>On Java 17+, this enables all JFR features including those that overlap with JMX metrics.
+   * Selects the metrics to source from JFR. Patterns are exact metric names or prefixes ending in
+   * {@code *}.
    */
-  public static void setEnableAllJfrFeatures(
-      RuntimeTelemetryBuilder builder, boolean enableAllJfr) {
-    if (setEnableAllJfrFeatures != null) {
-      setEnableAllJfrFeatures.accept(builder, enableAllJfr);
+  public static void setJfrMetrics(
+      RuntimeTelemetryBuilder builder, List<String> metricNamePatterns) {
+    if (setJfrMetrics != null) {
+      setJfrMetrics.accept(builder, metricNamePatterns);
     }
   }
 
-  public static void internalSetEnableAllJfrFeatures(
-      BiConsumer<RuntimeTelemetryBuilder, Boolean> callback) {
-    Internal.setEnableAllJfrFeatures = callback;
+  public static void internalSetJfrMetrics(
+      BiConsumer<RuntimeTelemetryBuilder, List<String>> callback) {
+    Internal.setJfrMetrics = callback;
   }
 
-  /**
-   * Sets whether all JFR features should be disabled. This is used for backward compatibility when
-   * running on Java 17+ but only the base {@code runtime_telemetry.enabled} option is set (without
-   * {@code runtime_telemetry_java17.enabled}).
-   */
-  public static void setDisableAllJfrFeatures(
-      RuntimeTelemetryBuilder builder, boolean disableAllJfr) {
-    if (setDisableAllJfrFeatures != null) {
-      setDisableAllJfrFeatures.accept(builder, disableAllJfr);
+  /** Sets whether JMX metrics registered by JFR should be suppressed. */
+  public static void setSuppressOverlappingJmxMetrics(
+      RuntimeTelemetryBuilder builder, boolean suppress) {
+    if (setSuppressOverlappingJmxMetrics != null) {
+      setSuppressOverlappingJmxMetrics.accept(builder, suppress);
     }
   }
 
-  public static void internalSetDisableAllJfrFeatures(
+  public static void internalSetSuppressOverlappingJmxMetrics(
       BiConsumer<RuntimeTelemetryBuilder, Boolean> callback) {
-    Internal.setDisableAllJfrFeatures = callback;
-  }
-
-  /**
-   * Sets whether experimental JFR features should be enabled. This is used for backward
-   * compatibility with the {@code runtime_telemetry_java17.enabled} configuration option, which
-   * enabled experimental JFR features (context switches, locks, allocations, network I/O) but not
-   * experimental JMX features.
-   */
-  public static void setEnableExperimentalJfrFeatures(
-      RuntimeTelemetryBuilder builder, boolean enable) {
-    if (setEnableExperimentalJfrFeatures != null) {
-      setEnableExperimentalJfrFeatures.accept(builder, enable);
-    }
-  }
-
-  public static void internalSetEnableExperimentalJfrFeatures(
-      BiConsumer<RuntimeTelemetryBuilder, Boolean> callback) {
-    Internal.setEnableExperimentalJfrFeatures = callback;
+    Internal.setSuppressOverlappingJmxMetrics = callback;
   }
 
   /**
@@ -186,42 +158,6 @@ public final class Internal {
   }
 
   /**
-   * Enables a specific JFR feature by name. This is used for backward compatibility with the
-   * runtime-telemetry-java17 module's per-feature control.
-   *
-   * @param builder the runtime telemetry builder
-   * @param featureName the JFR feature name (e.g., "CPU_COUNT_METRICS")
-   */
-  public static void setEnableJfrFeature(RuntimeTelemetryBuilder builder, String featureName) {
-    if (setEnableJfrFeature != null) {
-      setEnableJfrFeature.accept(builder, featureName);
-    }
-  }
-
-  public static void internalSetEnableJfrFeature(
-      BiConsumer<RuntimeTelemetryBuilder, String> callback) {
-    Internal.setEnableJfrFeature = callback;
-  }
-
-  /**
-   * Disables a specific JFR feature by name. This is used for backward compatibility with the
-   * runtime-telemetry-java17 module's per-feature control.
-   *
-   * @param builder the runtime telemetry builder
-   * @param featureName the JFR feature name (e.g., "CPU_COUNT_METRICS")
-   */
-  public static void setDisableJfrFeature(RuntimeTelemetryBuilder builder, String featureName) {
-    if (setDisableJfrFeature != null) {
-      setDisableJfrFeature.accept(builder, featureName);
-    }
-  }
-
-  public static void internalSetDisableJfrFeature(
-      BiConsumer<RuntimeTelemetryBuilder, String> callback) {
-    Internal.setDisableJfrFeature = callback;
-  }
-
-  /**
    * Disables all JMX-based metrics. This is used for backward compatibility with the
    * runtime-telemetry-java17 module's disableAllJmx() method.
    *
@@ -286,12 +222,13 @@ public final class Internal {
       RuntimeTelemetryBuilder builder, DeclarativeConfigProperties config) {
     logger.warning(
         "otel.instrumentation.runtime-telemetry-java17.enable-all is deprecated and will be"
-            + " removed in 3.0. Use otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics"
-            + " and otel.instrumentation.runtime-telemetry.experimental.prefer-jfr instead.");
+            + " removed in 3.0. Use"
+            + " otel.instrumentation.runtime-telemetry.experimental.jfr-metrics=* instead.");
     // For backward compatibility: route JMX metrics to java8 scope, JFR metrics to java17 scope
     Internal.setJmxInstrumentationName(builder, "io.opentelemetry.runtime-telemetry-java8");
     Internal.setJfrInstrumentationName(builder, "io.opentelemetry.runtime-telemetry-java17");
-    Internal.setEnableAllJfrFeatures(builder, true);
+    Internal.setJfrMetrics(builder, singletonList("*"));
+    Internal.setSuppressOverlappingJmxMetrics(builder, false);
     Internal.setUseLegacyJfrCpuCountMetric(builder, true);
 
     // Check if base config also has emit_experimental_telemetry enabled (for JMX experimental)
@@ -315,21 +252,18 @@ public final class Internal {
         "otel.instrumentation.runtime-telemetry-java17.enabled is deprecated and will be"
             + " removed in 3.0. Use"
             + " otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics instead.");
-    enableDefaultJfrFeatures(builder);
-    // Preserve legacy behavior of the deprecated runtime-telemetry-java17 module, which enabled
-    // CPU_COUNT_METRICS by default (emitted as jvm.cpu.limit via useLegacyJfrCpuCountMetric).
-    Internal.setEnableJfrFeature(builder, "CPU_COUNT_METRICS");
+    Internal.setJfrMetrics(
+        builder,
+        asList(
+            "jvm.cpu.context_switch",
+            "jvm.cpu.longlock",
+            "jvm.memory.allocation",
+            "jvm.network.*",
+            "jvm.cpu.limit"));
     Internal.setUseLegacyJfrCpuCountMetric(builder, true);
     // For backward compatibility: OLD java17 module used java8's JMX factory, so JMX -> java8 scope
     Internal.setJmxInstrumentationName(builder, "io.opentelemetry.runtime-telemetry-java8");
     Internal.setJfrInstrumentationName(builder, "io.opentelemetry.runtime-telemetry-java17");
-  }
-
-  private static void enableDefaultJfrFeatures(RuntimeTelemetryBuilder builder) {
-    Internal.setEnableJfrFeature(builder, "CONTEXT_SWITCH_METRICS");
-    Internal.setEnableJfrFeature(builder, "LOCK_METRICS");
-    Internal.setEnableJfrFeature(builder, "MEMORY_ALLOCATION_METRICS");
-    Internal.setEnableJfrFeature(builder, "NETWORK_IO_METRICS");
   }
 
   private static void configureUnified(
@@ -338,8 +272,10 @@ public final class Internal {
         config.getBoolean("emit_experimental_metrics/development", false);
     boolean emitExperimentalJfrMetrics =
         config.getBoolean("emit_experimental_jfr_metrics/development", false);
-    boolean preferJfrMetrics = config.getBoolean("prefer_jfr/development", false);
-    boolean newConfig = emitExperimentalMetrics || emitExperimentalJfrMetrics || preferJfrMetrics;
+    List<String> jfrMetrics =
+        config.getScalarList("jfr_metrics/development", String.class, emptyList());
+    boolean newConfig =
+        emitExperimentalMetrics || emitExperimentalJfrMetrics || !jfrMetrics.isEmpty();
 
     if (newConfig) {
       // New unified config: Use new instrumentation name for both JMX and JFR
@@ -347,7 +283,6 @@ public final class Internal {
       Internal.setJfrInstrumentationName(builder, "io.opentelemetry.runtime-telemetry");
     } else {
       // Old java8 config: JMX-only, disable JFR for backward compatibility
-      Internal.setDisableAllJfrFeatures(builder, true);
       Internal.setJmxInstrumentationName(builder, "io.opentelemetry.runtime-telemetry-java8");
       Internal.setJfrInstrumentationName(builder, "io.opentelemetry.runtime-telemetry-java8");
     }
@@ -368,9 +303,7 @@ public final class Internal {
     if (emitExperimentalJfrMetrics) {
       Experimental.setEmitExperimentalJfrMetrics(builder, true);
     }
-    if (preferJfrMetrics) {
-      Experimental.setPreferJfrMetrics(builder, true);
-    }
+    Experimental.setJfrMetrics(builder, jfrMetrics);
 
     // Apply capture_gc_cause. GC cause is always captured when emitting stable JVM semantic
     // conventions and is no longer configurable; otherwise it defaults to false.

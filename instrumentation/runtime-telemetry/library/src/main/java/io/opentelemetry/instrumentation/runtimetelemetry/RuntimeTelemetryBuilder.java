@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -16,19 +17,33 @@ import io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Internal;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JmxRuntimeMetricsFactory;
+import io.opentelemetry.instrumentation.runtimetelemetry.internal.MetricNameFilter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /** Builder for {@link RuntimeTelemetry}. */
 public final class RuntimeTelemetryBuilder {
 
   private static final String DEFAULT_INSTRUMENTATION_NAME = "io.opentelemetry.runtime-telemetry";
+  private static final List<String> EXPERIMENTAL_JFR_METRICS =
+      asList(
+          "jvm.cpu.context_switch",
+          "jvm.cpu.longlock",
+          "jvm.memory.allocation",
+          "jvm.network.io",
+          "jvm.network.time",
+          "jvm.thread.virtual.pinned",
+          "jvm.thread.virtual.submit_failed");
 
   private final OpenTelemetry openTelemetry;
   private final JfrConfig jfrConfig;
 
   private boolean emitExperimentalMetrics;
-  private boolean preferJfrMetrics;
+  private boolean emitExperimentalJfrMetrics;
+  private List<String> jfrMetricPatterns = emptyList();
+  private boolean suppressOverlappingJmxMetrics = true;
   private boolean disableJmx;
   private boolean captureGcCause;
   // For backward compatibility: support separate instrumentation names for JMX and JFR metrics
@@ -39,31 +54,13 @@ public final class RuntimeTelemetryBuilder {
     Experimental.internalSetEmitExperimentalMetrics(
         (builder, emit) -> builder.emitExperimentalMetrics = emit);
     Experimental.internalSetEmitExperimentalJfrMetrics(
-        (builder, emit) -> {
-          if (emit) {
-            builder.jfrConfig.enableExperimentalFeatures();
-          }
-        });
-    Experimental.internalSetPreferJfrMetrics(
-        (builder, prefer) -> builder.preferJfrMetrics = prefer);
-    Internal.internalSetEnableAllJfrFeatures(
-        (builder, enable) -> {
-          if (enable) {
-            builder.jfrConfig.enableAllFeatures();
-          }
-        });
-    Internal.internalSetDisableAllJfrFeatures(
-        (builder, disable) -> {
-          if (disable) {
-            builder.jfrConfig.disableAllFeatures();
-          }
-        });
-    Internal.internalSetEnableExperimentalJfrFeatures(
-        (builder, enable) -> {
-          if (enable) {
-            builder.jfrConfig.enableExperimentalFeatures();
-          }
-        });
+        (builder, emit) -> builder.emitExperimentalJfrMetrics = emit);
+    Experimental.internalSetJfrMetrics(
+        (builder, patterns) -> builder.jfrMetricPatterns = new ArrayList<>(patterns));
+    Internal.internalSetJfrMetrics(
+        (builder, patterns) -> builder.jfrMetricPatterns = new ArrayList<>(patterns));
+    Internal.internalSetSuppressOverlappingJmxMetrics(
+        (builder, suppress) -> builder.suppressOverlappingJmxMetrics = suppress);
     Internal.internalSetCaptureGcCause((builder, capture) -> builder.captureGcCause = capture);
     Internal.internalSetUseLegacyJfrCpuCountMetric(
         (builder, useLegacy) -> builder.jfrConfig.setUseLegacyJfrCpuCountMetric(useLegacy));
@@ -71,21 +68,12 @@ public final class RuntimeTelemetryBuilder {
         (builder, name) -> builder.jmxInstrumentationName = name);
     Internal.internalSetJfrInstrumentationName(
         (builder, name) -> builder.jfrInstrumentationName = name);
-    Internal.internalSetEnableJfrFeature(
-        (builder, featureName) -> builder.jfrConfig.enableFeature(featureName));
-    Internal.internalSetDisableJfrFeature(
-        (builder, featureName) -> builder.jfrConfig.disableFeature(featureName));
     Internal.internalSetDisableJmx((builder, disable) -> builder.disableJmx = disable);
   }
 
   RuntimeTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
     this.jfrConfig = JfrConfig.create();
-  }
-
-  // Visible for testing
-  JfrConfig getJfrConfig() {
-    return jfrConfig;
   }
 
   /** Disable all JMX telemetry collection. Visible for testing. */
@@ -105,15 +93,24 @@ public final class RuntimeTelemetryBuilder {
 
     Meter jmxMeter = getMeter(openTelemetry, jmxName);
     Meter jfrMeter = getMeter(openTelemetry, jfrName);
-    boolean effectivePreferJfrMetrics = preferJfrMetrics && jfrConfig.isJfrAvailable();
+    List<String> effectiveJfrMetricPatterns = new ArrayList<>(jfrMetricPatterns);
+    if (emitExperimentalJfrMetrics) {
+      effectiveJfrMetricPatterns.addAll(EXPERIMENTAL_JFR_METRICS);
+    }
+    MetricNameFilter jfrMetricFilter = MetricNameFilter.create(effectiveJfrMetricPatterns);
+    JfrConfig.JfrTelemetry jfrTelemetry = jfrConfig.buildJfrTelemetry(jfrMetricFilter, jfrMeter);
+    Set<String> jfrMetricNames = jfrTelemetry.getMetricNames();
 
     List<AutoCloseable> observables =
         disableJmx
             ? emptyList()
             : JmxRuntimeMetricsFactory.buildObservables(
-                emitExperimentalMetrics, captureGcCause, effectivePreferJfrMetrics, jmxMeter);
-    AutoCloseable jfrTelemetry = jfrConfig.buildJfrTelemetry(effectivePreferJfrMetrics, jfrMeter);
-    return new RuntimeTelemetry(observables, jfrTelemetry);
+                emitExperimentalMetrics,
+                captureGcCause,
+                metricName ->
+                    !suppressOverlappingJmxMetrics || !jfrMetricNames.contains(metricName),
+                jmxMeter);
+    return new RuntimeTelemetry(observables, jfrTelemetry.getTelemetry());
   }
 
   private static Meter getMeter(OpenTelemetry openTelemetry, String instrumentationName) {
