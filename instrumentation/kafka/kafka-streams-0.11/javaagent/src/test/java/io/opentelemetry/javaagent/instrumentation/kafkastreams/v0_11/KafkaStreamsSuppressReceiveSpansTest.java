@@ -104,6 +104,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
+                  // kafka-clients PRODUCER
                   span ->
                       span.hasName("send " + STREAM_PENDING)
                           .hasKind(SpanKind.PRODUCER)
@@ -111,6 +112,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                           .hasAttributesSatisfyingExactly(
                               producerAttributes(
                                   STREAM_PENDING, val -> val.isEqualTo("producer-1"), true)),
+                  // kafka-stream CONSUMER
                   span ->
                       span.hasName("process " + STREAM_PENDING)
                           .hasKind(SpanKind.CONSUMER)
@@ -122,6 +124,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                                   "test-application",
                                   val -> val.endsWith("consumer"),
                                   equalTo(stringKey("asdf"), "testing"))),
+                  // kafka-clients PRODUCER
                   span ->
                       span.hasName("send " + STREAM_PROCESSED)
                           .hasKind(SpanKind.PRODUCER)
@@ -131,6 +134,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                           .hasAttributesSatisfyingExactly(
                               producerAttributes(
                                   STREAM_PROCESSED, val -> val.isInstanceOf(String.class), false)),
+                  // kafka-clients CONSUMER process
                   span ->
                       span.hasName("process " + STREAM_PROCESSED)
                           .hasKind(SpanKind.CONSUMER)

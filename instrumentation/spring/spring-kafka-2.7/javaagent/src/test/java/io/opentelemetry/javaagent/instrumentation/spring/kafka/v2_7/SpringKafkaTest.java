@@ -185,6 +185,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             producerAttributes("testSingleTopic", "10")));
+            // trace structure differs in latest dep tests because CommonErrorHandler is
+            // only set for latest dep tests
             addSingleProcessAssertions(spanAssertions, trace, 2, true, testLatestDeps());
             addSingleProcessAssertions(
                 spanAssertions, trace, testLatestDeps() ? 5 : 4, true, testLatestDeps());
@@ -433,6 +435,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
       assertions.add(trace -> assertStableBatchProcessTrace(trace, producer.get(), true));
       assertions.add(trace -> assertStableBatchProcessTrace(trace, producer.get(), true));
       assertions.add(trace -> assertStableBatchProcessTrace(trace, producer.get(), false));
+      // latest dep tests call receive once and only retry the failed process step
       int receiveCount = testLatestDeps() ? 1 : 3;
       for (int i = 0; i < receiveCount; i++) {
         assertions.add(

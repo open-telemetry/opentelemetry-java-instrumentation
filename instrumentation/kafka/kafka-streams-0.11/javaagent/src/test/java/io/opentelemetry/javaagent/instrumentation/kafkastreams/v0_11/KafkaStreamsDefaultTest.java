@@ -110,11 +110,13 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
               "send " + STREAM_PENDING, "poll " + STREAM_PENDING, "poll " + STREAM_PROCESSED),
           trace -> {
             trace.hasSpansSatisfyingExactly(
+                // kafka-clients PRODUCER
                 span ->
                     span.hasName("send " + STREAM_PENDING)
                         .hasKind(SpanKind.PRODUCER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(producerAttributes(STREAM_PENDING, true)),
+                // kafka-stream CONSUMER
                 span -> {
                   List<AttributeAssertion> assertions =
                       new ArrayList<>(
@@ -147,6 +149,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                       .hasLinks(LinkData.create(trace.getSpan(0).getSpanContext()))
                       .hasAttributesSatisfyingExactly(assertions);
                 },
+                // kafka-clients PRODUCER
                 span ->
                     span.hasName("send " + STREAM_PROCESSED)
                         .hasKind(SpanKind.PRODUCER)
@@ -155,6 +158,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                         .hasSpanId(receivedContext.getSpanId())
                         .hasAttributesSatisfyingExactly(
                             producerAttributes(STREAM_PROCESSED, false)),
+                // kafka-clients CONSUMER process
                 span -> {
                   List<AttributeAssertion> assertions =
                       new ArrayList<>(
@@ -200,6 +204,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
               addGroupAssertions(assertions, "test-application");
             }
             trace.hasSpansSatisfyingExactly(
+                // kafka-clients CONSUMER receive
                 span ->
                     span.hasName("poll " + STREAM_PENDING)
                         .hasKind(SpanKind.CLIENT)
@@ -217,6 +222,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
               addGroupAssertions(assertions, "test");
             }
             trace.hasSpansSatisfyingExactly(
+                // kafka-clients CONSUMER receive
                 span ->
                     span.hasName("poll " + STREAM_PROCESSED)
                         .hasKind(SpanKind.CLIENT)
