@@ -10,6 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.emptyMap;
@@ -135,13 +136,18 @@ public class RabbitSingletons {
   private static Instrumenter<ChannelAndMethod, Void> createChannelSettleInstrumenter(
       String operationName) {
     RabbitChannelAttributesGetter getter = new RabbitChannelAttributesGetter();
-    return channelInstrumenterBuilder(
-            MessagingSpanNameExtractor.create(getter, MessagingOperationType.SETTLE, operationName),
-            true)
-        .addAttributesExtractor(
-            buildMessagingAttributesExtractor(getter, MessagingOperationType.SETTLE, operationName))
-        .addAttributesExtractor(new RabbitChannelSettleAttributesExtractor())
-        .buildInstrumenter(MessagingSpanKindExtractor.create(MessagingOperationType.SETTLE));
+    InstrumenterBuilder<ChannelAndMethod, Void> builder =
+        channelInstrumenterBuilder(
+                MessagingSpanNameExtractor.create(
+                    getter, MessagingOperationType.SETTLE, operationName),
+                true)
+            .addAttributesExtractor(
+                buildMessagingAttributesExtractor(
+                    getter, MessagingOperationType.SETTLE, operationName))
+            .addAttributesExtractor(new RabbitChannelSettleAttributesExtractor());
+    setMessagingSettleExceptionEventExtractor(builder);
+    return builder.buildInstrumenter(
+        MessagingSpanKindExtractor.create(MessagingOperationType.SETTLE));
   }
 
   private static Instrumenter<ReceiveRequest, GetResponse> createReceiveInstrumenter() {
