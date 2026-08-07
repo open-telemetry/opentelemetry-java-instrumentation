@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Iterator;
 import net.spy.memcached.transcoders.SerializingTranscoder;
+import net.spy.memcached.transcoders.Transcoder;
 import org.junit.jupiter.api.Test;
 
 class SpymemcachedQueryTextTest {
@@ -55,7 +56,10 @@ class SpymemcachedQueryTextTest {
   void shouldNotMaskValueWhenSanitizationIsDisabled() {
     assertThat(
             SpymemcachedQueryText.create(
-                "set", new Object[] {"my-key", 3600, "my-value"}, false))
+                "set",
+                "(Ljava/lang/String;ILjava/lang/Object;)V",
+                new Object[] {"my-key", 3600, "my-value"},
+                false))
         .isEqualTo("set my-key 3600 my-value");
   }
 
@@ -70,14 +74,18 @@ class SpymemcachedQueryTextTest {
   void shouldIgnoreIgnoredHoldArgumentOfDeprecatedDelete() {
     // delete(String key, int hold) is deprecated and delegates to delete(key), silently dropping
     // the hold argument, so it must not appear in the query text
-    assertThat(SpymemcachedQueryText.create("delete", new Object[] {"my-key", 5}, true))
+    assertThat(
+            SpymemcachedQueryText.create(
+                "delete", "(Ljava/lang/String;I)V", new Object[] {"my-key", 5}, true))
         .isEqualTo("delete my-key");
   }
 
   @Test
   void shouldCaptureCasArgumentOfDelete() {
     // delete(String key, long cas) is a distinct overload whose cas value is actually sent
-    assertThat(SpymemcachedQueryText.create("delete", new Object[] {"my-key", 5L}, true))
+    assertThat(
+            SpymemcachedQueryText.create(
+                "delete", "(Ljava/lang/String;J)V", new Object[] {"my-key", 5L}, true))
         .isEqualTo("delete my-key 5");
   }
 
@@ -99,6 +107,35 @@ class SpymemcachedQueryTextTest {
         .isEqualTo("get my-key");
     assertThat(
             create("set", new Object[] {"my-key", 3600, "my-value", new SerializingTranscoder()}))
+        .isEqualTo("set my-key 3600 ?");
+  }
+
+  @Test
+  void shouldIgnoreNullTranscoder() {
+    // a null transcoder is a legitimate call, e.g. set("key", 3600, "value", (Transcoder) null);
+    // the transcoder parameter position is known from the method descriptor, so a null value there
+    // must not be mistaken for the stored value and leak it unmasked
+    assertThat(
+            SpymemcachedQueryText.create(
+                "set",
+                "(Ljava/lang/String;ILjava/lang/Object;Lnet/spy/memcached/transcoders/Transcoder;)V",
+                new Object[] {"my-key", 3600, "my-value", null},
+                true))
+        .isEqualTo("set my-key 3600 ?");
+  }
+
+  @Test
+  void shouldMaskStoredValueThatImplementsTranscoder() {
+    // a stored value that happens to implement Transcoder is still the value, not a transcoder
+    // parameter, since the instrumented overload here has no explicit Transcoder parameter
+    Transcoder<?> value = new SerializingTranscoder();
+
+    assertThat(
+            SpymemcachedQueryText.create(
+                "set",
+                "(Ljava/lang/String;ILjava/lang/Object;)V",
+                new Object[] {"my-key", 3600, value},
+                true))
         .isEqualTo("set my-key 3600 ?");
   }
 
@@ -130,6 +167,31 @@ class SpymemcachedQueryTextTest {
   }
 
   private static String create(String operationName, Object[] args) {
-    return SpymemcachedQueryText.create(operationName, args, true);
+    StringBuilder descriptor = new StringBuilder("(");
+    for (Object arg : args) {
+      if (arg == null) {
+        descriptor.append("Ljava/lang/Object;");
+      } else if (arg instanceof Integer) {
+        descriptor.append("I");
+      } else if (arg instanceof Long) {
+        descriptor.append("J");
+      } else if (arg instanceof Boolean) {
+        descriptor.append("Z");
+      } else if (arg instanceof Byte) {
+        descriptor.append("B");
+      } else if (arg instanceof Character) {
+        descriptor.append("C");
+      } else if (arg instanceof Short) {
+        descriptor.append("S");
+      } else if (arg instanceof Float) {
+        descriptor.append("F");
+      } else if (arg instanceof Double) {
+        descriptor.append("D");
+      } else {
+        descriptor.append("L").append(arg.getClass().getName().replace('.', '/')).append(";");
+      }
+    }
+    descriptor.append(")V");
+    return SpymemcachedQueryText.create(operationName, descriptor.toString(), args, true);
   }
 }

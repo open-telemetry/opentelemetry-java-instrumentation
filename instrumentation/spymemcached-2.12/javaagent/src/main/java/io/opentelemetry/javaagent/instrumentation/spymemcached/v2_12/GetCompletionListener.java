@@ -19,8 +19,13 @@ public class GetCompletionListener extends CompletionListener<GetFuture<?>>
 
   @Nullable
   public static GetCompletionListener create(
-      Context parentContext, MemcachedConnection connection, String methodName, Object[] args) {
-    SpymemcachedRequest request = SpymemcachedRequest.create(connection, methodName, args);
+      Context parentContext,
+      MemcachedConnection connection,
+      String methodName,
+      String methodDescriptor,
+      Object[] args) {
+    SpymemcachedRequest request =
+        SpymemcachedRequest.create(connection, methodName, methodDescriptor, args);
     if (!instrumenter().shouldStart(parentContext, request)) {
       return null;
     }
