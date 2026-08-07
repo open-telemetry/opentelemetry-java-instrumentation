@@ -14,6 +14,7 @@ import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.ClassNames;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,6 +23,8 @@ import java.util.regex.Pattern;
 
 public class CountedSingletons {
 
+  private static final String COUNTED_ANNOTATION_NAME =
+      "application.io.opentelemetry.instrumentation.annotations.Counted";
   private static final Logger logger = Logger.getLogger(CountedSingletons.class.getName());
   private static final Meter meter = createMeter();
   private static final ClassValue<Map<Method, LongCounter>> counters =
@@ -60,14 +63,25 @@ public class CountedSingletons {
   }
 
   private static String createMetricName(Method method) {
-    application.io.opentelemetry.instrumentation.annotations.Counted annotation =
-        method.getDeclaredAnnotation(
-            application.io.opentelemetry.instrumentation.annotations.Counted.class);
-    String metricName = annotation.value();
+    String metricName = getConfiguredMetricName(method);
     if (!metricName.isEmpty()) {
       return metricName;
     }
     return buildDefaultMetricName(method);
+  }
+
+  private static String getConfiguredMetricName(Method method) {
+    // Avoid linking Counted directly so that older annotation versions keep passing muzzle.
+    for (Annotation annotation : method.getDeclaredAnnotations()) {
+      if (annotation.annotationType().getName().equals(COUNTED_ANNOTATION_NAME)) {
+        try {
+          return (String) annotation.annotationType().getMethod("value").invoke(annotation);
+        } catch (ReflectiveOperationException e) {
+          logger.log(FINE, "failed to read @Counted metric name for " + method, e);
+        }
+      }
+    }
+    return "";
   }
 
   private static String buildDefaultMetricName(Method method) {
