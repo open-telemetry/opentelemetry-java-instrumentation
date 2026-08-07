@@ -554,21 +554,23 @@ class HttpServerAttributesExtractorTest {
   @ParameterizedTest
   @CsvSource({
     "paramA=valA&paramB=valB, paramA=valA&paramB=valB",
+    "AWSAccessKeyId=AKIAIOSFODNN7, AWSAccessKeyId=REDACTED",
+    "Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0%3A377, Signature=REDACTED",
     "X-Amz-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, X-Amz-Signature=REDACTED",
     "X-Amz-Credential=AKIAIOSFODNN7%2F20260101%2Fus-east-1%2Fs3%2Faws4_request, X-Amz-Credential=REDACTED",
     "X-Amz-Security-Token=FwoGZXIvYXdzEBYaDG, X-Amz-Security-Token=REDACTED",
     "sig=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, sig=REDACTED",
     "X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, X-Goog-Signature=REDACTED",
-    "paramA=valA&X-Amz-Signature=AKIAIOSFODNN7&paramB=valB, paramA=valA&X-Amz-Signature=REDACTED&paramB=valB",
-    "X-Amz-Signature=AKIAIOSFODNN7&paramA=valA, X-Amz-Signature=REDACTED&paramA=valA",
-    "paramA=valA&X-Amz-Signature=AKIAIOSFODNN7, paramA=valA&X-Amz-Signature=REDACTED",
-    "X-Amz-Signature=AKIAIOSFODNN7&X-Amz-Signature=ZGIAIOSFODNN7, X-Amz-Signature=REDACTED&X-Amz-Signature=REDACTED",
-    "X-Amz-Signature=AKIAIOSFODNN7#ref, X-Amz-Signature=REDACTED#ref",
-    "X-Amz-Signature=AKIAIOSFODNN7&aa&bb, X-Amz-Signature=REDACTED&aa&bb",
-    "aa&bb&X-Amz-Signature=AKIAIOSFODNN7, aa&bb&X-Amz-Signature=REDACTED",
-    "X-Amz-Signature=AKIAIOSFODNN7&&, X-Amz-Signature=REDACTED&&",
-    "&&X-Amz-Signature=AKIAIOSFODNN7, &&X-Amz-Signature=REDACTED",
-    "X-Amz-Signature=AKIAIOSFODNN7&a&b#fragment, X-Amz-Signature=REDACTED&a&b#fragment"
+    "paramA=valA&AWSAccessKeyId=AKIAIOSFODNN7&paramB=valB, paramA=valA&AWSAccessKeyId=REDACTED&paramB=valB",
+    "AWSAccessKeyId=AKIAIOSFODNN7&paramA=valA, AWSAccessKeyId=REDACTED&paramA=valA",
+    "paramA=valA&AWSAccessKeyId=AKIAIOSFODNN7, paramA=valA&AWSAccessKeyId=REDACTED",
+    "AWSAccessKeyId=AKIAIOSFODNN7&AWSAccessKeyId=ZGIAIOSFODNN7, AWSAccessKeyId=REDACTED&AWSAccessKeyId=REDACTED",
+    "AWSAccessKeyId=AKIAIOSFODNN7#ref, AWSAccessKeyId=REDACTED#ref",
+    "AWSAccessKeyId=AKIAIOSFODNN7&aa&bb, AWSAccessKeyId=REDACTED&aa&bb",
+    "aa&bb&AWSAccessKeyId=AKIAIOSFODNN7, aa&bb&AWSAccessKeyId=REDACTED",
+    "AWSAccessKeyId=AKIAIOSFODNN7&&, AWSAccessKeyId=REDACTED&&",
+    "&&AWSAccessKeyId=AKIAIOSFODNN7, &&AWSAccessKeyId=REDACTED",
+    "AWSAccessKeyId=AKIAIOSFODNN7&a&b#fragment, AWSAccessKeyId=REDACTED&a&b#fragment"
   })
   void shouldRedactQueryParameters(String urlQuery, String expectedQuery) {
     Map<String, String> request = new HashMap<>();

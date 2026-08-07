@@ -28,6 +28,8 @@ public final class HttpConstants {
       unmodifiableSet(
           new HashSet<>(
               asList(
+                  "AWSAccessKeyId",
+                  "Signature",
                   "X-Amz-Signature",
                   "X-Amz-Credential",
                   "X-Amz-Security-Token",
