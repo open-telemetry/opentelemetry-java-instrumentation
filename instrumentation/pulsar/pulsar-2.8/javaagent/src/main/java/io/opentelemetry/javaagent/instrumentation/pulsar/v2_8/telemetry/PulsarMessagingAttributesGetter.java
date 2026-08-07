@@ -89,6 +89,12 @@ final class PulsarMessagingAttributesGetter
     return String.valueOf(partitionIndex);
   }
 
+  @Nullable
+  @Override
+  public String getDestinationSubscriptionName(PulsarRequest request) {
+    return request.getSubscription();
+  }
+
   @Override
   public List<String> getMessageHeader(PulsarRequest request, String name) {
     String value = request.getMessage().getProperty(name);

@@ -56,6 +56,17 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
+   * Returns the name of the destination subscription from which a message is consumed, or {@code
+   * null} if there is none.
+   *
+   * <p>This attribute only exists in the v1.43 messaging semantic conventions.
+   */
+  @Nullable
+  default String getDestinationSubscriptionName(REQUEST request) {
+    return null;
+  }
+
+  /**
    * Returns a description of a class of error the operation ended with.
    *
    * <p>If this method returns {@code null}, the exception class name (if any) will be used as error
