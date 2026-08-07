@@ -43,7 +43,7 @@ class SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<M
 
     String exchange = properties.getReceivedExchange();
     String routingKey = properties.getReceivedRoutingKey();
-    String queue = getConsumerQueue(properties);
+    String queue = getQueue(properties);
     StringBuilder destination = new StringBuilder();
     appendDestinationPart(destination, exchange);
     appendDestinationPart(destination, routingKey);
@@ -51,6 +51,24 @@ class SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<M
       appendDestinationPart(destination, queue);
     }
     return destination.length() == 0 ? null : destination.toString();
+  }
+
+  /**
+   * Returns the name of the queue that the message was consumed from, or {@code null} when it can't
+   * be determined.
+   */
+  @Nullable
+  private static String getQueue(MessageProperties properties) {
+    String queue = getConsumerQueue(properties);
+    if (queue != null) {
+      return queue;
+    }
+    // getConsumerQueue() was only added in spring-amqp 1.4, and even where it exists it is only
+    // populated for a message that a listener container consumed; every queue is bound to the
+    // default exchange under its own name, so a message received from it names its queue in the
+    // routing key
+    String exchange = properties.getReceivedExchange();
+    return exchange == null || exchange.isEmpty() ? properties.getReceivedRoutingKey() : null;
   }
 
   @Nullable
@@ -98,7 +116,7 @@ class SpringRabbitMessageAttributesGetter implements MessagingAttributesGetter<M
   @Override
   public boolean isAnonymousDestination(Message message) {
     return emitStableMessagingSemconv()
-        && isGeneratedQueueName(getConsumerQueue(message.getMessageProperties()));
+        && isGeneratedQueueName(getQueue(message.getMessageProperties()));
   }
 
   private static boolean isGeneratedQueueName(@Nullable String queue) {
