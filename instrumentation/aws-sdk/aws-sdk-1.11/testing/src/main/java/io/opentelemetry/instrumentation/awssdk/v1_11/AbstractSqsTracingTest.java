@@ -492,6 +492,8 @@ public abstract class AbstractSqsTracingTest {
                             sdkSpanAssertion,
                             processSpanAssertion,
                             span -> span.hasName("process child")));
+                // on jdk8 the order of the "SQS.ReceiveMessage" and "receive testSdkSqs"
+                // spans can vary
                 if ("SQS.ReceiveMessage".equals(trace.getSpan(1).getName())) {
                   assertions.set(1, sdkSpanAssertion);
                   assertions.set(2, receiveSpanAssertion);
