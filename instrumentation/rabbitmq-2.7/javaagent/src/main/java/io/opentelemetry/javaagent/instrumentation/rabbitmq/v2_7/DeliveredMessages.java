@@ -84,8 +84,17 @@ final class DeliveredMessages {
         // a multiple settle covers every outstanding delivery up to and including its delivery
         // tag, so the deliveries forgotten in that range are part of what it settles; they are
         // consumed here so that the settles that follow, which cover only what is left, stay
-        // accurate
-        incomplete = messages.messagesByDeliveryTag.consumeForgotten(deliveryTag);
+        // accurate, and they count as removed so that a failure puts them back
+        long forgottenLowestTag = messages.messagesByDeliveryTag.getForgottenLowestTag();
+        long forgottenHighestTag = messages.messagesByDeliveryTag.getForgottenHighestTag();
+        incomplete = messages.messagesByDeliveryTag.consumeForgottenUpTo(deliveryTag);
+        if (incomplete) {
+          lowestRemovedTag = forgottenLowestTag;
+          highestRemovedTag =
+              deliveryTag == 0 || forgottenHighestTag <= deliveryTag
+                  ? forgottenHighestTag
+                  : deliveryTag;
+        }
         Iterator<Map.Entry<Long, DeliveredMessage>> iterator =
             messages.messagesByDeliveryTag.entrySet().iterator();
         while (iterator.hasNext()) {
@@ -102,11 +111,14 @@ final class DeliveredMessages {
           }
         }
       } else {
-        // a single settle resolves exactly one delivery, so it is either remembered or not; the
-        // forgotten deliveries are deliberately left alone for a later multiple settle
+        // a single settle resolves exactly one delivery, so it is either remembered, or forgotten
+        // while the broker still has it, in which case settling it retires the forgotten delivery
         DeliveredMessage message = messages.messagesByDeliveryTag.remove(deliveryTag);
         if (message != null) {
           settled.add(message);
+          lowestRemovedTag = deliveryTag;
+          highestRemovedTag = deliveryTag;
+        } else if (messages.messagesByDeliveryTag.consumeForgottenTag(deliveryTag)) {
           lowestRemovedTag = deliveryTag;
           highestRemovedTag = deliveryTag;
         }
@@ -260,12 +272,20 @@ final class DeliveredMessages {
       }
     }
 
+    long getForgottenLowestTag() {
+      return forgottenLowestTag;
+    }
+
+    long getForgottenHighestTag() {
+      return forgottenHighestTag;
+    }
+
     /**
      * Returns whether a multiple settle up to and including {@code deliveryTag}, where {@code 0}
      * covers every outstanding delivery, settles any forgotten delivery, and forgets the ones it
      * covers.
      */
-    boolean consumeForgotten(long deliveryTag) {
+    boolean consumeForgottenUpTo(long deliveryTag) {
       if (forgottenHighestTag == 0) {
         return false;
       }
@@ -280,6 +300,29 @@ final class DeliveredMessages {
         // everything above it is treated as forgotten until a settle covers the whole range
         forgottenLowestTag = deliveryTag + 1;
       }
+      return true;
+    }
+
+    /**
+     * Returns whether a single settle of {@code deliveryTag} settles a forgotten delivery, and
+     * forgets it.
+     */
+    boolean consumeForgottenTag(long deliveryTag) {
+      if (forgottenHighestTag == 0
+          || deliveryTag < forgottenLowestTag
+          || deliveryTag > forgottenHighestTag) {
+        return false;
+      }
+      if (forgottenLowestTag == forgottenHighestTag) {
+        forgottenLowestTag = 0;
+        forgottenHighestTag = 0;
+      } else if (deliveryTag == forgottenLowestTag) {
+        forgottenLowestTag = deliveryTag + 1;
+      } else if (deliveryTag == forgottenHighestTag) {
+        forgottenHighestTag = deliveryTag - 1;
+      }
+      // a tag inside the range can't narrow it, because which deliveries within it were forgotten
+      // is no longer known
       return true;
     }
   }
