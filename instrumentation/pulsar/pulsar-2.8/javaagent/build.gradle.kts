@@ -48,6 +48,40 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.pulsar.experimental-span-attributes=true")
   }
 
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
+  val testMessagingPreviewReceiveSpansDisabled = register<Test>("testMessagingPreviewReceiveSpansDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("PulsarClientSuppressReceiveSpansTest")
+    }
+    include("**/PulsarClientSuppressReceiveSpansTest.*")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("PulsarClientTest.testConsumeNonPartitionedTopic")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+  }
+
   test {
     filter {
       excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
@@ -60,7 +94,13 @@ tasks {
   }
 
   check {
-    dependsOn(testReceiveSpanDisabled, testExperimental)
+    dependsOn(
+      testReceiveSpanDisabled,
+      testExperimental,
+      testMessagingPreview,
+      testMessagingPreviewReceiveSpansDisabled,
+      testBothSemconv,
+    )
   }
 
   if (otelProps.denyUnsafe) {
