@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetryBuilder;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.logging.Logger;
@@ -274,8 +275,12 @@ public final class Internal {
         config.getBoolean("emit_experimental_jfr_metrics/development", false);
     List<String> jfrMetrics =
         config.getScalarList("jfr_metrics/development", String.class, emptyList());
+    boolean preferJfrMetrics = config.getBoolean("prefer_jfr/development", false);
     boolean newConfig =
-        emitExperimentalMetrics || emitExperimentalJfrMetrics || !jfrMetrics.isEmpty();
+        emitExperimentalMetrics
+            || emitExperimentalJfrMetrics
+            || preferJfrMetrics
+            || !jfrMetrics.isEmpty();
 
     if (newConfig) {
       // New unified config: Use new instrumentation name for both JMX and JFR
@@ -303,7 +308,16 @@ public final class Internal {
     if (emitExperimentalJfrMetrics) {
       Experimental.setEmitExperimentalJfrMetrics(builder, true);
     }
-    Experimental.setJfrMetrics(builder, jfrMetrics);
+    // prefer_jfr is deprecated; translate it into the equivalent jfr_metrics selectors
+    List<String> effectiveJfrMetrics = new ArrayList<>(jfrMetrics);
+    if (preferJfrMetrics) {
+      logger.warning(
+          "otel.instrumentation.runtime-telemetry.experimental.prefer-jfr is deprecated and will be"
+              + " removed in the next release. Use"
+              + " otel.instrumentation.runtime-telemetry.experimental.jfr-metrics instead.");
+      effectiveJfrMetrics.addAll(Experimental.JMX_OVERLAPPING_JFR_METRICS);
+    }
+    Experimental.setJfrMetrics(builder, effectiveJfrMetrics);
 
     // Apply capture_gc_cause. GC cause is always captured when emitting stable JVM semantic
     // conventions and is no longer configurable; otherwise it defaults to false.
