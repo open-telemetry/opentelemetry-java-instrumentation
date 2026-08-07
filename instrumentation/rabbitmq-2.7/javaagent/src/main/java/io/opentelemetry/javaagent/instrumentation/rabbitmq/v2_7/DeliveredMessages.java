@@ -66,9 +66,9 @@ final class DeliveredMessages {
     synchronized (messages) {
       if (multiple) {
         // a multiple settle covers every outstanding delivery from the start of the channel, so
-        // whatever was evicted is part of what it settles; the flag is consumed here so that the
+        // whatever was forgotten is part of what it settles; the flag is consumed here so that the
         // settles that follow, which can only cover deliveries remembered since, stay accurate
-        incomplete = messages.messagesByDeliveryTag.consumeEvicted();
+        incomplete = messages.messagesByDeliveryTag.consumeForgotten();
         Iterator<Map.Entry<Long, DeliveredMessage>> iterator =
             messages.messagesByDeliveryTag.entrySet().iterator();
         while (iterator.hasNext()) {
@@ -80,7 +80,7 @@ final class DeliveredMessages {
         }
       } else {
         // a single settle resolves exactly one delivery, so it is either remembered or not; the
-        // eviction flag is deliberately left alone for a later multiple settle
+        // forgotten flag is deliberately left alone for a later multiple settle
         DeliveredMessage message = messages.messagesByDeliveryTag.remove(deliveryTag);
         if (message != null) {
           settled.add(message);
@@ -88,6 +88,27 @@ final class DeliveredMessages {
       }
     }
     return SettledMessages.of(settled, incomplete);
+  }
+
+  /**
+   * Records that deliveries that are still outstanding at the broker are no longer remembered, so
+   * that the next multiple settle, which covers every outstanding delivery, doesn't report a
+   * destination or a batch message count that describes only part of what it settles.
+   *
+   * <p>This happens when a settle call fails, and when a {@code txRollback} undoes the settlements
+   * made in the transaction: the deliveries were removed when the settle started, but the broker
+   * never settled them. They are not put back because the delivery tags they were remembered under
+   * are only valid until the channel is recovered, at which point the broker starts numbering
+   * deliveries from one again and restored entries would be attributed to unrelated messages.
+   */
+  static void markForgotten(Channel channel) {
+    DeliveredMessages messages = FIELD.get(channel);
+    if (messages == null) {
+      return;
+    }
+    synchronized (messages) {
+      messages.messagesByDeliveryTag.markForgotten();
+    }
   }
 
   /**
@@ -103,9 +124,9 @@ final class DeliveredMessages {
       return;
     }
     synchronized (messages) {
-      // this forgets the eviction flag too: every remembered delivery was unacknowledged, so
-      // whatever was evicted is requeued along with them, and the deliveries that follow, which are
-      // all remembered from the start, are the only ones a later multiple settle can cover
+      // this forgets the flag too: every remembered delivery was unacknowledged, so whatever was
+      // forgotten is requeued along with them, and the deliveries that follow, which are all
+      // remembered from the start, are the only ones a later multiple settle can cover
       messages.messagesByDeliveryTag.clear();
     }
   }
@@ -130,27 +151,31 @@ final class DeliveredMessages {
 
     private static final long serialVersionUID = 1L;
 
-    private boolean evicted;
+    private boolean forgotten;
 
     @Override
     protected boolean removeEldestEntry(Map.Entry<Long, DeliveredMessage> eldest) {
       if (size() <= CAPACITY) {
         return false;
       }
-      evicted = true;
+      forgotten = true;
       return true;
     }
 
     @Override
     public void clear() {
       super.clear();
-      evicted = false;
+      forgotten = false;
+    }
+
+    void markForgotten() {
+      forgotten = true;
     }
 
     /** Returns and clears whether any delivery has been forgotten since the last call. */
-    boolean consumeEvicted() {
-      boolean result = evicted;
-      evicted = false;
+    boolean consumeForgotten() {
+      boolean result = forgotten;
+      forgotten = false;
       return result;
     }
   }

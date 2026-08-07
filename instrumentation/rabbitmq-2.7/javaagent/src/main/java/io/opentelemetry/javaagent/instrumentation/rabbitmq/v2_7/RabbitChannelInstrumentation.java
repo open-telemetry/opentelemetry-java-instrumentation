@@ -111,6 +111,9 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         namedOneOf("basicRecover", "basicRecoverAsync").and(isPublic()),
         getClass().getName() + "$ChannelRecoverAdvice");
     transformer.applyAdviceToMethod(
+        named("txRollback").and(isPublic()).and(takesArguments(0)),
+        getClass().getName() + "$ChannelTxRollbackAdvice");
+    transformer.applyAdviceToMethod(
         named("basicGet").and(takesArgument(0, String.class)).and(takesArgument(1, boolean.class)),
         getClass().getName() + "$ChannelGetAdvice");
     transformer.applyAdviceToMethod(
@@ -129,16 +132,21 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
       @Nullable private final Context context;
       @Nullable private final Scope scope;
       @Nullable private final ChannelAndMethod request;
+      // set only when this scope removed the deliveries settled by the instrumented call, so that
+      // a failure can record that they are outstanding at the broker but no longer remembered
+      @Nullable private final Channel settledChannel;
 
       private ChannelMethodAdviceScope(
           CallDepth callDepth,
           @Nullable Context context,
           @Nullable Scope scope,
-          @Nullable ChannelAndMethod request) {
+          @Nullable ChannelAndMethod request,
+          @Nullable Channel settledChannel) {
         this.callDepth = callDepth;
         this.context = context;
         this.scope = scope;
         this.request = request;
+        this.settledChannel = settledChannel;
       }
 
       public static ChannelMethodAdviceScope start(
@@ -153,39 +161,46 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
           @Nullable Long deliveryTag,
           boolean multiple) {
         if (callDepth.getAndIncrement() > 0) {
-          return new ChannelMethodAdviceScope(callDepth, null, null, null);
+          return new ChannelMethodAdviceScope(callDepth, null, null, null, null);
         }
 
         Context parentContext = Context.current();
-        ChannelAndMethod request =
-            deliveryTag == null
-                ? ChannelAndMethod.create(channel, method)
-                // the settled deliveries are removed here, before the call to the broker, so that
-                // two threads settling on the same channel can never report the same delivery
-                // twice; the cost is that a settle that throws, or that is rolled back on a
-                // transactional channel, leaves its deliveries untracked, and a retry of it then
-                // produces a settle span without a destination or a batch message count
-                : ChannelAndMethod.createSettle(
-                    channel,
-                    method,
-                    deliveryTag,
-                    multiple,
-                    DeliveredMessages.settle(channel, deliveryTag, multiple));
+        ChannelAndMethod request;
+        Channel settledChannel = null;
+        if (deliveryTag == null) {
+          request = ChannelAndMethod.create(channel, method);
+        } else {
+          // the settled deliveries are removed here, before the call to the broker, so that two
+          // threads settling on the same channel can never report the same delivery twice; a
+          // settle that then fails records that its deliveries are no longer remembered
+          request =
+              ChannelAndMethod.createSettle(
+                  channel,
+                  method,
+                  deliveryTag,
+                  multiple,
+                  DeliveredMessages.settle(channel, deliveryTag, multiple));
+          settledChannel = channel;
+        }
 
         if (!channelInstrumenter(request).shouldStart(parentContext, request)) {
-          return new ChannelMethodAdviceScope(callDepth, null, null, null);
+          return new ChannelMethodAdviceScope(callDepth, null, null, null, settledChannel);
         }
 
         Context context = channelInstrumenter(request).start(parentContext, request);
         CURRENT_RABBIT_CONTEXT.set(context);
         helper().setChannelAndMethod(context, request);
 
-        return new ChannelMethodAdviceScope(callDepth, context, context.makeCurrent(), request);
+        return new ChannelMethodAdviceScope(
+            callDepth, context, context.makeCurrent(), request, settledChannel);
       }
 
       public void end(@Nullable Throwable throwable) {
         if (callDepth.decrementAndGet() > 0) {
           return;
+        }
+        if (throwable != null && settledChannel != null) {
+          DeliveredMessages.markForgotten(settledChannel);
         }
         if (scope == null) {
           return;
@@ -466,6 +481,30 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Channel channel) {
       ChannelRecoverAdviceScope.end(channel);
+    }
+  }
+
+  /**
+   * {@code txRollback} undoes the settlements made in the transaction, so the deliveries they
+   * settled are outstanding at the broker again while they are no longer remembered.
+   */
+  @SuppressWarnings("unused")
+  public static class ChannelTxRollbackAdvice {
+
+    public static class ChannelTxRollbackAdviceScope {
+
+      public static void end(Channel channel) {
+        if (emitStableMessagingSemconv()) {
+          DeliveredMessages.markForgotten(channel);
+        }
+      }
+
+      private ChannelTxRollbackAdviceScope() {}
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Channel channel) {
+      ChannelTxRollbackAdviceScope.end(channel);
     }
   }
 
