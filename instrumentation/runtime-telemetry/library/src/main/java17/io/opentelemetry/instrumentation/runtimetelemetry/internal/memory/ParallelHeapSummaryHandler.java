@@ -8,10 +8,10 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal.memory;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 import jdk.jfr.consumer.RecordedEvent;
@@ -112,8 +112,12 @@ public final class ParallelHeapSummaryHandler implements RecordedEventHandler {
   }
 
   @Override
-  public JfrFeature getFeature() {
-    return JfrFeature.MEMORY_POOL_METRICS;
+  public Set<String> getMetricNames() {
+    return Set.of(
+        Constants.METRIC_NAME_MEMORY,
+        Constants.METRIC_NAME_MEMORY_AFTER,
+        Constants.METRIC_NAME_COMMITTED,
+        Constants.METRIC_NAME_MEMORY_LIMIT);
   }
 
   @Override

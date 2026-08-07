@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetryBuilder;
+import java.util.List;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 
@@ -23,8 +24,7 @@ public final class Experimental {
   private static volatile BiConsumer<RuntimeTelemetryBuilder, Boolean>
       setEmitExperimentalJfrMetrics;
 
-  @Nullable
-  private static volatile BiConsumer<RuntimeTelemetryBuilder, Boolean> setPreferJfrMetrics;
+  @Nullable private static volatile BiConsumer<RuntimeTelemetryBuilder, List<String>> setJfrMetrics;
 
   /**
    * Sets whether experimental JMX-based metrics should be emitted. Experimental metrics are those
@@ -69,24 +69,25 @@ public final class Experimental {
   }
 
   /**
-   * Sets whether to prefer JFR over JMX for metrics where both collection methods are available.
-   * When set to {@code true}, metrics available from both sources will be collected using JFR. When
-   * set to {@code false} (default), metrics available from both sources will be collected using
-   * JMX. Metrics available from only one source are unaffected by this setting.
+   * Selects the metrics to source from JFR on Java 17+.
+   *
+   * <p>Each pattern must be an exact metric name or a prefix ending in {@code *}. Metrics that JFR
+   * actually registers are suppressed from JMX to avoid duplicates. This method is a no-op on Java
+   * versions prior to 17.
    *
    * @param builder the runtime telemetry builder
-   * @param preferJfrMetrics {@code true} to prefer JFR over JMX where both are available
+   * @param metricNamePatterns metric name patterns to source from JFR
    */
-  public static void setPreferJfrMetrics(
-      RuntimeTelemetryBuilder builder, boolean preferJfrMetrics) {
-    if (setPreferJfrMetrics != null) {
-      setPreferJfrMetrics.accept(builder, preferJfrMetrics);
+  public static void setJfrMetrics(
+      RuntimeTelemetryBuilder builder, List<String> metricNamePatterns) {
+    if (setJfrMetrics != null) {
+      setJfrMetrics.accept(builder, metricNamePatterns);
     }
   }
 
-  public static void internalSetPreferJfrMetrics(
-      BiConsumer<RuntimeTelemetryBuilder, Boolean> setPreferJfrMetrics) {
-    Experimental.setPreferJfrMetrics = setPreferJfrMetrics;
+  public static void internalSetJfrMetrics(
+      BiConsumer<RuntimeTelemetryBuilder, List<String>> setJfrMetrics) {
+    Experimental.setJfrMetrics = setJfrMetrics;
   }
 
   private Experimental() {}

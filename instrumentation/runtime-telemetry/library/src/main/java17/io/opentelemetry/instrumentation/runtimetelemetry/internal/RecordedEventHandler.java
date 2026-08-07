@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import jdk.jfr.consumer.RecordedEvent;
@@ -28,8 +29,8 @@ public interface RecordedEventHandler
    */
   String getEventName();
 
-  /** Return the {@link JfrFeature} this handler is associated with. */
-  JfrFeature getFeature();
+  /** Return the metric names this handler registers. */
+  Set<String> getMetricNames();
 
   /**
    * Test to see if this event is interesting to this mapper

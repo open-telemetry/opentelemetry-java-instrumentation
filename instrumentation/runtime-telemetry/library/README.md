@@ -89,19 +89,37 @@ meter_provider:
 
 ### Configuration
 
-The set of emitted metrics depends on three independent knobs. In autoconfigured
-environments, these map to system properties; programmatically, use the corresponding
-builder methods.
+JFR is disabled by default. On Java 17+, select metrics to source from JFR by metric name:
 
-- `otel.instrumentation.runtime-telemetry.emit-experimental-metrics=true`
-  (`emitExperimentalMetrics()`): enables additional JMX-based metrics that are not yet
-  stable in the semantic conventions.
-- `otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics=true` (Java 17+):
-  enables additional JFR-based metrics that are not yet stable in the semantic conventions.
-- `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr=true` (Java 17+): sources
-  metrics from JFR instead of JMX wherever a JFR equivalent exists (see
-  [JFR-based (Overlap with JMX)](#jfr-based-overlap-with-jmx) below). The corresponding
-  JMX metrics are suppressed.
+```properties
+otel.instrumentation.runtime-telemetry.experimental.jfr-metrics=jvm.memory.*,jvm.cpu.longlock
+```
+
+Patterns are exact metric names or prefixes ending in `*`; no other glob syntax is supported. JFR registers only matching metrics and starts its recording stream only when at least one handler remains. JMX registers all other enabled metrics, including JMX-only metrics such as `jvm.cpu.time` and `jvm.system.cpu.load_1m`.
+
+The equivalent declarative configuration is:
+
+```yaml
+instrumentation/development:
+  java:
+    runtime_telemetry:
+      jfr_metrics/development:
+        - jvm.memory.*
+        - jvm.cpu.longlock
+```
+
+Programmatically, configure the same selector through the experimental API:
+
+```java
+RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(openTelemetry);
+Experimental.setJfrMetrics(
+    builder, Arrays.asList("jvm.memory.*", "jvm.cpu.longlock"));
+RuntimeTelemetry runtimeTelemetry = builder.build();
+```
+
+`otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics=true` is a shorthand that adds all JFR-only experimental metrics to the selector: `jvm.cpu.context_switch`, `jvm.cpu.longlock`, `jvm.memory.allocation`, `jvm.network.io`, `jvm.network.time`, `jvm.thread.virtual.pinned`, and `jvm.thread.virtual.submit_failed`.
+
+`otel.instrumentation.runtime-telemetry.emit-experimental-metrics=true` independently enables additional JMX-based metrics that are not yet stable in the semantic conventions.
 
 > **Warning**: JFR events might not be available for all JVMs or with a GraalVM native
 > image, therefore limiting the produced metrics. The original implementation was done
@@ -111,7 +129,7 @@ builder methods.
 
 ### Stable Metrics (enabled by default)
 
-These metrics are collected via JMX on all Java versions:
+These metrics are collected via JMX on all Java versions unless selected for JFR on Java 17+:
 
 | Metric                          | Description                                                                                     |
 | ------------------------------- | ----------------------------------------------------------------------------------------------- |
@@ -158,8 +176,7 @@ These metrics are collected via JMX on all Java versions:
 
 #### JFR-based (Overlap with JMX)
 
-When `experimental.prefer-jfr=true`, the following metrics are sourced from JFR instead of JMX
-(the JMX-based registration is suppressed to avoid duplicates):
+The following metrics can be selected for JFR instead of JMX. JMX suppression is based on the metric names JFR actually registered, so unsupported JFR handlers fall back to JMX:
 
 | Metric                          |
 | ------------------------------- |

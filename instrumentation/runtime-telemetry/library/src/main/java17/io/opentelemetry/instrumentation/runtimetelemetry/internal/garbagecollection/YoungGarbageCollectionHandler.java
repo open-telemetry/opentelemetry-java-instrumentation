@@ -10,10 +10,10 @@ import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.DurationUtil;
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.Set;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
@@ -51,8 +51,8 @@ public final class YoungGarbageCollectionHandler implements RecordedEventHandler
   }
 
   @Override
-  public JfrFeature getFeature() {
-    return JfrFeature.GC_DURATION_METRICS;
+  public Set<String> getMetricNames() {
+    return Set.of(Constants.METRIC_NAME_GC_DURATION);
   }
 
   @Override
