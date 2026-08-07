@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
@@ -31,6 +33,11 @@ public final class ThreadCountHandler implements RecordedEventHandler {
 
   private volatile long activeCount = 0;
   private volatile long daemonCount = 0;
+
+  @Nullable
+  public static ThreadCountHandler create(Meter meter, Predicate<String> metricNamePredicate) {
+    return metricNamePredicate.test(METRIC_NAME) ? new ThreadCountHandler(meter) : null;
+  }
 
   public ThreadCountHandler(Meter meter) {
     observables.add(

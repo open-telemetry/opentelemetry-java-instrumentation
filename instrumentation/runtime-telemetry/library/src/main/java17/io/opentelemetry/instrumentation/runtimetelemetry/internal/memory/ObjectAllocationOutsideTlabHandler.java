@@ -11,6 +11,8 @@ import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.util.Set;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
@@ -26,6 +28,14 @@ public final class ObjectAllocationOutsideTlabHandler implements RecordedEventHa
 
   private final LongHistogram histogram;
   private final Attributes attributes;
+
+  @Nullable
+  public static ObjectAllocationOutsideTlabHandler create(
+      Meter meter, Predicate<String> metricNamePredicate) {
+    return metricNamePredicate.test(Constants.METRIC_NAME_MEMORY_ALLOCATION)
+        ? new ObjectAllocationOutsideTlabHandler(meter)
+        : null;
+  }
 
   public ObjectAllocationOutsideTlabHandler(Meter meter) {
     histogram =

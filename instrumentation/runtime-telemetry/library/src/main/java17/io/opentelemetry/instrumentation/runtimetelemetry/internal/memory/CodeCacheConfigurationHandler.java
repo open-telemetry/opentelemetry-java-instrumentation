@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
@@ -30,6 +32,14 @@ public final class CodeCacheConfigurationHandler implements RecordedEventHandler
   private final List<AutoCloseable> observables = new ArrayList<>();
 
   private volatile long initialSize = 0;
+
+  @Nullable
+  public static CodeCacheConfigurationHandler create(
+      Meter meter, Predicate<String> metricNamePredicate) {
+    return metricNamePredicate.test(Constants.METRIC_NAME_MEMORY_INIT)
+        ? new CodeCacheConfigurationHandler(meter)
+        : null;
+  }
 
   public CodeCacheConfigurationHandler(Meter meter) {
     observables.add(

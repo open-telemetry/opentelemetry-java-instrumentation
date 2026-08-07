@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -31,6 +32,17 @@ public interface RecordedEventHandler
 
   /** Return the metric names this handler registers. */
   Set<String> getMetricNames();
+
+  static Set<String> selectMetricNames(
+      Predicate<String> metricNamePredicate, String... metricNames) {
+    Set<String> selectedMetricNames = new HashSet<>();
+    for (String metricName : metricNames) {
+      if (metricNamePredicate.test(metricName)) {
+        selectedMetricNames.add(metricName);
+      }
+    }
+    return Set.copyOf(selectedMetricNames);
+  }
 
   /**
    * Test to see if this event is interesting to this mapper

@@ -12,6 +12,8 @@ import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventH
 import java.time.Duration;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
@@ -26,6 +28,14 @@ public final class VirtualThreadSubmitFailedHandler implements RecordedEventHand
 
   private final LongCounter counter;
   private final Attributes attributes;
+
+  @Nullable
+  public static VirtualThreadSubmitFailedHandler create(
+      Meter meter, Predicate<String> metricNamePredicate) {
+    return metricNamePredicate.test(METRIC_NAME)
+        ? new VirtualThreadSubmitFailedHandler(meter)
+        : null;
+  }
 
   public VirtualThreadSubmitFailedHandler(Meter meter) {
     counter = meter.counterBuilder(METRIC_NAME).setDescription(METRIC_DESCRIPTION).build();

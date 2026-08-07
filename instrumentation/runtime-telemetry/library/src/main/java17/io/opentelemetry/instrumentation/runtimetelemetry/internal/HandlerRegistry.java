@@ -29,9 +29,9 @@ import io.opentelemetry.instrumentation.runtimetelemetry.internal.threads.Virtua
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
+import javax.annotation.Nullable;
 
 final class HandlerRegistry {
 
@@ -40,59 +40,58 @@ final class HandlerRegistry {
   static List<RecordedEventHandler> getHandlers(
       Meter meter, Predicate<String> metricNamePredicate, boolean useLegacyCpuCountMetric) {
 
-    Meter filteringMeter = new FilteringMeter(meter, metricNamePredicate);
     List<RecordedEventHandler> handlers = new ArrayList<>();
     for (GarbageCollectorMXBean bean : ManagementFactory.getGarbageCollectorMXBeans()) {
       String name = bean.getName();
       switch (name) {
         case "G1 Young Generation" -> {
-          handlers.add(new G1HeapSummaryHandler(filteringMeter));
-          handlers.add(new G1GarbageCollectionHandler(filteringMeter));
+          addIfPresent(handlers, G1HeapSummaryHandler.create(meter, metricNamePredicate));
+          addIfPresent(handlers, G1GarbageCollectionHandler.create(meter, metricNamePredicate));
         }
 
-        case "Copy" -> handlers.add(new YoungGarbageCollectionHandler(filteringMeter, name));
+        case "Copy" ->
+            addIfPresent(
+                handlers, YoungGarbageCollectionHandler.create(meter, metricNamePredicate, name));
 
         case "PS Scavenge" -> {
-          handlers.add(new YoungGarbageCollectionHandler(filteringMeter, name));
-          handlers.add(new ParallelHeapSummaryHandler(filteringMeter));
+          addIfPresent(
+              handlers, YoungGarbageCollectionHandler.create(meter, metricNamePredicate, name));
+          addIfPresent(handlers, ParallelHeapSummaryHandler.create(meter, metricNamePredicate));
         }
 
         case "G1 Old Generation", "PS MarkSweep", "MarkSweepCompact" ->
-            handlers.add(new OldGarbageCollectionHandler(filteringMeter, name));
+            addIfPresent(
+                handlers, OldGarbageCollectionHandler.create(meter, metricNamePredicate, name));
 
         default -> {}
       }
     }
 
-    List<RecordedEventHandler> basicHandlers =
-        List.of(
-            new ObjectAllocationInNewTlabHandler(filteringMeter),
-            new ObjectAllocationOutsideTlabHandler(filteringMeter),
-            new NetworkReadHandler(filteringMeter),
-            new NetworkWriteHandler(filteringMeter),
-            new ContextSwitchRateHandler(filteringMeter),
-            new OverallCpuLoadHandler(filteringMeter),
-            new ContainerConfigurationHandler(filteringMeter, useLegacyCpuCountMetric),
-            new LongLockHandler(filteringMeter),
-            new ThreadCountHandler(filteringMeter),
-            new VirtualThreadPinnedHandler(filteringMeter),
-            new VirtualThreadSubmitFailedHandler(filteringMeter),
-            new ClassesLoadedHandler(filteringMeter),
-            new MetaspaceSummaryHandler(filteringMeter),
-            new CodeCacheConfigurationHandler(filteringMeter),
-            new DirectBufferStatisticsHandler(filteringMeter));
-    handlers.addAll(basicHandlers);
-
-    // Drop handlers whose instruments were all filtered out.
-    Iterator<RecordedEventHandler> iter = handlers.iterator();
-    while (iter.hasNext()) {
-      RecordedEventHandler handler = iter.next();
-      if (handler.getMetricNames().stream().noneMatch(metricNamePredicate)) {
-        handler.close();
-        iter.remove();
-      }
-    }
+    addIfPresent(handlers, ObjectAllocationInNewTlabHandler.create(meter, metricNamePredicate));
+    addIfPresent(handlers, ObjectAllocationOutsideTlabHandler.create(meter, metricNamePredicate));
+    addIfPresent(handlers, NetworkReadHandler.create(meter, metricNamePredicate));
+    addIfPresent(handlers, NetworkWriteHandler.create(meter, metricNamePredicate));
+    addIfPresent(handlers, ContextSwitchRateHandler.create(meter, metricNamePredicate));
+    addIfPresent(handlers, OverallCpuLoadHandler.create(meter, metricNamePredicate));
+    addIfPresent(
+        handlers,
+        ContainerConfigurationHandler.create(meter, metricNamePredicate, useLegacyCpuCountMetric));
+    addIfPresent(handlers, LongLockHandler.create(meter, metricNamePredicate));
+    addIfPresent(handlers, ThreadCountHandler.create(meter, metricNamePredicate));
+    addIfPresent(handlers, VirtualThreadPinnedHandler.create(meter, metricNamePredicate));
+    addIfPresent(handlers, VirtualThreadSubmitFailedHandler.create(meter, metricNamePredicate));
+    addIfPresent(handlers, ClassesLoadedHandler.create(meter, metricNamePredicate));
+    addIfPresent(handlers, MetaspaceSummaryHandler.create(meter, metricNamePredicate));
+    addIfPresent(handlers, CodeCacheConfigurationHandler.create(meter, metricNamePredicate));
+    addIfPresent(handlers, DirectBufferStatisticsHandler.create(meter, metricNamePredicate));
 
     return handlers;
+  }
+
+  private static void addIfPresent(
+      List<RecordedEventHandler> handlers, @Nullable RecordedEventHandler handler) {
+    if (handler != null) {
+      handlers.add(handler);
+    }
   }
 }
