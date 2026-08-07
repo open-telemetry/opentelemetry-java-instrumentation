@@ -23,7 +23,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -50,6 +49,11 @@ class WrapperTest extends AbstractWrapperTest {
   @Override
   void configure(KafkaTelemetryBuilder builder) {
     builder.setMessagingReceiveTelemetryEnabled(true);
+  }
+
+  @Override
+  boolean isReceiveTelemetryEnabled() {
+    return true;
   }
 
   @Override
