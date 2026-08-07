@@ -40,6 +40,7 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.DeliveredMessages.SettledMessages;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -135,21 +136,28 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
       @Nullable private final Context context;
       @Nullable private final Scope scope;
       @Nullable private final ChannelAndMethod request;
-      // set only when this scope removed the deliveries settled by the instrumented call, so that
-      // a failure can record that they are outstanding at the broker but no longer remembered
+      // the deliveries that the instrumented call removed, kept per call rather than per channel so
+      // that a failure marks exactly this call's deliveries as forgotten even when another thread
+      // settles on the same channel at the same time
       @Nullable private final Channel settledChannel;
+      private final long lowestRemovedTag;
+      private final long highestRemovedTag;
 
       private ChannelMethodAdviceScope(
           CallDepth callDepth,
           @Nullable Context context,
           @Nullable Scope scope,
           @Nullable ChannelAndMethod request,
-          @Nullable Channel settledChannel) {
+          @Nullable Channel settledChannel,
+          long lowestRemovedTag,
+          long highestRemovedTag) {
         this.callDepth = callDepth;
         this.context = context;
         this.scope = scope;
         this.request = request;
         this.settledChannel = settledChannel;
+        this.lowestRemovedTag = lowestRemovedTag;
+        this.highestRemovedTag = highestRemovedTag;
       }
 
       public static ChannelMethodAdviceScope start(
@@ -164,30 +172,33 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
           @Nullable Long deliveryTag,
           boolean multiple) {
         if (callDepth.getAndIncrement() > 0) {
-          return new ChannelMethodAdviceScope(callDepth, null, null, null, null);
+          return new ChannelMethodAdviceScope(callDepth, null, null, null, null, 0, 0);
         }
 
         Context parentContext = Context.current();
         ChannelAndMethod request;
         Channel settledChannel = null;
+        long lowestRemovedTag = 0;
+        long highestRemovedTag = 0;
         if (deliveryTag == null) {
           request = ChannelAndMethod.create(channel, method);
         } else {
           // the settled deliveries are removed here, before the call to the broker, so that two
           // threads settling on the same channel can never report the same delivery twice; a
           // settle that then fails records that its deliveries are no longer remembered
+          SettledMessages settledMessages =
+              DeliveredMessages.settle(channel, deliveryTag, multiple);
           request =
               ChannelAndMethod.createSettle(
-                  channel,
-                  method,
-                  deliveryTag,
-                  multiple,
-                  DeliveredMessages.settle(channel, deliveryTag, multiple));
+                  channel, method, deliveryTag, multiple, settledMessages);
           settledChannel = channel;
+          lowestRemovedTag = settledMessages.getLowestRemovedTag();
+          highestRemovedTag = settledMessages.getHighestRemovedTag();
         }
 
         if (!channelInstrumenter(request).shouldStart(parentContext, request)) {
-          return new ChannelMethodAdviceScope(callDepth, null, null, null, settledChannel);
+          return new ChannelMethodAdviceScope(
+              callDepth, null, null, null, settledChannel, lowestRemovedTag, highestRemovedTag);
         }
 
         Context context = channelInstrumenter(request).start(parentContext, request);
@@ -195,7 +206,13 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         helper().setChannelAndMethod(context, request);
 
         return new ChannelMethodAdviceScope(
-            callDepth, context, context.makeCurrent(), request, settledChannel);
+            callDepth,
+            context,
+            context.makeCurrent(),
+            request,
+            settledChannel,
+            lowestRemovedTag,
+            highestRemovedTag);
       }
 
       public void end(@Nullable Throwable throwable) {
@@ -203,7 +220,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
           return;
         }
         if (throwable != null && settledChannel != null) {
-          DeliveredMessages.markPendingForgotten(settledChannel);
+          DeliveredMessages.markForgotten(settledChannel, lowestRemovedTag, highestRemovedTag);
         }
         if (scope == null) {
           return;
