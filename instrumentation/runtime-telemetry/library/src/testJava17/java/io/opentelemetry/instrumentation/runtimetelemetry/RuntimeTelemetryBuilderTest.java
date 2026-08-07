@@ -86,6 +86,32 @@ class RuntimeTelemetryBuilderTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // testing deprecated method
+  void deprecatedPreferJfrMetricsSelectsOverlappingMetrics() {
+    RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
+    Experimental.setPreferJfrMetrics(builder, true);
+    RuntimeTelemetry runtimeTelemetry = builder.build();
+    cleanup.deferCleanup(runtimeTelemetry);
+
+    JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
+        (JfrConfig.JfrRuntimeMetrics) runtimeTelemetry.getJfrTelemetry();
+    assertThat(jfrRuntimeMetrics.getMetricNames())
+        .contains("jvm.class.count", "jvm.cpu.recent_utilization", "jvm.thread.count")
+        .doesNotContain("jvm.cpu.longlock", "jvm.memory.allocation");
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // testing deprecated method
+  void deprecatedPreferJfrMetricsDisabledSelectsNothing() {
+    RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
+    Experimental.setPreferJfrMetrics(builder, false);
+    RuntimeTelemetry runtimeTelemetry = builder.build();
+    cleanup.deferCleanup(runtimeTelemetry);
+
+    assertThat(runtimeTelemetry.getJfrTelemetry()).isNull();
+  }
+
+  @Test
   void splitsMemoryMetricsBetweenJfrAndJmx() {
     TestTelemetry telemetry = buildTelemetry(singletonList("jvm.memory.used"), false);
 
