@@ -322,17 +322,8 @@ abstract class AbstractPulsarClientTest {
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
-                        .satisfies(
-                            spanData -> {
-                              if (emitStableMessagingSemconv()) {
-                                assertThat(spanData.getParentSpanId())
-                                    .isIn(
-                                        trace.getSpan(0).getSpanId(), trace.getSpan(1).getSpanId());
-                              } else {
-                                assertThat(spanData.getParentSpanId())
-                                    .isEqualTo(trace.getSpan(1).getSpanId());
-                              }
-                            })));
+                        .hasParent(
+                            emitStableMessagingSemconv() ? trace.getSpan(0) : trace.getSpan(1))));
 
     if (!emitOldMessagingSemconv()) {
       return;
