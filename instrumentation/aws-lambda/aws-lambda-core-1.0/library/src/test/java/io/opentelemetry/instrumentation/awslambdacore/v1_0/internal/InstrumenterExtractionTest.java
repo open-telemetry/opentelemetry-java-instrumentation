@@ -95,15 +95,21 @@ class InstrumenterExtractionTest {
     }
   }
 
+  private interface XrayTraceIdContext {
+    @SuppressWarnings("UnusedMethod")
+    String getXrayTraceId();
+  }
+
   private static final class ContextWithXrayTraceId
-      implements com.amazonaws.services.lambda.runtime.Context {
+      implements com.amazonaws.services.lambda.runtime.Context, XrayTraceIdContext {
     private final String xrayTraceId;
 
     private ContextWithXrayTraceId(String xrayTraceId) {
       this.xrayTraceId = xrayTraceId;
     }
 
-    @SuppressWarnings({"EffectivelyPrivate", "UnusedMethod"})
+    @Override
+    @SuppressWarnings("EffectivelyPrivate")
     public String getXrayTraceId() {
       return xrayTraceId;
     }
