@@ -12,9 +12,11 @@ import static java.util.Collections.emptyList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -26,6 +28,10 @@ import java.util.List;
 /** A builder of {@link SpringIntegrationTelemetry}. */
 public final class SpringIntegrationTelemetryBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-integration-4.1";
+
+  // messaging.operation.name values, named after the Spring Messaging API operations
+  private static final String SEND_OPERATION_NAME = "send";
+  private static final String PROCESS_OPERATION_NAME = "process";
 
   private final OpenTelemetry openTelemetry;
   private final List<AttributesExtractor<MessageWithChannel, Void>> additionalAttributeExtractors =
@@ -75,31 +81,43 @@ public final class SpringIntegrationTelemetryBuilder {
    * SpringIntegrationTelemetryBuilder}.
    */
   public SpringIntegrationTelemetry build() {
+    SpringMessagingAttributesGetter consumerGetter = new SpringMessagingAttributesGetter(false);
+    SpringMessagingAttributesGetter consumerNameGetter = new SpringMessagingAttributesGetter(true);
     InstrumenterBuilder<MessageWithChannel, Void> consumerBuilder =
         Instrumenter.<MessageWithChannel, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                SpringIntegrationTelemetryBuilder::consumerSpanName)
+                MessagingSpanNameExtractor.create(
+                    consumerNameGetter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
-                    new SpringMessagingAttributesGetter(),
-                    MessageOperation.PROCESS,
+                    consumerGetter,
+                    MessagingOperationType.PROCESS,
+                    PROCESS_OPERATION_NAME,
                     capturedHeaders));
     setMessagingProcessExceptionEventExtractor(consumerBuilder);
     Instrumenter<MessageWithChannel, Void> consumerInstrumenter =
-        consumerBuilder.buildConsumerInstrumenter(MessageHeadersGetter.INSTANCE);
+        MessagingProcessInstrumenterFactory.create(
+            consumerBuilder,
+            openTelemetry.getPropagators().getTextMapPropagator(),
+            MessageHeadersGetter.INSTANCE,
+            false);
 
+    SpringMessagingAttributesGetter producerGetter = new SpringMessagingAttributesGetter(false);
+    SpringMessagingAttributesGetter producerNameGetter = new SpringMessagingAttributesGetter(true);
     InstrumenterBuilder<MessageWithChannel, Void> producerBuilder =
         Instrumenter.<MessageWithChannel, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                SpringIntegrationTelemetryBuilder::producerSpanName)
+                MessagingSpanNameExtractor.create(
+                    producerNameGetter, MessagingOperationType.SEND, SEND_OPERATION_NAME))
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
-                    new SpringMessagingAttributesGetter(),
-                    MessageOperation.PUBLISH,
+                    producerGetter,
+                    MessagingOperationType.SEND,
+                    SEND_OPERATION_NAME,
                     capturedHeaders));
     setMessagingSendExceptionEventExtractor(producerBuilder);
     Instrumenter<MessageWithChannel, Void> producerInstrumenter =
@@ -111,19 +129,12 @@ public final class SpringIntegrationTelemetryBuilder {
         producerSpanEnabled);
   }
 
-  private static String consumerSpanName(MessageWithChannel messageWithChannel) {
-    return messageWithChannel.getChannelName() + " process";
-  }
-
-  private static String producerSpanName(MessageWithChannel messageWithChannel) {
-    return messageWithChannel.getChannelName() + " publish";
-  }
-
   private static AttributesExtractor<MessageWithChannel, Void> buildMessagingAttributesExtractor(
       MessagingAttributesGetter<MessageWithChannel, Void> getter,
-      MessageOperation operation,
+      MessagingOperationType operationType,
+      String operationName,
       List<String> capturedHeaders) {
-    return MessagingAttributesExtractor.builder(getter, operation)
+    return MessagingAttributesExtractor.builder(getter, operationType, operationName)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }
