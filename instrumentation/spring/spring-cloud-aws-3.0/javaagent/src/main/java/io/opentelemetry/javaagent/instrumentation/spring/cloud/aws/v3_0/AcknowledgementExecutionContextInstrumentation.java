@@ -35,7 +35,7 @@ class AcknowledgementExecutionContextInstrumentation implements TypeInstrumentat
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope methodEnter(@Advice.Argument(0) Collection<Message<?>> messages) {
-      return SpringAwsUtil.handleBatch(messages);
+      return SpringAwsUtil.restoreBatchContext(messages);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
