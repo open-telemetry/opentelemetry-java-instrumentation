@@ -8,10 +8,10 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal.threads;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.Set;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
@@ -39,8 +39,8 @@ public final class VirtualThreadSubmitFailedHandler implements RecordedEventHand
   }
 
   @Override
-  public JfrFeature getFeature() {
-    return JfrFeature.VIRTUAL_THREAD_METRICS;
+  public Set<String> getMetricNames() {
+    return Set.of(METRIC_NAME);
   }
 
   @Override

@@ -11,8 +11,8 @@ import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.DurationUtil;
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
+import java.util.Set;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
@@ -50,8 +50,8 @@ public final class NetworkReadHandler implements RecordedEventHandler {
   }
 
   @Override
-  public JfrFeature getFeature() {
-    return JfrFeature.NETWORK_IO_METRICS;
+  public Set<String> getMetricNames() {
+    return Set.of(Constants.METRIC_NAME_NETWORK_BYTES, Constants.METRIC_NAME_NETWORK_DURATION);
   }
 
   @Override

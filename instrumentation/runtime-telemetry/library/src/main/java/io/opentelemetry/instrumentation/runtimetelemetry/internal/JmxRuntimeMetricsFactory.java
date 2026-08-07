@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 import io.opentelemetry.api.metrics.Meter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -17,27 +18,21 @@ public class JmxRuntimeMetricsFactory {
   public static List<AutoCloseable> buildObservables(
       boolean emitExperimentalTelemetry,
       boolean captureGcCause,
-      boolean preferJfrMetrics,
+      Predicate<String> metricNamePredicate,
       Meter meter) {
-    // Set up metrics gathered by JMX
-    // When preferJfrMetrics is true, skip JMX metrics that have JFR equivalents
+    Meter filteringMeter = new FilteringMeter(meter, metricNamePredicate);
     List<AutoCloseable> observables = new ArrayList<>();
-    if (!preferJfrMetrics) {
-      observables.addAll(Classes.registerObservers(meter));
-      observables.addAll(Cpu.registerObservers(meter));
-      observables.addAll(CpuCount.registerObservers(meter));
-      observables.addAll(GarbageCollector.registerObservers(meter, captureGcCause));
-      observables.addAll(MemoryPools.registerObservers(meter));
-      observables.addAll(Threads.registerObservers(meter));
-    }
+    observables.addAll(Classes.registerObservers(filteringMeter));
+    observables.addAll(Cpu.registerObservers(filteringMeter));
+    observables.addAll(CpuCount.registerObservers(filteringMeter));
+    observables.addAll(GarbageCollector.registerObservers(filteringMeter, captureGcCause));
+    observables.addAll(MemoryPools.registerObservers(filteringMeter));
+    observables.addAll(Threads.registerObservers(filteringMeter));
     if (emitExperimentalTelemetry) {
-      if (!preferJfrMetrics) {
-        observables.addAll(BufferPools.registerObservers(meter));
-        observables.addAll(SystemCpu.registerObservers(meter));
-        observables.addAll(MemoryInit.registerObservers(meter));
-      }
-      // FileDescriptor has no JFR equivalent, always register
-      observables.addAll(FileDescriptor.registerObservers(meter));
+      observables.addAll(BufferPools.registerObservers(filteringMeter));
+      observables.addAll(SystemCpu.registerObservers(filteringMeter));
+      observables.addAll(MemoryInit.registerObservers(filteringMeter));
+      observables.addAll(FileDescriptor.registerObservers(filteringMeter));
     }
     return observables;
   }
