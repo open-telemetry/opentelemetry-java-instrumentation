@@ -926,6 +926,42 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                         span, trace.getSpan(0), "ack", queueName, true, lastDeliveryTag, 3L)));
   }
 
+  @Test
+  void testRabbitSettleMultipleAfterTxRollback() throws IOException {
+    assumeTrue(emitStableMessagingSemconv());
+
+    String queueName = channel.queueDeclare().getQueue();
+    for (int i = 0; i < 3; i++) {
+      channel.basicPublish(
+          "", queueName, null, ("message " + i).getBytes(Charset.defaultCharset()));
+    }
+    channel.txSelect();
+    long deliveryTag = 0;
+    for (int i = 0; i < 3; i++) {
+      GetResponse response = channel.basicGet(queueName, false);
+      deliveryTag = response.getEnvelope().getDeliveryTag();
+    }
+    // acknowledges the first two deliveries and then undoes the acknowledgement, which leaves them
+    // outstanding under the same delivery tags while they are no longer remembered
+    channel.basicAck(deliveryTag - 1, true);
+    channel.txRollback();
+    testing.clearData();
+
+    long lastDeliveryTag = deliveryTag;
+    testing.runWithSpan("parent", () -> channel.basicAck(lastDeliveryTag, true));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                // the rolled back acknowledgement left deliveries outstanding that are no longer
+                // remembered, so the destination and the batch message count, which both have to
+                // describe every settled message, are not reported
+                span ->
+                    verifySettleSpan(
+                        span, trace.getSpan(0), "ack", null, false, lastDeliveryTag, null)));
+  }
+
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static void verifySettleSpan(
       SpanDataAssert span,
