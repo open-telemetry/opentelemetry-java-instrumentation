@@ -38,6 +38,17 @@ final class DeliveredMessages {
 
   private final BoundedMap messagesByDeliveryTag = new BoundedMap();
 
+  // whether the channel has been put into transaction mode, in which the settlements it makes are
+  // only durable once they are committed
+  private boolean transactional;
+
+  // the range of delivery tags removed by the settles that a txRollback, or a failure of the
+  // settle itself, would undo; a transactional channel accumulates them until the transaction
+  // ends, any other channel only ever holds the settle that is in flight, and a tag of zero, which
+  // no delivery ever uses, means that there is nothing to undo
+  private long pendingLowestTag;
+  private long pendingHighestTag;
+
   static void record(Channel channel, Envelope envelope, String queue) {
     DeliveredMessage message =
         new DeliveredMessage(
@@ -64,26 +75,34 @@ final class DeliveredMessages {
     List<DeliveredMessage> settled = new ArrayList<>();
     boolean incomplete = false;
     synchronized (messages) {
+      if (!messages.transactional) {
+        // outside a transaction the settle that is about to run is the only one that can still be
+        // undone, so whatever an earlier settle removed is durable and no longer pending
+        messages.clearPending();
+      }
       if (multiple) {
-        // a multiple settle covers every outstanding delivery from the start of the channel, so
-        // whatever was forgotten is part of what it settles; the flag is consumed here so that the
-        // settles that follow, which can only cover deliveries remembered since, stay accurate
-        incomplete = messages.messagesByDeliveryTag.consumeForgotten();
+        // a multiple settle covers every outstanding delivery up to and including its delivery
+        // tag, so the deliveries forgotten in that range are part of what it settles; they are
+        // consumed here so that the settles that follow, which cover only what is left, stay
+        // accurate
+        incomplete = messages.messagesByDeliveryTag.consumeForgotten(deliveryTag);
         Iterator<Map.Entry<Long, DeliveredMessage>> iterator =
             messages.messagesByDeliveryTag.entrySet().iterator();
         while (iterator.hasNext()) {
           Map.Entry<Long, DeliveredMessage> entry = iterator.next();
           if (deliveryTag == 0 || entry.getKey() <= deliveryTag) {
             settled.add(entry.getValue());
+            messages.addPending(entry.getKey());
             iterator.remove();
           }
         }
       } else {
         // a single settle resolves exactly one delivery, so it is either remembered or not; the
-        // forgotten flag is deliberately left alone for a later multiple settle
+        // forgotten deliveries are deliberately left alone for a later multiple settle
         DeliveredMessage message = messages.messagesByDeliveryTag.remove(deliveryTag);
         if (message != null) {
           settled.add(message);
+          messages.addPending(deliveryTag);
         }
       }
     }
@@ -91,24 +110,54 @@ final class DeliveredMessages {
   }
 
   /**
-   * Records that deliveries that are still outstanding at the broker are no longer remembered, so
-   * that the next multiple settle, which covers every outstanding delivery, doesn't report a
+   * Starts a new transaction on a channel, as {@code txSelect} and {@code txCommit} do: the
+   * settlements made in the transaction that just ended, if there was one, are durable, and only
+   * the settlements that follow can still be rolled back.
+   */
+  static void startTransaction(Channel channel) {
+    // a channel that has not delivered anything yet still has to be remembered as transactional,
+    // because the deliveries that follow can be settled and rolled back within this transaction
+    DeliveredMessages messages = getOrCreate(channel);
+    synchronized (messages) {
+      messages.transactional = true;
+      messages.clearPending();
+    }
+  }
+
+  /**
+   * Records that the deliveries removed by the settles that are still pending are outstanding at
+   * the broker while they are no longer remembered, as a {@code txRollback} and a settle call that
+   * fails both leave them, so that a later multiple settle covering them doesn't report a
    * destination or a batch message count that describes only part of what it settles.
    *
-   * <p>This happens when a settle call fails, and when a {@code txRollback} undoes the settlements
-   * made in the transaction: the deliveries were removed when the settle started, but the broker
-   * never settled them. They are not put back because the delivery tags they were remembered under
-   * are only valid until the channel is recovered, at which point the broker starts numbering
+   * <p>The deliveries are not put back because the delivery tags they were remembered under are
+   * only valid until the channel is recovered, at which point the broker starts numbering
    * deliveries from one again and restored entries would be attributed to unrelated messages.
    */
-  static void markForgotten(Channel channel) {
+  static void markPendingForgotten(Channel channel) {
     DeliveredMessages messages = FIELD.get(channel);
     if (messages == null) {
       return;
     }
     synchronized (messages) {
-      messages.messagesByDeliveryTag.markForgotten();
+      messages.messagesByDeliveryTag.markForgotten(
+          messages.pendingLowestTag, messages.pendingHighestTag);
+      messages.clearPending();
     }
+  }
+
+  private void addPending(long deliveryTag) {
+    if (pendingHighestTag == 0 || deliveryTag < pendingLowestTag) {
+      pendingLowestTag = deliveryTag;
+    }
+    if (deliveryTag > pendingHighestTag) {
+      pendingHighestTag = deliveryTag;
+    }
+  }
+
+  private void clearPending() {
+    pendingLowestTag = 0;
+    pendingHighestTag = 0;
   }
 
   /**
@@ -124,10 +173,11 @@ final class DeliveredMessages {
       return;
     }
     synchronized (messages) {
-      // this forgets the flag too: every remembered delivery was unacknowledged, so whatever was
-      // forgotten is requeued along with them, and the deliveries that follow, which are all
-      // remembered from the start, are the only ones a later multiple settle can cover
+      // this forgets the settled deliveries too: every remembered delivery was unacknowledged, so
+      // whatever was forgotten is requeued along with them, and the deliveries that follow, which
+      // are all remembered from the start, are the only ones a later multiple settle can cover
       messages.messagesByDeliveryTag.clear();
+      messages.clearPending();
     }
   }
 
@@ -151,32 +201,61 @@ final class DeliveredMessages {
 
     private static final long serialVersionUID = 1L;
 
-    private boolean forgotten;
+    // the range of delivery tags that were remembered and are no longer, while the deliveries
+    // themselves are still outstanding at the broker; a tag of zero, which no delivery ever uses,
+    // means that nothing has been forgotten
+    private long forgottenLowestTag;
+    private long forgottenHighestTag;
 
     @Override
     protected boolean removeEldestEntry(Map.Entry<Long, DeliveredMessage> eldest) {
       if (size() <= CAPACITY) {
         return false;
       }
-      forgotten = true;
+      markForgotten(eldest.getKey(), eldest.getKey());
       return true;
     }
 
     @Override
     public void clear() {
       super.clear();
-      forgotten = false;
+      forgottenLowestTag = 0;
+      forgottenHighestTag = 0;
     }
 
-    void markForgotten() {
-      forgotten = true;
+    void markForgotten(long lowestTag, long highestTag) {
+      if (highestTag == 0) {
+        return;
+      }
+      if (forgottenHighestTag == 0 || lowestTag < forgottenLowestTag) {
+        forgottenLowestTag = lowestTag;
+      }
+      if (highestTag > forgottenHighestTag) {
+        forgottenHighestTag = highestTag;
+      }
     }
 
-    /** Returns and clears whether any delivery has been forgotten since the last call. */
-    boolean consumeForgotten() {
-      boolean result = forgotten;
-      forgotten = false;
-      return result;
+    /**
+     * Returns whether a multiple settle up to and including {@code deliveryTag}, where {@code 0}
+     * covers every outstanding delivery, settles any forgotten delivery, and forgets the ones it
+     * covers.
+     */
+    boolean consumeForgotten(long deliveryTag) {
+      if (forgottenHighestTag == 0) {
+        return false;
+      }
+      if (deliveryTag != 0 && forgottenLowestTag > deliveryTag) {
+        return false;
+      }
+      if (deliveryTag == 0 || forgottenHighestTag <= deliveryTag) {
+        forgottenLowestTag = 0;
+        forgottenHighestTag = 0;
+      } else {
+        // deliveries above the settled tag are still forgotten; which ones is no longer known, so
+        // everything above it is treated as forgotten until a settle covers the whole range
+        forgottenLowestTag = deliveryTag + 1;
+      }
+      return true;
     }
   }
 
