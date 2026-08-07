@@ -42,12 +42,15 @@ final class DeliveredMessages {
   // only durable once they are committed
   private boolean transactional;
 
-  // the range of delivery tags removed by the settles that a txRollback, or a failure of the
-  // settle itself, would undo; a transactional channel accumulates them until the transaction
-  // ends, any other channel only ever holds the settle that is in flight, and a tag of zero, which
-  // no delivery ever uses, means that there is nothing to undo
+  // the range of delivery tags removed by the settles that a txRollback would undo; it is only
+  // tracked while the channel is transactional, and a tag of zero, which no delivery ever uses,
+  // means that there is nothing to undo
   private long pendingLowestTag;
   private long pendingHighestTag;
+
+  // the highest delivery tag remembered so far, used to notice that the broker started numbering
+  // deliveries from one again
+  private long highestRecordedTag;
 
   static void record(Channel channel, Envelope envelope, String queue) {
     DeliveredMessage message =
@@ -56,8 +59,19 @@ final class DeliveredMessages {
             isGeneratedQueueName(queue),
             envelope.getRoutingKey());
     DeliveredMessages messages = getOrCreate(channel);
+    long deliveryTag = envelope.getDeliveryTag();
     synchronized (messages) {
-      messages.messagesByDeliveryTag.put(envelope.getDeliveryTag(), message);
+      // delivery tags increase for the life of a channel, so a tag that doesn't means that the
+      // channel was recovered onto a new one, as the automatic connection recovery that the client
+      // enables by default does while keeping the same Channel object; the broker requeued every
+      // unacknowledged delivery and started numbering from one again, so the deliveries remembered
+      // under the old numbering describe unrelated messages now
+      if (deliveryTag <= messages.highestRecordedTag) {
+        messages.messagesByDeliveryTag.clear();
+        messages.clearPending();
+      }
+      messages.highestRecordedTag = deliveryTag;
+      messages.messagesByDeliveryTag.put(deliveryTag, message);
     }
   }
 
