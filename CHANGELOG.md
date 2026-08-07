@@ -18,6 +18,13 @@
   configuration properties and `GrpcTelemetryBuilder` captured request metadata methods in favor of
   include/exclude request metadata selectors. The deprecated properties and methods will be removed
   in 3.0.
+- Deprecate `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` and
+  `io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental#setPreferJfrMetrics(RuntimeTelemetryBuilder, boolean)`
+  in favor of `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics` and
+  `Experimental#setJfrMetrics(RuntimeTelemetryBuilder, List)`, which select JFR metrics by metric
+  name instead of by an all-or-nothing toggle. The deprecated property and method still select the
+  same metrics and will be removed in the next release.
+  ([#19421](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19421))
 - Deprecate the `opentelemetry-zipkin-spring-boot-starter` artifact. Use
   `opentelemetry-spring-boot-starter` with the OTLP exporter instead. It will be removed in 3.0.
 - Deprecate `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)` in the
