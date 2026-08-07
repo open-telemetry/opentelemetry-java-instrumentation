@@ -21,6 +21,9 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
+  test {
     systemProperty("otel.instrumentation.genai.capture-message-content", true)
   }
 
@@ -31,13 +34,25 @@ tasks {
     jvmArgs(
       "-Dotel.instrumentation.spring-ai.experimental.capture-message-content-as-span-attributes.enabled=true"
     )
+    systemProperty("otel.instrumentation.genai.capture-message-content", true)
     systemProperty(
       "metadataConfig",
       "otel.instrumentation.spring-ai.experimental.capture-message-content-as-span-attributes.enabled=true",
     )
   }
 
+  val testContentDisabled = register<Test>("testContentDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    systemProperty("otel.instrumentation.genai.capture-message-content", false)
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.genai.capture-message-content=false",
+    )
+  }
+
   check {
-    dependsOn(testExperimental)
+    dependsOn(testExperimental, testContentDisabled)
   }
 }

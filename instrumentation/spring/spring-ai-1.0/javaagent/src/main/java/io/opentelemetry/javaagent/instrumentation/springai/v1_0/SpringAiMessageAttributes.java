@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.springai.v1_0;
 
-import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -24,44 +23,43 @@ public final class SpringAiMessageAttributes {
       stringKey("gen_ai.input.messages");
   private static final AttributeKey<String> GEN_AI_OUTPUT_MESSAGES =
       stringKey("gen_ai.output.messages");
-  private static final AttributeKey<Boolean> GEN_AI_INPUT_MESSAGES_TRUNCATED =
-      booleanKey("gen_ai.input.messages.truncated");
-  private static final AttributeKey<Boolean> GEN_AI_OUTPUT_MESSAGES_TRUNCATED =
-      booleanKey("gen_ai.output.messages.truncated");
 
   public static void setInputMessages(Context context, SpringAiRequest request) {
     if (!SpringAiSingletons.captureMessageContentAsSpanAttributes()) {
       return;
     }
-    Span span = Span.fromContext(context);
-    SerializedMessages messages =
-        serializeMessages(
-            request.prompt().getInstructions(),
-            SpringAiSingletons.messageContentSpanAttributeMaxLength());
-    span.setAttribute(GEN_AI_INPUT_MESSAGES, messages.json());
-    if (messages.truncated()) {
-      span.setAttribute(GEN_AI_INPUT_MESSAGES_TRUNCATED, true);
+    try {
+      Span.fromContext(context)
+          .setAttribute(
+              GEN_AI_INPUT_MESSAGES,
+              serializeMessages(
+                  request.prompt().getInstructions(),
+                  SpringAiSingletons.messageContentSpanAttributeMaxLength()));
+    } catch (Throwable ignored) {
+      // This helper can run outside of Byte Buddy advice for streaming calls.
     }
   }
 
   public static void setOutputMessages(
-      Context context, @Nullable ChatResponse response, @Nullable String streamedContent) {
+      Context context, @Nullable ChatResponse response, @Nullable List<String> streamedContents) {
     if (!SpringAiSingletons.captureMessageContentAsSpanAttributes() || response == null) {
       return;
     }
-    Span span = Span.fromContext(context);
-    SerializedMessages messages =
-        serializeResponses(
-            response, streamedContent, SpringAiSingletons.messageContentSpanAttributeMaxLength());
-    span.setAttribute(GEN_AI_OUTPUT_MESSAGES, messages.json());
-    if (messages.truncated()) {
-      span.setAttribute(GEN_AI_OUTPUT_MESSAGES_TRUNCATED, true);
+    try {
+      Span.fromContext(context)
+          .setAttribute(
+              GEN_AI_OUTPUT_MESSAGES,
+              serializeResponses(
+                  response,
+                  streamedContents,
+                  SpringAiSingletons.messageContentSpanAttributeMaxLength()));
+    } catch (Throwable ignored) {
+      // This helper can run outside of Byte Buddy advice for streaming calls.
     }
   }
 
-  static SerializedMessages serializeMessages(List<Message> messages, int maxContentLength) {
+  static String serializeMessages(List<Message> messages, int maxContentLength) {
     StringBuilder result = new StringBuilder("[");
-    boolean truncated = false;
     for (int index = 0; index < messages.size(); index++) {
       if (index > 0) {
         result.append(',');
@@ -69,47 +67,52 @@ public final class SpringAiMessageAttributes {
       Message message = messages.get(index);
       result.append("{\"role\":");
       appendJsonString(result, message.getMessageType().name().toLowerCase(Locale.ROOT));
-      result.append(",\"content\":");
-      TruncatedContent content = truncate(message.getText(), maxContentLength);
-      appendJsonString(result, content.value());
-      result.append('}');
-      truncated |= content.truncated();
+      result.append(",\"parts\":[{\"type\":\"text\",\"content\":");
+      appendJsonString(result, truncate(message.getText(), maxContentLength));
+      result.append("}]}");
     }
-    return new SerializedMessages(result.append(']').toString(), truncated);
+    return result.append(']').toString();
   }
 
-  static SerializedMessages serializeResponses(
-      ChatResponse response, @Nullable String streamedContent, int maxContentLength) {
+  static String serializeResponses(
+      ChatResponse response, @Nullable List<String> streamedContents, int maxContentLength) {
     StringBuilder result = new StringBuilder("[");
-    boolean truncated = false;
-    if (streamedContent != null) {
-      truncated = appendAssistantMessage(result, streamedContent, maxContentLength);
-    } else {
-      List<Generation> generations = response.getResults();
-      for (int index = 0; index < generations.size(); index++) {
-        if (index > 0) {
-          result.append(',');
-        }
-        truncated |=
-            appendAssistantMessage(
-                result, generations.get(index).getOutput().getText(), maxContentLength);
+    List<Generation> generations = response.getResults();
+    for (int index = 0; index < generations.size(); index++) {
+      if (index > 0) {
+        result.append(',');
       }
+      Generation generation = generations.get(index);
+      String content =
+          streamedContents != null && index < streamedContents.size()
+              ? streamedContents.get(index)
+              : generation.getOutput().getText();
+      appendAssistantMessage(result, content, finishReason(generation), maxContentLength);
     }
-    return new SerializedMessages(result.append(']').toString(), truncated);
+    return result.append(']').toString();
   }
 
-  private static boolean appendAssistantMessage(
-      StringBuilder result, @Nullable String content, int maxContentLength) {
-    result.append("{\"role\":\"assistant\",\"content\":");
-    TruncatedContent truncatedContent = truncate(content, maxContentLength);
-    appendJsonString(result, truncatedContent.value());
+  private static void appendAssistantMessage(
+      StringBuilder result,
+      @Nullable String content,
+      @Nullable String finishReason,
+      int maxContentLength) {
+    result.append("{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":");
+    appendJsonString(result, truncate(content, maxContentLength));
+    result.append("}],\"finish_reason\":");
+    appendJsonString(result, finishReason == null ? "unknown" : finishReason);
     result.append('}');
-    return truncatedContent.truncated();
   }
 
-  private static TruncatedContent truncate(@Nullable String content, int maxContentLength) {
+  @Nullable
+  private static String finishReason(Generation generation) {
+    return generation.getMetadata() == null ? null : generation.getMetadata().getFinishReason();
+  }
+
+  @Nullable
+  private static String truncate(@Nullable String content, int maxContentLength) {
     if (content == null || content.length() <= maxContentLength) {
-      return new TruncatedContent(content, false);
+      return content;
     }
     int end = maxContentLength;
     if (end > 0
@@ -118,7 +121,7 @@ public final class SpringAiMessageAttributes {
         && Character.isLowSurrogate(content.charAt(end))) {
       end--;
     }
-    return new TruncatedContent(content.substring(0, end), true);
+    return content.substring(0, end);
   }
 
   private static void appendJsonString(StringBuilder result, @Nullable String value) {
@@ -153,41 +156,4 @@ public final class SpringAiMessageAttributes {
   }
 
   private SpringAiMessageAttributes() {}
-
-  static final class SerializedMessages {
-    private final String json;
-    private final boolean truncated;
-
-    private SerializedMessages(String json, boolean truncated) {
-      this.json = json;
-      this.truncated = truncated;
-    }
-
-    String json() {
-      return json;
-    }
-
-    boolean truncated() {
-      return truncated;
-    }
-  }
-
-  private static final class TruncatedContent {
-    @Nullable private final String value;
-    private final boolean truncated;
-
-    private TruncatedContent(@Nullable String value, boolean truncated) {
-      this.value = value;
-      this.truncated = truncated;
-    }
-
-    @Nullable
-    private String value() {
-      return value;
-    }
-
-    private boolean truncated() {
-      return truncated;
-    }
-  }
 }

@@ -49,6 +49,7 @@ public final class SpringAiSingletons {
         Instrumenter.<SpringAiRequest, ChatResponse>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, SpringAiSpanNameExtractor::name)
             .addAttributesExtractor(GenAiAttributesExtractor.create(getter))
+            .addAttributesExtractor(new SpringAiErrorAttributesExtractor())
             .addOperationMetrics(GenAiClientMetrics.get());
     setGenAiClientExceptionEventExtractor(builder);
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());

@@ -16,16 +16,32 @@ import org.springframework.ai.chat.metadata.DefaultUsage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 import reactor.core.publisher.Flux;
 
 @SuppressWarnings("PublicApiNamedStreamShouldReturnStream")
 public class TestChatModel implements ChatModel {
   private SpanContext lastSpanContext;
+  private final ChatOptions defaultOptions;
+  private RuntimeException callFailure;
+  private Flux<ChatResponse> streamPublisher;
+
+  public TestChatModel() {
+    this(null);
+  }
+
+  public TestChatModel(ChatOptions defaultOptions) {
+    this.defaultOptions = defaultOptions;
+    this.streamPublisher = Flux.just(response());
+  }
 
   @Override
   public ChatResponse call(Prompt prompt) {
     lastSpanContext = Span.current().getSpanContext();
+    if (callFailure != null) {
+      throw callFailure;
+    }
     return response();
   }
 
@@ -34,12 +50,25 @@ public class TestChatModel implements ChatModel {
     return Flux.defer(
         () -> {
           lastSpanContext = Span.current().getSpanContext();
-          return Flux.just(response());
+          return streamPublisher;
         });
+  }
+
+  @Override
+  public ChatOptions getDefaultOptions() {
+    return defaultOptions;
   }
 
   public SpanContext getLastSpanContext() {
     return lastSpanContext;
+  }
+
+  public void setCallFailure(RuntimeException callFailure) {
+    this.callFailure = callFailure;
+  }
+
+  public void setStreamPublisher(Flux<ChatResponse> streamPublisher) {
+    this.streamPublisher = streamPublisher;
   }
 
   private static ChatResponse response() {

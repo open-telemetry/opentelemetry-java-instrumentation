@@ -27,16 +27,20 @@ public final class SpringAiMessageEvents {
       stringKey("gen_ai.provider.name");
 
   public static void emitPromptEvents(Context context, SpringAiRequest request) {
-    for (Message message : request.prompt().getInstructions()) {
-      String eventName = eventName(message.getMessageType());
-      if (eventName == null) {
-        continue;
+    try {
+      for (Message message : request.prompt().getInstructions()) {
+        String eventName = eventName(message.getMessageType());
+        if (eventName == null) {
+          continue;
+        }
+        Map<String, Value<?>> body = new HashMap<>();
+        if (SpringAiSingletons.captureMessageContent()) {
+          body.put("content", Value.of(message.getText()));
+        }
+        newEvent(request, eventName).setContext(context).setBody(Value.of(body)).emit();
       }
-      Map<String, Value<?>> body = new HashMap<>();
-      if (SpringAiSingletons.captureMessageContent()) {
-        body.put("content", Value.of(message.getText()));
-      }
-      newEvent(request, eventName).setContext(context).setBody(Value.of(body)).emit();
+    } catch (Throwable ignored) {
+      // This helper can run outside of Byte Buddy advice for streaming calls.
     }
   }
 
@@ -44,34 +48,34 @@ public final class SpringAiMessageEvents {
       Context context,
       SpringAiRequest request,
       @Nullable ChatResponse response,
-      @Nullable String streamedContent) {
+      @Nullable List<String> streamedContents) {
     if (response == null) {
       return;
     }
 
-    List<Generation> results = response.getResults();
-    for (int index = 0; index < results.size(); index++) {
-      Generation generation = results.get(index);
-      Map<String, Value<?>> body = new HashMap<>();
-      String finishReason = finishReason(generation);
-      if (finishReason != null) {
-        body.put("finish_reason", Value.of(finishReason));
+    try {
+      List<Generation> results = response.getResults();
+      for (int index = 0; index < results.size(); index++) {
+        Generation generation = results.get(index);
+        Map<String, Value<?>> body = new HashMap<>();
+        String finishReason = finishReason(generation);
+        if (finishReason != null) {
+          body.put("finish_reason", Value.of(finishReason));
+        }
+        body.put("index", Value.of(index));
+        Map<String, Value<?>> message = new HashMap<>();
+        if (SpringAiSingletons.captureMessageContent()) {
+          String content =
+              streamedContents != null && index < streamedContents.size()
+                  ? streamedContents.get(index)
+                  : generation.getOutput().getText();
+          message.put("content", Value.of(content));
+        }
+        body.put("message", Value.of(message));
+        newEvent(request, "gen_ai.choice").setContext(context).setBody(Value.of(body)).emit();
       }
-      body.put("index", Value.of(index));
-      Map<String, Value<?>> message = new HashMap<>();
-      if (SpringAiSingletons.captureMessageContent()) {
-        String content =
-            streamedContent == null ? generation.getOutput().getText() : streamedContent;
-        message.put("content", Value.of(content));
-      }
-      body.put("message", Value.of(message));
-      newEvent(request, "gen_ai.choice").setContext(context).setBody(Value.of(body)).emit();
-    }
-  }
-
-  public static void appendResponseContent(StringBuilder content, ChatResponse response) {
-    for (Generation generation : response.getResults()) {
-      content.append(generation.getOutput().getText());
+    } catch (Throwable ignored) {
+      // This helper can run outside of Byte Buddy advice for streaming calls.
     }
   }
 

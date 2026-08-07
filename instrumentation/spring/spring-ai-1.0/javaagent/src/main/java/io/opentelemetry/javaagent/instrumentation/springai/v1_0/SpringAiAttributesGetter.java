@@ -16,7 +16,6 @@ import org.springframework.ai.chat.metadata.ChatResponseMetadata;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
-import org.springframework.ai.chat.prompt.ChatOptions;
 
 final class SpringAiAttributesGetter
     implements GenAiAttributesGetter<SpringAiRequest, ChatResponse> {
@@ -33,8 +32,7 @@ final class SpringAiAttributesGetter
   @Override
   @Nullable
   public String getRequestModel(SpringAiRequest request) {
-    ChatOptions options = request.prompt().getOptions();
-    return options == null ? null : options.getModel();
+    return request.model();
   }
 
   @Override
@@ -50,38 +48,40 @@ final class SpringAiAttributesGetter
 
   @Override
   public Double getRequestFrequencyPenalty(SpringAiRequest request) {
-    return null;
+    return request.frequencyPenalty();
   }
 
   @Override
   public Long getRequestMaxTokens(SpringAiRequest request) {
-    return null;
+    Integer maxTokens = request.maxTokens();
+    return maxTokens == null ? null : maxTokens.longValue();
   }
 
   @Override
   public Double getRequestPresencePenalty(SpringAiRequest request) {
-    return null;
+    return request.presencePenalty();
   }
 
   @Override
   @Nullable
   public List<String> getRequestStopSequences(SpringAiRequest request) {
-    return null;
+    return request.stopSequences();
   }
 
   @Override
   public Double getRequestTemperature(SpringAiRequest request) {
-    return null;
+    return request.temperature();
   }
 
   @Override
   public Double getRequestTopK(SpringAiRequest request) {
-    return null;
+    Integer topK = request.topK();
+    return topK == null ? null : topK.doubleValue();
   }
 
   @Override
   public Double getRequestTopP(SpringAiRequest request) {
-    return null;
+    return request.topP();
   }
 
   @Override

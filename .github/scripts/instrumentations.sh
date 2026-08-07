@@ -292,6 +292,7 @@ readonly INSTRUMENTATIONS=(
   "servlet:servlet-5.0:jetty12-testing:test"
   "sofa-rpc-5.4:javaagent:testSofaRpc"
   "spring:spring-ai-1.0:javaagent:test"
+  "spring:spring-ai-1.0:javaagent:testContentDisabled"
   "spring:spring-ai-1.0:javaagent:testExperimental"
   "spring:spring-batch-3.0:javaagent:test"
   "spring:spring-batch-3.0:javaagent:testExperimental"

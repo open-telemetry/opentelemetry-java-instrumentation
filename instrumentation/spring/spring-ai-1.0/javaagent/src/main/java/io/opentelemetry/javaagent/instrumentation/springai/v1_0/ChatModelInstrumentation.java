@@ -72,16 +72,20 @@ class ChatModelInstrumentation implements TypeInstrumentation {
           return null;
         }
         Context context = instrumenter().start(parentContext, request);
+        AdviceScope adviceScope = new AdviceScope(context, request);
         SpringAiMessageAttributes.setInputMessages(context, request);
         SpringAiMessageEvents.emitPromptEvents(context, request);
-        return new AdviceScope(context, request);
+        return adviceScope;
       }
 
       public void end(@Nullable ChatResponse response, @Nullable Throwable throwable) {
-        scope.close();
-        SpringAiMessageAttributes.setOutputMessages(context, response, null);
-        SpringAiMessageEvents.emitResponseEvents(context, request, response, null);
-        instrumenter().end(context, request, response, throwable);
+        try {
+          scope.close();
+        } finally {
+          SpringAiMessageAttributes.setOutputMessages(context, response, null);
+          SpringAiMessageEvents.emitResponseEvents(context, request, response, null);
+          instrumenter().end(context, request, response, throwable);
+        }
       }
     }
 
