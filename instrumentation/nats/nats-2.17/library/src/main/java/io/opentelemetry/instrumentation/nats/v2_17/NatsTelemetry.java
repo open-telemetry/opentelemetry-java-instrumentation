@@ -17,6 +17,7 @@ import java.io.IOException;
 /** Entrypoint for instrumenting NATS clients. */
 public final class NatsTelemetry {
   private final Instrumenter<NatsRequest, NatsRequest> producerInstrumenter;
+  private final Instrumenter<NatsRequest, NatsRequest> settleInstrumenter;
   private final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter;
 
   /** Returns a new {@link NatsTelemetry} configured with the given {@link OpenTelemetry}. */
@@ -31,8 +32,10 @@ public final class NatsTelemetry {
 
   NatsTelemetry(
       Instrumenter<NatsRequest, NatsRequest> producerInstrumenter,
+      Instrumenter<NatsRequest, NatsRequest> settleInstrumenter,
       Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     this.producerInstrumenter = producerInstrumenter;
+    this.settleInstrumenter = settleInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
 
@@ -45,7 +48,7 @@ public final class NatsTelemetry {
    */
   public Connection wrap(Connection connection) {
     return OpenTelemetryConnection.wrap(
-        connection, producerInstrumenter, consumerProcessInstrumenter);
+        connection, producerInstrumenter, settleInstrumenter, consumerProcessInstrumenter);
   }
 
   /**
