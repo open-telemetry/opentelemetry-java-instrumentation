@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.or
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CLIENT_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
@@ -154,6 +155,8 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                           .hasNoParent()
                           .hasLinks(LinkData.create(producerSpanContext.get()))
                           .hasAttributesSatisfyingExactly(receiveAttributes())),
+          // ideally we'd want producer callback to be part of the main trace,
+          // we just aren't able to instrument that
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
@@ -291,8 +294,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
       assertions.add(satisfies(MESSAGING_CLIENT_ID_OLD, val -> val.startsWith(clientIdPrefix)));
     }
     if (emitStableMessagingSemconv()) {
-      assertions.add(
-          satisfies(stringKey("messaging.client.id"), val -> val.startsWith(clientIdPrefix)));
+      assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
     }
   }
 }

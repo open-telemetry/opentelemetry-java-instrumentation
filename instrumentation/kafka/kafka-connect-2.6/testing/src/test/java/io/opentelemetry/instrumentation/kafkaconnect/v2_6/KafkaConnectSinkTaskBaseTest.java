@@ -157,13 +157,14 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
 
   @SafeVarargs
   @SuppressWarnings("varargs")
-  protected final void waitAndAssertTracesIgnoringStableReceive(
-      Consumer<TraceAssert>... assertions) {
+  protected final void waitAndAssertRelevantTraces(Consumer<TraceAssert>... assertions) {
     await()
         .atMost(Duration.ofSeconds(60))
         .untilAsserted(
             () -> {
               List<List<SpanData>> traces = groupTraces(testing.spans());
+              // Stable receive spans are separate traces, and Kafka Connect writes status records
+              // on its own schedule. Neither is relevant to the sink-task assertions.
               if (emitStableMessagingSemconv()) {
                 traces.removeIf(
                     trace ->
@@ -172,6 +173,10 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
                             && (trace.get(0).getName().equals("poll")
                                 || trace.get(0).getName().startsWith("poll ")));
               }
+              traces.removeIf(
+                  trace ->
+                      trace.stream()
+                          .anyMatch(span -> span.getName().contains("kafka-connect-status")));
               TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(asList(assertions));
             });
   }

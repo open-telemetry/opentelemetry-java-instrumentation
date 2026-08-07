@@ -20,7 +20,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.restassured.http.ContentType;
 import java.io.IOException;
@@ -30,7 +29,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -114,7 +112,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromMongo() >= 1);
 
     AtomicReference<SpanContext> producerSpanContext = new AtomicReference<>();
-    waitAndAssertTracesIgnoringStableReceive(
+    waitAndAssertRelevantTraces(
         trace ->
             // producer is in a separate trace, linked to consumer with a span link
             trace.hasSpansSatisfyingExactly(
@@ -127,23 +125,6 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                       .hasNoParent();
                   producerSpanContext.set(span.actual().getSpanContext());
                 }),
-        trace ->
-            // kafka connect sends message to status topic while processing our message
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "send kafka-connect-status"
-                                : "kafka-connect-status publish")
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasNoParent(),
-                span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process kafka-connect-status"
-                                : "kafka-connect-status process")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))),
         trace ->
             // kafka connect consumer trace, linked to producer span via a span link
             trace.hasSpansSatisfyingExactly(
@@ -211,29 +192,10 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
 
     await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromMongo() >= 3);
 
-    Consumer<TraceAssert> kafkaStatusAssertion =
-        trace ->
-            // kafka connect sends message to status topic while processing our message
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "send kafka-connect-status"
-                                : "kafka-connect-status publish")
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasNoParent(),
-                span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process kafka-connect-status"
-                                : "kafka-connect-status process")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0)));
-
     AtomicReference<SpanContext> producerSpanContext1 = new AtomicReference<>();
     AtomicReference<SpanContext> producerSpanContext2 = new AtomicReference<>();
     AtomicReference<SpanContext> producerSpanContext3 = new AtomicReference<>();
-    waitAndAssertTracesIgnoringStableReceive(
+    waitAndAssertRelevantTraces(
         trace ->
             // producer is in a separate trace, linked to consumer with a span link
             trace.hasSpansSatisfyingExactly(
@@ -265,9 +227,6 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                       .hasParent(trace.getSpan(0));
                   producerSpanContext3.set(span.actual().getSpanContext());
                 }),
-        kafkaStatusAssertion,
-        kafkaStatusAssertion,
-        kafkaStatusAssertion,
         trace ->
             // kafka connect consumer trace, linked to producer span via a span link
             trace.hasSpansSatisfyingExactly(
