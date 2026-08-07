@@ -17,7 +17,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import io.opentelemetry.instrumentation.api.semconv.url.internal.UrlQuerySanitizer;
+import io.opentelemetry.instrumentation.api.semconv.url.internal.UrlSanitizer;
 import java.util.HashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -57,7 +57,7 @@ final class ElasticsearchClientAttributeExtractor
     uri = uri.startsWith("/") ? uri : "/" + uri;
     String fullUrl = response.getHost().toURI() + uri;
 
-    attributes.put(URL_FULL, UrlQuerySanitizer.redactUrl(fullUrl, sensitiveQueryParameters));
+    attributes.put(URL_FULL, UrlSanitizer.sanitizeUrl(fullUrl, sensitiveQueryParameters));
   }
 
   private static void setPathPartsAttributes(

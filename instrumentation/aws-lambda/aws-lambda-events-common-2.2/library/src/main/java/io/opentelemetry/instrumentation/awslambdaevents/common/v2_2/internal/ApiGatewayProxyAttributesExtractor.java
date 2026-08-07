@@ -21,7 +21,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.url.internal.UrlQuerySanitizer;
+import io.opentelemetry.instrumentation.api.semconv.url.internal.UrlSanitizer;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -105,7 +105,7 @@ final class ApiGatewayProxyAttributesExtractor
     }
     return str.length() == 0
         ? null
-        : UrlQuerySanitizer.redactUrl(str.toString(), sensitiveQueryParameters);
+        : UrlSanitizer.sanitizeUrl(str.toString(), sensitiveQueryParameters);
   }
 
   @Override
