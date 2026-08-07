@@ -11,11 +11,9 @@ import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoolMetrics;
 import java.net.InetSocketAddress;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
-import org.redisson.api.NodeType;
 import org.redisson.client.RedisClient;
 import org.redisson.config.MasterSlaveServersConfig;
 import org.redisson.connection.ClientConnectionsEntry;
@@ -33,12 +31,10 @@ public class RedissonConnectionPoolMetrics {
       RedisClient redisClient,
       int regularMinIdle,
       int regularMax,
-      NodeType nodeType,
       MasterSlaveServersConfig config) {
     clientMetrics.computeIfAbsent(
         redisClient,
-        unused ->
-            createRegistration(entry, redisClient, regularMinIdle, regularMax, nodeType, config));
+        unused -> createRegistration(entry, redisClient, regularMinIdle, regularMax, config));
   }
 
   @Nullable
@@ -47,23 +43,16 @@ public class RedissonConnectionPoolMetrics {
       RedisClient redisClient,
       int regularMinIdle,
       int regularMax,
-      NodeType nodeType,
       MasterSlaveServersConfig config) {
     BatchCallback regularCallback =
         createCallback(
-            entry.getConnectionsHolder(),
-            redisClient,
-            regularMinIdle,
-            regularMax,
-            nodeType,
-            "regular");
+            entry.getConnectionsHolder(), redisClient, regularMinIdle, regularMax, "regular");
     BatchCallback subscriptionCallback =
         createCallback(
             entry.getPubSubConnectionsHolder(),
             redisClient,
             config.getSubscriptionConnectionMinimumIdleSize(),
             config.getSubscriptionConnectionPoolSize(),
-            nodeType,
             "subscription");
     if (regularCallback == null && subscriptionCallback == null) {
       return null;
@@ -77,7 +66,6 @@ public class RedissonConnectionPoolMetrics {
       RedisClient redisClient,
       int minIdleConnections,
       int maxConnections,
-      NodeType nodeType,
       String poolKind) {
     if (maxConnections <= 0) {
       return null;
@@ -87,7 +75,7 @@ public class RedissonConnectionPoolMetrics {
         DbConnectionPoolMetrics.create(
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
-            poolName(nodeType, poolKind, redisClient.getAddr()));
+            poolName(poolKind, redisClient.getAddr()));
     ObservableLongMeasurement connections = metrics.connections();
     ObservableLongMeasurement minIdle = metrics.minIdleConnections();
     ObservableLongMeasurement max = metrics.maxConnections();
@@ -115,13 +103,8 @@ public class RedissonConnectionPoolMetrics {
         pending);
   }
 
-  private static String poolName(
-      NodeType nodeType, String poolKind, @Nullable InetSocketAddress address) {
-    StringBuilder name =
-        new StringBuilder(nodeType.name().toLowerCase(Locale.ROOT))
-            .append('-')
-            .append(poolKind)
-            .append('-');
+  private static String poolName(String poolKind, @Nullable InetSocketAddress address) {
+    StringBuilder name = new StringBuilder(poolKind).append('-');
     if (address == null) {
       return name.append("unknown").toString();
     }

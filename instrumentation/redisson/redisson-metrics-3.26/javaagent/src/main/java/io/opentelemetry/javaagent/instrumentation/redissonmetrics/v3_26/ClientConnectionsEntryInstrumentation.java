@@ -15,7 +15,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.redisson.api.NodeType;
 import org.redisson.client.RedisClient;
 import org.redisson.config.MasterSlaveServersConfig;
 import org.redisson.connection.ClientConnectionsEntry;
@@ -50,10 +49,9 @@ class ClientConnectionsEntryInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) RedisClient redisClient,
         @Advice.Argument(1) int regularMinIdle,
         @Advice.Argument(2) int regularMax,
-        @Advice.Argument(4) NodeType nodeType,
         @Advice.Argument(5) MasterSlaveServersConfig config) {
       RedissonConnectionPoolMetrics.registerMetrics(
-          entry, redisClient, regularMinIdle, regularMax, nodeType, config);
+          entry, redisClient, regularMinIdle, regularMax, config);
     }
   }
 }

@@ -74,8 +74,8 @@ class RedissonConnectionPoolMetricsTest {
     try {
       redisson.getBucket("pool-metrics").set("value");
 
-      String regularPool = "master-regular-" + endpoint;
-      String subscriptionPool = "master-subscription-" + endpoint;
+      String regularPool = "regular-" + endpoint;
+      String subscriptionPool = "subscription-" + endpoint;
       assertConnectionPoolMetrics(regularPool, subscriptionPool);
       assertMetricNotEmitted(maxIdleMetricName());
 
