@@ -468,6 +468,7 @@
     "org.springframework.amqp:spring-rabbit#+": "4.1.0",
     "org.springframework.batch:spring-batch-core#+": "6.0.4",
     "org.springframework.batch:spring-batch-core#4.+": "4.3.10",
+    "org.springframework.ai:spring-ai-model#+": "1.1.3",
     "org.springframework.boot:spring-boot#+": "4.1.0",
     "org.springframework.boot:spring-boot#2.+": "2.7.18",
     "org.springframework.boot:spring-boot-actuator-autoconfigure#+": "4.1.0",

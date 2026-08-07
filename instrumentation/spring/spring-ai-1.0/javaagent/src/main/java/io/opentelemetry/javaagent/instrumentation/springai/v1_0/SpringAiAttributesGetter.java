@@ -1,0 +1,145 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.springai.v1_0;
+
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+
+import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesGetter;
+import java.util.List;
+import javax.annotation.Nullable;
+import org.springframework.ai.chat.metadata.ChatGenerationMetadata;
+import org.springframework.ai.chat.metadata.ChatResponseMetadata;
+import org.springframework.ai.chat.metadata.Usage;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.model.Generation;
+import org.springframework.ai.chat.prompt.ChatOptions;
+
+final class SpringAiAttributesGetter
+    implements GenAiAttributesGetter<SpringAiRequest, ChatResponse> {
+  @Override
+  public String getOperationName(SpringAiRequest request) {
+    return "chat";
+  }
+
+  @Override
+  public String getSystem(SpringAiRequest request) {
+    return request.provider();
+  }
+
+  @Override
+  @Nullable
+  public String getRequestModel(SpringAiRequest request) {
+    ChatOptions options = request.prompt().getOptions();
+    return options == null ? null : options.getModel();
+  }
+
+  @Override
+  public Long getRequestSeed(SpringAiRequest request) {
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public List<String> getRequestEncodingFormats(SpringAiRequest request) {
+    return null;
+  }
+
+  @Override
+  public Double getRequestFrequencyPenalty(SpringAiRequest request) {
+    return null;
+  }
+
+  @Override
+  public Long getRequestMaxTokens(SpringAiRequest request) {
+    return null;
+  }
+
+  @Override
+  public Double getRequestPresencePenalty(SpringAiRequest request) {
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public List<String> getRequestStopSequences(SpringAiRequest request) {
+    return null;
+  }
+
+  @Override
+  public Double getRequestTemperature(SpringAiRequest request) {
+    return null;
+  }
+
+  @Override
+  public Double getRequestTopK(SpringAiRequest request) {
+    return null;
+  }
+
+  @Override
+  public Double getRequestTopP(SpringAiRequest request) {
+    return null;
+  }
+
+  @Override
+  public List<String> getResponseFinishReasons(
+      SpringAiRequest request, @Nullable ChatResponse response) {
+    if (response == null) {
+      return emptyList();
+    }
+    return response.getResults().stream()
+        .map(Generation::getMetadata)
+        .filter(ChatGenerationMetadata.class::isInstance)
+        .map(ChatGenerationMetadata.class::cast)
+        .map(ChatGenerationMetadata::getFinishReason)
+        .filter(reason -> reason != null)
+        .collect(toList());
+  }
+
+  @Override
+  @Nullable
+  public String getResponseId(SpringAiRequest request, @Nullable ChatResponse response) {
+    ChatResponseMetadata metadata = metadata(response);
+    return metadata == null ? null : metadata.getId();
+  }
+
+  @Override
+  @Nullable
+  public String getResponseModel(SpringAiRequest request, @Nullable ChatResponse response) {
+    ChatResponseMetadata metadata = metadata(response);
+    if (metadata != null && metadata.getModel() != null && !metadata.getModel().isEmpty()) {
+      return metadata.getModel();
+    }
+    return getRequestModel(request);
+  }
+
+  @Override
+  @Nullable
+  public Long getUsageInputTokens(SpringAiRequest request, @Nullable ChatResponse response) {
+    Usage usage = usage(response);
+    Integer tokens = usage == null ? null : usage.getPromptTokens();
+    return tokens == null ? null : tokens.longValue();
+  }
+
+  @Override
+  @Nullable
+  public Long getUsageOutputTokens(SpringAiRequest request, @Nullable ChatResponse response) {
+    Usage usage = usage(response);
+    Integer tokens = usage == null ? null : usage.getCompletionTokens();
+    return tokens == null ? null : tokens.longValue();
+  }
+
+  @Nullable
+  private static ChatResponseMetadata metadata(@Nullable ChatResponse response) {
+    return response == null ? null : response.getMetadata();
+  }
+
+  @Nullable
+  private static Usage usage(@Nullable ChatResponse response) {
+    ChatResponseMetadata metadata = metadata(response);
+    return metadata == null ? null : metadata.getUsage();
+  }
+}

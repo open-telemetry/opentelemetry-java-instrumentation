@@ -1,0 +1,109 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.springai.v1_0;
+
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Value;
+import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.context.Context;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.annotation.Nullable;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.MessageType;
+import org.springframework.ai.chat.metadata.ChatGenerationMetadata;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.model.Generation;
+
+public final class SpringAiMessageEvents {
+  private static final AttributeKey<String> EVENT_NAME = stringKey("event.name");
+  private static final AttributeKey<String> GEN_AI_PROVIDER_NAME =
+      stringKey("gen_ai.provider.name");
+
+  public static void emitPromptEvents(Context context, SpringAiRequest request) {
+    for (Message message : request.prompt().getInstructions()) {
+      String eventName = eventName(message.getMessageType());
+      if (eventName == null) {
+        continue;
+      }
+      Map<String, Value<?>> body = new HashMap<>();
+      if (SpringAiSingletons.captureMessageContent()) {
+        body.put("content", Value.of(message.getText()));
+      }
+      newEvent(request, eventName).setContext(context).setBody(Value.of(body)).emit();
+    }
+  }
+
+  public static void emitResponseEvents(
+      Context context,
+      SpringAiRequest request,
+      @Nullable ChatResponse response,
+      @Nullable String streamedContent) {
+    if (response == null) {
+      return;
+    }
+
+    List<Generation> results = response.getResults();
+    for (int index = 0; index < results.size(); index++) {
+      Generation generation = results.get(index);
+      Map<String, Value<?>> body = new HashMap<>();
+      String finishReason = finishReason(generation);
+      if (finishReason != null) {
+        body.put("finish_reason", Value.of(finishReason));
+      }
+      body.put("index", Value.of(index));
+      Map<String, Value<?>> message = new HashMap<>();
+      if (SpringAiSingletons.captureMessageContent()) {
+        String content =
+            streamedContent == null ? generation.getOutput().getText() : streamedContent;
+        message.put("content", Value.of(content));
+      }
+      body.put("message", Value.of(message));
+      newEvent(request, "gen_ai.choice").setContext(context).setBody(Value.of(body)).emit();
+    }
+  }
+
+  public static void appendResponseContent(StringBuilder content, ChatResponse response) {
+    for (Generation generation : response.getResults()) {
+      content.append(generation.getOutput().getText());
+    }
+  }
+
+  private static LogRecordBuilder newEvent(SpringAiRequest request, String eventName) {
+    return SpringAiSingletons.eventLogger()
+        .logRecordBuilder()
+        .setAttribute(EVENT_NAME, eventName)
+        .setAttribute(GEN_AI_PROVIDER_NAME, request.provider());
+  }
+
+  @Nullable
+  private static String eventName(MessageType messageType) {
+    if (messageType == MessageType.SYSTEM) {
+      return "gen_ai.system.message";
+    }
+    if (messageType == MessageType.USER) {
+      return "gen_ai.user.message";
+    }
+    if (messageType == MessageType.ASSISTANT) {
+      return "gen_ai.assistant.message";
+    }
+    if (messageType == MessageType.TOOL) {
+      return "gen_ai.tool.message";
+    }
+    return null;
+  }
+
+  @Nullable
+  private static String finishReason(Generation generation) {
+    ChatGenerationMetadata metadata = generation.getMetadata();
+    return metadata == null ? null : metadata.getFinishReason();
+  }
+
+  private SpringAiMessageEvents() {}
+}
