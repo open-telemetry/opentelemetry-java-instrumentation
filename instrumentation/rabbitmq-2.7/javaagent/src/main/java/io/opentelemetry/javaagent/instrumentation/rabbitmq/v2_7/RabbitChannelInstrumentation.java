@@ -111,6 +111,9 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         namedOneOf("basicRecover", "basicRecoverAsync").and(isPublic()),
         getClass().getName() + "$ChannelRecoverAdvice");
     transformer.applyAdviceToMethod(
+        namedOneOf("txSelect", "txCommit").and(isPublic()).and(takesArguments(0)),
+        getClass().getName() + "$ChannelTxStartAdvice");
+    transformer.applyAdviceToMethod(
         named("txRollback").and(isPublic()).and(takesArguments(0)),
         getClass().getName() + "$ChannelTxRollbackAdvice");
     transformer.applyAdviceToMethod(
@@ -200,7 +203,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
           return;
         }
         if (throwable != null && settledChannel != null) {
-          DeliveredMessages.markForgotten(settledChannel);
+          DeliveredMessages.markPendingForgotten(settledChannel);
         }
         if (scope == null) {
           return;
@@ -485,6 +488,30 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
   }
 
   /**
+   * {@code txSelect} and {@code txCommit} both start a transaction, so the settlements made before
+   * them can no longer be rolled back.
+   */
+  @SuppressWarnings("unused")
+  public static class ChannelTxStartAdvice {
+
+    public static class ChannelTxStartAdviceScope {
+
+      public static void end(Channel channel) {
+        if (emitStableMessagingSemconv()) {
+          DeliveredMessages.startTransaction(channel);
+        }
+      }
+
+      private ChannelTxStartAdviceScope() {}
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Channel channel) {
+      ChannelTxStartAdviceScope.end(channel);
+    }
+  }
+
+  /**
    * {@code txRollback} undoes the settlements made in the transaction, so the deliveries they
    * settled are outstanding at the broker again while they are no longer remembered.
    */
@@ -495,7 +522,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
 
       public static void end(Channel channel) {
         if (emitStableMessagingSemconv()) {
-          DeliveredMessages.markForgotten(channel);
+          DeliveredMessages.markPendingForgotten(channel);
         }
       }
 

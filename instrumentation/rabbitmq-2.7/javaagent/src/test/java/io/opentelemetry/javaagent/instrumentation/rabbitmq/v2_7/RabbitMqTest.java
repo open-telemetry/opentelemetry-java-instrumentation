@@ -962,6 +962,81 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                         span, trace.getSpan(0), "ack", null, false, lastDeliveryTag, null)));
   }
 
+  @Test
+  void testRabbitSettleMultipleAfterTxRollbackWithoutSettlements() throws IOException {
+    assumeTrue(emitStableMessagingSemconv());
+
+    String queueName = channel.queueDeclare().getQueue();
+    for (int i = 0; i < 3; i++) {
+      channel.basicPublish(
+          "", queueName, null, ("message " + i).getBytes(Charset.defaultCharset()));
+    }
+    long deliveryTag = 0;
+    for (int i = 0; i < 3; i++) {
+      GetResponse response = channel.basicGet(queueName, false);
+      deliveryTag = response.getEnvelope().getDeliveryTag();
+    }
+    // the transaction settles nothing, so the rollback leaves every delivery remembered
+    channel.txSelect();
+    channel.txRollback();
+    testing.clearData();
+
+    long lastDeliveryTag = deliveryTag;
+    testing.runWithSpan("parent", () -> channel.basicAck(lastDeliveryTag, true));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    verifySettleSpan(
+                        span, trace.getSpan(0), "ack", queueName, true, lastDeliveryTag, 3L)));
+  }
+
+  @Test
+  void testRabbitSettleMultipleBelowTxRollbackDeliveryTag() throws IOException {
+    assumeTrue(emitStableMessagingSemconv());
+
+    String queueName = channel.queueDeclare().getQueue();
+    for (int i = 0; i < 3; i++) {
+      channel.basicPublish(
+          "", queueName, null, ("message " + i).getBytes(Charset.defaultCharset()));
+    }
+    long[] deliveryTags = new long[3];
+    for (int i = 0; i < 3; i++) {
+      deliveryTags[i] = channel.basicGet(queueName, false).getEnvelope().getDeliveryTag();
+    }
+    channel.txSelect();
+    // acknowledges the last delivery and then undoes the acknowledgement, which leaves it
+    // outstanding under the same delivery tag while it is no longer remembered
+    channel.basicAck(deliveryTags[2], false);
+    channel.txRollback();
+    testing.clearData();
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          channel.basicAck(deliveryTags[1], true);
+          channel.basicAck(deliveryTags[2], true);
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                // this settle stays below the forgotten delivery, so it settles only remembered
+                // deliveries and reports them
+                span ->
+                    verifySettleSpan(
+                        span, trace.getSpan(0), "ack", queueName, true, deliveryTags[1], 2L),
+                // this one settles the forgotten delivery, so the destination and the batch
+                // message count, which both have to describe every settled message, are not
+                // reported
+                span ->
+                    verifySettleSpan(
+                        span, trace.getSpan(0), "ack", null, false, deliveryTags[2], null)));
+  }
+
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static void verifySettleSpan(
       SpanDataAssert span,
