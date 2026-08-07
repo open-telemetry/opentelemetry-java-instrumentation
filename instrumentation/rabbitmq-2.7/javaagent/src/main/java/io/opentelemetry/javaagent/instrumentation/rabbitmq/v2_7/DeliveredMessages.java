@@ -65,6 +65,9 @@ final class DeliveredMessages {
    * Removes and returns the deliveries settled by a {@code basicAck}, {@code basicNack} or {@code
    * basicReject} call. When {@code multiple} is set, every delivery up to and including {@code
    * deliveryTag} is settled; a delivery tag of {@code 0} then settles every outstanding delivery.
+   *
+   * <p>The result also carries the range of delivery tags that were removed, so that the caller can
+   * mark exactly those as forgotten if the settle fails.
    */
   static SettledMessages settle(Channel channel, long deliveryTag, boolean multiple) {
     DeliveredMessages messages = FIELD.get(channel);
@@ -74,12 +77,9 @@ final class DeliveredMessages {
 
     List<DeliveredMessage> settled = new ArrayList<>();
     boolean incomplete = false;
+    long lowestRemovedTag = 0;
+    long highestRemovedTag = 0;
     synchronized (messages) {
-      if (!messages.transactional) {
-        // outside a transaction the settle that is about to run is the only one that can still be
-        // undone, so whatever an earlier settle removed is durable and no longer pending
-        messages.clearPending();
-      }
       if (multiple) {
         // a multiple settle covers every outstanding delivery up to and including its delivery
         // tag, so the deliveries forgotten in that range are part of what it settles; they are
@@ -92,7 +92,12 @@ final class DeliveredMessages {
           Map.Entry<Long, DeliveredMessage> entry = iterator.next();
           if (deliveryTag == 0 || entry.getKey() <= deliveryTag) {
             settled.add(entry.getValue());
-            messages.addPending(entry.getKey());
+            if (lowestRemovedTag == 0 || entry.getKey() < lowestRemovedTag) {
+              lowestRemovedTag = entry.getKey();
+            }
+            if (entry.getKey() > highestRemovedTag) {
+              highestRemovedTag = entry.getKey();
+            }
             iterator.remove();
           }
         }
@@ -102,11 +107,15 @@ final class DeliveredMessages {
         DeliveredMessage message = messages.messagesByDeliveryTag.remove(deliveryTag);
         if (message != null) {
           settled.add(message);
-          messages.addPending(deliveryTag);
+          lowestRemovedTag = deliveryTag;
+          highestRemovedTag = deliveryTag;
         }
       }
+      if (messages.transactional) {
+        messages.addPending(lowestRemovedTag, highestRemovedTag);
+      }
     }
-    return SettledMessages.of(settled, incomplete);
+    return SettledMessages.of(settled, incomplete, lowestRemovedTag, highestRemovedTag);
   }
 
   /**
@@ -125,14 +134,27 @@ final class DeliveredMessages {
   }
 
   /**
-   * Records that the deliveries removed by the settles that are still pending are outstanding at
-   * the broker while they are no longer remembered, as a {@code txRollback} and a settle call that
-   * fails both leave them, so that a later multiple settle covering them doesn't report a
-   * destination or a batch message count that describes only part of what it settles.
+   * Records that deliveries that are outstanding at the broker are no longer remembered, so that a
+   * later multiple settle covering them doesn't report a destination or a batch message count that
+   * describes only part of what it settles.
    *
    * <p>The deliveries are not put back because the delivery tags they were remembered under are
    * only valid until the channel is recovered, at which point the broker starts numbering
    * deliveries from one again and restored entries would be attributed to unrelated messages.
+   */
+  static void markForgotten(Channel channel, long lowestTag, long highestTag) {
+    DeliveredMessages messages = FIELD.get(channel);
+    if (messages == null) {
+      return;
+    }
+    synchronized (messages) {
+      messages.messagesByDeliveryTag.markForgotten(lowestTag, highestTag);
+    }
+  }
+
+  /**
+   * Records that the deliveries removed by the settles made in the transaction that a {@code
+   * txRollback} just undid are outstanding at the broker again while they are no longer remembered.
    */
   static void markPendingForgotten(Channel channel) {
     DeliveredMessages messages = FIELD.get(channel);
@@ -146,12 +168,15 @@ final class DeliveredMessages {
     }
   }
 
-  private void addPending(long deliveryTag) {
-    if (pendingHighestTag == 0 || deliveryTag < pendingLowestTag) {
-      pendingLowestTag = deliveryTag;
+  private void addPending(long lowestTag, long highestTag) {
+    if (highestTag == 0) {
+      return;
     }
-    if (deliveryTag > pendingHighestTag) {
-      pendingHighestTag = deliveryTag;
+    if (pendingHighestTag == 0 || lowestTag < pendingLowestTag) {
+      pendingLowestTag = lowestTag;
+    }
+    if (highestTag > pendingHighestTag) {
+      pendingHighestTag = highestTag;
     }
   }
 
@@ -277,30 +302,40 @@ final class DeliveredMessages {
    */
   static final class SettledMessages {
 
-    static final SettledMessages EMPTY = new SettledMessages(null, false, null, 0);
+    static final SettledMessages EMPTY = new SettledMessages(null, false, null, 0, 0, 0);
 
     @Nullable private final String destination;
     private final boolean anonymousDestination;
     @Nullable private final String routingKey;
     private final int count;
+    private final long lowestRemovedTag;
+    private final long highestRemovedTag;
 
     private SettledMessages(
         @Nullable String destination,
         boolean anonymousDestination,
         @Nullable String routingKey,
-        int count) {
+        int count,
+        long lowestRemovedTag,
+        long highestRemovedTag) {
       this.destination = destination;
       this.anonymousDestination = anonymousDestination;
       this.routingKey = routingKey;
       this.count = count;
+      this.lowestRemovedTag = lowestRemovedTag;
+      this.highestRemovedTag = highestRemovedTag;
     }
 
-    private static SettledMessages of(List<DeliveredMessage> messages, boolean incomplete) {
+    private static SettledMessages of(
+        List<DeliveredMessage> messages,
+        boolean incomplete,
+        long lowestRemovedTag,
+        long highestRemovedTag) {
       // when deliveries have been forgotten the settled messages are only a subset of what was
       // actually settled, and attributes that have to describe every settled message, as well as
       // their count, would be wrong
       if (messages.isEmpty() || incomplete) {
-        return EMPTY;
+        return new SettledMessages(null, false, null, 0, lowestRemovedTag, highestRemovedTag);
       }
       DeliveredMessage first = messages.get(0);
       String destination = first.destination;
@@ -319,7 +354,13 @@ final class DeliveredMessages {
           routingKey = null;
         }
       }
-      return new SettledMessages(destination, anonymousDestination, routingKey, messages.size());
+      return new SettledMessages(
+          destination,
+          anonymousDestination,
+          routingKey,
+          messages.size(),
+          lowestRemovedTag,
+          highestRemovedTag);
     }
 
     @Nullable
@@ -338,6 +379,22 @@ final class DeliveredMessages {
 
     int getCount() {
       return count;
+    }
+
+    /**
+     * Returns the lowest delivery tag that the settle removed from the remembered deliveries,
+     * {@code 0} when it removed none.
+     */
+    long getLowestRemovedTag() {
+      return lowestRemovedTag;
+    }
+
+    /**
+     * Returns the highest delivery tag that the settle removed from the remembered deliveries,
+     * {@code 0} when it removed none.
+     */
+    long getHighestRemovedTag() {
+      return highestRemovedTag;
     }
   }
 }
