@@ -1037,6 +1037,57 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                         span, trace.getSpan(0), "ack", null, false, deliveryTags[2], null)));
   }
 
+  @Test
+  void testRabbitSettleMultipleAfterSettlingForgottenDelivery() throws Exception {
+    assumeTrue(emitStableMessagingSemconv());
+
+    // more outstanding deliveries than are remembered, so the oldest one is forgotten
+    int messageCount = 1001;
+    String queueName = channel.queueDeclare().getQueue();
+    for (int i = 0; i < messageCount; i++) {
+      channel.basicPublish(
+          "", queueName, null, ("message " + i).getBytes(Charset.defaultCharset()));
+    }
+
+    CountDownLatch latch = new CountDownLatch(messageCount);
+    AtomicReference<Long> firstDeliveryTag = new AtomicReference<>();
+    AtomicReference<Long> lastDeliveryTag = new AtomicReference<>(0L);
+    channel.basicConsume(
+        queueName,
+        false,
+        new DefaultConsumer(channel) {
+          @Override
+          public void handleDelivery(
+              String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
+            firstDeliveryTag.compareAndSet(null, envelope.getDeliveryTag());
+            lastDeliveryTag.set(envelope.getDeliveryTag());
+            latch.countDown();
+          }
+        });
+    assertThat(latch.await(60, SECONDS)).isTrue();
+    // settles the forgotten delivery on its own, so nothing that the settle below covers is
+    // unknown
+    channel.basicAck(firstDeliveryTag.get(), false);
+    testing.clearData();
+
+    long lastTag = lastDeliveryTag.get();
+    testing.runWithSpan("parent", () -> channel.basicAck(lastTag, true));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    verifySettleSpan(
+                        span,
+                        trace.getSpan(0),
+                        "ack",
+                        queueName,
+                        true,
+                        lastTag,
+                        (long) messageCount - 1)));
+  }
+
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static void verifySettleSpan(
       SpanDataAssert span,
