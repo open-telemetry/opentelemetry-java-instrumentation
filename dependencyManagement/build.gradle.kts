@@ -6,6 +6,7 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.65.0"
+val otelZipkinVersion = "1.64.0" // last published version, remove with Zipkin support in 3.0
 val otelContribVersion = "1.59.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
@@ -105,6 +106,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-samplers:${otelContribVersion}",
   "io.opentelemetry.proto:opentelemetry-proto:1.11.0-alpha",
+  "io.opentelemetry:opentelemetry-exporter-zipkin:${otelZipkinVersion}",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
   "org.assertj:assertj-core:3.27.7",
   "org.awaitility:awaitility:4.3.0",
