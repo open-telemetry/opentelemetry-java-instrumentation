@@ -3,30 +3,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
+package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
 
-import com.rabbitmq.client.Envelope;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
+import org.springframework.amqp.core.Message;
 
-class RabbitDeliveryExtraAttributesExtractor implements AttributesExtractor<DeliveryRequest, Void> {
+class SpringRabbitExtraAttributesExtractor implements AttributesExtractor<Message, Void> {
 
   @Override
-  public void onStart(
-      AttributesBuilder attributes, Context parentContext, DeliveryRequest request) {
-    Envelope envelope = request.getEnvelope();
-    String routingKey = envelope.getRoutingKey();
-    if (routingKey != null && !routingKey.isEmpty()) {
-      attributes.put(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
-    }
+  public void onStart(AttributesBuilder attributes, Context parentContext, Message message) {
     if (emitStableMessagingSemconv()) {
-      attributes.put(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, envelope.getDeliveryTag());
+      String routingKey = message.getMessageProperties().getReceivedRoutingKey();
+      if (routingKey != null && !routingKey.isEmpty()) {
+        attributes.put(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
+      }
+      attributes.put(
+          MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, message.getMessageProperties().getDeliveryTag());
     }
   }
 
@@ -34,7 +33,7 @@ class RabbitDeliveryExtraAttributesExtractor implements AttributesExtractor<Deli
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
-      DeliveryRequest request,
+      Message message,
       @Nullable Void unused,
       @Nullable Throwable error) {}
 }

@@ -5,28 +5,28 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
 
-import com.rabbitmq.client.Envelope;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.DeliveredMessages.SettledMessages;
 import javax.annotation.Nullable;
 
-class RabbitDeliveryExtraAttributesExtractor implements AttributesExtractor<DeliveryRequest, Void> {
+class RabbitChannelSettleAttributesExtractor
+    implements AttributesExtractor<ChannelAndMethod, Void> {
 
   @Override
   public void onStart(
-      AttributesBuilder attributes, Context parentContext, DeliveryRequest request) {
-    Envelope envelope = request.getEnvelope();
-    String routingKey = envelope.getRoutingKey();
-    if (routingKey != null && !routingKey.isEmpty()) {
-      attributes.put(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
-    }
-    if (emitStableMessagingSemconv()) {
-      attributes.put(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, envelope.getDeliveryTag());
+      AttributesBuilder attributes, Context parentContext, ChannelAndMethod channelAndMethod) {
+    attributes.put(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, channelAndMethod.getDeliveryTag());
+    SettledMessages messages = channelAndMethod.getSettledMessages();
+    if (messages != null) {
+      String routingKey = messages.getRoutingKey();
+      if (routingKey != null && !routingKey.isEmpty()) {
+        attributes.put(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
+      }
     }
   }
 
@@ -34,7 +34,7 @@ class RabbitDeliveryExtraAttributesExtractor implements AttributesExtractor<Deli
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
-      DeliveryRequest request,
+      ChannelAndMethod channelAndMethod,
       @Nullable Void unused,
       @Nullable Throwable error) {}
 }
