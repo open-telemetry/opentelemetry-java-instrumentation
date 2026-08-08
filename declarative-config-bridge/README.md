@@ -85,6 +85,108 @@ public class InferredSpansSpanProcessorProvider implements ComponentProvider {
 }
 ```
 
+## DefaultInstrumentationConfig
+
+`DefaultInstrumentationConfig` lets distribution authors define instrumentation property defaults
+once and have them work in both configuration modes.
+First, there is a single defaults object that is unaware of the source of the configuration:
+
+```java
+DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+defaults.get("micrometer").setDefault("base_time_unit", "s");
+defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", "true");
+defaults.addMapping("acme", "acme.full_name");
+defaults.get("acme").get("full_name").setDefault("preserved", "true");
+```
+
+Navigation mirrors `DeclarativeConfigProperties` — reading uses
+`config.get("micrometer").getString("base_time_unit")`; writing defaults uses
+`defaults.get("micrometer").setDefault("base_time_unit", "s")`, and deeper nested paths can chain
+`get(...)` the same way.
+
+Keys use the same declarative config shape as `DeclarativeConfigProperties`. When producing system
+property keys, underscores are translated to hyphens, and keys ending in `/development` are
+translated using the bridge's `experimental.` convention. Custom property prefixes can be aligned
+with `DeclarativeConfigPropertiesBridgeBuilder` mappings via `defaults.addMapping(...)`.
+
+The auto configuration **without declarative config** registers the defaults as a properties
+supplier, translating them to `otel.instrumentation.*` keys:
+
+```java
+@AutoService(AutoConfigurationCustomizerProvider.class)
+public class MyDistroAutoConfig implements AutoConfigurationCustomizerProvider {
+  private static final DefaultInstrumentationConfig DEFAULTS = createDefaults();
+
+  @Override
+  public void customize(AutoConfigurationCustomizer autoConfiguration) {
+    autoConfiguration.addPropertiesSupplier(DEFAULTS::toConfigProperties);
+  }
+
+  private static DefaultInstrumentationConfig createDefaults() {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults.get("micrometer").setDefault("base_time_unit", "s");
+    defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", "true");
+    defaults.addMapping("acme", "acme.full_name");
+    defaults.get("acme").get("full_name").setDefault("preserved", "true");
+    return defaults;
+  }
+}
+```
+
+With the `acme` mapping above, the generated properties include:
+
+```properties
+otel.instrumentation.micrometer.base-time-unit=s
+otel.instrumentation.log4j-appender.experimental-log-attributes=true
+acme.preserved=true
+```
+
+The auto configuration **with declarative config** registers the defaults as a model customizer,
+injecting them under `instrumentation/development.java`. You can call
+`DefaultInstrumentationConfig#applyToModel(...)` directly, or use
+`DefaultInstrumentationConfigApplier` if a static helper fits better.
+
+Let's first look at the yaml file that the defaults effectively merge into:
+
+```yaml
+file_format: 1.0
+instrumentation/development:
+  java:
+    micrometer:
+      base_time_unit: s
+    log4j_appender:
+      experimental_log_attributes/development: "true"
+    acme:
+      full_name:
+        preserved: "true"
+```
+
+And now the customizer that applies the defaults to the model:
+
+```java
+@AutoService(DeclarativeConfigurationCustomizerProvider.class)
+public class MyDistroDeclarativeConfig implements DeclarativeConfigurationCustomizerProvider {
+  private static final DefaultInstrumentationConfig DEFAULTS = createDefaults();
+
+  @Override
+  public void customize(DeclarativeConfigurationCustomizer customizer) {
+    customizer.addModelCustomizer(DEFAULTS::applyToModel);
+  }
+
+  private static DefaultInstrumentationConfig createDefaults() {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults.get("micrometer").setDefault("base_time_unit", "s");
+    defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", "true");
+    defaults.addMapping("acme", "acme.full_name");
+    defaults.get("acme").get("full_name").setDefault("preserved", "true");
+    return defaults;
+  }
+}
+```
+
+Explicit user configuration always takes precedence — defaults are only applied for properties not
+already present (`putIfAbsent`).
+
 For duration properties, contrib's `span-stacktrace` and `inferred-spans` use
 `DeclarativeConfigDurationUtil.getDuration(...)`:
 

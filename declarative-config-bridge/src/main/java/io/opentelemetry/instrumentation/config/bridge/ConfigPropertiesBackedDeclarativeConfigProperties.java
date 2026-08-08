@@ -234,8 +234,19 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   }
 
   private String resolvePropertyKey(String name) {
-    String fullPath = pathWithName(name);
+    return toPropertyKey(
+        pathWithName(name), declarativePrefix, configPropertyPrefix, instrumentationConfig);
+  }
 
+  static String toPropertyKey(String fullPath) {
+    return toPropertyKey(fullPath, JAVA_DECLARATIVE_PREFIX, INSTRUMENTATION_PROPERTY_PREFIX, true);
+  }
+
+  private static String toPropertyKey(
+      String fullPath,
+      String declarativePrefix,
+      String configPropertyPrefix,
+      boolean instrumentationConfig) {
     if (instrumentationConfig) {
       // Check explicit property mappings first
       String mappedKey = SPECIAL_MAPPINGS.get(fullPath);
