@@ -84,7 +84,11 @@ class IncludeExcludeTest {
         argumentSet(
             "star matches many characters", singletonList("foo*"), emptyList(), "foobar", true),
         argumentSet(
+            "star matches line terminators", singletonList("foo*"), emptyList(), "foo\nbar", true),
+        argumentSet(
             "question matches one character", singletonList("f?o"), emptyList(), "foo", true),
+        argumentSet(
+            "question matches a line terminator", singletonList("f?o"), emptyList(), "f\no", true),
         argumentSet(
             "question rejects zero characters", singletonList("f?o"), emptyList(), "fo", false),
         argumentSet(

@@ -12,18 +12,12 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 final class CapturedGrpcMetadataUtil {
   private static final String RPC_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX =
       "rpc.grpc.request.metadata.";
   private static final String RPC_STABLE_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX =
       "rpc.request.metadata.";
-  private static final ConcurrentMap<String, AttributeKey<List<String>>> requestKeysCache =
-      new ConcurrentHashMap<>();
-  private static final ConcurrentMap<String, AttributeKey<List<String>>> stableRequestKeysCache =
-      new ConcurrentHashMap<>();
 
   static List<String> lowercase(List<String> names) {
     return unmodifiableList(names.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(toList()));
@@ -37,20 +31,10 @@ final class CapturedGrpcMetadataUtil {
   }
 
   static AttributeKey<List<String>> requestAttributeKey(String metadataKey) {
-    return requestKeysCache.computeIfAbsent(
-        metadataKey, CapturedGrpcMetadataUtil::createRequestKey);
-  }
-
-  static AttributeKey<List<String>> stableRequestAttributeKey(String metadataKey) {
-    return stableRequestKeysCache.computeIfAbsent(
-        metadataKey, CapturedGrpcMetadataUtil::createStableRequestKey);
-  }
-
-  private static AttributeKey<List<String>> createRequestKey(String metadataKey) {
     return AttributeKey.stringArrayKey(RPC_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX + metadataKey);
   }
 
-  private static AttributeKey<List<String>> createStableRequestKey(String metadataKey) {
+  static AttributeKey<List<String>> stableRequestAttributeKey(String metadataKey) {
     return AttributeKey.stringArrayKey(
         RPC_STABLE_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX + metadataKey);
   }

@@ -120,7 +120,7 @@ public final class IncludeExclude {
     if (tokenStart < globPattern.length()) {
       regex.append(Pattern.quote(globPattern.substring(tokenStart)));
     }
-    return Pattern.compile(regex.toString());
+    return Pattern.compile(regex.toString(), Pattern.DOTALL);
   }
 
   private static boolean matchesAny(List<Predicate<String>> predicates, String value) {
