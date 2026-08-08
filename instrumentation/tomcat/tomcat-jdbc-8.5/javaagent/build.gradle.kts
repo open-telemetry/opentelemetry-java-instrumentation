@@ -13,6 +13,10 @@ muzzle {
 
 dependencies {
   compileOnly("org.apache.tomcat:tomcat-jdbc:8.5.0")
+
+  implementation(project(":instrumentation:jdbc:javaagent-common"))
+  bootstrap(project(":instrumentation:jdbc:bootstrap"))
+
   testImplementation("org.apache.tomcat:tomcat-jdbc:8.5.0")
 }
 

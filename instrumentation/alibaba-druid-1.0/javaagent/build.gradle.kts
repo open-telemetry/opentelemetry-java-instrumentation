@@ -15,6 +15,8 @@ dependencies {
   library("com.alibaba:druid:1.0.0")
 
   implementation(project(":instrumentation:alibaba-druid-1.0:library"))
+  implementation(project(":instrumentation:jdbc:javaagent-common"))
+  bootstrap(project(":instrumentation:jdbc:bootstrap"))
 
   testImplementation(project(":instrumentation:alibaba-druid-1.0:testing"))
 }

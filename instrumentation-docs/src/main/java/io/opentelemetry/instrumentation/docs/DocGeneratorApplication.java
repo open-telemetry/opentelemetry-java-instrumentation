@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.List;
@@ -29,18 +30,14 @@ public class DocGeneratorApplication {
 
   public static void main(String[] args) throws IOException {
     // Identify path to repo so we can use absolute paths
-    String baseRepoPath = System.getProperty("basePath");
-    if (baseRepoPath == null) {
-      baseRepoPath = "./";
-    } else {
-      baseRepoPath += "/";
-    }
+    String basePath = System.getProperty("basePath");
+    Path baseRepoPath = Paths.get(basePath == null ? "." : basePath);
 
     FileManager fileManager = new FileManager(baseRepoPath);
     List<InstrumentationModule> modules = new InstrumentationAnalyzer(fileManager).analyze();
 
     try (BufferedWriter writer =
-        Files.newBufferedWriter(Paths.get(baseRepoPath + "docs/instrumentation-list.yaml"))) {
+        Files.newBufferedWriter(baseRepoPath.resolve("docs/instrumentation-list.yaml"))) {
       writer.write("# This file is generated and should not be manually edited.\n");
       writer.write("# The structure and contents are a work in progress and subject to change.\n");
       writer.write(
