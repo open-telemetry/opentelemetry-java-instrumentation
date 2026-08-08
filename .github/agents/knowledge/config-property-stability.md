@@ -125,8 +125,11 @@ capture_mdc_attributes:
   excluded: [password]
 ```
 
-This configuration rule does not govern Java method names. Existing and future Java `setCapture*`
-APIs follow Java API naming conventions and are unchanged by this guidance.
+Java methods that configure a structured selector are also named after the selected resource,
+without `Capture` or `Captured`, for example `setMdcAttributes(IncludeExclude)`. Use one selector
+value instead of paired include/exclude setters, with the shared `IncludeExclude` selector type as
+the intended end state. Retain `setCapture*` for action booleans, such as
+`setCaptureQuery(boolean)`.
 
 ## Structured Config (YAML-Only)
 
