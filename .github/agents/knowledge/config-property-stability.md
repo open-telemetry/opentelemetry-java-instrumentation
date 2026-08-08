@@ -100,6 +100,58 @@ if (value == null) {
 | Boolean toggle      | `.enabled` suffix                                                  | `enabled` leaf key                                                |
 | Env var form        | dots/hyphens → ALL_CAPS underscores                                | N/A                                                               |
 
+### Structured Selector Names
+
+A structured selector object with `included` and/or `excluded` lists is named after the resource
+being selected, for example `mdc_attributes`, `headers`, or `request_parameters`. This follows the
+OpenTelemetry Configuration
+[`IncludeExclude`](https://github.com/open-telemetry/opentelemetry-configuration/blob/main/schema/common.yaml)
+shape and its noun-based uses such as `attribute_keys` and `resource_constant_labels`.
+
+Do not give a new structured selector parent a `capture_*` name. A path such as
+`capture_mdc_attributes.excluded` is contradictory: the parent describes a selection, while the
+leaf excludes values from that selection. Retain `capture_*` for action booleans that collect or
+emit data that would otherwise be absent, such as `capture_query` and
+`capture_message_content`.
+
+```yaml
+# Preferred
+mdc_attributes:
+  included: [trace_id, request_id]
+  excluded: [password]
+
+# Avoid
+capture_mdc_attributes:
+  excluded: [password]
+```
+
+This configuration rule does not govern Java method names. Existing and future Java `setCapture*`
+APIs follow Java API naming conventions and are unchanged by this guidance.
+
+#### Migration impact
+
+This rule is migration-capable, not permanently non-retroactive. A future migration PR may add a
+preferred noun-based name, deprecate an existing `capture_*` selector, and eventually remove the old
+name within the applicable stability policy:
+
+- **Five experimental list selectors:** messaging `capture_headers`, servlet
+  `capture_request_parameters`, and the Logback, Log4j, and JBoss LogManager MDC capture selectors
+  may migrate to noun-based structured parents. During the deprecation window, each old scalar list
+  becomes an alias for the new selector's `included` list, while `included` and `excluded` are
+  exposed as flat leaves. The migration PR must define precedence and defaults explicitly, emit
+  deprecation warnings, and update metadata, generated documentation, user documentation, and
+  tests.
+- **Six stable list selectors:** the four HTTP request/response header selectors and two gRPC
+  metadata selectors may receive preferred aliases and deprecations now, but both old and new forms
+  must continue working throughout 2.x. Stable old names may be removed only in 3.0. The HTTP
+  declarative names are standardized across languages, so changing or aliasing them also requires
+  upstream coordination. This guidance intentionally does not choose final replacement spellings.
+- **Twenty-two unaffected capture booleans:** four stable and eighteen experimental action booleans
+  keep their `capture_*` names. The deprecated runtime `capture_gc_cause` property is not a naming
+  precedent.
+
+The repository inventory is 33 active capture-named metadata properties: 22 booleans and 11 lists.
+
 ## Structured Config (YAML-Only)
 
 Some configurations require structured data only expressible in YAML:
