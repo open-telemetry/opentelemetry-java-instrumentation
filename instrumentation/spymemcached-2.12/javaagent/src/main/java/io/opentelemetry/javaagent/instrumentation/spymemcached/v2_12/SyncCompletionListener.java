@@ -19,8 +19,13 @@ public class SyncCompletionListener extends CompletionListener<Void> {
 
   @Nullable
   public static SyncCompletionListener create(
-      Context parentContext, MemcachedConnection connection, String methodName) {
-    SpymemcachedRequest request = SpymemcachedRequest.create(connection, methodName);
+      Context parentContext,
+      MemcachedConnection connection,
+      String methodName,
+      String methodDescriptor,
+      Object[] args) {
+    SpymemcachedRequest request =
+        SpymemcachedRequest.create(connection, methodName, methodDescriptor, args);
     if (!instrumenter().shouldStart(parentContext, request)) {
       return null;
     }
