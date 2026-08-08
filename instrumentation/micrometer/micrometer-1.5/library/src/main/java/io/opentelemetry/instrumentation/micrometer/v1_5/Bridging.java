@@ -11,12 +11,17 @@ import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 final class Bridging {
 
-  private static final ConcurrentMap<String, String> descriptionsCache = new ConcurrentHashMap<>();
+  // Scoped to the OpenTelemetry Meter, since that is where a description conflict would occur, and
+  // so that entries become collectable together with the meter provider. Registries sharing a meter
+  // provider deliberately share a cache.
+  private static final Cache<io.opentelemetry.api.metrics.Meter, ConcurrentMap<String, String>>
+      descriptionCaches = Cache.weak();
 
   static Attributes tagsAsAttributes(Meter.Id id, NamingConvention namingConvention) {
     Iterable<Tag> tags = id.getTagsAsIterable();
@@ -36,13 +41,23 @@ final class Bridging {
     return namingConvention.name(id.getName(), id.getType(), id.getBaseUnit());
   }
 
-  static String description(Meter.Id id) {
-    return descriptionsCache.computeIfAbsent(
-        id.getName(),
-        n -> {
-          String description = id.getDescription();
-          return description != null ? description : "";
-        });
+  // Micrometer allows every set of tags to carry its own description, while in OpenTelemetry the
+  // description is one of an instrument's identifying fields. Bridging the descriptions through
+  // unchanged would turn a single Micrometer metric into conflicting OpenTelemetry instruments that
+  // share a name, which the SDK exports as separate metric streams instead of aggregating into one.
+  // So the first description seen for an instrument name wins, which is also what Micrometer's own
+  // PrometheusMeterRegistry does. Callers must pass the name the instrument is actually emitted
+  // under, including any suffix such as ".max", since that is the name a conflict would occur on.
+  static String description(
+      io.opentelemetry.api.metrics.Meter otelMeter, String instrumentName, Meter.Id id) {
+    return descriptionCaches
+        .computeIfAbsent(otelMeter, meter -> new ConcurrentHashMap<>())
+        .computeIfAbsent(
+            instrumentName,
+            n -> {
+              String description = id.getDescription();
+              return description != null ? description : "";
+            });
   }
 
   static String baseUnit(Meter.Id id) {

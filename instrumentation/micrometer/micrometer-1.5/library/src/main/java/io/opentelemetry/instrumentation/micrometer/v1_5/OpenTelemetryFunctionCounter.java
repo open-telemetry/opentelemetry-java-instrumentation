@@ -37,7 +37,7 @@ final class OpenTelemetryFunctionCounter<T> extends AbstractMeter
         otelMeter
             .counterBuilder(name)
             .ofDoubles()
-            .setDescription(Bridging.description(id))
+            .setDescription(Bridging.description(otelMeter, name, id))
             .setUnit(baseUnit(id))
             .buildWithCallback(
                 new DoubleMeasurementRecorder<>(
