@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
+import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -28,6 +29,11 @@ class AgentForTestingTest {
   @Test
   void empty() {
     assertThat(AgentTestingExporterAccess.getExportedSpans().size()).isEqualTo(0);
+  }
+
+  @Test
+  void initializesContextStorageBeforeInstrumentation() {
+    assertThat(TestAgentListenerAccess.isContextStorageInitializedBeforeInstrumentation()).isTrue();
   }
 
   @Test
