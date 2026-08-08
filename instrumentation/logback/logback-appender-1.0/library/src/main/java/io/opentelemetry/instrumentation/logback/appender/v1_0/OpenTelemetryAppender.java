@@ -42,6 +42,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureLogstashMarkerAttributes = false;
   private boolean captureLogstashStructuredArguments = false;
   private List<String> captureMdcAttributes = emptyList();
+  private List<String> excludeMdcAttributes = emptyList();
 
   private volatile OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
@@ -97,6 +98,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
         LoggingEventMapper.builder()
             .setCaptureExperimentalAttributes(captureExperimentalAttributes)
             .setCaptureMdcAttributes(captureMdcAttributes)
+            .setExcludeMdcAttributes(excludeMdcAttributes)
             .setCaptureCodeAttributes(captureCodeAttributes)
             .setCaptureMarkerAttribute(captureMarkerAttribute)
             .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
@@ -225,6 +227,19 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
       captureMdcAttributes = filterBlanksAndNulls(attributes.split(","));
     } else {
       captureMdcAttributes = emptyList();
+    }
+  }
+
+  /**
+   * Configures the {@link MDC} attributes that will be excluded from logs. Excludes only take
+   * effect alongside {@link #setCaptureMdcAttributes(String)}; both support glob wildcards ({@code
+   * *}, {@code ?}).
+   */
+  public void setExcludeMdcAttributes(String attributes) {
+    if (attributes != null) {
+      excludeMdcAttributes = filterBlanksAndNulls(attributes.split(","));
+    } else {
+      excludeMdcAttributes = emptyList();
     }
   }
 

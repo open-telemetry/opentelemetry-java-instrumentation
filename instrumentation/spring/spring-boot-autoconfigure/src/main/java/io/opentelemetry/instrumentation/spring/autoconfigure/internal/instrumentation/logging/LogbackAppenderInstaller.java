@@ -176,6 +176,14 @@ class LogbackAppenderInstaller {
     if (mdcAttributeProperty != null) {
       openTelemetryAppender.setCaptureMdcAttributes(mdcAttributeProperty);
     }
+
+    String excludeMdcAttributeProperty =
+        getLoggingProperty(
+            applicationEnvironmentPreparedEvent.getEnvironment(),
+            "otel.instrumentation.logback-appender.experimental.exclude-mdc-attributes");
+    if (excludeMdcAttributeProperty != null) {
+      openTelemetryAppender.setExcludeMdcAttributes(excludeMdcAttributeProperty);
+    }
   }
 
   private static void addMdcAppender(

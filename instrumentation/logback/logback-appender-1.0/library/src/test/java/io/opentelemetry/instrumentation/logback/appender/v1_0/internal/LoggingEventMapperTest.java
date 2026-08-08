@@ -80,6 +80,66 @@ class LoggingEventMapperTest {
   }
 
   @Test
+  void testAllWithExclude() {
+    // given - "*" captures everything except the configured excludes
+    LoggingEventMapper mapper =
+        LoggingEventMapper.builder()
+            .setCaptureMdcAttributes(singletonList("*"))
+            .setExcludeMdcAttributes(singletonList("key2"))
+            .build();
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("key1", "value1");
+    contextData.put("key2", "value2");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.captureMdcAttributes(builder, contextData);
+
+    // then
+    verify(builder).setAttribute(stringKey("key1"), "value1");
+    verifyNoMoreInteractions(builder);
+  }
+
+  @Test
+  void testGlobIncludeAndExclude() {
+    // given - includes/excludes support glob wildcards
+    LoggingEventMapper mapper =
+        LoggingEventMapper.builder()
+            .setCaptureMdcAttributes(singletonList("user.*"))
+            .setExcludeMdcAttributes(singletonList("user.secret*"))
+            .build();
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("user.id", "value1");
+    contextData.put("user.secretToken", "value2");
+    contextData.put("other", "value3");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.captureMdcAttributes(builder, contextData);
+
+    // then - only user.id matches the include glob and not the exclude glob
+    verify(builder).setAttribute(stringKey("user.id"), "value1");
+    verifyNoMoreInteractions(builder);
+  }
+
+  @Test
+  void testExcludeRequiresInclude() {
+    // given - excludes have no effect without a non-empty include list
+    LoggingEventMapper mapper =
+        LoggingEventMapper.builder().setExcludeMdcAttributes(singletonList("key2")).build();
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("key1", "value1");
+    contextData.put("key2", "value2");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.captureMdcAttributes(builder, contextData);
+
+    // then - nothing is captured
+    verifyNoInteractions(builder);
+  }
+
+  @Test
   void testEventNameMdc() {
     // given
     LoggingEventMapper mapper =

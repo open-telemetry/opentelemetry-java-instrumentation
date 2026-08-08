@@ -119,6 +119,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @PluginBuilderAttribute private boolean captureTemplate;
     @PluginBuilderAttribute private boolean captureArguments;
     @Nullable @PluginBuilderAttribute private String captureContextDataAttributes;
+    @Nullable @PluginBuilderAttribute private String excludeContextDataAttributes;
     @PluginBuilderAttribute private int numLogsCapturedBeforeOtelInstall;
 
     @Nullable private OpenTelemetry openTelemetry;
@@ -197,6 +198,17 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
 
     /**
+     * Configures the {@link ThreadContext} attributes that will be excluded from logs. Excludes
+     * only take effect alongside {@link #setCaptureContextDataAttributes(String)}; both support
+     * glob wildcards ({@code *}, {@code ?}).
+     */
+    @CanIgnoreReturnValue
+    public B setExcludeContextDataAttributes(String excludeContextDataAttributes) {
+      this.excludeContextDataAttributes = excludeContextDataAttributes;
+      return asBuilder();
+    }
+
+    /**
      * Log telemetry is emitted after the initialization of the OpenTelemetry Log4j appender with an
      * {@link OpenTelemetry} object. This setting allows you to modify the size of the cache used to
      * replay the logs that were emitted prior to setting the OpenTelemetry instance into the
@@ -231,6 +243,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
           captureTemplate,
           captureArguments,
           captureContextDataAttributes,
+          excludeContextDataAttributes,
           numLogsCapturedBeforeOtelInstall,
           openTelemetry);
     }
@@ -249,6 +262,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureTemplate,
       boolean captureArguments,
       @Nullable String captureContextDataAttributes,
+      @Nullable String excludeContextDataAttributes,
       int numLogsCapturedBeforeOtelInstall,
       @Nullable OpenTelemetry openTelemetry) {
     super(name, filter, layout, ignoreExceptions, properties);
@@ -266,6 +280,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
             captureTemplate,
             captureArguments,
             captureContextDataAttributes,
+            excludeContextDataAttributes,
             v3Preview);
     this.openTelemetry = openTelemetry;
     this.captureCodeAttributes = captureCodeAttributes;
@@ -295,6 +310,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureTemplate,
       boolean captureArguments,
       @Nullable String captureContextDataAttributes,
+      @Nullable String excludeContextDataAttributes,
       boolean v3Preview) {
     return new LogEventMapper<>(
         ContextDataAccessorImpl.INSTANCE,
@@ -305,6 +321,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
         captureTemplate,
         captureArguments,
         splitAndFilterBlanksAndNulls(captureContextDataAttributes),
+        splitAndFilterBlanksAndNulls(excludeContextDataAttributes),
         v3Preview);
   }
 

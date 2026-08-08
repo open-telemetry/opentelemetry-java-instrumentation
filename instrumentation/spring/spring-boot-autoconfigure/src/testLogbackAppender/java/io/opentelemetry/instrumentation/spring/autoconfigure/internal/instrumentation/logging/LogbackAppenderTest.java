@@ -148,6 +148,43 @@ class LogbackAppenderTest {
   }
 
   @Test
+  void shouldExcludeMdcAttributes() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:logback-test.xml");
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*");
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.exclude-mdc-attributes", "key2");
+
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+
+    ListAppender<ILoggingEvent> listAppender = getListAppender();
+    listAppender.list.clear();
+
+    MDC.put("key1", "val1");
+    MDC.put("key2", "val2");
+    try {
+      LoggerFactory.getLogger("test").info("test log message");
+    } finally {
+      MDC.clear();
+    }
+
+    assertThat(testing.logRecords())
+        .satisfiesOnlyOnce(
+            logRecord -> {
+              // key1 is captured by the "*" wildcard; key2 is excluded
+              assertThat(logRecord.getAttributes().asMap())
+                  .containsEntry(stringKey("key1"), "val1")
+                  .doesNotContainKey(stringKey("key2"));
+            });
+  }
+
+  @Test
   void shouldNotInitializeAppenderWhenDisabled() {
     Map<String, Object> properties = new HashMap<>();
     properties.put("logging.config", "classpath:logback-test.xml");

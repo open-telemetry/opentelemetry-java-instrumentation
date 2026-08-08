@@ -173,12 +173,16 @@ class Log4j1Test {
   void testMdc() {
     MDC.put("key1", "val1");
     MDC.put("key2", "val2");
+    // excludedKey is filtered out by the exclude-mdc-attributes config (see build.gradle.kts);
+    // the exact attribute assertions below verify it is not captured
+    MDC.put("excludedKey", "excludedValue");
     MDC.put("otel.event.name", "MyEventName");
     try {
       logger.info("xyz");
     } finally {
       MDC.remove("key1");
       MDC.remove("key2");
+      MDC.remove("excludedKey");
       MDC.remove("otel.event.name");
     }
 

@@ -46,6 +46,7 @@ class LogEventMapperTest {
             false,
             false,
             emptyList(),
+            emptyList(),
             false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
@@ -72,6 +73,7 @@ class LogEventMapperTest {
             false,
             false,
             singletonList("key2"),
+            emptyList(),
             false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
@@ -99,6 +101,7 @@ class LogEventMapperTest {
             false,
             false,
             singletonList("*"),
+            emptyList(),
             false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
@@ -115,6 +118,90 @@ class LogEventMapperTest {
   }
 
   @Test
+  void testAllWithExclude() {
+    // given - "*" captures everything except the configured excludes
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            singletonList("*"),
+            singletonList("key2"),
+            false);
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("key1", "value1");
+    contextData.put("key2", "value2");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.captureContextDataAttributes(builder, contextData);
+
+    // then
+    verify(builder).setAttribute(stringKey("key1"), "value1");
+    verifyNoMoreInteractions(builder);
+  }
+
+  @Test
+  void testGlobIncludeAndExclude() {
+    // given - includes/excludes support glob wildcards
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            singletonList("user.*"),
+            singletonList("user.secret*"),
+            false);
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("user.id", "value1");
+    contextData.put("user.secretToken", "value2");
+    contextData.put("other", "value3");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.captureContextDataAttributes(builder, contextData);
+
+    // then - only user.id matches the include glob and not the exclude glob
+    verify(builder).setAttribute(stringKey("user.id"), "value1");
+    verifyNoMoreInteractions(builder);
+  }
+
+  @Test
+  void testExcludeRequiresInclude() {
+    // given - excludes have no effect without a non-empty include list
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            emptyList(),
+            singletonList("key2"),
+            false);
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("key1", "value1");
+    contextData.put("key2", "value2");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    // when
+    mapper.captureContextDataAttributes(builder, contextData);
+
+    // then - nothing is captured
+    verifyNoInteractions(builder);
+  }
+
+  @Test
   void testCaptureEventNameFromContextDataWithCaptureAll() {
     // given
     LogEventMapper<Map<String, String>> mapper =
@@ -127,6 +214,7 @@ class LogEventMapperTest {
             false,
             false,
             singletonList("*"),
+            emptyList(),
             false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
@@ -155,6 +243,7 @@ class LogEventMapperTest {
             false,
             false,
             singletonList("*"),
+            emptyList(),
             false);
 
     StringMapMessage message = new StringMapMessage();
@@ -185,6 +274,7 @@ class LogEventMapperTest {
             false,
             false,
             singletonList("*"),
+            emptyList(),
             v3Preview);
 
     StringMapMessage message = new StringMapMessage();
@@ -217,6 +307,7 @@ class LogEventMapperTest {
             false,
             false,
             singletonList("*"),
+            emptyList(),
             v3Preview);
 
     StringMapMessage message = new StringMapMessage();
@@ -251,6 +342,7 @@ class LogEventMapperTest {
             false,
             false,
             singletonList("*"),
+            emptyList(),
             v3Preview);
 
     StructuredDataMessage message = new StructuredDataMessage("an id", "a message", "a type");
@@ -283,6 +375,7 @@ class LogEventMapperTest {
             false,
             true,
             true,
+            emptyList(),
             emptyList(),
             false);
     ParameterizedMessage message = new ParameterizedMessage("hello {}", "world");
@@ -319,6 +412,7 @@ class LogEventMapperTest {
             false,
             false,
             false,
+            emptyList(),
             emptyList(),
             false);
     ParameterizedMessage message = new ParameterizedMessage("hello {}", "world");
