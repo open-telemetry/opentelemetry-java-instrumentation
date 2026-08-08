@@ -29,6 +29,7 @@ public final class AgentInitializer {
   private static boolean isSecurityManagerSupportEnabled = false;
   private static volatile boolean agentStarted = false;
 
+  @SuppressWarnings("SystemOut")
   public static void initialize(
       Instrumentation inst, File javaagentFile, boolean fromPremain, @Nullable String agentArgs)
       throws Exception {
@@ -51,6 +52,23 @@ public final class AgentInitializer {
     // classes are loaded in boot loader
     if (AgentInitializer.class.getClassLoader() != null) {
       throw new IllegalStateException("agent initializer should be loaded in boot loader");
+    }
+
+    // check if running any JDK tool in $JAVA_HOME/bin, as this is common when setting
+    // JAVA_TOOL_OPTIONS or _JAVA_OPTIONS globally, and we don't want to instrument those tools.
+    // opt-in is still possible with an explicit otel.javaagent.enabled=true in system properties,
+    // java agent arguments or the OTEL_JAVAAGENT_ENABLED environment variable
+    String command = fromPremain ? getJvmCommand() : null;
+    if (fromPremain && isJdkToolMainClass(command)) {
+      if (isDebugEnabled()) {
+        // only log actual command in debug to avoid exposing potential sensitive arguments
+        System.err.println("JDK tool detected for command '" + command + "'");
+      }
+      System.err.println(
+          "JDK tool detected, enable agent debug for details, agent will not be started. "
+              + "To override this behavior, set otel.javaagent.enabled=true as an agent argument "
+              + "or system property, or OTEL_JAVAAGENT_ENABLED=true as an environment variable");
+      return;
     }
 
     isSecurityManagerSupportEnabled = isSecurityManagerSupportEnabled();
@@ -96,6 +114,46 @@ public final class AgentInitializer {
                 System.getProperty("otel.javaagent.experimental.security-manager-support.enabled");
             if (value == null) {
               value = System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_SECURITY_MANAGER_SUPPORT_ENABLED");
+            }
+            return Boolean.parseBoolean(value);
+          }
+        });
+  }
+
+  /**
+   * Get the command string that started this JVM.
+   *
+   * @return command string, {@literal null} when unable to retrieve or command check is bypassed
+   */
+  @Nullable
+  private static String getJvmCommand() {
+    String cmd =
+        doPrivileged(
+            new PrivilegedAction<String>() {
+              @Override
+              public String run() {
+                String enable = System.getProperty("otel.javaagent.enabled");
+                if (enable == null) {
+                  enable = System.getenv("OTEL_JAVAAGENT_ENABLED");
+                }
+                if (Boolean.parseBoolean(enable)) {
+                  // using empty string as method should not return null
+                  return "";
+                }
+                return System.getProperty("sun.java.command");
+              }
+            });
+    return cmd.isEmpty() ? null : cmd;
+  }
+
+  private static boolean isDebugEnabled() {
+    return doPrivileged(
+        new PrivilegedAction<Boolean>() {
+          @Override
+          public Boolean run() {
+            String value = System.getProperty("otel.javaagent.debug");
+            if (value == null) {
+              value = System.getenv("OTEL_JAVAAGENT_DEBUG");
             }
             return Boolean.parseBoolean(value);
           }
@@ -240,5 +298,38 @@ public final class AgentInitializer {
         }
       }
     }
+  }
+
+  static boolean isJdkToolMainClass(@Nullable String cmd) {
+    if (cmd == null || cmd.isEmpty()) {
+      return false;
+    }
+    int spaceIndex = cmd.indexOf(' ');
+    String first = spaceIndex == -1 ? cmd : cmd.substring(0, spaceIndex);
+
+    if (first.endsWith(".jar")) {
+      // java -jar /path/to/app.jar
+      return false;
+    }
+
+    // sun.java.command may be of the form "<module>/<mainClass>" when the main class belongs to a
+    // named module, e.g. "jdk.compiler/com.sun.tools.javac.Main"
+    int slashIndex = first.indexOf('/');
+    if (slashIndex >= 0) {
+      String moduleName = first.substring(0, slashIndex);
+      return moduleName.startsWith("jdk.") || moduleName.startsWith("java.");
+    }
+
+    return first.startsWith("com.sun.tools.")
+        || first.startsWith("com.sun.corba.se.")
+        || first.startsWith("com.sun.javafx.tools.")
+        || first.startsWith("com.sun.java.util.jar.pack.")
+        || first.startsWith("sun.applet.")
+        || first.startsWith("sun.jvm.hotspot.")
+        || first.startsWith("sun.rmi.")
+        || first.startsWith("sun.security.tools.")
+        || first.startsWith("sun.tools.")
+        || first.startsWith("jdk.jfr.internal.tool.")
+        || first.startsWith("jdk.nashorn.tools.");
   }
 }
