@@ -2,8 +2,13 @@ display_name: Quartz
 description: This instrumentation enables spans for Quartz job execution.
 library_link: https://www.quartz-scheduler.org/
 configurations:
+  - name: otel.instrumentation.quartz.emit-experimental-telemetry
+    declarative_name: java.quartz.emit_experimental_telemetry/development
+    description: Enables experimental telemetry, such as the `job.system` and `quartz.scheduler.name` attributes.
+    type: boolean
+    default: false
   - name: otel.instrumentation.quartz.experimental-span-attributes
     declarative_name: java.quartz.experimental_span_attributes/development
-    description: Enables the experimental `job.system` span attribute.
+    description: Deprecated, use `otel.instrumentation.quartz.emit-experimental-telemetry` instead.
     type: boolean
     default: false
