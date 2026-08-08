@@ -27,7 +27,7 @@ class SpringWebfluxClientInstrumentationTest
             .setCapturedRequestHeaders(singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
             .setCapturedResponseHeaders(singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
             .build();
-    return builder.filters(instrumentation::addFilterAndRegisterReactorHook);
+    return builder.filters(instrumentation::addFilter);
   }
 
   @Override

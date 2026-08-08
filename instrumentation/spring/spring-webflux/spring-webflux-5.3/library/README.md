@@ -78,7 +78,7 @@ public class WebClientConfig {
   // Adds instrumentation to Webflux server
   @Bean
   public WebFilter webFilter() {
-    return webfluxServerTelemetry.createWebFilterAndRegisterReactorHook();
+    return webfluxServerTelemetry.createWebFilter();
   }
 }
 ```
