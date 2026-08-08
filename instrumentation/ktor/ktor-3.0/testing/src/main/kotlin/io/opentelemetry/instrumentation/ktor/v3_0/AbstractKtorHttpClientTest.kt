@@ -66,13 +66,12 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
     client.request(request).status.value
   }
 
-  fun sendStreamingRequest(request: HttpRequestBuilder) = runBlocking {
+  fun sendStreamingRequest(request: HttpRequestBuilder, executeBlock: suspend (HttpResponse) -> Unit) = runBlocking {
     // withTimeout ensures requests complete before the HttpTimeout fires. The bug this guards
     // against caused the instrumentation to prevent timely completion of streaming requests.
     withTimeout(5.seconds) {
       client.prepareRequest(request).execute { response ->
-        response.bodyAsText()
-        response.status.value
+        executeBlock(response)
       }
     }
   }
@@ -82,7 +81,9 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
     val uri = resolveAddress("/success")
     val request = buildRequest("GET", uri, mutableMapOf())
 
-    sendStreamingRequest(request)
+    sendStreamingRequest(request) { response ->
+      response.bodyAsText()
+    }
 
     testing.waitAndAssertTraces(
       { trace ->

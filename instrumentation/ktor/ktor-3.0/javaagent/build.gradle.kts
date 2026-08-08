@@ -12,6 +12,11 @@ muzzle {
     versions.set("[3.0.0,)")
     assertInverse.set(true)
     excludeInstrumentationName("ktor-server")
+    // the client span context bridging in KtorClientExtensionsInstrumentation pulls in the
+    // opentelemetry-api instrumentation, which needs the api on the classpath and its own module
+    // excluded from this module's muzzle check
+    extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
+    excludeInstrumentationName("opentelemetry-api")
   }
   pass {
     group.set("io.ktor")
@@ -19,6 +24,8 @@ muzzle {
     versions.set("[3.0.0,)")
     assertInverse.set(true)
     excludeInstrumentationName("ktor-client")
+    extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
+    excludeInstrumentationName("opentelemetry-api")
   }
 }
 
@@ -29,6 +36,12 @@ dependencies {
   library("io.ktor:ktor-server-core:$ktorVersion")
 
   implementation(project(":instrumentation:ktor:ktor-3.0:library"))
+
+  // needed for bridging the shaded Context stored on the call back to the application context in
+  // KtorClientExtensionsInstrumentation
+  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
+  // see the comment in opentelemetry-api-1.0.gradle for more details
+  compileOnly(project(":opentelemetry-api-shaded-for-instrumenting", configuration = "shadow"))
 
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
