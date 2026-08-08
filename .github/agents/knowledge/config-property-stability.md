@@ -100,6 +100,34 @@ if (value == null) {
 | Boolean toggle      | `.enabled` suffix                                                  | `enabled` leaf key                                                |
 | Env var form        | dots/hyphens → ALL_CAPS underscores                                | N/A                                                               |
 
+### Structured Selector Names
+
+A structured selector object with `included` and/or `excluded` lists is named after the resource
+being selected, for example `mdc_attributes`, `headers`, or `request_parameters`. This follows the
+OpenTelemetry Configuration
+[`IncludeExclude`](https://github.com/open-telemetry/opentelemetry-configuration/blob/main/schema/common.yaml)
+shape and its noun-based uses such as `attribute_keys` and `resource_constant_labels`.
+
+Do not give a new structured selector parent a `capture_*` name. A path such as
+`capture_mdc_attributes.excluded` is contradictory: the parent describes a selection, while the
+leaf excludes values from that selection. Retain `capture_*` for action booleans that collect or
+emit data that would otherwise be absent, such as `capture_query` and
+`capture_message_content`.
+
+```yaml
+# Preferred
+mdc_attributes:
+  included: [trace_id, request_id]
+  excluded: [password]
+
+# Avoid
+capture_mdc_attributes:
+  excluded: [password]
+```
+
+This configuration rule does not govern Java method names. Existing and future Java `setCapture*`
+APIs follow Java API naming conventions and are unchanged by this guidance.
+
 ## Structured Config (YAML-Only)
 
 Some configurations require structured data only expressible in YAML:
