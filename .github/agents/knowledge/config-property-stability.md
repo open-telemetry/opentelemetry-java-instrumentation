@@ -128,30 +128,6 @@ capture_mdc_attributes:
 This configuration rule does not govern Java method names. Existing and future Java `setCapture*`
 APIs follow Java API naming conventions and are unchanged by this guidance.
 
-#### Migration impact
-
-This rule is migration-capable, not permanently non-retroactive. A future migration PR may add a
-preferred noun-based name, deprecate an existing `capture_*` selector, and eventually remove the old
-name within the applicable stability policy:
-
-- **Five experimental list selectors:** messaging `capture_headers`, servlet
-  `capture_request_parameters`, and the Logback, Log4j, and JBoss LogManager MDC capture selectors
-  may migrate to noun-based structured parents. During the deprecation window, each old scalar list
-  becomes an alias for the new selector's `included` list, while `included` and `excluded` are
-  exposed as flat leaves. The migration PR must define precedence and defaults explicitly, emit
-  deprecation warnings, and update metadata, generated documentation, user documentation, and
-  tests.
-- **Six stable list selectors:** the four HTTP request/response header selectors and two gRPC
-  metadata selectors may receive preferred aliases and deprecations now, but both old and new forms
-  must continue working throughout 2.x. Stable old names may be removed only in 3.0. The HTTP
-  declarative names are standardized across languages, so changing or aliasing them also requires
-  upstream coordination. This guidance intentionally does not choose final replacement spellings.
-- **Twenty-two unaffected capture booleans:** four stable and eighteen experimental action booleans
-  keep their `capture_*` names. The deprecated runtime `capture_gc_cause` property is not a naming
-  precedent.
-
-The repository inventory is 33 active capture-named metadata properties: 22 booleans and 11 lists.
-
 ## Structured Config (YAML-Only)
 
 Some configurations require structured data only expressible in YAML:
