@@ -1,0 +1,24 @@
+display_name: Java Executors Metrics
+description: >
+  This instrumentation emits JVM executor metrics for ThreadPoolExecutor and supported JDK executor
+  implementations.
+semantic_conventions:
+  - JVM_RUNTIME_METRICS
+disabled_by_default: true
+library_link: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ThreadPoolExecutor.html
+configurations:
+  - name: otel.instrumentation.executors-metrics.enabled
+    declarative_name: java.executors_metrics.enabled
+    description: Enables executor metrics instrumentation.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.executors-metrics.experimental.name-normalization
+    declarative_name: java.executors_metrics.name_normalization/development
+    description: >
+      Determines how executor thread names are normalized. all replaces every group of digits with
+      *; trailing replaces only the final group; other values act as trailing.
+    type: string
+    default: trailing
+    examples:
+      - trailing
+      - all
