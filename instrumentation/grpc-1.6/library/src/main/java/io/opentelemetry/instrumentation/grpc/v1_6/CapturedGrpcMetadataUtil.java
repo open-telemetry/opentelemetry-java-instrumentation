@@ -9,6 +9,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,6 +27,13 @@ final class CapturedGrpcMetadataUtil {
 
   static List<String> lowercase(List<String> names) {
     return unmodifiableList(names.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(toList()));
+  }
+
+  static IncludeExclude lowercase(IncludeExclude selector) {
+    return IncludeExclude.builder()
+        .setIncluded(lowercase(selector.getIncluded()))
+        .setExcluded(lowercase(selector.getExcluded()))
+        .build();
   }
 
   static AttributeKey<List<String>> requestAttributeKey(String metadataKey) {

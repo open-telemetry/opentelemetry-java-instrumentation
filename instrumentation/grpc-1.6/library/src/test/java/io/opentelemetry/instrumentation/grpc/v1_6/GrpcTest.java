@@ -24,6 +24,7 @@ import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -42,7 +43,10 @@ class GrpcTest extends AbstractGrpcTest {
   protected ServerBuilder<?> configureServer(ServerBuilder<?> server) {
     return server.intercept(
         GrpcTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedServerRequestMetadata(singletonList(SERVER_REQUEST_METADATA_KEY))
+            .setServerRequestMetadata(
+                IncludeExclude.builder()
+                    .setIncluded(singletonList(SERVER_REQUEST_METADATA_KEY))
+                    .build())
             .build()
             .createServerInterceptor());
   }
@@ -51,7 +55,10 @@ class GrpcTest extends AbstractGrpcTest {
   protected ManagedChannelBuilder<?> configureClient(ManagedChannelBuilder<?> client) {
     return client.intercept(
         GrpcTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedClientRequestMetadata(singletonList(CLIENT_REQUEST_METADATA_KEY))
+            .setClientRequestMetadata(
+                IncludeExclude.builder()
+                    .setIncluded(singletonList(CLIENT_REQUEST_METADATA_KEY))
+                    .build())
             .build()
             .createClientInterceptor());
   }
