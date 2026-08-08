@@ -12,26 +12,36 @@ public final class GenAiSpanNameExtractor<REQUEST> implements SpanNameExtractor<
 
   /**
    * Returns a {@link SpanNameExtractor} that constructs the span name according to GenAI semantic
-   * conventions: {@code <gen_ai.operation.name> <gen_ai.request.model>}.
+   * conventions.
+   *
+   * <ul>
+   *   <li>Inference (chat / text_completion / generate_content) - {@code <gen_ai.operation.name>
+   *       <gen_ai.request.model>}.
+   *   <li>Embeddings - {@code embeddings <gen_ai.request.model>}.
+   *   <li>Execute tool - {@code execute_tool <gen_ai.tool.name>}.
+   *   <li>Create/Invoke agent - {@code <gen_ai.operation.name> <gen_ai.agent.name>}.
+   *   <li>Retrieval - {@code retrieval <gen_ai.data_source.id>}, or {@code retrieval} when the data
+   *       source id is unavailable.
+   * </ul>
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      GenAiAttributesGetter<REQUEST, ?> attributesGetter) {
+      GenAiOperationAttributesGetter<REQUEST, ?> attributesGetter) {
     return new GenAiSpanNameExtractor<>(attributesGetter);
   }
 
-  private final GenAiAttributesGetter<REQUEST, ?> getter;
+  private final GenAiOperationAttributesGetter<REQUEST, ?> getter;
 
-  private GenAiSpanNameExtractor(GenAiAttributesGetter<REQUEST, ?> getter) {
+  private GenAiSpanNameExtractor(GenAiOperationAttributesGetter<REQUEST, ?> getter) {
     this.getter = getter;
   }
 
   @Override
   public String extract(REQUEST request) {
     String operation = getter.getOperationName(request);
-    String model = getter.getRequestModel(request);
-    if (model == null) {
+    String operationTarget = getter.getOperationTarget(request);
+    if (operationTarget == null || operationTarget.isEmpty()) {
       return operation;
     }
-    return operation + ' ' + model;
+    return operation + ' ' + operationTarget;
   }
 }
