@@ -61,7 +61,9 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
       return;
     }
     for (String key : request.getMetadata().keys()) {
-      if (key.endsWith(Metadata.BINARY_HEADER_SUFFIX) || !requestMetadata.matches(key)) {
+      if (key.startsWith(":")
+          || key.endsWith(Metadata.BINARY_HEADER_SUFFIX)
+          || !requestMetadata.matches(key)) {
         continue;
       }
       List<String> value = getter.metadataValue(request, key);

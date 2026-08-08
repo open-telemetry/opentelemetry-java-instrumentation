@@ -10,9 +10,11 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
@@ -69,6 +71,20 @@ class GrpcAttributesExtractorTest {
         .onEnd(attributes, Context.root(), request, null, null);
 
     assertExcludedMetadata(attributes.build(), "some-key");
+  }
+
+  @Test
+  void skipsHttp2PseudoHeaders() {
+    Metadata metadata = mock(Metadata.class);
+    when(metadata.keys()).thenReturn(singleton(":authority"));
+    GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
+    AttributesBuilder attributes = Attributes.builder();
+    IncludeExclude selector = IncludeExclude.builder().build();
+
+    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector)
+        .onEnd(attributes, Context.root(), request, null, null);
+
+    assertThat(attributes.build()).isEqualTo(Attributes.empty());
   }
 
   private static void assertExcludedMetadata(Attributes attributes, String key) {
