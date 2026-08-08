@@ -54,8 +54,8 @@ class TestWebfluxSpringBootApp {
   @Bean
   WebFilter telemetryFilter() {
     return SpringWebfluxServerTelemetry.builder(GlobalOpenTelemetry.get())
-        .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-        .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+        .setCaptureRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
+        .setCaptureResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
         .build()
         .createWebFilterAndRegisterReactorHook();
   }

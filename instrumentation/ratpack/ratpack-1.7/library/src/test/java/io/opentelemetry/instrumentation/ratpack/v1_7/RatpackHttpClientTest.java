@@ -23,8 +23,8 @@ class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
   @Override
   protected HttpClient buildHttpClient() throws Exception {
     return RatpackClientTelemetry.builder(testing.getOpenTelemetry())
-        .setCapturedRequestHeaders(singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
-        .setCapturedResponseHeaders(singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+        .setCaptureRequestHeaders(singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
+        .setCaptureResponseHeaders(singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
         .build()
         .instrument(HttpClient.of(Action.noop()));
   }

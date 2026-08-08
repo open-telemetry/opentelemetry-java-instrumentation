@@ -49,9 +49,18 @@ public final class RestletTelemetryBuilder {
    * @param requestHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
-  public RestletTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
-    builder.setCapturedRequestHeaders(requestHeaders);
+  public RestletTelemetryBuilder setCaptureRequestHeaders(Collection<String> requestHeaders) {
+    builder.setCaptureRequestHeaders(requestHeaders);
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureRequestHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public RestletTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
+    return setCaptureRequestHeaders(requestHeaders);
   }
 
   /**
@@ -60,9 +69,18 @@ public final class RestletTelemetryBuilder {
    * @param responseHeaders HTTP header names to capture.
    */
   @CanIgnoreReturnValue
-  public RestletTelemetryBuilder setCapturedResponseHeaders(Collection<String> responseHeaders) {
-    builder.setCapturedResponseHeaders(responseHeaders);
+  public RestletTelemetryBuilder setCaptureResponseHeaders(Collection<String> responseHeaders) {
+    builder.setCaptureResponseHeaders(responseHeaders);
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setCaptureResponseHeaders(Collection)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public RestletTelemetryBuilder setCapturedResponseHeaders(Collection<String> responseHeaders) {
+    return setCaptureResponseHeaders(responseHeaders);
   }
 
   /**
