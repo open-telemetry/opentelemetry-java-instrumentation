@@ -30,5 +30,6 @@ tasks {
 
   test {
     jvmArgs("-Dotel.instrumentation.opentelemetry-api-incubator-1.63.enabled=false")
+    jvmArgs("-Dotel.instrumentation.opentelemetry-api-incubator-1.65.enabled=false")
   }
 }
