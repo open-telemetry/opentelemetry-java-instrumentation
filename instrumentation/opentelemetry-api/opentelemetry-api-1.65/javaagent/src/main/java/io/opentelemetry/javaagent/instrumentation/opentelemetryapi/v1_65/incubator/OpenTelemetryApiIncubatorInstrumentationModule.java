@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_63.incubator;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_65.incubator;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -21,22 +20,15 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class OpenTelemetryApiIncubatorInstrumentationModule
     extends V3PreviewFallbackEnabledInstrumentationModule {
   public OpenTelemetryApiIncubatorInstrumentationModule() {
-    super("opentelemetry-api", "opentelemetry-api-1.63", "opentelemetry-api-incubator-1.63");
+    super("opentelemetry-api", "opentelemetry-api-1.65", "opentelemetry-api-incubator-1.65");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // this instrumentation module targets io.opentelemetry:opentelemetry-api-incubator
     return hasClassesNamed(
-            // added in 1.63
-            "application.io.opentelemetry.api.impl.InstrumentationUtil",
-            // added in 1.42
-            "application.io.opentelemetry.api.incubator.logs.ExtendedLogger")
-        .and(
-            // added in 1.65
-            not(
-                hasClassesNamed(
-                    "application.io.opentelemetry.api.incubator.metrics.BoundLongCounter")));
+        // added in 1.65
+        "application.io.opentelemetry.api.incubator.metrics.BoundLongCounter");
   }
 
   @Override
