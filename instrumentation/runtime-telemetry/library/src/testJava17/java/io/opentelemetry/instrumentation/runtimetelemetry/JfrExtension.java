@@ -11,6 +11,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
 import io.opentelemetry.instrumentation.testing.internal.MetaDataCollector;
@@ -37,7 +38,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 class JfrExtension implements BeforeEachCallback, AfterEachCallback {
 
-  private final List<String> jfrMetricPatterns;
+  private final IncludeExclude jfrMetrics;
 
   private SdkMeterProvider meterProvider;
   private InMemoryMetricReader metricReader;
@@ -47,7 +48,7 @@ class JfrExtension implements BeforeEachCallback, AfterEachCallback {
   private final Set<InstrumentationScopeInfo> instrumentationScopes = new HashSet<>();
 
   JfrExtension(String... jfrMetricPatterns) {
-    this.jfrMetricPatterns = asList(jfrMetricPatterns);
+    this.jfrMetrics = IncludeExclude.builder().setIncluded(asList(jfrMetricPatterns)).build();
   }
 
   @Override
@@ -63,7 +64,7 @@ class JfrExtension implements BeforeEachCallback, AfterEachCallback {
     meterProvider = SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     OpenTelemetrySdk sdk = OpenTelemetrySdk.builder().setMeterProvider(meterProvider).build();
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(sdk);
-    Experimental.setJfrMetrics(builder, jfrMetricPatterns);
+    Experimental.setJfrMetrics(builder, jfrMetrics);
     runtimeMetrics = builder.build();
     JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
         (JfrConfig.JfrRuntimeMetrics) runtimeMetrics.getJfrTelemetry();

@@ -33,7 +33,7 @@ import org.springframework.web.client.RestTemplate;
       "otel.exporter.otlp.headers.c=3",
       "otel.instrumentation.runtime-telemetry.emit-experimental-metrics=true",
       "otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics=true",
-      "otel.instrumentation.runtime-telemetry.experimental.jfr-metrics=*",
+      "otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included=*",
       "otel.instrumentation.common.thread_details.enabled=true",
       "logging.level.org.springframework.boot.autoconfigure=DEBUG",
     })

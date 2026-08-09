@@ -9,6 +9,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static java.util.Collections.singletonList;
 
 import io.github.netmikey.logunit.api.LogCapturer;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -82,7 +83,8 @@ class RuntimeTelemetryTest {
   @Test
   void builder_WithFeatureEnabled() {
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(sdk);
-    Experimental.setJfrMetrics(builder, singletonList("jvm.cpu.longlock"));
+    Experimental.setJfrMetrics(
+        builder, IncludeExclude.builder().setIncluded(singletonList("jvm.cpu.longlock")).build());
     var runtimeTelemetry = builder.build();
     cleanup.deferCleanup(runtimeTelemetry);
 
@@ -100,7 +102,8 @@ class RuntimeTelemetryTest {
   @Test
   void close() throws InterruptedException {
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(sdk);
-    Experimental.setJfrMetrics(builder, singletonList("jvm.cpu.longlock"));
+    Experimental.setJfrMetrics(
+        builder, IncludeExclude.builder().setIncluded(singletonList("jvm.cpu.longlock")).build());
     try (RuntimeTelemetry jfrTelemetry = builder.build()) {
       JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
           (JfrConfig.JfrRuntimeMetrics) jfrTelemetry.getJfrTelemetry();

@@ -7,17 +7,18 @@ package io.opentelemetry.instrumentation.runtimetelemetry;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Internal;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JmxRuntimeMetricsFactory;
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.MetricNameFilter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -42,7 +43,7 @@ public final class RuntimeTelemetryBuilder {
 
   private boolean emitExperimentalMetrics;
   private boolean emitExperimentalJfrMetrics;
-  private List<String> jfrMetricPatterns = emptyList();
+  @Nullable private IncludeExclude jfrMetrics;
   private boolean suppressOverlappingJmxMetrics = true;
   private boolean disableJmx;
   private boolean captureGcCause;
@@ -55,10 +56,8 @@ public final class RuntimeTelemetryBuilder {
         (builder, emit) -> builder.emitExperimentalMetrics = emit);
     Experimental.internalSetEmitExperimentalJfrMetrics(
         (builder, emit) -> builder.emitExperimentalJfrMetrics = emit);
-    Experimental.internalSetJfrMetrics(
-        (builder, patterns) -> builder.jfrMetricPatterns = new ArrayList<>(patterns));
-    Internal.internalSetJfrMetrics(
-        (builder, patterns) -> builder.jfrMetricPatterns = new ArrayList<>(patterns));
+    Experimental.internalSetJfrMetrics((builder, selector) -> builder.jfrMetrics = selector);
+    Internal.internalSetJfrMetrics((builder, selector) -> builder.jfrMetrics = selector);
     Internal.internalSetSuppressOverlappingJmxMetrics(
         (builder, suppress) -> builder.suppressOverlappingJmxMetrics = suppress);
     Internal.internalSetCaptureGcCause((builder, capture) -> builder.captureGcCause = capture);
@@ -91,16 +90,15 @@ public final class RuntimeTelemetryBuilder {
     String jfrName =
         jfrInstrumentationName != null ? jfrInstrumentationName : DEFAULT_INSTRUMENTATION_NAME;
 
-    Meter jmxMeter = getMeter(openTelemetry, jmxName);
-    Meter jfrMeter = getMeter(openTelemetry, jfrName);
-    List<String> effectiveJfrMetricPatterns = new ArrayList<>(jfrMetricPatterns);
-    if (emitExperimentalJfrMetrics) {
-      effectiveJfrMetricPatterns.addAll(EXPERIMENTAL_JFR_METRICS);
-    }
-    MetricNameFilter jfrMetricFilter = MetricNameFilter.create(effectiveJfrMetricPatterns);
-    JfrConfig.JfrTelemetry jfrTelemetry = jfrConfig.buildJfrTelemetry(jfrMetricFilter, jfrMeter);
+    IncludeExclude effectiveJfrMetrics = getEffectiveJfrMetrics();
+    JfrConfig.JfrTelemetry jfrTelemetry =
+        effectiveJfrMetrics == null
+            ? new JfrConfig.JfrTelemetry(null, emptySet())
+            : jfrConfig.buildJfrTelemetry(
+                effectiveJfrMetrics::matches, getMeter(openTelemetry, jfrName));
     Set<String> jfrMetricNames = jfrTelemetry.getMetricNames();
 
+    Meter jmxMeter = getMeter(openTelemetry, jmxName);
     List<AutoCloseable> observables =
         disableJmx
             ? emptyList()
@@ -111,6 +109,26 @@ public final class RuntimeTelemetryBuilder {
                     !suppressOverlappingJmxMetrics || !jfrMetricNames.contains(metricName),
                 jmxMeter);
     return new RuntimeTelemetry(observables, jfrTelemetry.getTelemetry());
+  }
+
+  @Nullable
+  private IncludeExclude getEffectiveJfrMetrics() {
+    if (!emitExperimentalJfrMetrics) {
+      return jfrMetrics;
+    }
+    if (jfrMetrics == null) {
+      return IncludeExclude.builder().setIncluded(EXPERIMENTAL_JFR_METRICS).build();
+    }
+    if (jfrMetrics.getIncluded().isEmpty()) {
+      return jfrMetrics;
+    }
+
+    List<String> included = new ArrayList<>(jfrMetrics.getIncluded());
+    included.addAll(EXPERIMENTAL_JFR_METRICS);
+    return IncludeExclude.builder()
+        .setIncluded(included)
+        .setExcluded(jfrMetrics.getExcluded())
+        .build();
   }
 
   private static Meter getMeter(OpenTelemetry openTelemetry, String instrumentationName) {

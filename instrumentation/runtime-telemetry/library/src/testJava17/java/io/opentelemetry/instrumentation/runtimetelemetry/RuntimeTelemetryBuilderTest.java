@@ -5,10 +5,12 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Internal;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
@@ -17,9 +19,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import jdk.jfr.FlightRecorder;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
@@ -46,7 +46,7 @@ class RuntimeTelemetryBuilderTest {
   @Test
   void setJfrMetricsSelectsExactMetric() {
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
-    Experimental.setJfrMetrics(builder, singletonList("jvm.cpu.longlock"));
+    Experimental.setJfrMetrics(builder, include("jvm.cpu.longlock"));
     RuntimeTelemetry runtimeTelemetry = builder.build();
     cleanup.deferCleanup(runtimeTelemetry);
 
@@ -65,7 +65,7 @@ class RuntimeTelemetryBuilderTest {
   @Test
   void setJfrMetricsSelectsMetricWithinSharedHandler() {
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
-    Experimental.setJfrMetrics(builder, singletonList("jvm.cpu.recent_utilization"));
+    Experimental.setJfrMetrics(builder, include("jvm.cpu.recent_utilization"));
     RuntimeTelemetry runtimeTelemetry = builder.build();
     cleanup.deferCleanup(runtimeTelemetry);
 
@@ -81,23 +81,79 @@ class RuntimeTelemetryBuilderTest {
   }
 
   @Test
-  void setJfrMetricsCopiesPatterns() {
-    List<String> patterns = new ArrayList<>(singletonList("jvm.cpu.longlock"));
+  void emptyPresentSelectorSelectsAllMetrics() {
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
-    Experimental.setJfrMetrics(builder, patterns);
-    patterns.clear();
+    Experimental.setJfrMetrics(builder, IncludeExclude.builder().build());
     RuntimeTelemetry runtimeTelemetry = builder.build();
     cleanup.deferCleanup(runtimeTelemetry);
 
     JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
         (JfrConfig.JfrRuntimeMetrics) runtimeTelemetry.getJfrTelemetry();
-    assertThat(jfrRuntimeMetrics.getMetricNames()).containsExactly("jvm.cpu.longlock");
+    assertThat(jfrRuntimeMetrics.getMetricNames())
+        .contains("jvm.class.count", "jvm.cpu.longlock", "jvm.memory.allocation");
+  }
+
+  @Test
+  void globPatternsSelectMetrics() {
+    RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
+    Experimental.setJfrMetrics(builder, include("jvm.cpu.long*", "jvm.class.coun?"));
+    RuntimeTelemetry runtimeTelemetry = builder.build();
+    cleanup.deferCleanup(runtimeTelemetry);
+
+    JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
+        (JfrConfig.JfrRuntimeMetrics) runtimeTelemetry.getJfrTelemetry();
+    assertThat(jfrRuntimeMetrics.getMetricNames())
+        .containsExactlyInAnyOrder("jvm.cpu.longlock", "jvm.class.count");
+  }
+
+  @Test
+  void selectorMatchingNoMetricsDoesNotStartRecording() {
+    RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
+    Experimental.setJfrMetrics(builder, include("not.a.jvm.metric"));
+    RuntimeTelemetry runtimeTelemetry = builder.build();
+    cleanup.deferCleanup(runtimeTelemetry);
+
+    assertThat(runtimeTelemetry.getJfrTelemetry()).isNull();
+  }
+
+  @Test
+  void excludeOnlySelectsAllOtherMetrics() {
+    RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
+    Experimental.setJfrMetrics(
+        builder, IncludeExclude.builder().setExcluded(singletonList("jvm.memory.*")).build());
+    RuntimeTelemetry runtimeTelemetry = builder.build();
+    cleanup.deferCleanup(runtimeTelemetry);
+
+    JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
+        (JfrConfig.JfrRuntimeMetrics) runtimeTelemetry.getJfrTelemetry();
+    assertThat(jfrRuntimeMetrics.getMetricNames())
+        .contains("jvm.class.count", "jvm.cpu.longlock")
+        .noneMatch(name -> name.startsWith("jvm.memory."));
+  }
+
+  @Test
+  void exclusionsTakePrecedenceOverIncludes() {
+    RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
+    Experimental.setJfrMetrics(
+        builder,
+        IncludeExclude.builder()
+            .setIncluded(singletonList("jvm.cpu.*"))
+            .setExcluded(singletonList("jvm.cpu.longlock"))
+            .build());
+    RuntimeTelemetry runtimeTelemetry = builder.build();
+    cleanup.deferCleanup(runtimeTelemetry);
+
+    JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
+        (JfrConfig.JfrRuntimeMetrics) runtimeTelemetry.getJfrTelemetry();
+    assertThat(jfrRuntimeMetrics.getMetricNames())
+        .contains("jvm.cpu.recent_utilization")
+        .doesNotContain("jvm.cpu.longlock");
   }
 
   @Test
   void experimentalJfrMetricsAreUnionedWithSelector() {
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
-    Experimental.setJfrMetrics(builder, singletonList("jvm.class.count"));
+    Experimental.setJfrMetrics(builder, include("jvm.class.count"));
     Experimental.setEmitExperimentalJfrMetrics(builder, true);
     RuntimeTelemetry runtimeTelemetry = builder.build();
     cleanup.deferCleanup(runtimeTelemetry);
@@ -106,6 +162,26 @@ class RuntimeTelemetryBuilderTest {
         (JfrConfig.JfrRuntimeMetrics) runtimeTelemetry.getJfrTelemetry();
     assertThat(jfrRuntimeMetrics.getMetricNames())
         .contains("jvm.class.count", "jvm.cpu.longlock", "jvm.memory.allocation");
+  }
+
+  @Test
+  void exclusionsTakePrecedenceOverExperimentalJfrMetrics() {
+    RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
+    Experimental.setJfrMetrics(
+        builder,
+        IncludeExclude.builder()
+            .setIncluded(singletonList("jvm.class.count"))
+            .setExcluded(singletonList("jvm.cpu.longlock"))
+            .build());
+    Experimental.setEmitExperimentalJfrMetrics(builder, true);
+    RuntimeTelemetry runtimeTelemetry = builder.build();
+    cleanup.deferCleanup(runtimeTelemetry);
+
+    JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
+        (JfrConfig.JfrRuntimeMetrics) runtimeTelemetry.getJfrTelemetry();
+    assertThat(jfrRuntimeMetrics.getMetricNames())
+        .contains("jvm.class.count", "jvm.memory.allocation")
+        .doesNotContain("jvm.cpu.longlock");
   }
 
   @Test
@@ -136,7 +212,7 @@ class RuntimeTelemetryBuilderTest {
 
   @Test
   void splitsMemoryMetricsBetweenJfrAndJmx() {
-    TestTelemetry telemetry = buildTelemetry(singletonList("jvm.memory.used"), false);
+    TestTelemetry telemetry = buildTelemetry(include("jvm.memory.used"), false);
 
     assertMetricScopes(telemetry.reader.collectAllMetrics(), "jvm.memory.used", "jfr");
     assertMetricScopes(telemetry.reader.collectAllMetrics(), "jvm.memory.limit", "jmx");
@@ -144,13 +220,13 @@ class RuntimeTelemetryBuilderTest {
 
   @Test
   void allJfrMetricsKeepsJmxOnlyMetrics() {
-    TestTelemetry telemetry = buildTelemetry(singletonList("*"), false);
+    TestTelemetry telemetry = buildTelemetry(include("*"), false);
     Collection<MetricData> metrics = telemetry.reader.collectAllMetrics();
 
     assertMetricScopes(metrics, "jvm.cpu.time", "jmx");
   }
 
-  private TestTelemetry buildTelemetry(List<String> jfrMetricPatterns, boolean experimentalJmx) {
+  private TestTelemetry buildTelemetry(IncludeExclude jfrMetrics, boolean experimentalJmx) {
     InMemoryMetricReader reader = InMemoryMetricReader.create();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(reader).build();
@@ -158,13 +234,17 @@ class RuntimeTelemetryBuilderTest {
     cleanup.deferCleanup(sdk);
 
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(sdk);
-    Experimental.setJfrMetrics(builder, jfrMetricPatterns);
+    Experimental.setJfrMetrics(builder, jfrMetrics);
     Experimental.setEmitExperimentalMetrics(builder, experimentalJmx);
     Internal.setJmxInstrumentationName(builder, "jmx");
     Internal.setJfrInstrumentationName(builder, "jfr");
     RuntimeTelemetry runtimeTelemetry = builder.build();
     cleanup.deferCleanup(runtimeTelemetry);
     return new TestTelemetry(reader);
+  }
+
+  private static IncludeExclude include(String... patterns) {
+    return IncludeExclude.builder().setIncluded(asList(patterns)).build();
   }
 
   private static void assertMetricScopes(

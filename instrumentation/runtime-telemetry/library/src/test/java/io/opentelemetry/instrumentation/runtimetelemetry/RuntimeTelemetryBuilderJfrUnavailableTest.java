@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental;
 import org.junit.jupiter.api.Test;
 
@@ -23,8 +24,9 @@ class RuntimeTelemetryBuilderJfrUnavailableTest {
   void setJfrMetricsIsNoopWithoutJfr() {
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
 
-    assertThatCode(() -> Experimental.setJfrMetrics(builder, singletonList("jvm.cpu.longlock")))
-        .doesNotThrowAnyException();
+    IncludeExclude selector =
+        IncludeExclude.builder().setIncluded(singletonList("jvm.cpu.longlock")).build();
+    assertThatCode(() -> Experimental.setJfrMetrics(builder, selector)).doesNotThrowAnyException();
 
     try (RuntimeTelemetry runtimeTelemetry = builder.build()) {
       assertThat(runtimeTelemetry.getJfrTelemetry()).isNull();
