@@ -112,8 +112,11 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         namedOneOf("basicRecover", "basicRecoverAsync").and(isPublic()),
         getClass().getName() + "$ChannelRecoverAdvice");
     transformer.applyAdviceToMethod(
-        namedOneOf("txSelect", "txCommit").and(isPublic()).and(takesArguments(0)),
-        getClass().getName() + "$ChannelTxStartAdvice");
+        named("txSelect").and(isPublic()).and(takesArguments(0)),
+        getClass().getName() + "$ChannelTxSelectAdvice");
+    transformer.applyAdviceToMethod(
+        named("txCommit").and(isPublic()).and(takesArguments(0)),
+        getClass().getName() + "$ChannelTxCommitAdvice");
     transformer.applyAdviceToMethod(
         named("txRollback").and(isPublic()).and(takesArguments(0)),
         getClass().getName() + "$ChannelTxRollbackAdvice");
@@ -504,27 +507,48 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
     }
   }
 
-  /**
-   * {@code txSelect} and {@code txCommit} both start a transaction, so the settlements made before
-   * them can no longer be rolled back.
-   */
+  /** {@code txSelect} puts a channel into transaction mode. */
   @SuppressWarnings("unused")
-  public static class ChannelTxStartAdvice {
+  public static class ChannelTxSelectAdvice {
 
-    public static class ChannelTxStartAdviceScope {
+    public static class ChannelTxSelectAdviceScope {
 
       public static void end(Channel channel) {
         if (emitStableMessagingSemconv()) {
-          DeliveredMessages.startTransaction(channel);
+          DeliveredMessages.selectTransaction(channel);
         }
       }
 
-      private ChannelTxStartAdviceScope() {}
+      private ChannelTxSelectAdviceScope() {}
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Channel channel) {
-      ChannelTxStartAdviceScope.end(channel);
+      ChannelTxSelectAdviceScope.end(channel);
+    }
+  }
+
+  /**
+   * {@code txCommit} starts the next transaction, so the settlements made before it can no longer
+   * be rolled back.
+   */
+  @SuppressWarnings("unused")
+  public static class ChannelTxCommitAdvice {
+
+    public static class ChannelTxCommitAdviceScope {
+
+      public static void end(Channel channel) {
+        if (emitStableMessagingSemconv()) {
+          DeliveredMessages.commitTransaction(channel);
+        }
+      }
+
+      private ChannelTxCommitAdviceScope() {}
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Channel channel) {
+      ChannelTxCommitAdviceScope.end(channel);
     }
   }
 

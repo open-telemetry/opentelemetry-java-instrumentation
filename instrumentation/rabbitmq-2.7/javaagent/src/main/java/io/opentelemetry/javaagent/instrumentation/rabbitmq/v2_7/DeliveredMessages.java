@@ -144,14 +144,21 @@ final class DeliveredMessages {
     return SettledMessages.of(settled, incomplete, lowestRemovedTag, highestRemovedTag);
   }
 
-  /**
-   * Starts a new transaction on a channel, as {@code txSelect} and {@code txCommit} do: the
-   * settlements made in the transaction that just ended, if there was one, are durable, and only
-   * the settlements that follow can still be rolled back.
-   */
-  static void startTransaction(Channel channel) {
+  /** Puts a channel into transaction mode, as {@code txSelect} does. */
+  static void selectTransaction(Channel channel) {
     // a channel that has not delivered anything yet still has to be remembered as transactional,
     // because the deliveries that follow can be settled and rolled back within this transaction
+    DeliveredMessages messages = getOrCreate(channel);
+    synchronized (messages) {
+      messages.transactional = true;
+    }
+  }
+
+  /**
+   * Commits a transaction and starts the next one: the settlements made in the transaction that
+   * just ended are durable, and only the settlements that follow can still be rolled back.
+   */
+  static void commitTransaction(Channel channel) {
     DeliveredMessages messages = getOrCreate(channel);
     synchronized (messages) {
       messages.transactional = true;
