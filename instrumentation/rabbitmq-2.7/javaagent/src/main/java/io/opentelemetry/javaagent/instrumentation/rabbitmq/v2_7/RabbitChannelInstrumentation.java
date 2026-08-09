@@ -90,6 +90,9 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
             .and(canThrow(IOException.class).or(canThrow(InterruptedException.class))),
         getClass().getName() + "$ChannelMethodAdvice");
     transformer.applyAdviceToMethod(
+        named("automaticallyRecover").and(takesArguments(2)),
+        getClass().getName() + "$ChannelAutomaticRecoveryAdvice");
+    transformer.applyAdviceToMethod(
         named("basicPublish").and(takesArguments(6)),
         getClass().getName() + "$ChannelPublishAdvice");
     // amqp-client 5.30.0 added a ByteBuffer overload that ChannelN implements directly instead of
@@ -248,6 +251,30 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter ChannelMethodAdviceScope adviceScope) {
       adviceScope.end(throwable);
+    }
+  }
+
+  /**
+   * Automatic connection recovery keeps the same logical channel while replacing its delegate and
+   * invalidating every outstanding delivery tag.
+   */
+  @SuppressWarnings("unused")
+  public static class ChannelAutomaticRecoveryAdvice {
+
+    public static class ChannelAutomaticRecoveryAdviceScope {
+
+      public static void start(Channel channel) {
+        if (emitStableMessagingSemconv()) {
+          DeliveredMessages.clear(channel);
+        }
+      }
+
+      private ChannelAutomaticRecoveryAdviceScope() {}
+    }
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(@Advice.This Channel channel) {
+      ChannelAutomaticRecoveryAdviceScope.start(channel);
     }
   }
 

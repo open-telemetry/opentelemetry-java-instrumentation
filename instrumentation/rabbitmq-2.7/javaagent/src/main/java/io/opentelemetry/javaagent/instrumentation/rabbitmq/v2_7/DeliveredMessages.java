@@ -48,10 +48,6 @@ final class DeliveredMessages {
   private long pendingLowestTag;
   private long pendingHighestTag;
 
-  // the highest delivery tag remembered so far, used to notice that the broker started numbering
-  // deliveries from one again
-  private long highestRecordedTag;
-
   static void record(Channel channel, Envelope envelope, String queue) {
     DeliveredMessage message =
         new DeliveredMessage(
@@ -59,19 +55,8 @@ final class DeliveredMessages {
             isGeneratedQueueName(queue),
             envelope.getRoutingKey());
     DeliveredMessages messages = getOrCreate(channel);
-    long deliveryTag = envelope.getDeliveryTag();
     synchronized (messages) {
-      // delivery tags increase for the life of a channel, so a tag that doesn't means that the
-      // channel was recovered onto a new one, as the automatic connection recovery that the client
-      // enables by default does while keeping the same Channel object; the broker requeued every
-      // unacknowledged delivery and started numbering from one again, so the deliveries remembered
-      // under the old numbering describe unrelated messages now
-      if (deliveryTag <= messages.highestRecordedTag) {
-        messages.messagesByDeliveryTag.clear();
-        messages.clearPending();
-      }
-      messages.highestRecordedTag = deliveryTag;
-      messages.messagesByDeliveryTag.put(deliveryTag, message);
+      messages.messagesByDeliveryTag.put(envelope.getDeliveryTag(), message);
     }
   }
 
@@ -219,11 +204,9 @@ final class DeliveredMessages {
   }
 
   /**
-   * Forgets every outstanding delivery on a channel, as {@code basicRecover} and {@code
-   * basicRecoverAsync} do: they requeue all unacknowledged deliveries, which the broker then
-   * redelivers under new, higher delivery tags. Without this the old tags would linger and a later
-   * multiple settle, which covers every tag up to the one it names, would settle them a second
-   * time.
+   * Forgets every outstanding delivery on a channel when it is recovered. {@code basicRecover},
+   * {@code basicRecoverAsync}, and automatic connection recovery requeue all unacknowledged
+   * deliveries, so the old entries must not be included in a later multiple settle.
    */
   static void clear(Channel channel) {
     DeliveredMessages messages = FIELD.get(channel);
