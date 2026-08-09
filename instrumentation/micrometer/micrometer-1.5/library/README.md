@@ -69,8 +69,9 @@ Notes:
   service level objectives can additionally be emitted as `<name>.percentile` and
   `<name>.histogram` gauges by enabling the experimental
   `Experimental#setMicrometerHistogramGaugesEnabled`.
-- Descriptions are deduplicated by instrument name, because in OpenTelemetry the description is one
-  of an instrument's identifying fields. The first description registered for a name wins.
+- Descriptions are deduplicated by instrument name within each registry, because in OpenTelemetry
+  the description is one of an instrument's identifying fields. The first description registered
+  for a name in that registry wins.
 - The `<name>.max` gauge is deprecated and will be removed in 3.0. It is no longer emitted when
   `otel.instrumentation.common.v3-preview` is enabled.
 - For a custom `Meter`, each measurement's `Statistic` determines the instrument type, and the name

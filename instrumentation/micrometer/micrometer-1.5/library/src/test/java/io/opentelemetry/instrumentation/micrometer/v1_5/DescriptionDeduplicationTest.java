@@ -22,23 +22,16 @@ import org.junit.jupiter.api.Test;
 class DescriptionDeduplicationTest {
 
   @Test
-  void descriptionsAreNotSharedAcrossMeterProviders() {
-    InMemoryMetricReader firstReader = InMemoryMetricReader.create();
-    InMemoryMetricReader secondReader = InMemoryMetricReader.create();
+  void descriptionsAreNotSharedAcrossRegistries() {
+    InMemoryMetricReader reader = InMemoryMetricReader.create();
 
-    try (SdkMeterProvider firstMeterProvider =
-            SdkMeterProvider.builder().registerMetricReader(firstReader).build();
-        SdkMeterProvider secondMeterProvider =
-            SdkMeterProvider.builder().registerMetricReader(secondReader).build()) {
+    try (SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(reader).build()) {
+      OpenTelemetrySdk openTelemetry =
+          OpenTelemetrySdk.builder().setMeterProvider(meterProvider).build();
 
-      MeterRegistry firstRegistry =
-          OpenTelemetryMeterRegistry.builder(
-                  OpenTelemetrySdk.builder().setMeterProvider(firstMeterProvider).build())
-              .build();
-      MeterRegistry secondRegistry =
-          OpenTelemetryMeterRegistry.builder(
-                  OpenTelemetrySdk.builder().setMeterProvider(secondMeterProvider).build())
-              .build();
+      MeterRegistry firstRegistry = OpenTelemetryMeterRegistry.builder(openTelemetry).build();
+      MeterRegistry secondRegistry = OpenTelemetryMeterRegistry.builder(openTelemetry).build();
 
       Counter.builder("testCounter")
           .description("First description")
@@ -49,14 +42,9 @@ class DescriptionDeduplicationTest {
           .register(secondRegistry)
           .increment();
 
-      assertThat(firstReader.collectAllMetrics())
-          .singleElement()
+      assertThat(reader.collectAllMetrics())
           .extracting(MetricData::getDescription)
-          .isEqualTo("First description");
-      assertThat(secondReader.collectAllMetrics())
-          .singleElement()
-          .extracting(MetricData::getDescription)
-          .isEqualTo("Second description");
+          .containsExactlyInAnyOrder("First description", "Second description");
     }
   }
 
