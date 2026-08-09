@@ -25,7 +25,7 @@ public final class Experimental {
    * The metrics that JFR and JMX both provide. These are exactly the metrics that the deprecated
    * prefer-jfr option sourced from JFR instead of JMX.
    */
-  static final List<String> JMX_OVERLAPPING_JFR_METRICS =
+  public static final List<String> JMX_OVERLAPPING_JFR_METRICS =
       unmodifiableList(
           asList(
               "jvm.buffer.count",
@@ -55,6 +55,9 @@ public final class Experimental {
 
   @Nullable
   private static volatile BiConsumer<RuntimeTelemetryBuilder, IncludeExclude> setJfrMetrics;
+
+  @Nullable
+  private static volatile BiConsumer<RuntimeTelemetryBuilder, Boolean> setPreferJfrMetrics;
 
   /**
    * Sets whether experimental JMX-based metrics should be emitted. Experimental metrics are those
@@ -118,6 +121,11 @@ public final class Experimental {
     Experimental.setJfrMetrics = setJfrMetrics;
   }
 
+  public static void internalSetPreferJfrMetrics(
+      BiConsumer<RuntimeTelemetryBuilder, Boolean> setPreferJfrMetrics) {
+    Experimental.setPreferJfrMetrics = setPreferJfrMetrics;
+  }
+
   /**
    * Sets whether to prefer JFR over JMX for metrics where both collection methods are available.
    *
@@ -129,10 +137,8 @@ public final class Experimental {
   @Deprecated // will be removed in the next release
   public static void setPreferJfrMetrics(
       RuntimeTelemetryBuilder builder, boolean preferJfrMetrics) {
-    // passing false was the default and selected no JFR metrics, so there is nothing to apply
-    if (preferJfrMetrics) {
-      setJfrMetrics(
-          builder, IncludeExclude.builder().setIncluded(JMX_OVERLAPPING_JFR_METRICS).build());
+    if (setPreferJfrMetrics != null) {
+      setPreferJfrMetrics.accept(builder, preferJfrMetrics);
     }
   }
 
