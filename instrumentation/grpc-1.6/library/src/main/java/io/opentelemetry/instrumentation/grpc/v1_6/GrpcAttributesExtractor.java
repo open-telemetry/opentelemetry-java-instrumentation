@@ -11,10 +11,12 @@ import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUti
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.requestAttributeKey;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.stableRequestAttributeKey;
 
+import io.grpc.Metadata;
 import io.grpc.Status;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -26,14 +28,13 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
       AttributeKey.longKey("rpc.grpc.status_code");
   private static final AttributeKey<String> RPC_RESPONSE_STATUS_CODE =
       AttributeKey.stringKey("rpc.response.status_code");
-
   private final GrpcRpcAttributesGetter getter;
-  private final List<String> capturedRequestMetadata;
+  @Nullable private final IncludeExclude requestMetadata;
 
   GrpcAttributesExtractor(
-      GrpcRpcAttributesGetter getter, List<String> requestMetadataValuesToCapture) {
+      GrpcRpcAttributesGetter getter, @Nullable IncludeExclude requestMetadata) {
     this.getter = getter;
-    this.capturedRequestMetadata = lowercase(requestMetadataValuesToCapture);
+    this.requestMetadata = requestMetadata == null ? null : lowercase(requestMetadata);
   }
 
   @Override
@@ -56,7 +57,16 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
         attributes.put(RPC_RESPONSE_STATUS_CODE, status.getCode().name());
       }
     }
-    for (String key : capturedRequestMetadata) {
+    if (requestMetadata == null || request.getMetadata() == null) {
+      return;
+    }
+    for (String key : request.getMetadata().keys()) {
+      // HTTP/2 pseudo-headers are not gRPC metadata and cannot be read with Metadata.Key.of().
+      if (key.startsWith(":")
+          || key.endsWith(Metadata.BINARY_HEADER_SUFFIX)
+          || !requestMetadata.matches(key)) {
+        continue;
+      }
       List<String> value = getter.metadataValue(request, key);
       if (!value.isEmpty()) {
         if (emitOldRpcSemconv()) {

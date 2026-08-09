@@ -7,11 +7,11 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcServerExceptionEventExtractor;
-import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.grpc.Status;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcMetricsContextCustomizers;
@@ -30,6 +30,7 @@ import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcClientNetworkAttr
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.UnaryOperator;
+import javax.annotation.Nullable;
 
 /** A builder of {@link GrpcTelemetry}. */
 public final class GrpcTelemetryBuilder {
@@ -51,8 +52,8 @@ public final class GrpcTelemetryBuilder {
 
   private boolean captureExperimentalSpanAttributes;
   private boolean emitMessageEvents = true;
-  private List<String> capturedClientRequestMetadata = emptyList();
-  private List<String> capturedServerRequestMetadata = emptyList();
+  @Nullable private IncludeExclude clientRequestMetadata;
+  @Nullable private IncludeExclude serverRequestMetadata;
 
   GrpcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -137,19 +138,51 @@ public final class GrpcTelemetryBuilder {
     return this;
   }
 
-  /** Sets which metadata request values should be captured as span attributes on client spans. */
+  /** Sets which request metadata should be captured as span attributes on client spans. */
   @CanIgnoreReturnValue
-  public GrpcTelemetryBuilder setCapturedClientRequestMetadata(
-      List<String> capturedClientRequestMetadata) {
-    this.capturedClientRequestMetadata = capturedClientRequestMetadata;
+  public GrpcTelemetryBuilder setClientRequestMetadata(IncludeExclude clientRequestMetadata) {
+    this.clientRequestMetadata = clientRequestMetadata;
     return this;
   }
 
-  /** Sets which metadata request values should be captured as span attributes on server spans. */
+  /**
+   * Sets which metadata request values should be captured as span attributes on client spans.
+   *
+   * @deprecated Use {@link #setClientRequestMetadata(IncludeExclude)} instead. Will be removed in
+   *     3.0.
+   */
+  @Deprecated // to be removed in 3.0
+  @CanIgnoreReturnValue
+  public GrpcTelemetryBuilder setCapturedClientRequestMetadata(
+      List<String> capturedClientRequestMetadata) {
+    clientRequestMetadata =
+        capturedClientRequestMetadata.isEmpty()
+            ? null
+            : IncludeExclude.builder().setIncluded(capturedClientRequestMetadata).build();
+    return this;
+  }
+
+  /** Sets which request metadata should be captured as span attributes on server spans. */
+  @CanIgnoreReturnValue
+  public GrpcTelemetryBuilder setServerRequestMetadata(IncludeExclude serverRequestMetadata) {
+    this.serverRequestMetadata = serverRequestMetadata;
+    return this;
+  }
+
+  /**
+   * Sets which metadata request values should be captured as span attributes on server spans.
+   *
+   * @deprecated Use {@link #setServerRequestMetadata(IncludeExclude)} instead. Will be removed in
+   *     3.0.
+   */
+  @Deprecated // to be removed in 3.0
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setCapturedServerRequestMetadata(
       List<String> capturedServerRequestMetadata) {
-    this.capturedServerRequestMetadata = capturedServerRequestMetadata;
+    serverRequestMetadata =
+        capturedServerRequestMetadata.isEmpty()
+            ? null
+            : IncludeExclude.builder().setIncluded(capturedServerRequestMetadata).build();
     return this;
   }
 
@@ -181,7 +214,7 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractors(additionalClientExtractors)
         .addAttributesExtractor(
-            new GrpcAttributesExtractor(rpcAttributesGetter, capturedClientRequestMetadata))
+            new GrpcAttributesExtractor(rpcAttributesGetter, clientRequestMetadata))
         .addOperationMetrics(RpcClientMetrics.get())
         .addContextCustomizer(
             RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
@@ -195,7 +228,7 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractor(ServerAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(
-            new GrpcAttributesExtractor(rpcAttributesGetter, capturedServerRequestMetadata))
+            new GrpcAttributesExtractor(rpcAttributesGetter, serverRequestMetadata))
         .addAttributesExtractors(additionalServerExtractors)
         .addOperationMetrics(RpcServerMetrics.get())
         .addContextCustomizer(
