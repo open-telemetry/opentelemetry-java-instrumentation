@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_65.incuba
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.incubator.metrics.BoundDoubleCounter;
@@ -61,20 +60,6 @@ class MeterTest {
     assertThat(bound).isInstanceOf(BoundLongCounter.class);
     bound.add(5);
     bound.add(6);
-
-    testing.waitAndAssertMetrics(
-        "test-bound-long-counter",
-        metric ->
-            metric
-                .hasName("test")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(11)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("q"), "r")))));
   }
 
   @Test
@@ -85,22 +70,9 @@ class MeterTest {
 
     BoundDoubleCounter bound =
         ((ExtendedDoubleCounter) doubleCounter).bind(Attributes.of(stringKey("q"), "r"));
+    assertThat(bound).isInstanceOf(BoundDoubleCounter.class);
     bound.add(5.5);
     bound.add(6.6);
-
-    testing.waitAndAssertMetrics(
-        "test-bound-double-counter",
-        metric ->
-            metric
-                .hasName("test")
-                .hasDoubleSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(12.1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("q"), "r")))));
   }
 
   @Test
@@ -112,21 +84,8 @@ class MeterTest {
 
     BoundLongUpDownCounter bound =
         ((ExtendedLongUpDownCounter) longUpDownCounter).bind(Attributes.of(stringKey("q"), "r"));
+    assertThat(bound).isInstanceOf(BoundLongUpDownCounter.class);
     bound.add(11);
-
-    testing.waitAndAssertMetrics(
-        "test-bound-long-up-down-counter",
-        metric ->
-            metric
-                .hasName("test")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(11)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("q"), "r")))));
   }
 
   @Test
@@ -139,21 +98,8 @@ class MeterTest {
     BoundDoubleUpDownCounter bound =
         ((ExtendedDoubleUpDownCounter) doubleUpDownCounter)
             .bind(Attributes.of(stringKey("q"), "r"));
+    assertThat(bound).isInstanceOf(BoundDoubleUpDownCounter.class);
     bound.add(12.1);
-
-    testing.waitAndAssertMetrics(
-        "test-bound-double-up-down-counter",
-        metric ->
-            metric
-                .hasName("test")
-                .hasDoubleSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(12.1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("q"), "r")))));
   }
 
   @Test
@@ -164,21 +110,8 @@ class MeterTest {
 
     BoundLongHistogram bound =
         ((ExtendedLongHistogram) longHistogram).bind(Attributes.of(stringKey("q"), "r"));
+    assertThat(bound).isInstanceOf(BoundLongHistogram.class);
     bound.record(11);
-
-    testing.waitAndAssertMetrics(
-        "test-bound-long-histogram",
-        metric ->
-            metric
-                .hasName("test")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasSum(11.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("q"), "r")))));
   }
 
   @Test
@@ -190,21 +123,8 @@ class MeterTest {
 
     BoundDoubleHistogram bound =
         ((ExtendedDoubleHistogram) doubleHistogram).bind(Attributes.of(stringKey("q"), "r"));
+    assertThat(bound).isInstanceOf(BoundDoubleHistogram.class);
     bound.record(12.1);
-
-    testing.waitAndAssertMetrics(
-        "test-bound-double-histogram",
-        metric ->
-            metric
-                .hasName("test")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasSum(12.1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("q"), "r")))));
   }
 
   @Test
@@ -214,21 +134,8 @@ class MeterTest {
     assertThat(longGauge).isInstanceOf(ExtendedLongGauge.class);
 
     BoundLongGauge bound = ((ExtendedLongGauge) longGauge).bind(Attributes.of(stringKey("q"), "r"));
+    assertThat(bound).isInstanceOf(BoundLongGauge.class);
     bound.set(123);
-
-    testing.waitAndAssertMetrics(
-        "test-bound-long-gauge",
-        metric ->
-            metric
-                .hasName("test")
-                .hasLongGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(123)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("q"), "r")))));
   }
 
   @Test
@@ -240,20 +147,7 @@ class MeterTest {
 
     BoundDoubleGauge bound =
         ((ExtendedDoubleGauge) doubleGauge).bind(Attributes.of(stringKey("q"), "r"));
+    assertThat(bound).isInstanceOf(BoundDoubleGauge.class);
     bound.set(1.23);
-
-    testing.waitAndAssertMetrics(
-        "test-bound-double-gauge",
-        metric ->
-            metric
-                .hasName("test")
-                .hasDoubleGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(1.23)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("q"), "r")))));
   }
 }

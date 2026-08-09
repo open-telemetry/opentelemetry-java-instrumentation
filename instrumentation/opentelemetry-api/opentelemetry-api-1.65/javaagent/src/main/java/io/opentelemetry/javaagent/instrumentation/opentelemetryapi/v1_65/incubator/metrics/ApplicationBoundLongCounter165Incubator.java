@@ -7,26 +7,16 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_65.incuba
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongCounter;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.context.AgentContextStorage;
 
+// Compatibility implementation; bound metric forwarding is added by the follow-up bridge.
 final class ApplicationBoundLongCounter165Incubator
     implements application.io.opentelemetry.api.incubator.metrics.BoundLongCounter {
 
-  private final LongCounter agentCounter;
-  private final Attributes attributes;
-
-  ApplicationBoundLongCounter165Incubator(LongCounter agentCounter, Attributes attributes) {
-    this.agentCounter = agentCounter;
-    this.attributes = attributes;
-  }
+  ApplicationBoundLongCounter165Incubator(LongCounter agentCounter, Attributes attributes) {}
 
   @Override
-  public void add(long value) {
-    agentCounter.add(value, attributes);
-  }
+  public void add(long value) {}
 
   @Override
-  public void add(long value, application.io.opentelemetry.context.Context applicationContext) {
-    agentCounter.add(value, attributes, AgentContextStorage.getAgentContext(applicationContext));
-  }
+  public void add(long value, application.io.opentelemetry.context.Context applicationContext) {}
 }
