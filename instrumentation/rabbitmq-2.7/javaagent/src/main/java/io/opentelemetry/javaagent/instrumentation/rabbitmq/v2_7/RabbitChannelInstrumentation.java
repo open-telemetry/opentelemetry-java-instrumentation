@@ -41,6 +41,7 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.DeliveredMessages.SettledMessages;
+import io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.DeliveredMessages.TagRanges;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -146,8 +147,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
       // that a failure marks exactly this call's deliveries as forgotten even when another thread
       // settles on the same channel at the same time
       @Nullable private final Channel settledChannel;
-      private final long lowestRemovedTag;
-      private final long highestRemovedTag;
+      @Nullable private final TagRanges removedTags;
 
       private ChannelMethodAdviceScope(
           CallDepth callDepth,
@@ -155,15 +155,13 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
           @Nullable Scope scope,
           @Nullable ChannelAndMethod request,
           @Nullable Channel settledChannel,
-          long lowestRemovedTag,
-          long highestRemovedTag) {
+          @Nullable TagRanges removedTags) {
         this.callDepth = callDepth;
         this.context = context;
         this.scope = scope;
         this.request = request;
         this.settledChannel = settledChannel;
-        this.lowestRemovedTag = lowestRemovedTag;
-        this.highestRemovedTag = highestRemovedTag;
+        this.removedTags = removedTags;
       }
 
       public static ChannelMethodAdviceScope start(
@@ -178,14 +176,13 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
           @Nullable Long deliveryTag,
           boolean multiple) {
         if (callDepth.getAndIncrement() > 0) {
-          return new ChannelMethodAdviceScope(callDepth, null, null, null, null, 0, 0);
+          return new ChannelMethodAdviceScope(callDepth, null, null, null, null, null);
         }
 
         Context parentContext = Context.current();
         ChannelAndMethod request;
         Channel settledChannel = null;
-        long lowestRemovedTag = 0;
-        long highestRemovedTag = 0;
+        TagRanges removedTags = null;
         if (deliveryTag == null) {
           request = ChannelAndMethod.create(channel, method);
         } else {
@@ -198,13 +195,12 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
               ChannelAndMethod.createSettle(
                   channel, method, deliveryTag, multiple, settledMessages);
           settledChannel = channel;
-          lowestRemovedTag = settledMessages.getLowestRemovedTag();
-          highestRemovedTag = settledMessages.getHighestRemovedTag();
+          removedTags = settledMessages.getRemovedTags();
         }
 
         if (!channelInstrumenter(request).shouldStart(parentContext, request)) {
           return new ChannelMethodAdviceScope(
-              callDepth, null, null, null, settledChannel, lowestRemovedTag, highestRemovedTag);
+              callDepth, null, null, null, settledChannel, removedTags);
         }
 
         Context context = channelInstrumenter(request).start(parentContext, request);
@@ -212,21 +208,15 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         helper().setChannelAndMethod(context, request);
 
         return new ChannelMethodAdviceScope(
-            callDepth,
-            context,
-            context.makeCurrent(),
-            request,
-            settledChannel,
-            lowestRemovedTag,
-            highestRemovedTag);
+            callDepth, context, context.makeCurrent(), request, settledChannel, removedTags);
       }
 
       public void end(@Nullable Throwable throwable) {
         if (callDepth.decrementAndGet() > 0) {
           return;
         }
-        if (throwable != null && settledChannel != null) {
-          DeliveredMessages.markForgotten(settledChannel, lowestRemovedTag, highestRemovedTag);
+        if (throwable != null && settledChannel != null && removedTags != null) {
+          DeliveredMessages.markForgotten(settledChannel, removedTags);
         }
         if (scope == null) {
           return;
