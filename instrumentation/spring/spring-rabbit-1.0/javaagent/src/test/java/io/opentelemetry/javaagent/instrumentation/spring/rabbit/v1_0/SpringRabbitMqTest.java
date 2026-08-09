@@ -278,8 +278,7 @@ class SpringRabbitMqTest {
               span -> span.hasName("consumer").hasParent(springProcessSpan));
         },
         trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> verifyAckSpan(span, ConsumerConfig.TEST_QUEUE, false));
+          trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyAckSpan);
         });
   }
 
@@ -316,12 +315,11 @@ class SpringRabbitMqTest {
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.qos")),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.consume")),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("basic.cancel")),
-        trace ->
-            trace.hasSpansSatisfyingExactly(span -> verifyAckSpan(span, anonymousQueueName, true)));
+        trace -> trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyAckSpan));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  private static void verifyAckSpan(SpanDataAssert span, String queue, boolean anonymousQueue) {
+  private static void verifyAckSpan(SpanDataAssert span) {
     boolean stable = emitStableMessagingSemconv();
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -333,20 +331,15 @@ class SpringRabbitMqTest {
     if (stable) {
       assertions.add(equalTo(SERVER_ADDRESS, ip));
       assertions.add(satisfies(SERVER_PORT, AbstractLongAssert::isNotNegative));
-      assertions.add(equalTo(MESSAGING_DESTINATION_NAME, queue));
-      if (anonymousQueue) {
-        assertions.add(equalTo(MESSAGING_DESTINATION_ANONYMOUS, true));
-      }
       assertions.add(equalTo(MESSAGING_OPERATION_NAME, "ack"));
       assertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
       assertions.add(
           satisfies(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, AbstractLongAssert::isPositive));
-      assertions.add(equalTo(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, queue));
       if (emitOldMessagingSemconv()) {
         assertions.add(equalTo(MESSAGING_OPERATION, "settle"));
       }
     }
-    span.hasName(stable ? (anonymousQueue ? "ack" : "ack " + queue) : "basic.ack")
+    span.hasName(stable ? "ack" : "basic.ack")
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfyingExactly(assertions);
   }
