@@ -7,18 +7,29 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_65.incuba
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.context.AgentContextStorage;
 
-// Compatibility implementation; bound metric forwarding is added by the follow-up bridge.
 final class ApplicationBoundDoubleHistogram165Incubator
     implements application.io.opentelemetry.api.incubator.metrics.BoundDoubleHistogram {
 
+  private final DoubleHistogram agentHistogram;
+  private final Attributes attributes;
+
   ApplicationBoundDoubleHistogram165Incubator(
-      DoubleHistogram agentHistogram, Attributes attributes) {}
+      DoubleHistogram agentHistogram, Attributes attributes) {
+    this.agentHistogram = agentHistogram;
+    this.attributes = attributes;
+  }
 
   @Override
-  public void record(double value) {}
+  public void record(double value) {
+    agentHistogram.record(value, attributes);
+  }
 
   @Override
   public void record(
-      double value, application.io.opentelemetry.context.Context applicationContext) {}
+      double value, application.io.opentelemetry.context.Context applicationContext) {
+    agentHistogram.record(
+        value, attributes, AgentContextStorage.getAgentContext(applicationContext));
+  }
 }
