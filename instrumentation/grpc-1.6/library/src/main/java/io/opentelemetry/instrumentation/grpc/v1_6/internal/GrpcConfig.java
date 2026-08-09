@@ -108,6 +108,8 @@ public class GrpcConfig {
               + replacementProperty
               + " or equivalent declarative configuration instead.");
     }
-    return IncludeExclude.builder().setIncluded(deprecatedIncluded).build();
+    return deprecatedIncluded.isEmpty()
+        ? null
+        : IncludeExclude.builder().setIncluded(deprecatedIncluded).build();
   }
 }
