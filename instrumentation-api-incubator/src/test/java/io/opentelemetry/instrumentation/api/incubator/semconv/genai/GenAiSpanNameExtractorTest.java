@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues.EMBEDDINGS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues.EXECUTE_TOOL;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues.INVOKE_AGENT;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues.RETRIEVAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -28,6 +29,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class GenAiSpanNameExtractorTest {
 
   @Mock GenAiOperationAttributesGetter<Request, Void> getter;
+
+  @Mock(answer = Answers.CALLS_REAL_METHODS)
+  GenAiAttributesGetter<Request, Void> inferenceGetter;
 
   @Mock(answer = Answers.CALLS_REAL_METHODS)
   GenAiAgentAttributesGetter<Request, Void> agentGetter;
@@ -49,15 +53,14 @@ class GenAiSpanNameExtractorTest {
   }
 
   static Stream<Arguments> spanNameParams() {
-    // "retrieval" operation constant is not in semconv-java 1.37.0-alpha; use the literal.
     return Stream.of(
         Arguments.of(CHAT, "gpt-4o", "chat gpt-4o"),
         Arguments.of(EMBEDDINGS, "text-embeddings-v2", "embeddings text-embeddings-v2"),
         Arguments.of(EXECUTE_TOOL, "get_weather", "execute_tool get_weather"),
         Arguments.of(CREATE_AGENT, "summary_agent", "create_agent summary_agent"),
         Arguments.of(INVOKE_AGENT, "order_assistant", "invoke_agent order_assistant"),
-        Arguments.of("retrieval", "products-index", "retrieval products-index"),
-        Arguments.of("retrieval", null, "retrieval"),
+        Arguments.of(RETRIEVAL, "products-index", "retrieval products-index"),
+        Arguments.of(RETRIEVAL, null, "retrieval"),
         Arguments.of(CHAT, null, "chat"),
         Arguments.of(CHAT, "", "chat"));
   }
@@ -82,6 +85,16 @@ class GenAiSpanNameExtractorTest {
     SpanNameExtractor<Request> underTest = GenAiSpanNameExtractor.create(toolGetter);
 
     assertThat(underTest.extract(request)).isEqualTo("execute_tool get_weather");
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // testing deprecated method fallback
+  void providerNameDefaultsToSystem() {
+    Request request = new Request();
+    when(inferenceGetter.getProviderName(request)).thenCallRealMethod();
+    when(inferenceGetter.getSystem(request)).thenReturn("openai");
+
+    assertThat(inferenceGetter.getProviderName(request)).isEqualTo("openai");
   }
 
   static class Request {}

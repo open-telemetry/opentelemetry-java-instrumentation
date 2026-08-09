@@ -21,6 +21,9 @@ public interface GenAiOperationAttributesGetter<REQUEST, RESPONSE> {
    */
   String getOperationName(REQUEST request);
 
+  /** Returns the value of {@code gen_ai.provider.name}. */
+  String getProviderName(REQUEST request);
+
   /**
    * Returns the target of the operation used to construct the span name (after the operation name).
    *

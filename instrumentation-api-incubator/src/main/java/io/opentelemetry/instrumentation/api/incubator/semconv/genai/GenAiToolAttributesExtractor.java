@@ -6,7 +6,9 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.genai;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAgentAttributesExtractor.GEN_AI_AGENT_NAME;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_OPERATION_NAME;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_PROVIDER_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -19,9 +21,6 @@ import javax.annotation.Nullable;
  *
  * <p>This class delegates to a type-specific {@link GenAiToolAttributesGetter} for individual
  * attribute extraction from request/response objects.
- *
- * <p>Note: this extractor does not emit {@code gen_ai.provider.name}; the surrounding instrumenter
- * is expected to attach it (e.g. via a separate {@link AttributesExtractor}).
  */
 public final class GenAiToolAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
@@ -48,6 +47,8 @@ public final class GenAiToolAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     attributes.put(GEN_AI_OPERATION_NAME, getter.getOperationName(request));
+    attributes.put(GEN_AI_PROVIDER_NAME, getter.getProviderName(request));
+    attributes.put(GEN_AI_AGENT_NAME, getter.getAgentName(request));
     attributes.put(GEN_AI_TOOL_NAME, getter.getToolName(request));
     attributes.put(GEN_AI_TOOL_DESCRIPTION, getter.getToolDescription(request));
     attributes.put(GEN_AI_TOOL_TYPE, getter.getToolType(request));

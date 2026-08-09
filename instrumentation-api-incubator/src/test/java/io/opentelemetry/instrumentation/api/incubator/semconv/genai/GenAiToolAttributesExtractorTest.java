@@ -23,6 +23,9 @@ class GenAiToolAttributesExtractorTest {
   // semantic-conventions-genai repo), so the expected keys are declared inline here.
   private static final AttributeKey<String> GEN_AI_OPERATION_NAME =
       stringKey("gen_ai.operation.name");
+  private static final AttributeKey<String> GEN_AI_PROVIDER_NAME =
+      stringKey("gen_ai.provider.name");
+  private static final AttributeKey<String> GEN_AI_AGENT_NAME = stringKey("gen_ai.agent.name");
   private static final AttributeKey<String> GEN_AI_TOOL_CALL_ID = stringKey("gen_ai.tool.call.id");
   private static final AttributeKey<String> GEN_AI_TOOL_DESCRIPTION =
       stringKey("gen_ai.tool.description");
@@ -31,7 +34,9 @@ class GenAiToolAttributesExtractorTest {
 
   @Test
   void shouldExtractToolAttributesOnStartAndCallIdOnEnd() {
-    ToolRequest request = new ToolRequest("get_weather", "Look up the current weather", "function");
+    ToolRequest request =
+        new ToolRequest(
+            "openai", "weather-agent", "get_weather", "Look up the current weather", "function");
     ToolResponse response = new ToolResponse("call_abc123");
 
     AttributesExtractor<ToolRequest, ToolResponse> extractor =
@@ -45,6 +50,8 @@ class GenAiToolAttributesExtractorTest {
     Attributes expectedStart =
         Attributes.builder()
             .put(GEN_AI_OPERATION_NAME, "execute_tool")
+            .put(GEN_AI_PROVIDER_NAME, "openai")
+            .put(GEN_AI_AGENT_NAME, "weather-agent")
             .put(GEN_AI_TOOL_NAME, "get_weather")
             .put(GEN_AI_TOOL_DESCRIPTION, "Look up the current weather")
             .put(GEN_AI_TOOL_TYPE, "function")
@@ -56,7 +63,7 @@ class GenAiToolAttributesExtractorTest {
 
   @Test
   void shouldOmitNullToolAttributes() {
-    ToolRequest request = new ToolRequest(null, null, null);
+    ToolRequest request = new ToolRequest("openai", null, null, null, null);
 
     AttributesExtractor<ToolRequest, ToolResponse> extractor =
         GenAiToolAttributesExtractor.create(new TestToolGetter());
@@ -67,16 +74,29 @@ class GenAiToolAttributesExtractorTest {
     extractor.onEnd(endBuilder, Context.root(), request, null, null);
 
     assertThat(startBuilder.build())
-        .isEqualTo(Attributes.builder().put(GEN_AI_OPERATION_NAME, "execute_tool").build());
+        .isEqualTo(
+            Attributes.builder()
+                .put(GEN_AI_OPERATION_NAME, "execute_tool")
+                .put(GEN_AI_PROVIDER_NAME, "openai")
+                .build());
     assertThat(endBuilder.build()).isEqualTo(Attributes.empty());
   }
 
   static class ToolRequest {
+    final String providerName;
+    @Nullable final String agentName;
     @Nullable final String name;
     @Nullable final String description;
     @Nullable final String type;
 
-    ToolRequest(@Nullable String name, @Nullable String description, @Nullable String type) {
+    ToolRequest(
+        String providerName,
+        @Nullable String agentName,
+        @Nullable String name,
+        @Nullable String description,
+        @Nullable String type) {
+      this.providerName = providerName;
+      this.agentName = agentName;
       this.name = name;
       this.description = description;
       this.type = type;
@@ -95,6 +115,17 @@ class GenAiToolAttributesExtractorTest {
     @Override
     public String getOperationName(ToolRequest request) {
       return EXECUTE_TOOL;
+    }
+
+    @Override
+    public String getProviderName(ToolRequest request) {
+      return request.providerName;
+    }
+
+    @Nullable
+    @Override
+    public String getAgentName(ToolRequest request) {
+      return request.agentName;
     }
 
     @Nullable

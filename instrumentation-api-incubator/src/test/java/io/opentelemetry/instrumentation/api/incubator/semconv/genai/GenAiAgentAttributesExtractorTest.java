@@ -23,6 +23,8 @@ class GenAiAgentAttributesExtractorTest {
   // semantic-conventions-genai repo), so the expected keys are declared inline here.
   private static final AttributeKey<String> GEN_AI_OPERATION_NAME =
       stringKey("gen_ai.operation.name");
+  private static final AttributeKey<String> GEN_AI_PROVIDER_NAME =
+      stringKey("gen_ai.provider.name");
   private static final AttributeKey<String> GEN_AI_AGENT_ID = stringKey("gen_ai.agent.id");
   private static final AttributeKey<String> GEN_AI_AGENT_NAME = stringKey("gen_ai.agent.name");
   private static final AttributeKey<String> GEN_AI_AGENT_DESCRIPTION =
@@ -34,7 +36,12 @@ class GenAiAgentAttributesExtractorTest {
   void shouldExtractAllAgentAttributes() {
     AgentRequest request =
         new AgentRequest(
-            INVOKE_AGENT, "agent-123", "weather-agent", "Provides weather forecasts", "1.0.0");
+            INVOKE_AGENT,
+            "openai",
+            "agent-123",
+            "weather-agent",
+            "Provides weather forecasts",
+            "1.0.0");
 
     AttributesExtractor<AgentRequest, Void> extractor =
         GenAiAgentAttributesExtractor.create(new TestAgentGetter());
@@ -47,6 +54,7 @@ class GenAiAgentAttributesExtractorTest {
     Attributes expected =
         Attributes.builder()
             .put(GEN_AI_OPERATION_NAME, "invoke_agent")
+            .put(GEN_AI_PROVIDER_NAME, "openai")
             .put(GEN_AI_AGENT_ID, "agent-123")
             .put(GEN_AI_AGENT_NAME, "weather-agent")
             .put(GEN_AI_AGENT_DESCRIPTION, "Provides weather forecasts")
@@ -58,7 +66,7 @@ class GenAiAgentAttributesExtractorTest {
 
   @Test
   void shouldOmitNullAgentAttributes() {
-    AgentRequest request = new AgentRequest(INVOKE_AGENT, null, null, null, null);
+    AgentRequest request = new AgentRequest(INVOKE_AGENT, "openai", null, null, null, null);
 
     AttributesExtractor<AgentRequest, Void> extractor =
         GenAiAgentAttributesExtractor.create(new TestAgentGetter());
@@ -67,11 +75,16 @@ class GenAiAgentAttributesExtractorTest {
     extractor.onStart(builder, Context.root(), request);
 
     assertThat(builder.build())
-        .isEqualTo(Attributes.builder().put(GEN_AI_OPERATION_NAME, "invoke_agent").build());
+        .isEqualTo(
+            Attributes.builder()
+                .put(GEN_AI_OPERATION_NAME, "invoke_agent")
+                .put(GEN_AI_PROVIDER_NAME, "openai")
+                .build());
   }
 
   static class AgentRequest {
     final String operationName;
+    final String providerName;
     @Nullable final String id;
     @Nullable final String name;
     @Nullable final String description;
@@ -79,11 +92,13 @@ class GenAiAgentAttributesExtractorTest {
 
     AgentRequest(
         String operationName,
+        String providerName,
         @Nullable String id,
         @Nullable String name,
         @Nullable String description,
         @Nullable String version) {
       this.operationName = operationName;
+      this.providerName = providerName;
       this.id = id;
       this.name = name;
       this.description = description;
@@ -95,6 +110,11 @@ class GenAiAgentAttributesExtractorTest {
     @Override
     public String getOperationName(AgentRequest request) {
       return request.operationName;
+    }
+
+    @Override
+    public String getProviderName(AgentRequest request) {
+      return request.providerName;
     }
 
     @Nullable

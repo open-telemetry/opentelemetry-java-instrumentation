@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.genai;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_OPERATION_NAME;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_PROVIDER_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -22,8 +23,7 @@ import javax.annotation.Nullable;
  * attribute extraction from request/response objects.
  *
  * <p>The retrieval query text is sensitive and is only emitted when {@code captureMessageContent}
- * is true. {@code gen_ai.provider.name} is not emitted by this extractor; the surrounding
- * instrumenter should attach it separately.
+ * is true.
  */
 public final class GenAiRetrievalAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
@@ -64,6 +64,7 @@ public final class GenAiRetrievalAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     attributes.put(GEN_AI_OPERATION_NAME, getter.getOperationName(request));
+    attributes.put(GEN_AI_PROVIDER_NAME, getter.getProviderName(request));
     attributes.put(GEN_AI_DATA_SOURCE_ID, getter.getDataSourceId(request));
     attributes.put(GEN_AI_RETRIEVAL_TOP_K, getter.getTopK(request));
     if (captureMessageContent) {

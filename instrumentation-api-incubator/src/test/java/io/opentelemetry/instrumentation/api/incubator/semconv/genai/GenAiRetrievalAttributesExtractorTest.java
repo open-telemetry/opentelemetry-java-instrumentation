@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.genai;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues.RETRIEVAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -23,6 +24,8 @@ class GenAiRetrievalAttributesExtractorTest {
   // semantic-conventions-genai repo), so the expected keys are declared inline here.
   private static final AttributeKey<String> GEN_AI_OPERATION_NAME =
       stringKey("gen_ai.operation.name");
+  private static final AttributeKey<String> GEN_AI_PROVIDER_NAME =
+      stringKey("gen_ai.provider.name");
   private static final AttributeKey<String> GEN_AI_DATA_SOURCE_ID =
       stringKey("gen_ai.data_source.id");
   private static final AttributeKey<String> GEN_AI_RETRIEVAL_QUERY_TEXT =
@@ -32,7 +35,8 @@ class GenAiRetrievalAttributesExtractorTest {
 
   @Test
   void shouldExtractRetrievalAttributesWithoutQueryTextByDefault() {
-    RetrievalRequest request = new RetrievalRequest("products-index", "weather in Paris", 5L);
+    RetrievalRequest request =
+        new RetrievalRequest("pinecone", "products-index", "weather in Paris", 5L);
 
     AttributesExtractor<RetrievalRequest, Void> extractor =
         GenAiRetrievalAttributesExtractor.create(new TestRetrievalGetter());
@@ -45,6 +49,7 @@ class GenAiRetrievalAttributesExtractorTest {
     Attributes expected =
         Attributes.builder()
             .put(GEN_AI_OPERATION_NAME, "retrieval")
+            .put(GEN_AI_PROVIDER_NAME, "pinecone")
             .put(GEN_AI_DATA_SOURCE_ID, "products-index")
             .put(GEN_AI_RETRIEVAL_TOP_K, 5L)
             .build();
@@ -54,7 +59,8 @@ class GenAiRetrievalAttributesExtractorTest {
 
   @Test
   void shouldExtractQueryTextWhenCaptureMessageContentEnabled() {
-    RetrievalRequest request = new RetrievalRequest("products-index", "weather in Paris", 5L);
+    RetrievalRequest request =
+        new RetrievalRequest("pinecone", "products-index", "weather in Paris", 5L);
 
     AttributesExtractor<RetrievalRequest, Void> extractor =
         GenAiRetrievalAttributesExtractor.builder(new TestRetrievalGetter())
@@ -67,6 +73,7 @@ class GenAiRetrievalAttributesExtractorTest {
     Attributes expected =
         Attributes.builder()
             .put(GEN_AI_OPERATION_NAME, "retrieval")
+            .put(GEN_AI_PROVIDER_NAME, "pinecone")
             .put(GEN_AI_DATA_SOURCE_ID, "products-index")
             .put(GEN_AI_RETRIEVAL_QUERY_TEXT, "weather in Paris")
             .put(GEN_AI_RETRIEVAL_TOP_K, 5L)
@@ -76,7 +83,7 @@ class GenAiRetrievalAttributesExtractorTest {
 
   @Test
   void shouldOmitNullRetrievalAttributes() {
-    RetrievalRequest request = new RetrievalRequest(null, null, null);
+    RetrievalRequest request = new RetrievalRequest("pinecone", null, null, null);
 
     AttributesExtractor<RetrievalRequest, Void> extractor =
         GenAiRetrievalAttributesExtractor.builder(new TestRetrievalGetter())
@@ -87,16 +94,25 @@ class GenAiRetrievalAttributesExtractorTest {
     extractor.onStart(startBuilder, Context.root(), request);
 
     assertThat(startBuilder.build())
-        .isEqualTo(Attributes.builder().put(GEN_AI_OPERATION_NAME, "retrieval").build());
+        .isEqualTo(
+            Attributes.builder()
+                .put(GEN_AI_OPERATION_NAME, "retrieval")
+                .put(GEN_AI_PROVIDER_NAME, "pinecone")
+                .build());
   }
 
   static class RetrievalRequest {
+    final String providerName;
     @Nullable final String dataSourceId;
     @Nullable final String queryText;
     @Nullable final Long topK;
 
     RetrievalRequest(
-        @Nullable String dataSourceId, @Nullable String queryText, @Nullable Long topK) {
+        String providerName,
+        @Nullable String dataSourceId,
+        @Nullable String queryText,
+        @Nullable Long topK) {
+      this.providerName = providerName;
       this.dataSourceId = dataSourceId;
       this.queryText = queryText;
       this.topK = topK;
@@ -107,7 +123,12 @@ class GenAiRetrievalAttributesExtractorTest {
       implements GenAiRetrievalAttributesGetter<RetrievalRequest, Void> {
     @Override
     public String getOperationName(RetrievalRequest request) {
-      return "retrieval";
+      return RETRIEVAL;
+    }
+
+    @Override
+    public String getProviderName(RetrievalRequest request) {
+      return request.providerName;
     }
 
     @Nullable

@@ -33,6 +33,10 @@ public interface GenAiToolAttributesGetter<REQUEST, RESPONSE>
   @Nullable
   String getToolCallId(REQUEST request, @Nullable RESPONSE response);
 
+  /** Returns the value of {@code gen_ai.agent.name} when the tool is executed by an agent. */
+  @Nullable
+  String getAgentName(REQUEST request);
+
   /**
    * Returns the operation target used to build the span name. Defaults to the tool name.
    *

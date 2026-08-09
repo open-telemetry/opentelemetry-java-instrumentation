@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes to non-stable APIs
+
+- Expand the incubating GenAI semantic-convention APIs with agent, tool, and retrieval extractors,
+  and change `GenAiSpanNameExtractor.create()` to accept `GenAiOperationAttributesGetter`.
+  ([#19124](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19124))
+
+### 🚫 Deprecations
+
+- Deprecate `GenAiAttributesGetter.getSystem()` in favor of `getProviderName()`. It will be removed
+  in a subsequent release after implementors have had a release to migrate.
+  ([#19124](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19124))
+
 ## Version 2.30.0 (2026-07-22)
 
 This release targets the OpenTelemetry SDK 1.64.0.
