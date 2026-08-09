@@ -10,7 +10,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.DeliveredMessages.SettledMessages;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -25,14 +24,13 @@ final class RabbitChannelAttributesGetter
   @Nullable
   @Override
   public String getDestination(ChannelAndMethod channelAndMethod) {
-    if (channelAndMethod.isPublish()) {
-      return emitStableMessagingSemconv()
-          ? RabbitInstrumenterHelper.producerDestinationName(
-              channelAndMethod.getExchange(), channelAndMethod.getRoutingKey())
-          : RabbitInstrumenterHelper.normalizeExchangeName(channelAndMethod.getExchange());
+    if (!channelAndMethod.isPublish()) {
+      return null;
     }
-    SettledMessages messages = channelAndMethod.getSettledMessages();
-    return messages != null ? messages.getDestination() : null;
+    return emitStableMessagingSemconv()
+        ? RabbitInstrumenterHelper.producerDestinationName(
+            channelAndMethod.getExchange(), channelAndMethod.getRoutingKey())
+        : RabbitInstrumenterHelper.normalizeExchangeName(channelAndMethod.getExchange());
   }
 
   @Nullable
@@ -48,15 +46,10 @@ final class RabbitChannelAttributesGetter
 
   @Override
   public boolean isAnonymousDestination(ChannelAndMethod channelAndMethod) {
-    if (!emitStableMessagingSemconv()) {
-      return false;
-    }
-    if (channelAndMethod.isPublish()) {
-      return RabbitInstrumenterHelper.isDefaultExchange(channelAndMethod.getExchange())
-          && RabbitInstrumenterHelper.isGeneratedQueueName(channelAndMethod.getRoutingKey());
-    }
-    SettledMessages messages = channelAndMethod.getSettledMessages();
-    return messages != null && messages.isAnonymousDestination();
+    return emitStableMessagingSemconv()
+        && channelAndMethod.isPublish()
+        && RabbitInstrumenterHelper.isDefaultExchange(channelAndMethod.getExchange())
+        && RabbitInstrumenterHelper.isGeneratedQueueName(channelAndMethod.getRoutingKey());
   }
 
   @Nullable
@@ -92,13 +85,7 @@ final class RabbitChannelAttributesGetter
   @Nullable
   @Override
   public Long getBatchMessageCount(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
-    if (!channelAndMethod.isMultipleSettle()) {
-      return null;
-    }
-    SettledMessages messages = channelAndMethod.getSettledMessages();
-    // the count is only known when every settled delivery is still remembered, and it is only
-    // reported when more than one delivery was actually settled
-    return messages == null || messages.getCount() <= 1 ? null : (long) messages.getCount();
+    return null;
   }
 
   @Override

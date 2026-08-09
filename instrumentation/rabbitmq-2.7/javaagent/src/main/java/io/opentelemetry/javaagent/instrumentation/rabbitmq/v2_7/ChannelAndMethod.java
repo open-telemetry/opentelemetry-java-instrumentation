@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
 import com.google.auto.value.AutoValue;
 import com.rabbitmq.client.Channel;
-import io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.DeliveredMessages.SettledMessages;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -20,23 +19,16 @@ public abstract class ChannelAndMethod {
   static final String REJECT_METHOD = "Channel.basicReject";
 
   public static ChannelAndMethod create(Channel channel, String method) {
-    return new AutoValue_ChannelAndMethod(channel, method, null, null, null, null, false);
+    return new AutoValue_ChannelAndMethod(channel, method, null, null, null);
   }
 
   public static ChannelAndMethod createPublish(
       Channel channel, @Nullable String exchange, @Nullable String routingKey) {
-    return new AutoValue_ChannelAndMethod(
-        channel, PUBLISH_METHOD, exchange, routingKey, null, null, false);
+    return new AutoValue_ChannelAndMethod(channel, PUBLISH_METHOD, exchange, routingKey, null);
   }
 
-  public static ChannelAndMethod createSettle(
-      Channel channel,
-      String method,
-      long deliveryTag,
-      boolean multiple,
-      SettledMessages settledMessages) {
-    return new AutoValue_ChannelAndMethod(
-        channel, method, null, null, deliveryTag, settledMessages, multiple);
+  public static ChannelAndMethod createSettle(Channel channel, String method, long deliveryTag) {
+    return new AutoValue_ChannelAndMethod(channel, method, null, null, deliveryTag);
   }
 
   abstract Channel getChannel();
@@ -57,19 +49,6 @@ public abstract class ChannelAndMethod {
    */
   @Nullable
   abstract Long getDeliveryTag();
-
-  /**
-   * Returns the deliveries settled by a settle call ({@code basicAck}, {@code basicNack} or {@code
-   * basicReject}), {@code null} for any other method.
-   */
-  @Nullable
-  abstract SettledMessages getSettledMessages();
-
-  /**
-   * Returns whether a settle call settles every outstanding delivery up to and including its
-   * delivery tag.
-   */
-  abstract boolean isMultipleSettle();
 
   boolean isPublish() {
     return PUBLISH_METHOD.equals(getMethod());
