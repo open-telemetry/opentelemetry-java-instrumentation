@@ -1013,6 +1013,13 @@ definitions:
       default: ''
       examples:
       - jvm.memory.*,jvm.cpu.longlock
+    otel.instrumentation.runtime-telemetry.experimental.prefer-jfr:
+      name: otel.instrumentation.runtime-telemetry.experimental.prefer-jfr
+      declarative_name: java.runtime_telemetry.prefer_jfr/development
+      description: |
+        Deprecated: use `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included` instead. Prefer JFR over JMX for metrics available from both sources, on Java 17+.
+      type: boolean
+      default: false
     otel.instrumentation.rxjava.experimental-span-attributes:
       name: otel.instrumentation.rxjava.experimental-span-attributes
       declarative_name: java.rxjava.experimental_span_attributes/development
@@ -13071,6 +13078,7 @@ libraries:
   - otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included
   - otel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled
   - otel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second
+  - otel.instrumentation.runtime-telemetry.experimental.prefer-jfr
   telemetry:
   - when: Java17
     metric_refs:
