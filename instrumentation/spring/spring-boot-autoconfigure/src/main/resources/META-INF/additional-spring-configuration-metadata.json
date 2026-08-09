@@ -563,9 +563,14 @@
       "defaultValue": false
     },
     {
-      "name": "otel.instrumentation.runtime-telemetry.experimental.jfr-metrics",
+      "name": "otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included",
       "type": "java.util.List<java.lang.String>",
-      "description": "Select JVM runtime metrics to source from JFR on Java 17+ using exact names or trailing-* prefixes."
+      "description": "Include JVM runtime metrics to source from JFR on Java 17+ using case-sensitive * and ? glob patterns. Configuring either selector property activates JFR; omitted included patterns select all metrics not excluded."
+    },
+    {
+      "name": "otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Exclude JVM runtime metrics from JFR on Java 17+ using case-sensitive * and ? glob patterns. Exclusions take precedence."
     },
     {
       "name": "otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters",

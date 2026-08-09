@@ -92,10 +92,13 @@ meter_provider:
 JFR is disabled by default. On Java 17+, select metrics to source from JFR by metric name:
 
 ```properties
-otel.instrumentation.runtime-telemetry.experimental.jfr-metrics=jvm.memory.*,jvm.cpu.longlock
+otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included=jvm.memory.*,jvm.cpu.longloc?
+otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded=jvm.memory.allocation
 ```
 
-Patterns are exact metric names or prefixes ending in `*`; no other glob syntax is supported. JFR registers only matching metrics and starts its recording stream only when at least one handler remains. JMX registers all other enabled metrics, including JMX-only metrics such as `jvm.cpu.time` and `jvm.system.cpu.load_1m`.
+Matching is case-sensitive. `*` matches any number of characters and `?` matches one character. Configuring either selector property activates JFR. If `included` is omitted or empty, all metrics are included, so an exclude-only selector means all metrics minus the excluded metrics. Exclusions always take precedence, including over shorthand and legacy selections.
+
+JFR registers only matching metrics and starts its recording stream only when at least one handler remains. JMX registers all other enabled metrics, including JMX-only metrics such as `jvm.cpu.time` and `jvm.system.cpu.load_1m`.
 
 The equivalent declarative configuration is:
 
@@ -104,8 +107,11 @@ instrumentation/development:
   java:
     runtime_telemetry:
       jfr_metrics/development:
-        - jvm.memory.*
-        - jvm.cpu.longlock
+        included:
+          - jvm.memory.*
+          - jvm.cpu.longloc?
+        excluded:
+          - jvm.memory.allocation
 ```
 
 Programmatically, configure the same selector through the experimental API:
@@ -113,11 +119,15 @@ Programmatically, configure the same selector through the experimental API:
 ```java
 RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(openTelemetry);
 Experimental.setJfrMetrics(
-    builder, Arrays.asList("jvm.memory.*", "jvm.cpu.longlock"));
+    builder,
+    IncludeExclude.builder()
+        .setIncluded(Arrays.asList("jvm.memory.*", "jvm.cpu.longloc?"))
+        .setExcluded(Collections.singletonList("jvm.memory.allocation"))
+        .build());
 RuntimeTelemetry runtimeTelemetry = builder.build();
 ```
 
-`otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics=true` is a shorthand that adds all JFR-only experimental metrics to the selector: `jvm.cpu.context_switch`, `jvm.cpu.longlock`, `jvm.memory.allocation`, `jvm.network.io`, `jvm.network.time`, `jvm.thread.virtual.pinned`, and `jvm.thread.virtual.submit_failed`.
+`otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics=true` is a shorthand that adds all JFR-only experimental metrics to the included patterns: `jvm.cpu.context_switch`, `jvm.cpu.longlock`, `jvm.memory.allocation`, `jvm.network.io`, `jvm.network.time`, `jvm.thread.virtual.pinned`, and `jvm.thread.virtual.submit_failed`. Explicit exclusions still win.
 
 `otel.instrumentation.runtime-telemetry.emit-experimental-metrics=true` independently enables additional JMX-based metrics that are not yet stable in the semantic conventions.
 

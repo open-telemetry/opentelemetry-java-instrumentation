@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetryBuilder;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -52,7 +53,8 @@ public final class Experimental {
   private static volatile BiConsumer<RuntimeTelemetryBuilder, Boolean>
       setEmitExperimentalJfrMetrics;
 
-  @Nullable private static volatile BiConsumer<RuntimeTelemetryBuilder, List<String>> setJfrMetrics;
+  @Nullable
+  private static volatile BiConsumer<RuntimeTelemetryBuilder, IncludeExclude> setJfrMetrics;
 
   /**
    * Sets whether experimental JMX-based metrics should be emitted. Experimental metrics are those
@@ -99,22 +101,20 @@ public final class Experimental {
   /**
    * Selects the metrics to source from JFR on Java 17+.
    *
-   * <p>Each pattern must be an exact metric name or a prefix ending in {@code *}. Metrics that JFR
-   * actually registers are suppressed from JMX to avoid duplicates. This method is a no-op on Java
-   * versions prior to 17.
+   * <p>Metrics that JFR actually registers are suppressed from JMX to avoid duplicates. This method
+   * is a no-op on Java versions prior to 17.
    *
    * @param builder the runtime telemetry builder
-   * @param metricNamePatterns metric name patterns to source from JFR
+   * @param selector metric names to source from JFR
    */
-  public static void setJfrMetrics(
-      RuntimeTelemetryBuilder builder, List<String> metricNamePatterns) {
+  public static void setJfrMetrics(RuntimeTelemetryBuilder builder, IncludeExclude selector) {
     if (setJfrMetrics != null) {
-      setJfrMetrics.accept(builder, metricNamePatterns);
+      setJfrMetrics.accept(builder, selector);
     }
   }
 
   public static void internalSetJfrMetrics(
-      BiConsumer<RuntimeTelemetryBuilder, List<String>> setJfrMetrics) {
+      BiConsumer<RuntimeTelemetryBuilder, IncludeExclude> setJfrMetrics) {
     Experimental.setJfrMetrics = setJfrMetrics;
   }
 
@@ -123,15 +123,16 @@ public final class Experimental {
    *
    * @param builder the runtime telemetry builder
    * @param preferJfrMetrics {@code true} to prefer JFR over JMX where both are available
-   * @deprecated Use {@link #setJfrMetrics(RuntimeTelemetryBuilder, List)} instead, passing the
-   *     metric names to source from JFR. Will be removed in the next release.
+   * @deprecated Use {@link #setJfrMetrics(RuntimeTelemetryBuilder, IncludeExclude)} instead,
+   *     passing the metric names to source from JFR. Will be removed in the next release.
    */
   @Deprecated // will be removed in the next release
   public static void setPreferJfrMetrics(
       RuntimeTelemetryBuilder builder, boolean preferJfrMetrics) {
     // passing false was the default and selected no JFR metrics, so there is nothing to apply
     if (preferJfrMetrics) {
-      setJfrMetrics(builder, JMX_OVERLAPPING_JFR_METRICS);
+      setJfrMetrics(
+          builder, IncludeExclude.builder().setIncluded(JMX_OVERLAPPING_JFR_METRICS).build());
     }
   }
 

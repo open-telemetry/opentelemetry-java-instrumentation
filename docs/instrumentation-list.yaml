@@ -995,11 +995,20 @@ definitions:
       description: The number of JAR files processed per second by the package emitter.
       type: int
       default: 10
-    otel.instrumentation.runtime-telemetry.experimental.jfr-metrics:
-      name: otel.instrumentation.runtime-telemetry.experimental.jfr-metrics
-      declarative_name: java.runtime_telemetry.jfr_metrics/development
+    otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded:
+      name: otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded
+      declarative_name: java.runtime_telemetry.jfr_metrics/development.excluded
       description: |
-        Selects JVM runtime metrics to source from JFR on Java 17+. Entries are exact metric names or prefixes ending in *. Metrics actually registered by JFR are suppressed from JMX.
+        Excludes JVM runtime metrics from JFR on Java 17+ using exact names or glob patterns with * and ?. Exclusions take precedence over inclusions and shorthand or legacy selections. Configuring this property without included selects all metrics except those excluded.
+      type: list
+      default: ''
+      examples:
+      - jvm.memory.allocation,jvm.network.*
+    otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included:
+      name: otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included
+      declarative_name: java.runtime_telemetry.jfr_metrics/development.included
+      description: |
+        Selects JVM runtime metrics to source from JFR on Java 17+. Supports exact names and glob patterns with * and ?. Configuring either JFR metric selector property activates JFR. When omitted, all metrics not excluded are included.
       type: list
       default: ''
       examples:
@@ -13248,9 +13257,10 @@ libraries:
   configuration_refs:
   - otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics
   - otel.instrumentation.runtime-telemetry.emit-experimental-metrics
+  - otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded
+  - otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included
   - otel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled
   - otel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second
-  - otel.instrumentation.runtime-telemetry.experimental.jfr-metrics
   telemetry:
   - when: Java17
     metric_refs:
