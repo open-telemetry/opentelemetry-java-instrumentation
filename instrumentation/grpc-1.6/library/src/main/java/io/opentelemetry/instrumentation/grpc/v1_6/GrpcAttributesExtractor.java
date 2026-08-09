@@ -61,6 +61,7 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
       return;
     }
     for (String key : request.getMetadata().keys()) {
+      // HTTP/2 pseudo-headers are not gRPC metadata and cannot be read with Metadata.Key.of().
       if (key.startsWith(":")
           || key.endsWith(Metadata.BINARY_HEADER_SUFFIX)
           || !requestMetadata.matches(key)) {
