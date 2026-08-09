@@ -963,6 +963,40 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   }
 
   @Test
+  void testRabbitSettleMultipleAfterRepeatedTxSelectAndRollback() throws IOException {
+    assumeTrue(emitStableMessagingSemconv());
+
+    String queueName = channel.queueDeclare().getQueue();
+    for (int i = 0; i < 3; i++) {
+      channel.basicPublish(
+          "", queueName, null, ("message " + i).getBytes(Charset.defaultCharset()));
+    }
+    channel.txSelect();
+    long deliveryTag = 0;
+    for (int i = 0; i < 3; i++) {
+      GetResponse response = channel.basicGet(queueName, false);
+      deliveryTag = response.getEnvelope().getDeliveryTag();
+    }
+    // Selecting transaction mode again does not commit the acknowledgement, so rolling back still
+    // leaves the first two deliveries outstanding under tags that are no longer remembered.
+    channel.basicAck(deliveryTag - 1, true);
+    channel.txSelect();
+    channel.txRollback();
+    testing.clearData();
+
+    long lastDeliveryTag = deliveryTag;
+    testing.runWithSpan("parent", () -> channel.basicAck(lastDeliveryTag, true));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    verifySettleSpan(
+                        span, trace.getSpan(0), "ack", null, false, lastDeliveryTag, null)));
+  }
+
+  @Test
   void testRabbitSettleMultipleAfterTxRollbackWithoutSettlements() throws IOException {
     assumeTrue(emitStableMessagingSemconv());
 
