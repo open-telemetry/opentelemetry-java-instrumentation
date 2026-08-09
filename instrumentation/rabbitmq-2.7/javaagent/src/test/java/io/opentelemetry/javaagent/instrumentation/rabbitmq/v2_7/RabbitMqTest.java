@@ -1028,6 +1028,41 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   }
 
   @Test
+  void testRabbitSettleMultipleAfterDisjointTxRollbackSettlements() throws IOException {
+    assumeTrue(emitStableMessagingSemconv());
+
+    String queueName = channel.queueDeclare().getQueue();
+    for (int i = 0; i < 5; i++) {
+      channel.basicPublish(
+          "", queueName, null, ("message " + i).getBytes(Charset.defaultCharset()));
+    }
+    channel.txSelect();
+    long[] deliveryTags = new long[5];
+    for (int i = 0; i < 5; i++) {
+      deliveryTags[i] = channel.basicGet(queueName, false).getEnvelope().getDeliveryTag();
+    }
+    // Rolling back disjoint acknowledgements leaves only those exact tags forgotten.
+    channel.basicAck(deliveryTags[0], false);
+    channel.basicAck(deliveryTags[2], false);
+    channel.txRollback();
+    channel.basicAck(deliveryTags[0], false);
+    channel.basicAck(deliveryTags[1], false);
+    channel.basicAck(deliveryTags[2], false);
+    channel.txCommit();
+    testing.clearData();
+
+    testing.runWithSpan("parent", () -> channel.basicAck(deliveryTags[4], true));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    verifySettleSpan(
+                        span, trace.getSpan(0), "ack", queueName, true, deliveryTags[4], 2L)));
+  }
+
+  @Test
   void testRabbitSettleMultipleAfterTxRollbackWithoutSettlements() throws IOException {
     assumeTrue(emitStableMessagingSemconv());
 

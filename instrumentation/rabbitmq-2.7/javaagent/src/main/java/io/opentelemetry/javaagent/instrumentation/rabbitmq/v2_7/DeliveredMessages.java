@@ -11,12 +11,14 @@ import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitIns
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Envelope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 import javax.annotation.Nullable;
 
 /**
@@ -42,11 +44,8 @@ final class DeliveredMessages {
   // only durable once they are committed
   private boolean transactional;
 
-  // the range of delivery tags removed by the settles that a txRollback would undo; it is only
-  // tracked while the channel is transactional, and a tag of zero, which no delivery ever uses,
-  // means that there is nothing to undo
-  private long pendingLowestTag;
-  private long pendingHighestTag;
+  // the delivery tags removed by the settles that a txRollback would undo
+  private final TagRanges pendingTags = new TagRanges();
 
   static void record(Channel channel, Envelope envelope, String queue) {
     DeliveredMessage message =
@@ -65,8 +64,8 @@ final class DeliveredMessages {
    * basicReject} call. When {@code multiple} is set, every delivery up to and including {@code
    * deliveryTag} is settled; a delivery tag of {@code 0} then settles every outstanding delivery.
    *
-   * <p>The result also carries the range of delivery tags that were removed, so that the caller can
-   * mark exactly those as forgotten if the settle fails.
+   * <p>The result also carries the delivery tags that were removed, so that the caller can mark
+   * exactly those as forgotten if the settle fails.
    */
   static SettledMessages settle(Channel channel, long deliveryTag, boolean multiple) {
     DeliveredMessages messages = FIELD.get(channel);
@@ -76,36 +75,23 @@ final class DeliveredMessages {
 
     List<DeliveredMessage> settled = new ArrayList<>();
     boolean incomplete = false;
-    long lowestRemovedTag = 0;
-    long highestRemovedTag = 0;
+    TagRanges removedTags = new TagRanges();
     synchronized (messages) {
       if (multiple) {
         // a multiple settle covers every outstanding delivery up to and including its delivery
         // tag, so the deliveries forgotten in that range are part of what it settles; they are
         // consumed here so that the settles that follow, which cover only what is left, stay
         // accurate, and they count as removed so that a failure puts them back
-        long forgottenLowestTag = messages.messagesByDeliveryTag.getForgottenLowestTag();
-        long forgottenHighestTag = messages.messagesByDeliveryTag.getForgottenHighestTag();
-        incomplete = messages.messagesByDeliveryTag.consumeForgottenUpTo(deliveryTag);
-        if (incomplete) {
-          lowestRemovedTag = forgottenLowestTag;
-          highestRemovedTag =
-              deliveryTag == 0 || forgottenHighestTag <= deliveryTag
-                  ? forgottenHighestTag
-                  : deliveryTag;
-        }
+        TagRanges forgottenTags = messages.messagesByDeliveryTag.consumeForgottenUpTo(deliveryTag);
+        incomplete = !forgottenTags.isEmpty();
+        removedTags.addAll(forgottenTags);
         Iterator<Map.Entry<Long, DeliveredMessage>> iterator =
             messages.messagesByDeliveryTag.entrySet().iterator();
         while (iterator.hasNext()) {
           Map.Entry<Long, DeliveredMessage> entry = iterator.next();
           if (deliveryTag == 0 || entry.getKey() <= deliveryTag) {
             settled.add(entry.getValue());
-            if (lowestRemovedTag == 0 || entry.getKey() < lowestRemovedTag) {
-              lowestRemovedTag = entry.getKey();
-            }
-            if (entry.getKey() > highestRemovedTag) {
-              highestRemovedTag = entry.getKey();
-            }
+            removedTags.add(entry.getKey(), entry.getKey());
             iterator.remove();
           }
         }
@@ -113,20 +99,19 @@ final class DeliveredMessages {
         // a single settle resolves exactly one delivery, so it is either remembered, or forgotten
         // while the broker still has it, in which case settling it retires the forgotten delivery
         DeliveredMessage message = messages.messagesByDeliveryTag.remove(deliveryTag);
+        boolean forgotten = messages.messagesByDeliveryTag.consumeForgottenTag(deliveryTag);
         if (message != null) {
           settled.add(message);
-          lowestRemovedTag = deliveryTag;
-          highestRemovedTag = deliveryTag;
-        } else if (messages.messagesByDeliveryTag.consumeForgottenTag(deliveryTag)) {
-          lowestRemovedTag = deliveryTag;
-          highestRemovedTag = deliveryTag;
+        }
+        if (message != null || forgotten) {
+          removedTags.add(deliveryTag, deliveryTag);
         }
       }
       if (messages.transactional) {
-        messages.addPending(lowestRemovedTag, highestRemovedTag);
+        messages.pendingTags.addAll(removedTags);
       }
     }
-    return SettledMessages.of(settled, incomplete, lowestRemovedTag, highestRemovedTag);
+    return SettledMessages.of(settled, incomplete, removedTags);
   }
 
   /** Puts a channel into transaction mode, as {@code txSelect} does. */
@@ -160,13 +145,13 @@ final class DeliveredMessages {
    * only valid until the channel is recovered, at which point the broker starts numbering
    * deliveries from one again and restored entries would be attributed to unrelated messages.
    */
-  static void markForgotten(Channel channel, long lowestTag, long highestTag) {
+  static void markForgotten(Channel channel, TagRanges tags) {
     DeliveredMessages messages = FIELD.get(channel);
     if (messages == null) {
       return;
     }
     synchronized (messages) {
-      messages.messagesByDeliveryTag.markForgotten(lowestTag, highestTag);
+      messages.messagesByDeliveryTag.markForgotten(tags);
     }
   }
 
@@ -180,27 +165,13 @@ final class DeliveredMessages {
       return;
     }
     synchronized (messages) {
-      messages.messagesByDeliveryTag.markForgotten(
-          messages.pendingLowestTag, messages.pendingHighestTag);
+      messages.messagesByDeliveryTag.markForgotten(messages.pendingTags);
       messages.clearPending();
     }
   }
 
-  private void addPending(long lowestTag, long highestTag) {
-    if (highestTag == 0) {
-      return;
-    }
-    if (pendingHighestTag == 0 || lowestTag < pendingLowestTag) {
-      pendingLowestTag = lowestTag;
-    }
-    if (highestTag > pendingHighestTag) {
-      pendingHighestTag = highestTag;
-    }
-  }
-
   private void clearPending() {
-    pendingLowestTag = 0;
-    pendingHighestTag = 0;
+    pendingTags.clear();
   }
 
   /**
@@ -238,50 +209,137 @@ final class DeliveredMessages {
 
   private DeliveredMessages() {}
 
+  static final class TagRanges implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    private final TreeMap<Long, Long> ranges = new TreeMap<>();
+    private boolean unknown;
+
+    void add(long lowestTag, long highestTag) {
+      if (highestTag == 0 || unknown) {
+        return;
+      }
+
+      Map.Entry<Long, Long> lower = ranges.floorEntry(lowestTag);
+      if (lower != null
+          && (lower.getValue() == Long.MAX_VALUE || lower.getValue() + 1 >= lowestTag)) {
+        lowestTag = lower.getKey();
+        highestTag = Math.max(highestTag, lower.getValue());
+        ranges.remove(lower.getKey());
+      }
+
+      Map.Entry<Long, Long> higher = ranges.ceilingEntry(lowestTag);
+      while (higher != null
+          && (highestTag == Long.MAX_VALUE || higher.getKey() <= highestTag + 1)) {
+        highestTag = Math.max(highestTag, higher.getValue());
+        ranges.remove(higher.getKey());
+        higher = ranges.ceilingEntry(lowestTag);
+      }
+      ranges.put(lowestTag, highestTag);
+
+      // Keep state bounded even when an application leaves an unbounded number of disjoint
+      // deliveries outstanding. Unknown state conservatively suppresses aggregate attributes until
+      // a settle covering every outstanding tag or a channel recovery resets it.
+      if (ranges.size() > CAPACITY) {
+        ranges.clear();
+        unknown = true;
+      }
+    }
+
+    void addAll(TagRanges other) {
+      if (other.unknown) {
+        ranges.clear();
+        unknown = true;
+        return;
+      }
+      for (Map.Entry<Long, Long> range : other.ranges.entrySet()) {
+        add(range.getKey(), range.getValue());
+      }
+    }
+
+    TagRanges removeUpTo(long deliveryTag) {
+      TagRanges removed = new TagRanges();
+      if (unknown) {
+        removed.unknown = true;
+        if (deliveryTag == 0) {
+          clear();
+        }
+        return removed;
+      }
+
+      Iterator<Map.Entry<Long, Long>> iterator = ranges.entrySet().iterator();
+      while (iterator.hasNext()) {
+        Map.Entry<Long, Long> range = iterator.next();
+        if (deliveryTag != 0 && range.getKey() > deliveryTag) {
+          break;
+        }
+        iterator.remove();
+        if (deliveryTag == 0 || range.getValue() <= deliveryTag) {
+          removed.add(range.getKey(), range.getValue());
+        } else {
+          removed.add(range.getKey(), deliveryTag);
+          ranges.put(deliveryTag + 1, range.getValue());
+          break;
+        }
+      }
+      return removed;
+    }
+
+    boolean remove(long deliveryTag) {
+      if (unknown) {
+        return true;
+      }
+      Map.Entry<Long, Long> range = ranges.floorEntry(deliveryTag);
+      if (range == null || range.getValue() < deliveryTag) {
+        return false;
+      }
+
+      ranges.remove(range.getKey());
+      if (range.getKey() < deliveryTag) {
+        add(range.getKey(), deliveryTag - 1);
+      }
+      if (deliveryTag < range.getValue()) {
+        add(deliveryTag + 1, range.getValue());
+      }
+      return true;
+    }
+
+    boolean isEmpty() {
+      return !unknown && ranges.isEmpty();
+    }
+
+    void clear() {
+      ranges.clear();
+      unknown = false;
+    }
+  }
+
   private static final class BoundedMap extends LinkedHashMap<Long, DeliveredMessage> {
 
     private static final long serialVersionUID = 1L;
 
-    // the range of delivery tags that were remembered and are no longer, while the deliveries
-    // themselves are still outstanding at the broker; a tag of zero, which no delivery ever uses,
-    // means that nothing has been forgotten
-    private long forgottenLowestTag;
-    private long forgottenHighestTag;
+    // delivery tags that were remembered and are no longer, while the deliveries themselves are
+    // still outstanding at the broker
+    private final TagRanges forgottenTags = new TagRanges();
 
     @Override
     protected boolean removeEldestEntry(Map.Entry<Long, DeliveredMessage> eldest) {
       if (size() <= CAPACITY) {
         return false;
       }
-      markForgotten(eldest.getKey(), eldest.getKey());
+      forgottenTags.add(eldest.getKey(), eldest.getKey());
       return true;
     }
 
     @Override
     public void clear() {
       super.clear();
-      forgottenLowestTag = 0;
-      forgottenHighestTag = 0;
+      forgottenTags.clear();
     }
 
-    void markForgotten(long lowestTag, long highestTag) {
-      if (highestTag == 0) {
-        return;
-      }
-      if (forgottenHighestTag == 0 || lowestTag < forgottenLowestTag) {
-        forgottenLowestTag = lowestTag;
-      }
-      if (highestTag > forgottenHighestTag) {
-        forgottenHighestTag = highestTag;
-      }
-    }
-
-    long getForgottenLowestTag() {
-      return forgottenLowestTag;
-    }
-
-    long getForgottenHighestTag() {
-      return forgottenHighestTag;
+    void markForgotten(TagRanges tags) {
+      forgottenTags.addAll(tags);
     }
 
     /**
@@ -289,22 +347,8 @@ final class DeliveredMessages {
      * covers every outstanding delivery, settles any forgotten delivery, and forgets the ones it
      * covers.
      */
-    boolean consumeForgottenUpTo(long deliveryTag) {
-      if (forgottenHighestTag == 0) {
-        return false;
-      }
-      if (deliveryTag != 0 && forgottenLowestTag > deliveryTag) {
-        return false;
-      }
-      if (deliveryTag == 0 || forgottenHighestTag <= deliveryTag) {
-        forgottenLowestTag = 0;
-        forgottenHighestTag = 0;
-      } else {
-        // deliveries above the settled tag are still forgotten; which ones is no longer known, so
-        // everything above it is treated as forgotten until a settle covers the whole range
-        forgottenLowestTag = deliveryTag + 1;
-      }
-      return true;
+    TagRanges consumeForgottenUpTo(long deliveryTag) {
+      return forgottenTags.removeUpTo(deliveryTag);
     }
 
     /**
@@ -312,22 +356,7 @@ final class DeliveredMessages {
      * forgets it.
      */
     boolean consumeForgottenTag(long deliveryTag) {
-      if (forgottenHighestTag == 0
-          || deliveryTag < forgottenLowestTag
-          || deliveryTag > forgottenHighestTag) {
-        return false;
-      }
-      if (forgottenLowestTag == forgottenHighestTag) {
-        forgottenLowestTag = 0;
-        forgottenHighestTag = 0;
-      } else if (deliveryTag == forgottenLowestTag) {
-        forgottenLowestTag = deliveryTag + 1;
-      } else if (deliveryTag == forgottenHighestTag) {
-        forgottenHighestTag = deliveryTag - 1;
-      }
-      // a tag inside the range can't narrow it, because which deliveries within it were forgotten
-      // is no longer known
-      return true;
+      return forgottenTags.remove(deliveryTag);
     }
   }
 
@@ -349,40 +378,34 @@ final class DeliveredMessages {
    */
   static final class SettledMessages {
 
-    static final SettledMessages EMPTY = new SettledMessages(null, false, null, 0, 0, 0);
+    static final SettledMessages EMPTY = new SettledMessages(null, false, null, 0, new TagRanges());
 
     @Nullable private final String destination;
     private final boolean anonymousDestination;
     @Nullable private final String routingKey;
     private final int count;
-    private final long lowestRemovedTag;
-    private final long highestRemovedTag;
+    private final TagRanges removedTags;
 
     private SettledMessages(
         @Nullable String destination,
         boolean anonymousDestination,
         @Nullable String routingKey,
         int count,
-        long lowestRemovedTag,
-        long highestRemovedTag) {
+        TagRanges removedTags) {
       this.destination = destination;
       this.anonymousDestination = anonymousDestination;
       this.routingKey = routingKey;
       this.count = count;
-      this.lowestRemovedTag = lowestRemovedTag;
-      this.highestRemovedTag = highestRemovedTag;
+      this.removedTags = removedTags;
     }
 
     private static SettledMessages of(
-        List<DeliveredMessage> messages,
-        boolean incomplete,
-        long lowestRemovedTag,
-        long highestRemovedTag) {
+        List<DeliveredMessage> messages, boolean incomplete, TagRanges removedTags) {
       // when deliveries have been forgotten the settled messages are only a subset of what was
       // actually settled, and attributes that have to describe every settled message, as well as
       // their count, would be wrong
       if (messages.isEmpty() || incomplete) {
-        return new SettledMessages(null, false, null, 0, lowestRemovedTag, highestRemovedTag);
+        return new SettledMessages(null, false, null, 0, removedTags);
       }
       DeliveredMessage first = messages.get(0);
       String destination = first.destination;
@@ -402,12 +425,7 @@ final class DeliveredMessages {
         }
       }
       return new SettledMessages(
-          destination,
-          anonymousDestination,
-          routingKey,
-          messages.size(),
-          lowestRemovedTag,
-          highestRemovedTag);
+          destination, anonymousDestination, routingKey, messages.size(), removedTags);
     }
 
     @Nullable
@@ -428,20 +446,8 @@ final class DeliveredMessages {
       return count;
     }
 
-    /**
-     * Returns the lowest delivery tag that the settle removed from the remembered deliveries,
-     * {@code 0} when it removed none.
-     */
-    long getLowestRemovedTag() {
-      return lowestRemovedTag;
-    }
-
-    /**
-     * Returns the highest delivery tag that the settle removed from the remembered deliveries,
-     * {@code 0} when it removed none.
-     */
-    long getHighestRemovedTag() {
-      return highestRemovedTag;
+    TagRanges getRemovedTags() {
+      return removedTags;
     }
   }
 }
