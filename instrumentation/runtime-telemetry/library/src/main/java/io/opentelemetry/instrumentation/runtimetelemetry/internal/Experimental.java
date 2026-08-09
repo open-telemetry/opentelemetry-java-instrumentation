@@ -22,8 +22,8 @@ import javax.annotation.Nullable;
 public final class Experimental {
 
   /**
-   * The metrics that JFR and JMX both provide. These are exactly the metrics that the deprecated
-   * prefer-jfr option sourced from JFR instead of JMX.
+   * The metrics that JFR and JMX both implement. These are exactly the metrics selected by the
+   * deprecated prefer-jfr option. Incomplete JFR implementations may remain sourced from JMX.
    */
   public static final List<String> JMX_OVERLAPPING_JFR_METRICS =
       unmodifiableList(

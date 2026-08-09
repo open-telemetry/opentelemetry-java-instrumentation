@@ -186,7 +186,7 @@ These metrics are collected via JMX on all Java versions unless selected for JFR
 
 #### JFR-based (Overlap with JMX)
 
-The following metrics can be selected for JFR instead of JMX. JMX suppression is based on the metric names JFR actually registered, so unsupported JFR handlers fall back to JMX:
+The following metrics have JFR implementations and can be selected for JFR. JMX suppression is based on the metric names JFR actually registered, so unsupported JFR handlers fall back to JMX. The `jvm.memory.*` implementations do not cover every memory pool and therefore remain sourced from JMX while overlapping suppression is enabled:
 
 | Metric                          |
 | ------------------------------- |
