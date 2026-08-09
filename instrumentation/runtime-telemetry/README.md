@@ -19,4 +19,4 @@
 | `otel.instrumentation.runtime-telemetry.package-emitter.jars-per-second` | Integer | 10      | Use `experimental.package-emitter.jars-per-second` instead.                       |
 | `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr`         | Boolean | `false` | Use `experimental.jfr-metrics.included` instead. Will be removed in the next release. |
 | `otel.instrumentation.runtime-telemetry-java17.enabled`                  | Boolean | `false` | Deprecated. Use `emit-experimental-jfr-metrics` instead.                          |
-| `otel.instrumentation.runtime-telemetry-java17.enable-all`               | Boolean | `false` | Deprecated. Use a present empty `experimental.jfr-metrics` selector instead.      |
+| `otel.instrumentation.runtime-telemetry-java17.enable-all`               | Boolean | `false` | Deprecated. Use `experimental.jfr-metrics.included=*` instead.                    |
