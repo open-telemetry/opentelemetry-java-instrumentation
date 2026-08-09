@@ -47,6 +47,12 @@ final class HandlerRegistry {
           "jvm.memory.limit",
           "jvm.memory.used",
           "jvm.memory.used_after_last_gc");
+  private static final Set<String> INCOMPLETE_EXPERIMENTAL_JMX_REPLACEMENTS =
+      Set.of(
+          "jvm.buffer.count",
+          "jvm.buffer.memory.limit",
+          "jvm.buffer.memory.used",
+          "jvm.memory.init");
 
   static List<RecordedEventHandler> getHandlers(
       Meter meter,
@@ -81,7 +87,8 @@ final class HandlerRegistry {
             ? metricNamePredicate.and(
                 name ->
                     !INCOMPLETE_JMX_REPLACEMENTS.contains(name)
-                        && !(emitExperimentalJmxMetrics && name.equals("jvm.memory.init")))
+                        && !(emitExperimentalJmxMetrics
+                            && INCOMPLETE_EXPERIMENTAL_JMX_REPLACEMENTS.contains(name)))
             : metricNamePredicate;
     for (GarbageCollectorMXBean bean : ManagementFactory.getGarbageCollectorMXBeans()) {
       String name = bean.getName();
