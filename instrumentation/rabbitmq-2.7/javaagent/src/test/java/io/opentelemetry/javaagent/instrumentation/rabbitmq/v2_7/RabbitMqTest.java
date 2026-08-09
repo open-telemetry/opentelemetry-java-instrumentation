@@ -42,7 +42,12 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -171,6 +176,32 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                         null,
                         null,
                         false)));
+  }
+
+  @Test
+  void testRabbitPublishPropagatesSuppressedProducerContext() throws IOException {
+    String queueName = channel.queueDeclare().getQueue();
+    AtomicReference<SpanContext> producerContext = new AtomicReference<>();
+    testing.clearData();
+
+    testing.runWithSpan(
+        "outer producer",
+        () -> {
+          Span span = Span.current();
+          producerContext.set(span.getSpanContext());
+          Context context = SpanKey.PRODUCER.storeInContext(Context.current(), span);
+          try (Scope ignored = context.makeCurrent()) {
+            channel.basicPublish(
+                "", queueName, null, "Hello, world!".getBytes(Charset.defaultCharset()));
+          }
+        });
+
+    GetResponse response = channel.basicGet(queueName, true);
+    Map<String, Object> headers = response.getProps().getHeaders();
+    assertThat(headers).containsKey("traceparent");
+    assertThat(headers.get("traceparent").toString())
+        .contains(producerContext.get().getTraceId())
+        .contains(producerContext.get().getSpanId());
   }
 
   @Test
