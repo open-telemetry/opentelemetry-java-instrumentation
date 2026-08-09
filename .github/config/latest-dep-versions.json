@@ -409,7 +409,7 @@
     "org.hibernate.orm:hibernate-core#+": "7.4.5.Final",
     "org.hibernate.orm:hibernate-core#6.+": "6.6.55.Final",
     "org.hibernate.orm:hibernate-core#7.+": "7.4.5.Final",
-    "org.hibernate.reactive:hibernate-reactive-core#+": "4.5.2.Final",
+    "org.hibernate.reactive:hibernate-reactive-core#+": "4.5.3.Final",
     "org.hibernate.reactive:hibernate-reactive-core#1.+": "1.1.9.Final",
     "org.hibernate.reactive:hibernate-reactive-core#3.+": "3.4.2.Final",
     "org.hibernate:hibernate-core#+": "7.4.5.Final",
