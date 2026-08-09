@@ -29,69 +29,171 @@ import io.opentelemetry.instrumentation.runtimetelemetry.internal.threads.Virtua
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
+import jdk.jfr.EventType;
+import jdk.jfr.FlightRecorder;
 
 final class HandlerRegistry {
 
-  private HandlerRegistry() {}
+  // These handlers cover only a subset of memory pools, so JMX must remain the source of the
+  // metric.
+  private static final Set<String> INCOMPLETE_JMX_REPLACEMENTS =
+      Set.of(
+          "jvm.memory.committed",
+          "jvm.memory.limit",
+          "jvm.memory.used",
+          "jvm.memory.used_after_last_gc");
 
   static List<RecordedEventHandler> getHandlers(
-      Meter meter, Predicate<String> metricNamePredicate, boolean useLegacyCpuCountMetric) {
+      Meter meter,
+      Predicate<String> metricNamePredicate,
+      boolean useLegacyCpuCountMetric,
+      boolean requireCompleteJmxReplacement) {
+    Set<String> availableEventNames = new HashSet<>();
+    for (EventType eventType : FlightRecorder.getFlightRecorder().getEventTypes()) {
+      availableEventNames.add(eventType.getName());
+    }
+    return getHandlers(
+        meter,
+        metricNamePredicate,
+        useLegacyCpuCountMetric,
+        requireCompleteJmxReplacement,
+        availableEventNames);
+  }
+
+  static List<RecordedEventHandler> getHandlers(
+      Meter meter,
+      Predicate<String> metricNamePredicate,
+      boolean useLegacyCpuCountMetric,
+      boolean requireCompleteJmxReplacement,
+      Set<String> availableEventNames) {
 
     List<RecordedEventHandler> handlers = new ArrayList<>();
+    Predicate<String> effectiveMetricNamePredicate =
+        requireCompleteJmxReplacement
+            ? metricNamePredicate.and(name -> !INCOMPLETE_JMX_REPLACEMENTS.contains(name))
+            : metricNamePredicate;
     for (GarbageCollectorMXBean bean : ManagementFactory.getGarbageCollectorMXBeans()) {
       String name = bean.getName();
       switch (name) {
         case "G1 Young Generation" -> {
-          addIfPresent(handlers, G1HeapSummaryHandler.create(meter, metricNamePredicate));
-          addIfPresent(handlers, G1GarbageCollectionHandler.create(meter, metricNamePredicate));
+          addIfPresent(
+              handlers,
+              availableEventNames,
+              G1HeapSummaryHandler.create(meter, effectiveMetricNamePredicate));
+          addIfPresent(
+              handlers,
+              availableEventNames,
+              G1GarbageCollectionHandler.create(meter, effectiveMetricNamePredicate));
         }
 
         case "Copy" ->
             addIfPresent(
-                handlers, YoungGarbageCollectionHandler.create(meter, metricNamePredicate, name));
+                handlers,
+                availableEventNames,
+                YoungGarbageCollectionHandler.create(meter, effectiveMetricNamePredicate, name));
 
         case "PS Scavenge" -> {
           addIfPresent(
-              handlers, YoungGarbageCollectionHandler.create(meter, metricNamePredicate, name));
-          addIfPresent(handlers, ParallelHeapSummaryHandler.create(meter, metricNamePredicate));
+              handlers,
+              availableEventNames,
+              YoungGarbageCollectionHandler.create(meter, effectiveMetricNamePredicate, name));
+          addIfPresent(
+              handlers,
+              availableEventNames,
+              ParallelHeapSummaryHandler.create(meter, effectiveMetricNamePredicate));
         }
 
         case "G1 Old Generation", "PS MarkSweep", "MarkSweepCompact" ->
             addIfPresent(
-                handlers, OldGarbageCollectionHandler.create(meter, metricNamePredicate, name));
+                handlers,
+                availableEventNames,
+                OldGarbageCollectionHandler.create(meter, effectiveMetricNamePredicate, name));
 
         default -> {}
       }
     }
 
-    addIfPresent(handlers, ObjectAllocationInNewTlabHandler.create(meter, metricNamePredicate));
-    addIfPresent(handlers, ObjectAllocationOutsideTlabHandler.create(meter, metricNamePredicate));
-    addIfPresent(handlers, NetworkReadHandler.create(meter, metricNamePredicate));
-    addIfPresent(handlers, NetworkWriteHandler.create(meter, metricNamePredicate));
-    addIfPresent(handlers, ContextSwitchRateHandler.create(meter, metricNamePredicate));
-    addIfPresent(handlers, OverallCpuLoadHandler.create(meter, metricNamePredicate));
     addIfPresent(
         handlers,
-        ContainerConfigurationHandler.create(meter, metricNamePredicate, useLegacyCpuCountMetric));
-    addIfPresent(handlers, LongLockHandler.create(meter, metricNamePredicate));
-    addIfPresent(handlers, ThreadCountHandler.create(meter, metricNamePredicate));
-    addIfPresent(handlers, VirtualThreadPinnedHandler.create(meter, metricNamePredicate));
-    addIfPresent(handlers, VirtualThreadSubmitFailedHandler.create(meter, metricNamePredicate));
-    addIfPresent(handlers, ClassesLoadedHandler.create(meter, metricNamePredicate));
-    addIfPresent(handlers, MetaspaceSummaryHandler.create(meter, metricNamePredicate));
-    addIfPresent(handlers, CodeCacheConfigurationHandler.create(meter, metricNamePredicate));
-    addIfPresent(handlers, DirectBufferStatisticsHandler.create(meter, metricNamePredicate));
+        availableEventNames,
+        ObjectAllocationInNewTlabHandler.create(meter, effectiveMetricNamePredicate));
+    addIfPresent(
+        handlers,
+        availableEventNames,
+        ObjectAllocationOutsideTlabHandler.create(meter, effectiveMetricNamePredicate));
+    addIfPresent(
+        handlers,
+        availableEventNames,
+        NetworkReadHandler.create(meter, effectiveMetricNamePredicate));
+    addIfPresent(
+        handlers,
+        availableEventNames,
+        NetworkWriteHandler.create(meter, effectiveMetricNamePredicate));
+    addIfPresent(
+        handlers,
+        availableEventNames,
+        ContextSwitchRateHandler.create(meter, effectiveMetricNamePredicate));
+    addIfPresent(
+        handlers,
+        availableEventNames,
+        OverallCpuLoadHandler.create(meter, effectiveMetricNamePredicate));
+    addIfPresent(
+        handlers,
+        availableEventNames,
+        ContainerConfigurationHandler.create(
+            meter, effectiveMetricNamePredicate, useLegacyCpuCountMetric));
+    addIfPresent(
+        handlers, availableEventNames, LongLockHandler.create(meter, effectiveMetricNamePredicate));
+    addIfPresent(
+        handlers,
+        availableEventNames,
+        ThreadCountHandler.create(meter, effectiveMetricNamePredicate));
+    addIfPresent(
+        handlers,
+        availableEventNames,
+        VirtualThreadPinnedHandler.create(meter, effectiveMetricNamePredicate));
+    addIfPresent(
+        handlers,
+        availableEventNames,
+        VirtualThreadSubmitFailedHandler.create(meter, effectiveMetricNamePredicate));
+    addIfPresent(
+        handlers,
+        availableEventNames,
+        ClassesLoadedHandler.create(meter, effectiveMetricNamePredicate));
+    addIfPresent(
+        handlers,
+        availableEventNames,
+        MetaspaceSummaryHandler.create(meter, effectiveMetricNamePredicate));
+    addIfPresent(
+        handlers,
+        availableEventNames,
+        CodeCacheConfigurationHandler.create(meter, effectiveMetricNamePredicate));
+    addIfPresent(
+        handlers,
+        availableEventNames,
+        DirectBufferStatisticsHandler.create(meter, effectiveMetricNamePredicate));
 
     return handlers;
   }
 
   private static void addIfPresent(
-      List<RecordedEventHandler> handlers, @Nullable RecordedEventHandler handler) {
-    if (handler != null) {
-      handlers.add(handler);
+      List<RecordedEventHandler> handlers,
+      Set<String> availableEventNames,
+      @Nullable RecordedEventHandler handler) {
+    if (handler == null) {
+      return;
     }
+    if (!availableEventNames.contains(handler.getEventName())) {
+      handler.close();
+      return;
+    }
+    handlers.add(handler);
   }
+
+  private HandlerRegistry() {}
 }
