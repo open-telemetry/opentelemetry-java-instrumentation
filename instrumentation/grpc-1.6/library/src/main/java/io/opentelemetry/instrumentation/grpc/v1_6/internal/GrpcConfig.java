@@ -22,7 +22,7 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class GrpcConfig {
+public class GrpcConfig {
 
   private static final Logger logger = Logger.getLogger(GrpcConfig.class.getName());
   private static final Set<String> warnedDeprecatedProperties = ConcurrentHashMap.newKeySet();
