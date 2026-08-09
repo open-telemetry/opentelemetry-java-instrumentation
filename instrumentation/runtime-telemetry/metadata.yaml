@@ -17,6 +17,13 @@ configurations:
       Enables the capture of experimental JFR-based JVM runtime metrics on Java 17+.
     type: boolean
     default: false
+  - name: otel.instrumentation.runtime-telemetry.experimental.prefer-jfr
+    declarative_name: java.runtime_telemetry.prefer_jfr/development
+    description: >
+      Deprecated: use `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included`
+      instead. Prefer JFR over JMX for metrics available from both sources, on Java 17+.
+    type: boolean
+    default: false
   - name: otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included
     declarative_name: java.runtime_telemetry.jfr_metrics/development.included
     description: >
