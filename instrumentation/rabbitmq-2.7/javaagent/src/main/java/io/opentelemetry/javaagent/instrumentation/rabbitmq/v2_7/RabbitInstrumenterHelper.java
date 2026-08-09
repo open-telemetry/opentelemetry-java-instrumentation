@@ -53,9 +53,11 @@ public class RabbitInstrumenterHelper {
       }
     }
     RabbitChannelAndMethodHolder channelContext = context.get(CHANNEL_AND_METHOD_CONTEXT_KEY);
-    ChannelAndMethod channelAndMethod = channelContext.getChannelAndMethod();
-    if (channelAndMethod != null) {
-      channelAndMethod.setHeaders(props.getHeaders());
+    if (channelContext != null) {
+      ChannelAndMethod channelAndMethod = channelContext.getChannelAndMethod();
+      if (channelAndMethod != null) {
+        channelAndMethod.setHeaders(props.getHeaders());
+      }
     }
   }
 
