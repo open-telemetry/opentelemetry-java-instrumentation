@@ -13,6 +13,7 @@ import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental;
+import io.opentelemetry.instrumentation.runtimetelemetry.internal.Internal;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
 import io.opentelemetry.instrumentation.testing.internal.MetaDataCollector;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -64,6 +65,7 @@ class JfrExtension implements BeforeEachCallback, AfterEachCallback {
     meterProvider = SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     OpenTelemetrySdk sdk = OpenTelemetrySdk.builder().setMeterProvider(meterProvider).build();
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(sdk);
+    Internal.setDisableJmx(builder, true);
     Experimental.setJfrMetrics(builder, jfrMetrics);
     runtimeMetrics = builder.build();
     JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
