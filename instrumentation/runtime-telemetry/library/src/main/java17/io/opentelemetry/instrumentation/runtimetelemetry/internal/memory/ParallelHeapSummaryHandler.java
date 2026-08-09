@@ -237,9 +237,9 @@ public final class ParallelHeapSummaryHandler implements RecordedEventHandler {
           oldObjectSpace -> {
             if (oldObjectSpace.hasField(Constants.USED)) {
               if (before) {
-                usageSurvivor = oldObjectSpace.getLong(Constants.USED);
+                usageOld = oldObjectSpace.getLong(Constants.USED);
               } else {
-                usageSurvivorAfter = oldObjectSpace.getLong(Constants.USED);
+                usageOldAfter = oldObjectSpace.getLong(Constants.USED);
               }
             }
           });
