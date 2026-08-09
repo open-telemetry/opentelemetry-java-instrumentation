@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_CONTEXT;
@@ -39,6 +40,8 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.DeliveredMessages.SettledMessages;
+import io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.DeliveredMessages.TagRanges;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -88,6 +91,9 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
             .and(canThrow(IOException.class).or(canThrow(InterruptedException.class))),
         getClass().getName() + "$ChannelMethodAdvice");
     transformer.applyAdviceToMethod(
+        named("automaticallyRecover").and(takesArguments(2)),
+        getClass().getName() + "$ChannelAutomaticRecoveryAdvice");
+    transformer.applyAdviceToMethod(
         named("basicPublish").and(takesArguments(6)),
         getClass().getName() + "$ChannelPublishAdvice");
     // amqp-client 5.30.0 added a ByteBuffer overload that ChannelN implements directly instead of
@@ -98,16 +104,33 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         named("basicPublish").and(takesArguments(7)).and(takesArgument(5, ByteBuffer.class)),
         getClass().getName() + "$ChannelPublishByteBufferAdvice");
     transformer.applyAdviceToMethod(
-        namedOneOf("basicAck", "basicNack", "basicReject")
+        namedOneOf("basicAck", "basicNack")
             .and(isPublic())
-            .and(takesArgument(0, long.class)),
+            .and(takesArgument(0, long.class))
+            .and(takesArgument(1, boolean.class)),
+        getClass().getName() + "$ChannelMultipleSettleAdvice");
+    transformer.applyAdviceToMethod(
+        named("basicReject").and(isPublic()).and(takesArgument(0, long.class)),
         getClass().getName() + "$ChannelSettleAdvice");
     transformer.applyAdviceToMethod(
-        named("basicGet").and(takesArgument(0, String.class)),
+        namedOneOf("basicRecover", "basicRecoverAsync").and(isPublic()),
+        getClass().getName() + "$ChannelRecoverAdvice");
+    transformer.applyAdviceToMethod(
+        named("txSelect").and(isPublic()).and(takesArguments(0)),
+        getClass().getName() + "$ChannelTxSelectAdvice");
+    transformer.applyAdviceToMethod(
+        named("txCommit").and(isPublic()).and(takesArguments(0)),
+        getClass().getName() + "$ChannelTxCommitAdvice");
+    transformer.applyAdviceToMethod(
+        named("txRollback").and(isPublic()).and(takesArguments(0)),
+        getClass().getName() + "$ChannelTxRollbackAdvice");
+    transformer.applyAdviceToMethod(
+        named("basicGet").and(takesArgument(0, String.class)).and(takesArgument(1, boolean.class)),
         getClass().getName() + "$ChannelGetAdvice");
     transformer.applyAdviceToMethod(
         named("basicConsume")
             .and(takesArgument(0, String.class))
+            .and(takesArgument(1, boolean.class))
             .and(takesArgument(6, named("com.rabbitmq.client.Consumer"))),
         getClass().getName() + "$ChannelConsumeAdvice");
   }
@@ -120,44 +143,80 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
       @Nullable private final Context context;
       @Nullable private final Scope scope;
       @Nullable private final ChannelAndMethod request;
+      // the deliveries that the instrumented call removed, kept per call rather than per channel so
+      // that a failure marks exactly this call's deliveries as forgotten even when another thread
+      // settles on the same channel at the same time
+      @Nullable private final Channel settledChannel;
+      @Nullable private final TagRanges removedTags;
 
       private ChannelMethodAdviceScope(
           CallDepth callDepth,
           @Nullable Context context,
           @Nullable Scope scope,
-          @Nullable ChannelAndMethod request) {
+          @Nullable ChannelAndMethod request,
+          @Nullable Channel settledChannel,
+          @Nullable TagRanges removedTags) {
         this.callDepth = callDepth;
         this.context = context;
         this.scope = scope;
         this.request = request;
+        this.settledChannel = settledChannel;
+        this.removedTags = removedTags;
       }
 
       public static ChannelMethodAdviceScope start(
           CallDepth callDepth, Channel channel, String method, @Nullable Long deliveryTag) {
+        return start(callDepth, channel, method, deliveryTag, false);
+      }
+
+      public static ChannelMethodAdviceScope start(
+          CallDepth callDepth,
+          Channel channel,
+          String method,
+          @Nullable Long deliveryTag,
+          boolean multiple) {
         if (callDepth.getAndIncrement() > 0) {
-          return new ChannelMethodAdviceScope(callDepth, null, null, null);
+          return new ChannelMethodAdviceScope(callDepth, null, null, null, null, null);
         }
 
         Context parentContext = Context.current();
-        ChannelAndMethod request =
-            deliveryTag == null
-                ? ChannelAndMethod.create(channel, method)
-                : ChannelAndMethod.createSettle(channel, method, deliveryTag);
+        ChannelAndMethod request;
+        Channel settledChannel = null;
+        TagRanges removedTags = null;
+        if (deliveryTag == null) {
+          request = ChannelAndMethod.create(channel, method);
+        } else {
+          // the settled deliveries are removed here, before the call to the broker, so that two
+          // threads settling on the same channel can never report the same delivery twice; a
+          // settle that then fails records that its deliveries are no longer remembered
+          SettledMessages settledMessages =
+              DeliveredMessages.settle(channel, deliveryTag, multiple);
+          request =
+              ChannelAndMethod.createSettle(
+                  channel, method, deliveryTag, multiple, settledMessages);
+          settledChannel = channel;
+          removedTags = settledMessages.getRemovedTags();
+        }
 
         if (!channelInstrumenter(request).shouldStart(parentContext, request)) {
-          return new ChannelMethodAdviceScope(callDepth, null, null, null);
+          return new ChannelMethodAdviceScope(
+              callDepth, null, null, null, settledChannel, removedTags);
         }
 
         Context context = channelInstrumenter(request).start(parentContext, request);
         CURRENT_RABBIT_CONTEXT.set(context);
         helper().setChannelAndMethod(context, request);
 
-        return new ChannelMethodAdviceScope(callDepth, context, context.makeCurrent(), request);
+        return new ChannelMethodAdviceScope(
+            callDepth, context, context.makeCurrent(), request, settledChannel, removedTags);
       }
 
       public void end(@Nullable Throwable throwable) {
         if (callDepth.decrementAndGet() > 0) {
           return;
+        }
+        if (throwable != null && settledChannel != null && removedTags != null) {
+          DeliveredMessages.markForgotten(settledChannel, removedTags);
         }
         if (scope == null) {
           return;
@@ -185,6 +244,30 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
     }
   }
 
+  /**
+   * Automatic connection recovery keeps the same logical channel while replacing its delegate and
+   * invalidating every outstanding delivery tag.
+   */
+  @SuppressWarnings("unused")
+  public static class ChannelAutomaticRecoveryAdvice {
+
+    public static class ChannelAutomaticRecoveryAdviceScope {
+
+      public static void start(Channel channel) {
+        if (emitStableMessagingSemconv()) {
+          DeliveredMessages.clear(channel);
+        }
+      }
+
+      private ChannelAutomaticRecoveryAdviceScope() {}
+    }
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(@Advice.This Channel channel) {
+      ChannelAutomaticRecoveryAdviceScope.start(channel);
+    }
+  }
+
   @SuppressWarnings("unused")
   public static class ChannelSettleAdvice {
 
@@ -195,6 +278,27 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) long deliveryTag) {
       return ChannelMethodAdvice.ChannelMethodAdviceScope.start(
           CallDepth.forClass(Channel.class), channel, method, deliveryTag);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void stopSpan(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter ChannelMethodAdvice.ChannelMethodAdviceScope adviceScope) {
+      adviceScope.end(throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ChannelMultipleSettleAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static ChannelMethodAdvice.ChannelMethodAdviceScope onEnter(
+        @Advice.This Channel channel,
+        @Advice.Origin("Channel.#m") String method,
+        @Advice.Argument(0) long deliveryTag,
+        @Advice.Argument(1) boolean multiple) {
+      return ChannelMethodAdvice.ChannelMethodAdviceScope.start(
+          CallDepth.forClass(Channel.class), channel, method, deliveryTag, multiple);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -395,6 +499,100 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
     }
   }
 
+  /**
+   * {@code basicRecover} and {@code basicRecoverAsync} requeue every unacknowledged delivery on the
+   * channel, so the broker redelivers them under new delivery tags and the old ones must not be
+   * settled again.
+   */
+  @SuppressWarnings("unused")
+  public static class ChannelRecoverAdvice {
+
+    public static class ChannelRecoverAdviceScope {
+
+      public static void end(Channel channel) {
+        if (emitStableMessagingSemconv()) {
+          DeliveredMessages.clear(channel);
+        }
+      }
+
+      private ChannelRecoverAdviceScope() {}
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Channel channel) {
+      ChannelRecoverAdviceScope.end(channel);
+    }
+  }
+
+  /** {@code txSelect} puts a channel into transaction mode. */
+  @SuppressWarnings("unused")
+  public static class ChannelTxSelectAdvice {
+
+    public static class ChannelTxSelectAdviceScope {
+
+      public static void end(Channel channel) {
+        if (emitStableMessagingSemconv()) {
+          DeliveredMessages.selectTransaction(channel);
+        }
+      }
+
+      private ChannelTxSelectAdviceScope() {}
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Channel channel) {
+      ChannelTxSelectAdviceScope.end(channel);
+    }
+  }
+
+  /**
+   * {@code txCommit} starts the next transaction, so the settlements made before it can no longer
+   * be rolled back.
+   */
+  @SuppressWarnings("unused")
+  public static class ChannelTxCommitAdvice {
+
+    public static class ChannelTxCommitAdviceScope {
+
+      public static void end(Channel channel) {
+        if (emitStableMessagingSemconv()) {
+          DeliveredMessages.commitTransaction(channel);
+        }
+      }
+
+      private ChannelTxCommitAdviceScope() {}
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Channel channel) {
+      ChannelTxCommitAdviceScope.end(channel);
+    }
+  }
+
+  /**
+   * {@code txRollback} undoes the settlements made in the transaction, so the deliveries they
+   * settled are outstanding at the broker again while they are no longer remembered.
+   */
+  @SuppressWarnings("unused")
+  public static class ChannelTxRollbackAdvice {
+
+    public static class ChannelTxRollbackAdviceScope {
+
+      public static void end(Channel channel) {
+        if (emitStableMessagingSemconv()) {
+          DeliveredMessages.markPendingForgotten(channel);
+        }
+      }
+
+      private ChannelTxRollbackAdviceScope() {}
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Channel channel) {
+      ChannelTxRollbackAdviceScope.end(channel);
+    }
+  }
+
   @SuppressWarnings("unused")
   public static class ChannelGetAdvice {
 
@@ -417,10 +615,17 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
       public void end(
           Channel channel,
           String queue,
+          boolean autoAck,
           @Nullable GetResponse response,
           @Nullable Throwable throwable) {
         if (callDepth.decrementAndGet() > 0) {
           return;
+        }
+
+        // automatically acknowledged deliveries are never settled by the application, so
+        // remembering them would only pollute the deliveries settled by a later multiple settle
+        if (response != null && !autoAck && emitStableMessagingSemconv()) {
+          DeliveredMessages.record(channel, response.getEnvelope(), queue);
         }
 
         Context parentContext = Context.current();
@@ -451,10 +656,11 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
     public static void extractAndStartSpan(
         @Advice.This Channel channel,
         @Advice.Argument(0) String queue,
+        @Advice.Argument(1) boolean autoAck,
         @Advice.Return @Nullable GetResponse response,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter ChannelGetAdviceScope adviceScope) {
-      adviceScope.end(channel, queue, response, throwable);
+      adviceScope.end(channel, queue, autoAck, response, throwable);
     }
   }
 
@@ -466,10 +672,12 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
     public static Object wrapConsumer(
         @Advice.This Channel channel,
         @Advice.Argument(0) String queue,
+        @Advice.Argument(1) boolean autoAck,
         @Advice.Argument(6) Consumer consumer) {
       // We have to save off the queue name here because it isn't available to the consumer later.
       if (consumer != null && !(consumer instanceof TracedDelegatingConsumer)) {
-        return new TracedDelegatingConsumer(queue, consumer, channel.getConnection());
+        return new TracedDelegatingConsumer(
+            queue, consumer, autoAck, channel, channel.getConnection());
       }
 
       return consumer;
