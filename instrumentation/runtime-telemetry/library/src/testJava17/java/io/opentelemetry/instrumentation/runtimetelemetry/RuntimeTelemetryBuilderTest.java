@@ -212,10 +212,10 @@ class RuntimeTelemetryBuilderTest {
   }
 
   @Test
-  void splitsMemoryMetricsBetweenJfrAndJmx() {
+  void incompleteJfrMemoryMetricFallsBackToJmx() {
     TestTelemetry telemetry = buildTelemetry(include("jvm.memory.used"), false);
 
-    assertMetricScopes(telemetry.reader.collectAllMetrics(), "jvm.memory.used", "jfr");
+    assertMetricScopes(telemetry.reader.collectAllMetrics(), "jvm.memory.used", "jmx");
     assertMetricScopes(telemetry.reader.collectAllMetrics(), "jvm.memory.limit", "jmx");
   }
 
