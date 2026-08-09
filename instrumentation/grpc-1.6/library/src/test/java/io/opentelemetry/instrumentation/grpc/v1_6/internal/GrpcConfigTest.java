@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.grpc.v1_6.internal;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
@@ -94,6 +95,17 @@ class GrpcConfigTest {
     } finally {
       logger.removeHandler(handler);
     }
+  }
+
+  @Test
+  void emptyDeprecatedConfigCapturesNothing() {
+    DeclarativeConfigProperties config = mockConfig();
+    when(config.get("capture_metadata").get("client").getScalarList("request", String.class))
+        .thenReturn(emptyList());
+
+    GrpcConfig grpcConfig = new GrpcConfig(config, false);
+
+    assertThat(grpcConfig.getClientRequestMetadata()).isNull();
   }
 
   @Test
