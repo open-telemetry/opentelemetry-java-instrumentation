@@ -57,6 +57,14 @@ public final class RuntimeTelemetryBuilder {
     Experimental.internalSetEmitExperimentalJfrMetrics(
         (builder, emit) -> builder.emitExperimentalJfrMetrics = emit);
     Experimental.internalSetJfrMetrics((builder, selector) -> builder.jfrMetrics = selector);
+    Experimental.internalSetPreferJfrMetrics(
+        (builder, prefer) ->
+            builder.jfrMetrics =
+                prefer
+                    ? IncludeExclude.builder()
+                        .setIncluded(Experimental.JMX_OVERLAPPING_JFR_METRICS)
+                        .build()
+                    : null);
     Internal.internalSetJfrMetrics((builder, selector) -> builder.jfrMetrics = selector);
     Internal.internalSetSuppressOverlappingJmxMetrics(
         (builder, suppress) -> builder.suppressOverlappingJmxMetrics = suppress);

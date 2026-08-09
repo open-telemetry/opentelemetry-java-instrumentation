@@ -203,6 +203,7 @@ class RuntimeTelemetryBuilderTest {
   @SuppressWarnings("deprecation") // testing deprecated method
   void deprecatedPreferJfrMetricsDisabledSelectsNothing() {
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
+    Experimental.setPreferJfrMetrics(builder, true);
     Experimental.setPreferJfrMetrics(builder, false);
     RuntimeTelemetry runtimeTelemetry = builder.build();
     cleanup.deferCleanup(runtimeTelemetry);
