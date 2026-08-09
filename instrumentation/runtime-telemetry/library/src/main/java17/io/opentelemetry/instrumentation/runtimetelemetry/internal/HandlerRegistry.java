@@ -52,7 +52,8 @@ final class HandlerRegistry {
       Meter meter,
       Predicate<String> metricNamePredicate,
       boolean useLegacyCpuCountMetric,
-      boolean requireCompleteJmxReplacement) {
+      boolean requireCompleteJmxReplacement,
+      boolean emitExperimentalJmxMetrics) {
     Set<String> availableEventNames = new HashSet<>();
     for (EventType eventType : FlightRecorder.getFlightRecorder().getEventTypes()) {
       availableEventNames.add(eventType.getName());
@@ -62,6 +63,7 @@ final class HandlerRegistry {
         metricNamePredicate,
         useLegacyCpuCountMetric,
         requireCompleteJmxReplacement,
+        emitExperimentalJmxMetrics,
         availableEventNames);
   }
 
@@ -70,129 +72,167 @@ final class HandlerRegistry {
       Predicate<String> metricNamePredicate,
       boolean useLegacyCpuCountMetric,
       boolean requireCompleteJmxReplacement,
+      boolean emitExperimentalJmxMetrics,
       Set<String> availableEventNames) {
 
     List<RecordedEventHandler> handlers = new ArrayList<>();
     Predicate<String> effectiveMetricNamePredicate =
         requireCompleteJmxReplacement
-            ? metricNamePredicate.and(name -> !INCOMPLETE_JMX_REPLACEMENTS.contains(name))
+            ? metricNamePredicate.and(
+                name ->
+                    !INCOMPLETE_JMX_REPLACEMENTS.contains(name)
+                        && !(emitExperimentalJmxMetrics && name.equals("jvm.memory.init")))
             : metricNamePredicate;
     for (GarbageCollectorMXBean bean : ManagementFactory.getGarbageCollectorMXBeans()) {
       String name = bean.getName();
       switch (name) {
         case "G1 Young Generation" -> {
-          addIfPresent(
+          addIfAvailable(
               handlers,
               availableEventNames,
-              G1HeapSummaryHandler.create(meter, effectiveMetricNamePredicate));
-          addIfPresent(
+              "jdk.G1HeapSummary",
+              () -> G1HeapSummaryHandler.create(meter, effectiveMetricNamePredicate));
+          addIfAvailable(
               handlers,
               availableEventNames,
-              G1GarbageCollectionHandler.create(meter, effectiveMetricNamePredicate));
+              "jdk.G1GarbageCollection",
+              () -> G1GarbageCollectionHandler.create(meter, effectiveMetricNamePredicate));
         }
 
         case "Copy" ->
-            addIfPresent(
+            addIfAvailable(
                 handlers,
                 availableEventNames,
-                YoungGarbageCollectionHandler.create(meter, effectiveMetricNamePredicate, name));
+                "jdk.YoungGarbageCollection",
+                () ->
+                    YoungGarbageCollectionHandler.create(
+                        meter, effectiveMetricNamePredicate, name));
 
         case "PS Scavenge" -> {
-          addIfPresent(
+          addIfAvailable(
               handlers,
               availableEventNames,
-              YoungGarbageCollectionHandler.create(meter, effectiveMetricNamePredicate, name));
-          addIfPresent(
+              "jdk.YoungGarbageCollection",
+              () ->
+                  YoungGarbageCollectionHandler.create(meter, effectiveMetricNamePredicate, name));
+          addIfAvailable(
               handlers,
               availableEventNames,
-              ParallelHeapSummaryHandler.create(meter, effectiveMetricNamePredicate));
+              "jdk.PSHeapSummary",
+              () -> ParallelHeapSummaryHandler.create(meter, effectiveMetricNamePredicate));
         }
 
         case "G1 Old Generation", "PS MarkSweep", "MarkSweepCompact" ->
-            addIfPresent(
+            addIfAvailable(
                 handlers,
                 availableEventNames,
-                OldGarbageCollectionHandler.create(meter, effectiveMetricNamePredicate, name));
+                "jdk.OldGarbageCollection",
+                () ->
+                    OldGarbageCollectionHandler.create(meter, effectiveMetricNamePredicate, name));
 
         default -> {}
       }
     }
 
-    addIfPresent(
+    addIfAvailable(
         handlers,
         availableEventNames,
-        ObjectAllocationInNewTlabHandler.create(meter, effectiveMetricNamePredicate));
-    addIfPresent(
+        "jdk.ObjectAllocationInNewTLAB",
+        () -> ObjectAllocationInNewTlabHandler.create(meter, effectiveMetricNamePredicate));
+    addIfAvailable(
         handlers,
         availableEventNames,
-        ObjectAllocationOutsideTlabHandler.create(meter, effectiveMetricNamePredicate));
-    addIfPresent(
+        "jdk.ObjectAllocationOutsideTLAB",
+        () -> ObjectAllocationOutsideTlabHandler.create(meter, effectiveMetricNamePredicate));
+    addIfAvailable(
         handlers,
         availableEventNames,
-        NetworkReadHandler.create(meter, effectiveMetricNamePredicate));
-    addIfPresent(
+        "jdk.SocketRead",
+        () -> NetworkReadHandler.create(meter, effectiveMetricNamePredicate));
+    addIfAvailable(
         handlers,
         availableEventNames,
-        NetworkWriteHandler.create(meter, effectiveMetricNamePredicate));
-    addIfPresent(
+        "jdk.SocketWrite",
+        () -> NetworkWriteHandler.create(meter, effectiveMetricNamePredicate));
+    addIfAvailable(
         handlers,
         availableEventNames,
-        ContextSwitchRateHandler.create(meter, effectiveMetricNamePredicate));
-    addIfPresent(
+        "jdk.ThreadContextSwitchRate",
+        () -> ContextSwitchRateHandler.create(meter, effectiveMetricNamePredicate));
+    addIfAvailable(
         handlers,
         availableEventNames,
-        OverallCpuLoadHandler.create(meter, effectiveMetricNamePredicate));
-    addIfPresent(
+        "jdk.CPULoad",
+        () -> OverallCpuLoadHandler.create(meter, effectiveMetricNamePredicate));
+    addIfAvailable(
         handlers,
         availableEventNames,
-        ContainerConfigurationHandler.create(
-            meter, effectiveMetricNamePredicate, useLegacyCpuCountMetric));
-    addIfPresent(
-        handlers, availableEventNames, LongLockHandler.create(meter, effectiveMetricNamePredicate));
-    addIfPresent(
+        "jdk.ContainerConfiguration",
+        () ->
+            ContainerConfigurationHandler.create(
+                meter, effectiveMetricNamePredicate, useLegacyCpuCountMetric));
+    addIfAvailable(
         handlers,
         availableEventNames,
-        ThreadCountHandler.create(meter, effectiveMetricNamePredicate));
-    addIfPresent(
+        "jdk.JavaMonitorWait",
+        () -> LongLockHandler.create(meter, effectiveMetricNamePredicate));
+    addIfAvailable(
         handlers,
         availableEventNames,
-        VirtualThreadPinnedHandler.create(meter, effectiveMetricNamePredicate));
-    addIfPresent(
+        "jdk.JavaThreadStatistics",
+        () -> ThreadCountHandler.create(meter, effectiveMetricNamePredicate));
+    addIfAvailable(
         handlers,
         availableEventNames,
-        VirtualThreadSubmitFailedHandler.create(meter, effectiveMetricNamePredicate));
-    addIfPresent(
+        "jdk.VirtualThreadPinned",
+        () -> VirtualThreadPinnedHandler.create(meter, effectiveMetricNamePredicate));
+    addIfAvailable(
         handlers,
         availableEventNames,
-        ClassesLoadedHandler.create(meter, effectiveMetricNamePredicate));
-    addIfPresent(
+        "jdk.VirtualThreadSubmitFailed",
+        () -> VirtualThreadSubmitFailedHandler.create(meter, effectiveMetricNamePredicate));
+    addIfAvailable(
         handlers,
         availableEventNames,
-        MetaspaceSummaryHandler.create(meter, effectiveMetricNamePredicate));
-    addIfPresent(
+        "jdk.ClassLoadingStatistics",
+        () -> ClassesLoadedHandler.create(meter, effectiveMetricNamePredicate));
+    addIfAvailable(
         handlers,
         availableEventNames,
-        CodeCacheConfigurationHandler.create(meter, effectiveMetricNamePredicate));
-    addIfPresent(
+        "jdk.MetaspaceSummary",
+        () -> MetaspaceSummaryHandler.create(meter, effectiveMetricNamePredicate));
+    addIfAvailable(
         handlers,
         availableEventNames,
-        DirectBufferStatisticsHandler.create(meter, effectiveMetricNamePredicate));
+        "jdk.CodeCacheConfiguration",
+        () -> CodeCacheConfigurationHandler.create(meter, effectiveMetricNamePredicate));
+    addIfAvailable(
+        handlers,
+        availableEventNames,
+        "jdk.DirectBufferStatistics",
+        () -> DirectBufferStatisticsHandler.create(meter, effectiveMetricNamePredicate));
 
     return handlers;
   }
 
-  private static void addIfPresent(
+  private static void addIfAvailable(
       List<RecordedEventHandler> handlers,
       Set<String> availableEventNames,
-      @Nullable RecordedEventHandler handler) {
-    if (handler == null) {
+      String eventName,
+      HandlerFactory handlerFactory) {
+    if (!availableEventNames.contains(eventName)) {
       return;
     }
-    if (!availableEventNames.contains(handler.getEventName())) {
-      handler.close();
-      return;
+    RecordedEventHandler handler = handlerFactory.create();
+    if (handler != null) {
+      handlers.add(handler);
     }
-    handlers.add(handler);
+  }
+
+  @FunctionalInterface
+  private interface HandlerFactory {
+    @Nullable
+    RecordedEventHandler create();
   }
 
   private HandlerRegistry() {}

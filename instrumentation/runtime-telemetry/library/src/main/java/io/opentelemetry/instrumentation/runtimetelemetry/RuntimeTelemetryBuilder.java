@@ -105,7 +105,8 @@ public final class RuntimeTelemetryBuilder {
             : jfrConfig.buildJfrTelemetry(
                 effectiveJfrMetrics::matches,
                 getMeter(openTelemetry, jfrName),
-                suppressOverlappingJmxMetrics && !disableJmx);
+                suppressOverlappingJmxMetrics && !disableJmx,
+                emitExperimentalMetrics);
     Set<String> jfrMetricNames = jfrTelemetry.getMetricNames();
 
     Meter jmxMeter = getMeter(openTelemetry, jmxName);

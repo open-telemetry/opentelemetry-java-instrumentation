@@ -220,6 +220,20 @@ class RuntimeTelemetryBuilderTest {
   }
 
   @Test
+  void incompleteJfrMemoryInitFallsBackToEnabledJmxMetric() {
+    TestTelemetry telemetry = buildTelemetry(include("jvm.memory.init"), true);
+
+    assertMetricScopes(telemetry.reader.collectAllMetrics(), "jvm.memory.init", "jmx");
+  }
+
+  @Test
+  void jfrMemoryInitIsAllowedWhenExperimentalJmxMetricsAreDisabled() {
+    TestTelemetry telemetry = buildTelemetry(include("jvm.memory.init"), false);
+
+    assertMetricScopes(telemetry.reader.collectAllMetrics(), "jvm.memory.init", "jfr");
+  }
+
+  @Test
   void allJfrMetricsKeepsJmxOnlyMetrics() {
     TestTelemetry telemetry = buildTelemetry(include("*"), false);
     Collection<MetricData> metrics = telemetry.reader.collectAllMetrics();
