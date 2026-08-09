@@ -43,6 +43,7 @@ public final class RuntimeTelemetryBuilder {
 
   private boolean emitExperimentalMetrics;
   private boolean emitExperimentalJfrMetrics;
+  private boolean preferJfrMetrics;
   @Nullable private IncludeExclude jfrMetrics;
   private boolean suppressOverlappingJmxMetrics = true;
   private boolean disableJmx;
@@ -58,13 +59,7 @@ public final class RuntimeTelemetryBuilder {
         (builder, emit) -> builder.emitExperimentalJfrMetrics = emit);
     Experimental.internalSetJfrMetrics((builder, selector) -> builder.jfrMetrics = selector);
     Experimental.internalSetPreferJfrMetrics(
-        (builder, prefer) ->
-            builder.jfrMetrics =
-                prefer
-                    ? IncludeExclude.builder()
-                        .setIncluded(Experimental.JMX_OVERLAPPING_JFR_METRICS)
-                        .build()
-                    : null);
+        (builder, prefer) -> builder.preferJfrMetrics = prefer);
     Internal.internalSetJfrMetrics((builder, selector) -> builder.jfrMetrics = selector);
     Internal.internalSetSuppressOverlappingJmxMetrics(
         (builder, suppress) -> builder.suppressOverlappingJmxMetrics = suppress);
@@ -124,21 +119,24 @@ public final class RuntimeTelemetryBuilder {
 
   @Nullable
   private IncludeExclude getEffectiveJfrMetrics() {
-    if (!emitExperimentalJfrMetrics) {
-      return jfrMetrics;
+    if (jfrMetrics == null && !preferJfrMetrics && !emitExperimentalJfrMetrics) {
+      return null;
     }
-    if (jfrMetrics == null) {
-      return IncludeExclude.builder().setIncluded(EXPERIMENTAL_JFR_METRICS).build();
-    }
-    if (jfrMetrics.getIncluded().isEmpty()) {
+    if (jfrMetrics != null && jfrMetrics.getIncluded().isEmpty()) {
       return jfrMetrics;
     }
 
-    List<String> included = new ArrayList<>(jfrMetrics.getIncluded());
-    included.addAll(EXPERIMENTAL_JFR_METRICS);
+    List<String> included =
+        jfrMetrics == null ? new ArrayList<>() : new ArrayList<>(jfrMetrics.getIncluded());
+    if (preferJfrMetrics) {
+      included.addAll(Experimental.JMX_OVERLAPPING_JFR_METRICS);
+    }
+    if (emitExperimentalJfrMetrics) {
+      included.addAll(EXPERIMENTAL_JFR_METRICS);
+    }
     return IncludeExclude.builder()
         .setIncluded(included)
-        .setExcluded(jfrMetrics.getExcluded())
+        .setExcluded(jfrMetrics == null ? emptyList() : jfrMetrics.getExcluded())
         .build();
   }
 

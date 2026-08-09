@@ -212,6 +212,48 @@ class RuntimeTelemetryBuilderTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // testing deprecated method
+  void deprecatedPreferJfrMetricsMergesWithExplicitSelector() {
+    RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
+    Experimental.setJfrMetrics(
+        builder,
+        IncludeExclude.builder()
+            .setIncluded(singletonList("jvm.cpu.longlock"))
+            .setExcluded(singletonList("jvm.class.count"))
+            .build());
+    Experimental.setPreferJfrMetrics(builder, true);
+    RuntimeTelemetry runtimeTelemetry = builder.build();
+    cleanup.deferCleanup(runtimeTelemetry);
+
+    JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
+        (JfrConfig.JfrRuntimeMetrics) runtimeTelemetry.getJfrTelemetry();
+    assertThat(jfrRuntimeMetrics.getMetricNames())
+        .contains("jvm.cpu.longlock", "jvm.thread.count")
+        .doesNotContain("jvm.class.count");
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // testing deprecated method
+  void explicitSelectorMergesWithDeprecatedPreferJfrMetrics() {
+    RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
+    Experimental.setPreferJfrMetrics(builder, true);
+    Experimental.setJfrMetrics(
+        builder,
+        IncludeExclude.builder()
+            .setIncluded(singletonList("jvm.cpu.longlock"))
+            .setExcluded(singletonList("jvm.class.count"))
+            .build());
+    RuntimeTelemetry runtimeTelemetry = builder.build();
+    cleanup.deferCleanup(runtimeTelemetry);
+
+    JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
+        (JfrConfig.JfrRuntimeMetrics) runtimeTelemetry.getJfrTelemetry();
+    assertThat(jfrRuntimeMetrics.getMetricNames())
+        .contains("jvm.cpu.longlock", "jvm.thread.count")
+        .doesNotContain("jvm.class.count");
+  }
+
+  @Test
   void incompleteJfrMemoryMetricFallsBackToJmx() {
     TestTelemetry telemetry = buildTelemetry(include("jvm.memory.used"), false);
 
