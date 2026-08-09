@@ -138,7 +138,10 @@ public final class GrpcTelemetryBuilder {
     return this;
   }
 
-  /** Sets which ASCII request metadata should be captured as span attributes on client spans. */
+  /**
+   * Sets which ASCII request metadata should be captured as span attributes on client spans.
+   * Included and excluded patterns are matched case-insensitively.
+   */
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setClientRequestMetadata(IncludeExclude clientRequestMetadata) {
     this.clientRequestMetadata = clientRequestMetadata;
@@ -162,7 +165,10 @@ public final class GrpcTelemetryBuilder {
     return this;
   }
 
-  /** Sets which ASCII request metadata should be captured as span attributes on server spans. */
+  /**
+   * Sets which ASCII request metadata should be captured as span attributes on server spans.
+   * Included and excluded patterns are matched case-insensitively.
+   */
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setServerRequestMetadata(IncludeExclude serverRequestMetadata) {
     this.serverRequestMetadata = serverRequestMetadata;
