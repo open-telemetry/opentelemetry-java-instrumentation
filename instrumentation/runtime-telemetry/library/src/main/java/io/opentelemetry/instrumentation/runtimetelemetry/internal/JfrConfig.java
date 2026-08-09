@@ -35,7 +35,10 @@ public class JfrConfig {
   }
 
   public JfrTelemetry buildJfrTelemetry(
-      Predicate<String> metricNamePredicate, Meter meter, boolean requireCompleteJmxReplacement) {
+      Predicate<String> metricNamePredicate,
+      Meter meter,
+      boolean requireCompleteJmxReplacement,
+      boolean emitExperimentalJmxMetrics) {
     return new JfrTelemetry(null, emptySet());
   }
 

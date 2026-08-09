@@ -49,10 +49,17 @@ public class JfrConfig {
   }
 
   public JfrTelemetry buildJfrTelemetry(
-      Predicate<String> metricNamePredicate, Meter meter, boolean requireCompleteJmxReplacement) {
+      Predicate<String> metricNamePredicate,
+      Meter meter,
+      boolean requireCompleteJmxReplacement,
+      boolean emitExperimentalJmxMetrics) {
     JfrRuntimeMetrics telemetry =
         JfrRuntimeMetrics.build(
-            meter, metricNamePredicate, useLegacyCpuCountMetric, requireCompleteJmxReplacement);
+            meter,
+            metricNamePredicate,
+            useLegacyCpuCountMetric,
+            requireCompleteJmxReplacement,
+            emitExperimentalJmxMetrics);
     if (telemetry == null) {
       return new JfrTelemetry(null, emptySet());
     }
@@ -135,13 +142,18 @@ public class JfrConfig {
         Meter meter,
         Predicate<String> metricNamePredicate,
         boolean useLegacyCpuCountMetric,
-        boolean requireCompleteJmxReplacement) {
+        boolean requireCompleteJmxReplacement,
+        boolean emitExperimentalJmxMetrics) {
       if (!isJfrAvailable()) {
         return null;
       }
       List<RecordedEventHandler> handlers =
           HandlerRegistry.getHandlers(
-              meter, metricNamePredicate, useLegacyCpuCountMetric, requireCompleteJmxReplacement);
+              meter,
+              metricNamePredicate,
+              useLegacyCpuCountMetric,
+              requireCompleteJmxReplacement,
+              emitExperimentalJmxMetrics);
       if (handlers.isEmpty()) {
         return null;
       }
