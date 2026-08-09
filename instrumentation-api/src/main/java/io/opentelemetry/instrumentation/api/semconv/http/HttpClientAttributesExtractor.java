@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.url.internal.UrlQuerySanitizer;
+import io.opentelemetry.instrumentation.api.semconv.url.internal.UrlSanitizer;
 import java.util.Set;
 import java.util.function.ToIntFunction;
 import javax.annotation.Nullable;
@@ -76,8 +76,8 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
     internalServerExtractor.onStart(attributes, request);
 
-    String fullUrl = stripSensitiveData(getter.getUrlFull(request));
-    attributes.put(URL_FULL, fullUrl);
+    attributes.put(
+        URL_FULL, UrlSanitizer.sanitizeUrl(getter.getUrlFull(request), sensitiveQueryParameters));
 
     int resendCount = resendCountIncrementer.applyAsInt(parentContext);
     if (resendCount > 0) {
@@ -104,55 +104,5 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public SpanKey internalGetSpanKey() {
     return SpanKey.HTTP_CLIENT;
-  }
-
-  @Nullable
-  private String stripSensitiveData(@Nullable String url) {
-    if (url == null || url.isEmpty()) {
-      return url;
-    }
-
-    url = redactUserInfo(url);
-    url = UrlQuerySanitizer.redactUrl(url, sensitiveQueryParameters);
-
-    return url;
-  }
-
-  private static String redactUserInfo(String url) {
-    int schemeEndIndex = url.indexOf(':');
-
-    if (schemeEndIndex == -1) {
-      // not a valid url
-      return url;
-    }
-
-    int len = url.length();
-    if (len <= schemeEndIndex + 2
-        || url.charAt(schemeEndIndex + 1) != '/'
-        || url.charAt(schemeEndIndex + 2) != '/') {
-      // has no authority component
-      return url;
-    }
-
-    // look for the end of the authority component:
-    //   '/', '?', '#' ==> start of path
-    int index;
-    int atIndex = -1;
-    for (index = schemeEndIndex + 3; index < len; index++) {
-      char c = url.charAt(index);
-
-      if (c == '@') {
-        atIndex = index;
-      }
-
-      if (c == '/' || c == '?' || c == '#') {
-        break;
-      }
-    }
-
-    if (atIndex == -1 || atIndex == len - 1) {
-      return url;
-    }
-    return url.substring(0, schemeEndIndex + 3) + "REDACTED:REDACTED" + url.substring(atIndex);
   }
 }

@@ -13,6 +13,22 @@
 - Deprecate `GenAiAttributesGetter.getSystem()` in favor of `getProviderName()`. It will be removed
   in a subsequent release after implementors have had a release to migrate.
   ([#19124](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19124))
+- Deprecate the `opentelemetry-zipkin-spring-boot-starter` artifact. Use
+  `opentelemetry-spring-boot-starter` with the OTLP exporter instead. It will be removed in 3.0.
+- Deprecate `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)` in the
+  Micrometer 1.5 library in favor of
+  `io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`.
+  Histogram/percentile gauges are experimental compatibility behavior, and this moves the API to the
+  standard experimental surface ahead of stabilization. Behavior and the
+  `otel.instrumentation.micrometer.histogram-gauges.enabled` config property are unchanged. The
+  deprecated builder method will be removed in the next release.
+  ([#19404](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19404))
+- The decaying `<name>.max` gauge that the Micrometer bridge emits alongside the histogram for
+  `Timer` and `DistributionSummary` is deprecated and will be removed in 3.0. The `<name>` /
+  `<name>.max` pair violates the OpenTelemetry metric naming rules, and OpenTelemetry histograms
+  already expose a max. It is no longer emitted when `otel.instrumentation.common.v3-preview` is
+  enabled.
+  ([#19397](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19397))
 
 ## Version 2.30.0 (2026-07-22)
 

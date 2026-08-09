@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
@@ -18,16 +19,19 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessContextCustomizer;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -48,6 +52,11 @@ import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
  */
 public final class AwsSdkInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
+
+  // messaging.operation.name values, named after the SQS API operations
+  private static final String SEND_OPERATION_NAME = "send";
+  private static final String RECEIVE_OPERATION_NAME = "receive";
+  private static final String PROCESS_OPERATION_NAME = "process";
 
   private static final AttributesExtractor<ExecutionAttributes, Response> rpcAttributesExtractor =
       RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter());
@@ -125,49 +134,82 @@ public final class AwsSdkInstrumenterFactory {
   }
 
   private <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> messagingAttributesExtractor(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
-    return MessagingAttributesExtractor.builder(getter, operation)
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter,
+      MessagingOperationType operationType,
+      String operationName) {
+    return MessagingAttributesExtractor.builder(getter, operationType, operationName)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }
 
   public Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter() {
-    MessageOperation operation = MessageOperation.RECEIVE;
+    MessagingOperationType operationType = MessagingOperationType.RECEIVE;
     SqsReceiveRequestAttributesGetter getter = new SqsReceiveRequestAttributesGetter();
     AttributesExtractor<SqsReceiveRequest, Response> messagingAttributeExtractor =
-        messagingAttributesExtractor(getter, operation);
+        messagingAttributesExtractor(getter, operationType, RECEIVE_OPERATION_NAME);
 
     return createInstrumenter(
         openTelemetry,
-        MessagingSpanNameExtractor.create(getter, operation),
-        SpanKindExtractor.alwaysConsumer(),
+        MessagingSpanNameExtractor.create(getter, operationType, RECEIVE_OPERATION_NAME),
+        MessagingSpanKindExtractor.create(operationType),
         toSqsRequestExtractors(consumerAttributesExtractors()),
         singletonList(messagingAttributeExtractor),
-        builder -> setMessagingReceiveExceptionEventExtractor(builder),
+        builder -> {
+          setMessagingReceiveExceptionEventExtractor(builder);
+          if (emitStableMessagingSemconv()) {
+            builder.addSpanLinksExtractor(
+                (spanLinks, parentContext, request) -> {
+                  for (SqsMessage message : request.getMessages()) {
+                    SpanContext spanContext =
+                        Span.fromContext(message.getCreationContext()).getSpanContext();
+                    if (spanContext.isValid()) {
+                      spanLinks.addLink(spanContext);
+                    }
+                  }
+                });
+          }
+        },
         messagingReceiveInstrumentationEnabled);
   }
 
   public Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter() {
-    MessageOperation operation = MessageOperation.PROCESS;
+    MessagingOperationType operationType = MessagingOperationType.PROCESS;
     SqsProcessRequestAttributesGetter getter = new SqsProcessRequestAttributesGetter();
 
     InstrumenterBuilder<SqsProcessRequest, Response> builder =
         Instrumenter.<SqsProcessRequest, Response>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operation))
+                MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractors(toSqsRequestExtractors(consumerAttributesExtractors()))
-            .addAttributesExtractor(messagingAttributesExtractor(getter, operation));
+            .addAttributesExtractor(
+                messagingAttributesExtractor(getter, operationType, PROCESS_OPERATION_NAME));
     setMessagingProcessExceptionEventExtractor(builder);
 
-    if (messagingReceiveInstrumentationEnabled) {
+    if (emitStableMessagingSemconv() || messagingReceiveInstrumentationEnabled) {
       builder.addSpanLinksExtractor(
           (spanLinks, parentContext, request) -> {
-            Context extracted =
-                SqsParentContext.ofMessage(
-                    request.getMessage(), messagingPropagator, useXrayPropagator);
-            spanLinks.addLink(Span.fromContext(extracted).getSpanContext());
+            // getCreationContext() extracts against a root context, so it is either a valid
+            // creation context or an invalid one; in particular it can never pick up the ambient
+            // span. the creation context is linked even when it ends up being this span's parent,
+            // which happens when there is no ambient span, because semconv asks for a link to the
+            // creation context for every message the span accounts for
+            SpanContext creationSpanContext =
+                Span.fromContext(request.getMessage().getCreationContext()).getSpanContext();
+            if (creationSpanContext.isValid()) {
+              spanLinks.addLink(creationSpanContext);
+            }
           });
+    }
+    if (emitStableMessagingSemconv()) {
+      builder.addContextCustomizer(
+          MessagingProcessContextCustomizer.create(
+              (parentContext, request) ->
+                  SqsParentContext.ofMessage(
+                      parentContext,
+                      request.getMessage(),
+                      messagingPropagator,
+                      useXrayPropagator)));
     }
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
@@ -201,14 +243,14 @@ public final class AwsSdkInstrumenterFactory {
   }
 
   public Instrumenter<ExecutionAttributes, Response> producerInstrumenter() {
-    MessageOperation operation = MessageOperation.PUBLISH;
+    MessagingOperationType operationType = MessagingOperationType.SEND;
     SqsAttributesGetter getter = new SqsAttributesGetter();
     AttributesExtractor<ExecutionAttributes, Response> messagingAttributeExtractor =
-        messagingAttributesExtractor(getter, operation);
+        messagingAttributesExtractor(getter, operationType, SEND_OPERATION_NAME);
 
     return createInstrumenter(
         openTelemetry,
-        MessagingSpanNameExtractor.create(getter, operation),
+        MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME),
         SpanKindExtractor.alwaysProducer(),
         attributesExtractors(),
         singletonList(messagingAttributeExtractor),

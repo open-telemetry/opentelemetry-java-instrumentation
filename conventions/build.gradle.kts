@@ -67,7 +67,7 @@ dependencies {
   }
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
   implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.5.0")
-  implementation("org.sonatype.gradle.plugins:scan-gradle-plugin:3.1.6")
+  implementation("org.sonatype.gradle.plugins:scan-gradle-plugin:4.0.0")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:2.0.1")
   implementation("org.spdx:spdx-gradle-plugin:0.12.0")
   // When updating, also update dependencyManagement/build.gradle.kts
@@ -79,7 +79,7 @@ dependencies {
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.6")
   // Used by otel.spring-native-test-conventions for typed access to the metadata repository
   // extension. Provided at runtime by smoke-test modules that apply this plugin via settings.
-  compileOnly("org.graalvm.buildtools:native-gradle-plugin:1.1.6")
+  compileOnly("org.graalvm.buildtools:native-gradle-plugin:1.1.7")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.4"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
