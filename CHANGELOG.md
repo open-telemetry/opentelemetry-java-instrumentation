@@ -14,7 +14,7 @@
   `Experimental#setJfrMetrics(RuntimeTelemetryBuilder, IncludeExclude)`, which select JFR metrics by
   metric name instead of by an all-or-nothing toggle. The deprecated property and method still
   select the same metrics and will be removed in the next release.
-  ([#19421](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19421))
+  ([#19459](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19459))
 - Deprecate the `opentelemetry-zipkin-spring-boot-starter` artifact. Use
   `opentelemetry-spring-boot-starter` with the OTLP exporter instead. It will be removed in 3.0.
 - Deprecate `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)` in the
