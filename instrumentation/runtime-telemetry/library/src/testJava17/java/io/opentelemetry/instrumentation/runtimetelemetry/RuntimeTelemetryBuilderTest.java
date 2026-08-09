@@ -276,6 +276,20 @@ class RuntimeTelemetryBuilderTest {
   }
 
   @Test
+  void incompleteJfrBufferMetricFallsBackToEnabledJmxMetric() {
+    TestTelemetry telemetry = buildTelemetry(include("jvm.buffer.count"), true);
+
+    assertMetricScopes(telemetry.reader.collectAllMetrics(), "jvm.buffer.count", "jmx");
+  }
+
+  @Test
+  void jfrBufferMetricIsAllowedWhenExperimentalJmxMetricsAreDisabled() {
+    TestTelemetry telemetry = buildTelemetry(include("jvm.buffer.count"), false);
+
+    assertMetricScopes(telemetry.reader.collectAllMetrics(), "jvm.buffer.count", "jfr");
+  }
+
+  @Test
   void allJfrMetricsKeepsJmxOnlyMetrics() {
     TestTelemetry telemetry = buildTelemetry(include("*"), false);
     Collection<MetricData> metrics = telemetry.reader.collectAllMetrics();
