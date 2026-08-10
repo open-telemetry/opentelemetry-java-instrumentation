@@ -35,6 +35,9 @@ class GrpcTargetParserTest {
         // dns: scheme (single colon)
         Arguments.of("dns:myhost", "myhost", null),
         Arguments.of("dns:myhost:8080", "myhost", 8080),
+        Arguments.of("dns:/myhost", "myhost", null),
+        Arguments.of("dns:/myhost:8080", "myhost", 8080),
+        Arguments.of("dns:///%5B2001:db8::1%5D:443", "2001:db8::1", 443),
 
         // bare host:port (no scheme)
         Arguments.of("myhost", "myhost", null),
@@ -59,8 +62,9 @@ class GrpcTargetParserTest {
         // bare IPv6 (no brackets) — treated as host with no port
         Arguments.of("::1", "::1", null),
 
-        // unknown scheme with ://
+        // xds scheme is preserved
         Arguments.of("xds:///myservice", "xds:///myservice", null),
+        Arguments.of("xds:/myservice", "xds:/myservice", null),
 
         // host with missing/invalid port — host preserved, port omitted
         Arguments.of("myhost:", "myhost", null),
@@ -79,6 +83,7 @@ class GrpcTargetParserTest {
   @ValueSource(
       strings = {
         "dns:",
+        "dns://",
         "dns:///",
         "unix:",
         "unix://",

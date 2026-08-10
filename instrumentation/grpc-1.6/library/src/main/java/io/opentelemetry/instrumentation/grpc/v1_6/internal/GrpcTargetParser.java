@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6.internal;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import javax.annotation.Nullable;
 
 /**
@@ -51,7 +53,7 @@ public final class GrpcTargetParser {
     String rest = target.substring(schemeEnd + 3); // after "://"
 
     if ("dns".equals(scheme)) {
-      return parseDnsScheme(rest);
+      return parseDnsScheme(target);
     }
 
     if ("unix".equals(scheme) || "unix-abstract".equals(scheme)) {
@@ -77,7 +79,7 @@ public final class GrpcTargetParser {
   @Nullable
   private static ParsedTarget parseSingleColonScheme(String scheme, String rest) {
     if ("dns".equals(scheme)) {
-      return parseHostPort(rest);
+      return parseDnsScheme(scheme + ":" + rest);
     }
 
     if ("unix".equals(scheme) || "unix-abstract".equals(scheme)) {
@@ -89,15 +91,24 @@ public final class GrpcTargetParser {
   }
 
   @Nullable
-  private static ParsedTarget parseDnsScheme(String rest) {
-    int slashIndex = rest.indexOf('/');
-    String endpoint;
-    if (slashIndex != -1) {
-      endpoint = rest.substring(slashIndex + 1);
-    } else {
-      endpoint = rest;
+  private static ParsedTarget parseDnsScheme(String target) {
+    try {
+      URI uri = new URI(target);
+      String endpoint = uri.isOpaque() ? uri.getSchemeSpecificPart() : uri.getPath();
+      if (endpoint == null) {
+        return null;
+      }
+      if (endpoint.startsWith("/")) {
+        endpoint = endpoint.substring(1);
+      }
+      return parseHostPort(endpoint);
+    } catch (URISyntaxException e) {
+      String rest = target.substring("dns:".length());
+      if (rest.isEmpty() || "//".equals(rest)) {
+        return null;
+      }
+      return new ParsedTarget(target, null);
     }
-    return parseHostPort(endpoint);
   }
 
   @Nullable
@@ -167,6 +178,7 @@ public final class GrpcTargetParser {
         || "unix".equals(scheme)
         || "unix-abstract".equals(scheme)
         || "ipv4".equals(scheme)
-        || "ipv6".equals(scheme);
+        || "ipv6".equals(scheme)
+        || "xds".equals(scheme);
   }
 }
