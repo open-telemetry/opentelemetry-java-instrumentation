@@ -63,15 +63,6 @@ public final class MetaspaceSummaryHandler implements RecordedEventHandler {
     return metricNames.isEmpty() ? null : new MetaspaceSummaryHandler(meter, metricNames);
   }
 
-  public MetaspaceSummaryHandler(Meter meter) {
-    this(
-        meter,
-        Set.of(
-            Constants.METRIC_NAME_MEMORY,
-            Constants.METRIC_NAME_COMMITTED,
-            Constants.METRIC_NAME_MEMORY_LIMIT));
-  }
-
   private MetaspaceSummaryHandler(Meter meter, Set<String> metricNames) {
     this.metricNames = metricNames;
     usageSelected = metricNames.contains(Constants.METRIC_NAME_MEMORY);

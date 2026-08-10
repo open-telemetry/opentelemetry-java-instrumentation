@@ -60,10 +60,6 @@ public final class DirectBufferStatisticsHandler implements RecordedEventHandler
     return metricNames.isEmpty() ? null : new DirectBufferStatisticsHandler(meter, metricNames);
   }
 
-  public DirectBufferStatisticsHandler(Meter meter) {
-    this(meter, Set.of(METRIC_NAME_USAGE, METRIC_NAME_LIMIT, METRIC_NAME_COUNT));
-  }
-
   private DirectBufferStatisticsHandler(Meter meter, Set<String> metricNames) {
     this.metricNames = metricNames;
     usageSelected = metricNames.contains(METRIC_NAME_USAGE);

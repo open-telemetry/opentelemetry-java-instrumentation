@@ -58,11 +58,6 @@ public final class NetworkWriteHandler implements RecordedEventHandler {
     return metricNames.isEmpty() ? null : new NetworkWriteHandler(meter, metricNames);
   }
 
-  public NetworkWriteHandler(Meter meter) {
-    this(
-        meter, Set.of(Constants.METRIC_NAME_NETWORK_BYTES, Constants.METRIC_NAME_NETWORK_DURATION));
-  }
-
   private NetworkWriteHandler(Meter meter, Set<String> metricNames) {
     this.metricNames = metricNames;
     bytesHistogram =
