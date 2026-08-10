@@ -53,7 +53,7 @@ applied. The default convention passes the name through unchanged; see
 | `LongTaskTimer`       | asynchronous long up-down counter, asynchronous double up-down counter | `<name>.active`, `<name>.duration` | `{tasks}`, base time unit      |
 | `FunctionCounter`     | asynchronous double counter                                            | `<name>`                           | base unit                      |
 | `FunctionTimer`       | asynchronous long counter, asynchronous double counter                 | `<name>.count`, `<name>.sum`       | `{invocation}`, base time unit |
-| `Meter` (custom)      | one instrument per `Measurement`, see below                            | `<name>.<statistic>`               | base unit                      |
+| `Meter` (custom)      | one instrument per `Measurement`, see below                            | `<raw name>.<statistic>`           | base unit                      |
 
 Notes:
 
@@ -75,7 +75,10 @@ Notes:
 - The `<name>.max` gauge is deprecated and will be removed in 3.0. It is no longer emitted when
   `otel.instrumentation.common.v3-preview` is enabled.
 - For a custom `Meter`, each measurement's `Statistic` determines the instrument type, and the name
-  suffix is the statistic's Micrometer tag value.
+  suffix is the statistic's Micrometer tag value. The naming convention is applied to the combined
+  `<raw name>.<statistic>`, where `<raw name>` is the Micrometer meter name before the convention,
+  so a custom `Meter` of type `COUNTER` named `my.meter` with the base unit `bytes` is emitted as
+  `my.meter.count.bytes` in [Prometheus mode](#prometheus-mode).
 
 ### Prometheus mode
 
