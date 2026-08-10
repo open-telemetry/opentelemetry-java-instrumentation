@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -83,10 +84,14 @@ public class SpringAwsUtil {
     if (tracingContext == null) {
       return null;
     }
-    SqsMessage wrappedMessage = SqsMessageImpl.wrap(tracingContext.sqsMessage);
-    Context parentContext = tracingContext.receiveContext;
+    SqsMessage wrappedMessage =
+        SqsMessageImpl.wrap(tracingContext.sqsMessage, tracingContext.config);
+    Context parentContext = tracingContext.processParentContext;
     if (parentContext == null) {
-      parentContext = SqsParentContext.ofMessage(wrappedMessage, tracingContext.config);
+      parentContext = wrappedMessage.getCreationContext();
+    } else if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
+      parentContext =
+          SqsParentContext.ofMessage(parentContext, wrappedMessage, tracingContext.config);
     }
     return parentContext.makeCurrent();
   }
@@ -121,7 +126,7 @@ public class SpringAwsUtil {
     private final Response response;
     private final Instrumenter<SqsProcessRequest, Response> instrumenter;
     private final TracingExecutionInterceptor config;
-    @Nullable private final Context receiveContext;
+    @Nullable private final Context processParentContext;
     private final software.amazon.awssdk.services.sqs.model.Message sqsMessage;
 
     private TracingContext(
@@ -130,16 +135,16 @@ public class SpringAwsUtil {
       this.response = tracingList.getResponse();
       this.instrumenter = tracingList.getInstrumenter();
       this.config = tracingList.getConfig();
-      this.receiveContext = tracingList.getReceiveContext();
+      this.processParentContext = tracingList.getProcessParentContext();
       this.sqsMessage = sqsMessage;
     }
 
     @Nullable
     MessageScope trace() {
-      SqsMessage wrappedMessage = SqsMessageImpl.wrap(sqsMessage);
-      Context parentContext = receiveContext;
+      SqsMessage wrappedMessage = SqsMessageImpl.wrap(sqsMessage, config);
+      Context parentContext = processParentContext;
       if (parentContext == null) {
-        parentContext = SqsParentContext.ofMessage(wrappedMessage, config);
+        parentContext = wrappedMessage.getCreationContext();
       }
       SqsProcessRequest processRequest = SqsProcessRequest.create(request, wrappedMessage);
       if (!instrumenter.shouldStart(parentContext, processRequest)) {

@@ -74,7 +74,7 @@ class EmittedScopeParserTest {
     Files.writeString(telemetryDir.resolve("scope-abc123.yaml"), scopeContent);
 
     Set<EmittedScope.Scope> scopes =
-        EmittedScopeParser.getScopesFromFiles(tempDir.toString(), "test-instrumentation");
+        EmittedScopeParser.getScopesFromFiles(tempDir, "test-instrumentation");
 
     assertThat(scopes).hasSize(2);
     assertThat(scopes)
@@ -112,7 +112,7 @@ class EmittedScopeParserTest {
     Files.writeString(telemetryDir.resolve("scope-file2.yaml"), scopeContent2);
 
     Set<EmittedScope.Scope> scopes =
-        EmittedScopeParser.getScopesFromFiles(tempDir.toString(), "test-instrumentation");
+        EmittedScopeParser.getScopesFromFiles(tempDir, "test-instrumentation");
 
     // duplicates should be removed
     assertThat(scopes).hasSize(2);
@@ -133,7 +133,7 @@ class EmittedScopeParserTest {
 
     // Parse should return empty set
     Set<EmittedScope.Scope> scopes =
-        EmittedScopeParser.getScopesFromFiles(tempDir.toString(), "test-instrumentation");
+        EmittedScopeParser.getScopesFromFiles(tempDir, "test-instrumentation");
 
     assertThat(scopes).isEmpty();
   }
@@ -154,7 +154,7 @@ class EmittedScopeParserTest {
 
     Files.writeString(telemetryDir.resolve("scope-abc123.yaml"), scopeContent);
 
-    FileManager fileManager = new FileManager(tempDir + "/");
+    FileManager fileManager = new FileManager(tempDir);
     InstrumentationModule module =
         new InstrumentationModule.Builder("test-lib-1.0").srcPath("test-instrumentation").build();
 
@@ -181,7 +181,7 @@ class EmittedScopeParserTest {
 
     Files.writeString(telemetryDir.resolve("scope-test.yaml"), scopeContent);
 
-    FileManager fileManager = new FileManager(tempDir + "/");
+    FileManager fileManager = new FileManager(tempDir);
     InstrumentationModule module =
         new InstrumentationModule.Builder("spring-web-6.0").srcPath("test-instrumentation").build();
 
@@ -194,7 +194,7 @@ class EmittedScopeParserTest {
 
   @Test
   void testGetScopeNoTelemetryDirectory(@TempDir Path tempDir) {
-    FileManager fileManager = new FileManager(tempDir.toString() + "/");
+    FileManager fileManager = new FileManager(tempDir);
     InstrumentationModule module =
         new InstrumentationModule.Builder("test-lib-1.0").srcPath("test-instrumentation").build();
 
@@ -222,7 +222,7 @@ class EmittedScopeParserTest {
 
     Files.writeString(telemetryDir.resolve("scope-abc123.yaml"), scopeContent);
 
-    FileManager fileManager = new FileManager(tempDir + "/");
+    FileManager fileManager = new FileManager(tempDir);
     InstrumentationModule module =
         new InstrumentationModule.Builder("test-lib-1.0").srcPath("test-instrumentation").build();
 
@@ -250,7 +250,7 @@ class EmittedScopeParserTest {
 
     Files.writeString(telemetryDir.resolve("scope-abc123.yaml"), scopeContent);
 
-    FileManager fileManager = new FileManager(tempDir + "/");
+    FileManager fileManager = new FileManager(tempDir);
     InstrumentationModule module =
         new InstrumentationModule.Builder("oshi-5.0").srcPath("test-instrumentation").build();
 
@@ -281,7 +281,7 @@ class EmittedScopeParserTest {
 
     Files.writeString(telemetryDir.resolve("scope-abc123.yaml"), scopeContent);
 
-    FileManager fileManager = new FileManager(tempDir + "/");
+    FileManager fileManager = new FileManager(tempDir);
     InstrumentationModule module =
         new InstrumentationModule.Builder("reactor-netty-0.9")
             .srcPath("test-instrumentation")
@@ -311,7 +311,7 @@ class EmittedScopeParserTest {
 
     Files.writeString(telemetryDir.resolve("scope-abc123.yaml"), scopeContent);
 
-    FileManager fileManager = new FileManager(tempDir + "/");
+    FileManager fileManager = new FileManager(tempDir);
     InstrumentationModule module =
         new InstrumentationModule.Builder("test-lib-1.0").srcPath("test-instrumentation").build();
 
@@ -344,7 +344,7 @@ class EmittedScopeParserTest {
 
     Files.writeString(telemetryDir.resolve("scope-multi.yaml"), scopeContent);
 
-    FileManager fileManager = new FileManager(tempDir + "/");
+    FileManager fileManager = new FileManager(tempDir);
     InstrumentationModule module =
         new InstrumentationModule.Builder("hibernate-6.0").srcPath("test-instrumentation").build();
 
@@ -374,7 +374,7 @@ class EmittedScopeParserTest {
 
     Files.writeString(telemetryDir.resolve("scope-with-attrs.yaml"), scopeContent);
 
-    FileManager fileManager = new FileManager(tempDir + "/");
+    FileManager fileManager = new FileManager(tempDir);
     InstrumentationModule module =
         new InstrumentationModule.Builder("jdbc").srcPath("test-instrumentation").build();
 
@@ -409,7 +409,7 @@ class EmittedScopeParserTest {
 
     Files.writeString(telemetryDir.resolve("scope-mixed-attrs.yaml"), scopeContent);
 
-    FileManager fileManager = new FileManager(tempDir + "/");
+    FileManager fileManager = new FileManager(tempDir);
     InstrumentationModule module =
         new InstrumentationModule.Builder("test-lib").srcPath("test-instrumentation").build();
 
@@ -454,7 +454,7 @@ class EmittedScopeParserTest {
     Files.writeString(telemetryDir.resolve("scope-2.yaml"), scopeContent2);
 
     Set<EmittedScope.Scope> scopes =
-        EmittedScopeParser.getScopesFromFiles(tempDir.toString(), "test-instrumentation");
+        EmittedScopeParser.getScopesFromFiles(tempDir, "test-instrumentation");
 
     assertThat(scopes).hasSize(1);
   }
@@ -489,7 +489,7 @@ class EmittedScopeParserTest {
     Files.writeString(telemetryDir.resolve("scope-2.yaml"), scopeContent2);
 
     Set<EmittedScope.Scope> scopes =
-        EmittedScopeParser.getScopesFromFiles(tempDir.toString(), "test-instrumentation");
+        EmittedScopeParser.getScopesFromFiles(tempDir, "test-instrumentation");
 
     assertThat(scopes).hasSize(2);
   }

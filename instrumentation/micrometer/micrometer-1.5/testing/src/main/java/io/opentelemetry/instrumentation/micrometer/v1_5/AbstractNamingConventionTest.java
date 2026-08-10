@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.AbstractCounterTest.INSTRUMENTATION_NAME;
+import static io.opentelemetry.instrumentation.micrometer.v1_5.MaxGaugeAssertions.assertMaxGauge;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -92,18 +93,18 @@ public abstract class AbstractNamingConventionTest {
                                 point ->
                                     point.hasAttributesSatisfyingExactly(
                                         equalTo(stringKey("test.tag"), "test.value")))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("test.renamedSummary.max")
-                    .hasDoubleGaugeSatisfying(
-                        gauge ->
-                            gauge.hasPointsSatisfying(
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("test.tag"), "test.value")))));
+    assertMaxGauge(
+        testing(),
+        "test.renamedSummary.max",
+        metric ->
+            metric
+                .hasName("test.renamedSummary.max")
+                .hasDoubleGaugeSatisfying(
+                    gauge ->
+                        gauge.hasPointsSatisfying(
+                            point ->
+                                point.hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("test.tag"), "test.value")))));
   }
 
   @Test
@@ -241,17 +242,17 @@ public abstract class AbstractNamingConventionTest {
                                 point ->
                                     point.hasAttributesSatisfyingExactly(
                                         equalTo(stringKey("test.tag"), "test.value")))));
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            metric ->
-                metric
-                    .hasName("test.renamedTimer.max")
-                    .hasDoubleGaugeSatisfying(
-                        gauge ->
-                            gauge.hasPointsSatisfying(
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("test.tag"), "test.value")))));
+    assertMaxGauge(
+        testing(),
+        "test.renamedTimer.max",
+        metric ->
+            metric
+                .hasName("test.renamedTimer.max")
+                .hasDoubleGaugeSatisfying(
+                    gauge ->
+                        gauge.hasPointsSatisfying(
+                            point ->
+                                point.hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("test.tag"), "test.value")))));
   }
 }

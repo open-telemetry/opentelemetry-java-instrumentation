@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -23,7 +24,13 @@ final class RabbitChannelAttributesGetter
   @Nullable
   @Override
   public String getDestination(ChannelAndMethod channelAndMethod) {
-    return null;
+    if (!channelAndMethod.isPublish()) {
+      return null;
+    }
+    return emitStableMessagingSemconv()
+        ? RabbitInstrumenterHelper.producerDestinationName(
+            channelAndMethod.getExchange(), channelAndMethod.getRoutingKey())
+        : RabbitInstrumenterHelper.normalizeExchangeName(channelAndMethod.getExchange());
   }
 
   @Nullable
@@ -39,7 +46,10 @@ final class RabbitChannelAttributesGetter
 
   @Override
   public boolean isAnonymousDestination(ChannelAndMethod channelAndMethod) {
-    return false;
+    return emitStableMessagingSemconv()
+        && channelAndMethod.isPublish()
+        && RabbitInstrumenterHelper.isDefaultExchange(channelAndMethod.getExchange())
+        && RabbitInstrumenterHelper.isGeneratedQueueName(channelAndMethod.getRoutingKey());
   }
 
   @Nullable
