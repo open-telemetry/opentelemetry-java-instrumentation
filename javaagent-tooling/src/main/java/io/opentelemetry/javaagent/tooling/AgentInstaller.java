@@ -105,8 +105,6 @@ public class AgentInstaller {
     }
   }
 
-  // Need to call deprecated API for backward compatibility with extensions that haven't migrated.
-  @SuppressWarnings("deprecation")
   private static void installBytebuddyAgent(
       Instrumentation inst,
       ClassLoader extensionClassLoader,
@@ -116,11 +114,7 @@ public class AgentInstaller {
     EmbeddedInstrumentationProperties.setPropertiesLoader(extensionClassLoader);
     setDefineClassHandler();
     FieldBackedImplementationConfiguration.configure();
-    // preload ThreadLocalRandom to avoid occasional
-    // java.lang.ClassCircularityError: java/util/concurrent/ThreadLocalRandom
-    // see https://github.com/raphw/byte-buddy/issues/1666 and
-    // https://bugs.openjdk.org/browse/JDK-8164165
-    ThreadLocalRandom.current();
+    preloadClasses();
 
     AgentBuilder agentBuilder =
         newAgentBuilder(
@@ -218,6 +212,25 @@ public class AgentInstaller {
     return config == null ? EmptyConfigProperties.INSTANCE : config;
   }
 
+  private static void preloadClasses() {
+    // preload ThreadLocalRandom to avoid occasional
+    // java.lang.ClassCircularityError: java/util/concurrent/ThreadLocalRandom
+    // see https://github.com/raphw/byte-buddy/issues/1666 and
+    // https://bugs.openjdk.org/browse/JDK-8164165
+    ThreadLocalRandom.current();
+
+    // preload the anonymous class used by MethodHandle.customize() to avoid
+    // java.lang.ClassCircularityError: java/lang/invoke/MethodHandle$1
+    // on jdk 17, which breaks all further invokedynamic call site linking in the jvm.
+    // MethodHandle.customize() only runs after a number of call sites have been linked, so linking
+    // a single call site here would not reliably trigger the load.
+    try {
+      Class.forName("java.lang.invoke.MethodHandle$1", false, null);
+    } catch (ClassNotFoundException ignored) {
+      // this class does not exist on all jdk versions
+    }
+  }
+
   private static AgentBuilder newAgentBuilder(ByteBuddy byteBuddy) {
     // AgentBuilder.Default constructor triggers sun.misc.Unsafe::objectFieldOffset called warning
     // AgentBuilder$Default.<init>
@@ -273,8 +286,6 @@ public class AgentInstaller {
     agentBuilder.installOn(instrumentation);
   }
 
-  // Need to call deprecated API for backward compatibility with extensions that haven't migrated.
-  @SuppressWarnings("deprecation")
   private static void setBootstrapPackages(
       ConfigProperties config, ClassLoader extensionClassLoader) {
     BootstrapPackagesBuilderImpl builder = new BootstrapPackagesBuilderImpl();
@@ -289,8 +300,6 @@ public class AgentInstaller {
     DefineClassHelper.internalSetHandler(DefineClassHandler.INSTANCE);
   }
 
-  // Need to call deprecated API for backward compatibility with extensions that haven't migrated.
-  @SuppressWarnings("deprecation")
   private static AgentBuilder configureIgnoredTypes(
       ConfigProperties config, ClassLoader extensionClassLoader, AgentBuilder agentBuilder) {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();

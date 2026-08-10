@@ -4,8 +4,4 @@ library_link: https://spring.io/projects/spring-amqp
 semantic_conventions:
   - MESSAGING_SPANS
 configurations:
-  - name: otel.instrumentation.messaging.experimental.capture-headers
-    declarative_name: java.common.messaging.capture_headers/development
-    description: A comma-separated list of header names to capture as span attributes.
-    type: list
-    default: ''
+  - ref: messaging.capture-headers

@@ -98,7 +98,8 @@ export HADOOP_IDENT_STRING=$USER
 export JAVA_AGENT_OPTS="-javaagent:/opentelemetry-instrumentation-javaagent.jar"
 export JAVA_AGENT_OPTS="$JAVA_AGENT_OPTS -Dotel.logs.exporter=none -Dotel.traces.exporter=none -Dotel.metrics.exporter=otlp"
 export JAVA_AGENT_OPTS="$JAVA_AGENT_OPTS -Dotel.exporter.otlp.endpoint=<<ENDPOINT_PLACEHOLDER>> -Dotel.exporter.otlp.protocol=grpc"
-export JAVA_AGENT_OPTS="$JAVA_AGENT_OPTS -Dotel.metric.export.interval=5s -Dotel.instrumentation.runtime-telemetry.enabled=false"
+export JAVA_AGENT_OPTS="$JAVA_AGENT_OPTS -Dotel.metric.export.interval=5s"
+export JAVA_AGENT_OPTS="$JAVA_AGENT_OPTS -Dotel.javaagent.experimental.initializer.jar=/opentelemetry-jmx-instrumentation.jar"
 export JAVA_AGENT_OPTS="$JAVA_AGENT_OPTS -Dotel.jmx.config=/hadoop.yaml"
 
 export HADOOP_NAMENODE_OPTS="$HADOOP_NAMENODE_OPTS $JAVA_AGENT_OPTS"
