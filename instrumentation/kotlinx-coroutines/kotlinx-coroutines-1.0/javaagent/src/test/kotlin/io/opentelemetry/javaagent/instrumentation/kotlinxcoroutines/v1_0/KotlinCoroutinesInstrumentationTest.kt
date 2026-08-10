@@ -438,6 +438,63 @@ class KotlinCoroutinesInstrumentationTest {
     delay(10)
   }
 
+  // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/12837
+  @Test
+  fun `WithSpan restores effective context after unannotated suspension`() {
+    Assumptions.assumeFalse(v3Preview())
+
+    val rootSpan = tracer.spanBuilder("root").startSpan()
+    runBlocking(Context.root().asContextElement()) {
+      withContext(TestContextElement(rootSpan.storeInContext(Context.root()))) {
+        annotatedIntermediate()
+        tracer.spanBuilder("after").startSpan().end()
+      }
+    }
+    rootSpan.end()
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          {
+            it.hasName("root")
+              .hasNoParent()
+          },
+          {
+            it.hasName("intermediate")
+              .hasParent(trace.getSpan(0))
+          },
+          {
+            it.hasName("leaf")
+              .hasParent(trace.getSpan(1))
+          },
+          {
+            it.hasName("leaf")
+              .hasParent(trace.getSpan(1))
+          },
+          {
+            it.hasName("after")
+              .hasParent(trace.getSpan(0))
+          },
+        )
+      },
+    )
+  }
+
+  @WithSpan("intermediate")
+  private suspend fun annotatedIntermediate() {
+    unannotatedIntermediate()
+  }
+
+  private suspend fun unannotatedIntermediate() {
+    annotatedLeaf()
+    annotatedLeaf()
+  }
+
+  @WithSpan("leaf")
+  private suspend fun annotatedLeaf() {
+    delay(10)
+  }
+
   // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/9312
   @Test
   fun `test class with default constructor argument`() {
