@@ -55,12 +55,7 @@ public final class GrpcTargetParser {
     }
 
     if ("unix".equals(scheme) || "unix-abstract".equals(scheme)) {
-      // unix://authority/path — the path (after authority) is the address
-      int slashIndex = rest.indexOf('/');
-      if (slashIndex != -1) {
-        return new ParsedTarget(rest.substring(slashIndex), null);
-      }
-      return new ParsedTarget(rest, null);
+      return parseUnixScheme(rest);
     }
 
     // Unknown scheme with "://" — use full target string as address, no port
@@ -86,7 +81,7 @@ public final class GrpcTargetParser {
     }
 
     if ("unix".equals(scheme) || "unix-abstract".equals(scheme)) {
-      return new ParsedTarget(rest, null);
+      return parseUnixScheme(rest);
     }
 
     // ipv4:, ipv6:, or other — full target as address
@@ -103,6 +98,14 @@ public final class GrpcTargetParser {
       endpoint = rest;
     }
     return parseHostPort(endpoint);
+  }
+
+  @Nullable
+  private static ParsedTarget parseUnixScheme(String rest) {
+    // unix://authority/path — the path (after authority) is the address
+    int slashIndex = rest.indexOf('/');
+    String endpoint = slashIndex != -1 ? rest.substring(slashIndex) : rest;
+    return endpoint.isEmpty() ? null : new ParsedTarget(endpoint, null);
   }
 
   @Nullable

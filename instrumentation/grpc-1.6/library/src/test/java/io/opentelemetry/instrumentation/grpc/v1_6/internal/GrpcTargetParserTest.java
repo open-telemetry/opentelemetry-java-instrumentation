@@ -76,10 +76,24 @@ class GrpcTargetParserTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"dns:", "dns:///", ":8080", ":", "[]:8080", "[]"})
+  @ValueSource(
+      strings = {
+        "dns:",
+        "dns:///",
+        "unix:",
+        "unix://",
+        "unix-abstract:",
+        "unix-abstract://",
+        ":8080",
+        ":",
+        "[]:8080",
+        "[]"
+      })
   void parseEmptyEndpointReturnsNull(String target) {
     // "dns:" -> empty after single-colon scheme
     // "dns:///" -> empty endpoint after authority slash
+    // "unix:" / "unix-abstract:" -> empty after single-colon scheme
+    // "unix://" / "unix-abstract://" -> empty endpoint after scheme
     // ":8080", ":" -> empty host before port
     // "[]:8080", "[]" -> empty host inside IPv6 brackets
     assertThat(GrpcTargetParser.parse(target)).isNull();
