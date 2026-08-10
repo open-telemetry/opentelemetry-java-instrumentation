@@ -90,6 +90,13 @@ will be removed in 3.0, use this order:
 4. Under `otel.instrumentation.common.v3-preview=true`, silently ignore the deprecated value. The
    user explicitly opted into 3.0 behavior, so warning about a value that is not applied is noise.
 
+Replacement-first lookup also supports warning-free rolling upgrades when many deployments share
+centralized configuration. Operators can temporarily publish both names: old versions use the
+deprecated property and ignore the replacement they do not recognize, while new versions use the
+replacement and do not warn about the redundant deprecated property. After every deployment has
+upgraded, operators can remove the deprecated property. A warning therefore identifies a deployment
+that still depends on the deprecated value, not one merely carrying it for compatibility.
+
 Keep the deprecated read itself inside the `!v3Preview` branch, rather than reading it eagerly and
 discarding it later:
 
@@ -107,21 +114,6 @@ if (!v3Preview) {
 }
 return defaultValue;
 ```
-
-Canonical implementations:
-
-- `instrumentation-api-incubator/src/main/java/io/opentelemetry/instrumentation/api/incubator/config/internal/DbConfig.java`
-- `instrumentation-api-incubator/src/main/java/io/opentelemetry/instrumentation/api/incubator/config/internal/CommonConfig.java`
-- `instrumentation/log4j/log4j-context-data/log4j-context-data-2.17/library-autoconfigure/src/main/java/io/opentelemetry/instrumentation/log4j/contextdata/v2_17/internal/ContextDataKeys.java`
-- `Configuration.getQuerySanitizationEnabled` in
-  `instrumentation/graphql-java/graphql-java-20.0/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/graphql/v20_0/GraphqlSingletons.java`
-
-Instrumentation-name aliases are a special case because their `.enabled` settings are resolved as
-one ordered list of equivalent instrumentation names, not as a single replacement property read
-followed by a deprecated fallback. When v3 preview is disabled, `DeprecatedInstrumentationNames`
-registers the current alias before the deprecated alias and warns whenever the deprecated alias is
-explicitly configured, even if the current alias takes precedence. Under v3 preview, it drops the
-deprecated alias and silently ignores the corresponding legacy key.
 
 ### Warning Text
 
@@ -146,19 +138,14 @@ otel.instrumentation.<old>.enabled is deprecated; use
 otel.instrumentation.<new>.enabled instead.
 ```
 
-Only cite a declarative path directly when the old key never had a flat-property equivalent, as in
-`DbConfig`.
+Only cite a declarative path directly when the old key never had a flat-property equivalent.
 
 ### Warning Deduplication
 
 - Use a static `ConcurrentHashMap.newKeySet()` keyed by deprecated property when a helper handles
-  multiple properties or can warn once per key. See `DbConfig`, `CommonConfig`, and
-  `ContextDataKeys`.
-- Use an `AtomicBoolean` for one deprecated property evaluated on a repeatable path. The same
-  one-warning concurrency pattern is used by
-  `instrumentation/log4j/log4j-appender-2.17/library/src/main/java/io/opentelemetry/instrumentation/log4j/appender/v2_17/OpenTelemetryAppender.java`.
-- Omit explicit deduplication only when initialization guarantees one evaluation, as in
-  `GraphqlSingletons` and `DeprecatedInstrumentationNames`.
+  multiple properties or can warn once per key.
+- Use an `AtomicBoolean` for one deprecated property evaluated on a repeatable path.
+- Omit explicit deduplication only when initialization guarantees one evaluation.
 
 ### CHANGELOG Categorization
 
@@ -166,10 +153,7 @@ The hand-written property deprecation entry belongs under `🚫 Deprecations`. I
 deprecated property under v3 preview is a separate behavior improvement, but normal enhancement
 entries are generated from pull request metadata rather than added by hand. When checking generated
 release notes, ensure the preview behavior appears under `📈 Enhancements` instead of being combined
-with the deprecation bullet. The
-[#18934 enhancement entry](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18934)
-in `CHANGELOG.md` is the precedent: it separately records that v3 preview ignores previously
-deprecated JDBC/database sanitization names.
+with the deprecation bullet.
 
 ## Migration Support Pattern (Optional)
 
@@ -243,6 +227,8 @@ These have no flat-property fallback, so tests must cover declarative config mod
   compatibility branch so 3.0 behavior does not observe the legacy setting.
 - **Warning emitted for a value ignored under v3 preview**: warn only when the deprecated value is
   actually applied; v3-preview users should get silent 3.0 behavior.
+- **Warning emitted when the replacement already determines the value**: do not warn merely because
+  shared configuration carries both names during a mixed-version rollout.
 - **Missing warning deduplication on a repeatable path**: use a per-key concurrent set for multiple
   properties or an `AtomicBoolean` for a single property.
 - **Generated release notes fold v3-preview behavior into the deprecation bullet**: keep the
