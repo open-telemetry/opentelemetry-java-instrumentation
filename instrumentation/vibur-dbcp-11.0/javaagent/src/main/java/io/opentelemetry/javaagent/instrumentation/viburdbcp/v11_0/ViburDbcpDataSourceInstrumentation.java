@@ -36,7 +36,11 @@ final class ViburDbcpDataSourceInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This ViburDBCPDataSource dataSource) {
-      telemetry().registerMetrics(dataSource);
+      String poolName = dataSource.getName();
+      if (!ViburSingletons.isDataSourceNameConfigured(dataSource)) {
+        poolName = ViburSingletons.getDataSourceName(dataSource);
+      }
+      telemetry().registerMetrics(dataSource, poolName);
     }
   }
 
