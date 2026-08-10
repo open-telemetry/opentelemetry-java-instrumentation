@@ -161,9 +161,11 @@ Only cite a declarative path directly when the old key never had a flat-property
 
 ### CHANGELOG Categorization
 
-The property deprecation belongs under `🚫 Deprecations`. Ignoring that deprecated property under
-v3 preview is a separate behavior improvement and belongs under `📈 Enhancements`; do not combine
-the preview behavior into the deprecation bullet. The
+The hand-written property deprecation entry belongs under `🚫 Deprecations`. Ignoring that
+deprecated property under v3 preview is a separate behavior improvement, but normal enhancement
+entries are generated from pull request metadata rather than added by hand. When checking generated
+release notes, ensure the preview behavior appears under `📈 Enhancements` instead of being combined
+with the deprecation bullet. The
 [#18934 enhancement entry](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18934)
 in `CHANGELOG.md` is the precedent: it separately records that v3 preview ignores previously
 deprecated JDBC/database sanitization names.
@@ -242,5 +244,6 @@ These have no flat-property fallback, so tests must cover declarative config mod
   actually applied; v3-preview users should get silent 3.0 behavior.
 - **Missing warning deduplication on a repeatable path**: use a per-key concurrent set for multiple
   properties or an `AtomicBoolean` for a single property.
-- **v3-preview behavior folded into the deprecation CHANGELOG bullet**: keep the deprecation under
-  `🚫 Deprecations` and add a separate `📈 Enhancements` bullet for ignoring it under v3 preview.
+- **Generated release notes fold v3-preview behavior into the deprecation bullet**: keep the
+  hand-written deprecation under `🚫 Deprecations` and verify that generated release notes classify
+  the preview behavior under `📈 Enhancements`; do not request a hand-written enhancement entry.
