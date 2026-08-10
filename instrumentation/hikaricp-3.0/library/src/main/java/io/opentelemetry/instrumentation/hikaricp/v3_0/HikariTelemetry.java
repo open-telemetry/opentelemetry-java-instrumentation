@@ -39,6 +39,16 @@ public final class HikariTelemetry {
    */
   public MetricsTrackerFactory createMetricsTrackerFactory(
       @Nullable MetricsTrackerFactory delegate) {
-    return new OpenTelemetryMetricsTrackerFactory(openTelemetry, delegate);
+    return new OpenTelemetryMetricsTrackerFactory(openTelemetry, delegate, null);
+  }
+
+  /**
+   * Returns a new {@link MetricsTrackerFactory} that uses {@code poolNameOverride} for
+   * OpenTelemetry metrics. Trackers created by the {@code delegate} metrics tracker factory will
+   * continue to use the pool name provided by HikariCP.
+   */
+  public MetricsTrackerFactory createMetricsTrackerFactory(
+      @Nullable MetricsTrackerFactory delegate, String poolNameOverride) {
+    return new OpenTelemetryMetricsTrackerFactory(openTelemetry, delegate, poolNameOverride);
   }
 }
