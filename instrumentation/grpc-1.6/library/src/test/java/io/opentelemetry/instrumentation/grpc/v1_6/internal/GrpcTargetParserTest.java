@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.grpc.v1_6.internal;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -77,6 +78,11 @@ class GrpcTargetParserTest {
   @NullAndEmptySource
   void parseNullOrEmpty(String target) {
     assertThat(GrpcTargetParser.parse(target)).isNull();
+  }
+
+  @Test
+  void parseSyntheticDirectAddressReturnsNull() {
+    assertThat(GrpcTargetParser.parse("directaddress:////localhost/127.0.0.1:443")).isNull();
   }
 
   @ParameterizedTest

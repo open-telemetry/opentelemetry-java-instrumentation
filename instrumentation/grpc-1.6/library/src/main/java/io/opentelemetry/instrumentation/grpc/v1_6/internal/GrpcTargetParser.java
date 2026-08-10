@@ -60,6 +60,10 @@ public final class GrpcTargetParser {
       return parseUnixScheme(rest);
     }
 
+    if ("directaddress".equals(scheme)) {
+      return null;
+    }
+
     // Unknown scheme with "://" — use full target string as address, no port
     return new ParsedTarget(target, null);
   }
