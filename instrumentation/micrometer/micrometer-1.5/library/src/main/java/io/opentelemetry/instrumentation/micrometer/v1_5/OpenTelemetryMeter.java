@@ -37,7 +37,7 @@ final class OpenTelemetryMeter extends AbstractMeter
     for (Measurement measurement : measurements) {
       String name =
           statisticInstrumentName(id, measurement.getStatistic(), namingConvention, v3Preview);
-      String description = Bridging.description(id);
+      String description = Bridging.description(name, id);
       String baseUnit = baseUnit(id);
       DoubleMeasurementRecorder<Measurement> callback =
           new DoubleMeasurementRecorder<>(measurement, Measurement::getValue, attributes);
