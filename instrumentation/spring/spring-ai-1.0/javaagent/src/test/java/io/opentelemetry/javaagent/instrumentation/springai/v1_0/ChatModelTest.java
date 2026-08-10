@@ -188,6 +188,17 @@ class ChatModelTest {
   }
 
   @Test
+  void synchronousStreamErrorEndsSpan() {
+    IllegalStateException error = new IllegalStateException("stream failed synchronously");
+    chatModel.setStreamFailure(error);
+
+    assertThatThrownBy(() -> testing.runWithSpan("parent", () -> chatModel.stream(prompt())))
+        .isSameAs(error);
+
+    assertErrorTrace(error);
+  }
+
+  @Test
   void streamCancellationEndsSpan() {
     chatModel.setStreamPublisher(Flux.never());
 

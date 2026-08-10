@@ -25,6 +25,7 @@ public class TestChatModel implements ChatModel {
   private SpanContext lastSpanContext;
   private final ChatOptions defaultOptions;
   private RuntimeException callFailure;
+  private RuntimeException streamFailure;
   private Flux<ChatResponse> streamPublisher;
 
   public TestChatModel() {
@@ -47,6 +48,9 @@ public class TestChatModel implements ChatModel {
 
   @Override
   public Flux<ChatResponse> stream(Prompt prompt) {
+    if (streamFailure != null) {
+      throw streamFailure;
+    }
     return Flux.defer(
         () -> {
           lastSpanContext = Span.current().getSpanContext();
@@ -69,6 +73,10 @@ public class TestChatModel implements ChatModel {
 
   public void setStreamPublisher(Flux<ChatResponse> streamPublisher) {
     this.streamPublisher = streamPublisher;
+  }
+
+  public void setStreamFailure(RuntimeException streamFailure) {
+    this.streamFailure = streamFailure;
   }
 
   private static ChatResponse response() {

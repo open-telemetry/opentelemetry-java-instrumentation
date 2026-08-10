@@ -109,12 +109,20 @@ class ChatModelInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class StreamAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
     public static Flux<ChatResponse> onExit(
         @Advice.This Object chatModel,
         @Advice.Argument(0) Prompt prompt,
-        @Advice.Return Flux<ChatResponse> publisher) {
+        @Advice.Return @Nullable Flux<ChatResponse> publisher,
+        @Advice.Thrown @Nullable Throwable throwable) {
+      if (throwable != null) {
+        CallAdvice.AdviceScope adviceScope = CallAdvice.AdviceScope.start(chatModel, prompt);
+        if (adviceScope != null) {
+          adviceScope.end(null, throwable);
+        }
+        return publisher;
+      }
       if (publisher == null) {
         return publisher;
       }
