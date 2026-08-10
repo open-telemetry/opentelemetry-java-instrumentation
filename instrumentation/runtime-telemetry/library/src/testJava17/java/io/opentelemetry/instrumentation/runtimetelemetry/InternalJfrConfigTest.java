@@ -36,7 +36,20 @@ class InternalJfrConfigTest {
   }
 
   @Test
-  void emptyPresentSelectorSelectsAll() {
+  void starPatternSelectsAll() {
+    TestConfig config = new TestConfig();
+    when(config.jfrMetrics.getScalarList("included", String.class)).thenReturn(singletonList("*"));
+
+    JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics = config.configureJfr();
+
+    assertThat(jfrRuntimeMetrics.getMetricNames())
+        .contains("jvm.class.count", "jvm.cpu.longlock", "jvm.memory.allocation");
+  }
+
+  // the declarative configuration schema requires at least one included pattern, so this only
+  // covers lenient handling of a selector that cannot be expressed by a valid configuration
+  @Test
+  void emptyIncludedListSelectsAll() {
     TestConfig config = new TestConfig();
     when(config.jfrMetrics.getScalarList("included", String.class)).thenReturn(emptyList());
 

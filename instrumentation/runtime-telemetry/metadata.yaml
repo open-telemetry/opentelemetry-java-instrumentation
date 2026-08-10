@@ -28,8 +28,8 @@ configurations:
     declarative_name: java.runtime_telemetry.jfr_metrics/development.included
     description: >
       Selects JVM runtime metrics to source from JFR on Java 17+. Supports exact names and glob
-      patterns with * and ?. Configuring either JFR metric selector property activates JFR. When
-      omitted, all metrics not excluded are included.
+      patterns with * and ?. Configuring either JFR metric selector property activates JFR. Use *
+      to select all metrics.
     type: list
     default: ""
     examples:
