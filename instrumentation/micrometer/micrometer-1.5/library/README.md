@@ -75,7 +75,8 @@ Notes:
 - The `<name>.max` gauge is deprecated and will be removed in 3.0. It is no longer emitted when
   `otel.instrumentation.common.v3-preview` is enabled.
 - For a custom `Meter`, each measurement's `Statistic` determines the instrument type, and the name
-  suffix is the statistic's Micrometer tag value. The naming convention is applied to the combined
+  suffix is the statistic's Micrometer tag value, except for `TOTAL_TIME`, which uses `total_time`
+  so that it does not clash with `TOTAL`. The naming convention is applied to the combined
   `<raw name>.<statistic>`, where `<raw name>` is the Micrometer meter name before the convention,
   so a custom `Meter` of type `COUNTER` named `my.meter` with the base unit `bytes` is emitted as
   `my.meter.count.bytes` in [Prometheus mode](#prometheus-mode).
