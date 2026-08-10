@@ -9,7 +9,7 @@ import apache.rocketmq.v2.ReceiveMessageRequest;
 import java.util.List;
 import org.apache.rocketmq.client.apis.message.MessageView;
 
-public class RocketMqReceiveRequest {
+class RocketMqReceiveRequest {
 
   private final ReceiveMessageRequest request;
   private final List<MessageView> messages;
@@ -19,8 +19,7 @@ public class RocketMqReceiveRequest {
     this.messages = messages;
   }
 
-  public static RocketMqReceiveRequest create(
-      ReceiveMessageRequest request, List<MessageView> messages) {
+  static RocketMqReceiveRequest create(ReceiveMessageRequest request, List<MessageView> messages) {
     return new RocketMqReceiveRequest(request, messages);
   }
 
