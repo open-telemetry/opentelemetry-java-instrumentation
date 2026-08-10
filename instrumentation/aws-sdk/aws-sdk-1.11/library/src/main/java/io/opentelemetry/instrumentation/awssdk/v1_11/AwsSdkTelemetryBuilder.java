@@ -21,6 +21,7 @@ public final class AwsSdkTelemetryBuilder {
   private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes;
   private boolean messagingReceiveTelemetryEnabled;
+  private boolean sqsMessageCreateSpansEnabled = true;
 
   AwsSdkTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -63,6 +64,19 @@ public final class AwsSdkTelemetryBuilder {
   }
 
   /**
+   * Sets whether a producer "Create" span is emitted for each entry in an SQS batch send.
+   *
+   * <p>This option only applies when the stable messaging semantic conventions are enabled. It is
+   * enabled by default.
+   */
+  @CanIgnoreReturnValue
+  public AwsSdkTelemetryBuilder setSqsMessageCreateSpansEnabled(
+      boolean sqsMessageCreateSpansEnabled) {
+    this.sqsMessageCreateSpansEnabled = sqsMessageCreateSpansEnabled;
+    return this;
+  }
+
+  /**
    * Returns a new {@link AwsSdkTelemetry} with the settings of this {@link AwsSdkTelemetryBuilder}.
    */
   public AwsSdkTelemetry build() {
@@ -70,6 +84,7 @@ public final class AwsSdkTelemetryBuilder {
         openTelemetry,
         capturedHeaders,
         captureExperimentalSpanAttributes,
-        messagingReceiveTelemetryEnabled);
+        messagingReceiveTelemetryEnabled,
+        sqsMessageCreateSpansEnabled);
   }
 }

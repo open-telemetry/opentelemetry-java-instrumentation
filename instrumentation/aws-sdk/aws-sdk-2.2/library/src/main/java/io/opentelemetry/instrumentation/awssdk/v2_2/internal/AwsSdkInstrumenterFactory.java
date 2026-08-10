@@ -20,6 +20,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
@@ -43,6 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
+import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 
@@ -55,6 +57,7 @@ public final class AwsSdkInstrumenterFactory {
 
   // messaging.operation.name values, named after the SQS API operations
   private static final String SEND_OPERATION_NAME = "send";
+  private static final String CREATE_OPERATION_NAME = "create";
   private static final String RECEIVE_OPERATION_NAME = "receive";
   private static final String PROCESS_OPERATION_NAME = "process";
 
@@ -95,6 +98,7 @@ public final class AwsSdkInstrumenterFactory {
   private final boolean captureExperimentalSpanAttributes;
   private final boolean messagingReceiveInstrumentationEnabled;
   private final boolean useXrayPropagator;
+  private final boolean sqsMessageCreateSpansEnabled;
 
   public AwsSdkInstrumenterFactory(
       OpenTelemetry openTelemetry,
@@ -102,13 +106,15 @@ public final class AwsSdkInstrumenterFactory {
       List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes,
       boolean messagingReceiveInstrumentationEnabled,
-      boolean useXrayPropagator) {
+      boolean useXrayPropagator,
+      boolean sqsMessageCreateSpansEnabled) {
     this.openTelemetry = openTelemetry;
     this.messagingPropagator = messagingPropagator;
     this.capturedHeaders = capturedHeaders;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
     this.useXrayPropagator = useXrayPropagator;
+    this.sqsMessageCreateSpansEnabled = sqsMessageCreateSpansEnabled;
   }
 
   public Instrumenter<ExecutionAttributes, Response> requestInstrumenter() {
@@ -209,7 +215,8 @@ public final class AwsSdkInstrumenterFactory {
                       parentContext,
                       request.getMessage(),
                       messagingPropagator,
-                      useXrayPropagator)));
+                      useXrayPropagator,
+                      sqsMessageCreateSpansEnabled)));
     }
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
@@ -251,11 +258,45 @@ public final class AwsSdkInstrumenterFactory {
     return createInstrumenter(
         openTelemetry,
         MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME),
-        SpanKindExtractor.alwaysProducer(),
+        request -> {
+          SdkRequest sdkRequest =
+              request.getAttribute(TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE);
+          return emitStableMessagingSemconv()
+                  && sqsMessageCreateSpansEnabled
+                  && SqsAccess.isBatchRequest(sdkRequest)
+              ? SpanKind.CLIENT
+              : SpanKind.PRODUCER;
+        },
         attributesExtractors(),
         singletonList(messagingAttributeExtractor),
-        builder -> setMessagingSendExceptionEventExtractor(builder),
+        builder -> {
+          setMessagingSendExceptionEventExtractor(builder);
+          if (emitStableMessagingSemconv() && sqsMessageCreateSpansEnabled) {
+            builder.addSpanLinksExtractor(
+                (spanLinks, parentContext, request) -> {
+                  for (Context creationContext :
+                      TracingExecutionInterceptor.getBatchMessageContexts(request)) {
+                    SpanContext spanContext = Span.fromContext(creationContext).getSpanContext();
+                    if (spanContext.isValid()) {
+                      spanLinks.addLink(spanContext);
+                    }
+                  }
+                });
+          }
+        },
         true);
+  }
+
+  public Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter() {
+    MessagingOperationType operationType = MessagingOperationType.CREATE;
+    SqsCreateRequestAttributesGetter getter = new SqsCreateRequestAttributesGetter();
+    return Instrumenter.<SqsCreateRequest, Void>builder(
+            openTelemetry,
+            INSTRUMENTATION_NAME,
+            MessagingSpanNameExtractor.create(getter, operationType, CREATE_OPERATION_NAME))
+        .addAttributesExtractor(
+            messagingAttributesExtractor(getter, operationType, CREATE_OPERATION_NAME))
+        .buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
   public Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter() {

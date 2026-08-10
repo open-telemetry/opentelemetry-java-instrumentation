@@ -67,6 +67,14 @@ public final class AwsSdkTelemetryFactory {
                 systemProperties.getBoolean(
                     "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging",
                     false)))
+        .setSqsMessageCreateSpansEnabled(
+            awsSdk
+                .get("experimental_sqs_message_create_spans/development")
+                .getBoolean(
+                    "enabled",
+                    systemProperties.getBoolean(
+                        "otel.instrumentation.aws-sdk.experimental-sqs-message-create-spans.enabled",
+                        true)))
         .setRecordIndividualHttpError(
             awsSdk.getBoolean(
                 "record_individual_http_error/development",

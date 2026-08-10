@@ -5,8 +5,11 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import io.opentelemetry.api.trace.SpanKind;
 import java.net.URISyntaxException;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
@@ -44,5 +47,39 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
     assertThat(response.messages()).hasSize(1);
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
     assertSqsTraces(false, false);
+  }
+
+  @Test
+  void testDisableSqsMessageCreateSpans() {
+    assumeTrue(emitStableMessagingSemconv());
+    AwsSdkTelemetry disabledTelemetry =
+        AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
+            .setCaptureExperimentalSpanAttributes(true)
+            .setSqsMessageCreateSpansEnabled(false)
+            .build();
+    SqsClientBuilder builder = SqsClient.builder();
+    configureSdkClient(builder);
+    builder.overrideConfiguration(
+        ClientOverrideConfiguration.builder()
+            .addExecutionInterceptor(disabledTelemetry.createExecutionInterceptor())
+            .build());
+
+    try (SqsClient client = disabledTelemetry.wrap(builder.build())) {
+      client.createQueue(createQueueRequest);
+      client.sendMessageBatch(sendMessageBatchRequest);
+
+      getTesting()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("Sqs.CreateQueue").hasKind(SpanKind.CLIENT)),
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("send testSdkSqs")
+                              .hasKind(SpanKind.PRODUCER)
+                              .hasNoParent()
+                              .hasTotalRecordedLinks(0)));
+    }
   }
 }

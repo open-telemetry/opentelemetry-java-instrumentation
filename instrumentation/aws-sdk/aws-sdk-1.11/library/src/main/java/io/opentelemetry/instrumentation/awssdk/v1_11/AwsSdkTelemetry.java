@@ -12,6 +12,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.awssdk.v1_11.internal.AwsSdkInstrumenterFactory;
+import io.opentelemetry.instrumentation.awssdk.v1_11.internal.SqsCreateRequest;
 import io.opentelemetry.instrumentation.awssdk.v1_11.internal.SqsProcessRequest;
 import io.opentelemetry.instrumentation.awssdk.v1_11.internal.SqsReceiveRequest;
 import io.opentelemetry.instrumentation.awssdk.v1_11.internal.TracingRequestHandler;
@@ -31,8 +32,10 @@ public final class AwsSdkTelemetry {
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
   private final Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter;
+  private final Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter;
+  private final boolean sqsMessageCreateSpansEnabled;
 
   /** Returns a new {@link AwsSdkTelemetry} configured with the given {@link OpenTelemetry}. */
   public static AwsSdkTelemetry create(OpenTelemetry openTelemetry) {
@@ -50,18 +53,22 @@ public final class AwsSdkTelemetry {
       OpenTelemetry openTelemetry,
       List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes,
-      boolean messagingReceiveInstrumentationEnabled) {
+      boolean messagingReceiveInstrumentationEnabled,
+      boolean sqsMessageCreateSpansEnabled) {
     AwsSdkInstrumenterFactory instrumenterFactory =
         new AwsSdkInstrumenterFactory(
             openTelemetry,
             capturedHeaders,
             captureExperimentalSpanAttributes,
-            messagingReceiveInstrumentationEnabled);
+            messagingReceiveInstrumentationEnabled,
+            sqsMessageCreateSpansEnabled);
     requestInstrumenter = instrumenterFactory.requestInstrumenter();
     consumerReceiveInstrumenter = instrumenterFactory.consumerReceiveInstrumenter();
     consumerProcessInstrumenter = instrumenterFactory.consumerProcessInstrumenter();
+    producerCreateInstrumenter = instrumenterFactory.producerCreateInstrumenter();
     producerInstrumenter = instrumenterFactory.producerInstrumenter();
     dynamoDbInstrumenter = instrumenterFactory.dynamoDbInstrumenter();
+    this.sqsMessageCreateSpansEnabled = sqsMessageCreateSpansEnabled;
   }
 
   /**
@@ -73,8 +80,10 @@ public final class AwsSdkTelemetry {
         requestInstrumenter,
         consumerReceiveInstrumenter,
         consumerProcessInstrumenter,
+        producerCreateInstrumenter,
         producerInstrumenter,
-        dynamoDbInstrumenter);
+        dynamoDbInstrumenter,
+        sqsMessageCreateSpansEnabled);
   }
 
   /**

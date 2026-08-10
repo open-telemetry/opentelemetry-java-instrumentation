@@ -9,8 +9,10 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
@@ -20,8 +22,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
@@ -146,20 +150,83 @@ public final class SqsImpl {
       SdkRequest request,
       io.opentelemetry.context.Context otelContext,
       boolean useXrayPropagator,
-      TextMapPropagator messagingPropagator) {
+      TextMapPropagator messagingPropagator,
+      boolean sqsMessageCreateSpansEnabled) {
     if (request instanceof ReceiveMessageRequest) {
       return modifyReceiveMessageRequest(
-          (ReceiveMessageRequest) request, useXrayPropagator, messagingPropagator);
+          (ReceiveMessageRequest) request,
+          useXrayPropagator,
+          messagingPropagator,
+          sqsMessageCreateSpansEnabled);
     } else if (messagingPropagator != null) {
       if (request instanceof SendMessageRequest) {
         return injectIntoSendMessageRequest(
             (SendMessageRequest) request, otelContext, messagingPropagator);
       } else if (request instanceof SendMessageBatchRequest) {
+        if (emitStableMessagingSemconv() && sqsMessageCreateSpansEnabled) {
+          return request;
+        }
         return injectIntoSendMessageBatchRequest(
             (SendMessageBatchRequest) request, otelContext, messagingPropagator);
       }
     }
     return null;
+  }
+
+  @Nullable
+  static SdkRequest prepareBatchRequest(
+      SdkRequest request,
+      ExecutionAttributes executionAttributes,
+      io.opentelemetry.context.Context parentContext,
+      Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter,
+      boolean useXrayPropagator,
+      TextMapPropagator messagingPropagator) {
+    if (!(request instanceof SendMessageBatchRequest)) {
+      return null;
+    }
+
+    SendMessageBatchRequest batchRequest = (SendMessageBatchRequest) request;
+    ArrayList<SendMessageBatchRequestEntry> entries = new ArrayList<>(batchRequest.entries());
+    List<io.opentelemetry.context.Context> creationContexts = new ArrayList<>();
+    io.opentelemetry.context.Context creationParentContext = parentContext.with(Span.getInvalid());
+
+    for (int i = 0; i < entries.size(); i++) {
+      SendMessageBatchRequestEntry entry = entries.get(i);
+      Map<String, MessageAttributeValue> messageAttributes = entry.messageAttributes();
+      SqsCreateRequest createRequest =
+          new SqsCreateRequest(batchRequest.queueUrl(), toStringMap(messageAttributes));
+      if (!producerCreateInstrumenter.shouldStart(creationParentContext, createRequest)) {
+        continue;
+      }
+
+      io.opentelemetry.context.Context creationContext =
+          producerCreateInstrumenter.start(creationParentContext, createRequest);
+      creationContexts.add(creationContext);
+      Map<String, MessageAttributeValue> updatedAttributes = new HashMap<>(messageAttributes);
+      if (useXrayPropagator) {
+        injectIntoMessageAttributesIfCapacity(
+            updatedAttributes, creationContext, AwsXrayPropagator.getInstance());
+      }
+      if (messagingPropagator != null) {
+        injectIntoMessageAttributesIfCapacity(
+            updatedAttributes, creationContext, messagingPropagator);
+      }
+      entries.set(i, entry.toBuilder().messageAttributes(updatedAttributes).build());
+      producerCreateInstrumenter.end(creationContext, createRequest, null, null);
+    }
+    TracingExecutionInterceptor.setBatchMessageContexts(executionAttributes, creationContexts);
+    return batchRequest.toBuilder().entries(entries).build();
+  }
+
+  private static void injectIntoMessageAttributesIfCapacity(
+      Map<String, MessageAttributeValue> messageAttributes,
+      io.opentelemetry.context.Context otelContext,
+      TextMapPropagator messagingPropagator) {
+    Map<String, MessageAttributeValue> candidate = new HashMap<>(messageAttributes);
+    if (injectIntoMessageAttributes(candidate, otelContext, messagingPropagator)) {
+      messageAttributes.clear();
+      messageAttributes.putAll(candidate);
+    }
   }
 
   private static SdkRequest injectIntoSendMessageBatchRequest(
@@ -172,10 +239,6 @@ public final class SqsImpl {
       Map<String, MessageAttributeValue> messageAttributes =
           new HashMap<>(entry.messageAttributes());
 
-      // TODO: Per https://github.com/open-telemetry/oteps/pull/220, each message should get
-      //  a separate context. We don't support this yet, also because it would be inconsistent
-      //  with the header-based X-Ray propagation
-      //  (probably could override it here by setting the X-Ray message system attribute)
       if (injectIntoMessageAttributes(messageAttributes, otelContext, messagingPropagator)) {
         entries.set(i, entry.toBuilder().messageAttributes(messageAttributes).build());
       }
@@ -215,7 +278,8 @@ public final class SqsImpl {
   private static SdkRequest modifyReceiveMessageRequest(
       ReceiveMessageRequest request,
       boolean useXrayPropagator,
-      TextMapPropagator messagingPropagator) {
+      TextMapPropagator messagingPropagator,
+      boolean sqsMessageCreateSpansEnabled) {
     boolean hasXrayAttribute = true;
     List<String> existingAttributeNames = null;
     if (useXrayPropagator) {
@@ -224,12 +288,16 @@ public final class SqsImpl {
           existingAttributeNames.contains(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
     }
 
-    boolean hasMessageAttribute = true;
-    List<String> existingMessageAttributeNames = null;
+    List<String> existingMessageAttributeNames = request.messageAttributeNames();
+    Set<String> requiredMessageAttributeNames = new HashSet<>();
     if (messagingPropagator != null) {
-      existingMessageAttributeNames = request.messageAttributeNames();
-      hasMessageAttribute = existingMessageAttributeNames.containsAll(messagingPropagator.fields());
+      requiredMessageAttributeNames.addAll(messagingPropagator.fields());
     }
+    if (useXrayPropagator && emitStableMessagingSemconv() && sqsMessageCreateSpansEnabled) {
+      requiredMessageAttributeNames.add(SqsParentContext.AWS_TRACE_MESSAGE_ATTRIBUTE);
+    }
+    boolean hasMessageAttribute =
+        existingMessageAttributeNames.containsAll(requiredMessageAttributeNames);
 
     if (hasMessageAttribute && hasXrayAttribute) {
       return request;
@@ -241,9 +309,9 @@ public final class SqsImpl {
       attributeNames.add(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
       builder.attributeNamesWithStrings(attributeNames);
     }
-    if (messagingPropagator != null) {
+    if (!hasMessageAttribute) {
       List<String> messageAttributeNames = new ArrayList<>(existingMessageAttributeNames);
-      for (String field : messagingPropagator.fields()) {
+      for (String field : requiredMessageAttributeNames) {
         if (!existingMessageAttributeNames.contains(field)) {
           messageAttributeNames.add(field);
         }
@@ -255,6 +323,17 @@ public final class SqsImpl {
 
   static boolean isSqsProducerRequest(SdkRequest request) {
     return request instanceof SendMessageRequest || request instanceof SendMessageBatchRequest;
+  }
+
+  static boolean isBatchRequest(SdkRequest request) {
+    return request instanceof SendMessageBatchRequest;
+  }
+
+  private static Map<String, String> toStringMap(
+      Map<String, MessageAttributeValue> messageAttributes) {
+    Map<String, String> result = new HashMap<>();
+    messageAttributes.forEach((key, value) -> result.put(key, value.stringValue()));
+    return result;
   }
 
   static String getQueueUrl(SdkRequest request) {

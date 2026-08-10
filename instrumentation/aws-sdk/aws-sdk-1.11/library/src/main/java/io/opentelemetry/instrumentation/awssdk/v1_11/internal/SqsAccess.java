@@ -5,12 +5,16 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
+import static java.util.Collections.emptyList;
+
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import java.util.List;
 import javax.annotation.Nullable;
 
 final class SqsAccess {
@@ -28,8 +32,24 @@ final class SqsAccess {
   }
 
   @NoMuzzle
-  static boolean beforeMarshalling(AmazonWebServiceRequest request) {
-    return enabled && SqsImpl.beforeMarshalling(request);
+  static AmazonWebServiceRequest beforeMarshalling(
+      AmazonWebServiceRequest request,
+      Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter,
+      boolean sqsMessageCreateSpansEnabled) {
+    return enabled
+        ? SqsImpl.beforeMarshalling(
+            request, producerCreateInstrumenter, sqsMessageCreateSpansEnabled)
+        : request;
+  }
+
+  @NoMuzzle
+  static boolean isBatchRequest(Request<?> request) {
+    return enabled && SqsImpl.isBatchRequest(request);
+  }
+
+  @NoMuzzle
+  static List<Context> getBatchMessageContexts(Request<?> request) {
+    return enabled ? SqsImpl.getBatchMessageContexts(request) : emptyList();
   }
 
   @NoMuzzle

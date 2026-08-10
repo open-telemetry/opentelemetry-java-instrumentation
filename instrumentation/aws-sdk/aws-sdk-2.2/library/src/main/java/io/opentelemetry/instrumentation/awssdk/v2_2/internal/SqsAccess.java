@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import javax.annotation.Nullable;
@@ -41,15 +42,46 @@ final class SqsAccess {
       SdkRequest request,
       io.opentelemetry.context.Context otelContext,
       boolean useXrayPropagator,
+      TextMapPropagator messagingPropagator,
+      boolean sqsMessageCreateSpansEnabled) {
+    return enabled
+        ? SqsImpl.modifyRequest(
+            request,
+            otelContext,
+            useXrayPropagator,
+            messagingPropagator,
+            sqsMessageCreateSpansEnabled)
+        : null;
+  }
+
+  @Nullable
+  @NoMuzzle
+  static SdkRequest prepareBatchRequest(
+      SdkRequest request,
+      ExecutionAttributes executionAttributes,
+      io.opentelemetry.context.Context parentContext,
+      Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter,
+      boolean useXrayPropagator,
       TextMapPropagator messagingPropagator) {
     return enabled
-        ? SqsImpl.modifyRequest(request, otelContext, useXrayPropagator, messagingPropagator)
+        ? SqsImpl.prepareBatchRequest(
+            request,
+            executionAttributes,
+            parentContext,
+            producerCreateInstrumenter,
+            useXrayPropagator,
+            messagingPropagator)
         : null;
   }
 
   @NoMuzzle
   static boolean isSqsProducerRequest(SdkRequest request) {
     return enabled && SqsImpl.isSqsProducerRequest(request);
+  }
+
+  @NoMuzzle
+  static boolean isBatchRequest(SdkRequest request) {
+    return enabled && SqsImpl.isBatchRequest(request);
   }
 
   @NoMuzzle

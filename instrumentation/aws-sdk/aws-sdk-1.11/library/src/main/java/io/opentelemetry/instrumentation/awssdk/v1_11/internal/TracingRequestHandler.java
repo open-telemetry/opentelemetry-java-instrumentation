@@ -45,20 +45,26 @@ public final class TracingRequestHandler extends RequestHandler2 {
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
   private final Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter;
+  private final Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter;
+  private final boolean sqsMessageCreateSpansEnabled;
 
   public TracingRequestHandler(
       Instrumenter<Request<?>, Response<?>> requestInstrumenter,
       Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter,
       Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter,
+      Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter,
       Instrumenter<Request<?>, Response<?>> producerInstrumenter,
-      Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter) {
+      Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter,
+      boolean sqsMessageCreateSpansEnabled) {
     this.requestInstrumenter = requestInstrumenter;
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
+    this.producerCreateInstrumenter = producerCreateInstrumenter;
     this.producerInstrumenter = producerInstrumenter;
     this.dynamoDbInstrumenter = dynamoDbInstrumenter;
+    this.sqsMessageCreateSpansEnabled = sqsMessageCreateSpansEnabled;
   }
 
   @Override
@@ -105,10 +111,8 @@ public final class TracingRequestHandler extends RequestHandler2 {
   @Override
   @CanIgnoreReturnValue
   public AmazonWebServiceRequest beforeMarshalling(AmazonWebServiceRequest request) {
-    // TODO: We are modifying the request in-place instead of using clone() as recommended
-    //  by the Javadoc in the interface.
-    SqsAccess.beforeMarshalling(request);
-    return request;
+    return SqsAccess.beforeMarshalling(
+        request, producerCreateInstrumenter, sqsMessageCreateSpansEnabled);
   }
 
   Instrumenter<SqsReceiveRequest, Response<?>> getConsumerReceiveInstrumenter() {
@@ -117,6 +121,10 @@ public final class TracingRequestHandler extends RequestHandler2 {
 
   Instrumenter<SqsProcessRequest, Response<?>> getConsumerProcessInstrumenter() {
     return consumerProcessInstrumenter;
+  }
+
+  boolean isSqsMessageCreateSpansEnabled() {
+    return sqsMessageCreateSpansEnabled;
   }
 
   @Override
