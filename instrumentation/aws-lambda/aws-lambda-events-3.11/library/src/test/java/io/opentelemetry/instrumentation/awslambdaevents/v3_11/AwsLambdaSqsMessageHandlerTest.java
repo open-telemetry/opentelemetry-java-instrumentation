@@ -72,12 +72,14 @@ class AwsLambdaSqsMessageHandlerTest {
     SQSEvent.SQSMessage message1 = newMessage();
     message1.setAttributes(singletonMap("AWSTraceHeader", AWS_TRACE_HEADER1));
     message1.setMessageId("message1");
-    message1.setEventSource("queue1");
+    message1.setEventSource("aws:sqs");
+    message1.setEventSourceArn("arn:aws:sqs:us-east-2:123456789012:queue1");
 
     SQSEvent.SQSMessage message2 = newMessage();
     message2.setAttributes(singletonMap("AWSTraceHeader", AWS_TRACE_HEADER2));
     message2.setMessageId("message2");
-    message2.setEventSource("queue1");
+    message2.setEventSource("aws:sqs");
+    message2.setEventSourceArn("arn:aws:sqs:us-east-2:123456789012:queue1");
 
     SQSEvent event = new SQSEvent();
     event.setRecords(asList(message1, message2));
@@ -95,7 +97,8 @@ class AwsLambdaSqsMessageHandlerTest {
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                 span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process queue1" : "queue1 process")
+                    span.hasName(
+                            emitStableMessagingSemconv() ? "process queue1" : "aws:sqs process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParentSpanId(trace.getSpan(0).getSpanId())
                         .hasAttributesSatisfyingExactly(
@@ -128,7 +131,8 @@ class AwsLambdaSqsMessageHandlerTest {
                                     TraceFlags.getSampled(),
                                     TraceState.getDefault()))),
                 span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process queue1" : "queue1 process")
+                    span.hasName(
+                            emitStableMessagingSemconv() ? "process queue1" : "aws:sqs process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
                         .hasAttributesSatisfyingExactly(
@@ -142,7 +146,9 @@ class AwsLambdaSqsMessageHandlerTest {
                                 MESSAGING_OPERATION_TYPE,
                                 emitStableMessagingSemconv() ? "process" : null),
                             equalTo(MESSAGING_MESSAGE_ID, "message1"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "queue1"))
+                            equalTo(
+                                MESSAGING_DESTINATION_NAME,
+                                emitStableMessagingSemconv() ? "queue1" : "aws:sqs"))
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
@@ -151,7 +157,8 @@ class AwsLambdaSqsMessageHandlerTest {
                                     TraceFlags.getSampled(),
                                     TraceState.getDefault()))),
                 span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process queue1" : "queue1 process")
+                    span.hasName(
+                            emitStableMessagingSemconv() ? "process queue1" : "aws:sqs process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
                         .hasAttributesSatisfyingExactly(
@@ -165,7 +172,9 @@ class AwsLambdaSqsMessageHandlerTest {
                                 MESSAGING_OPERATION_TYPE,
                                 emitStableMessagingSemconv() ? "process" : null),
                             equalTo(MESSAGING_MESSAGE_ID, "message2"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "queue1"))
+                            equalTo(
+                                MESSAGING_DESTINATION_NAME,
+                                emitStableMessagingSemconv() ? "queue1" : "aws:sqs"))
                         .hasLinks(
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(

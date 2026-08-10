@@ -71,7 +71,8 @@ class AwsLambdaSqsEventWrapperTest {
   void eventTraced() {
     SQSEvent event = new SQSEvent();
     SQSEvent.SQSMessage record = newMessage();
-    record.setEventSource("otel");
+    record.setEventSource("aws:sqs");
+    record.setEventSourceArn("arn:aws:sqs:us-east-2:123456789012:otel");
     record.setAttributes(emptyMap());
     event.setRecords(singletonList(record));
 
@@ -93,7 +94,7 @@ class AwsLambdaSqsEventWrapperTest {
                             equalTo(CLOUD_ACCOUNT_ID, "123456789"),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                 span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process otel" : "otel process")
+                    span.hasName(emitStableMessagingSemconv() ? "process otel" : "aws:sqs process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),

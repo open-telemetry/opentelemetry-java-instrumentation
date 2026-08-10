@@ -64,12 +64,14 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
     SQSEvent.SQSMessage message1 = newMessage();
     message1.setAttributes(singletonMap("AWSTraceHeader", AWS_TRACE_HEADER));
     message1.setMessageId("message1");
-    message1.setEventSource("queue1");
+    message1.setEventSource("aws:sqs");
+    message1.setEventSourceArn("arn:aws:sqs:us-east-2:123456789012:queue1");
 
     SQSEvent.SQSMessage message2 = newMessage();
     message2.setAttributes(emptyMap());
     message2.setMessageId("message2");
-    message2.setEventSource("queue1");
+    message2.setEventSource("aws:sqs");
+    message2.setEventSourceArn("arn:aws:sqs:us-east-2:123456789012:queue1");
 
     SQSEvent event = new SQSEvent();
     event.setRecords(asList(message1, message2));
@@ -87,7 +89,7 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                                 equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                     span ->
                         span.hasName(
-                                emitStableMessagingSemconv() ? "process queue1" : "queue1 process")
+                                emitStableMessagingSemconv() ? "process queue1" : "aws:sqs process")
                             .hasKind(SpanKind.CONSUMER)
                             .hasParentSpanId(trace.getSpan(0).getSpanId())
                             .hasAttributesSatisfyingExactly(
@@ -125,12 +127,14 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
     SQSEvent.SQSMessage message1 = newMessage();
     message1.setAttributes(singletonMap("AWSTraceHeader", AWS_TRACE_HEADER));
     message1.setMessageId("message1");
-    message1.setEventSource("queue1");
+    message1.setEventSource("aws:sqs");
+    message1.setEventSourceArn("arn:aws:sqs:us-east-2:123456789012:queue1");
 
     SQSEvent.SQSMessage message2 = newMessage();
     message2.setAttributes(emptyMap());
     message2.setMessageId("message2");
-    message2.setEventSource("queue2");
+    message2.setEventSource("aws:sqs");
+    message2.setEventSourceArn("arn:aws:sqs:us-east-2:123456789012:queue2");
 
     SQSEvent event = new SQSEvent();
     event.setRecords(asList(message1, message2));
@@ -150,7 +154,7 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                         span.hasName(
                                 emitStableMessagingSemconv()
                                     ? "process multiple_sources"
-                                    : "multiple_sources process")
+                                    : "aws:sqs process")
                             .hasKind(SpanKind.CONSUMER)
                             .hasParentSpanId(trace.getSpan(0).getSpanId())
                             .hasAttributesSatisfyingExactly(
