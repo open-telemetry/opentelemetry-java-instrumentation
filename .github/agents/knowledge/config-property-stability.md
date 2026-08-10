@@ -153,6 +153,9 @@ mdc_attributes:
   included: ["*"]
 ```
 
+Treat a selector with no patterns in either list as absent rather than as select-all, so invalid
+configuration fails safe instead of capturing everything.
+
 For an all-by-default setting, the selector filters telemetry that is already emitted. An absent
 selector keeps everything, an omitted `included` list keeps everything not excluded, and
 exclude-only is the natural shape.
