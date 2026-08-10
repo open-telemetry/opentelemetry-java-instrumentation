@@ -31,6 +31,10 @@ import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.ChangeMessageVisibilityBatchRequest;
+import software.amazon.awssdk.services.sqs.model.ChangeMessageVisibilityRequest;
+import software.amazon.awssdk.services.sqs.model.DeleteMessageBatchRequest;
+import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
@@ -257,6 +261,15 @@ public final class SqsImpl {
     return request instanceof SendMessageRequest || request instanceof SendMessageBatchRequest;
   }
 
+  static boolean isSqsDeleteRequest(SdkRequest request) {
+    return request instanceof DeleteMessageRequest || request instanceof DeleteMessageBatchRequest;
+  }
+
+  static boolean isSqsChangeVisibilityRequest(SdkRequest request) {
+    return request instanceof ChangeMessageVisibilityRequest
+        || request instanceof ChangeMessageVisibilityBatchRequest;
+  }
+
   static String getQueueUrl(SdkRequest request) {
     if (request instanceof SendMessageRequest) {
       return ((SendMessageRequest) request).queueUrl();
@@ -264,6 +277,14 @@ public final class SqsImpl {
       return ((SendMessageBatchRequest) request).queueUrl();
     } else if (request instanceof ReceiveMessageRequest) {
       return ((ReceiveMessageRequest) request).queueUrl();
+    } else if (request instanceof DeleteMessageRequest) {
+      return ((DeleteMessageRequest) request).queueUrl();
+    } else if (request instanceof DeleteMessageBatchRequest) {
+      return ((DeleteMessageBatchRequest) request).queueUrl();
+    } else if (request instanceof ChangeMessageVisibilityRequest) {
+      return ((ChangeMessageVisibilityRequest) request).queueUrl();
+    } else if (request instanceof ChangeMessageVisibilityBatchRequest) {
+      return ((ChangeMessageVisibilityBatchRequest) request).queueUrl();
     }
     return null;
   }
@@ -272,6 +293,10 @@ public final class SqsImpl {
   static Long getBatchMessageCount(SdkRequest request) {
     if (request instanceof SendMessageBatchRequest) {
       return (long) ((SendMessageBatchRequest) request).entries().size();
+    } else if (request instanceof DeleteMessageBatchRequest) {
+      return (long) ((DeleteMessageBatchRequest) request).entries().size();
+    } else if (request instanceof ChangeMessageVisibilityBatchRequest) {
+      return (long) ((ChangeMessageVisibilityBatchRequest) request).entries().size();
     }
     return null;
   }

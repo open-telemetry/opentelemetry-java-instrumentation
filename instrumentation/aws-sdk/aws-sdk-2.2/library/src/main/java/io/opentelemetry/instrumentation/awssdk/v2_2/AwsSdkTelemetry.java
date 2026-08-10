@@ -52,6 +52,8 @@ public class AwsSdkTelemetry {
   private final Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> settleInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> changeVisibilityInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter;
   private final Logger eventLogger;
@@ -99,6 +101,8 @@ public class AwsSdkTelemetry {
     this.consumerReceiveInstrumenter = instrumenterFactory.consumerReceiveInstrumenter();
     this.consumerProcessInstrumenter = instrumenterFactory.consumerProcessInstrumenter();
     this.producerInstrumenter = instrumenterFactory.producerInstrumenter();
+    this.settleInstrumenter = instrumenterFactory.settleInstrumenter();
+    this.changeVisibilityInstrumenter = instrumenterFactory.changeVisibilityInstrumenter();
     this.dynamoDbInstrumenter = instrumenterFactory.dynamoDbInstrumenter();
     this.bedrockRuntimeInstrumenter = instrumenterFactory.bedrockRuntimeInstrumenter();
     this.eventLogger = instrumenterFactory.eventLogger();
@@ -117,6 +121,8 @@ public class AwsSdkTelemetry {
         consumerReceiveInstrumenter,
         consumerProcessInstrumenter,
         producerInstrumenter,
+        settleInstrumenter,
+        changeVisibilityInstrumenter,
         dynamoDbInstrumenter,
         bedrockRuntimeInstrumenter,
         eventLogger,
