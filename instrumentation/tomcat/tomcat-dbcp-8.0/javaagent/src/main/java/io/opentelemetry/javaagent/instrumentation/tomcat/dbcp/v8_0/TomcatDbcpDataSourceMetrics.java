@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.tomcat.dbcp.dbcp2.BasicDataSourceMXBean;
 
-public final class TomcatDbcpDataSourceMetrics {
+public class TomcatDbcpDataSourceMetrics {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.tomcat-dbcp-8.0";
   private static final OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
 

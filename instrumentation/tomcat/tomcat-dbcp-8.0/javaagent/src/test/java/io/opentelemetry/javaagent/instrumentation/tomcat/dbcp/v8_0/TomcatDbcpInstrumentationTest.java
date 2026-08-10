@@ -129,19 +129,21 @@ class TomcatDbcpInstrumentationTest {
   }
 
   @Test
-  void shouldUseRegisteredJmxNameWhenJmxNameIsNull() throws Exception {
+  void shouldUnquoteRegisteredJmxNameWhenJmxNameIsNull() throws Exception {
     BasicDataSource dataSource = createDataSource();
+    String dataSourceName = "registered,pool \"primary\"\\replica";
 
     ObjectName objectName =
         new ObjectName(
-            "org.apache.tomcat.dbcp.dbcp2:type=BasicDataSource," + "name=registeredPoolFallback");
+            "org.apache.tomcat.dbcp.dbcp2:type=BasicDataSource,name="
+                + ObjectName.quote(dataSourceName));
     MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
     objectName = mbeanServer.registerMBean(dataSource, objectName).getObjectName();
 
     try {
       dataSource.getConnection().close();
 
-      assertDataSourceMetrics("registeredPoolFallback");
+      assertDataSourceMetrics(dataSourceName);
     } finally {
       dataSource.close();
       if (mbeanServer.isRegistered(objectName)) {
