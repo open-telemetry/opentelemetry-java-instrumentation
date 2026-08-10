@@ -62,7 +62,8 @@ must be communicated through:
 
 1. A `🚫 Deprecations` CHANGELOG entry naming the old and new property.
 2. A comment in code near where the old property is read.
-3. **A `WARN`-level log message at startup** if the deprecated property is detected.
+3. **A `WARN`-level log message at startup** if the deprecated property is detected and applied.
+   Instrumentation enablement name aliases are the exception described below.
    The warning message should reference the **flat system property name**
    (`otel.instrumentation.…`) since that is what most users configure today:
 
@@ -174,7 +175,13 @@ the preview; use the guarded pattern above instead.
 // Using the declarative config API
 Boolean value = config.getBoolean("new_property_name");
 if (value == null) {
-  value = config.getBoolean("old_property_name");
+  Boolean deprecatedValue = config.getBoolean("old_property_name");
+  if (deprecatedValue != null) {
+    warnOnce();
+    value = deprecatedValue;
+  } else {
+    value = defaultValue;
+  }
 }
 ```
 
@@ -244,6 +251,6 @@ These have no flat-property fallback, so tests must cover declarative config mod
   warn merely because shared configuration carries both names during a mixed-version rollout. This
   does not apply to instrumentation enablement name aliases.
 - **Missing warning deduplication on a repeatable path**: use a per-key concurrent set for multiple
-  properties or an `AtomicBoolean` for a single property.
+  properties or a static `AtomicBoolean` for a single property.
 - **Configuration-property rename classified outside deprecations**: generated release notes assign
   the pull request to `🚫 Deprecations`, including any v3-preview behavior described by its bullet.
