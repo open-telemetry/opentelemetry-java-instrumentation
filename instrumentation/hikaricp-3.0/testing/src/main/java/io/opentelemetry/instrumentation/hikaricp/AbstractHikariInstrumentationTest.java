@@ -164,18 +164,18 @@ public abstract class AbstractHikariInstrumentationTest {
   }
 
   protected void assertNoConnectionPoolMetrics() {
+    testing().clearData();
+
     await()
         .untilAsserted(
-            () -> {
-              testing().clearData();
-              assertThat(testing().metrics())
-                  .filteredOn(
-                      metric ->
-                          metric
-                              .getInstrumentationScopeInfo()
-                              .getName()
-                              .equals(INSTRUMENTATION_NAME))
-                  .isEmpty();
-            });
+            () ->
+                assertThat(testing().metrics())
+                    .filteredOn(
+                        metric ->
+                            metric
+                                .getInstrumentationScopeInfo()
+                                .getName()
+                                .equals(INSTRUMENTATION_NAME))
+                    .isEmpty());
   }
 }

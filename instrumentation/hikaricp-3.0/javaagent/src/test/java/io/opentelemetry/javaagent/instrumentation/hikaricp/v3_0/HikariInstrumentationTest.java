@@ -19,7 +19,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.sql.SQLException;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -34,7 +33,7 @@ class HikariInstrumentationTest extends AbstractHikariInstrumentationTest {
   }
 
   @Override
-  protected void configure(HikariConfig poolConfig, @Nullable MetricsTrackerFactory userTracker) {
+  protected void configure(HikariConfig poolConfig, MetricsTrackerFactory userTracker) {
     if (userTracker != null) {
       poolConfig.setMetricsTrackerFactory(userTracker);
     }
