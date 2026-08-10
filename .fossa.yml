@@ -1062,6 +1062,9 @@ targets:
       target: ':instrumentation:tomcat:tomcat-common-7.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:tomcat:tomcat-dbcp-8.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:tomcat:tomcat-jdbc-8.5:javaagent'
     - type: gradle
       path: ./
