@@ -81,8 +81,8 @@ must be communicated through:
 ### Deprecated Properties Under Common v3 Preview
 
 Configuration names are user-facing API; also see
-[Breaking Changes and Deprecation Policy](api-deprecation-policy.md). For ordinary replacement
-properties that will be removed in 3.0, use this order:
+[Breaking Changes and Deprecation Policy](api-deprecation-policy.md). For ordinary properties whose
+deprecated names will be removed in 3.0, use this order:
 
 1. Read the replacement first.
 2. Only if the replacement is absent and v3 preview is disabled, read the deprecated value.
