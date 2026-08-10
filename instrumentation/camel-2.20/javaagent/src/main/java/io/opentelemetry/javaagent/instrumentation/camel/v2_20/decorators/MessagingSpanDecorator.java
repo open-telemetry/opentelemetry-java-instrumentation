@@ -23,6 +23,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 
@@ -35,12 +36,24 @@ import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
 
-class MessagingSpanDecorator extends BaseSpanDecorator {
+public class MessagingSpanDecorator extends BaseSpanDecorator {
 
   private final String component;
+  private final String system;
+  private final boolean spanContextPropagated;
 
-  public MessagingSpanDecorator(String component) {
+  MessagingSpanDecorator(String component, String system, boolean spanContextPropagated) {
     this.component = component;
+    this.system = system;
+    this.spanContextPropagated = spanContextPropagated;
+  }
+
+  public String getSystem() {
+    return system;
+  }
+
+  public boolean isSpanContextPropagated() {
+    return spanContextPropagated;
   }
 
   @Override
@@ -61,9 +74,10 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
       CamelDirection camelDirection) {
     super.pre(attributes, exchange, endpoint, camelDirection);
 
-    attributes.put(MESSAGING_DESTINATION_NAME, getDestination(exchange, endpoint));
-
-    attributes.put(MESSAGING_MESSAGE_ID, getMessageId(exchange));
+    if (emitOldMessagingSemconv()) {
+      attributes.put(MESSAGING_DESTINATION_NAME, getDestination(exchange, endpoint));
+      attributes.put(MESSAGING_MESSAGE_ID, getMessageId(exchange));
+    }
   }
 
   /**
@@ -73,7 +87,7 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
    * @param endpoint The endpoint
    * @return The message bus destination
    */
-  protected String getDestination(Exchange exchange, Endpoint endpoint) {
+  public String getDestination(Exchange exchange, Endpoint endpoint) {
     switch (component) {
       case "cometds":
       case "cometd":
@@ -124,7 +138,7 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
    * @return The message id, or null if no id exists for the exchange
    */
   @Nullable
-  protected String getMessageId(Exchange exchange) {
+  public String getMessageId(Exchange exchange) {
     switch (component) {
       case "aws-sns":
         return (String) exchange.getIn().getHeader("CamelAwsSnsMessageId");
@@ -137,5 +151,10 @@ class MessagingSpanDecorator extends BaseSpanDecorator {
       default:
         return null;
     }
+  }
+
+  @Nullable
+  public String getDestinationPartitionId(Exchange exchange) {
+    return null;
   }
 }

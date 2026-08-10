@@ -6,16 +6,21 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import javax.jms.ConnectionFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -74,20 +79,44 @@ class JmsCamelTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("input").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("queue:testQueue")
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "send queue:testQueue"
+                                : "queue:testQueue")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "jms" : null),
                             equalTo(MESSAGING_DESTINATION_NAME, "queue:testQueue"),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "send" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "send" : null),
                             equalTo(stringKey("camel.uri"), experimental("jms://queue:testQueue"))),
-                span ->
-                    span.hasName("queue:testQueue")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_DESTINATION_NAME, "queue:testQueue"),
-                            equalTo(stringKey("camel.uri"), experimental("jms://queue:testQueue")),
-                            satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))),
+                span -> {
+                  span.hasName(
+                          emitStableMessagingSemconv()
+                              ? "process queue:testQueue"
+                              : "queue:testQueue")
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasParent(trace.getSpan(1))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "jms" : null),
+                          equalTo(MESSAGING_DESTINATION_NAME, "queue:testQueue"),
+                          equalTo(
+                              MESSAGING_OPERATION_NAME,
+                              emitStableMessagingSemconv() ? "process" : null),
+                          equalTo(
+                              MESSAGING_OPERATION_TYPE,
+                              emitStableMessagingSemconv() ? "process" : null),
+                          equalTo(stringKey("camel.uri"), experimental("jms://queue:testQueue")),
+                          satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
+                  if (emitStableMessagingSemconv()) {
+                    span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                  }
+                },
                 span -> span.hasName("mock").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(2))));
   }
 }
