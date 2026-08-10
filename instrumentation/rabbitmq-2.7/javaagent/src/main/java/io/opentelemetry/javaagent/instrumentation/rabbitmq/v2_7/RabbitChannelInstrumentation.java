@@ -36,7 +36,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.IOException;
@@ -237,7 +236,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
           return new ChannelPublishAdviceScope(callDepth, null, null, null);
         }
 
-        Context parentContext = Java8BytecodeBridge.currentContext();
+        Context parentContext = Context.current();
         ChannelAndMethod request = ChannelAndMethod.createPublish(channel, exchange, routingKey);
 
         if (!channelInstrumenter(request).shouldStart(parentContext, request)) {
@@ -298,9 +297,9 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
       // context so that the message headers still get injected
       Context context = adviceScope.getContext();
       if (context == null) {
-        context = Java8BytecodeBridge.currentContext();
+        context = Context.current();
       }
-      Span span = Java8BytecodeBridge.spanFromContext(context);
+      Span span = Span.fromContext(context);
       AMQP.BasicProperties props = originalProps;
 
       if (span.getSpanContext().isValid()) {
