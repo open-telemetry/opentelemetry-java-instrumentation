@@ -119,7 +119,7 @@ public final class OpenTelemetryMeterRegistryBuilder {
         baseTimeUnit,
         namingConvention,
         modifier,
-        !SemconvStability.v3Preview(openTelemetry),
+        SemconvStability.v3Preview(openTelemetry),
         meterBuilder.build());
   }
 }

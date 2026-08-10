@@ -52,6 +52,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   private final TimeUnit baseTimeUnit;
   private final DistributionStatisticConfigModifier distributionStatisticConfigModifier;
   private final boolean emitMaxGauge;
+  private final boolean v3Preview;
   private final io.opentelemetry.api.metrics.Meter otelMeter;
 
   OpenTelemetryMeterRegistry(
@@ -59,12 +60,13 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       TimeUnit baseTimeUnit,
       NamingConvention namingConvention,
       DistributionStatisticConfigModifier distributionStatisticConfigModifier,
-      boolean emitMaxGauge,
+      boolean v3Preview,
       io.opentelemetry.api.metrics.Meter otelMeter) {
     super(clock);
     this.baseTimeUnit = baseTimeUnit;
     this.distributionStatisticConfigModifier = distributionStatisticConfigModifier;
-    this.emitMaxGauge = emitMaxGauge;
+    this.emitMaxGauge = !v3Preview;
+    this.v3Preview = v3Preview;
     this.otelMeter = otelMeter;
 
     this.config()
@@ -142,7 +144,8 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
   @Override
   protected Meter newMeter(Meter.Id id, Meter.Type type, Iterable<Measurement> measurements) {
-    return new OpenTelemetryMeter(id, config().namingConvention(), measurements, otelMeter);
+    return new OpenTelemetryMeter(
+        id, config().namingConvention(), measurements, v3Preview, otelMeter);
   }
 
   @Override
