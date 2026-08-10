@@ -9,6 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaCommitRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
@@ -32,6 +33,7 @@ public class KafkaSingletons {
   private static final Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter;
   private static final Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter;
   private static final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
+  private static final Instrumenter<KafkaCommitRequest, Void> consumerCommitInstrumenter;
 
   static {
     DeclarativeConfigProperties commonConfig =
@@ -51,6 +53,7 @@ public class KafkaSingletons {
     producerInstrumenter = instrumenterFactory.createProducerInstrumenter();
     consumerReceiveInstrumenter = instrumenterFactory.createConsumerReceiveInstrumenter();
     consumerProcessInstrumenter = instrumenterFactory.createConsumerProcessInstrumenter();
+    consumerCommitInstrumenter = instrumenterFactory.createConsumerCommitInstrumenter();
   }
 
   public static Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter() {
@@ -63,6 +66,10 @@ public class KafkaSingletons {
 
   public static Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter() {
     return consumerProcessInstrumenter;
+  }
+
+  public static Instrumenter<KafkaCommitRequest, Void> consumerCommitInstrumenter() {
+    return consumerCommitInstrumenter;
   }
 
   private KafkaSingletons() {}

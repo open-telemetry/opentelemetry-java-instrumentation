@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 
@@ -38,6 +39,7 @@ public final class KafkaInstrumenterFactory {
   private static final String SEND_OPERATION_NAME = "send";
   private static final String POLL_OPERATION_NAME = "poll";
   private static final String PROCESS_OPERATION_NAME = "process";
+  private static final String COMMIT_OPERATION_NAME = "commit";
 
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
@@ -170,6 +172,24 @@ public final class KafkaInstrumenterFactory {
         openTelemetry.getPropagators().getTextMapPropagator(),
         new KafkaConsumerRecordGetter(),
         receiveInstrumentationEnabled());
+  }
+
+  public Instrumenter<KafkaCommitRequest, Void> createConsumerCommitInstrumenter() {
+    KafkaCommitAttributesGetter getter = new KafkaCommitAttributesGetter();
+    MessagingOperationType operationType = MessagingOperationType.SETTLE;
+
+    InstrumenterBuilder<KafkaCommitRequest, Void> builder =
+        Instrumenter.<KafkaCommitRequest, Void>builder(
+                openTelemetry,
+                instrumentationName,
+                MessagingSpanNameExtractor.create(getter, operationType, COMMIT_OPERATION_NAME))
+            .addAttributesExtractor(
+                buildMessagingAttributesExtractor(
+                    getter, operationType, COMMIT_OPERATION_NAME, emptyList()))
+            .setErrorCauseExtractor(errorCauseExtractor)
+            .setEnabled(emitStableMessagingSemconv());
+    setMessagingSettleExceptionEventExtractor(builder);
+    return builder.buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
   private boolean receiveInstrumentationEnabled() {
