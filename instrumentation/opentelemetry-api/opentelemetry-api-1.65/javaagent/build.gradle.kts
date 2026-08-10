@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
   compileOnly(project(":opentelemetry-api-shaded-for-instrumenting", configuration = "v1_65"))
+  compileOnly("io.opentelemetry:opentelemetry-api-incubator")
 
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent"))

@@ -6,30 +6,47 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_65.incubator.metrics;
 
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.incubator.metrics.BoundDoubleHistogram;
+import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogram;
 import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.context.AgentContextStorage;
+import java.util.function.DoubleConsumer;
+import java.util.function.ObjDoubleConsumer;
 
 final class ApplicationBoundDoubleHistogram165Incubator
     implements application.io.opentelemetry.api.incubator.metrics.BoundDoubleHistogram {
 
-  private final DoubleHistogram agentHistogram;
-  private final Attributes attributes;
+  private final DoubleConsumer record;
+  private final ObjDoubleConsumer<Context> recordWithContext;
 
-  ApplicationBoundDoubleHistogram165Incubator(
+  static ApplicationBoundDoubleHistogram165Incubator create(
       DoubleHistogram agentHistogram, Attributes attributes) {
-    this.agentHistogram = agentHistogram;
-    this.attributes = attributes;
+    if (agentHistogram instanceof ExtendedDoubleHistogram) {
+      BoundDoubleHistogram boundHistogram =
+          ((ExtendedDoubleHistogram) agentHistogram).bind(attributes);
+      return new ApplicationBoundDoubleHistogram165Incubator(
+          boundHistogram::record, (context, value) -> boundHistogram.record(value, context));
+    }
+    return new ApplicationBoundDoubleHistogram165Incubator(
+        value -> agentHistogram.record(value, attributes),
+        (context, value) -> agentHistogram.record(value, attributes, context));
+  }
+
+  private ApplicationBoundDoubleHistogram165Incubator(
+      DoubleConsumer record, ObjDoubleConsumer<Context> recordWithContext) {
+    this.record = record;
+    this.recordWithContext = recordWithContext;
   }
 
   @Override
   public void record(double value) {
-    agentHistogram.record(value, attributes);
+    record.accept(value);
   }
 
   @Override
   public void record(
       double value, application.io.opentelemetry.context.Context applicationContext) {
-    agentHistogram.record(
-        value, attributes, AgentContextStorage.getAgentContext(applicationContext));
+    recordWithContext.accept(AgentContextStorage.getAgentContext(applicationContext), value);
   }
 }

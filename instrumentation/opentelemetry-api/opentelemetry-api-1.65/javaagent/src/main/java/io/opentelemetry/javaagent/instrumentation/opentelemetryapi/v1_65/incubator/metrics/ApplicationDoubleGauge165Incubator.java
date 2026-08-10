@@ -25,7 +25,7 @@ final class ApplicationDoubleGauge165Incubator extends ApplicationDoubleGauge138
   @Override
   public application.io.opentelemetry.api.incubator.metrics.BoundDoubleGauge bind(
       application.io.opentelemetry.api.common.Attributes applicationAttributes) {
-    return new ApplicationBoundDoubleGauge165Incubator(
+    return ApplicationBoundDoubleGauge165Incubator.create(
         agentDoubleGauge, Bridging.toAgent(applicationAttributes));
   }
 }

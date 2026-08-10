@@ -26,7 +26,7 @@ final class ApplicationDoubleHistogram165Incubator extends ApplicationDoubleHist
   @Override
   public application.io.opentelemetry.api.incubator.metrics.BoundDoubleHistogram bind(
       application.io.opentelemetry.api.common.Attributes applicationAttributes) {
-    return new ApplicationBoundDoubleHistogram165Incubator(
+    return ApplicationBoundDoubleHistogram165Incubator.create(
         agentHistogram, Bridging.toAgent(applicationAttributes));
   }
 }

@@ -26,7 +26,7 @@ final class ApplicationLongUpDownCounter165Incubator extends ApplicationLongUpDo
   @Override
   public application.io.opentelemetry.api.incubator.metrics.BoundLongUpDownCounter bind(
       application.io.opentelemetry.api.common.Attributes applicationAttributes) {
-    return new ApplicationBoundLongUpDownCounter165Incubator(
+    return ApplicationBoundLongUpDownCounter165Incubator.create(
         agentCounter, Bridging.toAgent(applicationAttributes));
   }
 }

@@ -26,7 +26,7 @@ final class ApplicationDoubleUpDownCounter165Incubator extends ApplicationDouble
   @Override
   public application.io.opentelemetry.api.incubator.metrics.BoundDoubleUpDownCounter bind(
       application.io.opentelemetry.api.common.Attributes applicationAttributes) {
-    return new ApplicationBoundDoubleUpDownCounter165Incubator(
+    return ApplicationBoundDoubleUpDownCounter165Incubator.create(
         agentCounter, Bridging.toAgent(applicationAttributes));
   }
 }

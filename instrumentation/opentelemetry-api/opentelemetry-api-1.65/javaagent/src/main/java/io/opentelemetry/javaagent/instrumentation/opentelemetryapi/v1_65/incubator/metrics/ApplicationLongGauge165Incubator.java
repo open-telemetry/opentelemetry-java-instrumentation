@@ -25,7 +25,7 @@ final class ApplicationLongGauge165Incubator extends ApplicationLongGauge138
   @Override
   public application.io.opentelemetry.api.incubator.metrics.BoundLongGauge bind(
       application.io.opentelemetry.api.common.Attributes applicationAttributes) {
-    return new ApplicationBoundLongGauge165Incubator(
+    return ApplicationBoundLongGauge165Incubator.create(
         agentLongGauge, Bridging.toAgent(applicationAttributes));
   }
 }

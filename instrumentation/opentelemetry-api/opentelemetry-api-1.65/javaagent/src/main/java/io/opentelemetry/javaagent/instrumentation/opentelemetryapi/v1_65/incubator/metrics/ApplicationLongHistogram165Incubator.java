@@ -25,7 +25,7 @@ final class ApplicationLongHistogram165Incubator extends ApplicationLongHistogra
   @Override
   public application.io.opentelemetry.api.incubator.metrics.BoundLongHistogram bind(
       application.io.opentelemetry.api.common.Attributes applicationAttributes) {
-    return new ApplicationBoundLongHistogram165Incubator(
+    return ApplicationBoundLongHistogram165Incubator.create(
         agentHistogram, Bridging.toAgent(applicationAttributes));
   }
 }
