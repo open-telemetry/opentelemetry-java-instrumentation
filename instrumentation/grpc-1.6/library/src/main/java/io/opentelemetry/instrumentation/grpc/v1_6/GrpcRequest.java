@@ -118,18 +118,18 @@ public final class GrpcRequest {
   }
 
   /**
-   * @deprecated Use {@link #getServerAddress()} instead.
+   * @deprecated Use {@link #getServerAddress()} instead. Will be removed in a future release.
    */
-  @Deprecated
+  @Deprecated // will be removed in a future release
   @Nullable
   public String getLogicalHost() {
     return serverAddress;
   }
 
   /**
-   * @deprecated Use {@link #getServerPort()} instead.
+   * @deprecated Use {@link #getServerPort()} instead. Will be removed in a future release.
    */
-  @Deprecated
+  @Deprecated // will be removed in a future release
   public int getLogicalPort() {
     return serverPort != null ? serverPort : -1;
   }
