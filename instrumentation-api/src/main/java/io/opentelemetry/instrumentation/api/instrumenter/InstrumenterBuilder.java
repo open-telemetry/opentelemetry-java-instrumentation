@@ -420,26 +420,34 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
     String result = commonConfig.getString("span_suppression_strategy/development");
     if (result == null) {
-      // Read even in v3 preview so the deprecated property still triggers a warning when ignored.
-      String deprecatedResult = getDeprecatedSpanSuppressionStrategyProperty();
-      if (!SemconvStability.v3Preview(openTelemetry)) {
-        result = deprecatedResult;
+      String deprecatedResult =
+          SystemProperty.getString("otel.instrumentation.experimental.span-suppression-strategy");
+      if (deprecatedResult != null) {
+        boolean v3Preview = SemconvStability.v3Preview(openTelemetry);
+        warnDeprecatedSpanSuppressionStrategyProperty(v3Preview);
+        if (!v3Preview) {
+          result = deprecatedResult;
+        }
       }
     }
     return SpanSuppressionStrategy.fromConfig(result);
   }
 
-  @Nullable
-  private static String getDeprecatedSpanSuppressionStrategyProperty() {
-    String value =
-        SystemProperty.getString("otel.instrumentation.experimental.span-suppression-strategy");
-    if (value != null && spanSuppressionPropertyWarningLogged.compareAndSet(false, true)) {
+  private static void warnDeprecatedSpanSuppressionStrategyProperty(boolean v3Preview) {
+    if (!spanSuppressionPropertyWarningLogged.compareAndSet(false, true)) {
+      return;
+    }
+    if (v3Preview) {
+      logger.warning(
+          "The otel.instrumentation.experimental.span-suppression-strategy setting is deprecated"
+              + " and is ignored when v3 preview is enabled. Use the programmatic API or equivalent"
+              + " declarative instrumentation configuration instead.");
+    } else {
       logger.warning(
           "The otel.instrumentation.experimental.span-suppression-strategy setting is deprecated"
               + " and will be removed in 3.0. Use the programmatic API or equivalent declarative"
               + " instrumentation configuration instead.");
     }
-    return value;
   }
 
   private Set<SpanKey> getSpanKeysFromAttributesExtractors() {
