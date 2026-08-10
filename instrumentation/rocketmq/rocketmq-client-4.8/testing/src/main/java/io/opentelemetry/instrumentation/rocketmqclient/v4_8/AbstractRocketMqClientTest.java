@@ -425,19 +425,11 @@ abstract class AbstractRocketMqClientTest {
                 assertions.add(
                     span ->
                         assertLegacyBatchProcessSpan(
-                            span,
-                            trace.getSpan(0),
-                            producerSpanContext.get(),
-                            "TagA",
-                            failConsumption));
+                            span, trace.getSpan(0), producerSpanContext.get(), "TagA"));
                 assertions.add(
                     span ->
                         assertLegacyBatchProcessSpan(
-                            span,
-                            trace.getSpan(0),
-                            producerSpanContext.get(),
-                            "TagB",
-                            failConsumption));
+                            span, trace.getSpan(0), producerSpanContext.get(), "TagB"));
               }
               assertions.add(
                   span ->
@@ -460,12 +452,11 @@ abstract class AbstractRocketMqClientTest {
       SpanDataAssert span,
       SpanData parentSpan,
       SpanContext producerSpanContext,
-      String messageTag,
-      boolean failed) {
+      String messageTag) {
     span.hasName(sharedTopic + " process")
         .hasKind(SpanKind.CONSUMER)
         .hasParent(parentSpan)
-        .hasStatus(failed && emitStableMessagingSemconv() ? StatusData.error() : StatusData.unset())
+        .hasStatus(StatusData.unset())
         .hasAttributesSatisfyingExactly(
             equalTo(MESSAGING_SYSTEM, "rocketmq"),
             equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
