@@ -131,6 +131,32 @@ value instead of paired include/exclude setters, with the shared `IncludeExclude
 the intended end state. Retain `setCapture*` for action booleans, such as
 `setCaptureQuery(boolean)`.
 
+### Structured Selector Defaults
+
+What a selector means when it is absent depends on whether the setting it controls is
+none-by-default or all-by-default. Both baselines use the same shape and matching rules, and the
+declarative schema requires at least one entry in `included` and `excluded`, so an explicitly empty
+list is never valid configuration.
+
+For a none-by-default setting, the selector doubles as the on switch. An absent selector selects
+nothing, and an exclude-only selector selects everything except the excluded values. Document
+select-all as `included: ["*"]`, or `included=*` in flat configuration, because flat configuration
+cannot express a present selector that omits its included patterns:
+
+```yaml
+# select everything except one value
+mdc_attributes:
+  excluded: [password]
+
+# select everything
+mdc_attributes:
+  included: ["*"]
+```
+
+For an all-by-default setting, the selector filters telemetry that is already emitted. An absent
+selector keeps everything, an omitted `included` list keeps everything not excluded, and
+exclude-only is the natural shape.
+
 ## Structured Config (YAML-Only)
 
 Some configurations require structured data only expressible in YAML:
