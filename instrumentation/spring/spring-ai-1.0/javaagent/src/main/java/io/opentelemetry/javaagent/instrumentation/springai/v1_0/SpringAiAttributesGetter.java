@@ -110,10 +110,8 @@ final class SpringAiAttributesGetter
   @Nullable
   public String getResponseModel(SpringAiRequest request, @Nullable ChatResponse response) {
     ChatResponseMetadata metadata = metadata(response);
-    if (metadata != null && metadata.getModel() != null && !metadata.getModel().isEmpty()) {
-      return metadata.getModel();
-    }
-    return getRequestModel(request);
+    String model = metadata == null ? null : metadata.getModel();
+    return model == null || model.isEmpty() ? null : model;
   }
 
   @Override

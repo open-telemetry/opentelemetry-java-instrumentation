@@ -19,7 +19,7 @@ public final class SpringAiRequest {
 
   public static SpringAiRequest create(Prompt prompt, Object chatModel) {
     ChatOptions defaultOptions =
-        chatModel instanceof ChatModel ? ((ChatModel) chatModel).getDefaultOptions() : null;
+        chatModel instanceof ChatModel model ? model.getDefaultOptions() : null;
     return new SpringAiRequest(
         prompt, defaultOptions, providerName(chatModel.getClass().getName()));
   }

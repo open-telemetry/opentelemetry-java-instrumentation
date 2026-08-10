@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
+import org.springframework.ai.chat.metadata.ChatGenerationMetadata;
+import org.springframework.ai.chat.metadata.ChatResponseMetadata;
+import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import reactor.core.publisher.Flux;
@@ -42,8 +45,9 @@ public final class SpringAiStreamTracing {
       AtomicBoolean ended = new AtomicBoolean();
       StreamState state =
           new StreamState(
-              SpringAiSingletons.captureMessageContent()
-                  || SpringAiSingletons.captureMessageContentAsSpanAttributes());
+              SpringAiSingletons.captureMessageContent(),
+              SpringAiSingletons.captureMessageContentAsSpanAttributes(),
+              SpringAiSingletons.messageContentSpanAttributeMaxLength());
       Flux<ChatResponse> traced =
           source
               .doOnNext(state::add)
@@ -100,27 +104,58 @@ public final class SpringAiStreamTracing {
   }
 
   private static final class StreamState {
-    @Nullable private ChatResponse lastResponse;
-    @Nullable private final List<StringBuilder> streamedContents;
+    private boolean hasResponse;
+    private final List<GenerationState> generations = new ArrayList<>();
+    @Nullable private String responseId;
+    @Nullable private String responseModel;
+    @Nullable private Usage usage;
+    @Nullable private final List<ContentBuffer> streamedContents;
+    private final int contentMaxLength;
 
-    private StreamState(boolean captureContent) {
-      streamedContents = captureContent ? new ArrayList<>() : null;
+    private StreamState(
+        boolean captureMessageContent,
+        boolean captureMessageContentAsSpanAttributes,
+        int spanAttributeMaxLength) {
+      if (!captureMessageContent && !captureMessageContentAsSpanAttributes) {
+        streamedContents = null;
+        contentMaxLength = 0;
+      } else {
+        streamedContents = new ArrayList<>();
+        contentMaxLength = captureMessageContent ? -1 : spanAttributeMaxLength;
+      }
     }
 
     private synchronized void add(ChatResponse response) {
-      lastResponse = response;
-      if (streamedContents == null) {
-        return;
-      }
+      hasResponse = true;
       try {
         List<Generation> generations = response.getResults();
-        while (streamedContents.size() < generations.size()) {
-          streamedContents.add(new StringBuilder());
+        while (this.generations.size() < generations.size()) {
+          this.generations.add(new GenerationState());
+          if (streamedContents != null) {
+            streamedContents.add(new ContentBuffer(contentMaxLength));
+          }
         }
         for (int index = 0; index < generations.size(); index++) {
-          String content = generations.get(index).getOutput().getText();
-          if (content != null) {
-            streamedContents.get(index).append(content);
+          Generation generation = generations.get(index);
+          this.generations.get(index).add(generation);
+          if (streamedContents != null) {
+            String content = generation.getOutput().getText();
+            if (content != null) {
+              streamedContents.get(index).append(content);
+            }
+          }
+        }
+
+        ChatResponseMetadata metadata = response.getMetadata();
+        if (metadata != null) {
+          if (metadata.getId() != null && !metadata.getId().isEmpty()) {
+            responseId = metadata.getId();
+          }
+          if (metadata.getModel() != null && !metadata.getModel().isEmpty()) {
+            responseModel = metadata.getModel();
+          }
+          if (metadata.getUsage() != null) {
+            usage = metadata.getUsage();
           }
         }
       } catch (Throwable ignored) {
@@ -129,14 +164,111 @@ public final class SpringAiStreamTracing {
     }
 
     private synchronized Snapshot snapshot() {
+      if (!hasResponse) {
+        return new Snapshot(null, null);
+      }
+
+      List<Generation> responseGenerations = new ArrayList<>(generations.size());
+      for (GenerationState generation : generations) {
+        Generation value = generation.value();
+        if (value != null) {
+          responseGenerations.add(value);
+        }
+      }
+
+      ChatResponseMetadata.Builder metadata = ChatResponseMetadata.builder();
+      if (responseId != null) {
+        metadata.id(responseId);
+      }
+      if (responseModel != null) {
+        metadata.model(responseModel);
+      }
+      if (usage != null) {
+        metadata.usage(usage);
+      }
+      ChatResponse response = new ChatResponse(responseGenerations, metadata.build());
+
       if (streamedContents == null) {
-        return new Snapshot(lastResponse, null);
+        return new Snapshot(response, null);
       }
       List<String> contents = new ArrayList<>(streamedContents.size());
-      for (StringBuilder content : streamedContents) {
-        contents.add(content.toString());
+      for (ContentBuffer content : streamedContents) {
+        contents.add(content.value());
       }
-      return new Snapshot(lastResponse, contents);
+      return new Snapshot(response, contents);
+    }
+  }
+
+  private static final class GenerationState {
+    @Nullable private Generation generation;
+    @Nullable private String finishReason;
+
+    private void add(Generation generation) {
+      this.generation = generation;
+      ChatGenerationMetadata metadata = generation.getMetadata();
+      if (metadata != null && metadata.getFinishReason() != null) {
+        finishReason = metadata.getFinishReason();
+      }
+    }
+
+    @Nullable
+    private Generation value() {
+      if (generation == null || finishReason == null) {
+        return generation;
+      }
+      ChatGenerationMetadata metadata = generation.getMetadata();
+      if (metadata != null && finishReason.equals(metadata.getFinishReason())) {
+        return generation;
+      }
+      return new Generation(
+          generation.getOutput(),
+          ChatGenerationMetadata.builder().finishReason(finishReason).build());
+    }
+  }
+
+  private static final class ContentBuffer {
+    private final StringBuilder content = new StringBuilder();
+    private final int maxLength;
+    private boolean truncated;
+
+    private ContentBuffer(int maxLength) {
+      this.maxLength = maxLength;
+    }
+
+    private void append(String value) {
+      if (maxLength < 0) {
+        content.append(value);
+        return;
+      }
+      if (truncated) {
+        return;
+      }
+
+      int remaining = maxLength - content.length();
+      if (remaining <= 0) {
+        truncated = true;
+        return;
+      }
+      int end = Math.min(value.length(), remaining);
+      if (end < value.length()
+          && end > 0
+          && Character.isHighSurrogate(value.charAt(end - 1))
+          && Character.isLowSurrogate(value.charAt(end))) {
+        end--;
+      }
+      content.append(value, 0, end);
+      truncated = end < value.length();
+    }
+
+    private String value() {
+      int length = content.length();
+      if (maxLength >= 0
+          && length == maxLength
+          && length > 0
+          && Character.isHighSurrogate(content.charAt(length - 1))) {
+        return content.substring(0, length - 1);
+      }
+      return content.toString();
     }
   }
 

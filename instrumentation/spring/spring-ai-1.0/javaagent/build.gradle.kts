@@ -2,6 +2,10 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_17)
+}
+
 muzzle {
   pass {
     group.set("org.springframework.ai")
@@ -34,7 +38,7 @@ tasks {
     jvmArgs(
       "-Dotel.instrumentation.spring-ai.experimental.capture-message-content-as-span-attributes.enabled=true"
     )
-    systemProperty("otel.instrumentation.genai.capture-message-content", true)
+    systemProperty("otel.instrumentation.genai.capture-message-content", false)
     systemProperty(
       "metadataConfig",
       "otel.instrumentation.spring-ai.experimental.capture-message-content-as-span-attributes.enabled=true",
