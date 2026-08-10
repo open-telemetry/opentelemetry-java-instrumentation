@@ -7,12 +7,9 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import example.GreeterGrpc;
 import example.Helloworld;
@@ -61,53 +58,13 @@ class GrpcTest extends AbstractGrpcTest {
   }
 
   @Override
-  protected InstrumentationExtension testing() {
-    return testing;
+  protected boolean targetCaptureSupported() {
+    return testLatestDeps();
   }
 
-  @Test
-  void targetCapturedFromManagedChannelBuilder() throws Exception {
-    assumeTrue(testLatestDeps());
-
-    BindableService greeter =
-        new GreeterGrpc.GreeterImplBase() {
-          @Override
-          public void sayHello(
-              Helloworld.Request req, StreamObserver<Helloworld.Response> responseObserver) {
-            responseObserver.onNext(
-                Helloworld.Response.newBuilder().setMessage("Hello " + req.getName()).build());
-            responseObserver.onCompleted();
-          }
-        };
-
-    Server server = ServerBuilder.forPort(0).addService(greeter).build().start();
-    ManagedChannelBuilder<?> channelBuilder =
-        ManagedChannelBuilder.forTarget("dns:///localhost:" + server.getPort())
-            .overrideAuthority("fallback.invalid:1234");
-    ManagedChannel channel = createChannel(configureClient(channelBuilder));
-
-    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
-    closer.add(() -> server.shutdownNow().awaitTermination());
-
-    GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
-    Helloworld.Response response =
-        testing()
-            .runWithSpan(
-                "parent",
-                () -> client.sayHello(Helloworld.Request.newBuilder().setName("test").build()));
-
-    assertThat(response.getMessage()).isEqualTo("Hello test");
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttribute(SERVER_ADDRESS, "localhost")
-                            .hasAttribute(SERVER_PORT, (long) server.getPort())));
+  @Override
+  protected InstrumentationExtension testing() {
+    return testing;
   }
 
   /**
