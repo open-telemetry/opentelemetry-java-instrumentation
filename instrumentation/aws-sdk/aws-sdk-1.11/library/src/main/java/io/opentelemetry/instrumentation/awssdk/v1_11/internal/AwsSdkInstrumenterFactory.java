@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
@@ -17,6 +18,8 @@ import static java.util.Collections.singletonList;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -51,6 +54,10 @@ public final class AwsSdkInstrumenterFactory {
   private static final String SEND_OPERATION_NAME = "send";
   private static final String RECEIVE_OPERATION_NAME = "receive";
   private static final String PROCESS_OPERATION_NAME = "process";
+
+  // copied from MessagingIncubatingAttributes
+  private static final AttributeKey<String> MESSAGING_MESSAGE_ID =
+      stringKey("messaging.message.id");
 
   private static final List<AttributesExtractor<Request<?>, Response<?>>>
       defaultAttributesExtractors = createAttributesExtractors(false);
@@ -134,7 +141,7 @@ public final class AwsSdkInstrumenterFactory {
                     SpanContext spanContext =
                         Span.fromContext(message.getCreationContext()).getSpanContext();
                     if (spanContext.isValid()) {
-                      spanLinks.addLink(spanContext);
+                      spanLinks.addLink(spanContext, messageLinkAttributes(message));
                     }
                   }
                 });
@@ -166,10 +173,15 @@ public final class AwsSdkInstrumenterFactory {
             // span. the creation context is linked even when it ends up being this span's parent,
             // which happens when there is no ambient span, because semconv asks for a link to the
             // creation context for every message the span accounts for
+            SqsMessage message = request.getMessage();
             SpanContext creationSpanContext =
-                Span.fromContext(request.getMessage().getCreationContext()).getSpanContext();
+                Span.fromContext(message.getCreationContext()).getSpanContext();
             if (creationSpanContext.isValid()) {
-              spanLinks.addLink(creationSpanContext);
+              if (emitStableMessagingSemconv()) {
+                spanLinks.addLink(creationSpanContext, messageLinkAttributes(message));
+              } else {
+                spanLinks.addLink(creationSpanContext);
+              }
             }
           });
     }
@@ -180,6 +192,10 @@ public final class AwsSdkInstrumenterFactory {
                   parentContext.with(Span.fromContext(request.getMessage().getCreationContext()))));
     }
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+  }
+
+  private static Attributes messageLinkAttributes(SqsMessage message) {
+    return Attributes.of(MESSAGING_MESSAGE_ID, message.getMessageId());
   }
 
   private static List<AttributesExtractor<AbstractSqsRequest, Response<?>>> toSqsRequestExtractors(

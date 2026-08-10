@@ -34,10 +34,12 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.collect.ImmutableList;
 import java.util.ArrayList;
@@ -49,6 +51,7 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.SqsClientBuilder;
+import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
@@ -349,7 +352,9 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
 
     client.createQueue(createQueueRequest);
     client.sendMessage(sendMessageRequest);
-    client.receiveMessage(receiveMessageRequest);
+    ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest);
+    Message message = response.messages().get(0);
+    response.messages().forEach(unused -> {});
 
     AtomicReference<SpanData> publishSpan = new AtomicReference<>();
     getTesting()
@@ -362,7 +367,21 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                     span -> {
                       publishSpan.set(trace.getSpan(0));
                       span.hasName("send testSdkSqs").hasKind(SpanKind.PRODUCER);
-                    }),
+                    },
+                    span ->
+                        span.hasName("process testSdkSqs")
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasParent(trace.getSpan(0))
+                            .hasLinksSatisfying(
+                                links ->
+                                    assertThat(links)
+                                        .singleElement()
+                                        .satisfies(
+                                            link ->
+                                                assertMessageLink(
+                                                    link,
+                                                    publishSpan.get(),
+                                                    message.messageId())))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -375,8 +394,10 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                         .singleElement()
                                         .satisfies(
                                             link ->
-                                                assertThat(link.getSpanContext().getSpanId())
-                                                    .isEqualTo(publishSpan.get().getSpanId())))));
+                                                assertMessageLink(
+                                                    link,
+                                                    publishSpan.get(),
+                                                    message.messageId())))));
   }
 
   @Test
@@ -437,6 +458,10 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
     client.sendMessageBatch(sendMessageBatchRequest);
 
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageBatchRequest);
+    List<String> messageIds = new ArrayList<>();
+    for (int i = 0; i < response.messages().size(); i++) {
+      messageIds.add(response.messages().get(i).messageId());
+    }
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
 
     int totalAttrs =
@@ -515,13 +540,12 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                 if (emitStableMessagingSemconv()) {
                   // one link per message whose creation context could be propagated
                   span.hasLinksSatisfying(
-                      links ->
-                          assertThat(links)
-                              .hasSize(propagatedMessages)
-                              .allSatisfy(
-                                  link ->
-                                      assertThat(link.getSpanContext().getSpanId())
-                                          .isEqualTo(publishSpan.get().getSpanId())));
+                      links -> {
+                        assertThat(links).hasSize(propagatedMessages);
+                        for (int i = 0; i < links.size(); i++) {
+                          assertMessageLink(links.get(i), publishSpan.get(), messageIds.get(i));
+                        }
+                      });
                 } else {
                   span.hasTotalRecordedLinks(0);
                 }
@@ -562,5 +586,10 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
     }
 
     getTesting().waitAndAssertTraces(traceAsserts);
+  }
+
+  private static void assertMessageLink(LinkData link, SpanData creationContext, String messageId) {
+    assertThat(link.getSpanContext().getSpanId()).isEqualTo(creationContext.getSpanId());
+    assertThat(link.getAttributes()).isEqualTo(Attributes.of(MESSAGING_MESSAGE_ID, messageId));
   }
 }
