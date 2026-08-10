@@ -9,32 +9,39 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
 
-import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
-class RabbitDeliveryExtraAttributesExtractor implements AttributesExtractor<DeliveryRequest, Void> {
+class RabbitReceiveExtraAttributesExtractor
+    implements AttributesExtractor<ReceiveRequest, GetResponse> {
 
   @Override
   public void onStart(
-      AttributesBuilder attributes, Context parentContext, DeliveryRequest request) {
-    Envelope envelope = request.getEnvelope();
-    String routingKey = envelope.getRoutingKey();
-    if (routingKey != null && !routingKey.isEmpty()) {
-      attributes.put(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
-    }
-    if (emitStableMessagingSemconv()) {
-      attributes.put(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, envelope.getDeliveryTag());
-    }
-  }
+      AttributesBuilder attributes, Context parentContext, ReceiveRequest request) {}
 
   @Override
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
-      DeliveryRequest request,
-      @Nullable Void unused,
-      @Nullable Throwable error) {}
+      ReceiveRequest request,
+      @Nullable GetResponse response,
+      @Nullable Throwable error) {
+    if (response == null) {
+      response = request.getResponse();
+      if (response == null) {
+        return;
+      }
+    }
+    if (emitStableMessagingSemconv()) {
+      String routingKey = response.getEnvelope().getRoutingKey();
+      if (routingKey != null && !routingKey.isEmpty()) {
+        attributes.put(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
+      }
+      attributes.put(
+          MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, response.getEnvelope().getDeliveryTag());
+    }
+  }
 }

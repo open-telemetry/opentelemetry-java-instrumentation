@@ -20,6 +20,16 @@
   already expose a max. It is no longer emitted when `otel.instrumentation.common.v3-preview` is
   enabled.
   ([#19397](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19397))
+- Deprecate `MessageOperation` in favor of `MessagingOperationType`.
+  ([#19357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19357))
+- Deprecate the `MessageOperation`-based factory methods on `MessagingAttributesExtractor`,
+  `MessagingSpanNameExtractor` and `MessagingSpanKindExtractor` in favor of their
+  `MessagingOperationType`-based counterparts.
+  ([#19357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19357))
+- Deprecate `MessagingProducerMetrics.get()` and `MessagingConsumerMetrics.get()` in favor of
+  `MessagingProducerMetrics.getForOperationType()` and
+  `MessagingConsumerMetrics.getForOperationType()`.
+  ([#19357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19357))
 
 ## Version 2.30.0 (2026-07-22)
 

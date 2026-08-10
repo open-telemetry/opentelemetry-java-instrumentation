@@ -88,6 +88,34 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
+  val testMessagingOptIn = register<Test>("testMessagingOptIn") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("KafkaClientPropagationDisabledTest")
+      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+    }
+    // with the v3 preview off, the legacy opt-in flag selects the new messaging semconv too
+    jvmArgs("-Dotel.semconv-stability.opt-in=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
+  }
+
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("KafkaClientPropagationDisabledTest")
+      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    // the v3 preview does not support dual emit for messaging, so this degrades to emitting only
+    // the new messaging semconv
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    // kafka metrics are disabled by default with v3-preview enabled
+    jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -129,6 +157,8 @@ tasks {
       testMessagingPreview,
       testMessagingPreviewReceiveSpansDisabled,
       testMessagingPreviewPropagationDisabled,
+      testMessagingOptIn,
+      testV3Preview,
       testExperimental,
       testBothSemconv,
     )
