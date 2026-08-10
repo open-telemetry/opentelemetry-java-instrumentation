@@ -81,8 +81,8 @@ must be communicated through:
 ### Deprecated Properties Under Common v3 Preview
 
 Configuration names are user-facing API; also see
-[Breaking Changes and Deprecation Policy](api-deprecation-policy.md). When a deprecated property
-will be removed in 3.0, use this order:
+[Breaking Changes and Deprecation Policy](api-deprecation-policy.md). For ordinary replacement
+properties that will be removed in 3.0, use this order:
 
 1. Read the replacement first.
 2. Only if the replacement is absent and v3 preview is disabled, read the deprecated value.
@@ -96,6 +96,12 @@ deprecated property and ignore the replacement they do not recognize, while new 
 replacement and do not warn about the redundant deprecated property. After every deployment has
 upgraded, operators can remove the deprecated property. A warning therefore identifies a deployment
 that still depends on the deprecated value, not one merely carrying it for compatibility.
+
+Instrumentation enablement name aliases are an exception. Enablement is resolved across an ordered
+list of equivalent names, while deprecation warnings are based on whether the legacy alias is
+explicitly configured. The replacement alias can therefore determine the result while the legacy
+alias still triggers a warning. Under v3 preview, omit the legacy alias from resolution and silently
+ignore its key. Do not copy this alias-specific warning behavior into ordinary property fallback.
 
 Keep the deprecated read itself inside the `!v3Preview` branch, rather than reading it eagerly and
 discarding it later:
@@ -227,8 +233,9 @@ These have no flat-property fallback, so tests must cover declarative config mod
   compatibility branch so 3.0 behavior does not observe the legacy setting.
 - **Warning emitted for a value ignored under v3 preview**: warn only when the deprecated value is
   actually applied; v3-preview users should get silent 3.0 behavior.
-- **Warning emitted when the replacement already determines the value**: do not warn merely because
-  shared configuration carries both names during a mixed-version rollout.
+- **Warning emitted when the replacement already determines an ordinary property value**: do not
+  warn merely because shared configuration carries both names during a mixed-version rollout. This
+  does not apply to instrumentation enablement name aliases.
 - **Missing warning deduplication on a repeatable path**: use a per-key concurrent set for multiple
   properties or an `AtomicBoolean` for a single property.
 - **Generated release notes fold v3-preview behavior into the deprecation bullet**: keep the

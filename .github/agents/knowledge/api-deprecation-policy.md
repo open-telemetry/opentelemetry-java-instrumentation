@@ -123,7 +123,9 @@ names, so both `otel.instrumentation.jaxws-2.0-cxf-3.0.enabled` and
 `otel.instrumentation.jaxws-cxf-3.0.enabled` keep working (flat properties and YAML alike).
 Under `otel.instrumentation.common.v3-preview=true` the deprecated name is dropped and the legacy
 key is silently ignored. Otherwise, if the legacy key is explicitly set, a one-time WARNING is
-logged pointing at the new key.
+logged pointing at the new key. This is specific to instrumentation-name aliases: unlike ordinary
+replacement-property fallback, the warning is based on explicit legacy-key presence and can occur
+even when the current name determines the effective enablement.
 
 No per-module `AgentCommonConfig` branching, `isV3Preview()` checks, or bespoke logging are
 needed — one string literal is the entire change.
