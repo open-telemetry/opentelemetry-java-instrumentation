@@ -25,6 +25,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class GrpcAttributesExtractorTest {
 
@@ -73,10 +75,11 @@ class GrpcAttributesExtractorTest {
     assertExcludedMetadata(attributes.build(), "some-key");
   }
 
-  @Test
-  void skipsHttp2PseudoHeaders() {
+  @ParameterizedTest
+  @ValueSource(strings = {":authority", "x-foo!bar", "x_foo+bar", "x-foo~bar"})
+  void skipsKeysThatGrpcMetadataCannotRepresent(String key) {
     Metadata metadata = mock(Metadata.class);
-    when(metadata.keys()).thenReturn(singleton(":authority"));
+    when(metadata.keys()).thenReturn(singleton(key));
     GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
     AttributesBuilder attributes = Attributes.builder();
     IncludeExclude selector = IncludeExclude.builder().build();
