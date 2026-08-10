@@ -11,14 +11,15 @@ import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.instrumentation.viburdbcp.v11_0.ViburTelemetry;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
+import javax.annotation.Nullable;
 import org.vibur.dbcp.ViburConfig;
 import org.vibur.dbcp.ViburDBCPDataSource;
 
 public class ViburSingletons {
 
   private static final String DEFAULT_DATA_SOURCE_NAME = "vibur-dbcp";
-  private static final VirtualField<ViburConfig, String> defaultNameField =
-      VirtualField.find(ViburConfig.class, String.class);
+  private static final VirtualField<ViburConfig, Boolean> configuredNameField =
+      VirtualField.find(ViburConfig.class, Boolean.class);
 
   private static final ViburTelemetry telemetry = ViburTelemetry.create(GlobalOpenTelemetry.get());
 
@@ -26,13 +27,14 @@ public class ViburSingletons {
     return telemetry;
   }
 
-  public static void captureDefaultName(ViburConfig config) {
-    defaultNameField.set(config, config.getName());
+  public static void markDataSourceNameConfigured(ViburConfig config, @Nullable String name) {
+    if (name != null && !name.trim().isEmpty()) {
+      configuredNameField.set(config, true);
+    }
   }
 
   public static boolean isDataSourceNameConfigured(ViburConfig config) {
-    String defaultName = defaultNameField.get(config);
-    return defaultName == null || !defaultName.equals(config.getName());
+    return Boolean.TRUE.equals(configuredNameField.get(config));
   }
 
   public static String getDataSourceName(ViburDBCPDataSource dataSource) {

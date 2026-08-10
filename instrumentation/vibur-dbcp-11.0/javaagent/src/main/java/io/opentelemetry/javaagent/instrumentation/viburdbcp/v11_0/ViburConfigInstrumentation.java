@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.viburdbcp.v11_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -26,15 +27,17 @@ final class ViburConfigInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArguments(0)), getClass().getName() + "$ConstructorAdvice");
+        isPublic().and(named("setName")).and(takesArguments(String.class)),
+        getClass().getName() + "$SetNameAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class ConstructorAdvice {
+  public static class SetNameAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This ViburConfig config) {
-      ViburSingletons.captureDefaultName(config);
+    public static void onExit(
+        @Advice.This ViburConfig config, @Advice.Argument(0) @Nullable String name) {
+      ViburSingletons.markDataSourceNameConfigured(config, name);
     }
   }
 }

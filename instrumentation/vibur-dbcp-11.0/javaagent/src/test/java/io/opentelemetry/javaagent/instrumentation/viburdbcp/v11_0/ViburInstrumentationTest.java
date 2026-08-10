@@ -82,6 +82,39 @@ class ViburInstrumentationTest extends AbstractViburInstrumentationTest {
     assertPoolName(dataSource, "propertiesPool");
   }
 
+  @Test
+  void shouldUseNameConfiguredThroughSetterWhenItMatchesGeneratedName() throws SQLException {
+    ViburDBCPDataSource dataSource = newDataSource();
+    String poolName = dataSource.getName();
+
+    dataSource.setName(poolName);
+
+    assertPoolName(dataSource, poolName);
+  }
+
+  @Test
+  void shouldUseNameConfiguredThroughPropertiesWhenItMatchesGeneratedName() throws SQLException {
+    ViburDBCPDataSource previousDataSource = new ViburDBCPDataSource();
+    String previousName = previousDataSource.getName();
+    String poolName = "p" + (Integer.parseInt(previousName.substring(1)) + 1);
+
+    Properties properties = new Properties();
+    properties.setProperty("name", poolName);
+
+    ViburDBCPDataSource dataSource = new ViburDBCPDataSource(properties);
+    dataSource.setExternalDataSource(dataSourceMock);
+
+    assertPoolName(dataSource, poolName);
+  }
+
+  @Test
+  void shouldUseFallbackPoolNameAfterInvalidName() throws SQLException {
+    ViburDBCPDataSource dataSource = newDataSource();
+    dataSource.setName("");
+
+    assertPoolName(dataSource, "vibur-dbcp");
+  }
+
   private ViburDBCPDataSource newDataSource() {
     ViburDBCPDataSource dataSource = new ViburDBCPDataSource();
     dataSource.setExternalDataSource(dataSourceMock);
