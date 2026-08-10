@@ -51,12 +51,14 @@ final class Bridging {
   }
 
   static String statisticInstrumentName(
-      Meter.Id id, Statistic statistic, NamingConvention namingConvention) {
-    String prefix = id.getName() + ".";
+      Meter.Id id, Statistic statistic, NamingConvention namingConvention, boolean v3Preview) {
     // use "total_time" instead of "total" to avoid clashing with Statistic.TOTAL
     String statisticStr =
         statistic == Statistic.TOTAL_TIME ? "total_time" : statistic.getTagValueRepresentation();
-    return namingConvention.name(prefix + statisticStr, id.getType(), id.getBaseUnit());
+    if (v3Preview) {
+      return name(id, namingConvention) + "." + statisticStr;
+    }
+    return namingConvention.name(id.getName() + "." + statisticStr, id.getType(), id.getBaseUnit());
   }
 
   private Bridging() {}
