@@ -30,6 +30,11 @@ public final class RuntimeTelemetryBuilder {
   private static final String DEFAULT_INSTRUMENTATION_NAME = "io.opentelemetry.runtime-telemetry";
   private static final List<String> EXPERIMENTAL_JFR_METRICS =
       asList(
+          // the jvm.buffer.* metrics overlap with JMX, and are filtered back out of the JFR
+          // selection when experimental JMX metrics are also enabled
+          "jvm.buffer.count",
+          "jvm.buffer.memory.limit",
+          "jvm.buffer.memory.used",
           "jvm.cpu.context_switch",
           "jvm.cpu.longlock",
           "jvm.memory.allocation",
