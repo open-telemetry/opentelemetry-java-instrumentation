@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.FunctionTimer;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -19,6 +20,33 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.Test;
 
 class DescriptionDeduplicationTest {
+
+  @Test
+  void descriptionsAreNotSharedAcrossRegistries() {
+    InMemoryMetricReader reader = InMemoryMetricReader.create();
+
+    try (SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(reader).build()) {
+      OpenTelemetrySdk openTelemetry =
+          OpenTelemetrySdk.builder().setMeterProvider(meterProvider).build();
+
+      MeterRegistry firstRegistry = OpenTelemetryMeterRegistry.builder(openTelemetry).build();
+      MeterRegistry secondRegistry = OpenTelemetryMeterRegistry.builder(openTelemetry).build();
+
+      Counter.builder("testCounter")
+          .description("First description")
+          .register(firstRegistry)
+          .increment();
+      Counter.builder("testCounter")
+          .description("Second description")
+          .register(secondRegistry)
+          .increment();
+
+      assertThat(reader.collectAllMetrics())
+          .extracting(MetricData::getDescription)
+          .containsExactlyInAnyOrder("First description", "Second description");
+    }
+  }
 
   @Test
   void descriptionsAreDeduplicatedOnTheSuffixedInstrumentName() {
