@@ -115,7 +115,12 @@ Canonical implementations:
 - `instrumentation/log4j/log4j-context-data/log4j-context-data-2.17/library-autoconfigure/src/main/java/io/opentelemetry/instrumentation/log4j/contextdata/v2_17/internal/ContextDataKeys.java`
 - `Configuration.getQuerySanitizationEnabled` in
   `instrumentation/graphql-java/graphql-java-20.0/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/graphql/v20_0/GraphqlSingletons.java`
-- `javaagent-extension-api/src/main/java/io/opentelemetry/javaagent/extension/instrumentation/internal/DeprecatedInstrumentationNames.java`
+
+Instrumentation-name aliases are a special case rather than a canonical property fallback. When
+v3 preview is disabled, `DeprecatedInstrumentationNames` registers the current alias before the
+deprecated alias and warns whenever the deprecated alias is explicitly configured, even if the
+current alias takes precedence. Under v3 preview, it drops the deprecated alias and silently ignores
+the corresponding legacy key.
 
 ### Warning Text
 
