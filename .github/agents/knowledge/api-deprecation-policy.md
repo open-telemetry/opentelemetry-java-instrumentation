@@ -192,13 +192,10 @@ static {
 
 ### CHANGELOG
 
-The rename is **not** a breaking change or a deprecation in the current release: by default
-the old config keys and scope names continue to work unchanged, and the new names are only
-visible under `otel.instrumentation.common.v3-preview` — a preview flag that users are not
-generally encouraged to enable. Do not add a `⚠️ Breaking changes to non-stable APIs` or
-`🚫 Deprecations` entry for this kind of rename. If mentioned at all, it belongs in whatever
-section tracks v3-preview changes. The breaking change will be recorded when v3-preview
-becomes the default in 3.0.
+An instrumentation-name alias rename is a configuration-property rename and belongs under
+`🚫 Deprecations`, even though the legacy key continues to work outside v3 preview. Do not classify
+it under `⚠️ Breaking changes to non-stable APIs` while the compatibility alias remains. The
+breaking removal will be recorded when v3-preview behavior becomes the default in 3.0.
 
 ## What to Flag in Review
 
