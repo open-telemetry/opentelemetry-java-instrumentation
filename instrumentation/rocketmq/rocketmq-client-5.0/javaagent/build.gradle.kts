@@ -46,6 +46,18 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
+  val testSimpleConsumerReceiveSpanDisabled =
+    register<Test>("testSimpleConsumerReceiveSpanDisabled") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        includeTestsMatching("RocketMqSimpleConsumerTest.shouldHonorDisabledReceiveTelemetry")
+      }
+      include("**/RocketMqSimpleConsumerTest.*")
+      jvmArgs("-Dotel.semconv-stability.preview=messaging")
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+    }
+
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -70,7 +82,12 @@ tasks {
   }
 
   check {
-    dependsOn(testReceiveSpanDisabled, testMessagingPreview, testBothSemconv)
+    dependsOn(
+      testReceiveSpanDisabled,
+      testMessagingPreview,
+      testSimpleConsumerReceiveSpanDisabled,
+      testBothSemconv,
+    )
   }
 
   if (otelProps.denyUnsafe) {

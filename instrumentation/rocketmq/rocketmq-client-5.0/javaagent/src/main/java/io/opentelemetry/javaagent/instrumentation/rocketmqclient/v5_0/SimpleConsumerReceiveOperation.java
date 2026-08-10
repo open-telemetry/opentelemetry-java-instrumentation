@@ -62,23 +62,20 @@ public class SimpleConsumerReceiveOperation {
           }
         },
         MoreExecutors.directExecutor());
-    return Futures.transform(originalFuture, this::endSuccessfully, MoreExecutors.directExecutor());
+    return Futures.transform(
+        originalFuture,
+        messages -> {
+          endSuccessfully(messages);
+          return messages;
+        },
+        MoreExecutors.directExecutor());
   }
 
-  private List<MessageView> endSuccessfully(List<MessageView> messages) {
+  private void endSuccessfully(List<MessageView> messages) {
     try {
-      if (messages.isEmpty()) {
-        return messages;
-      }
-      for (MessageView message : messages) {
-        VirtualFieldStore.setConsumerGroupByMessage(message, consumerGroup);
-        VirtualFieldStore.setContextByMessage(message, parentContext);
-      }
       end(messages, null);
-      return SimpleConsumerTracingList.wrap(messages);
     } catch (Throwable t) {
       ExceptionLogger.logSuppressedError("Error instrumenting RocketMQ SimpleConsumer receive", t);
-      return messages;
     }
   }
 

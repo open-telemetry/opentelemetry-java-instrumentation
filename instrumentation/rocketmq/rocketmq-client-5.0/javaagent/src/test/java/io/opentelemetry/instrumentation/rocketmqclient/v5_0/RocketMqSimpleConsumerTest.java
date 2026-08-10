@@ -15,12 +15,10 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -62,8 +60,11 @@ class RocketMqSimpleConsumerTest {
   private static final String TOPIC = "normal-topic-0";
   private static final String TAG = "tagA";
   private static final String CONSUMER_GROUP = "simple-consumer-group";
+  private static final String EMPTY_CONSUMER_GROUP = "empty-simple-consumer-group";
   private static final String[] KEYS = {"simple-key-0", "simple-key-1"};
   private static final byte[] BODY = "simple-consumer".getBytes(UTF_8);
+  private static final boolean RECEIVE_TELEMETRY_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -105,7 +106,7 @@ class RocketMqSimpleConsumerTest {
   }
 
   @Test
-  void shouldInstrumentSynchronousReceiveAndProcess() throws ClientException {
+  void shouldInstrumentSynchronousReceive() throws ClientException {
     assumeTrue(emitStableMessagingSemconv());
     SpanData sendSpan = sendMessage();
 
@@ -114,16 +115,15 @@ class RocketMqSimpleConsumerTest {
         () -> {
           List<MessageView> messages = consumer.receive(1, Duration.ofSeconds(10));
           for (MessageView message : messages) {
-            testing.runWithSpan("sync process child", () -> {});
             consumer.ack(message);
           }
         });
 
-    assertReceiveAndProcessTrace("sync receive parent", "sync process child", sendSpan);
+    assertSuccessfulReceiveTrace("sync receive parent", sendSpan);
   }
 
   @Test
-  void shouldInstrumentAsynchronousReceiveAndProcess() throws ClientException {
+  void shouldInstrumentAsynchronousReceive() throws ClientException {
     assumeTrue(emitStableMessagingSemconv());
     SpanData sendSpan = sendMessage();
 
@@ -131,11 +131,79 @@ class RocketMqSimpleConsumerTest {
         testing.runWithSpan(
             "async receive parent", () -> consumer.receiveAsync(1, Duration.ofSeconds(10)).join());
     for (MessageView message : messages) {
-      testing.runWithSpan("async process child", () -> {});
       consumer.ack(message);
     }
 
-    assertReceiveAndProcessTrace("async receive parent", "async process child", sendSpan);
+    assertSuccessfulReceiveTrace("async receive parent", sendSpan);
+  }
+
+  @Test
+  void shouldInstrumentEmptySynchronousAndAsynchronousReceive() throws ClientException {
+    assumeTrue(emitStableMessagingSemconv());
+
+    Map<String, FilterExpression> subscriptionExpressions = new HashMap<>();
+    subscriptionExpressions.put(
+        TOPIC, new FilterExpression("missing-tag", FilterExpressionType.TAG));
+    SimpleConsumer emptyConsumer =
+        provider
+            .newSimpleConsumerBuilder()
+            .setClientConfiguration(
+                ClientConfiguration.newBuilder()
+                    .setEndpoints(container.endpoints)
+                    .setRequestTimeout(Duration.ofSeconds(10))
+                    .build())
+            .setConsumerGroup(EMPTY_CONSUMER_GROUP)
+            .setAwaitDuration(Duration.ofSeconds(1))
+            .setSubscriptionExpressions(subscriptionExpressions)
+            .build();
+    cleanup.deferCleanup(() -> ((ClientImpl) emptyConsumer).stopAsync());
+
+    List<MessageView> syncMessages =
+        testing.runWithSpan(
+            "sync empty parent", () -> emptyConsumer.receive(1, Duration.ofSeconds(1)));
+    List<MessageView> asyncMessages =
+        testing.runWithSpan(
+            "async empty parent",
+            () -> emptyConsumer.receiveAsync(1, Duration.ofSeconds(1)).join());
+
+    assertThat(syncMessages).isEmpty();
+    assertThat(asyncMessages).isEmpty();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("sync empty parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    assertEmptyReceiveSpan(span, EMPTY_CONSUMER_GROUP).hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("async empty parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    assertEmptyReceiveSpan(span, EMPTY_CONSUMER_GROUP)
+                        .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void shouldHonorDisabledReceiveTelemetry() throws ClientException {
+    assumeTrue(emitStableMessagingSemconv());
+    assumeFalse(RECEIVE_TELEMETRY_ENABLED);
+    sendMessage();
+
+    testing.runWithSpan(
+        "disabled receive parent",
+        () -> {
+          List<MessageView> messages = consumer.receive(1, Duration.ofSeconds(10));
+          assertThat(messages).hasSize(1);
+          consumer.ack(messages.get(0));
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("disabled receive parent")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()));
   }
 
   @Test
@@ -216,18 +284,12 @@ class RocketMqSimpleConsumerTest {
     return sendSpan.get();
   }
 
-  private static void assertReceiveAndProcessTrace(
-      String parentName, String childName, SpanData sendSpan) {
+  private static void assertSuccessfulReceiveTrace(String parentName, SpanData sendSpan) {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName(parentName).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertReceiveSpan(span, sendSpan).hasParent(trace.getSpan(0)),
-                span -> assertProcessSpan(span, sendSpan).hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName(childName)
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(2))));
+                span -> assertReceiveSpan(span, sendSpan).hasParent(trace.getSpan(0))));
   }
 
   private static void assertReceiveErrorTrace(String parentName) {
@@ -270,20 +332,15 @@ class RocketMqSimpleConsumerTest {
         .hasLinks(LinkData.create(sendSpan.getSpanContext()));
   }
 
-  private static SpanDataAssert assertProcessSpan(SpanDataAssert span, SpanData sendSpan) {
-    return span.hasKind(SpanKind.CONSUMER)
-        .hasName("process " + TOPIC)
+  private static SpanDataAssert assertEmptyReceiveSpan(SpanDataAssert span, String consumerGroup) {
+    return span.hasKind(SpanKind.CLIENT)
+        .hasName("receive")
         .hasStatus(StatusData.unset())
         .hasAttributesSatisfyingExactly(
-            equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-            equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, TAG),
-            equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(KEYS)),
+            equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
             equalTo(MESSAGING_SYSTEM, "rocketmq"),
-            equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
-            equalTo(MESSAGING_MESSAGE_ID, sendSpan.getAttributes().get(MESSAGING_MESSAGE_ID)),
-            equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
-            equalTo(MESSAGING_OPERATION_NAME, "process"),
-            equalTo(MESSAGING_OPERATION_TYPE, "process"))
-        .hasLinks(LinkData.create(sendSpan.getSpanContext()));
+            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0));
   }
 }
