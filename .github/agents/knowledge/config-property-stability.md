@@ -155,11 +155,10 @@ Only cite a declarative path directly when the old key never had a flat-property
 
 ### CHANGELOG Categorization
 
-The hand-written property deprecation entry belongs under `🚫 Deprecations`. Ignoring that
-deprecated property under v3 preview is a separate behavior improvement, but normal enhancement
-entries are generated from pull request metadata rather than added by hand. When checking generated
-release notes, ensure the preview behavior appears under `📈 Enhancements` instead of being combined
-with the deprecation bullet.
+The hand-written property deprecation entry belongs under `🚫 Deprecations`. The release-note
+generator assigns one section per pull request and always classifies configuration-property renames
+as deprecations, so the generated deprecation bullet may also mention that v3 preview ignores the
+legacy property. Do not request a separate hand-written or generated enhancement entry.
 
 ## Migration Support Pattern (Optional)
 
@@ -238,6 +237,5 @@ These have no flat-property fallback, so tests must cover declarative config mod
   does not apply to instrumentation enablement name aliases.
 - **Missing warning deduplication on a repeatable path**: use a per-key concurrent set for multiple
   properties or an `AtomicBoolean` for a single property.
-- **Generated release notes fold v3-preview behavior into the deprecation bullet**: keep the
-  hand-written deprecation under `🚫 Deprecations` and verify that generated release notes classify
-  the preview behavior under `📈 Enhancements`; do not request a hand-written enhancement entry.
+- **Configuration-property rename classified outside deprecations**: generated release notes assign
+  the pull request to `🚫 Deprecations`, including any v3-preview behavior described by its bullet.
