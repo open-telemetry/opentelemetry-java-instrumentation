@@ -50,10 +50,6 @@ public final class OverallCpuLoadHandler implements RecordedEventHandler {
     return metricNames.isEmpty() ? null : new OverallCpuLoadHandler(meter, metricNames);
   }
 
-  public OverallCpuLoadHandler(Meter meter) {
-    this(meter, Set.of(METRIC_NAME_PROCESS, METRIC_NAME_MACHINE));
-  }
-
   private OverallCpuLoadHandler(Meter meter, Set<String> metricNames) {
     this.metricNames = metricNames;
     processSelected = metricNames.contains(METRIC_NAME_PROCESS);

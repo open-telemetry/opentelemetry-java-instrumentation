@@ -79,16 +79,6 @@ public final class ParallelHeapSummaryHandler implements RecordedEventHandler {
     return metricNames.isEmpty() ? null : new ParallelHeapSummaryHandler(meter, metricNames);
   }
 
-  public ParallelHeapSummaryHandler(Meter meter) {
-    this(
-        meter,
-        Set.of(
-            Constants.METRIC_NAME_MEMORY,
-            Constants.METRIC_NAME_MEMORY_AFTER,
-            Constants.METRIC_NAME_COMMITTED,
-            Constants.METRIC_NAME_MEMORY_LIMIT));
-  }
-
   private ParallelHeapSummaryHandler(Meter meter, Set<String> metricNames) {
     this.metricNames = metricNames;
     usageSelected = metricNames.contains(Constants.METRIC_NAME_MEMORY);

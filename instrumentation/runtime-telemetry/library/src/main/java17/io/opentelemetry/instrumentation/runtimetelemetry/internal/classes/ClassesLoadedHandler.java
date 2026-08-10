@@ -59,10 +59,6 @@ public final class ClassesLoadedHandler implements RecordedEventHandler {
     return metricNames.isEmpty() ? null : new ClassesLoadedHandler(meter, metricNames);
   }
 
-  public ClassesLoadedHandler(Meter meter) {
-    this(meter, Set.of(METRIC_NAME_LOADED, METRIC_NAME_UNLOADED, METRIC_NAME_CURRENT));
-  }
-
   private ClassesLoadedHandler(Meter meter, Set<String> metricNames) {
     this.metricNames = metricNames;
     boolean currentSelected = metricNames.contains(METRIC_NAME_CURRENT);

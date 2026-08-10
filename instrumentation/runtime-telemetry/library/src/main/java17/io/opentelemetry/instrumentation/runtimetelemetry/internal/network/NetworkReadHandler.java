@@ -40,11 +40,6 @@ public final class NetworkReadHandler implements RecordedEventHandler {
     return metricNames.isEmpty() ? null : new NetworkReadHandler(meter, metricNames);
   }
 
-  public NetworkReadHandler(Meter meter) {
-    this(
-        meter, Set.of(Constants.METRIC_NAME_NETWORK_BYTES, Constants.METRIC_NAME_NETWORK_DURATION));
-  }
-
   private NetworkReadHandler(Meter meter, Set<String> metricNames) {
     this.metricNames = metricNames;
     bytesHistogram =

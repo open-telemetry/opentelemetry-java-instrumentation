@@ -68,15 +68,6 @@ public final class G1HeapSummaryHandler implements RecordedEventHandler {
     return metricNames.isEmpty() ? null : new G1HeapSummaryHandler(meter, metricNames);
   }
 
-  public G1HeapSummaryHandler(Meter meter) {
-    this(
-        meter,
-        Set.of(
-            Constants.METRIC_NAME_MEMORY,
-            Constants.METRIC_NAME_MEMORY_AFTER,
-            Constants.METRIC_NAME_COMMITTED));
-  }
-
   private G1HeapSummaryHandler(Meter meter, Set<String> metricNames) {
     this.metricNames = metricNames;
     usageSelected = metricNames.contains(Constants.METRIC_NAME_MEMORY);
