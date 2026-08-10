@@ -327,7 +327,9 @@ public final class Internal {
       List<String> included = jfrMetrics.getScalarList("included", String.class);
       List<String> excluded = jfrMetrics.getScalarList("excluded", String.class);
       return new JfrMetricSelection(
-          included != null || excluded != null,
+          // a selector without patterns is not valid configuration, and leaving JFR metrics
+          // disabled is safer than emitting every JFR metric
+          isNotEmpty(included) || isNotEmpty(excluded),
           included == null ? emptyList() : included,
           excluded == null ? emptyList() : excluded,
           config.getBoolean("emit_experimental_jfr_metrics/development", false),
@@ -384,6 +386,10 @@ public final class Internal {
       Internal.setJfrMetrics(
           builder,
           IncludeExclude.builder().setIncluded(effectiveIncluded).setExcluded(excluded).build());
+    }
+
+    private static boolean isNotEmpty(@Nullable List<String> patterns) {
+      return patterns != null && !patterns.isEmpty();
     }
   }
 

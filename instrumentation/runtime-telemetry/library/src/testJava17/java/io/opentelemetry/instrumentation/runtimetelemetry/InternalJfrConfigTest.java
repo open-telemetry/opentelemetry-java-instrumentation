@@ -46,17 +46,18 @@ class InternalJfrConfigTest {
         .contains("jvm.class.count", "jvm.cpu.longlock", "jvm.memory.allocation");
   }
 
-  // the declarative configuration schema requires at least one included pattern, so this only
-  // covers lenient handling of a selector that cannot be expressed by a valid configuration
+  // the declarative configuration schema requires at least one pattern, so a selector without
+  // patterns is not valid configuration and is treated as if it were absent
   @Test
-  void emptyIncludedListSelectsAll() {
+  void selectorWithoutPatternsKeepsJfrDisabled() {
     TestConfig config = new TestConfig();
     when(config.jfrMetrics.getScalarList("included", String.class)).thenReturn(emptyList());
+    when(config.jfrMetrics.getScalarList("excluded", String.class)).thenReturn(emptyList());
 
-    JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics = config.configureJfr();
+    RuntimeTelemetry runtimeTelemetry = config.configure();
+    cleanup.deferCleanup(runtimeTelemetry);
 
-    assertThat(jfrRuntimeMetrics.getMetricNames())
-        .contains("jvm.class.count", "jvm.cpu.longlock", "jvm.memory.allocation");
+    assertThat(runtimeTelemetry.getJfrTelemetry()).isNull();
   }
 
   @Test
