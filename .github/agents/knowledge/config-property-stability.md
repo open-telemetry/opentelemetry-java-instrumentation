@@ -121,6 +121,10 @@ if (!v3Preview) {
 return defaultValue;
 ```
 
+The nullable overloads above are intentional: migration code must distinguish an absent replacement
+from an explicitly configured value before applying the default. Use the defaulted overload for
+ordinary reads, after any migration probes have completed.
+
 ### Warning Text
 
 Use the flat `otel.instrumentation.*` property name in warnings even when code reads the equivalent
@@ -150,7 +154,7 @@ Only cite a declarative path directly when the old key never had a flat-property
 
 - Use a static `ConcurrentHashMap.newKeySet()` keyed by deprecated property when a helper handles
   multiple properties or can warn once per key.
-- Use an `AtomicBoolean` for one deprecated property evaluated on a repeatable path.
+- Use a static `AtomicBoolean` for one deprecated property evaluated on a repeatable path.
 - Omit explicit deduplication only when initialization guarantees one evaluation.
 
 ### CHANGELOG Categorization
@@ -223,8 +227,10 @@ These have no flat-property fallback, so tests must cover declarative config mod
 
 **Declarative config correctness:**
 
-- **Missing default values in declarative config reads**: always provide defaults
-  (`getBoolean(name, default)`, etc.) for graceful degradation when YAML is unavailable.
+- **Missing default values in declarative config reads**: provide defaults
+  (`getBoolean(name, default)`, etc.) for graceful degradation when YAML is unavailable. Migration
+  probes are the exception: use the nullable overload to detect absence, then apply the default after
+  checking replacement and deprecated names.
 - **Wrong config scope**: `getInstrumentationConfig(ot, name)` → `java → <name>`;
   `getGeneralInstrumentationConfig(ot)` → `general`. HTTP header capture lives under `general`.
 
