@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaSqsMetricsAssertions.assertMetrics;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
@@ -52,6 +53,8 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
   protected abstract RequestHandler<SQSEvent, ?> handler();
 
   protected abstract InstrumentationExtension testing();
+
+  protected abstract String instrumentationName();
 
   @Mock private Context context;
 
@@ -126,6 +129,7 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                                                     ? Attributes.of(
                                                         MESSAGING_MESSAGE_ID, "message1")
                                                     : Attributes.empty())))));
+    assertMetrics(testing(), instrumentationName(), "queue1", 1, 2, null);
   }
 
   @Test
