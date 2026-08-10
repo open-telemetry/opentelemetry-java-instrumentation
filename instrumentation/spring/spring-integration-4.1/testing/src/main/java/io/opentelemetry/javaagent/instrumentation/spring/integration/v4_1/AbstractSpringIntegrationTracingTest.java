@@ -8,11 +8,15 @@ package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertNoMetrics;
+import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertProcessMetrics;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.messagingAttributes;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -102,7 +106,30 @@ abstract class AbstractSpringIntegrationTracingTest {
                 },
                 span -> span.hasName("handler").hasParent(trace.getSpan(0))));
 
+    if (emitStableMessagingSemconv()) {
+      assertProcessMetrics(testing, destinationName, false);
+    } else {
+      assertNoMetrics(testing);
+    }
+
     channel.unsubscribe(messageHandler);
+  }
+
+  @Test
+  void shouldRecordFailedProcessMetrics() {
+    assumeTrue(emitStableMessagingSemconv());
+
+    SubscribableChannel channel =
+        applicationContext.getBean("directChannel", SubscribableChannel.class);
+    channel.subscribe(
+        message -> {
+          throw new IllegalStateException("test");
+        });
+
+    assertThatThrownBy(() -> channel.send(MessageBuilder.withPayload("test").build()))
+        .isInstanceOf(RuntimeException.class);
+
+    assertProcessMetrics(testing, "application.directChannel", true);
   }
 
   @Test
