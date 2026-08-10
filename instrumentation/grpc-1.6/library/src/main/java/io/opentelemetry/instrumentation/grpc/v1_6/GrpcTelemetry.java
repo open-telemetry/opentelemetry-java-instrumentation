@@ -134,9 +134,9 @@ public final class GrpcTelemetry {
    * Returns a new {@link ClientInterceptor} for use with methods like {@link
    * io.grpc.ManagedChannelBuilder#intercept(ClientInterceptor...)}.
    *
-   * @deprecated Use {@link #addClientInterceptor(ManagedChannelBuilder)} instead.
+   * <p>When configuring a {@link ManagedChannelBuilder} directly, prefer {@link
+   * #addClientInterceptor(ManagedChannelBuilder)} so the channel target can be captured.
    */
-  @Deprecated
   public ClientInterceptor createClientInterceptor() {
     return newTracingClientInterceptor(null);
   }
