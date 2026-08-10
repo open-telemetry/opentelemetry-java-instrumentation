@@ -21,6 +21,10 @@ import java.util.function.Predicate;
  * number of characters, including none. Excluded patterns take precedence over included patterns.
  * When there are no included patterns, all values that are not excluded match. Callers are
  * responsible for normalizing values and patterns when a domain requires case-insensitive matching.
+ *
+ * <p>There is no selector that matches nothing: a selector with no patterns at all matches every
+ * value. Settings that select nothing until they are configured should represent that as an absent
+ * selector rather than as a selector without patterns.
  */
 public final class IncludeExclude {
 
