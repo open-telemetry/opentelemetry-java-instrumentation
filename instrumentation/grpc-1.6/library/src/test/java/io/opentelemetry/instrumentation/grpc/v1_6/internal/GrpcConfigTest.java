@@ -109,6 +109,19 @@ class GrpcConfigTest {
   }
 
   @Test
+  void selectorWithoutPatternsCapturesNothing() {
+    DeclarativeConfigProperties config = mockConfig();
+    when(config.get("client").get("request_metadata").getScalarList("included", String.class))
+        .thenReturn(emptyList());
+    when(config.get("client").get("request_metadata").getScalarList("excluded", String.class))
+        .thenReturn(emptyList());
+
+    GrpcConfig grpcConfig = new GrpcConfig(config, false);
+
+    assertThat(grpcConfig.getClientRequestMetadata()).isNull();
+  }
+
+  @Test
   void deprecatedConfigIsIgnoredInV3Preview() {
     DeclarativeConfigProperties config = mockConfig();
     when(config.get("capture_metadata").get("client").getScalarList("request", String.class))
