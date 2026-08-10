@@ -548,7 +548,7 @@ public abstract class AbstractSqsTracingTest {
   }
 
   @Test
-  void testChangeMessageVisibility() {
+  void testChangeMessageVisibilityUsesGenericRpcSpan() {
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
     String receiptHandle = createMessages(queueUrl, 1).get(0);
 
@@ -579,17 +579,8 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(SERVER_ADDRESS, "localhost"),
                                   equalTo(SERVER_PORT, sqsPort),
                                   equalTo(NETWORK_PROTOCOL_VERSION, "1.1")));
-                      if (emitStableMessagingSemconv()) {
-                        attributes.add(equalTo(MESSAGING_SYSTEM, AWS_SQS));
-                        attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
-                        attributes.add(equalTo(MESSAGING_OPERATION_NAME, "change_visibility"));
-                        attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
-                      }
 
-                      span.hasName(
-                              emitStableMessagingSemconv()
-                                  ? "change_visibility testSdkSqs"
-                                  : "SQS.ChangeMessageVisibility")
+                      span.hasName("SQS.ChangeMessageVisibility")
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(attributes);
@@ -597,7 +588,7 @@ public abstract class AbstractSqsTracingTest {
   }
 
   @Test
-  void testChangeMessageVisibilityBatch() {
+  void testChangeMessageVisibilityBatchUsesGenericRpcSpan() {
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
     List<String> receiptHandles = createMessages(queueUrl, 2);
 
@@ -635,18 +626,8 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(SERVER_ADDRESS, "localhost"),
                                   equalTo(SERVER_PORT, sqsPort),
                                   equalTo(NETWORK_PROTOCOL_VERSION, "1.1")));
-                      if (emitStableMessagingSemconv()) {
-                        attributes.add(equalTo(MESSAGING_SYSTEM, AWS_SQS));
-                        attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
-                        attributes.add(equalTo(MESSAGING_OPERATION_NAME, "change_visibility"));
-                        attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
-                        attributes.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2));
-                      }
 
-                      span.hasName(
-                              emitStableMessagingSemconv()
-                                  ? "change_visibility testSdkSqs"
-                                  : "SQS.ChangeMessageVisibilityBatch")
+                      span.hasName("SQS.ChangeMessageVisibilityBatch")
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(attributes);

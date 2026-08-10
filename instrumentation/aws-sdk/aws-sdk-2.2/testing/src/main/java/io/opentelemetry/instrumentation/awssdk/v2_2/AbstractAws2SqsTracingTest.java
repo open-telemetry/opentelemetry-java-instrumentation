@@ -556,7 +556,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
   }
 
   @Test
-  void testChangeMessageVisibility() {
+  void testChangeMessageVisibilityUsesGenericRpcSpan() {
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());
@@ -594,17 +594,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                       val -> val.startsWith("http://localhost:" + sqsPort)),
                                   equalTo(SERVER_ADDRESS, "localhost"),
                                   equalTo(SERVER_PORT, sqsPort)));
-                      if (emitStableMessagingSemconv()) {
-                        attributes.add(equalTo(MESSAGING_SYSTEM, AWS_SQS));
-                        attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
-                        attributes.add(equalTo(MESSAGING_OPERATION_NAME, "change_visibility"));
-                        attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
-                      }
 
-                      span.hasName(
-                              emitStableMessagingSemconv()
-                                  ? "change_visibility testSdkSqs"
-                                  : "Sqs.ChangeMessageVisibility")
+                      span.hasName("Sqs.ChangeMessageVisibility")
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(attributes);
@@ -612,7 +603,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
   }
 
   @Test
-  void testChangeMessageVisibilityBatch() {
+  void testChangeMessageVisibilityBatchUsesGenericRpcSpan() {
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());
@@ -660,18 +651,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                       val -> val.startsWith("http://localhost:" + sqsPort)),
                                   equalTo(SERVER_ADDRESS, "localhost"),
                                   equalTo(SERVER_PORT, sqsPort)));
-                      if (emitStableMessagingSemconv()) {
-                        attributes.add(equalTo(MESSAGING_SYSTEM, AWS_SQS));
-                        attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
-                        attributes.add(equalTo(MESSAGING_OPERATION_NAME, "change_visibility"));
-                        attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
-                        attributes.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2));
-                      }
 
-                      span.hasName(
-                              emitStableMessagingSemconv()
-                                  ? "change_visibility testSdkSqs"
-                                  : "Sqs.ChangeMessageVisibilityBatch")
+                      span.hasName("Sqs.ChangeMessageVisibilityBatch")
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(attributes);

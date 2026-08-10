@@ -80,7 +80,6 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private final Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> settleInstrumenter;
-  private final Instrumenter<ExecutionAttributes, Response> changeVisibilityInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter;
   private final Logger eventLogger;
@@ -119,7 +118,6 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter,
       Instrumenter<ExecutionAttributes, Response> producerInstrumenter,
       Instrumenter<ExecutionAttributes, Response> settleInstrumenter,
-      Instrumenter<ExecutionAttributes, Response> changeVisibilityInstrumenter,
       Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter,
       Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter,
       Logger eventLogger,
@@ -133,7 +131,6 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
     this.producerInstrumenter = producerInstrumenter;
     this.settleInstrumenter = settleInstrumenter;
-    this.changeVisibilityInstrumenter = changeVisibilityInstrumenter;
     this.dynamoDbInstrumenter = dynamoDbInstrumenter;
     this.bedrockRuntimeInstrumenter = bedrockRuntimeInstrumenter;
     this.eventLogger = eventLogger;
@@ -484,9 +481,6 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
     if (emitStableMessagingSemconv() && SqsAccess.isSqsDeleteRequest(request)) {
       return settleInstrumenter;
-    }
-    if (emitStableMessagingSemconv() && SqsAccess.isSqsChangeVisibilityRequest(request)) {
-      return changeVisibilityInstrumenter;
     }
     if (BedrockRuntimeAccess.isBedrockRuntimeRequest(request)) {
       return bedrockRuntimeInstrumenter;

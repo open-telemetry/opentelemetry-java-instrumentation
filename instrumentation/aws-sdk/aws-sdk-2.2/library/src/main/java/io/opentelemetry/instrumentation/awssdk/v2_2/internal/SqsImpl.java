@@ -31,8 +31,6 @@ import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
-import software.amazon.awssdk.services.sqs.model.ChangeMessageVisibilityBatchRequest;
-import software.amazon.awssdk.services.sqs.model.ChangeMessageVisibilityRequest;
 import software.amazon.awssdk.services.sqs.model.DeleteMessageBatchRequest;
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
 import software.amazon.awssdk.services.sqs.model.Message;
@@ -265,11 +263,6 @@ public final class SqsImpl {
     return request instanceof DeleteMessageRequest || request instanceof DeleteMessageBatchRequest;
   }
 
-  static boolean isSqsChangeVisibilityRequest(SdkRequest request) {
-    return request instanceof ChangeMessageVisibilityRequest
-        || request instanceof ChangeMessageVisibilityBatchRequest;
-  }
-
   static String getQueueUrl(SdkRequest request) {
     if (request instanceof SendMessageRequest) {
       return ((SendMessageRequest) request).queueUrl();
@@ -281,10 +274,6 @@ public final class SqsImpl {
       return ((DeleteMessageRequest) request).queueUrl();
     } else if (request instanceof DeleteMessageBatchRequest) {
       return ((DeleteMessageBatchRequest) request).queueUrl();
-    } else if (request instanceof ChangeMessageVisibilityRequest) {
-      return ((ChangeMessageVisibilityRequest) request).queueUrl();
-    } else if (request instanceof ChangeMessageVisibilityBatchRequest) {
-      return ((ChangeMessageVisibilityBatchRequest) request).queueUrl();
     }
     return null;
   }
@@ -295,8 +284,6 @@ public final class SqsImpl {
       return (long) ((SendMessageBatchRequest) request).entries().size();
     } else if (request instanceof DeleteMessageBatchRequest) {
       return (long) ((DeleteMessageBatchRequest) request).entries().size();
-    } else if (request instanceof ChangeMessageVisibilityBatchRequest) {
-      return (long) ((ChangeMessageVisibilityBatchRequest) request).entries().size();
     }
     return null;
   }

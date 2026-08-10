@@ -11,7 +11,6 @@ import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.model.ChangeMessageVisibilityBatchRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageBatchRequest;
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
@@ -143,9 +142,6 @@ public final class SqsImpl {
       return (long) ((SendMessageBatchRequest) request.getOriginalRequest()).getEntries().size();
     } else if (request.getOriginalRequest() instanceof DeleteMessageBatchRequest) {
       return (long) ((DeleteMessageBatchRequest) request.getOriginalRequest()).getEntries().size();
-    } else if (request.getOriginalRequest() instanceof ChangeMessageVisibilityBatchRequest) {
-      return (long)
-          ((ChangeMessageVisibilityBatchRequest) request.getOriginalRequest()).getEntries().size();
     }
     return null;
   }

@@ -58,11 +58,6 @@ final class SqsAccess {
   }
 
   @NoMuzzle
-  static boolean isSqsChangeVisibilityRequest(SdkRequest request) {
-    return enabled && SqsImpl.isSqsChangeVisibilityRequest(request);
-  }
-
-  @NoMuzzle
   static String getQueueUrl(SdkRequest request) {
     return enabled ? SqsImpl.getQueueUrl(request) : null;
   }
