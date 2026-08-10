@@ -127,7 +127,7 @@ Experimental.setJfrMetrics(
 RuntimeTelemetry runtimeTelemetry = builder.build();
 ```
 
-`otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics=true` is a shorthand that adds all JFR-only experimental metrics to the included patterns: `jvm.cpu.context_switch`, `jvm.cpu.longlock`, `jvm.memory.allocation`, `jvm.network.io`, `jvm.network.time`, `jvm.thread.virtual.pinned`, and `jvm.thread.virtual.submit_failed`. Explicit exclusions still win.
+`otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics=true` is a shorthand that adds the experimental metrics that JFR can produce to the included patterns: `jvm.buffer.count`, `jvm.buffer.memory.limit`, `jvm.buffer.memory.used`, `jvm.cpu.context_switch`, `jvm.cpu.longlock`, `jvm.memory.allocation`, `jvm.network.io`, `jvm.network.time`, `jvm.thread.virtual.pinned`, and `jvm.thread.virtual.submit_failed`. The `jvm.buffer.*` metrics are also available from JMX, and are sourced from JMX instead whenever `otel.instrumentation.runtime-telemetry.emit-experimental-metrics=true` is also set. Explicit exclusions still win.
 
 `otel.instrumentation.runtime-telemetry.emit-experimental-metrics=true` independently enables additional JMX-based metrics that are not yet stable in the semantic conventions.
 

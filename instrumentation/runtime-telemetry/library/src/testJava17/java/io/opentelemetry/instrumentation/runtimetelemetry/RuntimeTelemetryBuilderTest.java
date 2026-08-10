@@ -165,6 +165,19 @@ class RuntimeTelemetryBuilderTest {
   }
 
   @Test
+  void experimentalJfrMetricsIncludeBufferMetrics() {
+    RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
+    Experimental.setEmitExperimentalJfrMetrics(builder, true);
+    RuntimeTelemetry runtimeTelemetry = builder.build();
+    cleanup.deferCleanup(runtimeTelemetry);
+
+    JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
+        (JfrConfig.JfrRuntimeMetrics) runtimeTelemetry.getJfrTelemetry();
+    assertThat(jfrRuntimeMetrics.getMetricNames())
+        .contains("jvm.buffer.count", "jvm.buffer.memory.limit", "jvm.buffer.memory.used");
+  }
+
+  @Test
   void exclusionsTakePrecedenceOverExperimentalJfrMetrics() {
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
     Experimental.setJfrMetrics(
