@@ -61,10 +61,7 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
       return;
     }
     for (String key : request.getMetadata().keys()) {
-      // HTTP/2 pseudo-headers are not gRPC metadata and cannot be read with Metadata.Key.of().
-      if (key.startsWith(":")
-          || key.endsWith(Metadata.BINARY_HEADER_SUFFIX)
-          || !requestMetadata.matches(key)) {
+      if (!isAsciiMetadataKey(key) || !requestMetadata.matches(key)) {
         continue;
       }
       List<String> value = getter.metadataValue(request, key);
@@ -77,5 +74,29 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
         }
       }
     }
+  }
+
+  // Returns whether the key names ASCII metadata that Metadata.Key.of() accepts. Metadata received
+  // from a peer can contain HTTP/2 pseudo-headers and header names built from HTTP token characters
+  // that gRPC does not allow in a metadata key, and passing those to Metadata.Key.of() throws.
+  private static boolean isAsciiMetadataKey(String key) {
+    if (key.isEmpty() || key.endsWith(Metadata.BINARY_HEADER_SUFFIX)) {
+      return false;
+    }
+    for (int i = 0; i < key.length(); i++) {
+      char c = key.charAt(i);
+      // the character set accepted by Metadata.Key, which lowercases the name before validating it
+      boolean valid =
+          (c >= 'a' && c <= 'z')
+              || (c >= 'A' && c <= 'Z')
+              || (c >= '0' && c <= '9')
+              || c == '-'
+              || c == '_'
+              || c == '.';
+      if (!valid) {
+        return false;
+      }
+    }
+    return true;
   }
 }
