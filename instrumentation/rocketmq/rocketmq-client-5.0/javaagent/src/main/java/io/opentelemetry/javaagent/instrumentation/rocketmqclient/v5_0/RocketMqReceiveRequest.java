@@ -18,27 +18,11 @@ class RocketMqReceiveRequest {
 
   private final ReceiveMessageRequest request;
   private final List<MessageView> messages;
-  private final String destination;
-  private final String messageId;
-  private final String messageTag;
-  private final String messageGroup;
-  private final Long messageDeliveryTimestamp;
-  private final List<String> messageKeys;
+  @Nullable private BatchMessageAttributes batchMessageAttributes;
 
   private RocketMqReceiveRequest(ReceiveMessageRequest request, List<MessageView> messages) {
     this.request = request;
     this.messages = messages;
-    this.destination =
-        messages.isEmpty()
-            ? request.getMessageQueue().getTopic().getName()
-            : commonValue(messages, MessageView::getTopic);
-    this.messageId =
-        commonValue(messages, message -> Objects.toString(message.getMessageId(), null));
-    this.messageTag = commonValue(messages, message -> message.getTag().orElse(null));
-    this.messageGroup = commonValue(messages, message -> message.getMessageGroup().orElse(null));
-    this.messageDeliveryTimestamp =
-        commonValue(messages, message -> message.getDeliveryTimestamp().orElse(null));
-    this.messageKeys = commonKeys(messages);
   }
 
   static RocketMqReceiveRequest create(ReceiveMessageRequest request, List<MessageView> messages) {
@@ -55,32 +39,41 @@ class RocketMqReceiveRequest {
 
   @Nullable
   String getDestination() {
-    return destination;
+    return getBatchMessageAttributes().destination;
   }
 
   @Nullable
   String getMessageId() {
-    return messageId;
+    return getBatchMessageAttributes().messageId;
   }
 
   @Nullable
   String getMessageTag() {
-    return messageTag;
+    return getBatchMessageAttributes().messageTag;
   }
 
   @Nullable
   String getMessageGroup() {
-    return messageGroup;
+    return getBatchMessageAttributes().messageGroup;
   }
 
   @Nullable
   Long getMessageDeliveryTimestamp() {
-    return messageDeliveryTimestamp;
+    return getBatchMessageAttributes().messageDeliveryTimestamp;
   }
 
   @Nullable
   List<String> getMessageKeys() {
-    return messageKeys;
+    return getBatchMessageAttributes().messageKeys;
+  }
+
+  private BatchMessageAttributes getBatchMessageAttributes() {
+    BatchMessageAttributes attributes = batchMessageAttributes;
+    if (attributes == null) {
+      attributes = new BatchMessageAttributes(request, messages);
+      batchMessageAttributes = attributes;
+    }
+    return attributes;
   }
 
   @Nullable
@@ -111,5 +104,27 @@ class RocketMqReceiveRequest {
       }
     }
     return keys;
+  }
+
+  private static class BatchMessageAttributes {
+    @Nullable private final String destination;
+    @Nullable private final String messageId;
+    @Nullable private final String messageTag;
+    @Nullable private final String messageGroup;
+    @Nullable private final Long messageDeliveryTimestamp;
+    @Nullable private final List<String> messageKeys;
+
+    private BatchMessageAttributes(ReceiveMessageRequest request, List<MessageView> messages) {
+      destination =
+          messages.isEmpty()
+              ? request.getMessageQueue().getTopic().getName()
+              : commonValue(messages, MessageView::getTopic);
+      messageId = commonValue(messages, message -> Objects.toString(message.getMessageId(), null));
+      messageTag = commonValue(messages, message -> message.getTag().orElse(null));
+      messageGroup = commonValue(messages, message -> message.getMessageGroup().orElse(null));
+      messageDeliveryTimestamp =
+          commonValue(messages, message -> message.getDeliveryTimestamp().orElse(null));
+      messageKeys = commonKeys(messages);
+    }
   }
 }

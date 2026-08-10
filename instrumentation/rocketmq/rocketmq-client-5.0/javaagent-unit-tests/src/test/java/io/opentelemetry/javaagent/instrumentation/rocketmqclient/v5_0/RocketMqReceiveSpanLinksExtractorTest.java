@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import apache.rocketmq.v2.ReceiveMessageRequest;
@@ -43,6 +44,17 @@ class RocketMqReceiveSpanLinksExtractorTest {
 
   private static final String TRACEPARENT =
       "00-00000000000000000000000000000001-0000000000000001-01";
+
+  @Test
+  void doesNotInspectMessagesWhenCreatingRequest() {
+    ReceiveMessageRequest receiveRequest = mock(ReceiveMessageRequest.class);
+    MessageView first = mock(MessageView.class);
+    MessageView second = mock(MessageView.class);
+
+    RocketMqReceiveRequest.create(receiveRequest, asList(first, second));
+
+    verifyNoInteractions(receiveRequest, first, second);
+  }
 
   @Test
   void keepsCommonAttributesOnReceiveSpan() {

@@ -20,9 +20,12 @@ final class RocketMqConsumerRequest {
   private final String consumerGroup;
   private final int batchSize;
   private final String namespace;
-  private final String destination;
-  private final String messageId;
-  private final String messageTag;
+  private boolean destinationInitialized;
+  @Nullable private String destination;
+  private boolean messageIdInitialized;
+  @Nullable private String messageId;
+  private boolean messageTagInitialized;
+  @Nullable private String messageTag;
 
   RocketMqConsumerRequest(
       MessageExt message, String consumerGroup, int batchSize, @Nullable String namespace) {
@@ -45,9 +48,6 @@ final class RocketMqConsumerRequest {
     this.consumerGroup = RocketMqNamespaceUtil.withoutNamespace(consumerGroup, namespace);
     this.batchSize = batchSize;
     this.namespace = namespace == null ? "" : namespace;
-    this.destination = commonValue(messages, MessageExt::getTopic);
-    this.messageId = commonValue(messages, MessageExt::getMsgId);
-    this.messageTag = commonValue(messages, MessageExt::getTags);
   }
 
   MessageExt getMessage() {
@@ -77,16 +77,28 @@ final class RocketMqConsumerRequest {
 
   @Nullable
   String getDestination() {
+    if (!destinationInitialized) {
+      destination = commonValue(messages, MessageExt::getTopic);
+      destinationInitialized = true;
+    }
     return destination;
   }
 
   @Nullable
   String getMessageId() {
+    if (!messageIdInitialized) {
+      messageId = commonValue(messages, MessageExt::getMsgId);
+      messageIdInitialized = true;
+    }
     return messageId;
   }
 
   @Nullable
   String getMessageTag() {
+    if (!messageTagInitialized) {
+      messageTag = commonValue(messages, MessageExt::getTags);
+      messageTagInitialized = true;
+    }
     return messageTag;
   }
 
