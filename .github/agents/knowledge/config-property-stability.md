@@ -113,7 +113,8 @@ Canonical implementations:
 - `instrumentation-api-incubator/src/main/java/io/opentelemetry/instrumentation/api/incubator/config/internal/DbConfig.java`
 - `instrumentation-api-incubator/src/main/java/io/opentelemetry/instrumentation/api/incubator/config/internal/CommonConfig.java`
 - `instrumentation/log4j/log4j-context-data/log4j-context-data-2.17/library-autoconfigure/src/main/java/io/opentelemetry/instrumentation/log4j/contextdata/v2_17/internal/ContextDataKeys.java`
-- `instrumentation/graphql-java/graphql-java-20.0/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/graphql/v20_0/GraphqlSingletons.java`
+- `Configuration.getQuerySanitizationEnabled` in
+  `instrumentation/graphql-java/graphql-java-20.0/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/graphql/v20_0/GraphqlSingletons.java`
 - `javaagent-extension-api/src/main/java/io/opentelemetry/javaagent/extension/instrumentation/internal/DeprecatedInstrumentationNames.java`
 
 ### Warning Text
