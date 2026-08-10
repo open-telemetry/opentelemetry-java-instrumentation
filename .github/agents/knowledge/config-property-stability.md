@@ -116,11 +116,12 @@ Canonical implementations:
 - `Configuration.getQuerySanitizationEnabled` in
   `instrumentation/graphql-java/graphql-java-20.0/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/graphql/v20_0/GraphqlSingletons.java`
 
-Instrumentation-name aliases are a special case rather than a canonical property fallback. When
-v3 preview is disabled, `DeprecatedInstrumentationNames` registers the current alias before the
-deprecated alias and warns whenever the deprecated alias is explicitly configured, even if the
-current alias takes precedence. Under v3 preview, it drops the deprecated alias and silently ignores
-the corresponding legacy key.
+Instrumentation-name aliases are a special case because their `.enabled` settings are resolved as
+one ordered list of equivalent instrumentation names, not as a single replacement property read
+followed by a deprecated fallback. When v3 preview is disabled, `DeprecatedInstrumentationNames`
+registers the current alias before the deprecated alias and warns whenever the deprecated alias is
+explicitly configured, even if the current alias takes precedence. Under v3 preview, it drops the
+deprecated alias and silently ignores the corresponding legacy key.
 
 ### Warning Text
 
