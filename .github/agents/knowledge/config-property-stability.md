@@ -78,6 +78,90 @@ must be communicated through:
    Note: the code reads via the declarative config API (YAML key), but the warning cites the
    flat property name for user clarity.
 
+### Deprecated Properties Under Common v3 Preview
+
+Configuration names are user-facing API; also see
+[Breaking Changes and Deprecation Policy](api-deprecation-policy.md). When a deprecated property
+will be removed in 3.0, use this order:
+
+1. Read the replacement first.
+2. Only if the replacement is absent and v3 preview is disabled, read the deprecated value.
+3. Warn only when returning/applying that deprecated value.
+4. Under `otel.instrumentation.common.v3-preview=true`, silently ignore the deprecated value. The
+   user explicitly opted into 3.0 behavior, so warning about a value that is not applied is noise.
+
+Keep the deprecated read itself inside the `!v3Preview` branch, rather than reading it eagerly and
+discarding it later:
+
+```java
+Boolean value = config.getBoolean("new_key");
+if (value != null) {
+  return value;
+}
+if (!v3Preview) {
+  Boolean deprecatedValue = config.getBoolean("old_key");
+  if (deprecatedValue != null) {
+    warnOnce();
+    return deprecatedValue;
+  }
+}
+return defaultValue;
+```
+
+Canonical implementations:
+
+- `instrumentation-api-incubator/src/main/java/io/opentelemetry/instrumentation/api/incubator/config/internal/DbConfig.java`
+- `instrumentation-api-incubator/src/main/java/io/opentelemetry/instrumentation/api/incubator/config/internal/CommonConfig.java`
+- `instrumentation/log4j/log4j-context-data/log4j-context-data-2.17/library-autoconfigure/src/main/java/io/opentelemetry/instrumentation/log4j/contextdata/v2_17/internal/ContextDataKeys.java`
+- `instrumentation/graphql-java/graphql-java-20.0/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/graphql/v20_0/GraphqlSingletons.java`
+- `javaagent-extension-api/src/main/java/io/opentelemetry/javaagent/extension/instrumentation/internal/DeprecatedInstrumentationNames.java`
+
+### Warning Text
+
+Use the flat `otel.instrumentation.*` property name in warnings even when code reads the equivalent
+declarative/YAML key. The dominant templates are:
+
+```text
+The <old-flat-property> setting and the equivalent declarative configuration property are
+deprecated and will be removed in 3.0. Use <new-flat-property> or equivalent declarative
+configuration instead.
+```
+
+```text
+The '<old-flat-property>' system property is deprecated and will be removed in 3.0. Use
+'<new-flat-property>' instead.
+```
+
+For an instrumentation-name alias, the concise form is:
+
+```text
+otel.instrumentation.<old>.enabled is deprecated; use
+otel.instrumentation.<new>.enabled instead.
+```
+
+Only cite a declarative path directly when the old key never had a flat-property equivalent, as in
+`DbConfig`.
+
+### Warning Deduplication
+
+- Use a static `ConcurrentHashMap.newKeySet()` keyed by deprecated property when a helper handles
+  multiple properties or can warn once per key. See `DbConfig`, `CommonConfig`, and
+  `ContextDataKeys`.
+- Use an `AtomicBoolean` for one deprecated property evaluated on a repeatable path. The same
+  one-warning concurrency pattern is used by
+  `instrumentation/log4j/log4j-appender-2.17/library/src/main/java/io/opentelemetry/instrumentation/log4j/appender/v2_17/OpenTelemetryAppender.java`.
+- Omit explicit deduplication only when initialization guarantees one evaluation, as in
+  `GraphqlSingletons` and `DeprecatedInstrumentationNames`.
+
+### CHANGELOG Categorization
+
+The property deprecation belongs under `🚫 Deprecations`. Ignoring that deprecated property under
+v3 preview is a separate behavior improvement and belongs under `📈 Enhancements`; do not combine
+the preview behavior into the deprecation bullet. The
+[#18934 enhancement entry](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/18934)
+in `CHANGELOG.md` is the precedent: it separately records that v3 preview ignores previously
+deprecated JDBC/database sanitization names.
+
 ## Migration Support Pattern (Optional)
 
 During the deprecation window, code may read both old and new names:
@@ -143,3 +227,14 @@ These have no flat-property fallback, so tests must cover declarative config mod
   (`getBoolean(name, default)`, etc.) for graceful degradation when YAML is unavailable.
 - **Wrong config scope**: `getInstrumentationConfig(ot, name)` → `java → <name>`;
   `getGeneralInstrumentationConfig(ot)` → `general`. HTTP header capture lives under `general`.
+
+**Deprecated properties under v3 preview:**
+
+- **Deprecated value read before or outside the `!v3Preview` guard**: keep the read inside the
+  compatibility branch so 3.0 behavior does not observe the legacy setting.
+- **Warning emitted for a value ignored under v3 preview**: warn only when the deprecated value is
+  actually applied; v3-preview users should get silent 3.0 behavior.
+- **Missing warning deduplication on a repeatable path**: use a per-key concurrent set for multiple
+  properties or an `AtomicBoolean` for a single property.
+- **v3-preview behavior folded into the deprecation CHANGELOG bullet**: keep the deprecation under
+  `🚫 Deprecations` and add a separate `📈 Enhancements` bullet for ignoring it under v3 preview.
