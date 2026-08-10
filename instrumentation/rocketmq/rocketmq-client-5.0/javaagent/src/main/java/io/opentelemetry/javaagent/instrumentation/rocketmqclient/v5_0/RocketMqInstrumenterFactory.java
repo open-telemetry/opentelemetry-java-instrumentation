@@ -85,6 +85,17 @@ final class RocketMqInstrumenterFactory {
     return instrumenterBuilder.buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
+  public static Instrumenter<RocketMqReceiveRequest, List<MessageView>>
+      createSimpleConsumerReceiveInstrumenter(
+          OpenTelemetry openTelemetry,
+          List<String> capturedHeaders,
+          boolean receiveInstrumentationEnabled) {
+    return createConsumerReceiveInstrumenter(
+        openTelemetry,
+        capturedHeaders,
+        receiveInstrumentationEnabled && emitStableMessagingSemconv());
+  }
+
   public static Instrumenter<MessageView, ConsumeResult> createConsumerProcessInstrumenter(
       OpenTelemetry openTelemetry,
       List<String> capturedHeaders,

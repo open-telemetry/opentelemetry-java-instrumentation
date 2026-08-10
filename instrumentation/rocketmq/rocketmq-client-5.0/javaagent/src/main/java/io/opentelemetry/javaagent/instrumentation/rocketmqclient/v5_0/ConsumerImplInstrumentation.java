@@ -42,7 +42,10 @@ final class ConsumerImplInstrumentation implements TypeInstrumentation {
   public static class ReceiveMessageAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Timer onStart() {
+    public static Timer onStart(@Advice.This Object consumer) {
+      if (SimpleConsumerReceiveOperation.shouldInstrument(consumer)) {
+        return null;
+      }
       return Timer.start();
     }
 
@@ -51,6 +54,9 @@ final class ConsumerImplInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) ReceiveMessageRequest request,
         @Advice.Enter Timer timer,
         @Advice.Return ListenableFuture<ReceiveMessageResult> future) {
+      if (timer == null) {
+        return;
+      }
       ReceiveSpanFinishingCallback spanFinishingCallback =
           new ReceiveSpanFinishingCallback(request, timer);
       Futures.addCallback(future, spanFinishingCallback, MoreExecutors.directExecutor());

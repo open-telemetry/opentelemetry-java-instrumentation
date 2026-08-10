@@ -20,6 +20,8 @@ public class RocketMqSingletons {
   private static final Instrumenter<PublishingMessageImpl, SendReceiptImpl> producerInstrumenter;
   private static final Instrumenter<RocketMqReceiveRequest, List<MessageView>>
       consumerReceiveInstrumenter;
+  private static final Instrumenter<RocketMqReceiveRequest, List<MessageView>>
+      simpleConsumerReceiveInstrumenter;
   private static final Instrumenter<MessageView, ConsumeResult> consumerProcessInstrumenter;
 
   static {
@@ -32,6 +34,9 @@ public class RocketMqSingletons {
         RocketMqInstrumenterFactory.createProducerInstrumenter(openTelemetry, messagingHeaders);
     consumerReceiveInstrumenter =
         RocketMqInstrumenterFactory.createConsumerReceiveInstrumenter(
+            openTelemetry, messagingHeaders, receiveInstrumentationEnabled);
+    simpleConsumerReceiveInstrumenter =
+        RocketMqInstrumenterFactory.createSimpleConsumerReceiveInstrumenter(
             openTelemetry, messagingHeaders, receiveInstrumentationEnabled);
     consumerProcessInstrumenter =
         RocketMqInstrumenterFactory.createConsumerProcessInstrumenter(
@@ -49,6 +54,11 @@ public class RocketMqSingletons {
 
   public static Instrumenter<MessageView, ConsumeResult> consumerProcessInstrumenter() {
     return consumerProcessInstrumenter;
+  }
+
+  public static Instrumenter<RocketMqReceiveRequest, List<MessageView>>
+      simpleConsumerReceiveInstrumenter() {
+    return simpleConsumerReceiveInstrumenter;
   }
 
   private RocketMqSingletons() {}
