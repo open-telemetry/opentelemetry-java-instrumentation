@@ -50,14 +50,13 @@ public final class GrpcTargetParser {
     }
 
     String scheme = target.substring(0, schemeEnd);
-    String rest = target.substring(schemeEnd + 3); // after "://"
 
     if ("dns".equals(scheme)) {
       return parseDnsScheme(target);
     }
 
     if ("unix".equals(scheme) || "unix-abstract".equals(scheme)) {
-      return parseUnixScheme(rest);
+      return parseUnixScheme(target);
     }
 
     if ("directaddress".equals(scheme)) {
@@ -87,7 +86,7 @@ public final class GrpcTargetParser {
     }
 
     if ("unix".equals(scheme) || "unix-abstract".equals(scheme)) {
-      return parseUnixScheme(rest);
+      return parseUnixScheme(scheme + ":" + rest);
     }
 
     // ipv4:, ipv6:, or other — full target as address
@@ -116,11 +115,21 @@ public final class GrpcTargetParser {
   }
 
   @Nullable
-  private static ParsedTarget parseUnixScheme(String rest) {
-    // unix://authority/path — the path (after authority) is the address
-    int slashIndex = rest.indexOf('/');
-    String endpoint = slashIndex != -1 ? rest.substring(slashIndex) : rest;
-    return endpoint.isEmpty() ? null : new ParsedTarget(endpoint, null);
+  private static ParsedTarget parseUnixScheme(String target) {
+    try {
+      URI uri = new URI(target);
+      String endpoint = uri.isOpaque() ? uri.getSchemeSpecificPart() : uri.getPath();
+      return endpoint == null || endpoint.isEmpty() ? null : new ParsedTarget(endpoint, null);
+    } catch (URISyntaxException ignored) {
+      String rest = target.substring(target.indexOf(':') + 1);
+      if (rest.startsWith("//")) {
+        rest = rest.substring(2);
+      }
+      // unix://authority/path — the path (after authority) is the address
+      int slashIndex = rest.indexOf('/');
+      String endpoint = slashIndex != -1 ? rest.substring(slashIndex) : rest;
+      return endpoint.isEmpty() ? null : new ParsedTarget(endpoint, null);
+    }
   }
 
   @Nullable

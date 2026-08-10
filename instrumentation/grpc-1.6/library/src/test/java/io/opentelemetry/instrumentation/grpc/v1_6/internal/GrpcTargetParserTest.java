@@ -49,6 +49,9 @@ class GrpcTargetParserTest {
         Arguments.of("unix:///var/run/grpc.sock", "/var/run/grpc.sock", null),
         Arguments.of("unix:/var/run/grpc.sock", "/var/run/grpc.sock", null),
         Arguments.of("unix-abstract:name", "name", null),
+        Arguments.of("unix:///tmp/a%20b.sock", "/tmp/a b.sock", null),
+        Arguments.of("unix:///tmp/a.sock?x", "/tmp/a.sock", null),
+        Arguments.of("unix:///tmp/a%.sock", "/tmp/a%.sock", null),
 
         // ipv4 scheme
         Arguments.of("ipv4:192.168.0.1:8080", "ipv4:192.168.0.1:8080", null),
