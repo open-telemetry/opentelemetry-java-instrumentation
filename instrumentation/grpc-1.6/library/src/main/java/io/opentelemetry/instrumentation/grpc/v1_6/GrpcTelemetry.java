@@ -46,7 +46,7 @@ public final class GrpcTelemetry {
       method =
           internalBuilder.getMethod(
               "interceptWithTarget", ManagedChannelBuilder.class, factoryClass);
-    } catch (ClassNotFoundException | NoSuchMethodException e) {
+    } catch (ClassNotFoundException | NoSuchMethodException ignored) {
       // gRPC version < 1.64.0, interceptWithTarget not available
     }
     interceptWithTargetMethod = method;

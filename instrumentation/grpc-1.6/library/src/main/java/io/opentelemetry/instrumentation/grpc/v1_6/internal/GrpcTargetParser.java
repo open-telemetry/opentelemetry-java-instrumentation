@@ -102,7 +102,7 @@ public final class GrpcTargetParser {
         endpoint = endpoint.substring(1);
       }
       return parseHostPort(endpoint);
-    } catch (URISyntaxException e) {
+    } catch (URISyntaxException ignored) {
       String rest = target.substring("dns:".length());
       if (rest.isEmpty() || "//".equals(rest)) {
         return null;
@@ -167,7 +167,7 @@ public final class GrpcTargetParser {
       if (port >= 0 && port <= 65535) {
         return port;
       }
-    } catch (NumberFormatException e) {
+    } catch (NumberFormatException ignored) {
       // ignore
     }
     return null;
