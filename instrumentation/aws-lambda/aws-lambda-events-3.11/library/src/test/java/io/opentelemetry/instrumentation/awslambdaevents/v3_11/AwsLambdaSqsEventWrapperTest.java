@@ -5,12 +5,18 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_RESOURCE_ID;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static java.util.Collections.emptyMap;
@@ -87,11 +93,24 @@ class AwsLambdaSqsEventWrapperTest {
                             equalTo(CLOUD_ACCOUNT_ID, "123456789"),
                             equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                 span ->
-                    span.hasName("otel process")
+                    span.hasName(emitStableMessagingSemconv() ? "process otel" : "otel process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                            equalTo(MESSAGING_OPERATION, "process"))));
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
+                            equalTo(
+                                MESSAGING_DESTINATION_NAME,
+                                emitStableMessagingSemconv() ? "otel" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "process" : null),
+                            equalTo(
+                                MESSAGING_BATCH_MESSAGE_COUNT,
+                                emitStableMessagingSemconv() ? Long.valueOf(1) : null))));
   }
 
   public static class TestRequestHandler implements RequestHandler<SQSEvent, SQSBatchResponse> {

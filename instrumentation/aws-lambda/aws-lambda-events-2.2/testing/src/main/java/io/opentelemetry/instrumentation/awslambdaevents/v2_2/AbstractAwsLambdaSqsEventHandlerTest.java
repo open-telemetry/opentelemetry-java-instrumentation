@@ -5,10 +5,16 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static java.util.Arrays.asList;
@@ -80,12 +86,27 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                     span ->
-                        span.hasName("queue1 process")
+                        span.hasName(
+                                emitStableMessagingSemconv() ? "process queue1" : "queue1 process")
                             .hasKind(SpanKind.CONSUMER)
                             .hasParentSpanId(trace.getSpan(0).getSpanId())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                equalTo(MESSAGING_OPERATION, "process"))
+                                equalTo(
+                                    MESSAGING_OPERATION,
+                                    emitOldMessagingSemconv() ? "process" : null),
+                                equalTo(
+                                    MESSAGING_DESTINATION_NAME,
+                                    emitStableMessagingSemconv() ? "queue1" : null),
+                                equalTo(
+                                    MESSAGING_OPERATION_NAME,
+                                    emitStableMessagingSemconv() ? "process" : null),
+                                equalTo(
+                                    MESSAGING_OPERATION_TYPE,
+                                    emitStableMessagingSemconv() ? "process" : null),
+                                equalTo(
+                                    MESSAGING_BATCH_MESSAGE_COUNT,
+                                    emitStableMessagingSemconv() ? Long.valueOf(2) : null))
                             .hasLinksSatisfying(
                                 links ->
                                     assertThat(links)
@@ -126,12 +147,29 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                     span ->
-                        span.hasName("multiple_sources process")
+                        span.hasName(
+                                emitStableMessagingSemconv()
+                                    ? "process multiple_sources"
+                                    : "multiple_sources process")
                             .hasKind(SpanKind.CONSUMER)
                             .hasParentSpanId(trace.getSpan(0).getSpanId())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                equalTo(MESSAGING_OPERATION, "process"))
+                                equalTo(
+                                    MESSAGING_OPERATION,
+                                    emitOldMessagingSemconv() ? "process" : null),
+                                equalTo(
+                                    MESSAGING_DESTINATION_NAME,
+                                    emitStableMessagingSemconv() ? "multiple_sources" : null),
+                                equalTo(
+                                    MESSAGING_OPERATION_NAME,
+                                    emitStableMessagingSemconv() ? "process" : null),
+                                equalTo(
+                                    MESSAGING_OPERATION_TYPE,
+                                    emitStableMessagingSemconv() ? "process" : null),
+                                equalTo(
+                                    MESSAGING_BATCH_MESSAGE_COUNT,
+                                    emitStableMessagingSemconv() ? Long.valueOf(2) : null))
                             .hasLinksSatisfying(
                                 links ->
                                     assertThat(links)
