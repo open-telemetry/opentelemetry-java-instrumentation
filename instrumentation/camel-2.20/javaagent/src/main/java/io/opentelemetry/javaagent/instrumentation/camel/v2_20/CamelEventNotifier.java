@@ -73,10 +73,10 @@ final class CamelEventNotifier extends EventNotifierSupport {
   @Nullable
   private static Context startOnExchangeSending(CamelRequest request) {
     Context parentContext = Context.current();
-    if (!instrumenter().shouldStart(parentContext, request)) {
+    if (!instrumenter(request).shouldStart(parentContext, request)) {
       return null;
     }
-    return instrumenter().start(parentContext, request);
+    return instrumenter(request).start(parentContext, request);
   }
 
   /** Camel finished sending (outbound). Finish span and remove it from CAMEL holder. */

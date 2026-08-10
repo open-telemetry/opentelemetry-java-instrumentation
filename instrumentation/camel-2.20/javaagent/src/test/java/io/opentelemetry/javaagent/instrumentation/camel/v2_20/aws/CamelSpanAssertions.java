@@ -6,11 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20.aws;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -28,14 +32,17 @@ class CamelSpanAssertions {
   }
 
   static SpanDataAssert sqsProduce(SpanDataAssert span, String queueName) {
-    return span.hasName(queueName)
-        .hasKind(SpanKind.INTERNAL)
+    return span.hasName(emitStableMessagingSemconv() ? "send " + queueName : queueName)
+        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
             equalTo(
                 stringKey("camel.uri"),
                 experimental(
                     "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=1000")),
-            equalTo(MESSAGING_DESTINATION_NAME, queueName));
+            equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "aws_sqs" : null),
+            equalTo(MESSAGING_DESTINATION_NAME, queueName),
+            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
+            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null));
   }
 
   static SpanDataAssert sqsConsume(SpanDataAssert span, String queueName) {
@@ -43,25 +50,31 @@ class CamelSpanAssertions {
   }
 
   static SpanDataAssert sqsConsume(SpanDataAssert span, String queueName, int delay) {
-    return span.hasName(queueName)
-        .hasKind(SpanKind.INTERNAL)
+    return span.hasName(emitStableMessagingSemconv() ? "process " + queueName : queueName)
+        .hasKind(emitStableMessagingSemconv() ? SpanKind.CONSUMER : SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
             equalTo(
                 stringKey("camel.uri"),
                 experimental(
                     "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=" + delay)),
+            equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "aws_sqs" : null),
             equalTo(MESSAGING_DESTINATION_NAME, queueName),
+            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
+            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
   }
 
   static SpanDataAssert snsPublish(SpanDataAssert span, String topicName) {
-    return span.hasName(topicName)
-        .hasKind(SpanKind.INTERNAL)
+    return span.hasName(emitStableMessagingSemconv() ? "send " + topicName : topicName)
+        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
             equalTo(
                 stringKey("camel.uri"),
                 experimental("aws-sns://" + topicName + "?amazonSNSClient=%23snsClient")),
-            equalTo(MESSAGING_DESTINATION_NAME, topicName));
+            equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "aws.sns" : null),
+            equalTo(MESSAGING_DESTINATION_NAME, topicName),
+            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
+            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null));
   }
 
   static SpanDataAssert s3(SpanDataAssert span, String bucketName) {

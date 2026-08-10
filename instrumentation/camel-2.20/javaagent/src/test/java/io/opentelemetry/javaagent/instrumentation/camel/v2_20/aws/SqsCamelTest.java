@@ -5,10 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20.aws;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import com.google.common.collect.ImmutableMap;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.LinkData;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -62,8 +68,12 @@ class SqsCamelTest {
                     AwsSpanAssertions.sqs(
                             span, "sqsCamelTest process", queueUrl, queueName, SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(2)),
-                span ->
-                    CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(2))),
+                span -> {
+                  CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(2));
+                  if (emitStableMessagingSemconv()) {
+                    span.hasLinks(propagatedLink(trace.getSpan(2)));
+                  }
+                }),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl).hasNoParent()));
@@ -97,8 +107,12 @@ class SqsCamelTest {
                     AwsSpanAssertions.sqs(
                             span, "sqsCamelTest process", queueUrl, queueName, SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0)),
-                span ->
-                    CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(0))),
+                span -> {
+                  CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(0));
+                  if (emitStableMessagingSemconv()) {
+                    span.hasLinks(propagatedLink(trace.getSpan(0)));
+                  }
+                }),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl).hasNoParent()));
@@ -143,5 +157,15 @@ class SqsCamelTest {
                             SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(2))));
     camelApp.stop();
+  }
+
+  private static LinkData propagatedLink(SpanData producerSpan) {
+    SpanContext producerContext = producerSpan.getSpanContext();
+    return LinkData.create(
+        SpanContext.create(
+            producerContext.getTraceId(),
+            producerContext.getSpanId(),
+            TraceFlags.getSampled(),
+            producerContext.getTraceState()));
   }
 }

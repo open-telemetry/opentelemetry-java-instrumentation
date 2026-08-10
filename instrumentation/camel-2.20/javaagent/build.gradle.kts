@@ -96,12 +96,23 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging")
+  }
+
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
   check {
-    dependsOn(testStableSemconv, testExperimental)
+    dependsOn(testStableSemconv, testExperimental, testV3Preview)
   }
 
   if (otelProps.denyUnsafe) {

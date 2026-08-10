@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.SpanDecorator;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.util.HashMap;
@@ -18,12 +20,15 @@ public class DecoratorRegistry {
   private static Map<String, SpanDecorator> loadDecorators() {
     Map<String, SpanDecorator> result = new HashMap<>();
     result.put("ahc", new HttpSpanDecorator());
-    result.put("ampq", new MessagingSpanDecorator("ampq"));
+    registerMessaging(result, "ampq");
+    if (emitStableMessagingSemconv()) {
+      registerMessaging(result, "amqp");
+    }
     result.put("aws-s3", new S3SpanDecorator());
-    result.put("aws-sns", new MessagingSpanDecorator("aws-sns"));
-    result.put("aws-sqs", new MessagingSpanDecorator("aws-sqs"));
-    result.put("cometd", new MessagingSpanDecorator("cometd"));
-    result.put("cometds", new MessagingSpanDecorator("cometds"));
+    registerMessaging(result, "aws-sns", "aws.sns", false);
+    registerMessaging(result, "aws-sqs", "aws_sqs", false);
+    registerMessaging(result, "cometd");
+    registerMessaging(result, "cometds");
     result.put("cql", new DbSpanDecorator("cql", DbSystemNameIncubatingValues.CASSANDRA));
     result.put("direct", new InternalSpanDecorator());
     result.put("direct-vm", new InternalSpanDecorator());
@@ -37,29 +42,46 @@ public class DecoratorRegistry {
     result.put("http4", new Http4SpanDecorator());
     result.put("https4", new Https4SpanDecorator());
     result.put("http", new HttpSpanDecorator());
-    result.put("ironmq", new MessagingSpanDecorator("ironmq"));
+    registerMessaging(result, "ironmq");
     result.put("jdbc", new DbSpanDecorator("jdbc", DbSystemNameIncubatingValues.OTHER_SQL));
     result.put("jetty", new HttpSpanDecorator());
-    result.put("jms", new MessagingSpanDecorator("jms"));
+    registerMessaging(result, "jms");
     result.put("kafka", new KafkaSpanDecorator());
     result.put("log", new LogSpanDecorator());
     result.put("mongodb", new DbSpanDecorator("mongodb", DbSystemNameIncubatingValues.MONGODB));
-    result.put("mqtt", new MessagingSpanDecorator("mqtt"));
+    registerMessaging(result, "mqtt");
     result.put("netty-http4", new HttpSpanDecorator());
     result.put("netty-http", new HttpSpanDecorator());
-    result.put("paho", new MessagingSpanDecorator("paho"));
-    result.put("rabbitmq", new MessagingSpanDecorator("rabbitmq"));
+    registerMessaging(result, "paho");
+    registerMessaging(result, "rabbitmq");
     result.put("restlet", new HttpSpanDecorator());
     result.put("rest", new RestSpanDecorator());
     result.put("seda", new InternalSpanDecorator());
     result.put("servlet", new HttpSpanDecorator());
-    result.put("sjms", new MessagingSpanDecorator("sjms"));
+    registerMessaging(result, "sjms", "jms");
     result.put("sql", new DbSpanDecorator("sql", DbSystemNameIncubatingValues.OTHER_SQL));
-    result.put("stomp", new MessagingSpanDecorator("stomp"));
+    registerMessaging(result, "stomp");
     result.put("timer", new TimerSpanDecorator());
     result.put("undertow", new HttpSpanDecorator());
     result.put("vm", new InternalSpanDecorator());
     return result;
+  }
+
+  private static void registerMessaging(
+      Map<String, SpanDecorator> decorators,
+      String component,
+      String system,
+      boolean spanContextPropagated) {
+    decorators.put(component, new MessagingSpanDecorator(component, system, spanContextPropagated));
+  }
+
+  private static void registerMessaging(
+      Map<String, SpanDecorator> decorators, String component, String system) {
+    registerMessaging(decorators, component, system, true);
+  }
+
+  private static void registerMessaging(Map<String, SpanDecorator> decorators, String component) {
+    registerMessaging(decorators, component, component);
   }
 
   public SpanDecorator forComponent(String component) {

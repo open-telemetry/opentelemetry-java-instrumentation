@@ -111,7 +111,7 @@ class ActiveContextManager {
         return;
       }
       scope.close();
-      instrumenter().end(context, request, null, exception);
+      instrumenter(request).end(context, request, null, exception);
     }
 
     @Override
