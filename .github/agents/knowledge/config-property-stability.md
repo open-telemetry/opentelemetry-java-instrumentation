@@ -160,9 +160,11 @@ generator assigns one section per pull request and always classifies configurati
 as deprecations, so the generated deprecation bullet may also mention that v3 preview ignores the
 legacy property. Do not request a separate hand-written or generated enhancement entry.
 
-## Migration Support Pattern (Optional)
+## Migration Support Without Major-Preview Removal (Optional)
 
-During the deprecation window, code may read both old and new names:
+For a deprecated property that is not being removed by the active major-version preview, code may
+read both old and new names. Do not use this unconditional fallback for properties being removed by
+the preview; use the guarded pattern above instead.
 
 ```java
 // Using the declarative config API
