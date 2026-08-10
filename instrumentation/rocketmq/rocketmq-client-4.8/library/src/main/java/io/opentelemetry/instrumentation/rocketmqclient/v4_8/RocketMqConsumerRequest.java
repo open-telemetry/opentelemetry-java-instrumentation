@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 import static java.util.Collections.singletonList;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.common.message.MessageExt;
 
@@ -18,6 +20,9 @@ final class RocketMqConsumerRequest {
   private final String consumerGroup;
   private final int batchSize;
   private final String namespace;
+  private final String destination;
+  private final String messageId;
+  private final String messageTag;
 
   RocketMqConsumerRequest(
       MessageExt message, String consumerGroup, int batchSize, @Nullable String namespace) {
@@ -40,6 +45,9 @@ final class RocketMqConsumerRequest {
     this.consumerGroup = RocketMqNamespaceUtil.withoutNamespace(consumerGroup, namespace);
     this.batchSize = batchSize;
     this.namespace = namespace == null ? "" : namespace;
+    this.destination = commonValue(messages, MessageExt::getTopic);
+    this.messageId = commonValue(messages, MessageExt::getMsgId);
+    this.messageTag = commonValue(messages, MessageExt::getTags);
   }
 
   MessageExt getMessage() {
@@ -65,5 +73,32 @@ final class RocketMqConsumerRequest {
 
   String getNamespace() {
     return namespace;
+  }
+
+  @Nullable
+  String getDestination() {
+    return destination;
+  }
+
+  @Nullable
+  String getMessageId() {
+    return messageId;
+  }
+
+  @Nullable
+  String getMessageTag() {
+    return messageTag;
+  }
+
+  @Nullable
+  private static String commonValue(
+      List<MessageExt> messages, Function<MessageExt, String> valueExtractor) {
+    String value = valueExtractor.apply(messages.get(0));
+    for (int i = 1; i < messages.size(); i++) {
+      if (!Objects.equals(value, valueExtractor.apply(messages.get(i)))) {
+        return null;
+      }
+    }
+    return value;
   }
 }
