@@ -61,6 +61,8 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
       return;
     }
     for (String key : request.getMetadata().keys()) {
+      // binary metadata and HTTP/2 pseudo-headers are never captured, even when the selector
+      // matches, because reading them below with Metadata.Key.of() would throw
       if (!isAsciiMetadataKey(key) || !requestMetadata.matches(key)) {
         continue;
       }
@@ -78,7 +80,7 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
 
   // Returns whether the key names ASCII metadata that Metadata.Key.of() accepts. Metadata received
   // from a peer can contain HTTP/2 pseudo-headers and header names built from HTTP token characters
-  // that gRPC does not allow in a metadata key, and passing those to Metadata.Key.of() throws.
+  // that gRPC does not allow in a metadata key.
   private static boolean isAsciiMetadataKey(String key) {
     if (key.isEmpty() || key.endsWith(Metadata.BINARY_HEADER_SUFFIX)) {
       return false;
