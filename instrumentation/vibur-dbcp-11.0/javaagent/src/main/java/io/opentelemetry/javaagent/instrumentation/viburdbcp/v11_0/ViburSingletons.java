@@ -18,7 +18,7 @@ import org.vibur.dbcp.ViburDBCPDataSource;
 public class ViburSingletons {
 
   private static final String DEFAULT_DATA_SOURCE_NAME = "vibur-dbcp";
-  private static final VirtualField<ViburConfig, Boolean> configuredNameField =
+  private static final VirtualField<ViburConfig, Boolean> CONFIGURED_NAME_FIELD =
       VirtualField.find(ViburConfig.class, Boolean.class);
 
   private static final ViburTelemetry telemetry = ViburTelemetry.create(GlobalOpenTelemetry.get());
@@ -28,13 +28,14 @@ public class ViburSingletons {
   }
 
   public static void markDataSourceNameConfigured(ViburConfig config, @Nullable String name) {
+    // Vibur rejects invalid names and does not support renaming, so this state is monotonic.
     if (name != null && !name.trim().isEmpty()) {
-      configuredNameField.set(config, true);
+      CONFIGURED_NAME_FIELD.set(config, true);
     }
   }
 
   public static boolean isDataSourceNameConfigured(ViburConfig config) {
-    return Boolean.TRUE.equals(configuredNameField.get(config));
+    return Boolean.TRUE.equals(CONFIGURED_NAME_FIELD.get(config));
   }
 
   public static String getDataSourceName(ViburDBCPDataSource dataSource) {

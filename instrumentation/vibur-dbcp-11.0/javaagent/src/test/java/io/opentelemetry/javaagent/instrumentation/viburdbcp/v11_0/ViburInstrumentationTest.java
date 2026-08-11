@@ -93,6 +93,16 @@ class ViburInstrumentationTest extends AbstractViburInstrumentationTest {
   }
 
   @Test
+  void shouldKeepConfiguredNameAfterRejectedInvalidRename() throws SQLException {
+    ViburDBCPDataSource dataSource = newDataSource();
+    dataSource.setName("configured");
+
+    dataSource.setName("");
+
+    assertPoolName(dataSource, "configured");
+  }
+
+  @Test
   void shouldUseNameConfiguredThroughPropertiesWhenItMatchesGeneratedName() throws SQLException {
     ViburDBCPDataSource previousDataSource = new ViburDBCPDataSource();
     String previousName = previousDataSource.getName();
