@@ -122,12 +122,10 @@ The framework (`DeprecatedInstrumentationNames.expand`) splits the marker and re
 names, so both `otel.instrumentation.jaxws-2.0-cxf-3.0.enabled` and
 `otel.instrumentation.jaxws-cxf-3.0.enabled` keep working (flat properties and YAML alike).
 Under `otel.instrumentation.common.v3-preview=true` the deprecated name is dropped and the legacy
-key is silently ignored. This mirrors 3.0, which will no longer know about the legacy name and
-therefore cannot read it or emit a deprecation warning for it. Users still receive that warning in
-the preceding minor releases when they run without v3 preview and explicitly configure the legacy
-key. This is specific to instrumentation-name aliases: unlike ordinary replacement-property
-fallback, the warning is based on explicit legacy-key presence and can occur even when the current
-name determines the effective enablement.
+key is silently ignored, matching 3.0 where it will no longer be recognized. Normal minor releases
+preceding 3.0 still warn outside preview mode. Unlike ordinary replacement-property fallback, alias
+warnings are based on explicit legacy-key presence and can occur even when the current name
+determines the effective enablement.
 
 No per-module `AgentCommonConfig` branching, `isV3Preview()` checks, or bespoke logging are
 needed — one string literal is the entire change.
@@ -194,10 +192,9 @@ static {
 
 ### CHANGELOG
 
-An instrumentation-name alias rename is a configuration-property rename and belongs under
-`🚫 Deprecations`, even though the legacy key continues to work outside v3 preview. Do not classify
-it under `⚠️ Breaking changes to non-stable APIs` while the compatibility alias remains. The
-breaking removal will be recorded when v3-preview behavior becomes the default in 3.0.
+An instrumentation-name alias rename belongs under `🚫 Deprecations`, not breaking changes, while
+the compatibility alias remains. Record the breaking removal when v3-preview behavior becomes the
+default in 3.0.
 
 ## What to Flag in Review
 

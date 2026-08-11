@@ -60,24 +60,14 @@ Examples (flat ↔ YAML):
 Config properties have no `@Deprecated` annotation and no automatic forwarding. Deprecation
 must be communicated through:
 
-1. A `🚫 Deprecations` CHANGELOG entry naming the old and new property.
+1. A `🚫 Deprecations` CHANGELOG entry naming the old and new property, including instrumentation
+   enablement alias renames.
 2. A comment in code near where the old property is read.
-3. **A `WARN`-level log message at startup** if the deprecated property is detected and applied.
-   Instrumentation enablement name aliases are the exception described below.
-   The warning message should reference the **flat system property name**
-   (`otel.instrumentation.…`) since that is what most users configure today:
-
-   ```java
-   boolean oldSetting = config.getBoolean("old_setting/development", false);
-   if (oldSetting) {
-     logger.warning(
-         "The otel.instrumentation.<module>.experimental.old-setting setting is"
-             + " deprecated and will be removed in a future version.");
-   }
-   ```
-
-   Note: the code reads via the declarative config API (YAML key), but the warning cites the
-   flat property name for user clarity.
+3. **A `WARN`-level log message at startup** if the deprecated property is applied. Name the old and
+   replacement flat properties when they exist; otherwise name the declarative paths. Deduplicate
+   warnings with a static, process-wide keyed set for multiple properties or an `AtomicBoolean` for
+   one. Omit the guard only when initialization guarantees one evaluation. Instrumentation
+   enablement aliases are the exception described below.
 
 ### Deprecated Properties Under Common v3 Preview
 
@@ -90,19 +80,13 @@ deprecated names will be removed in 3.0, use this order:
 3. Warn only when returning/applying that deprecated value.
 4. Under `otel.instrumentation.common.v3-preview=true`, silently ignore the deprecated value.
    Preview mode must reproduce 3.0 behavior: 3.0 will no longer know about the deprecated property,
-   so it will not read, apply, or warn about it.
+   so it will not read, apply, or warn about it. Normal preceding minor releases still warn outside
+   preview mode.
 
-Suppressing the warning in preview mode does not eliminate the deprecation warning period. The
-minor releases preceding 3.0 still recognize the deprecated property in normal mode and warn when
-they apply it. Preview mode alone omits that warning because it is intentionally exercising the
-future behavior after the property has been removed.
-
-Replacement-first lookup also supports warning-free rolling upgrades when many deployments share
-centralized configuration. Operators can temporarily publish both names: old versions use the
-deprecated property and ignore the replacement they do not recognize, while new versions use the
-replacement and do not warn about the redundant deprecated property. After every deployment has
-upgraded, operators can remove the deprecated property. A warning therefore identifies a deployment
-that still depends on the deprecated value, not one merely carrying it for compatibility.
+Replacement-first lookup also supports warning-free upgrades with centralized configuration:
+operators can publish both names while old versions use the deprecated property and new versions
+use the replacement, then remove the deprecated property after rollout. A warning identifies a
+deployment that still depends on the deprecated value, not one merely carrying it for compatibility.
 
 Instrumentation enablement name aliases are an exception. Enablement is resolved across an ordered
 list of equivalent names, while deprecation warnings are based on whether the legacy alias is
@@ -129,48 +113,7 @@ if (!v3Preview) {
 return defaultValue;
 ```
 
-The nullable overloads above are intentional: migration code must distinguish an absent replacement
-from an explicitly configured value before applying the default. Use the defaulted overload for
-ordinary reads, after any migration probes have completed.
-
-### Warning Text
-
-Use the flat `otel.instrumentation.*` property name in warnings even when code reads the equivalent
-declarative/YAML key. The dominant templates are:
-
-```text
-The <old-flat-property> setting and the equivalent declarative configuration property are
-deprecated and will be removed in 3.0. Use <new-flat-property> or equivalent declarative
-configuration instead.
-```
-
-```text
-The '<old-flat-property>' system property is deprecated and will be removed in 3.0. Use
-'<new-flat-property>' instead.
-```
-
-For an instrumentation-name alias, the concise form is:
-
-```text
-otel.instrumentation.<old>.enabled is deprecated; use
-otel.instrumentation.<new>.enabled instead.
-```
-
-Only cite a declarative path directly when the old key never had a flat-property equivalent.
-
-### Warning Deduplication
-
-- Use a static `ConcurrentHashMap.newKeySet()` keyed by deprecated property when a helper handles
-  multiple properties or can warn once per key.
-- Use a static `AtomicBoolean` for one deprecated property evaluated on a repeatable path.
-- Omit explicit deduplication only when initialization guarantees one evaluation.
-
-### CHANGELOG Categorization
-
-The hand-written property deprecation entry belongs under `🚫 Deprecations`. The release-note
-generator assigns one section per pull request and always classifies configuration-property renames
-as deprecations, so the generated deprecation bullet may also mention that v3 preview ignores the
-legacy property. Do not request a separate hand-written or generated enhancement entry.
+The nullable reads are intentional: migration code must detect absence before applying the default.
 
 ## Migration Support Without Major-Preview Removal (Optional)
 
@@ -250,14 +193,10 @@ These have no flat-property fallback, so tests must cover declarative config mod
 
 **Deprecated properties under v3 preview:**
 
-- **Deprecated value read before or outside the `!v3Preview` guard**: keep the read inside the
-  compatibility branch so 3.0 behavior does not observe the legacy setting.
-- **Warning emitted for a value ignored under v3 preview**: warn only when the deprecated value is
-  actually applied; v3-preview users should get silent 3.0 behavior.
+- **Deprecated value read or warned about under v3 preview**: preview must neither observe nor warn
+  about a setting that 3.0 will not recognize.
 - **Warning emitted when the replacement already determines an ordinary property value**: do not
   warn merely because shared configuration carries both names during a mixed-version rollout. This
   does not apply to instrumentation enablement name aliases.
 - **Missing warning deduplication on a repeatable path**: use a per-key concurrent set for multiple
   properties or a static `AtomicBoolean` for a single property.
-- **Configuration-property rename classified outside deprecations**: generated release notes assign
-  the pull request to `🚫 Deprecations`, including any v3-preview behavior described by its bullet.
