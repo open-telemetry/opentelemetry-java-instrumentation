@@ -20,7 +20,13 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.function.Consumer;
 import javax.jms.ConnectionFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -74,49 +80,83 @@ class JmsCamelTest {
     ProducerTemplate template = camelContext.createProducerTemplate();
     template.sendBody("direct:input", "test message");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("input").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "send queue:testQueue"
-                                : "queue:testQueue")
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "jms" : null),
-                            equalTo(MESSAGING_DESTINATION_NAME, "queue:testQueue"),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "send" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "send" : null),
-                            equalTo(stringKey("camel.uri"), experimental("jms://queue:testQueue"))),
-                span -> {
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "process queue:testQueue"
-                              : "queue:testQueue")
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasParent(trace.getSpan(1))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "jms" : null),
-                          equalTo(MESSAGING_DESTINATION_NAME, "queue:testQueue"),
-                          equalTo(
-                              MESSAGING_OPERATION_NAME,
-                              emitStableMessagingSemconv() ? "process" : null),
-                          equalTo(
-                              MESSAGING_OPERATION_TYPE,
-                              emitStableMessagingSemconv() ? "process" : null),
-                          equalTo(stringKey("camel.uri"), experimental("jms://queue:testQueue")),
-                          satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
-                  if (emitStableMessagingSemconv()) {
-                    span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
-                  }
-                },
-                span -> span.hasName("mock").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(2))));
+    if (emitStableMessagingSemconv()) {
+      testing.waitAndAssertSortedTraces(
+          Comparator.comparingInt(trace -> trace.size()),
+          JmsCamelTest::assertJmsReceiveTrace,
+          JmsCamelTest::assertCamelTrace);
+    }
+    if (!emitStableMessagingSemconv()) {
+      testing.waitAndAssertTraces(JmsCamelTest::assertCamelTrace);
+    }
+  }
+
+  private static void assertJmsReceiveTrace(TraceAssert trace) {
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            span.hasName("receive testQueue")
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasTotalRecordedLinks(1)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_SYSTEM, "jms"),
+                    equalTo(MESSAGING_DESTINATION_NAME, "testQueue"),
+                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                    satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))));
+  }
+
+  private static void assertCamelTrace(TraceAssert trace) {
+    List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+    assertions.add(span -> span.hasName("input").hasKind(SpanKind.INTERNAL).hasNoParent());
+    assertions.add(
+        span ->
+            span.hasName(emitStableMessagingSemconv() ? "send queue:testQueue" : "queue:testQueue")
+                .hasKind(SpanKind.PRODUCER)
+                .hasParent(trace.getSpan(0))
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "jms" : null),
+                    equalTo(MESSAGING_DESTINATION_NAME, "queue:testQueue"),
+                    equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
+                    equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
+                    equalTo(stringKey("camel.uri"), experimental("jms://queue:testQueue"))));
+    if (!emitStableMessagingSemconv()) {
+      assertions.add(
+          span ->
+              span.hasName("testQueue receive")
+                  .hasKind(SpanKind.CONSUMER)
+                  .hasParent(trace.getSpan(1))
+                  .hasTotalRecordedLinks(0)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(MESSAGING_SYSTEM, "jms"),
+                      equalTo(MESSAGING_DESTINATION_NAME, "testQueue"),
+                      equalTo(stringKey("messaging.operation"), "receive"),
+                      satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))));
+    }
+    int processSpanIndex = assertions.size();
+    assertions.add(
+        span -> {
+          span.hasName(emitStableMessagingSemconv() ? "process queue:testQueue" : "queue:testQueue")
+              .hasKind(SpanKind.CONSUMER)
+              .hasParent(trace.getSpan(1))
+              .hasAttributesSatisfyingExactly(
+                  equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "jms" : null),
+                  equalTo(MESSAGING_DESTINATION_NAME, "queue:testQueue"),
+                  equalTo(
+                      MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
+                  equalTo(
+                      MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
+                  equalTo(stringKey("camel.uri"), experimental("jms://queue:testQueue")),
+                  satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
+          if (emitStableMessagingSemconv()) {
+            span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+          }
+        });
+    assertions.add(
+        span ->
+            span.hasName("mock")
+                .hasKind(SpanKind.CLIENT)
+                .hasParent(trace.getSpan(processSpanIndex)));
+    trace.hasSpansSatisfyingExactly(assertions);
   }
 }
