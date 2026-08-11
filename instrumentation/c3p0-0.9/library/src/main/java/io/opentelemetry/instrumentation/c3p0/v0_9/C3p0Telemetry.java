@@ -25,6 +25,11 @@ public final class C3p0Telemetry {
     ConnectionPoolMetrics.registerMetrics(openTelemetry, dataSource);
   }
 
+  /** Start collecting metrics for given connection pool using the provided data source name. */
+  public void registerMetrics(PooledDataSource dataSource, String dataSourceName) {
+    ConnectionPoolMetrics.registerMetrics(openTelemetry, dataSource, dataSourceName);
+  }
+
   /** Stop collecting metrics for given connection pool. */
   public void unregisterMetrics(PooledDataSource dataSource) {
     ConnectionPoolMetrics.unregisterMetrics(dataSource);

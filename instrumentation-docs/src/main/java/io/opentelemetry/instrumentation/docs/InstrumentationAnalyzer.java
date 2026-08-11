@@ -23,6 +23,7 @@ import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,8 +52,7 @@ class InstrumentationAnalyzer {
    */
   public List<InstrumentationModule> analyze() throws IOException {
     List<InstrumentationPath> paths = fileManager.getInstrumentationPaths();
-    List<InstrumentationModule> modules =
-        ModuleParser.convertToModules(fileManager.rootDir(), paths);
+    List<InstrumentationModule> modules = ModuleParser.convertToModules(paths);
 
     for (InstrumentationModule module : modules) {
       enrichModule(module);
@@ -94,8 +94,9 @@ class InstrumentationAnalyzer {
   }
 
   private Set<String> getVersionInformation(InstrumentationModule module) {
-    List<String> gradleFiles = fileManager.findBuildGradleFiles(module.getSrcPath());
-    return GradleParser.extractVersions(gradleFiles, module);
+    Path moduleRoot = fileManager.rootDir().resolve(module.getSrcPath());
+    List<Path> gradleFiles = fileManager.findBuildGradleFiles(module.getSrcPath());
+    return GradleParser.extractVersions(moduleRoot, gradleFiles, module);
   }
 
   /**
