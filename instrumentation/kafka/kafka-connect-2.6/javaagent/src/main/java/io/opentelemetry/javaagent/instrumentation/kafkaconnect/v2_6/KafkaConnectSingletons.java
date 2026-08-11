@@ -42,6 +42,7 @@ public class KafkaConnectSingletons {
                     new KafkaConnectAttributesGetter(),
                     MessagingOperationType.PROCESS,
                     PROCESS_OPERATION_NAME))
+            .addAttributesExtractor(new KafkaConnectBatchAttributesExtractor())
             .addSpanLinksExtractor(spanLinksExtractor);
     setMessagingProcessExceptionEventExtractor(builder);
 

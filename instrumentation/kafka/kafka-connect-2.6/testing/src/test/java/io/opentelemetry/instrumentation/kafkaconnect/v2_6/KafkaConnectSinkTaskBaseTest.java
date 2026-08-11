@@ -12,6 +12,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
@@ -28,6 +31,8 @@ import static org.awaitility.Awaitility.await;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
@@ -42,6 +47,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.smoketest.SmokeTestInstrumentationExtension;
@@ -375,20 +381,24 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  protected static AttributeAssertion[] processAttributes(String destination, long batchSize) {
-    return processAttributes(destination, batchSize, true);
+  protected static AttributeAssertion[] processAttributes(
+      String destination, long batchSize, String messageKey) {
+    return processAttributes(destination, batchSize, true, messageKey);
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   protected static AttributeAssertion[] processAttributes(long batchSize) {
-    return processAttributes("", batchSize, false);
+    return processAttributes("", batchSize, false, null);
   }
 
   private static AttributeAssertion[] processAttributes(
-      String destination, long batchSize, boolean hasDestination) {
+      String destination, long batchSize, boolean hasDestination, String messageKey) {
     return new AttributeAssertion[] {
       equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize),
       equalTo(MESSAGING_DESTINATION_NAME, hasDestination ? destination : null),
+      equalTo(MESSAGING_DESTINATION_PARTITION_ID, emitStableMessagingSemconv() ? "0" : null),
+      equalTo(MESSAGING_KAFKA_OFFSET, emitStableMessagingSemconv() ? Long.valueOf(0) : null),
+      equalTo(MESSAGING_KAFKA_MESSAGE_KEY, emitStableMessagingSemconv() ? messageKey : null),
       equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? PROCESS : null),
       equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? PROCESS : null),
       equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? PROCESS : null),
@@ -396,6 +406,19 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
       satisfies(THREAD_ID, AbstractLongAssert::isNotZero),
       satisfies(THREAD_NAME, AbstractStringAssert::isNotBlank)
     };
+  }
+
+  protected static LinkData recordLink(
+      SpanContext spanContext, String destination, String messageKey) {
+    if (!emitStableMessagingSemconv()) {
+      return LinkData.create(spanContext);
+    }
+    return LinkData.create(
+        spanContext,
+        Attributes.builder()
+            .put(MESSAGING_DESTINATION_NAME, destination)
+            .put(MESSAGING_KAFKA_MESSAGE_KEY, messageKey)
+            .build());
   }
 
   @BeforeEach

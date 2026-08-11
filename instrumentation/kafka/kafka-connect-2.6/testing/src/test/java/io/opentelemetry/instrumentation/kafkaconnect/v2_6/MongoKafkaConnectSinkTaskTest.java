@@ -136,7 +136,8 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                         .hasKind(CONSUMER)
                         .hasNoParent()
                         .hasLinks(LinkData.create(producerSpanContext.get()))
-                        .hasAttributesSatisfyingExactly(processAttributes(testTopicName, 1)),
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(testTopicName, 1, "test-key")),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
@@ -235,9 +236,9 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                         .hasKind(CONSUMER)
                         .hasNoParent()
                         .hasLinks(
-                            LinkData.create(producerSpanContext1.get()),
-                            LinkData.create(producerSpanContext2.get()),
-                            LinkData.create(producerSpanContext3.get()))
+                            recordLink(producerSpanContext1.get(), topicName1, "key1"),
+                            recordLink(producerSpanContext2.get(), topicName2, "key2"),
+                            recordLink(producerSpanContext3.get(), topicName3, "key3"))
                         .hasAttributesSatisfyingExactly(processAttributes(3)),
                 span ->
                     span.hasName(
