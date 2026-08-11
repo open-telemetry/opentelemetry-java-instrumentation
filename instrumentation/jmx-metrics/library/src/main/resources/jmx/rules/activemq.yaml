@@ -40,7 +40,7 @@ rules:
         sourceUnit: "%"
         unit: "1"
         type: gauge
-        desc: The percentage of non-persistent storage used by this destination
+        desc: The fraction of non-persistent storage used by this destination
       # activemq.destination.temp.limit
       TempUsageLimit:
         metric: destination.temp.limit
@@ -97,7 +97,7 @@ rules:
         type: gauge
         sourceUnit: "%"
         unit: "1"
-        desc: The percentage of broker memory used
+        desc: The fraction of broker memory used
       # activemq.memory.limit
       MemoryLimit:
         metric: memory.limit
@@ -110,7 +110,7 @@ rules:
         type: gauge
         sourceUnit: "%"
         unit: "1"
-        desc: The percentage of broker persistent storage used
+        desc: The fraction of broker persistent storage used
       # activemq.store.limit
       StoreLimit:
         metric: store.limit
@@ -123,7 +123,7 @@ rules:
         type: gauge
         sourceUnit: "%"
         unit: "1"
-        desc: The percentage of broker non-persistent storage used
+        desc: The fraction of broker non-persistent storage used
       # activemq.temp.limit
       TempLimit:
         metric: temp.limit

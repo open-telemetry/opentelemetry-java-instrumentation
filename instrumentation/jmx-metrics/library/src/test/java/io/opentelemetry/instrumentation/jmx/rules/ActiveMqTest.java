@@ -147,7 +147,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .hasUnit("1")
                     .hasDataPointsWithAttributes(topicAttributes)
                     .hasDescription(
-                        "The percentage of non-persistent storage used by this destination"))
+                        "The fraction of non-persistent storage used by this destination"))
         .add(
             "activemq.destination.temp.limit",
             metric ->
@@ -173,7 +173,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .isGauge()
                     .hasUnit("1")
                     .hasDataPointsWithAttributes(brokerAttributes)
-                    .hasDescription("The percentage of broker memory used"))
+                    .hasDescription("The fraction of broker memory used"))
         .add(
             "activemq.memory.limit",
             metric ->
@@ -189,7 +189,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .isGauge()
                     .hasUnit("1")
                     .hasDataPointsWithAttributes(brokerAttributes)
-                    .hasDescription("The percentage of broker persistent storage used"))
+                    .hasDescription("The fraction of broker persistent storage used"))
         .add(
             "activemq.store.limit",
             metric ->
@@ -205,7 +205,7 @@ class ActiveMqTest extends TargetSystemTest {
                     .isGauge()
                     .hasUnit("1")
                     .hasDataPointsWithAttributes(brokerAttributes)
-                    .hasDescription("The percentage of broker non-persistent storage used"))
+                    .hasDescription("The fraction of broker non-persistent storage used"))
         .add(
             "activemq.temp.limit",
             metric ->
