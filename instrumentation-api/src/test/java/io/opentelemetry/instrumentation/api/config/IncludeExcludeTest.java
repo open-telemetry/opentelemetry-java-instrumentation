@@ -49,6 +49,15 @@ class IncludeExcludeTest {
   }
 
   @Test
+  void selectorIsEmptyOnlyWithoutPatterns() {
+    assertThat(IncludeExclude.builder().build().isEmpty()).isTrue();
+    assertThat(IncludeExclude.builder().setIncluded(singletonList("included")).build().isEmpty())
+        .isFalse();
+    assertThat(IncludeExclude.builder().setExcluded(singletonList("excluded")).build().isEmpty())
+        .isFalse();
+  }
+
+  @Test
   void selectorIsImmutable() {
     List<String> included = new ArrayList<>(singletonList("included"));
     List<String> excluded = new ArrayList<>(singletonList("excluded"));
