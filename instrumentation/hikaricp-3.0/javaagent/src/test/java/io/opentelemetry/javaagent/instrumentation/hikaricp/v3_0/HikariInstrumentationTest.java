@@ -92,17 +92,17 @@ class HikariInstrumentationTest extends AbstractHikariInstrumentationTest {
   }
 
   @Test
-  void shouldUseDataSourcePropertiesForDefaultPoolName() throws SQLException {
-    Properties properties = new Properties();
-    properties.setProperty("serverName", "properties.example");
-    properties.setProperty("portNumber", "5433");
-    properties.setProperty("databaseName", "inventory");
+  void shouldUseDataSourcePropertiesForDefaultPoolNameWithDataSourceClassName() {
+    HikariConfig config = new HikariConfig();
+    config.setDataSourceClassName("org.postgresql.ds.PGSimpleDataSource");
+    config.addDataSourceProperty("serverName", "properties.example");
+    config.addDataSourceProperty("portNumber", 5433);
+    config.addDataSourceProperty("databaseName", "inventory");
+    config.setMinimumIdle(0);
+    config.setMaximumPoolSize(1);
+    config.setInitializationFailTimeout(-1);
 
-    HikariDataSource dataSource = newDataSource();
-    dataSource.setJdbcUrl("jdbc:postgresql:ignored");
-    dataSource.setDataSourceProperties(properties);
-
-    assertPoolName(startDataSource(dataSource), "properties.example:5433/inventory");
+    assertPoolName(new HikariDataSource(config), "properties.example:5433/inventory");
   }
 
   @Test

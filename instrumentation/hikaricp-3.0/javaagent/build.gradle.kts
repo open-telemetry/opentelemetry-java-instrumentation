@@ -20,6 +20,7 @@ dependencies {
   bootstrap(project(":instrumentation:jdbc:bootstrap"))
 
   testImplementation(project(":instrumentation:hikaricp-3.0:testing"))
+  testImplementation("org.postgresql:postgresql:42.7.2")
 }
 
 tasks {

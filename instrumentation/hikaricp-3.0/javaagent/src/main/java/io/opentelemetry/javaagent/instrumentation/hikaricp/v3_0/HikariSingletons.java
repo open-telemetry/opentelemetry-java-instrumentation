@@ -19,32 +19,37 @@ public class HikariSingletons {
 
   private static final String DEFAULT_DATA_SOURCE_NAME = "hikaricp";
 
-  private static final VirtualField<HikariConfig, Boolean> generatedPoolNameField =
+  private static final VirtualField<HikariConfig, Boolean> GENERATED_POOL_NAME_FIELD =
       VirtualField.find(HikariConfig.class, Boolean.class);
 
   private static final HikariTelemetry hikariTelemetry =
       HikariTelemetry.create(GlobalOpenTelemetry.get());
 
   public static void setGeneratedPoolName(HikariConfig config, boolean generatedPoolName) {
-    generatedPoolNameField.set(config, generatedPoolName);
+    GENERATED_POOL_NAME_FIELD.set(config, generatedPoolName);
   }
 
   public static void copyGeneratedPoolName(HikariConfig source, HikariConfig target) {
-    Boolean generatedPoolName = generatedPoolNameField.get(source);
+    Boolean generatedPoolName = GENERATED_POOL_NAME_FIELD.get(source);
     if (generatedPoolName != null) {
-      generatedPoolNameField.set(target, generatedPoolName);
+      GENERATED_POOL_NAME_FIELD.set(target, generatedPoolName);
     }
   }
 
   public static MetricsTrackerFactory createMetricsTrackerFactory(
       @Nullable MetricsTrackerFactory delegate, HikariConfig config) {
-    if (Boolean.TRUE.equals(generatedPoolNameField.get(config))) {
+    if (Boolean.TRUE.equals(GENERATED_POOL_NAME_FIELD.get(config))) {
       return hikariTelemetry.createMetricsTrackerFactory(delegate, getDataSourceName(config));
     }
     return hikariTelemetry.createMetricsTrackerFactory(delegate);
   }
 
   private static String getDataSourceName(HikariConfig config) {
+    if (config.getDataSource() == null && config.getDataSourceClassName() != null) {
+      return JdbcConnectionPoolNameUtil.poolName(
+          config.getDataSourceProperties(), DEFAULT_DATA_SOURCE_NAME);
+    }
+
     DbInfo dbInfo =
         JdbcConnectionUrlParser.parse(config.getJdbcUrl(), config.getDataSourceProperties());
     return JdbcConnectionPoolNameUtil.poolName(dbInfo, DEFAULT_DATA_SOURCE_NAME);
