@@ -129,21 +129,19 @@ class TomcatDbcpInstrumentationTest {
   }
 
   @Test
-  void shouldUnquoteRegisteredJmxNameWhenJmxNameIsNull() throws Exception {
+  void shouldPreserveRegisteredJmxNameEncodingWhenJmxNameIsNull() throws Exception {
     BasicDataSource dataSource = createDataSource();
-    String dataSourceName = "registered,pool \"primary\"\\replica";
+    String objectNameValue = ObjectName.quote("registered,pool \"primary\"\\replica");
 
     ObjectName objectName =
-        new ObjectName(
-            "org.apache.tomcat.dbcp.dbcp2:type=BasicDataSource,name="
-                + ObjectName.quote(dataSourceName));
+        new ObjectName("org.apache.tomcat.dbcp.dbcp2:type=BasicDataSource,name=" + objectNameValue);
     MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
     objectName = mbeanServer.registerMBean(dataSource, objectName).getObjectName();
 
     try {
       dataSource.getConnection().close();
 
-      assertDataSourceMetrics(dataSourceName);
+      assertDataSourceMetrics(objectNameValue);
     } finally {
       dataSource.close();
       if (mbeanServer.isRegistered(objectName)) {

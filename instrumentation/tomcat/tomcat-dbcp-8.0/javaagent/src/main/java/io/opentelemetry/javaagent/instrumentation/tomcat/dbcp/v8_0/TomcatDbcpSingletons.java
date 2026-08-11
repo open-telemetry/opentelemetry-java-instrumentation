@@ -15,10 +15,7 @@ import org.apache.tomcat.dbcp.dbcp2.OpenTelemetryBasicDataSourceUtil;
 public class TomcatDbcpSingletons {
   public static String getDataSourceName(ObjectName objectName) {
     String name = objectName.getKeyProperty("name");
-    if (name == null) {
-      return objectName.toString();
-    }
-    return name.startsWith("\"") ? ObjectName.unquote(name) : name;
+    return name != null ? name : objectName.toString();
   }
 
   public static String getDataSourceName(BasicDataSource dataSource) {
