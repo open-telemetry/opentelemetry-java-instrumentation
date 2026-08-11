@@ -140,7 +140,12 @@ public final class GrpcTelemetryBuilder {
 
   /**
    * Sets which ASCII request metadata should be captured as span attributes on client spans.
-   * Included and excluded patterns are matched case-insensitively.
+   *
+   * <p>Metadata keys and selector patterns are matched case-insensitively. {@code ?} matches any
+   * single character and {@code *} matches any number of characters, including none. Excluded
+   * patterns take precedence over included patterns. No metadata is captured unless a selector is
+   * configured; a selector with only excluded patterns captures every ASCII metadata key that it
+   * does not exclude.
    */
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setClientRequestMetadata(IncludeExclude clientRequestMetadata) {
@@ -167,7 +172,12 @@ public final class GrpcTelemetryBuilder {
 
   /**
    * Sets which ASCII request metadata should be captured as span attributes on server spans.
-   * Included and excluded patterns are matched case-insensitively.
+   *
+   * <p>Metadata keys and selector patterns are matched case-insensitively. {@code ?} matches any
+   * single character and {@code *} matches any number of characters, including none. Excluded
+   * patterns take precedence over included patterns. No metadata is captured unless a selector is
+   * configured; a selector with only excluded patterns captures every ASCII metadata key that it
+   * does not exclude.
    */
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setServerRequestMetadata(IncludeExclude serverRequestMetadata) {
