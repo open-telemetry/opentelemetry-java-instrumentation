@@ -8,6 +8,11 @@
 
 ### 🚫 Deprecations
 
+- For library instrumentation users, deprecate configuring span suppression using the
+  `otel.instrumentation.experimental.span-suppression-strategy` system property in favor of
+  `Experimental.setSpanSuppressionStrategy(...)` or declarative instrumentation configuration.
+  The Java agent continues to support the system property through its declarative config bridge.
+  ([#19180](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19180))
 - Deprecate the `opentelemetry-zipkin-spring-boot-starter` artifact. Use
   `opentelemetry-spring-boot-starter` with the OTLP exporter instead. It will be removed in 3.0.
 - Deprecate `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)` in the
