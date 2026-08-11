@@ -27,9 +27,16 @@ if (otelProps.testLatestDeps) {
 tasks {
   withType<Test>().configureEach {
     // TODO run tests both with and without experimental log attributes
-    jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes=*")
     jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental-log-attributes=true")
     jvmArgs("-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true")
+  }
+
+  test {
+    jvmArgs(
+      "-Dotel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included=exact,prefix.*,single?,excluded*,otel.event.name",
+      "-Dotel.instrumentation.jboss-logmanager.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
+    )
+    systemProperty("testMdcConfiguration", "new")
   }
 
   val testCaptureTemplateAndArguments = register<Test>("testCaptureTemplateAndArguments") {
@@ -42,7 +49,41 @@ tasks {
     )
   }
 
+  val testLegacyMdcAttributes = register<Test>("testLegacyMdcAttributes") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes=legacy")
+    systemProperty("testMdcConfiguration", "legacy")
+  }
+
+  val testMdcAttributePrecedence = register<Test>("testMdcAttributePrecedence") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs(
+      "-Dotel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included=new",
+      "-Dotel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes=legacy",
+    )
+    systemProperty("testMdcConfiguration", "precedence")
+  }
+
+  val testLegacyMdcAttributesV3 = register<Test>("testLegacyMdcAttributesV3") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs(
+      "-Dotel.instrumentation.common.v3-preview=true",
+      "-Dotel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes=legacy",
+    )
+  }
+
   check {
-    dependsOn(testCaptureTemplateAndArguments)
+    dependsOn(
+      testCaptureTemplateAndArguments,
+      testLegacyMdcAttributes,
+      testMdcAttributePrecedence,
+      testLegacyMdcAttributesV3,
+    )
   }
 }

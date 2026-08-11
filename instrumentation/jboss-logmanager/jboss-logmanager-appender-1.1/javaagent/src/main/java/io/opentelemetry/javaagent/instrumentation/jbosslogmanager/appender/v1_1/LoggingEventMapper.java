@@ -18,21 +18,25 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import org.jboss.logmanager.ExtLogRecord;
 import org.jboss.logmanager.Level;
-import org.jboss.logmanager.Logger;
 import org.jboss.logmanager.MDC;
 
 public class LoggingEventMapper {
 
-  public static final LoggingEventMapper INSTANCE = new LoggingEventMapper();
-
+  private static final Logger logger = Logger.getLogger(LoggingEventMapper.class.getName());
+  private static final Set<String> warnedDeprecatedProperties = ConcurrentHashMap.newKeySet();
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
   private static final AttributeKey<String> LOG_BODY_TEMPLATE =
@@ -40,11 +44,21 @@ public class LoggingEventMapper {
   private static final AttributeKey<List<String>> LOG_BODY_PARAMETERS =
       AttributeKey.stringArrayKey("log.body.parameters");
 
-  private static final boolean captureExperimentalAttributes;
-  private static final boolean captureTemplate;
-  private static final boolean captureArguments;
+  private static final String DEPRECATED_CAPTURE_MDC_ATTRIBUTES =
+      "otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes";
+  private static final String MDC_ATTRIBUTES_INCLUDED =
+      "otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included";
+  private static final String MDC_ATTRIBUTES_EXCLUDED =
+      "otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.excluded";
 
-  static {
+  public static final LoggingEventMapper INSTANCE = new LoggingEventMapper();
+
+  private final boolean captureExperimentalAttributes;
+  private final boolean captureTemplate;
+  private final boolean captureArguments;
+  @Nullable private final IncludeExclude mdcAttributes;
+
+  private LoggingEventMapper() {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(
             GlobalOpenTelemetry.get(), "jboss_logmanager");
@@ -52,34 +66,66 @@ public class LoggingEventMapper {
         config.getBoolean("experimental_log_attributes/development", false);
     captureTemplate = config.getBoolean("capture_template/development", false);
     captureArguments = config.getBoolean("capture_arguments/development", false);
+    mdcAttributes = getMdcAttributes(config, SemconvStability.v3Preview(GlobalOpenTelemetry.get()));
   }
 
-  private final List<AttributeKey<String>> captureMdcAttributeKeys;
+  @Nullable
+  static IncludeExclude getMdcAttributes(DeclarativeConfigProperties config, boolean v3Preview) {
+    DeclarativeConfigProperties mdcAttributes = config.get("mdc_attributes/development");
+    List<String> included = mdcAttributes.getScalarList("included", String.class);
+    List<String> excluded = mdcAttributes.getScalarList("excluded", String.class);
+    IncludeExclude selector =
+        IncludeExclude.builder()
+            .setIncluded(included == null ? emptyList() : included)
+            .setExcluded(excluded == null ? emptyList() : excluded)
+            .build();
 
-  // cached as an optimization
-  private final boolean captureAllMdcAttributes;
+    if (v3Preview) {
+      return selector.isEmpty() ? null : selector;
+    }
 
-  private LoggingEventMapper() {
-    List<String> captureMdcAttributes =
-        DeclarativeConfigUtil.getInstrumentationConfig(
-                GlobalOpenTelemetry.get(), "jboss_logmanager")
-            .getScalarList("capture_mdc_attributes/development", String.class, emptyList());
-    this.captureAllMdcAttributes =
-        captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
-    if (captureAllMdcAttributes) {
-      this.captureMdcAttributeKeys = emptyList();
-    } else {
-      List<AttributeKey<String>> keys = new ArrayList<>(captureMdcAttributes.size());
-      for (String key : captureMdcAttributes) {
-        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
-          keys.add(getMdcAttributeKey(key));
-        }
+    // Deprecated include-only alias retained through 2.x.
+    List<String> deprecatedIncluded =
+        config.getScalarList("capture_mdc_attributes/development", String.class);
+    if (!selector.isEmpty()) {
+      if (deprecatedIncluded != null) {
+        logWarningOnce(
+            "precedence",
+            "The "
+                + DEPRECATED_CAPTURE_MDC_ATTRIBUTES
+                + " setting and the equivalent declarative configuration property are deprecated"
+                + " and ignored because "
+                + MDC_ATTRIBUTES_INCLUDED
+                + " or "
+                + MDC_ATTRIBUTES_EXCLUDED
+                + " is configured. They will be removed in 3.0.");
       }
-      this.captureMdcAttributeKeys = keys;
+      return selector;
+    }
+
+    if (deprecatedIncluded == null) {
+      return null;
+    }
+    logWarningOnce(
+        "deprecation",
+        "The "
+            + DEPRECATED_CAPTURE_MDC_ATTRIBUTES
+            + " setting and the equivalent declarative configuration property are deprecated and"
+            + " will be removed in 3.0. Use "
+            + MDC_ATTRIBUTES_INCLUDED
+            + " or equivalent declarative configuration instead.");
+    return deprecatedIncluded.isEmpty()
+        ? null
+        : IncludeExclude.builder().setIncluded(deprecatedIncluded).build();
+  }
+
+  private static void logWarningOnce(String warning, String message) {
+    if (warnedDeprecatedProperties.add(warning)) {
+      logger.warning(message);
     }
   }
 
-  public void capture(Logger logger, ExtLogRecord record) {
+  public void capture(org.jboss.logmanager.Logger logger, ExtLogRecord record) {
     String instrumentationName = logger.getName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
@@ -144,19 +190,15 @@ public class LoggingEventMapper {
       builder.setEventName(otelEventName);
     }
 
-    if (captureAllMdcAttributes) {
-      for (Map.Entry<String, String> entry : context.entrySet()) {
-        String key = entry.getKey();
-        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
-          builder.setAttribute(getMdcAttributeKey(key), entry.getValue());
-        }
-      }
+    if (mdcAttributes == null) {
       return;
     }
 
-    for (AttributeKey<String> attributeKey : captureMdcAttributeKeys) {
-      String value = context.get(attributeKey.getKey());
-      builder.setAttribute(attributeKey, value);
+    for (Map.Entry<String, String> entry : context.entrySet()) {
+      String key = entry.getKey();
+      if (!OTEL_EVENT_NAME.getKey().equals(key) && mdcAttributes.matches(key)) {
+        builder.setAttribute(getMdcAttributeKey(key), entry.getValue());
+      }
     }
   }
 

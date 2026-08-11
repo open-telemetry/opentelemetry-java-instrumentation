@@ -23,13 +23,33 @@ configurations:
       Enables the capture of the log message arguments.
     type: boolean
     default: false
-  - name: otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes
-    declarative_name: java.jboss_logmanager.capture_mdc_attributes/development
+  - name: otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included
+    declarative_name: java.jboss_logmanager.mdc_attributes/development.included
     description: >
-      Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a
-      comma-separated list of specific keys.
+      A comma-separated list of case-sensitive MDC attribute key patterns to capture. `?` matches one
+      character and `*` matches zero or more characters. If neither included nor excluded is
+      configured, no MDC attributes are captured.
     type: list
     default: ''
     examples:
       - "custom-mdc-key"
-      - "key1,key2,key3"
+      - "request.*,user-?"
+  - name: otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.excluded
+    declarative_name: java.jboss_logmanager.mdc_attributes/development.excluded
+    description: >
+      A comma-separated list of case-sensitive MDC attribute key patterns to exclude. Excluded
+      patterns take precedence over included patterns. `?` matches one character and `*` matches zero
+      or more characters. If included is not configured, all non-excluded MDC attributes are
+      captured, which may expose sensitive information.
+    type: list
+    default: ''
+    examples:
+      - "password,*-token"
+  - name: otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes
+    declarative_name: java.jboss_logmanager.capture_mdc_attributes/development
+    description: >
+      Deprecated: use `otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included`
+      instead. A comma-separated list of exact MDC attribute keys to capture, or `*` to capture all
+      MDC attributes.
+    type: list
+    default: ''
