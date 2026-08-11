@@ -50,7 +50,7 @@ groups:
     metric_name: trino.query.running.count
     stability: development
     type: metric
-    brief: The number of queries currently running or queued.
+    brief: The number of queries currently running.
     unit: "{query}"
     instrument: updowncounter
 

@@ -40,7 +40,7 @@ rules:
         metric: running.count
         type: updowncounter
         unit: "{query}"
-        desc: The number of queries currently running or queued.
+        desc: The number of queries currently running.
       # trino.query.started.count
       StartedQueries\.FiveMinute\.Count:
         metric: started.count

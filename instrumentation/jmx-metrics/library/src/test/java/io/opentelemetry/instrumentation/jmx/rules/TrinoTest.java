@@ -81,9 +81,7 @@ class TrinoTest extends TargetSystemTest {
 
     ExecResult query =
         target.execInContainer("trino", "--execute", "SELECT count(*) FROM tpch.tiny.nation");
-    assertThat(query.getExitCode())
-        .as("Trino query failed.%nstdout:%n%s%nstderr:%n%s", query.getStdout(), query.getStderr())
-        .isEqualTo(0);
+    assertThat(query.getExitCode()).isEqualTo(0);
 
     verifyMetrics(createMetricsVerifier());
   }
@@ -112,7 +110,7 @@ class TrinoTest extends TargetSystemTest {
             "trino.query.running.count",
             metric ->
                 metric
-                    .hasDescription("The number of queries currently running or queued.")
+                    .hasDescription("The number of queries currently running.")
                     .hasUnit("{query}")
                     .isUpDownCounter()
                     .hasDataPointsWithoutAttributes())
