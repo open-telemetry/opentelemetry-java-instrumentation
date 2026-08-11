@@ -88,8 +88,14 @@ deprecated names will be removed in 3.0, use this order:
 1. Read the replacement first.
 2. Only if the replacement is absent and v3 preview is disabled, read the deprecated value.
 3. Warn only when returning/applying that deprecated value.
-4. Under `otel.instrumentation.common.v3-preview=true`, silently ignore the deprecated value. The
-   user explicitly opted into 3.0 behavior, so warning about a value that is not applied is noise.
+4. Under `otel.instrumentation.common.v3-preview=true`, silently ignore the deprecated value.
+   Preview mode must reproduce 3.0 behavior: 3.0 will no longer know about the deprecated property,
+   so it will not read, apply, or warn about it.
+
+Suppressing the warning in preview mode does not eliminate the deprecation warning period. The
+minor releases preceding 3.0 still recognize the deprecated property in normal mode and warn when
+they apply it. Preview mode alone omits that warning because it is intentionally exercising the
+future behavior after the property has been removed.
 
 Replacement-first lookup also supports warning-free rolling upgrades when many deployments share
 centralized configuration. Operators can temporarily publish both names: old versions use the
@@ -102,7 +108,8 @@ Instrumentation enablement name aliases are an exception. Enablement is resolved
 list of equivalent names, while deprecation warnings are based on whether the legacy alias is
 explicitly configured. The replacement alias can therefore determine the result while the legacy
 alias still triggers a warning. Under v3 preview, omit the legacy alias from resolution and silently
-ignore its key. Do not copy this alias-specific warning behavior into ordinary property fallback.
+ignore its key, matching a future runtime that no longer knows the alias. Do not copy this
+alias-specific warning behavior into ordinary property fallback.
 
 Keep the deprecated read itself inside the `!v3Preview` branch, rather than reading it eagerly and
 discarding it later:
