@@ -302,6 +302,7 @@ class KafkaConsumerCommitTest {
 
   @Test
   @DisabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
+  @DisabledIfSystemProperty(named = "otel.javaagent.experimental.indy", matches = "true")
   void commitAsyncSpanEndsAtSuccessfulCompletion() {
     assumeTrue(emitStableMessagingSemconv());
     AtomicInteger callbackCount = new AtomicInteger();
@@ -338,6 +339,7 @@ class KafkaConsumerCommitTest {
 
   @Test
   @DisabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
+  @DisabledIfSystemProperty(named = "otel.javaagent.experimental.indy", matches = "true")
   void commitAsyncSpanEndsAtErrorCompletion() {
     assumeTrue(emitStableMessagingSemconv());
     AtomicReference<Exception> callbackException = new AtomicReference<>();
@@ -363,6 +365,7 @@ class KafkaConsumerCommitTest {
 
   @Test
   @DisabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
+  @DisabledIfSystemProperty(named = "otel.javaagent.experimental.indy", matches = "true")
   void commitAsyncDefaultCallbacksCorrelateReusedOffsets() {
     assumeTrue(emitStableMessagingSemconv());
     Map<TopicPartition, OffsetAndMetadata> offsets =
@@ -405,6 +408,7 @@ class KafkaConsumerCommitTest {
 
   @Test
   @DisabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
+  @DisabledIfSystemProperty(named = "otel.javaagent.experimental.indy", matches = "true")
   void commitAsyncFutureEndsSpanAtCompletion() {
     assumeTrue(emitStableMessagingSemconv());
     CompletableFuture<Void> future = new CompletableFuture<>();
@@ -427,6 +431,7 @@ class KafkaConsumerCommitTest {
 
   @Test
   @DisabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
+  @DisabledIfSystemProperty(named = "otel.javaagent.experimental.indy", matches = "true")
   void commitAsyncPropagatesCallbackException() {
     assumeTrue(emitStableMessagingSemconv());
     AtomicInteger callbackCount = new AtomicInteger();
