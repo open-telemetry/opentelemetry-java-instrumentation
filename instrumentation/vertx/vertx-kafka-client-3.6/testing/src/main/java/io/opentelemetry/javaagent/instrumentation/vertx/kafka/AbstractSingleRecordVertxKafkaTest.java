@@ -28,13 +28,21 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
   void setUpTopicAndConsumer() {
     kafkaConsumer.handler(
         record -> {
-          testing().runWithSpan("consumer", () -> {});
-          if ("error".equals(record.value())) {
-            throw new IllegalArgumentException("boom");
+          try {
+            testing().runWithSpan("consumer", () -> {});
+            if ("error".equals(record.value())) {
+              throw new IllegalArgumentException("boom");
+            }
+          } finally {
+            kafkaConsumer.pause();
           }
         });
 
-    kafkaConsumer.partitionsAssignedHandler(partitions -> consumerReady.countDown());
+    kafkaConsumer.partitionsAssignedHandler(
+        partitions -> {
+          kafkaConsumer.pause();
+          consumerReady.countDown();
+        });
     subscribe("testSingleTopic");
   }
 
@@ -44,9 +52,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
 
     KafkaProducerRecord<String, String> record =
         KafkaProducerRecord.create("testSingleTopic", "10", "testSpan");
-    CountDownLatch sent = new CountDownLatch(1);
-    testing().runWithSpan("producer", () -> sendRecord(record, result -> sent.countDown()));
-    assertThat(sent.await(30, SECONDS)).isTrue();
+    sendSingleRecord(record);
 
     AtomicReference<SpanData> producer = new AtomicReference<>();
 
@@ -120,9 +126,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
 
     KafkaProducerRecord<String, String> record =
         KafkaProducerRecord.create("testSingleTopic", "10", "error");
-    CountDownLatch sent = new CountDownLatch(1);
-    testing().runWithSpan("producer", () -> sendRecord(record, result -> sent.countDown()));
-    assertThat(sent.await(30, SECONDS)).isTrue();
+    sendSingleRecord(record);
 
     AtomicReference<SpanData> producer = new AtomicReference<>();
 
@@ -194,5 +198,15 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                             .hasAttributesSatisfyingExactly(
                                 withErrorType(processAttributes(record))),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
+  }
+
+  private void sendSingleRecord(KafkaProducerRecord<String, String> record)
+      throws InterruptedException {
+    testing().clearData();
+
+    CountDownLatch sent = new CountDownLatch(1);
+    testing().runWithSpan("producer", () -> sendRecord(record, result -> sent.countDown()));
+    assertThat(sent.await(30, SECONDS)).isTrue();
+    kafkaConsumer.resume();
   }
 }
