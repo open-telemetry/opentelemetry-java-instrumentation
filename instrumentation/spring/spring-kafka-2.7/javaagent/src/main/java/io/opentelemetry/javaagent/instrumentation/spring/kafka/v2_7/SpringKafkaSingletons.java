@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
+import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetryBuilder;
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.internal.SpringKafkaErrorCauseExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
@@ -37,7 +38,7 @@ public class SpringKafkaSingletons {
   }
 
   private static SpringKafkaTelemetry createTelemetry() {
-    io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetryBuilder builder =
+    SpringKafkaTelemetryBuilder builder =
         SpringKafkaTelemetry.builder(GlobalOpenTelemetry.get())
             .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
             .setCaptureExperimentalSpanAttributes(

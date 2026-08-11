@@ -147,7 +147,8 @@ abstract class AbstractRocketMqClientTest {
             .setClientConfiguration(clientConfiguration)
             .setConsumerGroup("empty-pull-group")
             .setSubscriptionExpressions(
-                singletonMap(NORMAL_TOPIC, new FilterExpression(TAG, FilterExpressionType.TAG)))
+                singletonMap(
+                    NORMAL_TOPIC, new FilterExpression("empty-pull-tag", FilterExpressionType.TAG)))
             .setAwaitDuration(Duration.ofSeconds(1))
             .build();
     cleanup.deferCleanup(simpleConsumer);
