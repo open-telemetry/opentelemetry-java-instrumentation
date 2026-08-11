@@ -23,10 +23,12 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.jboss.logmanager.ExtLogRecord;
@@ -56,7 +58,7 @@ public class LoggingEventMapper {
   private final boolean captureExperimentalAttributes;
   private final boolean captureTemplate;
   private final boolean captureArguments;
-  @Nullable private final IncludeExclude mdcAttributes;
+  @Nullable private final Predicate<String> mdcAttributes;
 
   private LoggingEventMapper() {
     DeclarativeConfigProperties config =
@@ -70,7 +72,7 @@ public class LoggingEventMapper {
   }
 
   @Nullable
-  static IncludeExclude getMdcAttributes(DeclarativeConfigProperties config, boolean v3Preview) {
+  static Predicate<String> getMdcAttributes(DeclarativeConfigProperties config, boolean v3Preview) {
     DeclarativeConfigProperties mdcAttributes = config.get("mdc_attributes/development");
     List<String> included = mdcAttributes.getScalarList("included", String.class);
     List<String> excluded = mdcAttributes.getScalarList("excluded", String.class);
@@ -81,7 +83,7 @@ public class LoggingEventMapper {
             .build();
 
     if (v3Preview) {
-      return selector.isEmpty() ? null : selector;
+      return selector.isEmpty() ? null : selector::matches;
     }
 
     // Deprecated include-only alias retained through 2.x.
@@ -100,7 +102,7 @@ public class LoggingEventMapper {
                 + MDC_ATTRIBUTES_EXCLUDED
                 + " is configured. They will be removed in 3.0.");
       }
-      return selector;
+      return selector::matches;
     }
 
     if (deprecatedIncluded == null) {
@@ -114,9 +116,14 @@ public class LoggingEventMapper {
             + " will be removed in 3.0. Use "
             + MDC_ATTRIBUTES_INCLUDED
             + " or equivalent declarative configuration instead.");
-    return deprecatedIncluded.isEmpty()
-        ? null
-        : IncludeExclude.builder().setIncluded(deprecatedIncluded).build();
+    if (deprecatedIncluded.isEmpty()) {
+      return null;
+    }
+    if (deprecatedIncluded.size() == 1 && deprecatedIncluded.get(0).equals("*")) {
+      return key -> true;
+    }
+    Set<String> exactKeys = new HashSet<>(deprecatedIncluded);
+    return exactKeys::contains;
   }
 
   private static void logWarningOnce(String warning, String message) {
@@ -196,7 +203,7 @@ public class LoggingEventMapper {
 
     for (Map.Entry<String, String> entry : context.entrySet()) {
       String key = entry.getKey();
-      if (!OTEL_EVENT_NAME.getKey().equals(key) && mdcAttributes.matches(key)) {
+      if (!OTEL_EVENT_NAME.getKey().equals(key) && mdcAttributes.test(key)) {
         builder.setAttribute(getMdcAttributeKey(key), entry.getValue());
       }
     }
