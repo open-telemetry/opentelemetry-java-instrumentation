@@ -124,27 +124,31 @@ public final class RuntimeTelemetryBuilder {
 
   @Nullable
   private IncludeExclude getEffectiveJfrMetrics() {
-    // an empty selector is equivalent to no selector at all
-    IncludeExclude selector = jfrMetrics == null || jfrMetrics.isEmpty() ? null : jfrMetrics;
-    if (selector == null && !preferJfrMetrics && !emitExperimentalJfrMetrics) {
-      return null;
-    }
-    if (selector != null && selector.getIncluded().isEmpty()) {
+    IncludeExclude selector = jfrMetrics;
+
+    // An exclude-only selector already selects every non-excluded metric.
+    if (selector != null && !selector.isEmpty() && selector.getIncluded().isEmpty()) {
       return selector;
     }
 
-    List<String> included =
-        selector == null ? new ArrayList<>() : new ArrayList<>(selector.getIncluded());
+    List<String> included = new ArrayList<>();
+    List<String> excluded = emptyList();
+    if (selector != null) {
+      included.addAll(selector.getIncluded());
+      excluded = selector.getExcluded();
+    }
     if (preferJfrMetrics) {
       included.addAll(Experimental.JMX_OVERLAPPING_JFR_METRICS);
     }
     if (emitExperimentalJfrMetrics) {
       included.addAll(EXPERIMENTAL_JFR_METRICS);
     }
-    return IncludeExclude.builder()
-        .setIncluded(included)
-        .setExcluded(selector == null ? emptyList() : selector.getExcluded())
-        .build();
+
+    if (included.isEmpty()) {
+      return null;
+    }
+
+    return IncludeExclude.builder().setIncluded(included).setExcluded(excluded).build();
   }
 
   private static Meter getMeter(OpenTelemetry openTelemetry, String instrumentationName) {
