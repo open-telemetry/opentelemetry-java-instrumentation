@@ -11,7 +11,6 @@ import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
@@ -25,6 +24,7 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.lang.reflect.Array;
@@ -75,8 +75,7 @@ public final class LoggingEventMapper {
       AttributeKey.stringArrayKey("log.body.parameters");
 
   private final boolean captureExperimentalAttributes;
-  private final List<AttributeKey<String>> captureMdcAttributeKeys;
-  private final boolean captureAllMdcAttributes;
+  @Nullable private final IncludeExclude mdcAttributes;
   private final boolean captureCodeAttributes;
   private final boolean captureMarkerAttribute;
   private final boolean captureKeyValuePairAttributes;
@@ -96,19 +95,10 @@ public final class LoggingEventMapper {
     this.captureArguments = builder.captureArguments;
     this.captureLogstashMarkerAttributes = builder.captureLogstashMarkerAttributes;
     this.captureLogstashStructuredArguments = builder.captureLogstashStructuredArguments;
-    this.captureAllMdcAttributes =
-        builder.captureMdcAttributes.size() == 1 && builder.captureMdcAttributes.get(0).equals("*");
-    if (captureAllMdcAttributes) {
-      this.captureMdcAttributeKeys = emptyList();
-    } else {
-      List<AttributeKey<String>> keys = new ArrayList<>(builder.captureMdcAttributes.size());
-      for (String key : builder.captureMdcAttributes) {
-        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
-          keys.add(getAttributeKey(key));
-        }
-      }
-      this.captureMdcAttributeKeys = keys;
-    }
+    this.mdcAttributes =
+        builder.mdcAttributes == null || builder.mdcAttributes.isEmpty()
+            ? null
+            : builder.mdcAttributes;
   }
 
   public static Builder builder() {
@@ -271,19 +261,14 @@ public final class LoggingEventMapper {
       builder.setEventName(otelEventName);
     }
 
-    if (captureAllMdcAttributes) {
-      for (Map.Entry<String, String> entry : mdcProperties.entrySet()) {
-        String key = entry.getKey();
-        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
-          builder.setAttribute(getAttributeKey(key), entry.getValue());
-        }
-      }
+    if (mdcAttributes == null) {
       return;
     }
-
-    for (AttributeKey<String> attributeKey : captureMdcAttributeKeys) {
-      String value = mdcProperties.get(attributeKey.getKey());
-      builder.setAttribute(attributeKey, value);
+    for (Map.Entry<String, String> entry : mdcProperties.entrySet()) {
+      String key = entry.getKey();
+      if (!OTEL_EVENT_NAME.getKey().equals(key) && mdcAttributes.matches(key)) {
+        builder.setAttribute(getAttributeKey(key), entry.getValue());
+      }
     }
   }
 
@@ -697,7 +682,7 @@ public final class LoggingEventMapper {
    */
   public static final class Builder {
     private boolean captureExperimentalAttributes;
-    private List<String> captureMdcAttributes = emptyList();
+    @Nullable private IncludeExclude mdcAttributes;
     private boolean captureCodeAttributes;
     private boolean captureMarkerAttribute;
     private boolean captureKeyValuePairAttributes;
@@ -716,8 +701,8 @@ public final class LoggingEventMapper {
     }
 
     @CanIgnoreReturnValue
-    public Builder setCaptureMdcAttributes(List<String> captureMdcAttributes) {
-      this.captureMdcAttributes = captureMdcAttributes;
+    public Builder setMdcAttributes(@Nullable IncludeExclude mdcAttributes) {
+      this.mdcAttributes = mdcAttributes;
       return this;
     }
 

@@ -87,7 +87,8 @@ Settings can be configured in `logback.xml`, for example:
 ```xml
 <appender name="OpenTelemetry" class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
   <captureExperimentalAttributes>true</captureExperimentalAttributes>
-  <captureMdcAttributes>*</captureMdcAttributes>
+  <!-- Deprecated compatibility setting; prefer setMdcAttributes(IncludeExclude). -->
+  <captureMdcAttributes>request-*,user-?</captureMdcAttributes>
 </appender>
 ```
 
@@ -104,8 +105,23 @@ The available settings are:
 | `captureArguments`                   | Boolean | `false` | Enable the capture of Logback log event arguments.                                                                                                                                                                                                |
 | `captureLogstashMarkerAttributes`    | Boolean | `false` | Enable the capture of Logstash markers, supported are those added to logs via `Markers.append()`, `Markers.appendEntries()`, `Markers.appendArray()` and `Markers.appendRaw()` methods.                                                           |
 | `captureLogstashStructuredArguments` | Boolean | `false` | Enable the capture of Logstash StructuredArguments as attributes (e.g., `StructuredArguments.v()` and `StructuredArguments.keyValue()`).                                                                                                          |
-| `captureMdcAttributes`               | String  |         | Comma separated list of MDC attributes to capture. Use the wildcard character `*` to capture all attributes.                                                                                                                                      |
+| `captureMdcAttributes`               | String  |         | Deprecated include-only compatibility setting for XML and programmatic configurations. Prefer `setMdcAttributes(IncludeExclude)` for new programmatic configurations. Will be removed in 3.0.                                                     |
 | `numLogsCapturedBeforeOtelInstall`   | Integer | 1000    | Log telemetry is emitted after the initialization of the OpenTelemetry Logback appender with an OpenTelemetry object. This setting allows you to modify the size of the cache used to replay the first logs. thread.id attribute is not captured. |
+
+For programmatic configuration, use an `IncludeExclude` selector:
+
+```java
+appender.setMdcAttributes(
+    IncludeExclude.builder()
+        .setIncluded("request-*", "user-?")
+        .setExcluded("*-secret")
+        .build());
+```
+
+MDC keys and selector patterns are matched case-sensitively. `?` matches any single character and
+`*` matches any number of characters, including none. Excluded patterns take precedence over
+included patterns. No MDC attributes are captured when the selector is absent or empty; a selector
+with only excluded patterns captures every MDC attribute that it does not exclude.
 
 The `otel.event.name` key is supported in key-value pairs (SLF4J 2.x fluent API), MDC entries, Logstash markers (e.g., `Markers.append("otel.event.name", ...)`), and Logstash structured arguments (e.g., `StructuredArguments.keyValue("otel.event.name", ...)`). When present, its value is used as the log event name and is not emitted as an attribute.
 

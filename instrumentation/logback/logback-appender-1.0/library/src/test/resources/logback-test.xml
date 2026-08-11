@@ -14,7 +14,7 @@
     <captureCodeAttributes>true</captureCodeAttributes>
     <captureMarkerAttribute>true</captureMarkerAttribute>
     <captureLoggerContext>true</captureLoggerContext>
-    <captureMdcAttributes>*</captureMdcAttributes>
+    <captureMdcAttributes>key?</captureMdcAttributes>
     <numLogsCapturedBeforeOtelInstall>1</numLogsCapturedBeforeOtelInstall>
   </appender>
 

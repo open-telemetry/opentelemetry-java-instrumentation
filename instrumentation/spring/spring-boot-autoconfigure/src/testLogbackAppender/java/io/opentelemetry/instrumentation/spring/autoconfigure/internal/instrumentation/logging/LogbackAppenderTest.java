@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import ch.qos.logback.classic.LoggerContext;
@@ -23,10 +24,12 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -41,6 +44,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.StandardEnvironment;
 
 class LogbackAppenderTest {
 
@@ -82,8 +87,14 @@ class LogbackAppenderTest {
     if (declarativeConfig) {
       properties.put("otel.file_format", "1.1");
       properties.put(
+          "otel.instrumentation/development.java.logback_appender.mdc_attributes/development.included",
+          "key*");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.mdc_attributes/development.excluded",
+          "key2");
+      properties.put(
           "otel.instrumentation/development.java.logback_appender.capture_mdc_attributes/development",
-          "*");
+          "key2");
       properties.put(
           "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
           false);
@@ -92,7 +103,11 @@ class LogbackAppenderTest {
           true);
     } else {
       properties.put(
-          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*");
+          "otel.instrumentation.logback-appender.experimental.mdc-attributes.included", "key*");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded", "key2");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "key2");
       properties.put(
           "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
       properties.put("otel.instrumentation.logback-appender.experimental.capture-template", true);
@@ -129,12 +144,11 @@ class LogbackAppenderTest {
               assertThat(logRecord.getBodyValue().asString()).contains("test log message: arg");
 
               Attributes attributes = logRecord.getAttributes();
-              // key1 and key2, the code attributes should not be present because they are enabled
+              // key1, the code attributes should not be present because they are enabled
               // in the logback.xml file but are disabled with a property
               assertThat(attributes.asMap())
-                  .hasSize(3)
+                  .hasSize(2)
                   .containsEntry(stringKey("key1"), "val1")
-                  .containsEntry(stringKey("key2"), "val2")
                   .containsEntry(stringKey("log.body.template"), "test log message: {}");
             });
 
@@ -145,6 +159,90 @@ class LogbackAppenderTest {
                     .satisfies(
                         e -> assertThat(e.getMessage()).isEqualTo("test log message: {}"),
                         e -> assertThat(e.getMDCPropertyMap()).containsOnlyKeys("key1", "key2")));
+  }
+
+  @ParameterizedTest
+  @CsvSource({"false, false, true", "true, false, true", "false, true, false", "true, true, false"})
+  void deprecatedMdcPropertyIsIncludeOnlyAndIgnoredInV3Preview(
+      boolean declarativeConfig, boolean v3Preview, boolean expectMdcAttribute) {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:logback-test-no-mdc.xml");
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_mdc_attributes/development",
+          "key1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
+          false);
+      properties.put("otel.instrumentation/development.java.common.v3_preview", v3Preview);
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "key1");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
+      properties.put("otel.instrumentation.common.v3-preview", v3Preview);
+    }
+
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+    testing.clearData();
+
+    MDC.put("key1", "val1");
+    try {
+      LoggerFactory.getLogger("test").info("legacy MDC property");
+    } finally {
+      MDC.clear();
+    }
+
+    assertThat(testing.logRecords())
+        .satisfiesOnlyOnce(
+            logRecord ->
+                assertThat(logRecord.getAttributes().asMap().get(stringKey("key1")))
+                    .isEqualTo(expectMdcAttribute ? "val1" : null));
+  }
+
+  @Test
+  void deprecatedMdcPropertyWarnsOnce() throws Exception {
+    Field field = LogbackAppenderInstaller.class.getDeclaredField("warnedDeprecatedProperties");
+    field.setAccessible(true);
+    ((Set<?>) field.get(null)).clear();
+
+    ch.qos.logback.classic.Logger installerLogger =
+        (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(LogbackAppenderInstaller.class);
+    ListAppender<ILoggingEvent> warningAppender = new ListAppender<>();
+    warningAppender.start();
+    installerLogger.addAppender(warningAppender);
+    try {
+      StandardEnvironment environment = new StandardEnvironment();
+      environment
+          .getPropertySources()
+          .addFirst(
+              new MapPropertySource(
+                  "test",
+                  singletonMap(
+                      "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
+                      "key1")));
+
+      LogbackAppenderInstaller.getMdcAttributes(environment);
+      LogbackAppenderInstaller.getMdcAttributes(environment);
+
+      assertThat(warningAppender.list)
+          .filteredOn(
+              event ->
+                  event
+                      .getFormattedMessage()
+                      .contains(
+                          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes"))
+          .hasSize(1);
+    } finally {
+      installerLogger.detachAppender(warningAppender);
+      warningAppender.stop();
+    }
   }
 
   @Test

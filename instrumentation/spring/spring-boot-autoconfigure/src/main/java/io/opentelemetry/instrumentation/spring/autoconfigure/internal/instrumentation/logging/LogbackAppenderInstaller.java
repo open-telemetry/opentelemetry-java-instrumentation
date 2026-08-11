@@ -5,14 +5,22 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging;
 
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.spi.AppenderAttachable;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EarlyConfig;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
@@ -22,6 +30,14 @@ import org.springframework.core.env.ConfigurableEnvironment;
 
 class LogbackAppenderInstaller {
   private static final Logger logger = LoggerFactory.getLogger(LogbackAppenderInstaller.class);
+  private static final Set<String> warnedDeprecatedProperties = ConcurrentHashMap.newKeySet();
+
+  private static final String DEPRECATED_MDC_ATTRIBUTES =
+      "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes";
+  private static final String MDC_ATTRIBUTES_INCLUDED =
+      "otel.instrumentation.logback-appender.experimental.mdc-attributes.included";
+  private static final String MDC_ATTRIBUTES_EXCLUDED =
+      "otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded";
 
   static void install(ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
     Optional<io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender>
@@ -169,13 +185,65 @@ class LogbackAppenderInstaller {
           captureLogstashStructuredArguments);
     }
 
-    String mdcAttributeProperty =
-        getLoggingProperty(
-            applicationEnvironmentPreparedEvent.getEnvironment(),
-            "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes");
-    if (mdcAttributeProperty != null) {
-      openTelemetryAppender.setCaptureMdcAttributes(mdcAttributeProperty);
+    MdcAttributesConfiguration mdcAttributes =
+        getMdcAttributes(applicationEnvironmentPreparedEvent.getEnvironment());
+    if (mdcAttributes.configured) {
+      openTelemetryAppender.setMdcAttributes(mdcAttributes.selector);
     }
+  }
+
+  static MdcAttributesConfiguration getMdcAttributes(ConfigurableEnvironment environment) {
+    String includedProperty = getLoggingProperty(environment, MDC_ATTRIBUTES_INCLUDED);
+    String excludedProperty = getLoggingProperty(environment, MDC_ATTRIBUTES_EXCLUDED);
+    List<String> included = parseList(includedProperty);
+    List<String> excluded = parseList(excludedProperty);
+    IncludeExclude selector =
+        IncludeExclude.builder().setIncluded(included).setExcluded(excluded).build();
+    if (!selector.isEmpty()) {
+      return MdcAttributesConfiguration.configured(selector);
+    }
+
+    boolean newSelectorConfigured = includedProperty != null || excludedProperty != null;
+    if (Boolean.TRUE.equals(
+        environment.getProperty(
+            getEnvironmentPropertyName(environment, "otel.instrumentation.common.v3-preview"),
+            Boolean.class))) {
+      String deprecatedProperty = getLoggingProperty(environment, DEPRECATED_MDC_ATTRIBUTES);
+      return deprecatedProperty != null || newSelectorConfigured
+          ? MdcAttributesConfiguration.configured(null)
+          : MdcAttributesConfiguration.unconfigured();
+    }
+
+    String deprecatedProperty = getLoggingProperty(environment, DEPRECATED_MDC_ATTRIBUTES);
+    if (deprecatedProperty != null) {
+      if (warnedDeprecatedProperties.add(DEPRECATED_MDC_ATTRIBUTES)) {
+        logger.warn(
+            "The '{}' property and the equivalent declarative configuration property are"
+                + " deprecated and will be removed in 3.0. Use '{}' or equivalent declarative"
+                + " configuration instead.",
+            DEPRECATED_MDC_ATTRIBUTES,
+            MDC_ATTRIBUTES_INCLUDED);
+      }
+      List<String> deprecatedIncluded = parseList(deprecatedProperty);
+      return MdcAttributesConfiguration.configured(
+          deprecatedIncluded.isEmpty()
+              ? null
+              : IncludeExclude.builder().setIncluded(deprecatedIncluded).build());
+    }
+
+    return newSelectorConfigured
+        ? MdcAttributesConfiguration.configured(null)
+        : MdcAttributesConfiguration.unconfigured();
+  }
+
+  private static List<String> parseList(@Nullable String value) {
+    if (value == null) {
+      return emptyList();
+    }
+    return Arrays.stream(value.split(","))
+        .map(String::trim)
+        .filter(item -> !item.isEmpty())
+        .collect(toList());
   }
 
   private static void addMdcAppender(
@@ -347,6 +415,27 @@ class LogbackAppenderInstaller {
       }
     }
     return Optional.empty();
+  }
+
+  static final class MdcAttributesConfiguration {
+    private static final MdcAttributesConfiguration UNCONFIGURED =
+        new MdcAttributesConfiguration(false, null);
+
+    private final boolean configured;
+    @Nullable private final IncludeExclude selector;
+
+    private static MdcAttributesConfiguration configured(@Nullable IncludeExclude selector) {
+      return new MdcAttributesConfiguration(true, selector);
+    }
+
+    private static MdcAttributesConfiguration unconfigured() {
+      return UNCONFIGURED;
+    }
+
+    private MdcAttributesConfiguration(boolean configured, @Nullable IncludeExclude selector) {
+      this.configured = configured;
+      this.selector = selector;
+    }
   }
 
   private LogbackAppenderInstaller() {}

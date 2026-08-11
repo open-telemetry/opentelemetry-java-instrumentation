@@ -15,6 +15,7 @@ import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.spi.AppenderAttachable;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +27,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -41,7 +43,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureArguments = false;
   private boolean captureLogstashMarkerAttributes = false;
   private boolean captureLogstashStructuredArguments = false;
-  private List<String> captureMdcAttributes = emptyList();
+  @Nullable private IncludeExclude mdcAttributes;
 
   private volatile OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
@@ -96,7 +98,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     mapper =
         LoggingEventMapper.builder()
             .setCaptureExperimentalAttributes(captureExperimentalAttributes)
-            .setCaptureMdcAttributes(captureMdcAttributes)
+            .setMdcAttributes(mdcAttributes)
             .setCaptureCodeAttributes(captureCodeAttributes)
             .setCaptureMarkerAttribute(captureMarkerAttribute)
             .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
@@ -219,13 +221,30 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     this.captureLogstashStructuredArguments = captureLogstashStructuredArguments;
   }
 
-  /** Configures the {@link MDC} attributes that will be copied to logs. */
+  /**
+   * Configures the {@link MDC} attributes that will be copied to logs.
+   *
+   * <p>MDC keys and selector patterns are matched case-sensitively. {@code ?} matches any single
+   * character and {@code *} matches any number of characters, including none. Excluded patterns
+   * take precedence over included patterns. No MDC attributes are captured when the selector is
+   * {@code null} or empty; a selector with only excluded patterns captures every MDC attribute that
+   * it does not exclude.
+   */
+  public void setMdcAttributes(@Nullable IncludeExclude mdcAttributes) {
+    this.mdcAttributes = mdcAttributes == null || mdcAttributes.isEmpty() ? null : mdcAttributes;
+  }
+
+  /**
+   * Configures the {@link MDC} attributes that will be copied to logs.
+   *
+   * @deprecated Use {@link #setMdcAttributes(IncludeExclude)} instead. Will be removed in 3.0.
+   */
+  @Deprecated // to be removed in 3.0
   public void setCaptureMdcAttributes(String attributes) {
-    if (attributes != null) {
-      captureMdcAttributes = filterBlanksAndNulls(attributes.split(","));
-    } else {
-      captureMdcAttributes = emptyList();
-    }
+    List<String> included =
+        attributes == null ? emptyList() : filterBlanksAndNulls(attributes.split(","));
+    setMdcAttributes(
+        included.isEmpty() ? null : IncludeExclude.builder().setIncluded(included).build());
   }
 
   /**
