@@ -202,6 +202,8 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
 
   private void sendSingleRecord(KafkaProducerRecord<String, String> record)
       throws InterruptedException {
+    // Wait for the poll that was in flight when the consumer paused to finish.
+    Thread.sleep(1_000);
     testing().clearData();
 
     CountDownLatch sent = new CountDownLatch(1);
