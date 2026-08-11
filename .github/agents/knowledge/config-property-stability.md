@@ -160,6 +160,21 @@ same as an absent selector and fall back to the setting's own default. This keep
 a no-op and matches flat configuration, where empty property values cannot be distinguished from
 unset ones. `IncludeExclude#isEmpty()` identifies that case.
 
+### Documenting Structured Selectors
+
+Describe the relationship between the two lists as precedence, not as order of application.
+"Exclusions are applied after inclusions" reads as a sequence and leaves it ambiguous whether a
+later rule can re-add a value that an earlier rule removed. State the outcome instead, using the
+same sentence everywhere:
+
+```text
+Excluded patterns take precedence over included patterns.
+```
+
+Document the matching rules on every surface a user reads: the property table, the metadata
+description, and the javadoc of the Java setter. Cover pattern syntax, case sensitivity, precedence,
+and what an absent selector means, because a reader on IDE hover does not see the README.
+
 ## Structured Config (YAML-Only)
 
 Some configurations require structured data only expressible in YAML:

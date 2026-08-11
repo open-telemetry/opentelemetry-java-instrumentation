@@ -65,7 +65,15 @@ public final class IncludeExclude {
     return included.isEmpty() && excluded.isEmpty();
   }
 
-  /** Returns whether {@code value} matches this selector. */
+  /**
+   * Returns whether {@code value} matches this selector.
+   *
+   * <p>Excluded patterns take precedence over included patterns: an excluded value never matches,
+   * even when an included pattern also matches it. When there are no included patterns, every value
+   * that is not excluded matches, so an {@linkplain #isEmpty() empty} selector matches every value.
+   * A caller that treats an empty selector as no configuration should check {@link #isEmpty()}
+   * rather than call this method.
+   */
   public boolean matches(String value) {
     requireNonNull(value, "value");
     return (includedPredicates.isEmpty() || matchesAny(includedPredicates, value))
