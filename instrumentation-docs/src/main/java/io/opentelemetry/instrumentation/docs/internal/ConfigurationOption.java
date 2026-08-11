@@ -20,8 +20,9 @@ public record ConfigurationOption(
     @Nullable String name,
     @JsonProperty("declarative_name") @Nullable String declarativeName,
     String description,
-    @JsonProperty("default") String defaultValue,
+    @JsonProperty("default") @Nullable String defaultValue,
     ConfigurationType type,
+    @JsonProperty("default_is_conditional") boolean defaultIsConditional,
     @Nullable List<String> examples,
     @JsonProperty("declarative_type") @Nullable ConfigurationType declarativeType,
     @JsonProperty("declarative_schema") @Nullable DeclarativeSchema declarativeSchema,
@@ -48,6 +49,7 @@ public record ConfigurationOption(
           || description != null
           || defaultValue != null
           || type != null
+          || defaultIsConditional
           || examples != null
           || declarativeType != null
           || declarativeSchema != null
@@ -58,8 +60,15 @@ public record ConfigurationOption(
       }
     } else {
       requireNonNull(description, "description");
-      requireNonNull(defaultValue, "defaultValue");
       requireNonNull(type, "type");
+      if (defaultIsConditional) {
+        if (defaultValue != null) {
+          throw new IllegalArgumentException(
+              "A conditional-default ConfigurationOption must not specify a default value");
+        }
+      } else {
+        requireNonNull(defaultValue, "defaultValue");
+      }
 
       // Most configs are backed by a flat system property (name). Declarative-only configs (such as
       // the url_template_rules structured list) have no flat property and rely on declarative_name.
@@ -89,7 +98,7 @@ public record ConfigurationOption(
 
   public ConfigurationOption(
       String name, String description, String defaultValue, ConfigurationType type) {
-    this(name, null, description, defaultValue, type, null, null, null, null, null);
+    this(name, null, description, defaultValue, type, false, null, null, null, null, null);
   }
 
   /** Returns a copy of this option with the given definition id assigned. */
@@ -100,6 +109,7 @@ public record ConfigurationOption(
         description,
         defaultValue,
         type,
+        defaultIsConditional,
         examples,
         declarativeType,
         declarativeSchema,

@@ -43,6 +43,38 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
 
   @Override
   void assertSpringJmsListener() {
+    if (!receiveTelemetryExplicitlyEnabled()) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent").hasNoParent(),
+                  span ->
+                      span.hasName("send spring-jms-listener")
+                          .hasKind(PRODUCER)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(MESSAGING_SYSTEM, "jms"),
+                              equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
+                              oldOperation("publish"),
+                              operationName("send"),
+                              operationType("send"),
+                              satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank)),
+                  span ->
+                      span.hasName("process spring-jms-listener")
+                          .hasKind(CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(MESSAGING_SYSTEM, "jms"),
+                              equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
+                              oldOperation("process"),
+                              operationName("process"),
+                              operationType("process"),
+                              satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank)),
+                  span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+      return;
+    }
+
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(INTERNAL, emitStableMessagingSemconv() ? CLIENT : CONSUMER),
@@ -133,6 +165,50 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
         applicationContext.getBean("receivedMessage", CompletableFuture.class);
     assertThat(receivedMessage.get(10, SECONDS)).isEqualTo(message);
 
+    if (!receiveTelemetryExplicitlyEnabled()) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent").hasNoParent(),
+                  span ->
+                      span.hasName("send spring-jms-listener")
+                          .hasKind(PRODUCER)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(MESSAGING_SYSTEM, "jms"),
+                              equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
+                              oldOperation("publish"),
+                              operationName("send"),
+                              operationType("send"),
+                              satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                              equalTo(
+                                  stringArrayKey("messaging.header.Test_Message_Header"),
+                                  singletonList("test")),
+                              equalTo(
+                                  stringArrayKey("messaging.header.Test_Message_Int_Header"),
+                                  singletonList("1234"))),
+                  span ->
+                      span.hasName("process spring-jms-listener")
+                          .hasKind(CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(MESSAGING_SYSTEM, "jms"),
+                              equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
+                              oldOperation("process"),
+                              operationName("process"),
+                              operationType("process"),
+                              satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                              equalTo(
+                                  stringArrayKey("messaging.header.Test_Message_Header"),
+                                  singletonList("test")),
+                              equalTo(
+                                  stringArrayKey("messaging.header.Test_Message_Int_Header"),
+                                  singletonList("1234"))),
+                  span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+      return;
+    }
+
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(INTERNAL, emitStableMessagingSemconv() ? CLIENT : CONSUMER),
         trace ->
@@ -213,5 +289,10 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
 
   private static AttributeAssertion operationType(String operation) {
     return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
+  }
+
+  private static boolean receiveTelemetryExplicitlyEnabled() {
+    return Boolean.getBoolean(
+        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
   }
 }

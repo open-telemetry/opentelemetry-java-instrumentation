@@ -11,7 +11,7 @@ configurations:
       Controls experimental receive spans for pull-based messaging operations. When unset, receive
       spans are enabled with stable messaging semantic conventions or v3-preview, and disabled otherwise.
     type: boolean
-    default: false
+    default_is_conditional: true
   - ref: messaging.capture-headers
   - name: otel.instrumentation.pulsar.experimental-span-attributes
     declarative_name: java.pulsar.experimental_span_attributes/development

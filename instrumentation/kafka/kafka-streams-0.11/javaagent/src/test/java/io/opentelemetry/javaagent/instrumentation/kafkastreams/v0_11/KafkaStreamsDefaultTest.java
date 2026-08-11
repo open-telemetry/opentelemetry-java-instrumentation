@@ -35,6 +35,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.time.Duration;
@@ -43,6 +44,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -106,9 +108,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
     AtomicReference<SpanData> producerProcessedRef = new AtomicReference<>();
 
     if (emitStableMessagingSemconv()) {
-      testing.waitAndAssertSortedTraces(
-          TelemetryDataUtil.orderByRootSpanName(
-              "send " + STREAM_PENDING, "poll " + STREAM_PENDING, "poll " + STREAM_PROCESSED),
+      Consumer<TraceAssert> mainTrace =
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 // kafka-clients PRODUCER
@@ -194,25 +194,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 });
             producerPendingRef.set(trace.getSpan(0));
             producerProcessedRef.set(trace.getSpan(2));
-          },
-          trace -> {
-            List<AttributeAssertion> assertions =
-                new ArrayList<>(
-                    messagingAttributes(
-                        STREAM_PENDING, "receive", "poll", "receive", "consumer", false));
-            assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
-            if (testLatestDeps()) {
-              addGroupAssertions(assertions, "test-application");
-            }
-            trace.hasSpansSatisfyingExactly(
-                // kafka-clients CONSUMER receive
-                span ->
-                    span.hasName("poll " + STREAM_PENDING)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasLinks(LinkData.create(producerPendingRef.get().getSpanContext()))
-                        .hasAttributesSatisfyingExactly(assertions));
-          },
+          };
+      Consumer<TraceAssert> processedReceiveTrace =
           trace -> {
             List<AttributeAssertion> assertions =
                 new ArrayList<>(
@@ -230,7 +213,39 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                         .hasNoParent()
                         .hasLinks(LinkData.create(producerProcessedRef.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(assertions));
-          });
+          };
+      if (receiveTelemetryExplicitlyEnabled()) {
+        Consumer<TraceAssert> pendingReceiveTrace =
+            trace -> {
+              List<AttributeAssertion> assertions =
+                  new ArrayList<>(
+                      messagingAttributes(
+                          STREAM_PENDING, "receive", "poll", "receive", "consumer", false));
+              assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
+              if (testLatestDeps()) {
+                addGroupAssertions(assertions, "test-application");
+              }
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("poll " + STREAM_PENDING)
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasLinks(LinkData.create(producerPendingRef.get().getSpanContext()))
+                          .hasAttributesSatisfyingExactly(assertions));
+            };
+        testing.waitAndAssertSortedTraces(
+            TelemetryDataUtil.orderByRootSpanName(
+                "send " + STREAM_PENDING, "poll " + STREAM_PENDING, "poll " + STREAM_PROCESSED),
+            mainTrace,
+            pendingReceiveTrace,
+            processedReceiveTrace);
+      } else {
+        testing.waitAndAssertSortedTraces(
+            TelemetryDataUtil.orderByRootSpanName(
+                "send " + STREAM_PENDING, "poll " + STREAM_PROCESSED),
+            mainTrace,
+            processedReceiveTrace);
+      }
       return;
     }
 
@@ -434,5 +449,10 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
     if (emitStableMessagingSemconv()) {
       assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, group));
     }
+  }
+
+  private static boolean receiveTelemetryExplicitlyEnabled() {
+    return Boolean.getBoolean(
+        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
   }
 }

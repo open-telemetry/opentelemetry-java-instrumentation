@@ -79,6 +79,12 @@ public class PulsarSingletons {
     return producerInstrumenter;
   }
 
+  private static boolean receiveInstrumentationEnabled() {
+    return receiveInstrumentationEnabled != null
+        ? receiveInstrumentationEnabled
+        : emitStableMessagingSemconv();
+  }
+
   private static Instrumenter<PulsarRequest, Void> createConsumerReceiveInstrumenter() {
     MessagingAttributesGetter<PulsarRequest, Void> getter = new PulsarMessagingAttributesGetter();
 
@@ -94,7 +100,6 @@ public class PulsarSingletons {
             .addOperationMetrics(MessagingConsumerMetrics.getForOperationTypeWithOldMetrics())
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
-    instrumenterBuilder.setEnabled(receiveInstrumentationEnabled());
     setMessagingReceiveExceptionEventExtractor(instrumenterBuilder);
 
     if (emitStableMessagingSemconv() || Boolean.TRUE.equals(receiveInstrumentationEnabled)) {
@@ -124,7 +129,6 @@ public class PulsarSingletons {
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
             .addSpanLinksExtractor(new PulsarBatchRequestSpanLinksExtractor(propagator))
             .addOperationMetrics(MessagingConsumerMetrics.getForOperationTypeWithOldMetrics());
-    instrumenterBuilder.setEnabled(receiveInstrumentationEnabled());
     setMessagingReceiveExceptionEventExtractor(instrumenterBuilder);
     return instrumenterBuilder.buildInstrumenter(
         MessagingSpanKindExtractor.create(MessagingOperationType.RECEIVE));
@@ -153,12 +157,6 @@ public class PulsarSingletons {
         propagator,
         MessageTextMapGetter.INSTANCE,
         Boolean.TRUE.equals(receiveInstrumentationEnabled));
-  }
-
-  private static boolean receiveInstrumentationEnabled() {
-    return receiveInstrumentationEnabled != null
-        ? receiveInstrumentationEnabled
-        : emitStableMessagingSemconv();
   }
 
   private static Instrumenter<PulsarRequest, Void> createProducerInstrumenter() {
@@ -204,28 +202,34 @@ public class PulsarSingletons {
       @Nullable Throwable throwable) {
     String brokerUrl = VirtualFieldStore.extract(consumer);
     PulsarRequest request = PulsarRequest.create(message, brokerUrl, consumer);
-    if (!consumerReceiveInstrumenter.shouldStart(parent, request)) {
-      return null;
-    }
-    if (MessageListenerContext.isProcessing()
-        && (message == null || !Boolean.TRUE.equals(receiveInstrumentationEnabled))) {
-      return null;
-    }
+    boolean listenerContextActive = MessageListenerContext.isProcessing();
+    boolean createReceiveSpan =
+        listenerContextActive
+            ? message != null && Boolean.TRUE.equals(receiveInstrumentationEnabled)
+            : message != null || throwable != null || receiveInstrumentationEnabled();
+    Context spanParentContext = parent;
     if (!emitStableMessagingSemconv() && !Boolean.TRUE.equals(receiveInstrumentationEnabled)) {
-      parent = propagator.extract(parent, request, MessageTextMapGetter.INSTANCE);
+      spanParentContext = propagator.extract(parent, request, MessageTextMapGetter.INSTANCE);
     }
-    Context receiveContext =
-        InstrumenterUtil.startAndEnd(
-            consumerReceiveInstrumenter,
-            parent,
-            request,
-            null,
-            throwable,
-            timer.startTime(),
-            timer.now());
-    Context processParentContext = emitStableMessagingSemconv() ? parent : receiveContext;
+    Context processParentContext = emitStableMessagingSemconv() ? parent : spanParentContext;
+    boolean receiveSpanRecorded = false;
+    if (createReceiveSpan && consumerReceiveInstrumenter.shouldStart(spanParentContext, request)) {
+      Context receiveContext =
+          InstrumenterUtil.startAndEnd(
+              consumerReceiveInstrumenter,
+              spanParentContext,
+              request,
+              null,
+              throwable,
+              timer.startTime(),
+              timer.now());
+      processParentContext = emitStableMessagingSemconv() ? parent : receiveContext;
+      receiveSpanRecorded = true;
+    }
     if (message != null) {
-      VirtualFieldStore.markReceiveTelemetryRecorded(message);
+      if (receiveSpanRecorded) {
+        VirtualFieldStore.markReceiveTelemetryRecorded(message);
+      }
       // injected context is used in MessageListenerInstrumentation and also in the spring-pulsar
       // instrumentation
       VirtualFieldStore.inject(message, processParentContext);
@@ -241,31 +245,35 @@ public class PulsarSingletons {
       Consumer<?> consumer,
       boolean listenerContextActive,
       @Nullable Throwable throwable) {
-    if (listenerContextActive
-        && (messages == null
-            || messages.size() == 0
-            || !Boolean.TRUE.equals(receiveInstrumentationEnabled))) {
-      return null;
-    }
     String brokerUrl = VirtualFieldStore.extract(consumer);
     PulsarBatchRequest request = PulsarBatchRequest.create(messages, brokerUrl, consumer);
-    if (!consumerBatchReceiveInstrumenter.shouldStart(parent, request)) {
-      return null;
+    boolean createReceiveSpan =
+        (!listenerContextActive && throwable != null)
+            || (messages != null
+                && messages.size() != 0
+                && (!listenerContextActive || Boolean.TRUE.equals(receiveInstrumentationEnabled)))
+            || (!listenerContextActive && receiveInstrumentationEnabled());
+    Context processParentContext = parent;
+    boolean receiveSpanRecorded = false;
+    if (createReceiveSpan && consumerBatchReceiveInstrumenter.shouldStart(parent, request)) {
+      Context receiveContext =
+          InstrumenterUtil.startAndEnd(
+              consumerBatchReceiveInstrumenter,
+              parent,
+              request,
+              null,
+              throwable,
+              timer.startTime(),
+              timer.now());
+      processParentContext = emitStableMessagingSemconv() ? parent : receiveContext;
+      receiveSpanRecorded = true;
     }
-    Context receiveContext =
-        InstrumenterUtil.startAndEnd(
-            consumerBatchReceiveInstrumenter,
-            parent,
-            request,
-            null,
-            throwable,
-            timer.startTime(),
-            timer.now());
-    Context processParentContext = emitStableMessagingSemconv() ? parent : receiveContext;
     // injected context is used in MessageListenerInstrumentation and also in the spring-pulsar
     // instrumentation
     for (Message<?> message : request.getMessages()) {
-      VirtualFieldStore.markReceiveTelemetryRecorded(message);
+      if (receiveSpanRecorded) {
+        VirtualFieldStore.markReceiveTelemetryRecorded(message);
+      }
       VirtualFieldStore.inject(message, processParentContext);
     }
     return processParentContext;

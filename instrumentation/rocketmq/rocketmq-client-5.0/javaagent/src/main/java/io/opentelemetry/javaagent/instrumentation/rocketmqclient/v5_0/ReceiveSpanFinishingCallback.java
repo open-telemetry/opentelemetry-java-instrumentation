@@ -79,7 +79,7 @@ public class ReceiveSpanFinishingCallback implements FutureCallback<ReceiveMessa
 
   @Override
   public void onFailure(Throwable throwable) {
-    if (!pullApi) {
+    if (!pullApi && !receiveTelemetryExplicitlyEnabled) {
       return;
     }
     Instrumenter<RocketMqReceiveRequest, List<MessageView>> receiveInstrumenter =

@@ -11,10 +11,8 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.or
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
@@ -29,7 +27,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -72,6 +69,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
 
     latch.await(1, MINUTES);
 
+    boolean receiveTelemetryExplicitlyEnabled = receiveTelemetryExplicitlyEnabled();
     if (emitStableMessagingSemconv()) {
       testing.waitAndAssertMetrics(
           INSTRUMENTATION_NAME,
@@ -111,18 +109,28 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                           .hasLongSumSatisfying(
                               sum ->
                                   sum.hasPointsSatisfying(
-                                      point ->
-                                          point
-                                              .hasValue(1)
-                                              .hasAttributesSatisfyingExactly(
-                                                  equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                                  equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                                  equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                                  equalTo(
-                                                      MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                                      "test_sub"),
-                                                  equalTo(SERVER_ADDRESS, brokerHost),
-                                                  equalTo(SERVER_PORT, brokerPort))))));
+                                      point -> {
+                                        point.hasValue(1);
+                                        if (receiveTelemetryExplicitlyEnabled) {
+                                          point.hasAttributesSatisfyingExactly(
+                                              equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                              equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                              equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                              equalTo(
+                                                  MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                  "test_sub"),
+                                              equalTo(SERVER_ADDRESS, brokerHost),
+                                              equalTo(SERVER_PORT, brokerPort));
+                                        } else {
+                                          point.hasAttributesSatisfyingExactly(
+                                              equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                              equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                              equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                              equalTo(
+                                                  MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                  "test_sub"));
+                                        }
+                                      }))));
       testing.waitAndAssertMetrics(
           INSTRUMENTATION_NAME,
           "messaging.client.sent.messages",
@@ -174,6 +182,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     }
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    if (emitStableMessagingSemconv() && !receiveTelemetryExplicitlyEnabled) {
+      assertStableListenerTrace(topic, msgId.toString(), false);
+      return;
+    }
     if (emitStableMessagingSemconv()) {
       testing.waitAndAssertSortedTraces(
           orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
@@ -320,54 +332,6 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                   metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
                       && metric.getName().equals("messaging.client.consumed.messages"));
     }
-  }
-
-  @SuppressWarnings("deprecation") // using deprecated semconv
-  @Test
-  void testFailedBatchReceiveAsync() throws Exception {
-    String topic = "persistent://public/default/testFailedBatchReceiveAsync";
-    admin.topics().createNonPartitionedTopic(topic);
-    consumer =
-        client.newConsumer(Schema.STRING).subscriptionName("test_sub").topic(topic).subscribe();
-    testing.clearData();
-    CompletableFuture<Messages<String>> receive = consumer.batchReceiveAsync();
-    client.close();
-
-    Throwable error = receive.handle((messages, throwable) -> throwable).get(1, MINUTES);
-
-    assertThat(error).isNotNull();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
-                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(error)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                            equalTo(SERVER_ADDRESS, brokerHost),
-                            equalTo(SERVER_PORT, brokerPort),
-                            equalTo(MESSAGING_DESTINATION_NAME, topic),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                emitStableMessagingSemconv() ? "test_sub" : null),
-                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0),
-                            equalTo(
-                                ERROR_TYPE,
-                                emitStableMessagingSemconv()
-                                    ? error.getClass().getName()
-                                    : null))));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -796,6 +760,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     latch.await(1, MINUTES);
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    if (emitStableMessagingSemconv() && !receiveTelemetryExplicitlyEnabled()) {
+      assertStableListenerTrace(topic, msgId.toString(), true);
+      return;
+    }
     if (emitStableMessagingSemconv()) {
       testing.waitAndAssertSortedTraces(
           orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
@@ -891,6 +859,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     latch.await(1, MINUTES);
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    if (emitStableMessagingSemconv() && !receiveTelemetryExplicitlyEnabled()) {
+      assertStableListenerTrace(topic + "-partition-0", msgId.toString(), false);
+      return;
+    }
     if (emitStableMessagingSemconv()) {
       String partitionTopic = topic + "-partition-0";
       testing.waitAndAssertSortedTraces(
@@ -996,6 +968,41 @@ class PulsarClientTest extends AbstractPulsarClientTest {
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     AtomicReference<SpanData> producerSpan2 = new AtomicReference<>();
+    if (emitStableMessagingSemconv() && !receiveTelemetryExplicitlyEnabled()) {
+      testing.waitAndAssertSortedTraces(
+          orderByRootSpanName("parent1", "parent2"),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent1").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                  span ->
+                      span.hasName("send " + topic1)
+                          .hasKind(SpanKind.PRODUCER)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              sendAttributes(topic1, msgId1.toString(), false)),
+                  span ->
+                      span.hasName("process " + topic1)
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasAttributesSatisfyingExactly(
+                              processAttributes(topic1, msgId1.toString(), false))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                  span ->
+                      span.hasName("send " + topic2)
+                          .hasKind(SpanKind.PRODUCER)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              sendAttributes(topic2, msgId2.toString(), false)),
+                  span ->
+                      span.hasName("process " + topic2)
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasAttributesSatisfyingExactly(
+                              processAttributes(topic2, msgId2.toString(), false))));
+      return;
+    }
     if (emitStableMessagingSemconv()) {
       testing.waitAndAssertSortedTraces(
           orderByRootSpanName("parent1", "receive " + topic1, "parent2", "receive " + topic2),
@@ -1130,6 +1137,31 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                         .hasLinks(LinkData.create(producerSpan2.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(topic2, msgId2.toString(), false))));
+  }
+
+  private static void assertStableListenerTrace(
+      String topic, String messageId, boolean testHeaders) {
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("send " + topic)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(topic, messageId, testHeaders)),
+                span ->
+                    span.hasName("process " + topic)
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(topic, messageId, testHeaders))));
+  }
+
+  private static boolean receiveTelemetryExplicitlyEnabled() {
+    return Boolean.getBoolean(
+        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
   }
 
   @Test

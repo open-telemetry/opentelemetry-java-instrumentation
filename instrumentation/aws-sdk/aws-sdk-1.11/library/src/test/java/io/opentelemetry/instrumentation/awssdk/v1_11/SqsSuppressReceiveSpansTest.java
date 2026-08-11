@@ -25,6 +25,7 @@ class SqsSuppressReceiveSpansTest extends AbstractSqsSuppressReceiveSpansTest {
     return client.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)
+            .setMessagingReceiveTelemetryEnabled(false)
             .build()
             .createRequestHandler());
   }

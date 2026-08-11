@@ -46,7 +46,8 @@ abstract class Aws2SqsSuppressReceiveSpansTest extends AbstractAws2SqsSuppressRe
   void setup() {
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true);
+            .setCaptureExperimentalSpanAttributes(true)
+            .setMessagingReceiveTelemetryEnabled(false);
     configure(telemetryBuilder);
     telemetry = telemetryBuilder.build();
   }

@@ -18,7 +18,7 @@ configurations:
       Controls experimental receive spans for pull-based messaging operations. When unset, receive
       spans are enabled with stable messaging semantic conventions or v3-preview, and disabled otherwise.
     type: boolean
-    default: false
+    default_is_conditional: true
   - ref: messaging.capture-headers
   - name: otel.instrumentation.aws-sdk.experimental-span-attributes
     declarative_name: java.aws_sdk.experimental_span_attributes/development

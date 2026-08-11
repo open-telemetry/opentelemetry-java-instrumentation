@@ -82,8 +82,7 @@ public class JmsInstrumenterFactory {
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, RECEIVE_OPERATION_NAME))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(operationType, RECEIVE_OPERATION_NAME))
-            .setEnabled(receiveInstrumentationEnabled());
+                createMessagingAttributesExtractor(operationType, RECEIVE_OPERATION_NAME));
     setMessagingReceiveExceptionEventExtractor(builder);
     // with the stable messaging semantic conventions the producer is always linked, since it is
     // never used as the parent of the receive span

@@ -12,12 +12,9 @@ import static java.util.Collections.singleton;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.google.common.collect.ImmutableMap;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapGetter;
-import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -119,6 +116,7 @@ abstract class KafkaStreamsBaseTest {
             consumerReady.countDown();
           }
         });
+    awaitUntilConsumerIsReady();
   }
 
   static Map<String, Object> producerProps(String servers) {
@@ -148,11 +146,7 @@ abstract class KafkaStreamsBaseTest {
       return;
     }
     for (int i = 0; i < 10; i++) {
-      Context suppressed =
-          SpanKey.CONSUMER_RECEIVE.storeInContext(Context.current(), Span.getInvalid());
-      try (Scope ignored = suppressed.makeCurrent()) {
-        poll(Duration.ofMillis(100));
-      }
+      poll(Duration.ofMillis(100));
       if (consumerReady.await(1, SECONDS)) {
         break;
       }

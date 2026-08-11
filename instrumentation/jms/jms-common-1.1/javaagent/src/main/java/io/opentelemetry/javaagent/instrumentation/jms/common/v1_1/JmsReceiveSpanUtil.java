@@ -28,6 +28,9 @@ public class JmsReceiveSpanUtil {
       MessageWithDestination request,
       Timer timer,
       @Nullable Throwable throwable) {
+    if (request.message() == null && !receiveInstrumentationEnabled) {
+      return;
+    }
     Context parentContext = Context.current();
     // if receive instrumentation is not enabled we'll use the producer as parent, unless the stable
     // messaging semantic conventions are enabled, where the producer is linked instead
@@ -49,6 +52,12 @@ public class JmsReceiveSpanUtil {
               timer.startTime(),
               timer.now());
       JmsReceiveContextHolder.set(receiveContext);
+    } else if (request.message() != null && JmsReceiveContextHolder.isInitialized(parentContext)) {
+      Context extractedContext =
+          propagators
+              .getTextMapPropagator()
+              .extract(Context.root(), request, MessagePropertyGetter.INSTANCE);
+      JmsReceiveContextHolder.set(parentContext, extractedContext);
     }
   }
 
