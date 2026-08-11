@@ -238,6 +238,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                             processAttributes(topic, msgId.toString(), false))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testEmptyReceive() throws Exception {
     String topic = "persistent://public/default/testEmptyReceive";
@@ -257,6 +258,65 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                         .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasTotalRecordedLinks(0)));
+
+    if (emitOldMessagingSemconv()) {
+      testing.waitAndAssertMetrics(
+          INSTRUMENTATION_NAME,
+          "messaging.receive.duration",
+          metrics ->
+              metrics.satisfiesExactly(
+                  metric ->
+                      assertThat(metric)
+                          .hasUnit("s")
+                          .hasDescription("Measures the duration of receive operation.")
+                          .hasHistogramSatisfying(
+                              histogram ->
+                                  histogram.hasPointsSatisfying(
+                                      point ->
+                                          point
+                                              .hasSumGreaterThan(0.0)
+                                              .hasAttributesSatisfyingExactly(
+                                                  equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                  equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                  equalTo(MESSAGING_OPERATION, "receive"),
+                                                  equalTo(SERVER_ADDRESS, brokerHost),
+                                                  equalTo(SERVER_PORT, brokerPort))
+                                              .hasBucketBoundaries(DURATION_BUCKETS)))));
+    }
+    if (emitStableMessagingSemconv()) {
+      testing.waitAndAssertMetrics(
+          INSTRUMENTATION_NAME,
+          "messaging.client.operation.duration",
+          metrics ->
+              metrics.satisfiesExactly(
+                  metric ->
+                      assertThat(metric)
+                          .hasUnit("s")
+                          .hasDescription(
+                              "Duration of messaging operation initiated by a producer or consumer client.")
+                          .hasHistogramSatisfying(
+                              histogram ->
+                                  histogram.hasPointsSatisfying(
+                                      point ->
+                                          point
+                                              .hasSumGreaterThan(0.0)
+                                              .hasAttributesSatisfyingExactly(
+                                                  equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                                  equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                  equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                  equalTo(
+                                                      MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                      "test_sub"),
+                                                  equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                                                  equalTo(SERVER_ADDRESS, brokerHost),
+                                                  equalTo(SERVER_PORT, brokerPort))
+                                              .hasBucketBoundaries(DURATION_BUCKETS)))));
+      assertThat(testing.metrics())
+          .noneMatch(
+              metric ->
+                  metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
+                      && metric.getName().equals("messaging.client.consumed.messages"));
+    }
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv

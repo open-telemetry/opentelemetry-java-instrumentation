@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -30,6 +31,27 @@ import org.apache.pulsar.client.api.SubscriptionInitialPosition;
 import org.junit.jupiter.api.Test;
 
 class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
+
+  @Test
+  void testEmptyReceive() throws Exception {
+    String topic = "persistent://public/default/testEmptyReceive";
+    admin.topics().createNonPartitionedTopic(topic);
+    consumer =
+        client.newConsumer(Schema.STRING).subscriptionName("test_sub").topic(topic).subscribe();
+    testing.clearData();
+
+    Message<String> message = consumer.receive(100, MILLISECONDS);
+
+    assertThat(message).isNull();
+    assertThat(testing.spans()).isEmpty();
+    assertThat(testing.metrics())
+        .noneMatch(
+            metric ->
+                metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
+                    && (metric.getName().equals("messaging.receive.duration")
+                        || metric.getName().equals("messaging.client.operation.duration")
+                        || metric.getName().equals("messaging.client.consumed.messages")));
+  }
 
   @Test
   void testFailedListenerCountsConsumedMessage() throws Exception {

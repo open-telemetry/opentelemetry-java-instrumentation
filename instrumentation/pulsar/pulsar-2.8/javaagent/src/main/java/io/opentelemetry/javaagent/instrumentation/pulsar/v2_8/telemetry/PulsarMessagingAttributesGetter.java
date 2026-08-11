@@ -78,7 +78,7 @@ final class PulsarMessagingAttributesGetter
   @Nullable
   @Override
   public Long getBatchMessageCount(PulsarRequest request, @Nullable Void unused) {
-    return null;
+    return request.hasMessage() ? null : 0L;
   }
 
   @Nullable
