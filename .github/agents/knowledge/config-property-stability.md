@@ -134,9 +134,7 @@ the intended end state. Retain `setCapture*` for action booleans, such as
 ### Structured Selector Defaults
 
 What a selector means when it is absent depends on whether the setting it controls is
-none-by-default or all-by-default. Both baselines use the same shape and matching rules, and the
-declarative schema requires at least one entry in `included` and `excluded`, so a selector with no
-patterns is not a shape that configuration is expected to take.
+none-by-default or all-by-default. Both baselines use the same shape and matching rules.
 
 For a none-by-default setting, the selector doubles as the on switch. An absent selector selects
 nothing, and an exclude-only selector selects everything except the excluded values. Document
@@ -153,13 +151,15 @@ mdc_attributes:
   included: ["*"]
 ```
 
-Treat an empty selector, one with no patterns in either list, the same as an absent selector rather
-than as select-all. This keeps an empty selector a no-op and matches flat configuration, where empty
-property values cannot be distinguished from unset ones.
-
 For an all-by-default setting, the selector filters telemetry that is already emitted. An absent
 selector keeps everything, an omitted `included` list keeps everything not excluded, and
 exclude-only is the natural shape.
+
+An empty selector, one with no patterns in either list, carries no configuration, so treat it the
+same as an absent selector: a none-by-default setting still selects nothing, and an all-by-default
+setting still keeps everything. This keeps an empty selector a no-op and matches flat configuration,
+where empty property values cannot be distinguished from unset ones. `IncludeExclude#isEmpty()`
+identifies that case.
 
 ## Structured Config (YAML-Only)
 
