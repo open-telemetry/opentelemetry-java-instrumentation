@@ -24,6 +24,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.DecoratorRegistry;
 import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
@@ -35,6 +37,8 @@ class CamelSingletons {
 
   private static final DecoratorRegistry registry = new DecoratorRegistry();
   private static final Instrumenter<CamelRequest, Void> instrumenter = createInstrumenter();
+  private static final Instrumenter<CamelRequest, Void> httpClientInstrumenter =
+      createHttpClientInstrumenter();
   private static final Instrumenter<CamelRequest, Void> messagingSendInstrumenter =
       createMessagingInstrumenter(SEND, "send", true);
   // AWS SQS/SNS sends rely on the nested AWS SDK producer span to inject propagation.
@@ -44,6 +48,11 @@ class CamelSingletons {
       createMessagingInstrumenter(PROCESS, "process", true);
 
   private static Instrumenter<CamelRequest, Void> createInstrumenter() {
+    return createInstrumenter(false);
+  }
+
+  private static Instrumenter<CamelRequest, Void> createInstrumenter(
+      boolean exposeHttpClientSpanKey) {
     SpanNameExtractor<CamelRequest> spanNameExtractor =
         camelRequest ->
             camelRequest
@@ -53,7 +62,15 @@ class CamelSingletons {
                     camelRequest.getEndpoint(),
                     camelRequest.getCamelDirection());
 
-    return instrumenterBuilder(spanNameExtractor).buildInstrumenter(CamelRequest::getSpanKind);
+    InstrumenterBuilder<CamelRequest, Void> builder = instrumenterBuilder(spanNameExtractor);
+    if (exposeHttpClientSpanKey) {
+      builder.addAttributesExtractor(new HttpClientSuppressionAttributesExtractor());
+    }
+    return builder.buildInstrumenter(CamelRequest::getSpanKind);
+  }
+
+  private static Instrumenter<CamelRequest, Void> createHttpClientInstrumenter() {
+    return createInstrumenter(true);
   }
 
   private static Instrumenter<CamelRequest, Void> createMessagingInstrumenter(
@@ -119,6 +136,10 @@ class CamelSingletons {
       }
       return messagingProcessInstrumenter;
     }
+    if (request.getCamelDirection() == CamelDirection.OUTBOUND
+        && request.getSpanDecorator().isHttp()) {
+      return httpClientInstrumenter;
+    }
     return instrumenter;
   }
 
@@ -179,6 +200,27 @@ class CamelSingletons {
         @Nullable Void unused,
         @Nullable Throwable error) {
       delegate.onEnd(attributes, context, request, null, error);
+    }
+  }
+
+  private static class HttpClientSuppressionAttributesExtractor
+      implements AttributesExtractor<CamelRequest, Void>, SpanKeyProvider {
+
+    @Override
+    public void onStart(
+        AttributesBuilder attributes, Context parentContext, CamelRequest request) {}
+
+    @Override
+    public void onEnd(
+        AttributesBuilder attributes,
+        Context context,
+        CamelRequest request,
+        @Nullable Void unused,
+        @Nullable Throwable error) {}
+
+    @Override
+    public SpanKey internalGetSpanKey() {
+      return SpanKey.HTTP_CLIENT;
     }
   }
 

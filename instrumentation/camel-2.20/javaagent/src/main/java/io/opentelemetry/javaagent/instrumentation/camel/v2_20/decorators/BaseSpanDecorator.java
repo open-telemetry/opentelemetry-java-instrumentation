@@ -122,6 +122,11 @@ class BaseSpanDecorator implements SpanDecorator {
   }
 
   @Override
+  public boolean isHttp() {
+    return false;
+  }
+
+  @Override
   public void updateServerSpanName(
       Context context, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {}
 }
