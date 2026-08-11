@@ -165,10 +165,7 @@ public final class SqsImpl {
       boolean sqsMessageCreateSpansEnabled) {
     if (request instanceof ReceiveMessageRequest) {
       return modifyReceiveMessageRequest(
-          (ReceiveMessageRequest) request,
-          useXrayPropagator,
-          messagingPropagator,
-          sqsMessageCreateSpansEnabled);
+          (ReceiveMessageRequest) request, useXrayPropagator, messagingPropagator);
     } else if (messagingPropagator != null) {
       if (request instanceof SendMessageRequest) {
         return injectIntoSendMessageRequest(
@@ -342,8 +339,7 @@ public final class SqsImpl {
   private static SdkRequest modifyReceiveMessageRequest(
       ReceiveMessageRequest request,
       boolean useXrayPropagator,
-      TextMapPropagator messagingPropagator,
-      boolean sqsMessageCreateSpansEnabled) {
+      TextMapPropagator messagingPropagator) {
     boolean hasXrayAttribute = true;
     List<String> existingAttributeNames = null;
     if (useXrayPropagator) {
@@ -357,7 +353,7 @@ public final class SqsImpl {
     if (messagingPropagator != null) {
       requiredMessageAttributeNames.addAll(messagingPropagator.fields());
     }
-    if (useXrayPropagator && emitStableMessagingSemconv() && sqsMessageCreateSpansEnabled) {
+    if (useXrayPropagator && emitStableMessagingSemconv()) {
       requiredMessageAttributeNames.add(SqsParentContext.AWS_TRACE_MESSAGE_ATTRIBUTE);
     }
     boolean hasMessageAttribute =

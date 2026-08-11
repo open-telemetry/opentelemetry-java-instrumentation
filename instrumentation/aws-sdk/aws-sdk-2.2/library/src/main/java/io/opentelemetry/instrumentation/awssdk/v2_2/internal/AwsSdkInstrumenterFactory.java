@@ -216,7 +216,7 @@ public final class AwsSdkInstrumenterFactory {
                       request.getMessage(),
                       messagingPropagator,
                       useXrayPropagator,
-                      sqsMessageCreateSpansEnabled && useXrayPropagator)));
+                      useXrayPropagator)));
     }
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }

@@ -20,28 +20,26 @@ import javax.annotation.Nullable;
 final class SqsMessageImpl implements SqsMessage {
 
   private final Message message;
-  private final boolean sqsMessageCreateSpansEnabled;
 
-  private SqsMessageImpl(Message message, boolean sqsMessageCreateSpansEnabled) {
+  private SqsMessageImpl(Message message) {
     this.message = message;
-    this.sqsMessageCreateSpansEnabled = sqsMessageCreateSpansEnabled;
   }
 
-  static SqsMessage wrap(Message message, boolean sqsMessageCreateSpansEnabled) {
-    return new SqsMessageImpl(message, sqsMessageCreateSpansEnabled);
+  static SqsMessage wrap(Message message) {
+    return new SqsMessageImpl(message);
   }
 
-  static List<SqsMessage> wrap(List<Message> messages, boolean sqsMessageCreateSpansEnabled) {
+  static List<SqsMessage> wrap(List<Message> messages) {
     List<SqsMessage> result = new ArrayList<>();
     for (Message message : messages) {
-      result.add(wrap(message, sqsMessageCreateSpansEnabled));
+      result.add(wrap(message));
     }
     return result;
   }
 
   @Override
   public Context getCreationContext() {
-    if (emitStableMessagingSemconv() && sqsMessageCreateSpansEnabled) {
+    if (emitStableMessagingSemconv()) {
       Context messageAttributeContext =
           SqsParentContext.ofMessageAttributes(toStringMap(message.getMessageAttributes()));
       if (Span.fromContext(messageAttributeContext).getSpanContext().isValid()) {

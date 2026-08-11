@@ -24,7 +24,6 @@ class TracingList extends SdkInternalList<Message> {
   private final transient Request<?> request;
   private final transient Response<?> response;
   @Nullable private final transient Context processParentContext;
-  private final transient boolean sqsMessageCreateSpansEnabled;
   private boolean firstIterator = true;
 
   static SdkInternalList<Message> wrap(
@@ -32,15 +31,8 @@ class TracingList extends SdkInternalList<Message> {
       Instrumenter<SqsProcessRequest, Response<?>> instrumenter,
       Request<?> request,
       Response<?> response,
-      @Nullable Context processParentContext,
-      boolean sqsMessageCreateSpansEnabled) {
-    return new TracingList(
-        messages,
-        instrumenter,
-        request,
-        response,
-        processParentContext,
-        sqsMessageCreateSpansEnabled);
+      @Nullable Context processParentContext) {
+    return new TracingList(messages, instrumenter, request, response, processParentContext);
   }
 
   private TracingList(
@@ -48,14 +40,12 @@ class TracingList extends SdkInternalList<Message> {
       Instrumenter<SqsProcessRequest, Response<?>> instrumenter,
       Request<?> request,
       Response<?> response,
-      @Nullable Context processParentContext,
-      boolean sqsMessageCreateSpansEnabled) {
+      @Nullable Context processParentContext) {
     super(messages);
     this.instrumenter = instrumenter;
     this.request = request;
     this.response = response;
     this.processParentContext = processParentContext;
-    this.sqsMessageCreateSpansEnabled = sqsMessageCreateSpansEnabled;
   }
 
   @Override
@@ -89,10 +79,6 @@ class TracingList extends SdkInternalList<Message> {
   @Nullable
   Context getProcessParentContext() {
     return processParentContext;
-  }
-
-  boolean isSqsMessageCreateSpansEnabled() {
-    return sqsMessageCreateSpansEnabled;
   }
 
   @Override

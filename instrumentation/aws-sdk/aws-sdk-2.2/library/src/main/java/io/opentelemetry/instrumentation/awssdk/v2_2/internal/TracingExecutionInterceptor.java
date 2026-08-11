@@ -111,10 +111,6 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     return useXrayPropagator;
   }
 
-  boolean isSqsMessageCreateSpansEnabled() {
-    return sqsMessageCreateSpansEnabled;
-  }
-
   static void setBatchMessageContexts(
       ExecutionAttributes executionAttributes,
       List<io.opentelemetry.context.Context> creationContexts) {

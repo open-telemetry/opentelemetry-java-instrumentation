@@ -117,9 +117,7 @@ public final class SqsParentContext {
         message,
         config.getMessagingPropagator(),
         config.shouldUseXrayPropagator(),
-        emitStableMessagingSemconv()
-            && config.isSqsMessageCreateSpansEnabled()
-            && config.shouldUseXrayPropagator());
+        emitStableMessagingSemconv() && config.shouldUseXrayPropagator());
   }
 
   static Context ofMessage(

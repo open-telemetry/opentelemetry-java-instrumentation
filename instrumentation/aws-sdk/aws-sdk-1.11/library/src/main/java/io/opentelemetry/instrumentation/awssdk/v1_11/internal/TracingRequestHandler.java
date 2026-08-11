@@ -123,10 +123,6 @@ public final class TracingRequestHandler extends RequestHandler2 {
     return consumerProcessInstrumenter;
   }
 
-  boolean isSqsMessageCreateSpansEnabled() {
-    return sqsMessageCreateSpansEnabled;
-  }
-
   @Override
   public void afterResponse(Request<?> request, Response<?> response) {
     Context context = request.getHandlerContext(CONTEXT);

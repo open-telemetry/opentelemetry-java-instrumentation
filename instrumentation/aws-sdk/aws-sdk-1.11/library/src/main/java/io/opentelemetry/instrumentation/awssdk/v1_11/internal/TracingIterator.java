@@ -51,8 +51,7 @@ class TracingIterator implements Iterator<Message> {
     // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
     Message next = delegateIterator.next();
     if (next != null) {
-      SqsMessage sqsMessage =
-          SqsMessageImpl.wrap(next, tracingList.isSqsMessageCreateSpansEnabled());
+      SqsMessage sqsMessage = SqsMessageImpl.wrap(next);
       Context parentContext = tracingList.getProcessParentContext();
       if (parentContext == null) {
         parentContext = sqsMessage.getCreationContext();

@@ -79,11 +79,7 @@ public final class SqsImpl {
 
     Context receiveContext = null;
     SqsReceiveRequest receiveRequest =
-        SqsReceiveRequest.create(
-            request,
-            SqsMessageImpl.wrap(
-                receiveMessageResult.getMessages(),
-                requestHandler.isSqsMessageCreateSpansEnabled()));
+        SqsReceiveRequest.create(request, SqsMessageImpl.wrap(receiveMessageResult.getMessages()));
     if (timer != null && consumerReceiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
       receiveContext =
           InstrumenterUtil.startAndEnd(
@@ -98,12 +94,7 @@ public final class SqsImpl {
 
     Context processParentContext = emitStableMessagingSemconv() ? parentContext : receiveContext;
     addTracing(
-        receiveMessageResult,
-        request,
-        response,
-        consumerProcessInstrumenter,
-        processParentContext,
-        requestHandler.isSqsMessageCreateSpansEnabled());
+        receiveMessageResult, request, response, consumerProcessInstrumenter, processParentContext);
   }
 
   @Nullable private static final Field messagesField = getMessagesField();
@@ -124,8 +115,7 @@ public final class SqsImpl {
       Request<?> request,
       Response<?> response,
       Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter,
-      @Nullable Context processParentContext,
-      boolean sqsMessageCreateSpansEnabled) {
+      @Nullable Context processParentContext) {
     if (messagesField == null) {
       return;
     }
@@ -139,8 +129,7 @@ public final class SqsImpl {
               consumerProcessInstrumenter,
               request,
               response,
-              processParentContext,
-              sqsMessageCreateSpansEnabled));
+              processParentContext));
     } catch (IllegalAccessException ignored) {
       // should not happen, we call setAccessible on the field
     }
@@ -156,7 +145,6 @@ public final class SqsImpl {
         request.withAttributeNames(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
       }
       if (emitStableMessagingSemconv()
-          && sqsMessageCreateSpansEnabled
           && !request
               .getMessageAttributeNames()
               .contains(SqsParentContext.AWS_TRACE_MESSAGE_ATTRIBUTE)) {
