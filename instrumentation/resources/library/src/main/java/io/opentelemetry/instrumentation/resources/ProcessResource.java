@@ -143,10 +143,22 @@ public final class ProcessResource {
         if (JAR_FILE_PATTERN.matcher(javaCommand).matches()) {
           commandLine.append(" -jar");
         }
-        commandLine.append(' ').append(javaCommand);
+        commandLine.append(' ').append(scrubCommandLine(javaCommand));
       }
       attributes.put(PROCESS_COMMAND_LINE, commandLine.toString());
     }
+  }
+
+  private static String scrubCommandLine(String commandLine) {
+    String[] arguments = commandLine.split(" ", -1);
+    StringBuilder result = new StringBuilder();
+    for (int i = 0; i < arguments.length; i++) {
+      if (i > 0) {
+        result.append(' ');
+      }
+      result.append(scrub(arguments[i]));
+    }
+    return result.toString();
   }
 
   private static String scrub(String argument) {
