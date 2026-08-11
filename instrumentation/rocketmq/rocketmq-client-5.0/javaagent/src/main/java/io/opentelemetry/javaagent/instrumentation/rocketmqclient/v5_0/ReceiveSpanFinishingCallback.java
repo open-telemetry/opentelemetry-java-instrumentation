@@ -24,17 +24,11 @@ public class ReceiveSpanFinishingCallback implements FutureCallback<ReceiveMessa
   private final ReceiveMessageRequest request;
   private final Timer timer;
   private final boolean pullApi;
-  private final boolean receiveTelemetryExplicitlyEnabled;
 
-  public ReceiveSpanFinishingCallback(
-      ReceiveMessageRequest request,
-      Timer timer,
-      boolean pullApi,
-      boolean receiveTelemetryExplicitlyEnabled) {
+  public ReceiveSpanFinishingCallback(ReceiveMessageRequest request, Timer timer, boolean pullApi) {
     this.request = request;
     this.timer = timer;
     this.pullApi = pullApi;
-    this.receiveTelemetryExplicitlyEnabled = receiveTelemetryExplicitlyEnabled;
   }
 
   @Override
@@ -44,7 +38,8 @@ public class ReceiveSpanFinishingCallback implements FutureCallback<ReceiveMessa
     for (MessageView messageView : messageViews) {
       VirtualFieldStore.setConsumerGroupByMessage(messageView, consumerGroup);
     }
-    if (!pullApi && (!receiveTelemetryExplicitlyEnabled || messageViews.isEmpty())) {
+    if (!pullApi
+        && (messageViews.isEmpty() || !RocketMqSingletons.receiveTelemetryExplicitlyEnabled())) {
       return;
     }
     Instrumenter<RocketMqReceiveRequest, List<MessageView>> receiveInstrumenter =
@@ -79,7 +74,7 @@ public class ReceiveSpanFinishingCallback implements FutureCallback<ReceiveMessa
 
   @Override
   public void onFailure(Throwable throwable) {
-    if (!pullApi && !receiveTelemetryExplicitlyEnabled) {
+    if (!pullApi && !RocketMqSingletons.receiveTelemetryExplicitlyEnabled()) {
       return;
     }
     Instrumenter<RocketMqReceiveRequest, List<MessageView>> receiveInstrumenter =

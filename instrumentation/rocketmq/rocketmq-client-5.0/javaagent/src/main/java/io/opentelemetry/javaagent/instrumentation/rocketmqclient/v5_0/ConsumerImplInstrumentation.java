@@ -59,8 +59,7 @@ final class ConsumerImplInstrumentation implements TypeInstrumentation {
               consumer
                   .getClass()
                   .getName()
-                  .equals("org.apache.rocketmq.client.java.impl.consumer.SimpleConsumerImpl"),
-              RocketMqSingletons.receiveTelemetryExplicitlyEnabled());
+                  .equals("org.apache.rocketmq.client.java.impl.consumer.SimpleConsumerImpl"));
       Futures.addCallback(future, spanFinishingCallback, MoreExecutors.directExecutor());
     }
   }
