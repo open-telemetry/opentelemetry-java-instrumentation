@@ -9,42 +9,30 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.incubator.metrics.BoundDoubleGauge;
 import io.opentelemetry.api.incubator.metrics.ExtendedDoubleGauge;
 import io.opentelemetry.api.metrics.DoubleGauge;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.context.AgentContextStorage;
-import java.util.function.DoubleConsumer;
-import java.util.function.ObjDoubleConsumer;
 
 final class ApplicationBoundDoubleGauge165Incubator
     implements application.io.opentelemetry.api.incubator.metrics.BoundDoubleGauge {
 
-  private final DoubleConsumer set;
-  private final ObjDoubleConsumer<Context> setWithContext;
+  private final BoundDoubleGauge delegate;
 
   static ApplicationBoundDoubleGauge165Incubator create(
       DoubleGauge agentGauge, Attributes attributes) {
-    if (agentGauge instanceof ExtendedDoubleGauge) {
-      BoundDoubleGauge boundGauge = ((ExtendedDoubleGauge) agentGauge).bind(attributes);
-      return new ApplicationBoundDoubleGauge165Incubator(
-          boundGauge::set, (context, value) -> boundGauge.set(value, context));
-    }
     return new ApplicationBoundDoubleGauge165Incubator(
-        value -> agentGauge.set(value, attributes),
-        (context, value) -> agentGauge.set(value, attributes, context));
+        ((ExtendedDoubleGauge) agentGauge).bind(attributes));
   }
 
-  private ApplicationBoundDoubleGauge165Incubator(
-      DoubleConsumer set, ObjDoubleConsumer<Context> setWithContext) {
-    this.set = set;
-    this.setWithContext = setWithContext;
+  private ApplicationBoundDoubleGauge165Incubator(BoundDoubleGauge delegate) {
+    this.delegate = delegate;
   }
 
   @Override
   public void set(double value) {
-    set.accept(value);
+    delegate.set(value);
   }
 
   @Override
   public void set(double value, application.io.opentelemetry.context.Context applicationContext) {
-    setWithContext.accept(AgentContextStorage.getAgentContext(applicationContext), value);
+    delegate.set(value, AgentContextStorage.getAgentContext(applicationContext));
   }
 }
