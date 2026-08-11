@@ -108,18 +108,19 @@ The names passed to the `InstrumentationModule` constructor drive the
 `otel.instrumentation.<name>.enabled` config keys — any of them, not just the first. A rename
 silently breaks users who have the old key in their config.
 
-Keep the pre-rename name by passing it inline alongside the current name using the
-{@code "<current>|deprecated:<old>"} marker recognized by the `InstrumentationModule`
-constructor:
+Keep the pre-rename name by passing the `"<current>|deprecated:<old>"` marker through
+`expandDeprecatedNames`:
 
 ```java
 public CxfInstrumentationModule() {
-  super("cxf", "jaxws-2.0-cxf-3.0|deprecated:jaxws-cxf-3.0", "jaxws");
+  super(
+      "cxf",
+      expandDeprecatedNames("jaxws-2.0-cxf-3.0|deprecated:jaxws-cxf-3.0", "jaxws"));
 }
 ```
 
-The framework (`DeprecatedInstrumentationNames.expand`) splits the marker and registers both
-names, so both `otel.instrumentation.jaxws-2.0-cxf-3.0.enabled` and
+The helper splits the marker and registers both names, so both
+`otel.instrumentation.jaxws-2.0-cxf-3.0.enabled` and
 `otel.instrumentation.jaxws-cxf-3.0.enabled` keep working (flat properties and YAML alike).
 Under `otel.instrumentation.common.v3-preview=true` the deprecated name is dropped and the legacy
 key is silently ignored, matching 3.0 where it will no longer be recognized. Normal minor releases
