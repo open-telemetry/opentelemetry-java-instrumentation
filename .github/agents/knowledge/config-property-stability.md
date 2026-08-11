@@ -156,10 +156,9 @@ selector keeps everything, an omitted `included` list keeps everything not exclu
 exclude-only is the natural shape.
 
 An empty selector, one with no patterns in either list, carries no configuration, so treat it the
-same as an absent selector: a none-by-default setting still selects nothing, and an all-by-default
-setting still keeps everything. This keeps an empty selector a no-op and matches flat configuration,
-where empty property values cannot be distinguished from unset ones. `IncludeExclude#isEmpty()`
-identifies that case.
+same as an absent selector and fall back to the setting's own default. This keeps an empty selector
+a no-op and matches flat configuration, where empty property values cannot be distinguished from
+unset ones. `IncludeExclude#isEmpty()` identifies that case.
 
 ## Structured Config (YAML-Only)
 
