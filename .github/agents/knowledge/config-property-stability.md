@@ -100,6 +100,67 @@ if (value == null) {
 | Boolean toggle      | `.enabled` suffix                                                  | `enabled` leaf key                                                |
 | Env var form        | dots/hyphens → ALL_CAPS underscores                                | N/A                                                               |
 
+### Structured Selector Names
+
+A structured selector object with `included` and/or `excluded` lists is named after the resource
+being selected, for example `mdc_attributes`, `headers`, or `request_parameters`. This follows the
+OpenTelemetry Configuration
+[`IncludeExclude`](https://github.com/open-telemetry/opentelemetry-configuration/blob/main/schema/common.yaml)
+shape and its noun-based uses such as `attribute_keys` and `resource_constant_labels`.
+
+Do not give a new structured selector parent a `capture_*` name. A path such as
+`capture_mdc_attributes.excluded` is contradictory: the parent describes a selection, while the
+leaf excludes values from that selection. Retain `capture_*` for action booleans that collect or
+emit data that would otherwise be absent, such as `capture_query` and
+`capture_message_content`.
+
+```yaml
+# Preferred
+mdc_attributes:
+  included: [trace_id, request_id]
+  excluded: [password]
+
+# Avoid
+capture_mdc_attributes:
+  excluded: [password]
+```
+
+Java methods that configure a structured selector are also named after the selected resource,
+without `Capture` or `Captured`, for example `setMdcAttributes(IncludeExclude)`. Use one selector
+value instead of paired include/exclude setters, with the shared `IncludeExclude` selector type as
+the intended end state. Retain `setCapture*` for action booleans, such as
+`setCaptureQuery(boolean)`.
+
+### Structured Selector Defaults
+
+What a selector means when it is absent depends on whether the setting it controls is
+none-by-default or all-by-default. Both baselines use the same shape and matching rules.
+
+For a none-by-default setting, the selector doubles as the on switch. An absent selector selects
+nothing, and an exclude-only selector selects everything except the excluded values. Document
+select-all as `included: ["*"]`, or `included=*` in flat configuration, because flat configuration
+cannot express a present selector that omits its included patterns:
+
+```yaml
+# select everything except one value
+mdc_attributes:
+  excluded: [password]
+
+# select everything
+mdc_attributes:
+  included: ["*"]
+```
+
+For an all-by-default setting, the selector filters telemetry that is already emitted. An absent
+selector keeps everything, an omitted `included` list keeps everything not excluded, and
+exclude-only is the natural shape.
+
+An empty selector, one with no patterns in either list, carries no configuration, so treat it the
+same as an absent selector: a none-by-default setting still selects nothing, and an all-by-default
+setting still keeps everything. This keeps an empty selector a no-op and matches flat configuration,
+where empty property values cannot be distinguished from unset ones. `IncludeExclude#isEmpty()`
+identifies that case.
+
 ## Structured Config (YAML-Only)
 
 Some configurations require structured data only expressible in YAML:
