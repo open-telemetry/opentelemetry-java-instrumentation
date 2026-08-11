@@ -64,8 +64,7 @@ public class JmxTelemetryRulesTest {
     try (Stream<Path> stream = Files.walk(rulesRoot)) {
       return stream
           .filter(Files::isRegularFile)
-          .map(path -> Paths.get("jmx", "rules").resolve(rulesRoot.relativize(path)))
-          .map(Path::toString)
+          .map(path -> "jmx/rules/" + rulesRoot.relativize(path))
           .collect(toSet());
     }
   }

@@ -41,7 +41,7 @@ public class JmxTelemetryRules {
    * @param classLoader class loader
    * @param system system
    * @param includeInstable {@literal true} to include unstable metrics definitions
-   * @return set of resources path(s) to load JMX rules from, empty if system is not supported
+   * @return matching JMX rule resource paths, empty if none are found
    */
   public static Set<String> locateRulesForSystem(
       ClassLoader classLoader, String system, boolean includeInstable) {
