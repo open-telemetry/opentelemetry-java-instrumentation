@@ -414,7 +414,7 @@ definitions:
       name: otel.instrumentation.grpc.client.request-metadata.excluded
       declarative_name: java.grpc.client.request_metadata.excluded
       description: |
-        A comma-separated list of ASCII request metadata key patterns to exclude from client spans. Applies after included patterns. Matching is case-insensitive. `?` matches one character and `*` matches zero or more characters. If included is not configured, all non-excluded ASCII metadata is captured, which may expose sensitive information.
+        A comma-separated list of ASCII request metadata key patterns to exclude from client spans. Excluded patterns take precedence over included patterns. Matching is case-insensitive. `?` matches one character and `*` matches zero or more characters. If included is not configured, all non-excluded ASCII metadata is captured, which may expose sensitive information.
       type: list
       default: ''
       examples:
@@ -447,7 +447,7 @@ definitions:
       name: otel.instrumentation.grpc.server.request-metadata.excluded
       declarative_name: java.grpc.server.request_metadata.excluded
       description: |
-        A comma-separated list of ASCII request metadata key patterns to exclude from server spans. Applies after included patterns. Matching is case-insensitive. `?` matches one character and `*` matches zero or more characters. If included is not configured, all non-excluded ASCII metadata is captured, which may expose sensitive information.
+        A comma-separated list of ASCII request metadata key patterns to exclude from server spans. Excluded patterns take precedence over included patterns. Matching is case-insensitive. `?` matches one character and `*` matches zero or more characters. If included is not configured, all non-excluded ASCII metadata is captured, which may expose sensitive information.
       type: list
       default: ''
       examples:

@@ -35,7 +35,7 @@ configurations:
     type: list
     description: >
       A comma-separated list of ASCII request metadata key patterns to exclude from client spans.
-      Applies after included patterns. Matching is case-insensitive. `?` matches one character and
+      Excluded patterns take precedence over included patterns. Matching is case-insensitive. `?` matches one character and
       `*` matches zero or more characters. If included is not configured, all non-excluded ASCII
       metadata is captured, which may expose sensitive information.
     default: ''
@@ -57,7 +57,7 @@ configurations:
     type: list
     description: >
       A comma-separated list of ASCII request metadata key patterns to exclude from server spans.
-      Applies after included patterns. Matching is case-insensitive. `?` matches one character and
+      Excluded patterns take precedence over included patterns. Matching is case-insensitive. `?` matches one character and
       `*` matches zero or more characters. If included is not configured, all non-excluded ASCII
       metadata is captured, which may expose sensitive information.
     default: ''

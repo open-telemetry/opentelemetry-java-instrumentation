@@ -14,6 +14,7 @@ import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import io.grpc.Metadata;
@@ -23,6 +24,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import java.util.HashSet;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -86,6 +88,37 @@ class GrpcAttributesExtractorTest {
         .onEnd(attributes, Context.root(), request, null, null);
 
     assertExcludedMetadata(attributes.build(), "some-key");
+  }
+
+  @Test
+  void matchesMetadataKeysCaseInsensitively() {
+    Metadata delegate = new Metadata();
+    delegate.put(
+        Metadata.Key.of("included-key", Metadata.ASCII_STRING_MARSHALLER), "included-value");
+    delegate.put(
+        Metadata.Key.of("excluded-key", Metadata.ASCII_STRING_MARSHALLER), "excluded-value");
+    // a transport could surface metadata key names with casing that Metadata.Key would normalize
+    Metadata metadata = spy(delegate);
+    when(metadata.keys()).thenReturn(new HashSet<>(asList("Included-Key", "Excluded-Key")));
+    GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
+    IncludeExclude selector =
+        IncludeExclude.builder()
+            .setIncluded(singletonList("*-key"))
+            .setExcluded(singletonList("excluded-key"))
+            .build();
+    AttributesBuilder attributes = Attributes.builder();
+
+    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector)
+        .onEnd(attributes, Context.root(), request, null, null);
+
+    Attributes result = attributes.build();
+    assertThat(result.get(oldMetadataAttributeKey("included-key")))
+        .isEqualTo(emitOldRpcSemconv() ? singletonList("included-value") : null);
+    assertThat(result.get(stableMetadataAttributeKey("included-key")))
+        .isEqualTo(emitStableRpcSemconv() ? singletonList("included-value") : null);
+    assertExcludedMetadata(result, "Included-Key");
+    assertExcludedMetadata(result, "excluded-key");
+    assertExcludedMetadata(result, "Excluded-Key");
   }
 
   @ParameterizedTest

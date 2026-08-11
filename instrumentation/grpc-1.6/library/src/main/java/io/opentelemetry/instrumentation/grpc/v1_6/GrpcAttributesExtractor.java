@@ -22,6 +22,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -84,16 +85,24 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
     for (String key : request.getMetadata().keys()) {
       // binary metadata and HTTP/2 pseudo-headers are never captured, even when the selector
       // matches, because reading them below with Metadata.Key.of() would throw
-      if (!isAsciiMetadataKey(key) || !requestMetadata.matches(key)) {
+      if (!isAsciiMetadataKey(key)) {
         continue;
       }
-      List<String> value = getter.metadataValue(request, key);
+      // gRPC lowercases metadata key names, but normalize defensively so that matching is
+      // case-insensitive as documented and an excluded key cannot be captured because a transport
+      // surfaced its name with different casing
+      String metadataKey = key.toLowerCase(Locale.ROOT);
+      if (!requestMetadata.matches(metadataKey)) {
+        continue;
+      }
+      List<String> value = getter.metadataValue(request, metadataKey);
       if (!value.isEmpty()) {
         if (emitOldRpcSemconv()) {
-          attributes.put(requestAttributeKey(key, literalRequestAttributeKeys), value);
+          attributes.put(requestAttributeKey(metadataKey, literalRequestAttributeKeys), value);
         }
         if (emitStableRpcSemconv()) {
-          attributes.put(stableRequestAttributeKey(key, literalStableRequestAttributeKeys), value);
+          attributes.put(
+              stableRequestAttributeKey(metadataKey, literalStableRequestAttributeKeys), value);
         }
       }
     }
