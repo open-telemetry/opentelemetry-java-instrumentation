@@ -44,6 +44,8 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       AttributeKey.stringKey("messaging.destination.name");
   private static final AttributeKey<String> MESSAGING_DESTINATION_PARTITION_ID =
       AttributeKey.stringKey("messaging.destination.partition.id");
+  private static final AttributeKey<String> MESSAGING_DESTINATION_SUBSCRIPTION_NAME =
+      AttributeKey.stringKey("messaging.destination.subscription.name");
   private static final AttributeKey<String> MESSAGING_DESTINATION_TEMPLATE =
       AttributeKey.stringKey("messaging.destination.template");
   private static final AttributeKey<Boolean> MESSAGING_DESTINATION_TEMPORARY =
@@ -80,7 +82,11 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     return builder(getter, operationType, operationName).build();
   }
 
-  /** Creates the messaging attributes extractor for the given operation. */
+  /**
+   * @deprecated Use {@link #create(MessagingAttributesGetter, MessagingOperationType, String)}.
+   *     Will be removed in 3.0.
+   */
+  @Deprecated // to be removed in 3.0
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter, @Nullable MessageOperation operation) {
     return builder(getter, operation).build();
@@ -101,7 +107,11 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
         getter, operationType, requireNonNull(operationName, "operationName"), true);
   }
 
-  /** Returns a new messaging attributes extractor builder for the given operation. */
+  /**
+   * @deprecated Use {@link #builder(MessagingAttributesGetter, MessagingOperationType, String)}.
+   *     Will be removed in 3.0.
+   */
+  @Deprecated // to be removed in 3.0
   public static <REQUEST, RESPONSE> MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter, @Nullable MessageOperation operation) {
     return new MessagingAttributesExtractorBuilder<>(
@@ -159,6 +169,10 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     }
     if (emitStableSemconv) {
       attributes.put(MESSAGING_CLIENT_ID, getter.getClientId(request));
+      // messaging.destination.subscription.name only exists in the v1.43 messaging semantic
+      // conventions
+      attributes.put(
+          MESSAGING_DESTINATION_SUBSCRIPTION_NAME, getter.getDestinationSubscriptionName(request));
     }
     if (emitOldSemconv && operationType != null) {
       attributes.put(MESSAGING_OPERATION, operationType.legacyOperationName());

@@ -33,15 +33,21 @@ final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
       return;
     }
     Context parentContext = Context.current();
-    Context newContext = instrumenter.start(parentContext, context.getMsgList());
+    RocketMqConsumerInstrumenter.ConsumerContext consumerContext =
+        instrumenter.start(
+            parentContext,
+            context.getMsgList(),
+            context.getConsumerGroup(),
+            RocketMqNamespaceUtil.getNamespace(context));
 
     // it's safe to store the scope in the rocketMq message context, both before() and after()
     // methods are always called from the same thread; see:
     // - ConsumeMessageConcurrentlyService$ConsumeRequest#run()
     // - ConsumeMessageOrderlyService$ConsumeRequest#run()
-    if (newContext != parentContext) {
+    if (consumerContext != null) {
+      Context newContext = consumerContext.getContext();
       CONTEXT_AND_SCOPE_FIELD.set(
-          context, ContextAndScope.create(newContext, newContext.makeCurrent()));
+          context, ContextAndScope.create(consumerContext, newContext.makeCurrent()));
     }
   }
 
@@ -53,7 +59,7 @@ final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
     ContextAndScope contextAndScope = CONTEXT_AND_SCOPE_FIELD.get(context);
     if (contextAndScope != null) {
       contextAndScope.close();
-      instrumenter.end(contextAndScope.getContext(), context.getMsgList());
+      instrumenter.end(contextAndScope.getConsumerContext(), context);
     }
   }
 }

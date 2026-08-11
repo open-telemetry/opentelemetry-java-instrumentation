@@ -95,6 +95,12 @@ final class PulsarBatchMessagingAttributesGetter
     return String.valueOf(partitionIndex);
   }
 
+  @Nullable
+  @Override
+  public String getDestinationSubscriptionName(PulsarBatchRequest request) {
+    return request.getSubscription();
+  }
+
   @Override
   public List<String> getMessageHeader(PulsarBatchRequest request, String name) {
     List<String> values = null;
