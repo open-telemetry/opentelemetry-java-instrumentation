@@ -79,6 +79,9 @@ public interface SpanDecorator {
   /** Returns the 'span.kind' value for use when the component is receiving a communication. */
   SpanKind getReceiverSpanKind();
 
+  /** Returns whether this decorator represents HTTP telemetry. */
+  boolean isHttp();
+
   void updateServerSpanName(
       Context context, Exchange exchange, Endpoint endpoint, CamelDirection camelDirection);
 }
