@@ -64,10 +64,10 @@ must be communicated through:
    enablement alias renames.
 2. A comment in code near where the old property is read.
 3. **A `WARN`-level log message at startup** if the deprecated property is applied. Name the old and
-   replacement flat properties when they exist; otherwise name the declarative paths. Deduplicate
-   warnings with a static, process-wide keyed set for multiple properties or an `AtomicBoolean` for
-   one. Omit the guard only when initialization guarantees one evaluation. Instrumentation
-   enablement aliases are the exception described below.
+   replacement flat properties when they exist; otherwise name the declarative paths. Exact wording
+   is not standardized. Deduplicate warnings with a static, process-wide keyed set for multiple
+   properties or an `AtomicBoolean` for one. Omit the guard only when initialization guarantees one
+   evaluation. Instrumentation enablement aliases are the exception described below.
 
 ### Deprecated Properties Under Common v3 Preview
 
