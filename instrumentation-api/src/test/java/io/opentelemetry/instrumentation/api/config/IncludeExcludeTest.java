@@ -39,13 +39,13 @@ class IncludeExcludeTest {
     IncludeExclude selector =
         IncludeExclude.builder()
             .setIncluded(singletonList("first"))
-            .setIncluded(singletonList("second"))
-            .setExcluded(singletonList("third"))
+            .setIncluded("second", "third")
             .setExcluded(singletonList("fourth"))
+            .setExcluded("fifth", "sixth")
             .build();
 
-    assertThat(selector.getIncluded()).containsExactly("second");
-    assertThat(selector.getExcluded()).containsExactly("fourth");
+    assertThat(selector.getIncluded()).containsExactly("second", "third");
+    assertThat(selector.getExcluded()).containsExactly("fifth", "sixth");
   }
 
   @Test
@@ -77,9 +77,13 @@ class IncludeExcludeTest {
 
   @Test
   void rejectsNullPatterns() {
-    assertThatThrownBy(() -> IncludeExclude.builder().setIncluded(null))
+    assertThatThrownBy(() -> IncludeExclude.builder().setIncluded((Collection<String>) null))
         .isInstanceOf(NullPointerException.class);
     assertThatThrownBy(() -> IncludeExclude.builder().setExcluded(asList("foo", null)))
+        .isInstanceOf(NullPointerException.class);
+    assertThatThrownBy(() -> IncludeExclude.builder().setIncluded((String[]) null))
+        .isInstanceOf(NullPointerException.class);
+    assertThatThrownBy(() -> IncludeExclude.builder().setExcluded("foo", null))
         .isInstanceOf(NullPointerException.class);
   }
 

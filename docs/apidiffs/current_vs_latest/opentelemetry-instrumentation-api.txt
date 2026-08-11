@@ -15,4 +15,6 @@ Comparing source compatibility of opentelemetry-instrumentation-api-2.31.0-SNAPS
 	+++  NEW SUPERCLASS: java.lang.Object
 	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.config.IncludeExclude build()
 	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.config.IncludeExcludeBuilder setExcluded(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.config.IncludeExcludeBuilder setExcluded(java.lang.String[])
 	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.config.IncludeExcludeBuilder setIncluded(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.config.IncludeExcludeBuilder setIncluded(java.lang.String[])

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.config;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
@@ -28,11 +29,23 @@ public final class IncludeExcludeBuilder {
     return this;
   }
 
+  /** Replaces the included patterns. */
+  @CanIgnoreReturnValue
+  public IncludeExcludeBuilder setIncluded(String... included) {
+    return setIncluded(asList(included));
+  }
+
   /** Replaces the excluded patterns. */
   @CanIgnoreReturnValue
   public IncludeExcludeBuilder setExcluded(Collection<String> excluded) {
     this.excluded = copyPatterns(excluded, "excluded");
     return this;
+  }
+
+  /** Replaces the excluded patterns. */
+  @CanIgnoreReturnValue
+  public IncludeExcludeBuilder setExcluded(String... excluded) {
+    return setExcluded(asList(excluded));
   }
 
   /** Returns a new immutable {@link IncludeExclude}. */
