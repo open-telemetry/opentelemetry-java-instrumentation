@@ -29,7 +29,6 @@ public final class AgentInitializer {
   private static boolean isSecurityManagerSupportEnabled = false;
   private static volatile boolean agentStarted = false;
 
-  @SuppressWarnings("SystemOut")
   public static void initialize(
       Instrumentation inst, File javaagentFile, boolean fromPremain, @Nullable String agentArgs)
       throws Exception {
@@ -54,20 +53,10 @@ public final class AgentInitializer {
       throw new IllegalStateException("agent initializer should be loaded in boot loader");
     }
 
-    // check if running any JDK tool in $JAVA_HOME/bin, as this is common when setting
-    // JAVA_TOOL_OPTIONS or _JAVA_OPTIONS globally, and we don't want to instrument those tools.
-    // opt-in is still possible with an explicit otel.javaagent.enabled=true in system properties,
-    // java agent arguments or the OTEL_JAVAAGENT_ENABLED environment variable
-    String command = fromPremain ? getJvmCommand() : null;
-    if (fromPremain && isJdkToolMainClass(command)) {
-      if (isDebugEnabled()) {
-        // only log actual command in debug to avoid exposing potential sensitive arguments
-        System.err.println("JDK tool detected for command '" + command + "'");
-      }
-      System.err.println(
-          "JDK tool detected, enable agent debug for details, agent will not be started. "
-              + "To override this behavior, set otel.javaagent.enabled=true as an agent argument "
-              + "or system property, or OTEL_JAVAAGENT_ENABLED=true as an environment variable");
+    // JDK tools in $JAVA_HOME/bin also run on the JVM, and they pick up JAVA_TOOL_OPTIONS or
+    // _JAVA_OPTIONS when those are set globally, instrumenting them only adds startup overhead,
+    // so skip them unless the agent has been explicitly enabled
+    if (fromPremain && shouldSkipJdkTool()) {
       return;
     }
 
@@ -104,56 +93,69 @@ public final class AgentInitializer {
   }
 
   private static boolean isSecurityManagerSupportEnabled() {
+    return isConfigEnabled(
+        "otel.javaagent.experimental.security-manager-support.enabled",
+        "OTEL_JAVAAGENT_EXPERIMENTAL_SECURITY_MANAGER_SUPPORT_ENABLED");
+  }
+
+  /**
+   * Test whether this JVM is running a JDK tool that should not be instrumented. Explicitly
+   * enabling the agent with {@code otel.javaagent.enabled=true} overrides the detection.
+   *
+   * @return true when the agent should not be started
+   */
+  @SuppressWarnings("SystemOut")
+  private static boolean shouldSkipJdkTool() {
+    if (isConfigEnabled("otel.javaagent.enabled", "OTEL_JAVAAGENT_ENABLED")) {
+      // explicitly enabled, instrument the tool
+      return false;
+    }
+    String command = getJvmCommand();
+    if (!isJdkToolMainClass(command)) {
+      return false;
+    }
+    if (isConfigEnabled("otel.javaagent.debug", "OTEL_JAVAAGENT_DEBUG")) {
+      // only log the command with debug enabled to avoid exposing potentially sensitive arguments
+      System.err.println("JDK tool detected for command '" + command + "'");
+    }
+    System.err.println(
+        "JDK tool detected, enable agent debug for details, agent will not be started. "
+            + "To override this behavior, set otel.javaagent.enabled=true as an agent argument "
+            + "or system property, or OTEL_JAVAAGENT_ENABLED=true as an environment variable");
+    return true;
+  }
+
+  /**
+   * Get the command that started this JVM.
+   *
+   * @return command, {@literal null} when not available, e.g. when the JVM was not started by the
+   *     java launcher
+   */
+  @Nullable
+  private static String getJvmCommand() {
+    // this call deliberately uses anonymous class instead of lambda because using lambdas too
+    // early on early jdk8 (see isEarlyOracle18 method) causes jvm to crash. See CrashEarlyJdk8Test.
+    return doPrivileged(
+        new PrivilegedAction<String>() {
+          @Override
+          public String run() {
+            return System.getProperty("sun.java.command");
+          }
+        });
+  }
+
+  // this only reads the system property and the environment variable, the configuration file is
+  // not available yet as it is read by javaagent-tooling which has not been loaded at this point
+  private static boolean isConfigEnabled(String propertyName, String environmentVariableName) {
     // this call deliberately uses anonymous class instead of lambda because using lambdas too
     // early on early jdk8 (see isEarlyOracle18 method) causes jvm to crash. See CrashEarlyJdk8Test.
     return doPrivileged(
         new PrivilegedAction<Boolean>() {
           @Override
           public Boolean run() {
-            String value =
-                System.getProperty("otel.javaagent.experimental.security-manager-support.enabled");
+            String value = System.getProperty(propertyName);
             if (value == null) {
-              value = System.getenv("OTEL_JAVAAGENT_EXPERIMENTAL_SECURITY_MANAGER_SUPPORT_ENABLED");
-            }
-            return Boolean.parseBoolean(value);
-          }
-        });
-  }
-
-  /**
-   * Get the command string that started this JVM.
-   *
-   * @return command string, {@literal null} when unable to retrieve or command check is bypassed
-   */
-  @Nullable
-  private static String getJvmCommand() {
-    String cmd =
-        doPrivileged(
-            new PrivilegedAction<String>() {
-              @Override
-              public String run() {
-                String enable = System.getProperty("otel.javaagent.enabled");
-                if (enable == null) {
-                  enable = System.getenv("OTEL_JAVAAGENT_ENABLED");
-                }
-                if (Boolean.parseBoolean(enable)) {
-                  // using empty string as method should not return null
-                  return "";
-                }
-                return System.getProperty("sun.java.command");
-              }
-            });
-    return cmd.isEmpty() ? null : cmd;
-  }
-
-  private static boolean isDebugEnabled() {
-    return doPrivileged(
-        new PrivilegedAction<Boolean>() {
-          @Override
-          public Boolean run() {
-            String value = System.getProperty("otel.javaagent.debug");
-            if (value == null) {
-              value = System.getenv("OTEL_JAVAAGENT_DEBUG");
+              value = System.getenv(environmentVariableName);
             }
             return Boolean.parseBoolean(value);
           }
@@ -301,7 +303,7 @@ public final class AgentInitializer {
   }
 
   static boolean isJdkToolMainClass(@Nullable String cmd) {
-    if (cmd == null || cmd.isEmpty()) {
+    if (cmd == null) {
       return false;
     }
     int spaceIndex = cmd.indexOf(' ');
@@ -312,24 +314,18 @@ public final class AgentInitializer {
       return false;
     }
 
-    // sun.java.command may be of the form "<module>/<mainClass>" when the main class belongs to a
-    // named module, e.g. "jdk.compiler/com.sun.tools.javac.Main"
+    // sun.java.command is of the form "<module>/<mainClass>" when the main class belongs to a
+    // named module, e.g. "jdk.compiler/com.sun.tools.javac.Main", match the module name then
     int slashIndex = first.indexOf('/');
-    if (slashIndex >= 0) {
-      String moduleName = first.substring(0, slashIndex);
-      return moduleName.startsWith("jdk.") || moduleName.startsWith("java.");
-    }
+    String name = slashIndex == -1 ? first : first.substring(0, slashIndex);
 
-    return first.startsWith("com.sun.tools.")
-        || first.startsWith("com.sun.corba.se.")
-        || first.startsWith("com.sun.javafx.tools.")
-        || first.startsWith("com.sun.java.util.jar.pack.")
-        || first.startsWith("sun.applet.")
-        || first.startsWith("sun.jvm.hotspot.")
-        || first.startsWith("sun.rmi.")
-        || first.startsWith("sun.security.tools.")
-        || first.startsWith("sun.tools.")
-        || first.startsWith("jdk.jfr.internal.tool.")
-        || first.startsWith("jdk.nashorn.tools.");
+    return name.startsWith("java.")
+        || name.startsWith("jdk.")
+        || name.startsWith("sun.")
+        // com.sun. is also used outside of the jdk (e.g. glassfish), match tools packages only
+        || name.startsWith("com.sun.tools.")
+        || name.startsWith("com.sun.corba.se.")
+        || name.startsWith("com.sun.javafx.tools.")
+        || name.startsWith("com.sun.java.util.jar.pack.");
   }
 }
