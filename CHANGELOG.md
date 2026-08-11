@@ -4,6 +4,7 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- `jetty.thread.queue.size` Jetty JMX metric unit has been changed from `{thread}` to `{job}`.
 - Normalize the value of `activemq.destination.temp.utilization` JMX Metric for ActiveMQ to be between 0 and 1 (inclusive) instead of between 0 and 100 (inclusive).
 
 ### 🚫 Deprecations
