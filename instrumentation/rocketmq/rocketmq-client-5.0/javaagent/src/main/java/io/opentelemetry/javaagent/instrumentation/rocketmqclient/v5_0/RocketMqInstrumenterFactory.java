@@ -8,7 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.StatusCode;
@@ -35,6 +37,7 @@ final class RocketMqInstrumenterFactory {
   private static final String SEND_OPERATION_NAME = "send";
   private static final String RECEIVE_OPERATION_NAME = "receive";
   private static final String PROCESS_OPERATION_NAME = "process";
+  private static final String ACK_OPERATION_NAME = "ack";
 
   private RocketMqInstrumenterFactory() {}
 
@@ -130,6 +133,24 @@ final class RocketMqInstrumenterFactory {
         openTelemetry.getPropagators().getTextMapPropagator(),
         new MessageMapGetter(),
         receiveInstrumentationEnabled);
+  }
+
+  public static Instrumenter<RocketMqAckRequest, Void> createSimpleConsumerAckInstrumenter(
+      OpenTelemetry openTelemetry) {
+    RocketMqAckAttributeGetter getter = new RocketMqAckAttributeGetter();
+    MessagingOperationType operationType = MessagingOperationType.SETTLE;
+    InstrumenterBuilder<RocketMqAckRequest, Void> instrumenterBuilder =
+        Instrumenter.<RocketMqAckRequest, Void>builder(
+                openTelemetry,
+                INSTRUMENTATION_NAME,
+                MessagingSpanNameExtractor.create(getter, operationType, ACK_OPERATION_NAME))
+            .setEnabled(emitStableMessagingSemconv())
+            .addAttributesExtractor(
+                buildMessagingAttributesExtractor(
+                    getter, operationType, ACK_OPERATION_NAME, emptyList()))
+            .addAttributesExtractor(new RocketMqAckAttributeExtractor());
+    setMessagingSettleExceptionEventExtractor(instrumenterBuilder);
+    return instrumenterBuilder.buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
   private static <T, R> AttributesExtractor<T, R> buildMessagingAttributesExtractor(
