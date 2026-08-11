@@ -25,7 +25,7 @@ public class PulsarRequest extends BasePulsarRequest {
       @Nullable Message<?> message, @Nullable String url, Consumer<?> consumer) {
     return new PulsarRequest(
         message,
-        message != null ? message.getTopicName() : consumer.getTopic(),
+        message != null ? message.getTopicName() : getConsumerDestination(consumer),
         parseUrl(url),
         consumer.getSubscription());
   }
@@ -41,7 +41,7 @@ public class PulsarRequest extends BasePulsarRequest {
 
   private PulsarRequest(
       @Nullable Message<?> message,
-      String destination,
+      @Nullable String destination,
       @Nullable UrlData urlData,
       @Nullable String subscription) {
     super(destination, urlData, subscription);

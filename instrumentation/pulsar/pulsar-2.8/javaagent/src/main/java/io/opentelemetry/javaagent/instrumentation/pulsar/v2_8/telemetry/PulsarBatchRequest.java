@@ -26,13 +26,14 @@ public class PulsarBatchRequest extends BasePulsarRequest {
 
   private PulsarBatchRequest(
       @Nullable Messages<?> messages,
-      String destination,
+      @Nullable String destination,
       @Nullable UrlData urlData,
       @Nullable String subscription) {
     super(destination, urlData, subscription);
     this.messages = messages;
   }
 
+  @Nullable
   private static String getTopicName(@Nullable Messages<?> messages, Consumer<?> consumer) {
     String topicName = null;
     if (messages != null) {
@@ -49,7 +50,7 @@ public class PulsarBatchRequest extends BasePulsarRequest {
         }
       }
     }
-    return topicName != null ? topicName : consumer.getTopic();
+    return topicName != null ? topicName : getConsumerDestination(consumer);
   }
 
   public Iterable<? extends Message<?>> getMessages() {

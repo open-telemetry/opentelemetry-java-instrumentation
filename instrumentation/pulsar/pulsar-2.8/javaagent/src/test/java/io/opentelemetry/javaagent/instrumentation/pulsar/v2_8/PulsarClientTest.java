@@ -13,6 +13,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
@@ -30,6 +31,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import org.apache.pulsar.client.api.BatchReceivePolicy;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.MessageListener;
@@ -1181,6 +1183,8 @@ class PulsarClientTest extends AbstractPulsarClientTest {
             .topic(topic2, topic1)
             .subscriptionName("test_sub")
             .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .batchReceivePolicy(
+                BatchReceivePolicy.builder().maxNumMessages(1).timeout(100, MILLISECONDS).build())
             .subscribe();
 
     Message<String> received1 = consumer.receive(1, MINUTES);
@@ -1249,6 +1253,37 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                         .hasLinks(LinkData.create(producerSpan2.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic2, msgId2.toString(), false))));
+
+    testing.clearData();
+    assertThat(consumer.receive(100, MILLISECONDS)).isNull();
+    assertEmptyMultiTopicReceive();
+
+    testing.clearData();
+    assertThat(consumer.batchReceive()).isEmpty();
+    assertEmptyMultiTopicReceive();
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private static void assertEmptyMultiTopicReceive() {
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableMessagingSemconv() ? "receive" : "unknown receive")
+                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfying(
+                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                            equalTo(MESSAGING_DESTINATION_NAME, null),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "receive" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "receive" : null),
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0L))));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv

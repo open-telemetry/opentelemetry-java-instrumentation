@@ -88,7 +88,11 @@ final class PulsarBatchMessagingAttributesGetter
   @Nullable
   @Override
   public String getDestinationPartitionId(PulsarBatchRequest request) {
-    int partitionIndex = TopicName.getPartitionIndex(request.getDestination());
+    String destination = request.getDestination();
+    if (destination == null) {
+      return null;
+    }
+    int partitionIndex = TopicName.getPartitionIndex(destination);
     if (partitionIndex == -1) {
       return null;
     }
