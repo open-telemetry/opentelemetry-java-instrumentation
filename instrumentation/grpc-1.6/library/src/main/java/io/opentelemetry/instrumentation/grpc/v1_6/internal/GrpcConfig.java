@@ -42,7 +42,7 @@ public class GrpcConfig {
   public static GrpcConfig create(OpenTelemetry openTelemetry) {
     return new GrpcConfig(
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "grpc"),
-        SemconvStability.v3Preview());
+        SemconvStability.v3Preview(openTelemetry));
   }
 
   GrpcConfig(DeclarativeConfigProperties config, boolean v3Preview) {
