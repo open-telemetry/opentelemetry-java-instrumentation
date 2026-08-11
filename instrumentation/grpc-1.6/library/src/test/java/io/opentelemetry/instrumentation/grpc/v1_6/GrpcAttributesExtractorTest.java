@@ -95,7 +95,7 @@ class GrpcAttributesExtractorTest {
     when(metadata.keys()).thenReturn(singleton(key));
     GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
     AttributesBuilder attributes = Attributes.builder();
-    IncludeExclude selector = IncludeExclude.builder().build();
+    IncludeExclude selector = IncludeExclude.builder().setIncluded(singleton("*")).build();
 
     new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector)
         .onEnd(attributes, Context.root(), request, null, null);
