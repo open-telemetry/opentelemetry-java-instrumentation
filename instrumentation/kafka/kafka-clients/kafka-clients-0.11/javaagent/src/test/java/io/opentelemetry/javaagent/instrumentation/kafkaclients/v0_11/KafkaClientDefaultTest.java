@@ -113,7 +113,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
-                          .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
+                          .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders, "10"))));
       return;
     }
 
@@ -139,7 +139,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                     span.hasName(SHARED_TOPIC + " receive")
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders)),
+                        .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders, "10")),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
@@ -447,7 +447,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                       span.hasName("poll " + SHARED_TOPIC)
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
-                          .hasAttributesSatisfyingExactly(receiveAttributes(false))));
+                          .hasAttributesSatisfyingExactly(receiveAttributes(false, "10"))));
       return;
     }
 
@@ -473,7 +473,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                     span.hasName(SHARED_TOPIC + " receive")
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(receiveAttributes(false)),
+                        .hasAttributesSatisfyingExactly(receiveAttributes(false, "10")),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)

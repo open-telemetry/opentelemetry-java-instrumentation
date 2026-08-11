@@ -108,10 +108,9 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
                             .hasLinks(
-                                LinkData.create(producer1.get().getSpanContext()),
-                                LinkData.create(producer2.get().getSpanContext()))
+                                batchRecordLink(producer1.get()), batchRecordLink(producer2.get()))
                             .hasAttributesSatisfyingExactly(
-                                batchProcessAttributes("testBatchTopic")),
+                                batchProcessAttributes("testBatchTopic", record1, record2)),
                     span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))));
   }
 
@@ -163,7 +162,7 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
                             .hasAttributesSatisfyingExactly(
-                                withErrorType(batchProcessAttributes("testBatchTopic"))),
+                                withErrorType(batchProcessAttributes("testBatchTopic", record))),
                     span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))));
   }
 }

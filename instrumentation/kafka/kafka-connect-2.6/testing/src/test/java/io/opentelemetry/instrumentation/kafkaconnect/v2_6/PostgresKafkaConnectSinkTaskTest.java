@@ -19,6 +19,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.restassured.http.ContentType;
 import java.io.IOException;
 import java.sql.Connection;
@@ -28,6 +29,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -233,82 +235,37 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
 
     await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromPostgres() >= 3);
 
-    AtomicReference<SpanContext> producerSpanContext1 = new AtomicReference<>();
-    AtomicReference<SpanContext> producerSpanContext2 = new AtomicReference<>();
-    AtomicReference<SpanContext> producerSpanContext3 = new AtomicReference<>();
-    waitAndAssertRelevantTraces(
-        trace ->
-            // producer is in a separate trace, linked to consumer with a span link
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> {
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "send " + topicName1
-                              : topicName1 + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0));
-                  producerSpanContext1.set(span.actual().getSpanContext());
-                },
-                span -> {
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "send " + topicName2
-                              : topicName2 + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0));
-                  producerSpanContext2.set(span.actual().getSpanContext());
-                },
-                span -> {
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "send " + topicName3
-                              : topicName3 + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0));
-                  producerSpanContext3.set(span.actual().getSpanContext());
-                }),
-        trace -> {
-          // kafka connect consumer trace, linked to producer span via a span link
-          Consumer<SpanDataAssert> selectAssertion =
-              span -> {
-                if (emitStableDatabaseSemconv()) {
-                  span.satisfies(spanData -> assertThat(spanData.getName()).startsWith("SELECT"));
-                } else {
-                  span.hasName("SELECT " + DATABASE_NAME);
-                }
-                span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0));
-              };
-
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName(emitStableMessagingSemconv() ? "process" : "unknown process")
-                      .hasKind(CONSUMER)
-                      .hasNoParent()
-                      .hasLinks(
-                          recordLink(producerSpanContext1.get(), topicName1, "key1"),
-                          recordLink(producerSpanContext2.get(), topicName2, "key2"),
-                          recordLink(producerSpanContext3.get(), topicName3, "key3"))
-                      .hasAttributesSatisfyingExactly(processAttributes(3)),
-              selectAssertion,
-              selectAssertion,
-              selectAssertion,
-              selectAssertion,
-              selectAssertion,
-              span ->
-                  span.hasName(
-                          emitStableDatabaseSemconv()
-                              ? "BATCH INSERT \"" + DB_TABLE_PERSON + "\""
-                              : "INSERT " + DATABASE_NAME + "." + DB_TABLE_PERSON)
-                      .hasKind(SpanKind.CLIENT)
-                      .hasParent(trace.getSpan(0)));
-        },
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("GET /connectors").hasKind(SpanKind.SERVER).hasNoParent()),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("GET /connectors").hasKind(SpanKind.SERVER).hasNoParent()));
+    Map<String, String> expectedKeysByDestination = new HashMap<>();
+    expectedKeysByDestination.put(topicName1, "key1");
+    expectedKeysByDestination.put(topicName2, "key2");
+    expectedKeysByDestination.put(topicName3, "key3");
+    waitAndAssertMultiTopicTraces(
+        expectedKeysByDestination,
+        processTraces -> {
+          for (List<SpanData> trace : processTraces) {
+            SpanData process = trace.get(0);
+            assertThat(trace).hasSize(7);
+            for (SpanData select : trace.subList(1, 6)) {
+              if (emitStableDatabaseSemconv()) {
+                assertThat(select.getName()).startsWith("SELECT");
+              } else {
+                assertThat(select.getName()).isEqualTo("SELECT " + DATABASE_NAME);
+              }
+              assertThat(select.getKind()).isEqualTo(SpanKind.CLIENT);
+              assertThat(select.getParentSpanContext()).isEqualTo(process.getSpanContext());
+            }
+            SpanData insert = trace.get(6);
+            assertThat(insert.getName())
+                .isEqualTo(
+                    emitStableDatabaseSemconv()
+                        ? (process.getLinks().size() == 1 ? "INSERT \"" : "BATCH INSERT \"")
+                            + DB_TABLE_PERSON
+                            + "\""
+                        : "INSERT " + DATABASE_NAME + "." + DB_TABLE_PERSON);
+            assertThat(insert.getKind()).isEqualTo(SpanKind.CLIENT);
+            assertThat(insert.getParentSpanContext()).isEqualTo(process.getSpanContext());
+          }
+        });
   }
 
   private void setupPostgresSinkConnector(String topicName) throws IOException {

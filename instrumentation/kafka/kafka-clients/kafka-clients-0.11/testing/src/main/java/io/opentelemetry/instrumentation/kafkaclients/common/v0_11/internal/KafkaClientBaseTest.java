@@ -216,6 +216,12 @@ public abstract class KafkaClientBaseTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> receiveAttributes(boolean testHeaders) {
+    return receiveAttributes(testHeaders, null);
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  protected static List<AttributeAssertion> receiveAttributes(
+      boolean testHeaders, String messageKey) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -232,6 +238,12 @@ public abstract class KafkaClientBaseTest {
           equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, emitOldMessagingSemconv() ? "test" : null));
       assertions.add(
           equalTo(MESSAGING_CONSUMER_GROUP_NAME, emitStableMessagingSemconv() ? "test" : null));
+    }
+    if (emitStableMessagingSemconv()) {
+      assertions.add(
+          satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
+      assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
+      assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
     }
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));

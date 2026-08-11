@@ -210,12 +210,10 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                         span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
-                            .hasLinksSatisfying(
-                                links(
-                                    producer1.get().getSpanContext(),
-                                    producer2.get().getSpanContext()))
+                            .hasLinksSatisfying(links(producer1.get(), producer2.get()))
                             .hasAttributesSatisfyingExactly(
-                                batchProcessAttributes("testBatchTopic", "testBatchListener", 2)),
+                                batchProcessAttributes(
+                                    "testBatchTopic", "testBatchListener", 2, null)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))));
   }
 
@@ -235,7 +233,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
     AtomicReference<SpanData> producer = new AtomicReference<>();
 
     List<AttributeAssertion> processAttributes =
-        batchProcessAttributes("testBatchTopic", "testBatchListener", 1);
+        batchProcessAttributes("testBatchTopic", "testBatchListener", 1, "10");
 
     testing()
         .waitAndAssertSortedTraces(
@@ -258,7 +256,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                         span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
-                            .hasLinksSatisfying(links(producer.get().getSpanContext()))
+                            .hasLinksSatisfying(links(producer.get()))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
                             .hasAttributesSatisfyingExactly(withErrorType(processAttributes, true)),
@@ -274,7 +272,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                         span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
-                            .hasLinksSatisfying(links(producer.get().getSpanContext()))
+                            .hasLinksSatisfying(links(producer.get()))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
                             .hasAttributesSatisfyingExactly(withErrorType(processAttributes, true)),
@@ -290,7 +288,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                         span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
-                            .hasLinksSatisfying(links(producer.get().getSpanContext()))
+                            .hasLinksSatisfying(links(producer.get()))
                             .hasStatus(StatusData.unset())
                             .hasAttributesSatisfyingExactly(processAttributes),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0)));
@@ -322,11 +320,19 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
   }
 
   private static List<AttributeAssertion> batchProcessAttributes(
-      String topic, String group, int batchSize) {
+      String topic, String group, int batchSize, String messageKey) {
     List<AttributeAssertion> assertions =
         messagingAttributes(topic, "process", "process", "process", "consumer");
     addGroupAssertions(assertions, group);
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize));
+    if (emitStableMessagingSemconv()) {
+      assertions.add(
+          satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
+      if (messageKey != null) {
+        assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
+        assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
+      }
+    }
     return assertions;
   }
 

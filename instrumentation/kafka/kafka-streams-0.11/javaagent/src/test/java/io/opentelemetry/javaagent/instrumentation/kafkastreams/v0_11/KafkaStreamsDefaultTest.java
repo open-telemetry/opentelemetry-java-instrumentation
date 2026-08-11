@@ -201,6 +201,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                     messagingAttributes(
                         STREAM_PENDING, "receive", "poll", "receive", "consumer", false));
             assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
+            addStableBatchRecordAttributes(assertions, null);
             if (testLatestDeps()) {
               addGroupAssertions(assertions, "test-application");
             }
@@ -219,6 +220,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                     messagingAttributes(
                         STREAM_PROCESSED, "receive", "poll", "receive", "consumer", true));
             assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
+            addStableBatchRecordAttributes(assertions, "10");
             if (testLatestDeps()) {
               addGroupAssertions(assertions, "test");
             }
@@ -425,6 +427,17 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
     if (emitStableMessagingSemconv()) {
       assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, offset));
     }
+  }
+
+  private static void addStableBatchRecordAttributes(
+      List<AttributeAssertion> assertions, String messageKey) {
+    if (!emitStableMessagingSemconv()) {
+      return;
+    }
+    assertions.add(
+        satisfies(MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
+    assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, 0));
+    assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
   }
 
   private static void addGroupAssertions(List<AttributeAssertion> assertions, String group) {

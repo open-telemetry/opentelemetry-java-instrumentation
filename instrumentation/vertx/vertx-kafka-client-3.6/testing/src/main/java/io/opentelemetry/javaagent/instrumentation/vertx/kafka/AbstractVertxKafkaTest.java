@@ -28,13 +28,17 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.trace.data.LinkData;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -191,15 +195,32 @@ public abstract class AbstractVertxKafkaTest {
     return assertions;
   }
 
-  protected List<AttributeAssertion> receiveAttributes(String topic) {
-    return batchConsumerAttributes(topic, "receive");
+  protected List<AttributeAssertion> receiveAttributes(
+      String topic, KafkaProducerRecord<String, String> record) {
+    return batchConsumerAttributes(topic, "receive", singletonList(record));
   }
 
-  protected List<AttributeAssertion> batchProcessAttributes(String topic) {
-    return batchConsumerAttributes(topic, "process");
+  protected List<AttributeAssertion> receiveAttributes(
+      String topic,
+      KafkaProducerRecord<String, String> record1,
+      KafkaProducerRecord<String, String> record2) {
+    return batchConsumerAttributes(topic, "receive", asList(record1, record2));
   }
 
-  private List<AttributeAssertion> batchConsumerAttributes(String topic, String operation) {
+  protected List<AttributeAssertion> batchProcessAttributes(
+      String topic, KafkaProducerRecord<String, String> record) {
+    return batchConsumerAttributes(topic, "process", singletonList(record));
+  }
+
+  protected List<AttributeAssertion> batchProcessAttributes(
+      String topic,
+      KafkaProducerRecord<String, String> record1,
+      KafkaProducerRecord<String, String> record2) {
+    return batchConsumerAttributes(topic, "process", asList(record1, record2));
+  }
+
+  private List<AttributeAssertion> batchConsumerAttributes(
+      String topic, String operation, List<KafkaProducerRecord<String, String>> records) {
     List<AttributeAssertion> assertions =
         messagingAttributes(
             topic,
@@ -211,7 +232,29 @@ public abstract class AbstractVertxKafkaTest {
     if (hasConsumerGroup()) {
       addGroupAssertions(assertions);
     }
+    if (emitStableMessagingSemconv()) {
+      assertions.add(
+          satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
+      if (records.size() == 1) {
+        assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
+        assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, records.get(0).key()));
+      }
+    }
     return assertions;
+  }
+
+  protected static LinkData batchRecordLink(SpanData producerSpan) {
+    if (!emitStableMessagingSemconv()) {
+      return LinkData.create(producerSpan.getSpanContext());
+    }
+    return LinkData.create(
+        producerSpan.getSpanContext(),
+        Attributes.builder()
+            .put(MESSAGING_KAFKA_OFFSET, producerSpan.getAttributes().get(MESSAGING_KAFKA_OFFSET))
+            .put(
+                MESSAGING_KAFKA_MESSAGE_KEY,
+                producerSpan.getAttributes().get(MESSAGING_KAFKA_MESSAGE_KEY))
+            .build());
   }
 
   protected List<AttributeAssertion> processAttributes(KafkaProducerRecord<String, String> record) {

@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import com.mongodb.client.MongoClient;
@@ -21,10 +22,13 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.trace.data.LinkData;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.restassured.http.ContentType;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -193,80 +197,30 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
 
     await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromMongo() >= 3);
 
-    AtomicReference<SpanContext> producerSpanContext1 = new AtomicReference<>();
-    AtomicReference<SpanContext> producerSpanContext2 = new AtomicReference<>();
-    AtomicReference<SpanContext> producerSpanContext3 = new AtomicReference<>();
-    waitAndAssertRelevantTraces(
-        trace ->
-            // producer is in a separate trace, linked to consumer with a span link
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> {
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "send " + topicName1
-                              : topicName1 + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0));
-                  producerSpanContext1.set(span.actual().getSpanContext());
-                },
-                span -> {
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "send " + topicName2
-                              : topicName2 + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0));
-                  producerSpanContext2.set(span.actual().getSpanContext());
-                },
-                span -> {
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "send " + topicName3
-                              : topicName3 + " publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0));
-                  producerSpanContext3.set(span.actual().getSpanContext());
-                }),
-        trace ->
-            // kafka connect consumer trace, linked to producer span via a span link
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process" : "unknown process")
-                        .hasKind(CONSUMER)
-                        .hasNoParent()
-                        .hasLinks(
-                            recordLink(producerSpanContext1.get(), topicName1, "key1"),
-                            recordLink(producerSpanContext2.get(), topicName2, "key2"),
-                            recordLink(producerSpanContext3.get(), topicName3, "key3"))
-                        .hasAttributesSatisfyingExactly(processAttributes(3)),
-                span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "update " + COLLECTION_NAME
-                                : "update " + DATABASE_NAME + "." + COLLECTION_NAME)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "update " + COLLECTION_NAME
-                                : "update " + DATABASE_NAME + "." + COLLECTION_NAME)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "update " + COLLECTION_NAME
-                                : "update " + DATABASE_NAME + "." + COLLECTION_NAME)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("GET /connectors").hasKind(SpanKind.SERVER).hasNoParent()),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("GET /connectors").hasKind(SpanKind.SERVER).hasNoParent()));
+    Map<String, String> expectedKeysByDestination = new HashMap<>();
+    expectedKeysByDestination.put(topicName1, "key1");
+    expectedKeysByDestination.put(topicName2, "key2");
+    expectedKeysByDestination.put(topicName3, "key3");
+    waitAndAssertMultiTopicTraces(
+        expectedKeysByDestination,
+        processTraces -> {
+          List<SpanData> updateSpans = new ArrayList<>();
+          for (List<SpanData> trace : processTraces) {
+            SpanData process = trace.get(0);
+            assertThat(trace).hasSize(process.getLinks().size() + 1);
+            for (SpanData update : trace.subList(1, trace.size())) {
+              assertThat(update.getName())
+                  .isEqualTo(
+                      emitStableDatabaseSemconv()
+                          ? "update " + COLLECTION_NAME
+                          : "update " + DATABASE_NAME + "." + COLLECTION_NAME);
+              assertThat(update.getKind()).isEqualTo(SpanKind.CLIENT);
+              assertThat(update.getParentSpanContext()).isEqualTo(process.getSpanContext());
+              updateSpans.add(update);
+            }
+          }
+          assertThat(updateSpans).hasSize(3);
+        });
   }
 
   // MongoDB-specific helper methods

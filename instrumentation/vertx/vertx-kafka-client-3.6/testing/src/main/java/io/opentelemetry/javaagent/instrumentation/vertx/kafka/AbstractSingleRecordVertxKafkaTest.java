@@ -80,7 +80,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                               .hasNoParent()
                               .hasLinks(LinkData.create(producer.get().getSpanContext()))
                               .hasAttributesSatisfyingExactly(
-                                  receiveAttributes("testSingleTopic"))));
+                                  receiveAttributes("testSingleTopic", record))));
       return;
     }
 
@@ -104,7 +104,8 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                         span.hasName(spanName("testSingleTopic", "receive", "poll"))
                             .hasKind(receiveKind())
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(receiveAttributes("testSingleTopic")),
+                            .hasAttributesSatisfyingExactly(
+                                receiveAttributes("testSingleTopic", record)),
                     span ->
                         span.hasName(spanName("testSingleTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
@@ -159,7 +160,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                               .hasNoParent()
                               .hasLinks(LinkData.create(producer.get().getSpanContext()))
                               .hasAttributesSatisfyingExactly(
-                                  receiveAttributes("testSingleTopic"))));
+                                  receiveAttributes("testSingleTopic", record))));
       return;
     }
 
@@ -183,7 +184,8 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                         span.hasName(spanName("testSingleTopic", "receive", "poll"))
                             .hasKind(receiveKind())
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(receiveAttributes("testSingleTopic")),
+                            .hasAttributesSatisfyingExactly(
+                                receiveAttributes("testSingleTopic", record)),
                     span ->
                         span.hasName(spanName("testSingleTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)

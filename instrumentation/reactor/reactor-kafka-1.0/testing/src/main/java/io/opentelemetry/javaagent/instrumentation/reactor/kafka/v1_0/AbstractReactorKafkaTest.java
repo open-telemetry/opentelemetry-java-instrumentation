@@ -197,7 +197,7 @@ public abstract class AbstractReactorKafkaTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
-                          .hasAttributesSatisfyingExactly(receiveAttributes("testTopic"))));
+                          .hasAttributesSatisfyingExactly(receiveAttributes(record))));
       return;
     }
 
@@ -220,7 +220,7 @@ public abstract class AbstractReactorKafkaTest {
                     span.hasName(spanName("testTopic", "receive", "poll"))
                         .hasKind(receiveKind())
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(receiveAttributes("testTopic")),
+                        .hasAttributesSatisfyingExactly(receiveAttributes(record)),
                 span ->
                     span.hasName(spanName("testTopic", "process", "process"))
                         .hasKind(SpanKind.CONSUMER)
@@ -268,12 +268,18 @@ public abstract class AbstractReactorKafkaTest {
     return assertions;
   }
 
-  private static List<AttributeAssertion> receiveAttributes(String topic) {
+  private static List<AttributeAssertion> receiveAttributes(ProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
-        messagingAttributes(topic, "receive", "poll", "receive", "consumer");
+        messagingAttributes(record.topic(), "receive", "poll", "receive", "consumer");
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
     if (HAS_CONSUMER_GROUP) {
       addGroupAssertions(assertions);
+    }
+    if (emitStableMessagingSemconv()) {
+      assertions.add(
+          satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
+      assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
+      assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, record.key()));
     }
     return assertions;
   }

@@ -114,7 +114,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           .hasNoParent()
                           .hasLinks(LinkData.create(producer.get().getSpanContext()))
                           .hasAttributesSatisfyingExactly(
-                              receiveAttributes("testSingleTopic", "testSingleListener", 1))));
+                              receiveAttributes(
+                                  "testSingleTopic", "testSingleListener", 1, "10"))));
       return;
     }
 
@@ -138,7 +139,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                         .hasKind(receiveKind())
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            receiveAttributes("testSingleTopic", "testSingleListener", 1)),
+                            receiveAttributes("testSingleTopic", "testSingleListener", 1, "10")),
                 span ->
                     span.hasName(spanName("testSingleTopic", "process", "process"))
                         .hasKind(SpanKind.CONSUMER)
@@ -167,7 +168,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                 .hasKind(receiveKind())
                 .hasNoParent()
                 .hasAttributesSatisfyingExactly(
-                    receiveAttributes("testSingleTopic", "testSingleListener", 1));
+                    receiveAttributes("testSingleTopic", "testSingleListener", 1, "10"));
     List<AttributeAssertion> processAttributes =
         singleProcessAttributes("testSingleTopic", "testSingleListener", "10");
 
@@ -345,11 +346,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                       span.hasName(spanName("testBatchTopic", "process", "process"))
                           .hasKind(SpanKind.CONSUMER)
                           .hasNoParent()
-                          .hasLinks(
-                              LinkData.create(producer1.get().getSpanContext()),
-                              LinkData.create(producer2.get().getSpanContext()))
+                          .hasLinks(recordLink(producer1.get()), recordLink(producer2.get()))
                           .hasAttributesSatisfyingExactly(
-                              batchProcessAttributes("testBatchTopic", "testBatchListener", 2)),
+                              batchProcessAttributes(
+                                  "testBatchTopic", "testBatchListener", 2, null)),
                   span -> span.hasName("consumer").hasParent(trace.getSpan(0))),
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -357,11 +357,9 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                       span.hasName(spanName("testBatchTopic", "receive", "poll"))
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
-                          .hasLinks(
-                              LinkData.create(producer1.get().getSpanContext()),
-                              LinkData.create(producer2.get().getSpanContext()))
+                          .hasLinks(recordLink(producer1.get()), recordLink(producer2.get()))
                           .hasAttributesSatisfyingExactly(
-                              receiveAttributes("testBatchTopic", "testBatchListener", 2))));
+                              receiveAttributes("testBatchTopic", "testBatchListener", 2, null))));
       return;
     }
 
@@ -391,7 +389,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                         .hasKind(receiveKind())
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            receiveAttributes("testBatchTopic", "testBatchListener", 2)),
+                            receiveAttributes("testBatchTopic", "testBatchListener", 2, null)),
                 span ->
                     span.hasName(spanName("testBatchTopic", "process", "process"))
                         .hasKind(SpanKind.CONSUMER)
@@ -400,7 +398,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             LinkData.create(producer1.get().getSpanContext()),
                             LinkData.create(producer2.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
-                            batchProcessAttributes("testBatchTopic", "testBatchListener", 2)),
+                            batchProcessAttributes("testBatchTopic", "testBatchListener", 2, null)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 
@@ -505,7 +503,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         .hasKind(receiveKind())
         .hasNoParent()
         .hasAttributesSatisfyingExactly(
-            receiveAttributes("testBatchTopic", "testBatchListener", 1));
+            receiveAttributes("testBatchTopic", "testBatchListener", 1, "10"));
   }
 
   private static void addSingleProcessAssertions(
@@ -544,7 +542,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
               .hasLinks(LinkData.create(producer.getSpanContext()))
               .hasAttributesSatisfyingExactly(
                   withErrorType(
-                      batchProcessAttributes("testBatchTopic", "testBatchListener", 1), failed));
+                      batchProcessAttributes("testBatchTopic", "testBatchListener", 1, "10"),
+                      failed));
           if (failed) {
             span.hasStatus(StatusData.error()).hasException(new IllegalArgumentException("boom"));
           }
@@ -558,7 +557,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
         .hasLinks(LinkData.create(producer.getSpanContext()))
-        .hasAttributesSatisfyingExactly(receiveAttributes(topic, group, 1));
+        .hasAttributesSatisfyingExactly(receiveAttributes(topic, group, 1, "10"));
   }
 
   private static void assertProcessSpan(
@@ -569,7 +568,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         .hasLinks(LinkData.create(producer.getSpanContext()))
         .hasAttributesSatisfyingExactly(
             withErrorType(
-                batchProcessAttributes("testBatchTopic", "testBatchListener", 1), failed));
+                batchProcessAttributes("testBatchTopic", "testBatchListener", 1, "10"), failed));
     if (failed) {
       span.hasStatus(StatusData.error()).hasException(new IllegalArgumentException("boom"));
     }
@@ -589,11 +588,12 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
   }
 
   private static List<AttributeAssertion> receiveAttributes(
-      String topic, String group, int batchSize) {
+      String topic, String group, int batchSize, String messageKey) {
     List<AttributeAssertion> assertions =
         messagingAttributes(topic, "receive", "poll", "receive", "consumer");
     addGroupAssertions(assertions, group);
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize));
+    addCommonBatchRecordAttributes(assertions, messageKey);
     return assertions;
   }
 
@@ -620,12 +620,25 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
   }
 
   private static List<AttributeAssertion> batchProcessAttributes(
-      String topic, String group, int batchSize) {
+      String topic, String group, int batchSize, String messageKey) {
     List<AttributeAssertion> assertions =
         messagingAttributes(topic, "process", "process", "process", "consumer");
     addGroupAssertions(assertions, group);
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize));
+    addCommonBatchRecordAttributes(assertions, messageKey);
     return assertions;
+  }
+
+  private static void addCommonBatchRecordAttributes(
+      List<AttributeAssertion> assertions, String messageKey) {
+    if (!emitStableMessagingSemconv()) {
+      return;
+    }
+    assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
+    if (messageKey != null) {
+      assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
+      assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
+    }
   }
 
   private static List<AttributeAssertion> messagingAttributes(
