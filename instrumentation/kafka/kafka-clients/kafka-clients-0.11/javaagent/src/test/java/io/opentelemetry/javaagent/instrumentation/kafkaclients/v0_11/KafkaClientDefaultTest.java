@@ -9,6 +9,8 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -25,10 +27,13 @@ import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -39,6 +44,32 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @Test
+  void testCommitAsyncDefaultCallbackEndsSpanAfterBrokerCompletion() throws InterruptedException {
+    assumeTrue(emitStableMessagingSemconv());
+    awaitUntilConsumerIsReady();
+    consumer.seekToEnd(emptyList());
+    Map<TopicPartition, OffsetAndMetadata> offsets =
+        singletonMap(TOPIC_PARTITION, new OffsetAndMetadata(consumer.position(TOPIC_PARTITION)));
+    testing.clearData();
+
+    testing.runWithSpan("commit parent", () -> consumer.commitAsync(offsets, null));
+
+    assertThat(testing.spans()).hasSize(1);
+    for (int i = 0; i < 10 && testing.spans().size() == 1; i++) {
+      poll(Duration.ofMillis(500));
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("commit parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("commit " + SHARED_TOPIC)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))));
+  }
 
   @DisplayName("test kafka produce and consume")
   @ParameterizedTest(name = "{index} => test headers: {0}")

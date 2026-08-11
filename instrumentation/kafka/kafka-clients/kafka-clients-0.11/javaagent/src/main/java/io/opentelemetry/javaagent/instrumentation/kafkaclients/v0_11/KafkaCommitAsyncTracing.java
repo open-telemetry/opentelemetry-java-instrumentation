@@ -10,10 +10,8 @@ import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.Kafk
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaCommitRequest;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -23,8 +21,6 @@ public class KafkaCommitAsyncTracing {
 
   private static final ContextKey<TracingState> TRACING_STATE =
       ContextKey.named(KafkaCommitAsyncTracing.class.getName());
-  private static final VirtualField<Map<?, ?>, TracingState> OFFSET_TRACING_STATE =
-      VirtualField.find(Map.class, TracingState.class);
 
   public static AdviceScope start(
       @Nullable Object offsets, @Nullable OffsetCommitCallback callback) {
@@ -56,26 +52,8 @@ public class KafkaCommitAsyncTracing {
     return new AdviceScope(callDepth, null, tracingState, wrapCallback(callback, tracingState));
   }
 
-  public static void trackOffsets(Map<?, ?> offsets) {
-    TracingState tracingState = Context.current().get(TRACING_STATE);
-    if (tracingState != null) {
-      OFFSET_TRACING_STATE.set(offsets, tracingState);
-    }
-  }
-
-  public static void endTrackedOffsets(Map<?, ?> offsets, @Nullable Throwable error) {
-    TracingState tracingState = OFFSET_TRACING_STATE.get(offsets);
-    if (tracingState != null) {
-      OFFSET_TRACING_STATE.set(offsets, null);
-      tracingState.end(error);
-    }
-  }
-
-  public static void endOnCompletion(@Nullable CompletableFuture<?> future) {
-    TracingState tracingState = Context.current().get(TRACING_STATE);
-    if (tracingState != null && future != null) {
-      future.whenComplete((unused, error) -> tracingState.end(error));
-    }
+  public static OffsetCommitCallback wrapCallback(OffsetCommitCallback callback) {
+    return wrapCallback(callback, Context.current().get(TRACING_STATE));
   }
 
   @Nullable
@@ -85,6 +63,13 @@ public class KafkaCommitAsyncTracing {
       return callback;
     }
     return new KafkaCommitCallback(callback, tracingState);
+  }
+
+  public static void endOnCompletion(@Nullable CompletableFuture<?> future) {
+    TracingState tracingState = Context.current().get(TRACING_STATE);
+    if (tracingState != null && future != null) {
+      future.whenComplete((unused, error) -> tracingState.end(error));
+    }
   }
 
   public static class AdviceScope {

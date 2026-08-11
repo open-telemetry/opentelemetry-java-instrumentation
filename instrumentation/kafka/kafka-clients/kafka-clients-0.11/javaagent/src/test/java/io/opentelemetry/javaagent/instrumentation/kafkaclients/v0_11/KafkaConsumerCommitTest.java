@@ -17,7 +17,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -35,8 +34,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -335,25 +336,44 @@ class KafkaConsumerCommitTest {
 
   @Test
   @DisabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
-  void commitAsyncDefaultCallbackEndsSpan() {
+  void commitAsyncDefaultCallbacksCorrelateReusedOffsets() {
     assumeTrue(emitStableMessagingSemconv());
+    Map<TopicPartition, OffsetAndMetadata> offsets =
+        singletonMap(TOPIC_PARTITION, new OffsetAndMetadata(1));
+    List<Exception> callbackExceptions = new ArrayList<>();
+    OffsetCommitCallback defaultCallback =
+        (committedOffsets, exception) -> callbackExceptions.add(exception);
+    AtomicReference<OffsetCommitCallback> firstCallback = new AtomicReference<>();
+    AtomicReference<OffsetCommitCallback> secondCallback = new AtomicReference<>();
+    CommitFailedException error = new CommitFailedException();
     testing.clearData();
 
-    Map<TopicPartition, OffsetAndMetadata> offsets = emptyMap();
-    KafkaCommitAsyncTracing.AdviceScope adviceScope = KafkaCommitAsyncTracing.start(null, null);
-    assertThat(adviceScope.callback()).isNull();
-    KafkaCommitAsyncTracing.trackOffsets(offsets);
-    adviceScope.end(null);
-    assertThat(testing.spans()).isEmpty();
-    KafkaCommitAsyncTracing.endTrackedOffsets(offsets, null);
+    testing.runWithSpan(
+        "first parent",
+        () -> firstCallback.set(startAsyncCommitWithDefaultCallback(offsets, defaultCallback)));
+    testing.runWithSpan(
+        "second parent",
+        () -> secondCallback.set(startAsyncCommitWithDefaultCallback(offsets, defaultCallback)));
+    assertThat(testing.spans()).hasSize(2);
 
+    secondCallback.get().onComplete(offsets, error);
+    firstCallback.get().onComplete(offsets, null);
+
+    assertThat(callbackExceptions).containsExactly(error, null);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("first parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    assertCommitSpan(span, null, null, null)
-                        .hasStatus(StatusData.unset())
-                        .hasNoParent()));
+                    assertCommitSpan(span, trace.getSpan(0), TOPIC, null)
+                        .hasStatus(StatusData.unset())),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("second parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    assertCommitSpan(
+                            span, trace.getSpan(0), TOPIC, CommitFailedException.class.getName())
+                        .hasStatus(StatusData.error())));
   }
 
   @Test
@@ -416,6 +436,14 @@ class KafkaConsumerCommitTest {
     if (wrappedCallback == null) {
       throw new AssertionError("Callback was not wrapped");
     }
+    return wrappedCallback;
+  }
+
+  private static OffsetCommitCallback startAsyncCommitWithDefaultCallback(
+      Map<TopicPartition, OffsetAndMetadata> offsets, OffsetCommitCallback defaultCallback) {
+    KafkaCommitAsyncTracing.AdviceScope adviceScope = KafkaCommitAsyncTracing.start(offsets, null);
+    OffsetCommitCallback wrappedCallback = KafkaCommitAsyncTracing.wrapCallback(defaultCallback);
+    adviceScope.end(null);
     return wrappedCallback;
   }
 

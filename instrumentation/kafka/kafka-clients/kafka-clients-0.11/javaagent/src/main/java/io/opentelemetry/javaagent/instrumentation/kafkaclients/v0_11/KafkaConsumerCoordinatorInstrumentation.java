@@ -12,9 +12,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Map;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.kafka.clients.consumer.OffsetCommitCallback;
 
 class KafkaConsumerCoordinatorInstrumentation implements TypeInstrumentation {
 
@@ -36,9 +40,14 @@ class KafkaConsumerCoordinatorInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CommitOffsetsAsyncAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.Argument(0) Map<?, ?> offsets) {
-      KafkaCommitAsyncTracing.trackOffsets(offsets);
+    public static OffsetCommitCallback onEnter(
+        @Advice.Argument(1) @Nullable OffsetCommitCallback callback,
+        @Advice.FieldValue("defaultOffsetCommitCallback")
+            OffsetCommitCallback defaultOffsetCommitCallback) {
+      return KafkaCommitAsyncTracing.wrapCallback(
+          callback == null ? defaultOffsetCommitCallback : callback);
     }
   }
 }
