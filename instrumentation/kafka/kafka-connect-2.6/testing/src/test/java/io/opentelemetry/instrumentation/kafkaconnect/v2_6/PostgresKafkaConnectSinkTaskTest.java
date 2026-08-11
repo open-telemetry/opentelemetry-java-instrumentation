@@ -252,7 +252,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                 assertThat(select.getName()).isEqualTo("SELECT " + DATABASE_NAME);
               }
               assertThat(select.getKind()).isEqualTo(SpanKind.CLIENT);
-              assertThat(select.getParentSpanContext()).isEqualTo(process.getSpanContext());
+              assertThat(select.getParentSpanId()).isEqualTo(process.getSpanId());
             }
             SpanData insert = trace.get(6);
             assertThat(insert.getName())
@@ -263,7 +263,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                             + "\""
                         : "INSERT " + DATABASE_NAME + "." + DB_TABLE_PERSON);
             assertThat(insert.getKind()).isEqualTo(SpanKind.CLIENT);
-            assertThat(insert.getParentSpanContext()).isEqualTo(process.getSpanContext());
+            assertThat(insert.getParentSpanId()).isEqualTo(process.getSpanId());
           }
         });
   }

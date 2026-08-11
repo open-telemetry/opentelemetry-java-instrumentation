@@ -215,7 +215,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                           ? "update " + COLLECTION_NAME
                           : "update " + DATABASE_NAME + "." + COLLECTION_NAME);
               assertThat(update.getKind()).isEqualTo(SpanKind.CLIENT);
-              assertThat(update.getParentSpanContext()).isEqualTo(process.getSpanContext());
+              assertThat(update.getParentSpanId()).isEqualTo(process.getSpanId());
               updateSpans.add(update);
             }
           }
