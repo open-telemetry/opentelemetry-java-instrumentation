@@ -114,7 +114,8 @@ class RabbitMqTest extends AbstractRabbitMqTest {
 
   @Test
   void testEmptyPullReceive() throws IOException {
-    String queueName = channel.queueDeclare().getQueue();
+    String queueName = "empty-pull-queue";
+    channel.queueDeclare(queueName, false, true, true, null);
     testing.clearData();
 
     GetResponse response = channel.basicGet(queueName, true);
