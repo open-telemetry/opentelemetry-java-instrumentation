@@ -34,6 +34,7 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.lang.reflect.InvocationTargetException;
@@ -150,6 +151,12 @@ public abstract class AbstractReactorKafkaTest {
 
   protected void testSingleRecordProcess(
       Function<Consumer<ConsumerRecord<String, String>>, Disposable> subscriptionFunction) {
+    testSingleRecordProcess(subscriptionFunction, false);
+  }
+
+  protected void testSingleRecordProcess(
+      Function<Consumer<ConsumerRecord<String, String>>, Disposable> subscriptionFunction,
+      boolean expectCommitSpan) {
     Disposable disposable =
         subscriptionFunction.apply(record -> testing.runWithSpan("consumer", () -> {}));
     cleanup.deferCleanup(disposable::dispose);
@@ -160,18 +167,19 @@ public abstract class AbstractReactorKafkaTest {
     testing.runWithSpan("producer", () -> producer.blockLast(Duration.ofSeconds(30)));
 
     if (RECEIVE_TELEMETRY_ENABLED) {
-      assertWithReceiveTelemetry(record);
+      assertWithReceiveTelemetry(record, expectCommitSpan);
     } else {
-      assertWithoutReceiveTelemetry(record);
+      assertWithoutReceiveTelemetry(record, expectCommitSpan);
     }
   }
 
-  private static void assertWithReceiveTelemetry(SenderRecord<String, String, Object> record) {
+  private static void assertWithReceiveTelemetry(
+      SenderRecord<String, String, Object> record, boolean expectCommitSpan) {
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
 
     if (emitStableMessagingSemconv()) {
-      testing.waitAndAssertSortedTraces(
-          orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
+      List<Consumer<TraceAssert>> assertions = new ArrayList<>();
+      assertions.add(
           trace -> {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("producer"),
@@ -189,7 +197,8 @@ public abstract class AbstractReactorKafkaTest {
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
 
             producerSpan.set(trace.getSpan(1));
-          },
+          });
+      assertions.add(
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
@@ -198,6 +207,11 @@ public abstract class AbstractReactorKafkaTest {
                           .hasNoParent()
                           .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                           .hasAttributesSatisfyingExactly(receiveAttributes("testTopic"))));
+      if (expectCommitSpan) {
+        assertions.add(AbstractReactorKafkaTest::assertCommitTrace);
+      }
+      testing.waitAndAssertSortedTraces(
+          orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT), assertions);
       return;
     }
 
@@ -230,8 +244,10 @@ public abstract class AbstractReactorKafkaTest {
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 
-  private static void assertWithoutReceiveTelemetry(SenderRecord<String, String, Object> record) {
-    testing.waitAndAssertTraces(
+  private static void assertWithoutReceiveTelemetry(
+      SenderRecord<String, String, Object> record, boolean expectCommitSpan) {
+    List<Consumer<TraceAssert>> assertions = new ArrayList<>();
+    assertions.add(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("producer"),
@@ -250,6 +266,24 @@ public abstract class AbstractReactorKafkaTest {
                   }
                 },
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+    if (expectCommitSpan && emitStableMessagingSemconv()) {
+      assertions.add(AbstractReactorKafkaTest::assertCommitTrace);
+    }
+    testing.waitAndAssertTraces(assertions);
+  }
+
+  private static void assertCommitTrace(TraceAssert trace) {
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            span.hasName("commit testTopic")
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                   equalTo(MESSAGING_SYSTEM, "kafka"),
+                   equalTo(MESSAGING_OPERATION_NAME, "commit"),
+                   equalTo(MESSAGING_OPERATION_TYPE, "settle"),
+                   equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "settle" : null),
+                   equalTo(MESSAGING_DESTINATION_NAME, "testTopic")));
   }
 
   private static List<AttributeAssertion> sendAttributes(ProducerRecord<String, String> record) {

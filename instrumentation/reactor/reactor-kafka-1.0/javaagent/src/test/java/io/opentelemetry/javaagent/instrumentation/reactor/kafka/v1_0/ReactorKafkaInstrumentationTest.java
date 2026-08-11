@@ -24,6 +24,6 @@ class ReactorKafkaInstrumentationTest extends AbstractReactorKafkaTest {
   @Test
   void testReceiveAtMostOnce() {
     testSingleRecordProcess(
-        recordConsumer -> receiver.receiveAtmostOnce().subscribe(recordConsumer));
+        recordConsumer -> receiver.receiveAtmostOnce().subscribe(recordConsumer), true);
   }
 }

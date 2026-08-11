@@ -114,7 +114,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           .hasNoParent()
                           .hasLinks(LinkData.create(producer.get().getSpanContext()))
                           .hasAttributesSatisfyingExactly(
-                              receiveAttributes("testSingleTopic", "testSingleListener", 1))));
+                              receiveAttributes("testSingleTopic", "testSingleListener", 1))),
+          trace -> assertCommitSpan(trace, "testSingleTopic"));
       return;
     }
 
@@ -204,6 +205,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                         assertStableReceiveSpan(
                             span, producer.get(), "testSingleTopic", "testSingleListener")));
       }
+      assertions.add(trace -> assertCommitSpan(trace, "testSingleTopic"));
       testing.waitAndAssertSortedTraces(
           orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT), assertions);
       return;
@@ -361,7 +363,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                               LinkData.create(producer1.get().getSpanContext()),
                               LinkData.create(producer2.get().getSpanContext()))
                           .hasAttributesSatisfyingExactly(
-                              receiveAttributes("testBatchTopic", "testBatchListener", 2))));
+                              receiveAttributes("testBatchTopic", "testBatchListener", 2))),
+          trace -> assertCommitSpan(trace, "testBatchTopic"));
       return;
     }
 
@@ -445,6 +448,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                         assertStableReceiveSpan(
                             span, producer.get(), "testBatchTopic", "testBatchListener")));
       }
+      assertions.add(trace -> assertCommitSpan(trace, "testBatchTopic"));
       testing.waitAndAssertSortedTraces(
           orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER, SpanKind.CLIENT), assertions);
       return;
@@ -559,6 +563,20 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         .hasNoParent()
         .hasLinks(LinkData.create(producer.getSpanContext()))
         .hasAttributesSatisfyingExactly(receiveAttributes(topic, group, 1));
+  }
+
+  private static void assertCommitSpan(TraceAssert trace, String topic) {
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            span.hasName("commit " + topic)
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_SYSTEM, "kafka"),
+                    equalTo(MESSAGING_OPERATION_NAME, "commit"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "settle"),
+                    equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "settle" : null),
+                    equalTo(MESSAGING_DESTINATION_NAME, topic)));
   }
 
   private static void assertProcessSpan(
