@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import io.opentelemetry.context.Context;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 
@@ -18,21 +20,37 @@ import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 public final class SqsMessageImpl implements SqsMessage {
 
   private final Message message;
+  @Nullable private final TracingExecutionInterceptor config;
 
   private SqsMessageImpl(Message message) {
     this.message = message;
+    this.config = null;
+  }
+
+  private SqsMessageImpl(Message message, TracingExecutionInterceptor config) {
+    this.message = message;
+    this.config = config;
   }
 
   public static SqsMessage wrap(Message message) {
     return new SqsMessageImpl(message);
   }
 
-  static List<SqsMessage> wrap(List<Message> messages) {
+  public static SqsMessage wrap(Message message, TracingExecutionInterceptor config) {
+    return new SqsMessageImpl(message, config);
+  }
+
+  static List<SqsMessage> wrap(List<Message> messages, TracingExecutionInterceptor config) {
     List<SqsMessage> result = new ArrayList<>();
     for (Message message : messages) {
-      result.add(wrap(message));
+      result.add(wrap(message, config));
     }
     return result;
+  }
+
+  @Override
+  public Context getCreationContext() {
+    return config != null ? SqsParentContext.ofMessage(this, config) : Context.root();
   }
 
   @Override

@@ -6,7 +6,7 @@ provides.
 - Bundled exporters
   - [OTLP](https://opentelemetry.io/docs/specs/otlp/)
   - Console
-  - Zipkin
+  - Zipkin (deprecated, will be removed in 3.0)
 - Bundled propagators
   - [W3C TraceContext / Baggage](https://www.w3.org/TR/trace-context/)
   - All Java [trace propagator extensions](https://github.com/open-telemetry/opentelemetry-java/tree/main/extensions/trace-propagators)

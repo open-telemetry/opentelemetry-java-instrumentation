@@ -17,6 +17,9 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import java.net.URI;
+import org.apache.camel.CamelContext;
+import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.impl.DefaultCamelContext;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -76,5 +79,65 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
                                 stringKey("camel.uri"),
                                 experimental(
                                     requestUrl.toString().replace("localhost", "0.0.0.0"))))));
+  }
+
+  @Test
+  void sensitiveQueryParametersAreRedacted() throws Exception {
+    CamelContext clientContext = new DefaultCamelContext();
+    clientContext.addRoutes(
+        new RouteBuilder() {
+          @Override
+          public void configure() {
+            from("direct:input").to("http://localhost:" + port + "/camelService?sig=secret");
+          }
+        });
+    clientContext.start();
+    try {
+      clientContext.createProducerTemplate().sendBody("direct:input", "testContent");
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("input").hasKind(SpanKind.INTERNAL),
+                  span ->
+                      span.hasName("GET")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttribute(
+                              URL_FULL, "http://localhost:" + port + "/camelService?sig=REDACTED"),
+                  span -> span.hasName("GET /camelService").hasKind(SpanKind.SERVER)));
+    } finally {
+      clientContext.stop();
+    }
+  }
+
+  @Test
+  void userInfoIsRedacted() throws Exception {
+    CamelContext clientContext = new DefaultCamelContext();
+    clientContext.addRoutes(
+        new RouteBuilder() {
+          @Override
+          public void configure() {
+            from("direct:userInfoInput")
+                .to("http://user:secret@localhost:" + port + "/camelService");
+          }
+        });
+    clientContext.start();
+    try {
+      clientContext.createProducerTemplate().sendBody("direct:userInfoInput", "testContent");
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("userInfoInput").hasKind(SpanKind.INTERNAL),
+                  span ->
+                      span.hasName("POST")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttribute(
+                              URL_FULL,
+                              "http://REDACTED:REDACTED@localhost:" + port + "/camelService"),
+                  span -> span.hasName("POST /camelService").hasKind(SpanKind.SERVER)));
+    } finally {
+      clientContext.stop();
+    }
   }
 }
