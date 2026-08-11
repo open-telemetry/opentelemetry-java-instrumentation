@@ -37,6 +37,7 @@ rules:
       # activemq.destination.temp.utilization
       TempUsagePercentUsage:
         metric: destination.temp.utilization
+        sourceUnit: "%"
         unit: "1"
         type: gauge
         desc: The percentage of non-persistent storage used by this destination
