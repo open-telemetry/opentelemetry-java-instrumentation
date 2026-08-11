@@ -124,8 +124,7 @@ public final class IncludeExclude {
     // regex backtracking on a non-match. Possessive quantifiers change glob semantics because '*'
     // may need to give characters back to match a later token (for example, glob "*a" must match
     // "ba"). Each retry below consumes one value code point, bounding the work by the product of
-    // the
-    // pattern and value lengths.
+    // the pattern and value lengths.
     while (valueIndex < value.length()) {
       if (patternIndex < pattern.length()) {
         int patternCodePoint = pattern.codePointAt(patternIndex);
