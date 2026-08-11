@@ -13,6 +13,7 @@ import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.lang.reflect.Field;
@@ -130,6 +131,23 @@ class GrpcConfigTest {
     GrpcConfig grpcConfig = new GrpcConfig(config, true);
 
     assertThat(grpcConfig.getClientRequestMetadata()).isNull();
+  }
+
+  @Test
+  void createUsesV3PreviewFromOpenTelemetryInstance() {
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
+    DeclarativeConfigProperties grpcConfig = mockConfig();
+    DeclarativeConfigProperties commonConfig =
+        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
+    when(openTelemetry.getInstrumentationConfig("grpc")).thenReturn(grpcConfig);
+    when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
+    when(commonConfig.getBoolean("v3_preview")).thenReturn(true);
+    when(grpcConfig.get("capture_metadata").get("client").getScalarList("request", String.class))
+        .thenReturn(singletonList("deprecated"));
+
+    GrpcConfig config = GrpcConfig.create(openTelemetry);
+
+    assertThat(config.getClientRequestMetadata()).isNull();
   }
 
   private static DeclarativeConfigProperties mockConfig() {
