@@ -109,7 +109,7 @@ class GrpcConfigTest {
   }
 
   @Test
-  void selectorWithoutPatternsCapturesNothing() {
+  void emptySelectorCapturesNothing() {
     DeclarativeConfigProperties config = mockConfig();
     when(config.get("client").get("request_metadata").getScalarList("included", String.class))
         .thenReturn(emptyList());
