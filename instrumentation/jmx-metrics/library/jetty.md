@@ -28,7 +28,7 @@ Those metrics require the following Jetty modules to be enabled : `jmx`, `http`,
 Those metrics require the following Jetty modules to be enabled : `jmx`, `http` and `stats`.
 
 | Metric Name                 | Type          | Unit        | Attributes    | Description                               |
-| --------------------------- | ------------- |-------------| ------------- | ----------------------------------------- |
+| --------------------------- | ------------- | ----------- | ------------- | ----------------------------------------- |
 | jetty.thread.count          | UpDownCounter | {thread}    |               | The current number of threads             |
 | jetty.thread.limit          | UpDownCounter | {thread}    |               | The maximum number of threads in the pool |
 | jetty.thread.busy.count     | UpDownCounter | {thread}    |               | The current number of busy threads        |
