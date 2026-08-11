@@ -347,8 +347,7 @@
     {
       "name": "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
       "type": "java.lang.Boolean",
-      "description": "Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.",
-      "defaultValue": false
+      "description": "Controls experimental receive telemetry, which causes consumers to start a new trace, with only a span link connecting it to the producer trace. Defaults to enabled when stable messaging semantic conventions or v3 preview are enabled, and disabled otherwise."
     },
     {
       "name": "otel.instrumentation.messaging.experimental.capture-headers",
