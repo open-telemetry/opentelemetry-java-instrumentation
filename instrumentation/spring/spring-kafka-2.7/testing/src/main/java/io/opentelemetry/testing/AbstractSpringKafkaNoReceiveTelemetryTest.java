@@ -32,6 +32,7 @@ import static java.util.Arrays.asList;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -63,29 +64,31 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                   });
             });
 
+    List<Consumer<TraceAssert>> assertions = new ArrayList<>();
+    assertions.add(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("producer"),
+                span ->
+                    span.hasName(spanName("testSingleTopic", "publish", "send"))
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(sendAttributes("testSingleTopic", "10")),
+                span -> {
+                  span.hasName(spanName("testSingleTopic", "process", "process"))
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasParent(trace.getSpan(1))
+                      .hasAttributesSatisfyingExactly(
+                          singleProcessAttributes("testSingleTopic", "testSingleListener", "10"));
+                  if (emitStableMessagingSemconv()) {
+                    span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                  }
+                },
+                span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+    addCommitSpanAssertion(assertions, "testSingleTopic");
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("producer"),
-                    span ->
-                        span.hasName(spanName("testSingleTopic", "publish", "send"))
-                            .hasKind(SpanKind.PRODUCER)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                sendAttributes("testSingleTopic", "10")),
-                    span -> {
-                      span.hasName(spanName("testSingleTopic", "process", "process"))
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(
-                              singleProcessAttributes(
-                                  "testSingleTopic", "testSingleListener", "10"));
-                      if (emitStableMessagingSemconv()) {
-                        span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
-                      }
-                    },
-                    span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+        .waitAndAssertSortedTraces(
+            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT), assertions);
   }
 
   @Test
@@ -104,38 +107,19 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
     List<AttributeAssertion> processAttributes =
         singleProcessAttributes("testSingleTopic", "testSingleListener", "10");
 
-    testing()
-        .waitAndAssertTraces(
-            trace -> {
-              List<Consumer<SpanDataAssert>> assertions =
-                  new ArrayList<>(
-                      asList(
-                          span -> span.hasName("producer"),
-                          span ->
-                              span.hasName(spanName("testSingleTopic", "publish", "send"))
-                                  .hasKind(SpanKind.PRODUCER)
-                                  .hasParent(trace.getSpan(0))
-                                  .hasAttributesSatisfyingExactly(
-                                      sendAttributes("testSingleTopic", "10")),
-                          span -> {
-                            span.hasName(spanName("testSingleTopic", "process", "process"))
-                                .hasKind(SpanKind.CONSUMER)
-                                .hasParent(trace.getSpan(1))
-                                .hasStatus(StatusData.error())
-                                .hasException(new IllegalArgumentException("boom"))
-                                .hasAttributesSatisfyingExactly(
-                                    withErrorType(processAttributes, true));
-                            if (emitStableMessagingSemconv()) {
-                              span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
-                            }
-                          },
-                          span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
-              if (testLatestDeps()) {
-                assertions.add(
-                    span -> span.hasName("handle exception").hasParent(trace.getSpan(2)));
-              }
-              assertions.addAll(
+    List<Consumer<TraceAssert>> traceAssertions = new ArrayList<>();
+    traceAssertions.add(
+        trace -> {
+          List<Consumer<SpanDataAssert>> assertions =
+              new ArrayList<>(
                   asList(
+                      span -> span.hasName("producer"),
+                      span ->
+                          span.hasName(spanName("testSingleTopic", "publish", "send"))
+                              .hasKind(SpanKind.PRODUCER)
+                              .hasParent(trace.getSpan(0))
+                              .hasAttributesSatisfyingExactly(
+                                  sendAttributes("testSingleTopic", "10")),
                       span -> {
                         span.hasName(spanName("testSingleTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
@@ -147,31 +131,49 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                           span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
                         }
                       },
-                      span ->
-                          span.hasName("consumer")
-                              .hasParent(trace.getSpan(testLatestDeps() ? 5 : 4))));
-              if (testLatestDeps()) {
-                assertions.add(
-                    span -> span.hasName("handle exception").hasParent(trace.getSpan(5)));
-              }
-              assertions.addAll(
-                  asList(
-                      span -> {
-                        span.hasName(spanName("testSingleTopic", "process", "process"))
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(1))
-                            .hasStatus(StatusData.unset())
-                            .hasAttributesSatisfyingExactly(processAttributes);
-                        if (emitStableMessagingSemconv()) {
-                          span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
-                        }
-                      },
-                      span ->
-                          span.hasName("consumer")
-                              .hasParent(trace.getSpan(testLatestDeps() ? 8 : 6))));
+                      span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+          if (testLatestDeps()) {
+            assertions.add(span -> span.hasName("handle exception").hasParent(trace.getSpan(2)));
+          }
+          assertions.addAll(
+              asList(
+                  span -> {
+                    span.hasName(spanName("testSingleTopic", "process", "process"))
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasStatus(StatusData.error())
+                        .hasException(new IllegalArgumentException("boom"))
+                        .hasAttributesSatisfyingExactly(withErrorType(processAttributes, true));
+                    if (emitStableMessagingSemconv()) {
+                      span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                    }
+                  },
+                  span ->
+                      span.hasName("consumer").hasParent(trace.getSpan(testLatestDeps() ? 5 : 4))));
+          if (testLatestDeps()) {
+            assertions.add(span -> span.hasName("handle exception").hasParent(trace.getSpan(5)));
+          }
+          assertions.addAll(
+              asList(
+                  span -> {
+                    span.hasName(spanName("testSingleTopic", "process", "process"))
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(processAttributes);
+                    if (emitStableMessagingSemconv()) {
+                      span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                    }
+                  },
+                  span ->
+                      span.hasName("consumer").hasParent(trace.getSpan(testLatestDeps() ? 8 : 6))));
 
-              trace.hasSpansSatisfyingExactly(assertions);
-            });
+          trace.hasSpansSatisfyingExactly(assertions);
+        });
+    addCommitSpanAssertion(traceAssertions, "testSingleTopic");
+    testing()
+        .waitAndAssertSortedTraces(
+            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT), traceAssertions);
   }
 
   @Test
@@ -184,39 +186,42 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
     AtomicReference<SpanData> producer1 = new AtomicReference<>();
     AtomicReference<SpanData> producer2 = new AtomicReference<>();
 
+    List<Consumer<TraceAssert>> assertions = new ArrayList<>();
+    assertions.add(
+        trace -> {
+          trace.hasSpansSatisfyingExactlyInAnyOrder(
+              span -> span.hasName("producer"),
+              span ->
+                  span.hasName(spanName("testBatchTopic", "publish", "send"))
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(sendAttributes("testBatchTopic", "10")),
+              span ->
+                  span.hasName(spanName("testBatchTopic", "publish", "send"))
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(sendAttributes("testBatchTopic", "20")));
+
+          producer1.set(trace.getSpan(1));
+          producer2.set(trace.getSpan(2));
+        });
+    assertions.add(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(spanName("testBatchTopic", "process", "process"))
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasLinksSatisfying(
+                            links(
+                                producer1.get().getSpanContext(), producer2.get().getSpanContext()))
+                        .hasAttributesSatisfyingExactly(
+                            batchProcessAttributes("testBatchTopic", "testBatchListener", 2)),
+                span -> span.hasName("consumer").hasParent(trace.getSpan(0))));
+    addCommitSpanAssertion(assertions, "testBatchTopic");
     testing()
         .waitAndAssertSortedTraces(
-            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
-            trace -> {
-              trace.hasSpansSatisfyingExactlyInAnyOrder(
-                  span -> span.hasName("producer"),
-                  span ->
-                      span.hasName(spanName("testBatchTopic", "publish", "send"))
-                          .hasKind(SpanKind.PRODUCER)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(sendAttributes("testBatchTopic", "10")),
-                  span ->
-                      span.hasName(spanName("testBatchTopic", "publish", "send"))
-                          .hasKind(SpanKind.PRODUCER)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(sendAttributes("testBatchTopic", "20")));
-
-              producer1.set(trace.getSpan(1));
-              producer2.set(trace.getSpan(2));
-            },
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(spanName("testBatchTopic", "process", "process"))
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasNoParent()
-                            .hasLinksSatisfying(
-                                links(
-                                    producer1.get().getSpanContext(),
-                                    producer2.get().getSpanContext()))
-                            .hasAttributesSatisfyingExactly(
-                                batchProcessAttributes("testBatchTopic", "testBatchListener", 2)),
-                    span -> span.hasName("consumer").hasParent(trace.getSpan(0))));
+            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER, SpanKind.CLIENT), assertions);
   }
 
   @Test
@@ -237,65 +242,107 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
     List<AttributeAssertion> processAttributes =
         batchProcessAttributes("testBatchTopic", "testBatchListener", 1);
 
+    List<Consumer<TraceAssert>> assertions =
+        new ArrayList<>(
+            asList(
+                trace -> {
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("producer"),
+                      span ->
+                          span.hasName(spanName("testBatchTopic", "publish", "send"))
+                              .hasKind(SpanKind.PRODUCER)
+                              .hasParent(trace.getSpan(0))
+                              .hasAttributesSatisfyingExactly(
+                                  sendAttributes("testBatchTopic", "10")));
+
+                  producer.set(trace.getSpan(1));
+                },
+                trace ->
+                    trace.hasSpansSatisfyingExactly(
+                        span ->
+                            span.hasName(spanName("testBatchTopic", "process", "process"))
+                                .hasKind(SpanKind.CONSUMER)
+                                .hasNoParent()
+                                .hasLinksSatisfying(links(producer.get().getSpanContext()))
+                                .hasStatus(StatusData.error())
+                                .hasException(new IllegalArgumentException("boom"))
+                                .hasAttributesSatisfyingExactly(
+                                    withErrorType(processAttributes, true)),
+                        span -> span.hasName("consumer").hasParent(trace.getSpan(0))),
+                trace -> {
+                  if (isLibraryInstrumentationTest() && testLatestDeps()) {
+                    // in latest dep tests process spans are not created for retries because spring
+                    // does
+                    // not call the success/failure methods on the BatchInterceptor for retries
+                    trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer").hasNoParent());
+                  } else {
+                    trace.hasSpansSatisfyingExactly(
+                        span ->
+                            span.hasName(spanName("testBatchTopic", "process", "process"))
+                                .hasKind(SpanKind.CONSUMER)
+                                .hasNoParent()
+                                .hasLinksSatisfying(links(producer.get().getSpanContext()))
+                                .hasStatus(StatusData.error())
+                                .hasException(new IllegalArgumentException("boom"))
+                                .hasAttributesSatisfyingExactly(
+                                    withErrorType(processAttributes, true)),
+                        span -> span.hasName("consumer").hasParent(trace.getSpan(0)));
+                  }
+                },
+                trace -> {
+                  if (isLibraryInstrumentationTest() && testLatestDeps()) {
+                    trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer").hasNoParent());
+                  } else {
+                    trace.hasSpansSatisfyingExactly(
+                        span ->
+                            span.hasName(spanName("testBatchTopic", "process", "process"))
+                                .hasKind(SpanKind.CONSUMER)
+                                .hasNoParent()
+                                .hasLinksSatisfying(links(producer.get().getSpanContext()))
+                                .hasStatus(StatusData.unset())
+                                .hasAttributesSatisfyingExactly(processAttributes),
+                        span -> span.hasName("consumer").hasParent(trace.getSpan(0)));
+                  }
+                }));
+
+    if (!isLibraryInstrumentationTest() && emitStableMessagingSemconv()) {
+      addCommitSpanAssertion(assertions, "testBatchTopic");
+      testing()
+          .waitAndAssertSortedTraces(
+              orderByRootSpanName(
+                  "producer",
+                  spanName("testBatchTopic", "process", "process"),
+                  "consumer",
+                  "commit testBatchTopic"),
+              assertions);
+      return;
+    }
+
     testing()
         .waitAndAssertSortedTraces(
             orderByRootSpanName(
                 "producer", spanName("testBatchTopic", "process", "process"), "consumer"),
-            trace -> {
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("producer"),
-                  span ->
-                      span.hasName(spanName("testBatchTopic", "publish", "send"))
-                          .hasKind(SpanKind.PRODUCER)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(sendAttributes("testBatchTopic", "10")));
+            assertions);
+  }
 
-              producer.set(trace.getSpan(1));
-            },
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(spanName("testBatchTopic", "process", "process"))
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasNoParent()
-                            .hasLinksSatisfying(links(producer.get().getSpanContext()))
-                            .hasStatus(StatusData.error())
-                            .hasException(new IllegalArgumentException("boom"))
-                            .hasAttributesSatisfyingExactly(withErrorType(processAttributes, true)),
-                    span -> span.hasName("consumer").hasParent(trace.getSpan(0))),
-            trace -> {
-              if (isLibraryInstrumentationTest() && testLatestDeps()) {
-                // in latest dep tests process spans are not created for retries because spring does
-                // not call the success/failure methods on the BatchInterceptor for retries
-                trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer").hasNoParent());
-              } else {
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(spanName("testBatchTopic", "process", "process"))
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasNoParent()
-                            .hasLinksSatisfying(links(producer.get().getSpanContext()))
-                            .hasStatus(StatusData.error())
-                            .hasException(new IllegalArgumentException("boom"))
-                            .hasAttributesSatisfyingExactly(withErrorType(processAttributes, true)),
-                    span -> span.hasName("consumer").hasParent(trace.getSpan(0)));
-              }
-            },
-            trace -> {
-              if (isLibraryInstrumentationTest() && testLatestDeps()) {
-                trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer").hasNoParent());
-              } else {
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(spanName("testBatchTopic", "process", "process"))
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasNoParent()
-                            .hasLinksSatisfying(links(producer.get().getSpanContext()))
-                            .hasStatus(StatusData.unset())
-                            .hasAttributesSatisfyingExactly(processAttributes),
-                    span -> span.hasName("consumer").hasParent(trace.getSpan(0)));
-              }
-            });
+  private void addCommitSpanAssertion(List<Consumer<TraceAssert>> assertions, String topic) {
+    if (!isLibraryInstrumentationTest() && emitStableMessagingSemconv()) {
+      assertions.add(trace -> assertCommitSpan(trace, topic));
+    }
+  }
+
+  private static void assertCommitSpan(TraceAssert trace, String topic) {
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            span.hasName("commit " + topic)
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_SYSTEM, "kafka"),
+                    equalTo(MESSAGING_OPERATION_NAME, "commit"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "settle"),
+                    equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "settle" : null),
+                    equalTo(MESSAGING_DESTINATION_NAME, topic)));
   }
 
   private static List<AttributeAssertion> sendAttributes(String topic, String messageKey) {
