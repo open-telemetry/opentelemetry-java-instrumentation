@@ -35,7 +35,6 @@ tasks {
     filter {
       includeTestsMatching("io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0.AwsSqsTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
   }
 
@@ -45,12 +44,38 @@ tasks {
     filter {
       includeTestsMatching("io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0.AwsSqsTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
   }
 
+  val testMessagingPreviewReceiveTelemetryDisabled =
+    register<Test>("testMessagingPreviewReceiveTelemetryDisabled") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        includeTestsMatching("io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0.AwsSqsTest")
+      }
+      jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+      jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    }
+
+  val testMessagingPreviewReceiveTelemetryEnabled =
+    register<Test>("testMessagingPreviewReceiveTelemetryEnabled") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        includeTestsMatching("io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0.AwsSqsTest")
+      }
+      jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+      jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    }
+
   check {
-    dependsOn(testMessagingPreview, testBothSemconv)
+    dependsOn(
+      testMessagingPreview,
+      testBothSemconv,
+      testMessagingPreviewReceiveTelemetryDisabled,
+      testMessagingPreviewReceiveTelemetryEnabled,
+    )
   }
 }
 

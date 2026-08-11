@@ -69,13 +69,21 @@ public final class SqsImpl {
     ReceiveMessageResponse response = (ReceiveMessageResponse) rawResponse;
     io.opentelemetry.context.Context parentContext =
         TracingExecutionInterceptor.getParentContext(executionAttributes);
+    boolean internalListenerPoll =
+        TracingExecutionInterceptor.isSqsInternalListenerPoll(executionAttributes);
     Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter =
         config.getConsumerReceiveInstrumenter();
     io.opentelemetry.context.Context receiveContext = null;
     SqsReceiveRequest receiveRequest =
         SqsReceiveRequest.create(
             executionAttributes, SqsMessageImpl.wrap(response.messages(), config));
-    if (timer != null && consumerReceiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
+    boolean recordReceiveSpan =
+        !internalListenerPoll
+            || (config.isMessagingReceiveInstrumentationExplicitlyEnabled()
+                && !response.messages().isEmpty());
+    if (timer != null
+        && recordReceiveSpan
+        && consumerReceiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
       receiveContext =
           InstrumenterUtil.startAndEnd(
               consumerReceiveInstrumenter,

@@ -62,6 +62,9 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
           new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".ParentContext");
   private static final ExecutionAttribute<Scope> SCOPE_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".Scope");
+  private static final ExecutionAttribute<Boolean> SQS_INTERNAL_LISTENER_POLL_ATTRIBUTE =
+      new ExecutionAttribute<>(
+          TracingExecutionInterceptor.class.getName() + ".SqsInternalListenerPoll");
   private static final ExecutionAttribute<AwsSdkRequest> AWS_SDK_REQUEST_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".AwsSdkRequest");
   static final ExecutionAttribute<SdkHttpRequest> SDK_HTTP_REQUEST_ATTRIBUTE =
@@ -103,9 +106,19 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     return useXrayPropagator;
   }
 
+  boolean isMessagingReceiveInstrumentationExplicitlyEnabled() {
+    return messagingReceiveInstrumentationExplicitlyEnabled;
+  }
+
+  static boolean isSqsInternalListenerPoll(ExecutionAttributes executionAttributes) {
+    return Boolean.TRUE.equals(
+        executionAttributes.getAttribute(SQS_INTERNAL_LISTENER_POLL_ATTRIBUTE));
+  }
+
   @Nullable private final TextMapPropagator messagingPropagator;
   private final boolean useXrayPropagator;
   private final boolean recordIndividualHttpError;
+  private final boolean messagingReceiveInstrumentationExplicitlyEnabled;
   private final boolean genAiCaptureMessageContent;
   private final FieldMapper fieldMapper;
 
@@ -122,6 +135,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       TextMapPropagator messagingPropagator,
       boolean useXrayPropagator,
       boolean recordIndividualHttpError,
+      boolean messagingReceiveInstrumentationExplicitlyEnabled,
       boolean genAiCaptureMessageContent) {
     this.requestInstrumenter = requestInstrumenter;
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
@@ -133,6 +147,8 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     this.messagingPropagator = messagingPropagator;
     this.useXrayPropagator = useXrayPropagator;
     this.recordIndividualHttpError = recordIndividualHttpError;
+    this.messagingReceiveInstrumentationExplicitlyEnabled =
+        messagingReceiveInstrumentationExplicitlyEnabled;
     this.genAiCaptureMessageContent = genAiCaptureMessageContent;
     this.fieldMapper = new FieldMapper(captureExperimentalSpanAttributes);
   }
@@ -146,6 +162,9 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     // it into the request payload. This means that HTTP attributes need to be captured later.
 
     io.opentelemetry.context.Context parentOtelContext = io.opentelemetry.context.Context.current();
+    if (SqsReceiveContext.isInternalListenerPoll()) {
+      executionAttributes.putAttribute(SQS_INTERNAL_LISTENER_POLL_ATTRIBUTE, true);
+    }
     SdkRequest request = context.request();
 
     // the request has already been modified, duplicate interceptor?

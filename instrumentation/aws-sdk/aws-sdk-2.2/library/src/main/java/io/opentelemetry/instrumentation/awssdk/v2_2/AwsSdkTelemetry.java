@@ -60,6 +60,7 @@ public class AwsSdkTelemetry {
   private final boolean useXrayPropagator;
   private final boolean recordIndividualHttpError;
   private final boolean genAiCaptureMessageContent;
+  private final boolean messagingReceiveInstrumentationExplicitlyEnabled;
 
   /** Returns a new {@link AwsSdkTelemetry} configured with the given {@link OpenTelemetry}. */
   public static AwsSdkTelemetry create(OpenTelemetry openTelemetry) {
@@ -105,6 +106,8 @@ public class AwsSdkTelemetry {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.recordIndividualHttpError = recordIndividualHttpError;
     this.genAiCaptureMessageContent = genAiCaptureMessageContent;
+    this.messagingReceiveInstrumentationExplicitlyEnabled =
+        Boolean.TRUE.equals(messagingReceiveInstrumentationEnabled);
   }
 
   /**
@@ -124,6 +127,7 @@ public class AwsSdkTelemetry {
         messagingPropagator,
         useXrayPropagator,
         recordIndividualHttpError,
+        messagingReceiveInstrumentationExplicitlyEnabled,
         genAiCaptureMessageContent);
   }
 
