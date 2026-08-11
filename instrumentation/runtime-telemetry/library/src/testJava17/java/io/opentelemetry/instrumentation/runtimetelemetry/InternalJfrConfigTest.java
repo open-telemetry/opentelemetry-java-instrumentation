@@ -46,10 +46,9 @@ class InternalJfrConfigTest {
         .contains("jvm.class.count", "jvm.cpu.longlock", "jvm.memory.allocation");
   }
 
-  // the declarative configuration schema requires at least one pattern, so a selector without
-  // patterns is not valid configuration and is treated as if it were absent
+  // an empty selector is equivalent to no selector at all
   @Test
-  void selectorWithoutPatternsKeepsJfrDisabled() {
+  void emptySelectorKeepsJfrDisabled() {
     TestConfig config = new TestConfig();
     when(config.jfrMetrics.getScalarList("included", String.class)).thenReturn(emptyList());
     when(config.jfrMetrics.getScalarList("excluded", String.class)).thenReturn(emptyList());
