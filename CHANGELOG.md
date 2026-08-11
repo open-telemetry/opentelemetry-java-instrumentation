@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes to non-stable APIs
+
+- Normalize the value of `activemq.destination.temp.utilization` JMX Metric for ActiveMQ to be between 0 and 1 instead of between 0 and 100. 
+
 ### 🚫 Deprecations
 
 - For library instrumentation users, deprecate configuring span suppression using the
