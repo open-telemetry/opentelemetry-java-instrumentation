@@ -3530,7 +3530,7 @@ too disruptive to adopt right away.
   ([#7904](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7904))
 - Upgrade to gradle 8.0.2
   ([#7910](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7910),
-  [7978](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7978))
+  [ 7978](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7978))
 - Replace the test-sets plugin with Gradle test suites
   ([#7930](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7930),
   [#7933](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7933),
