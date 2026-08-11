@@ -50,6 +50,17 @@ tasks {
     jvmArgs("-Dotel.instrumentation.micrometer.histogram-gauges.enabled=true")
   }
 
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("*TimerMillisecondsTest")
+      excludeTestsMatching("*PrometheusModeTest")
+      excludeTestsMatching("*HistogramGaugesTest")
+    }
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+  }
+
   test {
     filter {
       excludeTestsMatching("*TimerMillisecondsTest")
@@ -59,7 +70,7 @@ tasks {
   }
 
   check {
-    dependsOn(testBaseTimeUnit, testPrometheusMode, testHistogramGauges)
+    dependsOn(testBaseTimeUnit, testPrometheusMode, testHistogramGauges, testV3Preview)
   }
 
   withType<Test>().configureEach {
