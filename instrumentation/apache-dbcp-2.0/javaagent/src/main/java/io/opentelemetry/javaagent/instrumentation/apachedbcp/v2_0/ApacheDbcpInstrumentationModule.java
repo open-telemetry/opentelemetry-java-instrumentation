@@ -19,6 +19,18 @@ public class ApacheDbcpInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public boolean isHelperClass(String className) {
+    return "org.apache.commons.dbcp2.OpenTelemetryBasicDataSourceUtil".equals(className);
+  }
+
+  @Override
+  public List<String> injectedClassNames() {
+    // must be injected into the application class loader so that it can access the package-private
+    // BasicDataSource members it delegates to
+    return singletonList("org.apache.commons.dbcp2.OpenTelemetryBasicDataSourceUtil");
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new BasicDataSourceInstrumentation());
   }

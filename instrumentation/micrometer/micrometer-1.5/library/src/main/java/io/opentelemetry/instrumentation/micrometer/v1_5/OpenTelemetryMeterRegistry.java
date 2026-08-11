@@ -51,6 +51,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
   private final TimeUnit baseTimeUnit;
   private final DistributionStatisticConfigModifier distributionStatisticConfigModifier;
+  private final boolean emitMaxGauge;
   private final io.opentelemetry.api.metrics.Meter otelMeter;
 
   OpenTelemetryMeterRegistry(
@@ -58,10 +59,12 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       TimeUnit baseTimeUnit,
       NamingConvention namingConvention,
       DistributionStatisticConfigModifier distributionStatisticConfigModifier,
+      boolean emitMaxGauge,
       io.opentelemetry.api.metrics.Meter otelMeter) {
     super(clock);
     this.baseTimeUnit = baseTimeUnit;
     this.distributionStatisticConfigModifier = distributionStatisticConfigModifier;
+    this.emitMaxGauge = emitMaxGauge;
     this.otelMeter = otelMeter;
 
     this.config()
@@ -110,6 +113,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
             distributionStatisticConfigModifier,
             pauseDetector,
             getBaseTimeUnit(),
+            emitMaxGauge,
             otelMeter);
     if (timer.isUsingMicrometerHistograms()) {
       HistogramGauges.registerWithCommonFormat(timer, this);
@@ -128,6 +132,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
             distributionStatisticConfig,
             distributionStatisticConfigModifier,
             scale,
+            emitMaxGauge,
             otelMeter);
     if (distributionSummary.isUsingMicrometerHistograms()) {
       HistogramGauges.registerWithCommonFormat(distributionSummary, this);

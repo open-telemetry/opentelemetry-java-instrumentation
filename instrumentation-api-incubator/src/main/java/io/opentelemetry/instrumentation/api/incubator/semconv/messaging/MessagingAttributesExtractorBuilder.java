@@ -12,18 +12,26 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /** A builder of {@link MessagingAttributesExtractor}. */
 public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   final MessagingAttributesGetter<REQUEST, RESPONSE> getter;
-  final MessageOperation operation;
+  @Nullable private final MessagingOperationType operationType;
+  @Nullable private final String operationName;
+  private final boolean supportsStableSemconv;
   List<String> capturedHeaders = emptyList();
 
   MessagingAttributesExtractorBuilder(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter,
+      @Nullable MessagingOperationType operationType,
+      @Nullable String operationName,
+      boolean supportsStableSemconv) {
     this.getter = getter;
-    this.operation = operation;
+    this.operationType = operationType;
+    this.operationName = operationName;
+    this.supportsStableSemconv = supportsStableSemconv;
   }
 
   /**
@@ -47,6 +55,7 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * MessagingAttributesExtractorBuilder}.
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
-    return new MessagingAttributesExtractor<>(getter, operation, capturedHeaders);
+    return new MessagingAttributesExtractor<>(
+        getter, operationType, operationName, supportsStableSemconv, capturedHeaders);
   }
 }
