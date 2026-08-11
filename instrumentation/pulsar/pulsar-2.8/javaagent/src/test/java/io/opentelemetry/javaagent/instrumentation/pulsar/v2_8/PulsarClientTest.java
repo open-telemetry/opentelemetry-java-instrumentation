@@ -338,6 +338,33 @@ class PulsarClientTest extends AbstractPulsarClientTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
+  void testEmptyReceivePartitionedTopic() throws Exception {
+    String topic = "persistent://public/default/testEmptyReceivePartitionedTopic";
+    admin.topics().createPartitionedTopic(topic, 2);
+    consumer =
+        client.newConsumer(Schema.STRING).subscriptionName("test_sub").topic(topic).subscribe();
+
+    assertThat(consumer.receive(100, MILLISECONDS)).isNull();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
+                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfying(
+                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                            equalTo(MESSAGING_DESTINATION_NAME, topic),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "receive" : null))));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  @Test
   void testConsumeNonPartitionedTopicUsingReceive() throws Exception {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopicCallReceive";
     admin.topics().createNonPartitionedTopic(topic);

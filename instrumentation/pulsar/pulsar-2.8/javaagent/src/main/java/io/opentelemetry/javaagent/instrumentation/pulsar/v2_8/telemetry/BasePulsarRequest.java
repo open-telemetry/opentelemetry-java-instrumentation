@@ -30,7 +30,10 @@ public class BasePulsarRequest {
 
   @Nullable
   static String getConsumerDestination(Consumer<?> consumer) {
-    return consumer instanceof MultiTopicsConsumerImpl ? null : consumer.getTopic();
+    String destination = consumer.getTopic();
+    return destination.startsWith(MultiTopicsConsumerImpl.DUMMY_TOPIC_NAME_PREFIX)
+        ? null
+        : destination;
   }
 
   @Nullable
