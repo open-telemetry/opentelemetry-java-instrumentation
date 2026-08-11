@@ -234,15 +234,13 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
               for (List<SpanData> trace : traces) {
                 SpanData root = trace.get(0);
                 if (root.getKind() != SpanKind.CONSUMER
-                    || !root
-                        .getInstrumentationScopeInfo()
+                    || !root.getInstrumentationScopeInfo()
                         .getName()
                         .equals("io.opentelemetry.kafka-connect-2.6")) {
                   continue;
                 }
                 for (LinkData link : root.getLinks()) {
-                  if (expectedRecordAttributesBySpan.containsKey(
-                      spanId(link.getSpanContext()))) {
+                  if (expectedRecordAttributesBySpan.containsKey(spanId(link.getSpanContext()))) {
                     processTraces.add(trace);
                     break;
                   }
@@ -278,8 +276,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
                   .containsExactlyInAnyOrderElementsOf(expectedRecordAttributesBySpan.keySet());
               if (emitStableMessagingSemconv()) {
                 assertThat(actualRecordAttributes)
-                    .containsExactlyInAnyOrderElementsOf(
-                        expectedRecordAttributesBySpan.values());
+                    .containsExactlyInAnyOrderElementsOf(expectedRecordAttributesBySpan.values());
               }
               processTraceAssertions.accept(processTraces);
             });
@@ -287,16 +284,13 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
 
   private static Attributes effectiveRecordAttributes(SpanData process, LinkData link) {
     return Attributes.builder()
-        .put(
-            MESSAGING_DESTINATION_NAME,
-            batchAttribute(process, link, MESSAGING_DESTINATION_NAME))
+        .put(MESSAGING_DESTINATION_NAME, batchAttribute(process, link, MESSAGING_DESTINATION_NAME))
         .put(
             MESSAGING_DESTINATION_PARTITION_ID,
             batchAttribute(process, link, MESSAGING_DESTINATION_PARTITION_ID))
         .put(MESSAGING_KAFKA_OFFSET, batchAttribute(process, link, MESSAGING_KAFKA_OFFSET))
         .put(
-            MESSAGING_KAFKA_MESSAGE_KEY,
-            batchAttribute(process, link, MESSAGING_KAFKA_MESSAGE_KEY))
+            MESSAGING_KAFKA_MESSAGE_KEY, batchAttribute(process, link, MESSAGING_KAFKA_MESSAGE_KEY))
         .build();
   }
 
