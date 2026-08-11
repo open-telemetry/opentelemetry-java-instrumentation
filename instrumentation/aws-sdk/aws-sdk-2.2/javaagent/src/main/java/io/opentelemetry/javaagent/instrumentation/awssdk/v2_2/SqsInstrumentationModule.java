@@ -47,7 +47,7 @@ public class SqsInstrumentationModule extends AbstractAwsSdkInstrumentationModul
 
   @SuppressWarnings("unused")
   public static class RegisterAdvice {
-    @Advice.OnMethodExit(inline = false)
+    @Advice.OnMethodExit
     public static void onExit() {
       // using SqsImpl class here to make sure it is available from SqsAccess
       // (injected into app classloader) and checked by Muzzle
