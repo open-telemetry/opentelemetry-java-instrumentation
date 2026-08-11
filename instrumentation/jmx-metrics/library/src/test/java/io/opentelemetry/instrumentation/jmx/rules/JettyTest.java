@@ -107,7 +107,7 @@ class JettyTest extends TargetSystemTest {
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasDescription("The current number of threads")
+                        .hasDescription("The current number of threads.")
                         .hasUnit("{thread}")
                         .hasDataPointsWithoutAttributes())
             .add(
@@ -115,7 +115,7 @@ class JettyTest extends TargetSystemTest {
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasDescription("The configured maximum number of threads in the pool")
+                        .hasDescription("The configured maximum number of threads in the pool.")
                         .hasUnit("{thread}")
                         .hasDataPointsWithoutAttributes())
             .add(
@@ -123,7 +123,7 @@ class JettyTest extends TargetSystemTest {
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasDescription("The current number of idle threads")
+                        .hasDescription("The current number of idle threads.")
                         .hasUnit("{thread}")
                         .hasDataPointsWithoutAttributes())
             .add(
@@ -131,7 +131,7 @@ class JettyTest extends TargetSystemTest {
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasDescription("The current number of busy threads")
+                        .hasDescription("The current number of busy threads.")
                         .hasUnit("{thread}")
                         .hasDataPointsWithoutAttributes())
             .add(
@@ -139,7 +139,7 @@ class JettyTest extends TargetSystemTest {
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasDescription("The current job queue size")
+                        .hasDescription("The current job queue size.")
                         .hasUnit("{thread}")
                         .hasDataPointsWithoutAttributes())
             .add(
@@ -147,7 +147,7 @@ class JettyTest extends TargetSystemTest {
                 metric ->
                     metric
                         .isCounter()
-                        .hasDescription("The number of select calls")
+                        .hasDescription("The number of select calls.")
                         .hasUnit("{operation}")
                         .hasDataPointsWithoutAttributes());
 
@@ -158,7 +158,7 @@ class JettyTest extends TargetSystemTest {
           metric ->
               metric
                   .isUpDownCounter()
-                  .hasDescription("Current number of active sessions")
+                  .hasDescription("Current number of active sessions.")
                   .hasUnit("{session}")
                   .hasDataPointsWithOneAttribute(contextAttribute));
     } else {
@@ -168,7 +168,7 @@ class JettyTest extends TargetSystemTest {
               metric ->
                   metric
                       .isCounter()
-                      .hasDescription("The total number of created sessions")
+                      .hasDescription("The total number of created sessions.")
                       .hasUnit("{session}")
                       .hasDataPointsWithOneAttribute(contextAttribute))
           .add(
@@ -176,7 +176,7 @@ class JettyTest extends TargetSystemTest {
               metric ->
                   metric
                       .isCounter()
-                      .hasDescription("The cumulated session duration")
+                      .hasDescription("The cumulated session duration.")
                       .hasUnit("s")
                       .hasDataPointsWithOneAttribute(contextAttribute));
     }
