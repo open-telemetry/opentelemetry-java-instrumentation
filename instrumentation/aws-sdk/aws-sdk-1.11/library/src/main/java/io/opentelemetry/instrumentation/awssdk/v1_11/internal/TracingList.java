@@ -23,29 +23,29 @@ class TracingList extends SdkInternalList<Message> {
   private final transient Instrumenter<SqsProcessRequest, Response<?>> instrumenter;
   private final transient Request<?> request;
   private final transient Response<?> response;
-  @Nullable private final transient Context receiveContext;
+  @Nullable private final transient Context processParentContext;
   private boolean firstIterator = true;
 
-  private TracingList(
-      List<Message> list,
+  static SdkInternalList<Message> wrap(
+      List<Message> messages,
       Instrumenter<SqsProcessRequest, Response<?>> instrumenter,
       Request<?> request,
       Response<?> response,
-      @Nullable Context receiveContext) {
-    super(list);
+      @Nullable Context processParentContext) {
+    return new TracingList(messages, instrumenter, request, response, processParentContext);
+  }
+
+  private TracingList(
+      List<Message> messages,
+      Instrumenter<SqsProcessRequest, Response<?>> instrumenter,
+      Request<?> request,
+      Response<?> response,
+      @Nullable Context processParentContext) {
+    super(messages);
     this.instrumenter = instrumenter;
     this.request = request;
     this.response = response;
-    this.receiveContext = receiveContext;
-  }
-
-  static SdkInternalList<Message> wrap(
-      List<Message> list,
-      Instrumenter<SqsProcessRequest, Response<?>> instrumenter,
-      Request<?> request,
-      Response<?> response,
-      @Nullable Context receiveContext) {
-    return new TracingList(list, instrumenter, request, response, receiveContext);
+    this.processParentContext = processParentContext;
   }
 
   @Override
@@ -55,13 +55,30 @@ class TracingList extends SdkInternalList<Message> {
     // However, this is not thread-safe, but usually the first (hopefully only) traversal of
     // List is performed in the same thread that called receiveMessage()
     if (firstIterator && !inAwsClient()) {
-      it = TracingIterator.wrap(super.iterator(), instrumenter, request, response, receiveContext);
+      it = TracingIterator.wrap(super.iterator(), this);
       firstIterator = false;
     } else {
       it = super.iterator();
     }
 
     return it;
+  }
+
+  Instrumenter<SqsProcessRequest, Response<?>> getInstrumenter() {
+    return instrumenter;
+  }
+
+  Request<?> getRequest() {
+    return request;
+  }
+
+  Response<?> getResponse() {
+    return response;
+  }
+
+  @Nullable
+  Context getProcessParentContext() {
+    return processParentContext;
   }
 
   @Override

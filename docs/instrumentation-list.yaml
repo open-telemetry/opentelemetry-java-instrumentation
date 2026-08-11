@@ -1130,7 +1130,7 @@ definitions:
       description: List of URL query parameter names whose values are redacted in
         URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
       type: list
-      default: AWSAccessKeyId,Signature,sig,X-Goog-Signature
+      default: AWSAccessKeyId,Signature,X-Amz-Signature,X-Amz-Credential,X-Amz-Security-Token,sig,X-Goog-Signature
   metrics:
     db.client.connection.count-2e6ba9b7:
       name: db.client.connection.count
@@ -2004,6 +2004,92 @@ definitions:
       data_type: HISTOGRAM
       unit: s
       attributes: []
+    messaging.client.consumed.messages-5c21579f:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.subscription.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    messaging.client.operation.duration-df200871:
+      name: messaging.client.operation.duration
+      description: Duration of messaging operation initiated by a producer or consumer
+        client.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.subscription.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    messaging.client.sent.messages-38a90199:
+      name: messaging.client.sent.messages
+      description: Number of messages producer attempted to send to the broker.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    messaging.process.duration-9ee3dd0a:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.subscription.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.process.duration-ab13a22e:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.publish.duration-05731f17:
       name: messaging.publish.duration
       description: Measures the duration of publish operation.
@@ -2659,7 +2745,7 @@ libraries:
   display_name: Apache DBCP
   description: |
     This instrumentation enables database connection pools metrics for Apache DBCP.
-    The instrumentation uses `MBeanRegistration` methods for lifecycle detection, therefore it only activates if the `BasicDataSource` is registered to an `MBeanServer`. If using Spring Boot, this happens automatically as all Spring beans that support JMX registration are automatically registered by default.
+    The auto-instrumentation registers metrics when the connection pool is initialized (`BasicDataSource.startPoolMaintenance()`) or when `BasicDataSource.preRegister(...)` is invoked during MBean registration, whichever comes first, and unregisters them when the `BasicDataSource` is closed. JMX registration is not required. When a JMX `ObjectName` is available, its `name` property is used as the pool name; if the property is absent, the full `ObjectName` is used. Otherwise, the JDBC URL and connection properties are used to derive `server.address[:server.port][/db.namespace]`. If neither server address nor database namespace is available, `apache-dbcp2` is used. A pool registered as an MBean after it has already started switches from the derived name to the `ObjectName`-based name.
   semantic_conventions:
   - DATABASE_POOL_METRICS
   library_link: https://commons.apache.org/proper/commons-dbcp/
@@ -3981,6 +4067,120 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.queue.name
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.protocol.version
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.protocol.version
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.protocol.version
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
 - name: aws-sdk-2.2
   display_name: AWS SDK
   description: |
@@ -4298,6 +4498,110 @@ libraries:
       - name: messaging.message.id
         type: STRING
       - name: messaging.operation
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.queue.name
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: url.full
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: aws.agent
+        type: STRING
+      - name: aws.request_id
+        type: STRING
+      - name: aws.sqs.queue.url
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
         type: STRING
       - name: messaging.system
         type: STRING
@@ -6445,6 +6749,59 @@ libraries:
         type: STRING
       - name: rpc.system
         type: STRING
+- name: hbase-client-1.0
+  display_name: HBase Client
+  description: |
+    This instrumentation enables database client spans and database client metrics for the Apache HBase client.
+  semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
+  library_link: https://hbase.apache.org/
+  source_path: instrumentation/hbase/hbase-client-1.0
+  scope:
+    name: io.opentelemetry.hbase-client-1.0
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.apache.hbase:hbase-client:[1.0.0,1.4.0)
+  telemetry:
+  - when: default
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.name
+        type: STRING
+      - name: db.operation
+        type: STRING
+      - name: db.system
+        type: STRING
+      - name: db.user
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+  - when: otel.semconv-stability.opt-in=database
+    metric_refs:
+    - db.client.operation.duration-e36c6087
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.batch.size
+        type: LONG
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: hbase-client-1.4
   display_name: HBase Client
   description: |
@@ -8238,6 +8595,50 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.temporary
+        type: BOOLEAN
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.temporary
+        type: BOOLEAN
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.temporary
+        type: BOOLEAN
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
 - name: jms-3.0
   display_name: JMS (Java Message Service)
   description: |
@@ -8277,6 +8678,46 @@ libraries:
       - name: messaging.message.id
         type: STRING
       - name: messaging.operation
+        type: STRING
+      - name: messaging.system
+        type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.temporary
+        type: BOOLEAN
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
         type: STRING
       - name: messaging.system
         type: STRING
@@ -8582,13 +9023,29 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
-  - when: otel.semconv-stability.opt-in=messaging
+  - when: otel.semconv-stability.preview=messaging
     spans:
-    - span_kind: CONSUMER
+    - span_kind: CLIENT
       attributes:
       - name: messaging.batch.message_count
         type: LONG
-      - name: messaging.client_id
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.consumer.group.name
         type: STRING
       - name: messaging.destination.name
         type: STRING
@@ -8600,15 +9057,15 @@ libraries:
         type: BOOLEAN
       - name: messaging.kafka.offset
         type: LONG
-      - name: messaging.message.body.size
-        type: LONG
-      - name: messaging.operation
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
         type: STRING
       - name: messaging.system
         type: STRING
     - span_kind: PRODUCER
       attributes:
-      - name: messaging.client_id
+      - name: messaging.client.id
         type: STRING
       - name: messaging.destination.name
         type: STRING
@@ -8620,7 +9077,9 @@ libraries:
         type: BOOLEAN
       - name: messaging.kafka.offset
         type: LONG
-      - name: messaging.operation
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
         type: STRING
       - name: messaging.system
         type: STRING
@@ -8678,6 +9137,74 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.kafka.bootstrap.servers
+        type: STRING
+      - name: messaging.kafka.offset
+        type: LONG
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: kafka.record.queue_time_ms
+        type: LONG
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.kafka.offset
+        type: LONG
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.kafka.bootstrap.servers
+        type: STRING
+      - name: messaging.kafka.message.key
+        type: STRING
+      - name: messaging.kafka.offset
+        type: LONG
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
 - name: kafka-connect-2.6
   display_name: Apache Kafka Connect
   description: This instrumentation enables messaging spans for Kafka Connect sink
@@ -8691,23 +9218,6 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - org.apache.kafka:connect-api:[2.6.0,)
-  telemetry:
-  - when: default
-    spans:
-    - span_kind: CONSUMER
-      attributes:
-      - name: messaging.batch.message_count
-        type: LONG
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.operation
-        type: STRING
-      - name: messaging.system
-        type: STRING
-      - name: thread.id
-        type: LONG
-      - name: thread.name
-        type: STRING
 - name: kafka-streams-0.11
   display_name: Apache Kafka Streams
   description: This instrumentation enables messaging spans for Kafka Streams processing.
@@ -8768,6 +9278,28 @@ libraries:
       - name: messaging.message.body.size
         type: LONG
       - name: messaging.operation
+        type: STRING
+      - name: messaging.system
+        type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.kafka.message.key
+        type: STRING
+      - name: messaging.kafka.offset
+        type: LONG
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
         type: STRING
       - name: messaging.system
         type: STRING
@@ -9985,6 +10517,42 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.template
+        type: STRING
+      - name: messaging.destination.temporary
+        type: BOOLEAN
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.template
+        type: STRING
+      - name: messaging.destination.temporary
+        type: BOOLEAN
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
 - name: netty-3.8
   display_name: Netty HTTP codec
   description: |
@@ -10511,7 +11079,7 @@ libraries:
   semantic_conventions:
   - HTTP_CLIENT_SPANS
   - HTTP_CLIENT_METRICS
-  library_link: https://square.github.io/okhttp/
+  library_link: https://lysine.dev/okhttp/
   source_path: instrumentation/okhttp/okhttp-3.0
   scope:
     name: io.opentelemetry.okhttp-3.0
@@ -11297,6 +11865,69 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+  - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-5c21579f
+    - messaging.client.operation.duration-df200871
+    - messaging.client.sent.messages-38a90199
+    - messaging.process.duration-9ee3dd0a
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.destination.subscription.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.destination.subscription.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: quarkus-resteasy-reactive-1.11
   display_name: Quarkus RESTEasy Reactive
   description: |
@@ -11538,6 +12169,88 @@ libraries:
         type: STRING
       - name: rabbitmq.delivery_mode
         type: LONG
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.anonymous
+        type: BOOLEAN
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rabbitmq.destination.routing_key
+        type: STRING
+      - name: messaging.rabbitmq.message.delivery_tag
+        type: LONG
+      - name: messaging.system
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - span_kind: CONSUMER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.anonymous
+        type: BOOLEAN
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rabbitmq.destination.routing_key
+        type: STRING
+      - name: messaging.rabbitmq.message.delivery_tag
+        type: LONG
+      - name: messaging.system
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.destination.anonymous
+        type: BOOLEAN
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rabbitmq.destination.routing_key
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
 - name: ratpack-1.4
   display_name: Ratpack
   description: |
@@ -11778,6 +12491,26 @@ libraries:
       - name: messaging.message.body.size
         type: LONG
       - name: messaging.operation
+        type: STRING
+      - name: messaging.system
+        type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.kafka.message.key
+        type: STRING
+      - name: messaging.kafka.offset
+        type: LONG
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
         type: STRING
       - name: messaging.system
         type: STRING
@@ -12288,6 +13021,44 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rocketmq.namespace
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rocketmq.namespace
+        type: STRING
+      - name: messaging.system
+        type: STRING
 - name: rocketmq-client-5.0
   display_name: Apache RocketMQ Client - gRPC Protocol
   description: |
@@ -12350,6 +13121,74 @@ libraries:
       - name: messaging.rocketmq.message.tag
         type: STRING
       - name: messaging.rocketmq.message.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rocketmq.namespace
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rocketmq.message.delivery_timestamp
+        type: LONG
+      - name: messaging.rocketmq.message.group
+        type: STRING
+      - name: messaging.rocketmq.message.keys
+        type: STRING_ARRAY
+      - name: messaging.rocketmq.message.tag
+        type: STRING
+      - name: messaging.rocketmq.namespace
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rocketmq.message.delivery_timestamp
+        type: LONG
+      - name: messaging.rocketmq.message.group
+        type: STRING
+      - name: messaging.rocketmq.message.keys
+        type: STRING_ARRAY
+      - name: messaging.rocketmq.message.tag
+        type: STRING
+      - name: messaging.rocketmq.message.type
+        type: STRING
+      - name: messaging.rocketmq.namespace
         type: STRING
       - name: messaging.system
         type: STRING
@@ -12879,6 +13718,8 @@ libraries:
   display_name: Spring Integration
   description: This instrumentation enables producer and consumer messaging spans
     for Spring Integration.
+  semantic_conventions:
+  - MESSAGING_SPANS
   library_link: https://spring.io/projects/spring-integration
   source_path: instrumentation/spring/spring-integration-4.1
   scope:
@@ -12907,6 +13748,28 @@ libraries:
     - span_kind: PRODUCER
       attributes:
       - name: messaging.operation
+        type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
         type: STRING
 - name: spring-jms-2.0
   display_name: Spring JMS
@@ -12937,6 +13800,20 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
 - name: spring-jms-6.0
   display_name: Spring JMS
   description: This instrumentation enables messaging spans for Spring JMS message
@@ -12964,6 +13841,20 @@ libraries:
       - name: messaging.message.id
         type: STRING
       - name: messaging.operation
+        type: STRING
+      - name: messaging.system
+        type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
         type: STRING
       - name: messaging.system
         type: STRING
@@ -13036,6 +13927,32 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.kafka.message.key
+        type: STRING
+      - name: messaging.kafka.offset
+        type: LONG
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
 - name: spring-pulsar-1.0
   display_name: Spring Pulsar
   description: This instrumentation enables consumer messaging spans for Spring Pulsar
@@ -13069,6 +13986,22 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.process.duration-ab13a22e
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
 - name: spring-rabbit-1.0
   display_name: Spring Rabbit
   description: This instrumentation enables consumer messaging spans for Spring RabbitMQ
@@ -13095,6 +14028,22 @@ libraries:
         type: LONG
       - name: messaging.operation
         type: STRING
+      - name: messaging.system
+        type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rabbitmq.destination.routing_key
+        type: STRING
+      - name: messaging.rabbitmq.message.delivery_tag
+        type: LONG
       - name: messaging.system
         type: STRING
 - name: spring-rmi-4.0
@@ -13271,7 +14220,7 @@ libraries:
   configuration_refs:
   - common.controller-telemetry.enabled
   telemetry:
-  - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+  - when: default
     metric_refs:
     - http.client.request.duration-98bb5f3b
     spans:
@@ -13291,6 +14240,8 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
+  - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+    spans:
     - span_kind: INTERNAL
       attributes:
       - name: code.function
@@ -13298,6 +14249,14 @@ libraries:
       - name: code.namespace
         type: STRING
   - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true,otel.semconv-stability.opt-in=service.peer
+    spans:
+    - span_kind: INTERNAL
+      attributes:
+      - name: code.function
+        type: STRING
+      - name: code.namespace
+        type: STRING
+  - when: otel.semconv-stability.opt-in=service.peer
     metric_refs:
     - http.client.request.duration-98bb5f3b
     spans:
@@ -13316,12 +14275,6 @@ libraries:
       - name: service.peer.name
         type: STRING
       - name: url.full
-        type: STRING
-    - span_kind: INTERNAL
-      attributes:
-      - name: code.function
-        type: STRING
-      - name: code.namespace
         type: STRING
 - name: spring-webflux-5.3
   display_name: Spring WebFlux
@@ -13953,8 +14906,8 @@ libraries:
         type: STRING
 - name: tomcat-jdbc-8.5
   display_name: Tomcat JDBC
-  description: This instrumentation enables database connection pool metrics for Tomcat
-    JDBC.
+  description: |
+    This instrumentation enables database connection pool metrics for Tomcat JDBC. When no pool name is explicitly configured, the JDBC URL and connection properties are used to derive `server.address[:server.port][/db.namespace]`. If no server address or database namespace is available, `tomcat-jdbc` is used.
   semantic_conventions:
   - DATABASE_POOL_METRICS
   library_link: https://tomcat.apache.org/tomcat-8.5-doc/jdbc-pool.html
@@ -14371,6 +15324,30 @@ libraries:
       - name: messaging.message.body.size
         type: LONG
       - name: messaging.operation
+        type: STRING
+      - name: messaging.system
+        type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.kafka.message.key
+        type: STRING
+      - name: messaging.kafka.offset
+        type: LONG
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
         type: STRING
       - name: messaging.system
         type: STRING

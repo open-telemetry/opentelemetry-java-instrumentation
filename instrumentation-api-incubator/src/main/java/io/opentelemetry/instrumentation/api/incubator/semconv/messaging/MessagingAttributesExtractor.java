@@ -5,6 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -17,7 +22,7 @@ import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md">messaging
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.43.0/docs/messaging/messaging-spans.md">messaging
  * attributes</a>.
  *
  * <p>This class delegates to a type-specific {@link MessagingAttributesGetter} for individual
@@ -29,14 +34,18 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<Long> MESSAGING_BATCH_MESSAGE_COUNT =
       AttributeKey.longKey("messaging.batch.message_count");
-  private static final AttributeKey<String> MESSAGING_CLIENT_ID =
+  private static final AttributeKey<String> MESSAGING_CLIENT_ID_OLD =
       AttributeKey.stringKey("messaging.client_id");
+  private static final AttributeKey<String> MESSAGING_CLIENT_ID =
+      AttributeKey.stringKey("messaging.client.id");
   private static final AttributeKey<Boolean> MESSAGING_DESTINATION_ANONYMOUS =
       AttributeKey.booleanKey("messaging.destination.anonymous");
   private static final AttributeKey<String> MESSAGING_DESTINATION_NAME =
       AttributeKey.stringKey("messaging.destination.name");
   private static final AttributeKey<String> MESSAGING_DESTINATION_PARTITION_ID =
       AttributeKey.stringKey("messaging.destination.partition.id");
+  private static final AttributeKey<String> MESSAGING_DESTINATION_SUBSCRIPTION_NAME =
+      AttributeKey.stringKey("messaging.destination.subscription.name");
   private static final AttributeKey<String> MESSAGING_DESTINATION_TEMPLATE =
       AttributeKey.stringKey("messaging.destination.template");
   private static final AttributeKey<Boolean> MESSAGING_DESTINATION_TEMPORARY =
@@ -51,49 +60,97 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       AttributeKey.stringKey("messaging.message.id");
   private static final AttributeKey<String> MESSAGING_OPERATION =
       AttributeKey.stringKey("messaging.operation");
+  private static final AttributeKey<String> MESSAGING_OPERATION_NAME =
+      AttributeKey.stringKey("messaging.operation.name");
+  private static final AttributeKey<String> MESSAGING_OPERATION_TYPE =
+      AttributeKey.stringKey("messaging.operation.type");
   private static final AttributeKey<String> MESSAGING_SYSTEM =
       AttributeKey.stringKey("messaging.system");
 
   static final String TEMP_DESTINATION_NAME = "(temporary)";
 
   /**
-   * Creates the messaging attributes extractor for the given {@link MessageOperation operation}
-   * with default configuration.
+   * Creates the messaging attributes extractor for the given operation type.
+   *
+   * @param operationName the system-specific name of the operation, emitted as {@code
+   *     messaging.operation.name}, e.g. {@code send}, {@code poll} or {@code ack}.
    */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter,
+      MessagingOperationType operationType,
+      String operationName) {
+    return builder(getter, operationType, operationName).build();
+  }
+
+  /**
+   * @deprecated Use {@link #create(MessagingAttributesGetter, MessagingOperationType, String)}.
+   *     Will be removed in 3.0.
+   */
+  @Deprecated // to be removed in 3.0
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter, @Nullable MessageOperation operation) {
     return builder(getter, operation).build();
   }
 
   /**
-   * Returns a new {@link MessagingAttributesExtractorBuilder} for the given {@link MessageOperation
-   * operation} that can be used to configure the messaging attributes extractor.
+   * Returns a new {@link MessagingAttributesExtractorBuilder} configured for the given operation
+   * type.
+   *
+   * @param operationName the system-specific name of the operation, emitted as {@code
+   *     messaging.operation.name}, e.g. {@code send}, {@code poll} or {@code ack}.
    */
   public static <REQUEST, RESPONSE> MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
-    return new MessagingAttributesExtractorBuilder<>(getter, operation);
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter,
+      MessagingOperationType operationType,
+      String operationName) {
+    return new MessagingAttributesExtractorBuilder<>(
+        getter, operationType, requireNonNull(operationName, "operationName"), true);
+  }
+
+  /**
+   * @deprecated Use {@link #builder(MessagingAttributesGetter, MessagingOperationType, String)}.
+   *     Will be removed in 3.0.
+   */
+  @Deprecated // to be removed in 3.0
+  public static <REQUEST, RESPONSE> MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter, @Nullable MessageOperation operation) {
+    return new MessagingAttributesExtractorBuilder<>(
+        getter, operation == null ? null : operation.type(), null, false);
   }
 
   private final MessagingAttributesGetter<REQUEST, RESPONSE> getter;
-  private final MessageOperation operation;
+  @Nullable private final MessagingOperationType operationType;
+  @Nullable private final String operationName;
+  private final boolean supportsStableSemconv;
   private final List<String> capturedHeaders;
 
   MessagingAttributesExtractor(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter,
-      MessageOperation operation,
+      @Nullable MessagingOperationType operationType,
+      @Nullable String operationName,
+      boolean supportsStableSemconv,
       List<String> capturedHeaders) {
     this.getter = getter;
-    this.operation = operation;
+    this.operationType = operationType;
+    this.operationName = operationName;
+    this.supportsStableSemconv = supportsStableSemconv;
     this.capturedHeaders = new ArrayList<>(capturedHeaders);
   }
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
+    boolean emitOldSemconv = !supportsStableSemconv || emitOldMessagingSemconv();
+    boolean emitStableSemconv = supportsStableSemconv && emitStableMessagingSemconv();
     attributes.put(MESSAGING_SYSTEM, getter.getSystem(request));
     boolean isTemporaryDestination = getter.isTemporaryDestination(request);
     if (isTemporaryDestination) {
       attributes.put(MESSAGING_DESTINATION_TEMPORARY, true);
-      attributes.put(MESSAGING_DESTINATION_NAME, TEMP_DESTINATION_NAME);
+      if (emitStableSemconv) {
+        attributes.put(MESSAGING_DESTINATION_NAME, getter.getDestination(request));
+        attributes.put(MESSAGING_DESTINATION_TEMPLATE, getter.getDestinationTemplate(request));
+      } else {
+        attributes.put(MESSAGING_DESTINATION_NAME, TEMP_DESTINATION_NAME);
+      }
     } else {
       attributes.put(MESSAGING_DESTINATION_NAME, getter.getDestination(request));
       attributes.put(MESSAGING_DESTINATION_TEMPLATE, getter.getDestinationTemplate(request));
@@ -104,11 +161,27 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       attributes.put(MESSAGING_DESTINATION_ANONYMOUS, true);
     }
     attributes.put(MESSAGING_MESSAGE_CONVERSATION_ID, getter.getConversationId(request));
-    attributes.put(MESSAGING_MESSAGE_BODY_SIZE, getter.getMessageBodySize(request));
-    attributes.put(MESSAGING_MESSAGE_ENVELOPE_SIZE, getter.getMessageEnvelopeSize(request));
-    attributes.put(MESSAGING_CLIENT_ID, getter.getClientId(request));
-    if (operation != null) {
-      attributes.put(MESSAGING_OPERATION, operation.operationName());
+    if (emitOldSemconv) {
+      // the message size attributes are opt-in in the v1.43 messaging semantic conventions
+      attributes.put(MESSAGING_MESSAGE_BODY_SIZE, getter.getMessageBodySize(request));
+      attributes.put(MESSAGING_MESSAGE_ENVELOPE_SIZE, getter.getMessageEnvelopeSize(request));
+      attributes.put(MESSAGING_CLIENT_ID_OLD, getter.getClientId(request));
+    }
+    if (emitStableSemconv) {
+      attributes.put(MESSAGING_CLIENT_ID, getter.getClientId(request));
+      // messaging.destination.subscription.name only exists in the v1.43 messaging semantic
+      // conventions
+      attributes.put(
+          MESSAGING_DESTINATION_SUBSCRIPTION_NAME, getter.getDestinationSubscriptionName(request));
+    }
+    if (emitOldSemconv && operationType != null) {
+      attributes.put(MESSAGING_OPERATION, operationType.legacyOperationName());
+    }
+    if (emitStableSemconv) {
+      attributes.put(MESSAGING_OPERATION_NAME, operationName);
+      if (operationType != null) {
+        attributes.put(MESSAGING_OPERATION_TYPE, operationType.value());
+      }
     }
   }
 
@@ -121,6 +194,13 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
     attributes.put(MESSAGING_MESSAGE_ID, getter.getMessageId(request, response));
     attributes.put(MESSAGING_BATCH_MESSAGE_COUNT, getter.getBatchMessageCount(request, response));
+    if (supportsStableSemconv && emitStableMessagingSemconv()) {
+      String errorType = getter.getErrorType(request, response, error);
+      if (errorType == null && error != null) {
+        errorType = error.getClass().getName();
+      }
+      attributes.put(ERROR_TYPE, errorType);
+    }
 
     for (String name : capturedHeaders) {
       List<String> values = getter.getMessageHeader(request, name);
@@ -137,17 +217,21 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   @Override
   @Nullable
   public SpanKey internalGetSpanKey() {
-    if (operation == null) {
+    if (operationType == null) {
       return null;
     }
 
-    switch (operation) {
-      case PUBLISH:
+    switch (operationType) {
+      case CREATE:
+        return SpanKey.PRODUCER_CREATE;
+      case SEND:
         return SpanKey.PRODUCER;
       case RECEIVE:
         return SpanKey.CONSUMER_RECEIVE;
       case PROCESS:
         return SpanKey.CONSUMER_PROCESS;
+      case SETTLE:
+        return SpanKey.CONSUMER_SETTLE;
     }
     throw new IllegalStateException("Can't possibly happen");
   }
