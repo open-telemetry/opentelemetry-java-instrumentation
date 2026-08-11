@@ -21,23 +21,31 @@ public class KafkaCommitAsyncTracing {
 
   private static final ContextKey<TracingState> TRACING_STATE =
       ContextKey.named(KafkaCommitAsyncTracing.class.getName());
+  private static final ContextKey<CallbackState> CALLBACK_STATE =
+      ContextKey.named(KafkaCommitAsyncTracing.class.getName() + ".callbackState");
 
   public static AdviceScope start(
       @Nullable Object offsets, @Nullable OffsetCommitCallback callback) {
     CallDepth callDepth = CallDepth.forClass(KafkaConsumer.class);
     int callDepthValue = callDepth.getAndIncrement();
+    CallbackState callbackState = Context.current().get(CALLBACK_STATE);
+    int callbackCommitDepth = callbackState == null ? -1 : callbackState.enterCommit();
     boolean adviceScopeCreated = false;
     try {
-      if (callDepthValue > 0) {
-        AdviceScope adviceScope = join(callDepth, callback);
+      if (callDepthValue > 0 && callbackCommitDepth != 0) {
+        AdviceScope adviceScope =
+            join(callDepth, callback, callbackCommitDepth < 0 ? null : callbackState);
         adviceScopeCreated = true;
         return adviceScope;
       }
 
       KafkaCommitRequest request = KafkaCommitRequest.create(offsets);
       Context parentContext = Context.current();
-      if (!consumerCommitInstrumenter().shouldStart(parentContext, request)) {
-        AdviceScope adviceScope = new AdviceScope(callDepth, null, null, callback);
+      if (callbackCommitDepth != 0
+          && !consumerCommitInstrumenter().shouldStart(parentContext, request)) {
+        AdviceScope adviceScope =
+            new AdviceScope(
+                callDepth, null, null, callback, callbackCommitDepth < 0 ? null : callbackState);
         adviceScopeCreated = true;
         return adviceScope;
       }
@@ -46,14 +54,28 @@ public class KafkaCommitAsyncTracing {
       TracingState tracingState = new TracingState(context, request);
       Scope scope = context.with(TRACING_STATE, tracingState).makeCurrent();
       AdviceScope adviceScope =
-          new AdviceScope(callDepth, scope, tracingState, wrapCallback(callback, tracingState));
+          new AdviceScope(
+              callDepth,
+              scope,
+              tracingState,
+              wrapCallback(callback, tracingState),
+              callbackCommitDepth < 0 ? null : callbackState);
       adviceScopeCreated = true;
       return adviceScope;
     } finally {
       if (!adviceScopeCreated) {
         callDepth.decrementAndGet();
+        if (callbackCommitDepth >= 0) {
+          callbackState.exitCommit();
+        }
       }
     }
+  }
+
+  public static CallbackScope enterCallback() {
+    CallbackState callbackState = new CallbackState();
+    return new CallbackScope(
+        Context.current().with(CALLBACK_STATE, callbackState).makeCurrent(), callbackState);
   }
 
   public static AdviceScope join(@Nullable OffsetCommitCallback callback) {
@@ -61,7 +83,7 @@ public class KafkaCommitAsyncTracing {
     callDepth.getAndIncrement();
     boolean adviceScopeCreated = false;
     try {
-      AdviceScope adviceScope = join(callDepth, callback);
+      AdviceScope adviceScope = join(callDepth, callback, null);
       adviceScopeCreated = true;
       return adviceScope;
     } finally {
@@ -71,9 +93,13 @@ public class KafkaCommitAsyncTracing {
     }
   }
 
-  private static AdviceScope join(CallDepth callDepth, @Nullable OffsetCommitCallback callback) {
+  private static AdviceScope join(
+      CallDepth callDepth,
+      @Nullable OffsetCommitCallback callback,
+      @Nullable CallbackState callbackState) {
     TracingState tracingState = Context.current().get(TRACING_STATE);
-    return new AdviceScope(callDepth, null, tracingState, wrapCallback(callback, tracingState));
+    return new AdviceScope(
+        callDepth, null, tracingState, wrapCallback(callback, tracingState), callbackState);
   }
 
   public static OffsetCommitCallback wrapCallback(OffsetCommitCallback callback) {
@@ -101,16 +127,19 @@ public class KafkaCommitAsyncTracing {
     @Nullable private final Scope scope;
     @Nullable private final TracingState tracingState;
     @Nullable private final OffsetCommitCallback callback;
+    @Nullable private final CallbackState callbackState;
 
     private AdviceScope(
         CallDepth callDepth,
         @Nullable Scope scope,
         @Nullable TracingState tracingState,
-        @Nullable OffsetCommitCallback callback) {
+        @Nullable OffsetCommitCallback callback,
+        @Nullable CallbackState callbackState) {
       this.callDepth = callDepth;
       this.scope = scope;
       this.tracingState = tracingState;
       this.callback = callback;
+      this.callbackState = callbackState;
     }
 
     @Nullable
@@ -120,6 +149,9 @@ public class KafkaCommitAsyncTracing {
 
     public void end(@Nullable Throwable error) {
       callDepth.decrementAndGet();
+      if (callbackState != null) {
+        callbackState.exitCommit();
+      }
       if (scope == null) {
         return;
       }
@@ -128,6 +160,39 @@ public class KafkaCommitAsyncTracing {
       if (error != null && tracingState != null) {
         tracingState.end(error);
       }
+    }
+  }
+
+  private static class CallbackState {
+    private boolean active = true;
+    private int commitDepth;
+
+    private synchronized int enterCommit() {
+      return active ? commitDepth++ : -1;
+    }
+
+    private synchronized void exitCommit() {
+      commitDepth--;
+    }
+
+    private synchronized void deactivate() {
+      active = false;
+    }
+  }
+
+  public static class CallbackScope implements AutoCloseable {
+    private final Scope scope;
+    private final CallbackState callbackState;
+
+    private CallbackScope(Scope scope, CallbackState callbackState) {
+      this.scope = scope;
+      this.callbackState = callbackState;
+    }
+
+    @Override
+    public void close() {
+      callbackState.deactivate();
+      scope.close();
     }
   }
 

@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -84,6 +85,75 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                     span.hasName("commit " + SHARED_TOPIC)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void testCommitAsyncCallbackReentryStartsNewSpan() throws InterruptedException {
+    assumeTrue(emitStableMessagingSemconv());
+    awaitUntilConsumerIsReady();
+    consumer.seekToEnd(emptyList());
+    Map<TopicPartition, OffsetAndMetadata> offsets =
+        singletonMap(TOPIC_PARTITION, new OffsetAndMetadata(consumer.position(TOPIC_PARTITION)));
+    AtomicBoolean callbackInvoked = new AtomicBoolean();
+    AtomicReference<Exception> callbackException = new AtomicReference<>();
+    int drivingCommitCount = 0;
+    testing.clearData();
+
+    testing.runWithSpan(
+        "first commit parent",
+        () ->
+            consumer.commitAsync(
+                offsets,
+                (committedOffsets, exception) -> {
+                  callbackInvoked.set(true);
+                  callbackException.set(exception);
+                  testing.runWithSpan(
+                      "reentrant commit parent", () -> consumer.commitAsync(offsets, null));
+                }));
+
+    for (int i = 0; i < 20 && !callbackInvoked.get(); i++) {
+      int commitNumber = ++drivingCommitCount;
+      testing.runWithSpan(
+          "driving commit parent " + commitNumber, () -> consumer.commitAsync(offsets, null));
+    }
+
+    assertThat(callbackInvoked).isTrue();
+    assertThat(callbackException).hasValue(null);
+    for (int i = 0; i < 10 && !hasReentrantCommitSpan(); i++) {
+      poll(Duration.ofMillis(500));
+    }
+
+    SpanData reentrantParent =
+        testing.spans().stream()
+            .filter(span -> span.getName().equals("reentrant commit parent"))
+            .findFirst()
+            .orElseThrow(AssertionError::new);
+    assertThat(testing.spans())
+        .filteredOn(
+            span ->
+                span.getParentSpanId().equals(reentrantParent.getSpanContext().getSpanId())
+                    && span.getName().equals("commit " + SHARED_TOPIC))
+        .hasSize(1);
+    assertThat(testing.spans())
+        .filteredOn(
+            span ->
+                span.getSpanContext().getSpanId().equals(reentrantParent.getParentSpanId())
+                    && span.getName().equals("commit " + SHARED_TOPIC))
+        .hasSize(1);
+  }
+
+  private static boolean hasReentrantCommitSpan() {
+    SpanData reentrantParent =
+        testing.spans().stream()
+            .filter(span -> span.getName().equals("reentrant commit parent"))
+            .findFirst()
+            .orElse(null);
+    return reentrantParent != null
+        && testing.spans().stream()
+            .anyMatch(
+                span ->
+                    span.getParentSpanId().equals(reentrantParent.getSpanContext().getSpanId())
+                        && span.getName().equals("commit " + SHARED_TOPIC));
   }
 
   @Test

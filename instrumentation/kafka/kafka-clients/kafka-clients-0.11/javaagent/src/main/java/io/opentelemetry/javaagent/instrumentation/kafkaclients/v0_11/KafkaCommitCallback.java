@@ -27,7 +27,10 @@ public class KafkaCommitCallback implements OffsetCommitCallback {
       Map<TopicPartition, OffsetAndMetadata> offsets, @Nullable Exception exception) {
     tracingState.end(exception);
     if (callback != null) {
-      callback.onComplete(offsets, exception);
+      try (KafkaCommitAsyncTracing.CallbackScope ignored =
+          KafkaCommitAsyncTracing.enterCallback()) {
+        callback.onComplete(offsets, exception);
+      }
     }
   }
 }
