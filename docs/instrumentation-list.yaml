@@ -2023,7 +2023,7 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    messaging.client.operation.duration-dab7c60a:
+    messaging.client.operation.duration-df200871:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
         client.
@@ -2032,6 +2032,8 @@ definitions:
       unit: s
       attributes:
       - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.subscription.name
         type: STRING
       - name: messaging.operation.name
         type: STRING
@@ -11866,7 +11868,7 @@ libraries:
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
     - messaging.client.consumed.messages-5c21579f
-    - messaging.client.operation.duration-dab7c60a
+    - messaging.client.operation.duration-df200871
     - messaging.client.sent.messages-38a90199
     - messaging.process.duration-9ee3dd0a
     spans:
@@ -12166,6 +12168,88 @@ libraries:
       - name: rabbitmq.command
         type: STRING
       - name: rabbitmq.delivery_mode
+        type: LONG
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.anonymous
+        type: BOOLEAN
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rabbitmq.destination.routing_key
+        type: STRING
+      - name: messaging.rabbitmq.message.delivery_tag
+        type: LONG
+      - name: messaging.system
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - span_kind: CONSUMER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.anonymous
+        type: BOOLEAN
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rabbitmq.destination.routing_key
+        type: STRING
+      - name: messaging.rabbitmq.message.delivery_tag
+        type: LONG
+      - name: messaging.system
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.destination.anonymous
+        type: BOOLEAN
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rabbitmq.destination.routing_key
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
         type: LONG
 - name: ratpack-1.4
   display_name: Ratpack
@@ -12937,6 +13021,44 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rocketmq.namespace
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rocketmq.namespace
+        type: STRING
+      - name: messaging.system
+        type: STRING
 - name: rocketmq-client-5.0
   display_name: Apache RocketMQ Client - gRPC Protocol
   description: |
@@ -13002,6 +13124,74 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rocketmq.namespace
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rocketmq.message.delivery_timestamp
+        type: LONG
+      - name: messaging.rocketmq.message.group
+        type: STRING
+      - name: messaging.rocketmq.message.keys
+        type: STRING_ARRAY
+      - name: messaging.rocketmq.message.tag
+        type: STRING
+      - name: messaging.rocketmq.namespace
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rocketmq.message.delivery_timestamp
+        type: LONG
+      - name: messaging.rocketmq.message.group
+        type: STRING
+      - name: messaging.rocketmq.message.keys
+        type: STRING_ARRAY
+      - name: messaging.rocketmq.message.tag
+        type: STRING
+      - name: messaging.rocketmq.message.type
+        type: STRING
+      - name: messaging.rocketmq.namespace
+        type: STRING
+      - name: messaging.system
+        type: STRING
 - name: runtime-telemetry
   display_name: JVM Runtime Telemetry
   description: |
@@ -13049,7 +13239,6 @@ libraries:
     - jvm.cpu.count-ae176c2b
     - jvm.cpu.recent_utilization-6056df51
     - jvm.cpu.time-e00d5c75
-    - jvm.gc.duration-e20d0032
     - jvm.memory.committed-75750f2f
     - jvm.memory.limit-13513f5f
     - jvm.memory.used-0d769189
@@ -13839,6 +14028,22 @@ libraries:
         type: LONG
       - name: messaging.operation
         type: STRING
+      - name: messaging.system
+        type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rabbitmq.destination.routing_key
+        type: STRING
+      - name: messaging.rabbitmq.message.delivery_tag
+        type: LONG
       - name: messaging.system
         type: STRING
 - name: spring-rmi-4.0
