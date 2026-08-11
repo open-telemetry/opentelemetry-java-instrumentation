@@ -242,7 +242,7 @@ class RocketMqSimpleConsumerTest {
             () ->
                 testing.runWithSpan(
                     "sync error parent", () -> consumer.receive(0, Duration.ofSeconds(1))))
-        .isInstanceOf(ClientException.class);
+        .isInstanceOf(IllegalArgumentException.class);
 
     assertReceiveErrorTrace("sync error parent");
   }
