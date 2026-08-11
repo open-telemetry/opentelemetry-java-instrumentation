@@ -23,6 +23,9 @@ public class KafkaClientsInstrumentationModule extends InstrumentationModule {
     return asList(
         new KafkaProducerInstrumentation(),
         new KafkaConsumerInstrumentation(),
+        new KafkaConsumerDelegateInstrumentation(),
+        new KafkaConsumerCoordinatorInstrumentation(),
+        new KafkaOffsetCommitCompletionInstrumentation(),
         new ConsumerRecordsInstrumentation());
   }
 }
