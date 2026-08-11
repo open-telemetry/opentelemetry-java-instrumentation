@@ -296,9 +296,11 @@ class RocketMqSimpleConsumerTest {
 
     testing.runWithSpan(
         "sync ack error parent",
-        () -> assertThatThrownBy(() -> consumer.ack(message)).isInstanceOf(ClientException.class));
+        () ->
+            assertThatThrownBy(() -> consumer.ack(message))
+                .isInstanceOf(IllegalArgumentException.class));
 
-    assertAckErrorTrace("sync ack error parent", message, ClientException.class);
+    assertAckErrorTrace("sync ack error parent", message, IllegalArgumentException.class);
   }
 
   @Test
