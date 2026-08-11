@@ -36,9 +36,12 @@ class CamelSingletons {
   private static final DecoratorRegistry registry = new DecoratorRegistry();
   private static final Instrumenter<CamelRequest, Void> instrumenter = createInstrumenter();
   private static final Instrumenter<CamelRequest, Void> messagingSendInstrumenter =
-      createMessagingInstrumenter(SEND, "send");
+      createMessagingInstrumenter(SEND, "send", true);
+  // AWS SQS/SNS sends rely on the nested AWS SDK producer span to inject propagation.
+  private static final Instrumenter<CamelRequest, Void> keylessMessagingSendInstrumenter =
+      createMessagingInstrumenter(SEND, "send", false);
   private static final Instrumenter<CamelRequest, Void> messagingProcessInstrumenter =
-      createMessagingInstrumenter(PROCESS, "process");
+      createMessagingInstrumenter(PROCESS, "process", true);
 
   private static Instrumenter<CamelRequest, Void> createInstrumenter() {
     SpanNameExtractor<CamelRequest> spanNameExtractor =
@@ -54,7 +57,7 @@ class CamelSingletons {
   }
 
   private static Instrumenter<CamelRequest, Void> createMessagingInstrumenter(
-      MessagingOperationType operationType, String operationName) {
+      MessagingOperationType operationType, String operationName, boolean exposeSpanKey) {
     MessagingAttributesGetter<CamelRequest, Void> getter = new CamelMessagingAttributesGetter();
     SpanNameExtractor<CamelRequest> legacySpanNameExtractor =
         request ->
@@ -68,9 +71,12 @@ class CamelSingletons {
             : legacySpanNameExtractor;
     InstrumenterBuilder<CamelRequest, Void> builder = instrumenterBuilder(spanNameExtractor);
     if (emitStableMessagingSemconv()) {
+      AttributesExtractor<CamelRequest, Void> attributesExtractor =
+          MessagingAttributesExtractor.create(getter, operationType, operationName);
       builder.addAttributesExtractor(
-          new CamelMessagingAttributesExtractor(
-              MessagingAttributesExtractor.create(getter, operationType, operationName)));
+          exposeSpanKey
+              ? attributesExtractor
+              : new KeylessAttributesExtractor(attributesExtractor));
     }
 
     if (operationType == PROCESS && emitStableMessagingSemconv()) {
@@ -106,9 +112,12 @@ class CamelSingletons {
 
   static Instrumenter<CamelRequest, Void> instrumenter(CamelRequest request) {
     if (request.isMessaging()) {
-      return request.getCamelDirection() == CamelDirection.OUTBOUND
-          ? messagingSendInstrumenter
-          : messagingProcessInstrumenter;
+      if (request.getCamelDirection() == CamelDirection.OUTBOUND) {
+        return request.isMessagingSpanContextPropagated()
+            ? messagingSendInstrumenter
+            : keylessMessagingSendInstrumenter;
+      }
+      return messagingProcessInstrumenter;
     }
     return instrumenter;
   }
@@ -148,14 +157,12 @@ class CamelSingletons {
     }
   }
 
-  private static class CamelMessagingAttributesExtractor
+  private static class KeylessAttributesExtractor
       implements AttributesExtractor<CamelRequest, Void> {
 
-    // Do not expose the messaging span key: AWS SDK must still create the producer span that
-    // injects SQS/SNS propagation when the surrounding Camel send span is a client span.
     private final AttributesExtractor<CamelRequest, Void> delegate;
 
-    private CamelMessagingAttributesExtractor(AttributesExtractor<CamelRequest, Void> delegate) {
+    private KeylessAttributesExtractor(AttributesExtractor<CamelRequest, Void> delegate) {
       this.delegate = delegate;
     }
 

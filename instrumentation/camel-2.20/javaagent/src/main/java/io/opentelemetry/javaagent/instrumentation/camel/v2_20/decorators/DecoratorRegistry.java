@@ -28,7 +28,7 @@ public class DecoratorRegistry {
     registerMessaging(result, "aws-sns", "aws.sns", false);
     registerMessaging(result, "aws-sqs", "aws_sqs", false);
     registerMessaging(result, "cometd");
-    registerMessaging(result, "cometds");
+    registerMessaging(result, "cometds", "cometd");
     result.put("cql", new DbSpanDecorator("cql", DbSystemNameIncubatingValues.CASSANDRA));
     result.put("direct", new InternalSpanDecorator());
     result.put("direct-vm", new InternalSpanDecorator());
@@ -52,7 +52,7 @@ public class DecoratorRegistry {
     registerMessaging(result, "mqtt");
     result.put("netty-http4", new HttpSpanDecorator());
     result.put("netty-http", new HttpSpanDecorator());
-    registerMessaging(result, "paho");
+    registerMessaging(result, "paho", "mqtt");
     registerMessaging(result, "rabbitmq");
     result.put("restlet", new HttpSpanDecorator());
     result.put("rest", new RestSpanDecorator());

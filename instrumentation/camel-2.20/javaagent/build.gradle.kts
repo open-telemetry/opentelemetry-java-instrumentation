@@ -32,6 +32,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:aws-sdk:aws-sdk-1.11:javaagent"))
+  testInstrumentation(project(":instrumentation:jms:jms-1.1:javaagent"))
 
   testInstrumentation(project(":instrumentation:cassandra:cassandra-3.0:javaagent"))
 
