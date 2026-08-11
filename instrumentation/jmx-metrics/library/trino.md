@@ -7,7 +7,7 @@ Here is the list of metrics based on MBeans exposed by Trino.
 | trino.node.active.count                        | UpDownCounter | {node}  |                          | The number of active Trino nodes.                                          |
 | trino.memory.pool.free                         | UpDownCounter | By      | trino.memory.pool.name   | The amount of distributed memory currently free in the memory pool.        |
 | trino.memory.query.killed.count                | Counter       | {query} |                          | The number of queries killed due to running out of memory.                 |
-| trino.query.running.count                      | UpDownCounter | {query} |                          | The number of queries currently running or queued.                         |
+| trino.query.running.count                      | UpDownCounter | {query} |                          | The number of queries currently running.                                   |
 | trino.query.started.count                      | Gauge         | {query} |                          | The number of queries started in the last five minutes.                    |
 | trino.query.failed.count                       | Gauge         | {query} |                          | The number of failed queries in the last five minutes.                     |
 | trino.query.failure.count                      | Gauge         | {query} | trino.query.failure.type | The number of failed queries in the last five minutes by failure type.     |
