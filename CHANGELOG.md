@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes to non-stable APIs
+
+- `jetty.thread.queue.size` Jetty JMX metric unit has been changed from `{thread}` to `{job}`.
+
 ### 🚫 Deprecations
 
 - For library instrumentation users, deprecate configuring span suppression using the
