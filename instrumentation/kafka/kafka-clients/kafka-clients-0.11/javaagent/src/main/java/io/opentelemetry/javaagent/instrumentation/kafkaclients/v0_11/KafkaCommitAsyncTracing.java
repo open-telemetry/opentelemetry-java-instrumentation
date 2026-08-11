@@ -25,26 +25,50 @@ public class KafkaCommitAsyncTracing {
   public static AdviceScope start(
       @Nullable Object offsets, @Nullable OffsetCommitCallback callback) {
     CallDepth callDepth = CallDepth.forClass(KafkaConsumer.class);
-    if (callDepth.getAndIncrement() > 0) {
-      return join(callDepth, callback);
-    }
+    int callDepthValue = callDepth.getAndIncrement();
+    boolean adviceScopeCreated = false;
+    try {
+      if (callDepthValue > 0) {
+        AdviceScope adviceScope = join(callDepth, callback);
+        adviceScopeCreated = true;
+        return adviceScope;
+      }
 
-    KafkaCommitRequest request = KafkaCommitRequest.create(offsets);
-    Context parentContext = Context.current();
-    if (!consumerCommitInstrumenter().shouldStart(parentContext, request)) {
-      return new AdviceScope(callDepth, null, null, callback);
-    }
+      KafkaCommitRequest request = KafkaCommitRequest.create(offsets);
+      Context parentContext = Context.current();
+      if (!consumerCommitInstrumenter().shouldStart(parentContext, request)) {
+        AdviceScope adviceScope = new AdviceScope(callDepth, null, null, callback);
+        adviceScopeCreated = true;
+        return adviceScope;
+      }
 
-    Context context = consumerCommitInstrumenter().start(parentContext, request);
-    TracingState tracingState = new TracingState(context, request);
-    Scope scope = context.with(TRACING_STATE, tracingState).makeCurrent();
-    return new AdviceScope(callDepth, scope, tracingState, wrapCallback(callback, tracingState));
+      Context context = consumerCommitInstrumenter().start(parentContext, request);
+      TracingState tracingState = new TracingState(context, request);
+      Scope scope = context.with(TRACING_STATE, tracingState).makeCurrent();
+      AdviceScope adviceScope =
+          new AdviceScope(callDepth, scope, tracingState, wrapCallback(callback, tracingState));
+      adviceScopeCreated = true;
+      return adviceScope;
+    } finally {
+      if (!adviceScopeCreated) {
+        callDepth.decrementAndGet();
+      }
+    }
   }
 
   public static AdviceScope join(@Nullable OffsetCommitCallback callback) {
     CallDepth callDepth = CallDepth.forClass(KafkaConsumer.class);
     callDepth.getAndIncrement();
-    return join(callDepth, callback);
+    boolean adviceScopeCreated = false;
+    try {
+      AdviceScope adviceScope = join(callDepth, callback);
+      adviceScopeCreated = true;
+      return adviceScope;
+    } finally {
+      if (!adviceScopeCreated) {
+        callDepth.decrementAndGet();
+      }
+    }
   }
 
   private static AdviceScope join(CallDepth callDepth, @Nullable OffsetCommitCallback callback) {

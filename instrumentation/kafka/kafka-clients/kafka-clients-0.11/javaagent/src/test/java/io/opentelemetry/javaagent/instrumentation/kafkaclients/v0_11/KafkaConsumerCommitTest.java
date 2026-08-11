@@ -215,6 +215,33 @@ class KafkaConsumerCommitTest {
                         .hasNoParent()));
   }
 
+  @Test
+  void instrumentationFailureDoesNotDisableAsyncCommitSpans() {
+    assumeTrue(emitStableMessagingSemconv());
+    Consumer<Integer, String> consumer = closedConsumer();
+    Map<TopicPartition, OffsetAndMetadata> throwingOffsets =
+        new AbstractMap<TopicPartition, OffsetAndMetadata>() {
+          @Override
+          public Set<Entry<TopicPartition, OffsetAndMetadata>> entrySet() {
+            throw new IllegalStateException("test instrumentation failure");
+          }
+        };
+    testing.clearData();
+
+    assertThatThrownBy(() -> consumer.commitAsync(throwingOffsets, null))
+        .isInstanceOf(IllegalStateException.class);
+    assertThat(getAndResetAdviceFailureCount()).isPositive();
+    assertThatThrownBy(consumer::commitAsync).isInstanceOf(IllegalStateException.class);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertCommitSpan(span, null, null, IllegalStateException.class.getName())
+                        .hasStatus(StatusData.error())
+                        .hasNoParent()));
+  }
+
   @ParameterizedTest
   @MethodSource("commitAsyncOverloads")
   void commitAsyncPreservesKafkaException(
