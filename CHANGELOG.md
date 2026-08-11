@@ -2,8 +2,17 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes to non-stable APIs
+
+- Expand the incubating GenAI semantic-convention APIs with agent, tool, and retrieval extractors,
+  and change `GenAiSpanNameExtractor.create()` to accept `GenAiOperationAttributesGetter`.
+  ([#19124](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19124))
+
 ### 🚫 Deprecations
 
+- Deprecate `GenAiAttributesGetter.getSystem()` in favor of `getProviderName()`. It will be removed
+  in a subsequent release after implementors have had a release to migrate.
+  ([#19124](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19124))
 - Deprecate the `opentelemetry-zipkin-spring-boot-starter` artifact. Use
   `opentelemetry-spring-boot-starter` with the OTLP exporter instead. It will be removed in 3.0.
 - Deprecate `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)` in the
