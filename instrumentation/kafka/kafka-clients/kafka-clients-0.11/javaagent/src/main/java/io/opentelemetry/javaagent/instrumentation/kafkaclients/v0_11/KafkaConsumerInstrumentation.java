@@ -128,15 +128,25 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
           return new AdviceScope(callDepth, null);
         }
 
-        KafkaCommitRequest request = KafkaCommitRequest.create(argument);
-        Context parentContext = Context.current();
-        if (!consumerCommitInstrumenter().shouldStart(parentContext, request)) {
-          return new AdviceScope(callDepth, null);
-        }
+        boolean scopeCreated = false;
+        try {
+          KafkaCommitRequest request = KafkaCommitRequest.create(argument);
+          Context parentContext = Context.current();
+          if (!consumerCommitInstrumenter().shouldStart(parentContext, request)) {
+            scopeCreated = true;
+            return new AdviceScope(callDepth, null);
+          }
 
-        Context context = consumerCommitInstrumenter().start(parentContext, request);
-        return new AdviceScope(
-            callDepth, new TracingState(context, context.makeCurrent(), request));
+          Context context = consumerCommitInstrumenter().start(parentContext, request);
+          AdviceScope adviceScope =
+              new AdviceScope(callDepth, new TracingState(context, context.makeCurrent(), request));
+          scopeCreated = true;
+          return adviceScope;
+        } finally {
+          if (!scopeCreated) {
+            callDepth.decrementAndGet();
+          }
+        }
       }
 
       public void end(@Nullable Throwable error) {
@@ -169,8 +179,10 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown @Nullable Throwable error, @Advice.Enter AdviceScope adviceScope) {
-      adviceScope.end(error);
+        @Advice.Thrown @Nullable Throwable error, @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(error);
+      }
     }
   }
 }

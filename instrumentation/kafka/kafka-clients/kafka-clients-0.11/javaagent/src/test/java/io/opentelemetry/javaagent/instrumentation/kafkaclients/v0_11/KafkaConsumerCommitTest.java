@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess.getAndResetAdviceFailureCount;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -17,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.singletonMap;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -31,9 +33,11 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Duration;
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -148,6 +152,33 @@ class KafkaConsumerCommitTest {
     Consumer<Integer, String> consumer = closedConsumer();
     testing.clearData();
 
+    assertThatThrownBy(consumer::commitSync).isInstanceOf(IllegalStateException.class);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertCommitSpan(span, null, null, IllegalStateException.class.getName())
+                        .hasStatus(StatusData.error())
+                        .hasNoParent()));
+  }
+
+  @Test
+  void instrumentationFailureDoesNotDisableCommitSpans() {
+    assumeTrue(emitStableMessagingSemconv());
+    Consumer<Integer, String> consumer = closedConsumer();
+    Map<TopicPartition, OffsetAndMetadata> throwingOffsets =
+        new AbstractMap<TopicPartition, OffsetAndMetadata>() {
+          @Override
+          public Set<Entry<TopicPartition, OffsetAndMetadata>> entrySet() {
+            throw new IllegalStateException("test instrumentation failure");
+          }
+        };
+    testing.clearData();
+
+    assertThatThrownBy(() -> consumer.commitSync(throwingOffsets))
+        .isInstanceOf(IllegalStateException.class);
+    assertThat(getAndResetAdviceFailureCount()).isEqualTo(1);
     assertThatThrownBy(consumer::commitSync).isInstanceOf(IllegalStateException.class);
 
     testing.waitAndAssertTraces(
