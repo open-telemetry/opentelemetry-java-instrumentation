@@ -22,10 +22,9 @@ import java.util.function.Predicate;
  * When there are no included patterns, all values that are not excluded match. Callers are
  * responsible for normalizing values and patterns when a domain requires case-insensitive matching.
  *
- * <p>An empty selector, one with no included and no excluded patterns, carries no configuration.
- * Settings should treat an empty selector the same as an absent one: a setting that selects nothing
- * until it is configured still selects nothing, and a setting that selects everything until it is
- * configured still selects everything.
+ * <p>An empty selector, one with no included and no excluded patterns, carries no configuration. A
+ * setting that uses one should behave as if no selector were configured and fall back to its own
+ * default.
  */
 public final class IncludeExclude {
 
@@ -59,8 +58,8 @@ public final class IncludeExclude {
   /**
    * Returns whether this selector has no included and no excluded patterns.
    *
-   * <p>An empty selector carries no configuration, so settings should treat it the same as an
-   * absent selector.
+   * <p>An empty selector carries no configuration, so a setting that uses one should fall back to
+   * its own default, as if no selector were configured.
    */
   public boolean isEmpty() {
     return included.isEmpty() && excluded.isEmpty();
