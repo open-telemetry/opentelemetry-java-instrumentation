@@ -184,6 +184,18 @@ public final class SqsImpl {
     for (SendMessageBatchRequestEntry entry : request.getEntries()) {
       SendMessageBatchRequestEntry preparedEntry = entry.clone();
       Map<String, MessageAttributeValue> attributes = entry.getMessageAttributes();
+      Context customCreationContext = SqsParentContext.ofMessageAttributes(toStringMap(attributes));
+      if (Span.fromContext(customCreationContext).getSpanContext().isValid()) {
+        creationContexts.add(customCreationContext);
+        preparedEntries.add(preparedEntry);
+        continue;
+      }
+      if (attributes.containsKey(SqsParentContext.AWS_TRACE_MESSAGE_ATTRIBUTE)
+          || attributes.size() >= 10) {
+        preparedEntries.add(preparedEntry);
+        continue;
+      }
+
       SqsCreateRequest createRequest =
           new SqsCreateRequest(request.getQueueUrl(), toStringMap(attributes));
       if (!producerCreateInstrumenter.shouldStart(parentContext, createRequest)) {
@@ -193,18 +205,14 @@ public final class SqsImpl {
 
       Context creationContext = producerCreateInstrumenter.start(parentContext, createRequest);
       creationContexts.add(creationContext);
-      if (attributes.containsKey(SqsParentContext.AWS_TRACE_MESSAGE_ATTRIBUTE)
-          || attributes.size() < 10) {
-        Map<String, MessageAttributeValue> updatedAttributes = new HashMap<>(attributes);
-        xrayPropagator.inject(
-            creationContext,
-            updatedAttributes,
-            (carrier, key, value) ->
-                carrier.put(
-                    key,
-                    new MessageAttributeValue().withDataType("String").withStringValue(value)));
-        preparedEntry.setMessageAttributes(updatedAttributes);
-      }
+      Map<String, MessageAttributeValue> updatedAttributes = new HashMap<>(attributes);
+      xrayPropagator.inject(
+          creationContext,
+          updatedAttributes,
+          (carrier, key, value) ->
+              carrier.put(
+                  key, new MessageAttributeValue().withDataType("String").withStringValue(value)));
+      preparedEntry.setMessageAttributes(updatedAttributes);
       producerCreateInstrumenter.end(creationContext, createRequest, null, null);
       preparedEntries.add(preparedEntry);
     }

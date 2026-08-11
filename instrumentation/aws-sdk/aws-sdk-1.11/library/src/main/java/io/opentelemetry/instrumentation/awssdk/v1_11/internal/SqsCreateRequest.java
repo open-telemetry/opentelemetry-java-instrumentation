@@ -14,16 +14,19 @@ import javax.annotation.Nullable;
  */
 public final class SqsCreateRequest {
 
-  private final String queueUrl;
+  @Nullable private final String queueUrl;
   private final Map<String, String> messageAttributes;
 
-  SqsCreateRequest(String queueUrl, Map<String, String> messageAttributes) {
+  SqsCreateRequest(@Nullable String queueUrl, Map<String, String> messageAttributes) {
     this.queueUrl = queueUrl;
     this.messageAttributes = messageAttributes;
   }
 
   @Nullable
   String getDestination() {
+    if (queueUrl == null) {
+      return null;
+    }
     int i = queueUrl.lastIndexOf('/');
     return i > 0 ? queueUrl.substring(i + 1) : null;
   }

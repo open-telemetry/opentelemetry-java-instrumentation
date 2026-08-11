@@ -456,21 +456,6 @@ public abstract class AbstractSqsTracingTest {
                                   MESSAGING_OPERATION, emitOldMessagingSemconv() ? "create" : null),
                               equalTo(MESSAGING_OPERATION_TYPE, "create")));
             },
-            trace -> {
-              createSpans.add(trace.getSpan(0));
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("create testSdkSqs")
-                          .hasKind(SpanKind.PRODUCER)
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                              equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                              equalTo(MESSAGING_OPERATION_NAME, "create"),
-                              equalTo(
-                                  MESSAGING_OPERATION, emitOldMessagingSemconv() ? "create" : null),
-                              equalTo(MESSAGING_OPERATION_TYPE, "create")));
-            },
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -505,8 +490,7 @@ public abstract class AbstractSqsTracingTest {
                                         .extracting(link -> link.getSpanContext().getSpanId())
                                         .containsExactlyInAnyOrder(
                                             createSpans.get(0).getSpanId(),
-                                            createSpans.get(1).getSpanId(),
-                                            createSpans.get(2).getSpanId()))));
+                                            createSpans.get(1).getSpanId()))));
   }
 
   @Test
