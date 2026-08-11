@@ -140,7 +140,7 @@ class JettyTest extends TargetSystemTest {
                     metric
                         .isUpDownCounter()
                         .hasDescription("The current job queue size.")
-                        .hasUnit("{job}")
+                        .hasUnit("{thread}")
                         .hasDataPointsWithoutAttributes())
             .add(
                 "jetty.select.count",

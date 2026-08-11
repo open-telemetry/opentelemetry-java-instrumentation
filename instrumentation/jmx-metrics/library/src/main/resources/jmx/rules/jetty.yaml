@@ -32,7 +32,6 @@ rules:
       queueSize:
         metric: queue.size
         desc: The current job queue size.
-        unit: "{job}"
 
   - bean: org.eclipse.jetty.io:context=*,type=managedselector,id=*
     mapping:
