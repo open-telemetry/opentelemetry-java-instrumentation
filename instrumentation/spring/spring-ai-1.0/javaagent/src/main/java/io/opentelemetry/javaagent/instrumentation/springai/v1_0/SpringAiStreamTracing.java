@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import org.springframework.ai.chat.metadata.ChatGenerationMetadata;
 import org.springframework.ai.chat.metadata.ChatResponseMetadata;
+import org.springframework.ai.chat.metadata.EmptyUsage;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
@@ -154,8 +155,9 @@ public final class SpringAiStreamTracing {
           if (metadata.getModel() != null && !metadata.getModel().isEmpty()) {
             responseModel = metadata.getModel();
           }
-          if (metadata.getUsage() != null) {
-            usage = metadata.getUsage();
+          Usage newUsage = metadata.getUsage();
+          if (newUsage != null && !(newUsage instanceof EmptyUsage)) {
+            usage = newUsage;
           }
         }
       } catch (Throwable ignored) {

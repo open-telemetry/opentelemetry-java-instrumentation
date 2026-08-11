@@ -47,6 +47,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.metadata.ChatGenerationMetadata;
 import org.springframework.ai.chat.metadata.ChatResponseMetadata;
 import org.springframework.ai.chat.metadata.DefaultUsage;
@@ -120,7 +121,8 @@ class ChatModelTest {
             ChatResponseMetadata.builder().build());
     ChatResponse usageChunk =
         response(emptyList(), ChatResponseMetadata.builder().usage(new DefaultUsage(3, 2)).build());
-    chatModel.setStreamPublisher(Flux.just(firstChunk, secondChunk, usageChunk));
+    ChatResponse metadataOnlyChunk = response(emptyList(), ChatResponseMetadata.builder().build());
+    chatModel.setStreamPublisher(Flux.just(firstChunk, secondChunk, usageChunk, metadataOnlyChunk));
 
     testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
 
@@ -162,6 +164,93 @@ class ChatModelTest {
                                         + "{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"B two\"}],\"finish_reason\":\"length\"}]")))));
     assertMetrics();
     assertMultiChoiceEvents(spanContext);
+  }
+
+  @Test
+  void callOmitsEmptyResponseMetadata() {
+    chatModel.setCallResponse(
+        response(
+            singletonList(generation(RESPONSE, "stop")),
+            ChatResponseMetadata.builder().model(MODEL).build()));
+
+    testing.runWithSpan("parent", () -> chatModel.call(prompt()));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("chat " + MODEL)
+                        .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                            equalTo(GEN_AI_REQUEST_FREQUENCY_PENALTY, 0.1),
+                            equalTo(GEN_AI_REQUEST_MAX_TOKENS, 42L),
+                            equalTo(GEN_AI_REQUEST_PRESENCE_PENALTY, 0.2),
+                            equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, singletonList("stop-sequence")),
+                            equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.3),
+                            equalTo(GEN_AI_REQUEST_TOP_K, 4.0),
+                            equalTo(GEN_AI_REQUEST_TOP_P, 0.5),
+                            equalTo(GEN_AI_RESPONSE_FINISH_REASONS, singletonList("stop")),
+                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                            equalTo(
+                                stringKey("gen_ai.input.messages"),
+                                messageSpanAttribute(
+                                    "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
+                                        + PROMPT
+                                        + "\"}]}]")),
+                            equalTo(
+                                stringKey("gen_ai.output.messages"),
+                                messageSpanAttribute(
+                                    "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
+                                        + RESPONSE
+                                        + "\"}],\"finish_reason\":\"stop\"}]")))));
+    assertMetricsWithoutTokenUsage();
+  }
+
+  @Test
+  void nullMessageContentDoesNotAbortEvents() {
+    chatModel.setCallResponse(
+        response(
+            asList(generation(null, "tool_calls"), generation(RESPONSE, "stop")),
+            ChatResponseMetadata.builder()
+                .id("response-id")
+                .model(MODEL)
+                .usage(new DefaultUsage(3, 2))
+                .build()));
+    Prompt prompt = new Prompt(asList(new AssistantMessage(null), new UserMessage(PROMPT)));
+
+    testing.runWithSpan("parent", () -> chatModel.call(prompt));
+
+    SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
+    testing.waitAndAssertLogRecords(
+        log ->
+            log.hasAttributesSatisfyingExactly(
+                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                    equalTo(stringKey("event.name"), "gen_ai.assistant.message"))
+                .hasSpanContext(spanContext)
+                .hasBody(messageBody(null)),
+        log ->
+            log.hasAttributesSatisfyingExactly(
+                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                    equalTo(stringKey("event.name"), "gen_ai.user.message"))
+                .hasSpanContext(spanContext)
+                .hasBody(messageBody(PROMPT)),
+        log ->
+            log.hasAttributesSatisfyingExactly(
+                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                    equalTo(stringKey("event.name"), "gen_ai.choice"))
+                .hasSpanContext(spanContext)
+                .hasBody(choiceBody("tool_calls", 0, null)),
+        log ->
+            log.hasAttributesSatisfyingExactly(
+                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                    equalTo(stringKey("event.name"), "gen_ai.choice"))
+                .hasSpanContext(spanContext)
+                .hasBody(choiceBody("stop", 1, RESPONSE)));
   }
 
   @Test
@@ -402,6 +491,27 @@ class ChatModelTest {
                                         equalTo(GEN_AI_TOKEN_TYPE, OUTPUT)))));
   }
 
+  private static void assertMetricsWithoutTokenUsage() {
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        metric ->
+            metric
+                .hasName("gen_ai.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSumGreaterThan(0.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))));
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME, "gen_ai.client.token.usage", metrics -> metrics.isEmpty());
+  }
+
   private static void assertMessageEvents(SpanContext spanContext) {
     testing.waitAndAssertLogRecords(
         log ->
@@ -441,14 +551,14 @@ class ChatModelTest {
   }
 
   private static Value<?> messageBody(String content) {
-    return CAPTURE_MESSAGE_CONTENT
+    return CAPTURE_MESSAGE_CONTENT && content != null
         ? Value.of(KeyValue.of("content", Value.of(content)))
         : Value.of(emptyMap());
   }
 
   private static Value<?> choiceBody(String finishReason, int index, String content) {
     Value<?> message =
-        CAPTURE_MESSAGE_CONTENT
+        CAPTURE_MESSAGE_CONTENT && content != null
             ? Value.of(KeyValue.of("content", Value.of(content)))
             : Value.of(emptyMap());
     return Value.of(

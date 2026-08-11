@@ -16,7 +16,7 @@ muzzle {
 }
 
 dependencies {
-  library("org.springframework.ai:spring-ai-model:1.1.2")
+  library("org.springframework.ai:spring-ai-model:1.0.0")
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))

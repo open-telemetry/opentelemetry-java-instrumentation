@@ -35,7 +35,10 @@ public final class SpringAiMessageEvents {
         }
         Map<String, Value<?>> body = new HashMap<>();
         if (SpringAiSingletons.captureMessageContent()) {
-          body.put("content", Value.of(message.getText()));
+          String content = message.getText();
+          if (content != null) {
+            body.put("content", Value.of(content));
+          }
         }
         newEvent(request, eventName).setContext(context).setBody(Value.of(body)).emit();
       }
@@ -69,7 +72,9 @@ public final class SpringAiMessageEvents {
               streamedContents != null && index < streamedContents.size()
                   ? streamedContents.get(index)
                   : generation.getOutput().getText();
-          message.put("content", Value.of(content));
+          if (content != null) {
+            message.put("content", Value.of(content));
+          }
         }
         body.put("message", Value.of(message));
         newEvent(request, "gen_ai.choice").setContext(context).setBody(Value.of(body)).emit();

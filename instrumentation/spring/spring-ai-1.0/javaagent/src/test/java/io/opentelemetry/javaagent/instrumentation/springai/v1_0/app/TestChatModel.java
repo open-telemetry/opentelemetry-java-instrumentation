@@ -26,6 +26,7 @@ public class TestChatModel implements ChatModel {
   private final ChatOptions defaultOptions;
   private RuntimeException callFailure;
   private RuntimeException streamFailure;
+  private ChatResponse callResponse;
   private Flux<ChatResponse> streamPublisher;
 
   public TestChatModel() {
@@ -34,7 +35,8 @@ public class TestChatModel implements ChatModel {
 
   public TestChatModel(ChatOptions defaultOptions) {
     this.defaultOptions = defaultOptions;
-    this.streamPublisher = Flux.just(response());
+    this.callResponse = response();
+    this.streamPublisher = Flux.just(callResponse);
   }
 
   @Override
@@ -43,7 +45,7 @@ public class TestChatModel implements ChatModel {
     if (callFailure != null) {
       throw callFailure;
     }
-    return response();
+    return callResponse;
   }
 
   @Override
@@ -69,6 +71,10 @@ public class TestChatModel implements ChatModel {
 
   public void setCallFailure(RuntimeException callFailure) {
     this.callFailure = callFailure;
+  }
+
+  public void setCallResponse(ChatResponse callResponse) {
+    this.callResponse = callResponse;
   }
 
   public void setStreamPublisher(Flux<ChatResponse> streamPublisher) {

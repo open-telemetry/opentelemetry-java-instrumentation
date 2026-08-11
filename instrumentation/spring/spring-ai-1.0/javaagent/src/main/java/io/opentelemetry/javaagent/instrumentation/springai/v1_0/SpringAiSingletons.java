@@ -12,6 +12,7 @@ import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -47,7 +48,9 @@ public final class SpringAiSingletons {
     SpringAiAttributesGetter getter = new SpringAiAttributesGetter();
     InstrumenterBuilder<SpringAiRequest, ChatResponse> builder =
         Instrumenter.<SpringAiRequest, ChatResponse>builder(
-                GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, SpringAiSpanNameExtractor::name)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                GenAiSpanNameExtractor.create(getter))
             .addAttributesExtractor(GenAiAttributesExtractor.create(getter))
             .addAttributesExtractor(new SpringAiErrorAttributesExtractor())
             .addOperationMetrics(GenAiClientMetrics.get());

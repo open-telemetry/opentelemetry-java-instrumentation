@@ -13,6 +13,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.springframework.ai.chat.metadata.ChatGenerationMetadata;
 import org.springframework.ai.chat.metadata.ChatResponseMetadata;
+import org.springframework.ai.chat.metadata.EmptyUsage;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
@@ -103,7 +104,8 @@ final class SpringAiAttributesGetter
   @Nullable
   public String getResponseId(SpringAiRequest request, @Nullable ChatResponse response) {
     ChatResponseMetadata metadata = metadata(response);
-    return metadata == null ? null : metadata.getId();
+    String id = metadata == null ? null : metadata.getId();
+    return id == null || id.isEmpty() ? null : id;
   }
 
   @Override
@@ -138,6 +140,7 @@ final class SpringAiAttributesGetter
   @Nullable
   private static Usage usage(@Nullable ChatResponse response) {
     ChatResponseMetadata metadata = metadata(response);
-    return metadata == null ? null : metadata.getUsage();
+    Usage usage = metadata == null ? null : metadata.getUsage();
+    return usage instanceof EmptyUsage ? null : usage;
   }
 }
