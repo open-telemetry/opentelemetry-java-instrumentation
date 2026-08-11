@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.ktor.common.v2_0.internal
 
 import io.ktor.client.*
+import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.util.*
@@ -24,6 +25,26 @@ import kotlinx.coroutines.withContext
 object KtorClientTelemetryUtil {
   private val OPEN_TELEMETRY_CONTEXT_KEY = AttributeKey<Context>("OpenTelemetry")
   private val OPEN_TELEMETRY_PARENT_CONTEXT_KEY = AttributeKey<Context>("OpenTelemetryParent")
+
+  /** Returns the OpenTelemetry [Context] holding the client span for [call], or null if absent. */
+  @JvmStatic
+  fun getOpenTelemetryContext(call: HttpClientCall): Context? = call.attributes.getOrNull(OPEN_TELEMETRY_CONTEXT_KEY)
+
+  @JvmStatic
+  @Suppress("UNCHECKED_CAST")
+  fun wrapWithClientSpanContext(block: Any?): Any? {
+    block ?: return null
+    val original = block as suspend (HttpResponse) -> Any?
+    val wrapped: suspend (HttpResponse) -> Any? = { response ->
+      val otelContext = response.call.attributes.getOrNull(OPEN_TELEMETRY_CONTEXT_KEY)
+      if (otelContext != null) {
+        withContext(otelContext.asContextElement()) { original(response) }
+      } else {
+        original(response)
+      }
+    }
+    return wrapped
+  }
 
   fun install(plugin: AbstractKtorClientTelemetry, scope: HttpClient) {
     installSpanCreation(plugin, scope)

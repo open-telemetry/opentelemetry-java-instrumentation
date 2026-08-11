@@ -61,3 +61,35 @@ val client = HttpClient {
   }
 }
 ```
+
+### Setting attributes on the client span
+
+The client span is stored on the `HttpClientCall` and can be reached from a response. This is the
+supported way to enrich the client span with the library instrumentation, from inside a
+`HttpStatement.execute { }` block, where the client span is not the ambient `Context`:
+
+```kotlin
+import io.opentelemetry.instrumentation.ktor.v3_0.withClientSpan
+
+client.prepareGet("https://example.com").execute { response ->
+  response.call.withClientSpan {
+    setAttribute("example.attribute", "value")
+  }
+  // ...
+}
+```
+
+`HttpClientCall.getOpenTelemetryContext()` is also available if you need the raw `Context` (for
+example to make it current via `asContextElement()`). Both return `null`/no-op if no span was
+created. e.g. if instrumentation is disabled, or the client span was suppressed because a client
+span was already active.
+
+The client span ends when the call completes, so mutate it while the call is still in progress
+(within the `execute` block); attribute changes after the span has ended are no-ops.
+
+> [!NOTE]
+> This `HttpClientCall` approach also works under the OpenTelemetry Java agent (the agent bridges
+> the context it stores on the call). Under the agent the client span is additionally available as
+> the ambient `Context` inside the `execute` block, so `Span.current()` works there too — see the
+> [javaagent README](../javaagent/README.md#setting-attributes-on-the-client-span). Prefer this
+> `HttpClientCall` approach if your code must run in both modes.
