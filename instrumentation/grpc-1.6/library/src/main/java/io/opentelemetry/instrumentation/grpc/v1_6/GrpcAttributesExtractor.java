@@ -46,7 +46,7 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
   GrpcAttributesExtractor(
       GrpcRpcAttributesGetter getter, @Nullable IncludeExclude requestMetadata) {
     this.getter = getter;
-    if (requestMetadata == null) {
+    if (requestMetadata == null || requestMetadata.isEmpty()) {
       this.requestMetadata = null;
       literalRequestAttributeKeys = emptyMap();
       literalStableRequestAttributeKeys = emptyMap();

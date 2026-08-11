@@ -75,6 +75,19 @@ class GrpcAttributesExtractorTest {
     assertExcludedMetadata(attributes.build(), "some-key");
   }
 
+  @Test
+  void emptySelectorCapturesNothing() {
+    Metadata metadata = new Metadata();
+    metadata.put(Metadata.Key.of("some-key", Metadata.ASCII_STRING_MARSHALLER), "some-value");
+    GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
+    AttributesBuilder attributes = Attributes.builder();
+
+    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), IncludeExclude.builder().build())
+        .onEnd(attributes, Context.root(), request, null, null);
+
+    assertExcludedMetadata(attributes.build(), "some-key");
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {":authority", "x-foo!bar", "x_foo+bar", "x-foo~bar"})
   void skipsKeysThatGrpcMetadataCannotRepresent(String key) {
