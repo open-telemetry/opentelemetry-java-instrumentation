@@ -104,6 +104,12 @@ public final class Experimental {
   /**
    * Selects the metrics to source from JFR on Java 17+.
    *
+   * <p>Metric names and selector patterns are matched case-sensitively. {@code ?} matches any
+   * single character and {@code *} matches any number of characters, including none. Excluded
+   * patterns take precedence over included patterns. JFR is inactive unless a selector is
+   * configured; a selector with only excluded patterns sources every metric that JFR implements and
+   * that it does not exclude.
+   *
    * <p>Metrics that JFR actually registers are suppressed from JMX to avoid duplicates. This method
    * is a no-op on Java versions prior to 17.
    *

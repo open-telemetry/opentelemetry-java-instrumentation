@@ -999,7 +999,7 @@ definitions:
       name: otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded
       declarative_name: java.runtime_telemetry.jfr_metrics/development.excluded
       description: |
-        Excludes JVM runtime metrics from JFR on Java 17+ using exact names or glob patterns with * and ?. Exclusions take precedence over inclusions and shorthand or legacy selections. Configuring this property without included selects all metrics except those excluded.
+        Excludes JVM runtime metrics from JFR on Java 17+ using exact names or glob patterns with * and ?. Excluded patterns take precedence over included patterns, including over shorthand and legacy selections. Configuring this property without included selects all metrics except those excluded.
       type: list
       default: ''
       examples:
