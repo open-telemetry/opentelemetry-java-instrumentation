@@ -124,15 +124,17 @@ public final class RuntimeTelemetryBuilder {
 
   @Nullable
   private IncludeExclude getEffectiveJfrMetrics() {
-    if (jfrMetrics == null && !preferJfrMetrics && !emitExperimentalJfrMetrics) {
+    // an empty selector is equivalent to no selector at all
+    IncludeExclude selector = jfrMetrics == null || jfrMetrics.isEmpty() ? null : jfrMetrics;
+    if (selector == null && !preferJfrMetrics && !emitExperimentalJfrMetrics) {
       return null;
     }
-    if (jfrMetrics != null && jfrMetrics.getIncluded().isEmpty()) {
-      return jfrMetrics;
+    if (selector != null && selector.getIncluded().isEmpty()) {
+      return selector;
     }
 
     List<String> included =
-        jfrMetrics == null ? new ArrayList<>() : new ArrayList<>(jfrMetrics.getIncluded());
+        selector == null ? new ArrayList<>() : new ArrayList<>(selector.getIncluded());
     if (preferJfrMetrics) {
       included.addAll(Experimental.JMX_OVERLAPPING_JFR_METRICS);
     }
@@ -141,7 +143,7 @@ public final class RuntimeTelemetryBuilder {
     }
     return IncludeExclude.builder()
         .setIncluded(included)
-        .setExcluded(jfrMetrics == null ? emptyList() : jfrMetrics.getExcluded())
+        .setExcluded(selector == null ? emptyList() : selector.getExcluded())
         .build();
   }
 

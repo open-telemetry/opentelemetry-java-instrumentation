@@ -324,14 +324,16 @@ public final class Internal {
 
     private static JfrMetricSelection create(DeclarativeConfigProperties config) {
       DeclarativeConfigProperties jfrMetrics = config.get("jfr_metrics/development");
-      List<String> included = jfrMetrics.getScalarList("included", String.class);
-      List<String> excluded = jfrMetrics.getScalarList("excluded", String.class);
+      List<String> includedConfig = jfrMetrics.getScalarList("included", String.class);
+      List<String> excludedConfig = jfrMetrics.getScalarList("excluded", String.class);
+      List<String> included = includedConfig == null ? emptyList() : includedConfig;
+      List<String> excluded = excludedConfig == null ? emptyList() : excludedConfig;
       return new JfrMetricSelection(
           // an empty selector is equivalent to no selector at all, matching flat configuration
           // where empty property values cannot be distinguished from unset ones
-          isNotEmpty(included) || isNotEmpty(excluded),
-          included == null ? emptyList() : included,
-          excluded == null ? emptyList() : excluded,
+          !included.isEmpty() || !excluded.isEmpty(),
+          included,
+          excluded,
           config.getBoolean("emit_experimental_jfr_metrics/development", false),
           config.getBoolean("prefer_jfr/development", false));
     }
@@ -386,10 +388,6 @@ public final class Internal {
       Internal.setJfrMetrics(
           builder,
           IncludeExclude.builder().setIncluded(effectiveIncluded).setExcluded(excluded).build());
-    }
-
-    private static boolean isNotEmpty(@Nullable List<String> patterns) {
-      return patterns != null && !patterns.isEmpty();
     }
   }
 

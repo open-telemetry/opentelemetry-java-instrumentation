@@ -81,19 +81,6 @@ class RuntimeTelemetryBuilderTest {
   }
 
   @Test
-  void emptyPresentSelectorSelectsAllMetrics() {
-    RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
-    Experimental.setJfrMetrics(builder, IncludeExclude.builder().build());
-    RuntimeTelemetry runtimeTelemetry = builder.build();
-    cleanup.deferCleanup(runtimeTelemetry);
-
-    JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
-        (JfrConfig.JfrRuntimeMetrics) runtimeTelemetry.getJfrTelemetry();
-    assertThat(jfrRuntimeMetrics.getMetricNames())
-        .contains("jvm.class.count", "jvm.cpu.longlock", "jvm.memory.allocation");
-  }
-
-  @Test
   void globPatternsSelectMetrics() {
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
     Experimental.setJfrMetrics(builder, include("jvm.cpu.long*", "jvm.class.coun?"));
@@ -110,6 +97,16 @@ class RuntimeTelemetryBuilderTest {
   void selectorMatchingNoMetricsDoesNotStartRecording() {
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
     Experimental.setJfrMetrics(builder, include("not.a.jvm.metric"));
+    RuntimeTelemetry runtimeTelemetry = builder.build();
+    cleanup.deferCleanup(runtimeTelemetry);
+
+    assertThat(runtimeTelemetry.getJfrTelemetry()).isNull();
+  }
+
+  @Test
+  void emptySelectorSelectsNothing() {
+    RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(OpenTelemetry.noop());
+    Experimental.setJfrMetrics(builder, IncludeExclude.builder().build());
     RuntimeTelemetry runtimeTelemetry = builder.build();
     cleanup.deferCleanup(runtimeTelemetry);
 
