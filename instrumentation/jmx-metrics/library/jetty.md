@@ -36,6 +36,6 @@ Those metrics require the following Jetty modules to be enabled : `jmx`, `http` 
 | jetty.thread.queue.size     | UpDownCounter | {thread}    |               | The current job queue size                |
 | jetty.select.count          | Counter       | {operation} |               | The number of select calls                |
 | jetty.session.created.count | Counter       | {session}   | jetty.context | The total number of created sessions      |
-| jetty.session.duration.sum  | Counter       | {session}   | jetty.context | The cumulated session duration            |
+| jetty.session.duration.sum  | Counter       | s           | jetty.context | The cumulated session duration            |
 
 - `jetty.context` corresponds to the deployed application subfolder in `webapps` folder.
