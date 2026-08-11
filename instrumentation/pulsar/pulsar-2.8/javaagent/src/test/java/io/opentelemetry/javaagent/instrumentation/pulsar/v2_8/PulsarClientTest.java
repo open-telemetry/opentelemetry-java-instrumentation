@@ -331,7 +331,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
         client.newConsumer(Schema.STRING).subscriptionName("test_sub").topic(topic).subscribe();
     testing.clearData();
     CompletableFuture<Messages<String>> receive = consumer.batchReceiveAsync();
-    consumer.close();
+    client.close();
 
     Throwable error = receive.handle((messages, throwable) -> throwable).get(1, MINUTES);
 

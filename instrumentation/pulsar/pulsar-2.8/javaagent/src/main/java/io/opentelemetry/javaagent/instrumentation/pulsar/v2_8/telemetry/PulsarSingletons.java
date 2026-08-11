@@ -242,7 +242,6 @@ public class PulsarSingletons {
       boolean listenerContextActive,
       @Nullable Throwable throwable) {
     if (listenerContextActive
-        && throwable == null
         && (messages == null
             || messages.size() == 0
             || !Boolean.TRUE.equals(receiveInstrumentationEnabled))) {
