@@ -7,9 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -23,14 +25,17 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
@@ -46,7 +51,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
-  void testCommitAsyncDefaultCallbackEndsSpanAfterBrokerCompletion() throws InterruptedException {
+  void testCommitAsyncDefaultCallbacksCorrelateReusedOffsets() throws InterruptedException {
     assumeTrue(emitStableMessagingSemconv());
     awaitUntilConsumerIsReady();
     consumer.seekToEnd(emptyList());
@@ -54,21 +59,66 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
         singletonMap(TOPIC_PARTITION, new OffsetAndMetadata(consumer.position(TOPIC_PARTITION)));
     testing.clearData();
 
-    testing.runWithSpan("commit parent", () -> consumer.commitAsync(offsets, null));
+    testing.runWithSpan("first commit parent", () -> consumer.commitAsync(offsets, null));
+    testing.runWithSpan("second commit parent", () -> consumer.commitAsync(offsets, null));
 
-    assertThat(testing.spans()).hasSize(1);
-    for (int i = 0; i < 10 && testing.spans().size() == 1; i++) {
+    assertThat(testing.spans()).hasSize(2);
+    for (int i = 0; i < 10 && testing.spans().size() == 2; i++) {
       poll(Duration.ofMillis(500));
     }
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("commit parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("first commit parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("commit " + SHARED_TOPIC)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("second commit parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
                     span.hasName("commit " + SHARED_TOPIC)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void testCommitAsyncKip848FutureEndsSpanAfterBrokerCompletion() {
+    assumeTrue(emitStableMessagingSemconv());
+    assumeTrue(testLatestDeps());
+    Map<String, Object> properties = consumerProps();
+    properties.put("group.protocol", "consumer");
+    properties.remove("session.timeout.ms");
+
+    try (Consumer<Integer, String> asyncConsumer = new KafkaConsumer<>(properties)) {
+      asyncConsumer.assign(singleton(TOPIC_PARTITION));
+      Map<TopicPartition, OffsetAndMetadata> offsets =
+          singletonMap(TOPIC_PARTITION, new OffsetAndMetadata(0));
+      testing.clearData();
+
+      testing.runWithSpan("KIP-848 commit parent", () -> asyncConsumer.commitAsync(offsets, null));
+
+      assertThat(testing.spans()).hasSize(1);
+      for (int i = 0; i < 10 && testing.spans().size() == 1; i++) {
+        poll(asyncConsumer, Duration.ofMillis(500));
+      }
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("KIP-848 commit parent")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasNoParent(),
+                  span ->
+                      span.hasName("commit " + SHARED_TOPIC)
+                          .hasKind(SpanKind.CLIENT)
+                          .hasParent(trace.getSpan(0))));
+    }
   }
 
   @DisplayName("test kafka produce and consume")
@@ -513,5 +563,14 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasAttributesSatisfyingExactly(
                             processAttributes("10", greeting, false, false)),
                 span -> span.hasName("processing").hasParent(trace.getSpan(1))));
+  }
+
+  private static void poll(Consumer<?, ?> consumer, Duration duration) {
+    try {
+      Method method = consumer.getClass().getMethod("poll", Duration.class);
+      method.invoke(consumer, duration);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException(e);
+    }
   }
 }
