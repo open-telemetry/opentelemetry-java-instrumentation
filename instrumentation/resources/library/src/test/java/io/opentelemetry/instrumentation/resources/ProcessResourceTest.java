@@ -46,7 +46,7 @@ class ProcessResourceTest {
   }
 
   @Test
-  @SetSystemProperty(key = "sun.java.command", value = "app.jar -DappSecret=abc --other=test")
+  @SetSystemProperty(key = "sun.java.command", value = "app.jar -DappSecret=abc def --other=test")
   void commandAttributesEnabled() {
     Resource resource = ProcessResource.create(true);
     Attributes attributes = resource.getAttributes();
@@ -57,7 +57,7 @@ class ProcessResourceTest {
           .contains("-DtestSecret=***")
           .contains("-DtestPassword=***")
           .contains("-DtestNotRedacted=test")
-          .contains("app.jar -DappSecret=*** --other=test");
+          .endsWith(" app.jar -DappSecret=***");
     } else {
       assertThat(attributes.get(PROCESS_COMMAND_ARGS))
           .contains(attributes.get(PROCESS_EXECUTABLE_PATH))

@@ -38,6 +38,8 @@ public final class ProcessResource {
   // scrub values for system properties containing "secret" or "password" in the name
   private static final Pattern SCRUB_PATTERN =
       Pattern.compile("(-D.*(password|secret).*=).*", Pattern.CASE_INSENSITIVE);
+  private static final Pattern SCRUB_COMMAND_LINE_PATTERN =
+      Pattern.compile("(-D[^\\s=]*(password|secret)[^\\s=]*=).*", Pattern.CASE_INSENSITIVE);
 
   @Deprecated // to be removed in 3.0
   private static final Resource INSTANCE = create(true);
@@ -150,15 +152,8 @@ public final class ProcessResource {
   }
 
   private static String scrubCommandLine(String commandLine) {
-    String[] arguments = commandLine.split(" ", -1);
-    StringBuilder result = new StringBuilder();
-    for (int i = 0; i < arguments.length; i++) {
-      if (i > 0) {
-        result.append(' ');
-      }
-      result.append(scrub(arguments[i]));
-    }
-    return result.toString();
+    // Argument boundaries have been lost, so redact the remainder to avoid exposing continuations.
+    return SCRUB_COMMAND_LINE_PATTERN.matcher(commandLine).replaceFirst("$1***");
   }
 
   private static String scrub(String argument) {
