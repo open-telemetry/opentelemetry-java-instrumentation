@@ -35,7 +35,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class SimpleConsumerAckOperationTest {
 
   private static final String TOPIC = "settle-topic";
@@ -192,6 +191,7 @@ class SimpleConsumerAckOperationTest {
                         .hasParent(trace.getSpan(0))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static SpanDataAssert assertAckSpan(
       SpanDataAssert span, Class<? extends Throwable> errorType) {
     return span.hasName("ack " + TOPIC)
