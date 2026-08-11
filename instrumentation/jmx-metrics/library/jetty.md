@@ -18,7 +18,7 @@ Those metrics require the following Jetty modules to be enabled : `jmx`, `http`,
 | jetty.thread.busy.count | UpDownCounter | {thread}    |               | The current number of busy threads        |
 | jetty.thread.idle.count | UpDownCounter | {thread}    |               | The current number of idle threads        |
 | jetty.thread.queue.size | UpDownCounter | {thread}    |               | The current job queue size                |
-| jetty.io.select.count   | Counter       | {operation} |               | The number of select calls                |
+| jetty.select.count      | Counter       | {operation} |               | The number of select calls                |
 | jetty.session.count     | UpDownCounter | {session}   | jetty.context | Current number of active sessions         |
 
 - `jetty.context` corresponds to the deployed application subfolder in `webapps` folder.
@@ -28,13 +28,13 @@ Those metrics require the following Jetty modules to be enabled : `jmx`, `http`,
 Those metrics require the following Jetty modules to be enabled : `jmx`, `http` and `stats`.
 
 | Metric Name                 | Type          | Unit        | Attributes    | Description                               |
-| --------------------------- | ------------- | ----------- | ------------- | ----------------------------------------- |
+| --------------------------- | ------------- |-------------| ------------- | ----------------------------------------- |
 | jetty.thread.count          | UpDownCounter | {thread}    |               | The current number of threads             |
 | jetty.thread.limit          | UpDownCounter | {thread}    |               | The maximum number of threads in the pool |
 | jetty.thread.busy.count     | UpDownCounter | {thread}    |               | The current number of busy threads        |
 | jetty.thread.idle.count     | UpDownCounter | {thread}    |               | The current number of idle threads        |
 | jetty.thread.queue.size     | UpDownCounter | {thread}    |               | The current job queue size                |
-| jetty.io.select.count       | Counter       | {operation} |               | The number of select calls                |
+| jetty.select.count          | Counter       | {operation} |               | The number of select calls                |
 | jetty.session.created.count | Counter       | {session}   | jetty.context | The total number of created sessions      |
 | jetty.session.duration.sum  | Counter       | {session}   | jetty.context | The cumulated session duration            |
 
