@@ -6,8 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
 import static io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil.serializeKey;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import java.util.Objects;
@@ -15,15 +18,6 @@ import javax.annotation.Nullable;
 import org.apache.kafka.connect.sink.SinkRecord;
 
 final class KafkaConnectBatchRecordAttributes {
-
-  private static final AttributeKey<String> MESSAGING_DESTINATION_NAME =
-      AttributeKey.stringKey("messaging.destination.name");
-  private static final AttributeKey<String> MESSAGING_DESTINATION_PARTITION_ID =
-      AttributeKey.stringKey("messaging.destination.partition.id");
-  private static final AttributeKey<String> MESSAGING_KAFKA_MESSAGE_KEY =
-      AttributeKey.stringKey("messaging.kafka.message.key");
-  private static final AttributeKey<Long> MESSAGING_KAFKA_OFFSET =
-      AttributeKey.longKey("messaging.kafka.offset");
 
   private boolean initialized;
   @Nullable private String commonDestination;

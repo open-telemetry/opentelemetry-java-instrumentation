@@ -26,11 +26,11 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
@@ -99,6 +99,11 @@ class KafkaBatchProcessSpanLinksExtractorTest {
     assertThat(links.linksWithoutAttributes).isEqualTo(2);
   }
 
+  @Test
+  void doesNotSerializeByteBufferKey() {
+    assertThat(KafkaUtil.serializeKey(ByteBuffer.wrap(new byte[] {1}))).isNull();
+  }
+
   private static RecordingSpanLinksBuilder extractLinks(KafkaReceiveRequest request) {
     RecordingSpanLinksBuilder links = new RecordingSpanLinksBuilder();
     new KafkaBatchProcessSpanLinksExtractor(new TestPropagator())
@@ -161,10 +166,10 @@ class KafkaBatchProcessSpanLinksExtractorTest {
     }
 
     @Override
-    public <C> void inject(Context context, @Nullable C carrier, TextMapSetter<C> setter) {}
+    public <C> void inject(Context context, C carrier, TextMapSetter<C> setter) {}
 
     @Override
-    public <C> Context extract(Context context, @Nullable C carrier, TextMapGetter<C> getter) {
+    public <C> Context extract(Context context, C carrier, TextMapGetter<C> getter) {
       return Context.root().with(Span.wrap(LINK_CONTEXT));
     }
   }

@@ -148,7 +148,7 @@ public final class KafkaUtil {
   @Nullable
   public static String serializeKey(@Nullable Object key) {
     // Calling toString() does not produce useful message-key values for byte[] or ByteBuffer.
-    if (key == null || key.getClass().isArray() || key.getClass() == ByteBuffer.class) {
+    if (key == null || key.getClass().isArray() || key instanceof ByteBuffer) {
       return null;
     }
     return key.toString();
