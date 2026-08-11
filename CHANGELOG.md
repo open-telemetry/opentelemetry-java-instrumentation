@@ -36,12 +36,6 @@
   `MessagingConsumerMetrics.getForOperationType()`.
   ([#19357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19357))
 
-### 📈 Enhancements
-
-- When `otel.instrumentation.common.v3-preview` is enabled, library instrumentation ignores the
-  deprecated `otel.instrumentation.experimental.span-suppression-strategy` system property.
-  ([#19180](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19180))
-
 ## Version 2.30.0 (2026-07-22)
 
 This release targets the OpenTelemetry SDK 1.64.0.
