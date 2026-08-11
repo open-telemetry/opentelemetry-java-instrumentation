@@ -47,7 +47,7 @@ groups:
     stability: development
     type: metric
     brief: The current job queue size.
-    unit: "{thread}"
+    unit: "{job}"
     instrument: updowncounter
 
   - id: metric.jetty.session.created.count
