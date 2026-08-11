@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
-public abstract class ExecutorMetrics {
+public final class ExecutorMetricsRegistry {
 
   public static final String UNKNOWN = "unknown";
 
@@ -28,17 +28,28 @@ public abstract class ExecutorMetrics {
 
   private static final Cache<Executor, Registration> registrations = Cache.weak();
 
-  public final void preRegister(ThreadPoolExecutor executor, String threadNameNormalization) {
+  @FunctionalInterface
+  public interface MetricsRegistrar {
+
+    BatchCallback registerMetrics(
+        Executor executor,
+        Set<Thread> threads,
+        String executorName,
+        @Nullable String ownerName,
+        LongAdder rejectedTaskCount);
+  }
+
+  public static void preRegister(ThreadPoolExecutor executor, String threadNameNormalization) {
     preRegister(executor, emptySet(), threadNameNormalization);
   }
 
-  public final void preRegister(
+  public static void preRegister(
       Executor executor, Set<Thread> threads, String threadNameNormalization) {
     registrations.computeIfAbsent(
         executor, ignored -> new Registration(threads, threadNameNormalization));
   }
 
-  public final ThreadFactory preRegister(
+  public static ThreadFactory preRegister(
       Executor executor,
       ThreadFactory threadFactory,
       Set<Thread> threads,
@@ -47,18 +58,14 @@ public abstract class ExecutorMetrics {
     return new RegistrationThreadFactory(threadFactory);
   }
 
-  protected abstract BatchCallback registerMetrics(
-      Executor executor,
-      Set<Thread> threads,
-      String executorName,
-      @Nullable String ownerName,
-      LongAdder rejectedTaskCount);
-
   public static void reregister(
-      Executor executor, @Nullable String ownerName, String threadNameNormalization) {
+      Executor executor,
+      @Nullable String ownerName,
+      String threadNameNormalization,
+      MetricsRegistrar metricsRegistrar) {
     Registration registration = registrations.get(executor);
     if (registration != null) {
-      registration.reregister(executor, ownerName, threadNameNormalization);
+      registration.reregister(executor, ownerName, threadNameNormalization, metricsRegistrar);
     }
   }
 
@@ -69,19 +76,24 @@ public abstract class ExecutorMetrics {
     }
   }
 
-  public static void onWorkerThreadStarted(Executor executor, @Nullable String threadName) {
+  public static void onWorkerThreadStarted(
+      Executor executor, @Nullable String threadName, MetricsRegistrar metricsRegistrar) {
     Registration registration = registrations.get(executor);
     if (registration != null) {
-      registration.onWorkerThreadStarted(executor, threadName);
+      registration.onWorkerThreadStarted(executor, threadName, metricsRegistrar);
     }
   }
 
   public static void onWorkerThreadStarted(
-      Executor executor, ThreadFactory threadFactory, @Nullable String threadName) {
+      Executor executor,
+      ThreadFactory threadFactory,
+      @Nullable String threadName,
+      MetricsRegistrar metricsRegistrar) {
     if (threadFactory instanceof RegistrationThreadFactory) {
-      ((RegistrationThreadFactory) threadFactory).onWorkerThreadStarted(executor, threadName);
+      ((RegistrationThreadFactory) threadFactory)
+          .onWorkerThreadStarted(executor, threadName, metricsRegistrar);
     } else {
-      onWorkerThreadStarted(executor, threadName);
+      onWorkerThreadStarted(executor, threadName, metricsRegistrar);
     }
   }
 
@@ -127,7 +139,7 @@ public abstract class ExecutorMetrics {
         .replaceAll("*");
   }
 
-  private final class Registration {
+  private static final class Registration {
     private final WeakReference<Set<Thread>> threadsRef;
     private final LongAdder rejectedTaskCount = new LongAdder();
     @Nullable private String ownerName;
@@ -149,7 +161,8 @@ public abstract class ExecutorMetrics {
       }
     }
 
-    private void onWorkerThreadStarted(Executor executor, @Nullable String threadName) {
+    private void onWorkerThreadStarted(
+        Executor executor, @Nullable String threadName, MetricsRegistrar metricsRegistrar) {
       if (!awaitingWorkerThread) {
         return;
       }
@@ -171,7 +184,8 @@ public abstract class ExecutorMetrics {
         }
 
         BatchCallback newCallback =
-            registerMetrics(executor, threads, newExecutorName, ownerName, rejectedTaskCount);
+            metricsRegistrar.registerMetrics(
+                executor, threads, newExecutorName, ownerName, rejectedTaskCount);
         previous = callback;
         callback = newCallback;
         executorName = newExecutorName;
@@ -185,7 +199,10 @@ public abstract class ExecutorMetrics {
     }
 
     private void reregister(
-        Executor executor, @Nullable String newOwnerName, String newThreadNameNormalization) {
+        Executor executor,
+        @Nullable String newOwnerName,
+        String newThreadNameNormalization,
+        MetricsRegistrar metricsRegistrar) {
       @Nullable BatchCallback previous;
       synchronized (this) {
         if (closed) {
@@ -204,7 +221,8 @@ public abstract class ExecutorMetrics {
         }
 
         BatchCallback newCallback =
-            registerMetrics(executor, threads, newExecutorName, newOwnerName, rejectedTaskCount);
+            metricsRegistrar.registerMetrics(
+                executor, threads, newExecutorName, newOwnerName, rejectedTaskCount);
         previous = callback;
         callback = newCallback;
         ownerName = newOwnerName;
@@ -252,11 +270,12 @@ public abstract class ExecutorMetrics {
       return delegate.newThread(runnable);
     }
 
-    private void onWorkerThreadStarted(Executor executor, @Nullable String threadName) {
+    private void onWorkerThreadStarted(
+        Executor executor, @Nullable String threadName, MetricsRegistrar metricsRegistrar) {
       if (!registrationPending) {
         return;
       }
-      ExecutorMetrics.onWorkerThreadStarted(executor, threadName);
+      ExecutorMetricsRegistry.onWorkerThreadStarted(executor, threadName, metricsRegistrar);
       registrationPending = false;
     }
 
@@ -265,5 +284,5 @@ public abstract class ExecutorMetrics {
     }
   }
 
-  protected ExecutorMetrics() {}
+  private ExecutorMetricsRegistry() {}
 }

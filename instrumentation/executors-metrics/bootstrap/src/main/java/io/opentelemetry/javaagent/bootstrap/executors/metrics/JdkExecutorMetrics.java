@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 import javax.annotation.Nullable;
 
-public final class JdkExecutorMetrics extends ExecutorMetrics {
+public final class JdkExecutorMetrics {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.executors-metrics";
 
@@ -27,19 +27,24 @@ public final class JdkExecutorMetrics extends ExecutorMetrics {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "executors_metrics")
           .getString("name_normalization/development", "trailing");
 
-  public static final JdkExecutorMetrics INSTANCE = new JdkExecutorMetrics();
-
-  public static void preRegister(ThreadPoolExecutor executor) {
-    INSTANCE.preRegister(executor, DEFAULT_NAME_NORMALIZATION);
+  public static void reregister(
+      Executor executor, @Nullable String ownerName, String threadNameNormalization) {
+    ExecutorMetricsRegistry.reregister(
+        executor, ownerName, threadNameNormalization, JdkExecutorMetrics::registerMetrics);
   }
 
-  public static ThreadFactory preRegister(
-      Executor executor, ThreadFactory threadFactory, Set<Thread> threads) {
-    return INSTANCE.preRegister(executor, threadFactory, threads, DEFAULT_NAME_NORMALIZATION);
+  public static void onWorkerThreadStarted(Executor executor, @Nullable String threadName) {
+    ExecutorMetricsRegistry.onWorkerThreadStarted(
+        executor, threadName, JdkExecutorMetrics::registerMetrics);
   }
 
-  @Override
-  protected BatchCallback registerMetrics(
+  public static void onWorkerThreadStarted(
+      Executor executor, ThreadFactory threadFactory, @Nullable String threadName) {
+    ExecutorMetricsRegistry.onWorkerThreadStarted(
+        executor, threadFactory, threadName, JdkExecutorMetrics::registerMetrics);
+  }
+
+  private static BatchCallback registerMetrics(
       Executor executor,
       Set<Thread> threads,
       String executorName,

@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.javaagent.bootstrap.executors.metrics.ExecutorMetrics;
+import io.opentelemetry.javaagent.bootstrap.executors.metrics.ExecutorMetricsRegistry;
 import io.opentelemetry.javaagent.bootstrap.executors.metrics.JdkExecutorMetrics;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -57,7 +57,9 @@ public class ThreadPerTaskExecutorMetricsInstrumentation implements TypeInstrume
         @Advice.This Executor executor,
         @Advice.FieldValue(value = "factory", readOnly = false) ThreadFactory threadFactory,
         @Advice.FieldValue("threads") Set<Thread> threads) {
-      threadFactory = JdkExecutorMetrics.preRegister(executor, threadFactory, threads);
+      threadFactory =
+          ExecutorMetricsRegistry.preRegister(
+              executor, threadFactory, threads, JdkExecutorMetrics.DEFAULT_NAME_NORMALIZATION);
     }
   }
 
@@ -69,7 +71,7 @@ public class ThreadPerTaskExecutorMetricsInstrumentation implements TypeInstrume
         @Advice.This Executor executor,
         @Advice.FieldValue("factory") ThreadFactory threadFactory,
         @Advice.Argument(0) @Nullable Thread thread) {
-      ExecutorMetrics.onWorkerThreadStarted(
+      JdkExecutorMetrics.onWorkerThreadStarted(
           executor, threadFactory, thread == null ? null : thread.getName());
     }
   }
@@ -82,7 +84,7 @@ public class ThreadPerTaskExecutorMetricsInstrumentation implements TypeInstrume
         @Advice.This ExecutorService executor,
         @Advice.FieldValue("factory") ThreadFactory threadFactory) {
       if (executor.isShutdown()) {
-        ExecutorMetrics.unregister(executor, threadFactory);
+        ExecutorMetricsRegistry.unregister(executor, threadFactory);
       }
     }
   }

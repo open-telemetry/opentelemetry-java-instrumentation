@@ -17,7 +17,7 @@ import static org.awaitility.Awaitility.await;
 import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.bootstrap.executors.metrics.ExecutorMetrics;
+import io.opentelemetry.javaagent.bootstrap.executors.metrics.JdkExecutorMetrics;
 import io.opentelemetry.javaagent.instrumentation.executors.metrics.JvmExecutorMetricsAssertions;
 import java.lang.ref.WeakReference;
 import java.time.Duration;
@@ -347,7 +347,7 @@ class ThreadPoolExecutorMetricsTest {
           .assertExecutorEmitsMetrics();
       assertThat(originalThreadFactory.createdThreadCount()).isEqualTo(1);
 
-      ExecutorMetrics.reregister(executor, "tomcat", "trailing");
+      JdkExecutorMetrics.reregister(executor, "tomcat", "trailing");
 
       testing.clearData();
       JvmExecutorMetricsAssertions.create(
@@ -397,7 +397,7 @@ class ThreadPoolExecutorMetricsTest {
       assertThat(replacementThreadFactory.createdThreadCount()).isEqualTo(1);
       assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, originalExecutorName);
 
-      ExecutorMetrics.reregister(executor, null, "trailing");
+      JdkExecutorMetrics.reregister(executor, null, "trailing");
 
       testing.clearData();
       JvmExecutorMetricsAssertions.create(

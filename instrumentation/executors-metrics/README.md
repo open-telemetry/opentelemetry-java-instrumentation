@@ -6,7 +6,7 @@ configured `trailing` or `all` normalization rule is applied.
 
 The optional `jvm.executor.owner.name` attribute is omitted by default. Instrumentations that know
 the logical component owning an executor can provide or update it through
-`ExecutorMetrics.reregister`; passing a null owner removes the attribute.
+`JdkExecutorMetrics.reregister`; passing a null owner removes the attribute.
 
 | System property                                                          | Type    | Default    | Description                                                                                                                                   |
 | ------------------------------------------------------------------------ | ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -93,7 +93,7 @@ class ThreadPerTaskExecutorMetricsTest {
 
       Class<?> executorMetrics =
           Class.forName(
-              "io.opentelemetry.javaagent.bootstrap.executors.metrics.ExecutorMetrics",
+              "io.opentelemetry.javaagent.bootstrap.executors.metrics.ExecutorMetricsRegistry",
               false,
               null);
       executorMetrics.getMethod("onThreadFactoryChanged", Executor.class).invoke(null, executor);
@@ -194,7 +194,9 @@ class ThreadPerTaskExecutorMetricsTest {
       Executor executor, String ownerName, String threadNameNormalization) throws Exception {
     Class<?> executorMetrics =
         Class.forName(
-            "io.opentelemetry.javaagent.bootstrap.executors.metrics.ExecutorMetrics", false, null);
+            "io.opentelemetry.javaagent.bootstrap.executors.metrics.JdkExecutorMetrics",
+            false,
+            null);
     executorMetrics
         .getMethod("reregister", Executor.class, String.class, String.class)
         .invoke(null, executor, ownerName, threadNameNormalization);
