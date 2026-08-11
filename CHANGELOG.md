@@ -21,6 +21,7 @@
   the `otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.{included,excluded}`
   selector. The deprecated property remains as an include-only alias through 2.x and is ignored
   under v3 configuration.
+  ([#19519](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19519))
 - Deprecate `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` and
   `io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental#setPreferJfrMetrics(RuntimeTelemetryBuilder, boolean)`
   in favor of `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included` and
