@@ -82,8 +82,8 @@ public class GrpcConfig {
     DeclarativeConfigProperties requestMetadata = config.get(side).get("request_metadata");
     List<String> included = requestMetadata.getScalarList("included", String.class);
     List<String> excluded = requestMetadata.getScalarList("excluded", String.class);
-    // a selector without patterns is not valid configuration, and capturing nothing is safer than
-    // capturing every metadata key
+    // an empty selector is equivalent to no selector at all, matching flat configuration where
+    // empty property values cannot be distinguished from unset ones
     if (isNotEmpty(included) || isNotEmpty(excluded)) {
       return IncludeExclude.builder()
           .setIncluded(included == null ? emptyList() : included)
