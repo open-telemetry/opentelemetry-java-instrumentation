@@ -279,11 +279,11 @@ public abstract class AbstractReactorKafkaTest {
                 .hasKind(SpanKind.CLIENT)
                 .hasNoParent()
                 .hasAttributesSatisfyingExactly(
-                   equalTo(MESSAGING_SYSTEM, "kafka"),
-                   equalTo(MESSAGING_OPERATION_NAME, "commit"),
-                   equalTo(MESSAGING_OPERATION_TYPE, "settle"),
-                   equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "settle" : null),
-                   equalTo(MESSAGING_DESTINATION_NAME, "testTopic")));
+                    equalTo(MESSAGING_SYSTEM, "kafka"),
+                    equalTo(MESSAGING_OPERATION_NAME, "commit"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "settle"),
+                    equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "settle" : null),
+                    equalTo(MESSAGING_DESTINATION_NAME, "testTopic")));
   }
 
   private static List<AttributeAssertion> sendAttributes(ProducerRecord<String, String> record) {
