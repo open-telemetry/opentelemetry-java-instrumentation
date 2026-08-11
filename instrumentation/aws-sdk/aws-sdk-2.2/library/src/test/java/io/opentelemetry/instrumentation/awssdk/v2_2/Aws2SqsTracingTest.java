@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -32,9 +33,11 @@ abstract class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest {
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)
-            .setMessagingReceiveTelemetryEnabled(true)
             .setCapturedHeaders(singletonList("Test-Message-Header"));
 
+    if (!emitStableMessagingSemconv()) {
+      telemetryBuilder.setMessagingReceiveTelemetryEnabled(true);
+    }
     configure(telemetryBuilder);
     telemetry = telemetryBuilder.build();
   }

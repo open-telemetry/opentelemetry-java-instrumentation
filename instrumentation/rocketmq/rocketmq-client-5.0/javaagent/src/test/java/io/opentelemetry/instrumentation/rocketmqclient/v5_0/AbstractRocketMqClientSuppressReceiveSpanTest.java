@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
@@ -104,43 +105,57 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                 (ThrowingSupplier<SendReceipt, ClientException>) () -> producer.send(message));
     testing()
         .waitAndAssertTraces(
-            trace ->
+            trace -> {
+              if (emitStableMessagingSemconv()) {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         span.hasKind(SpanKind.PRODUCER)
-                            .hasName(topic + " publish")
-                            .hasStatus(StatusData.unset())
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, NORMAL),
-                                equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
-                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(
-                                    MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
-                                equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                equalTo(MESSAGING_OPERATION, "publish")),
+                            .hasName("send " + topic)
+                            .hasParent(trace.getSpan(0)),
                     span ->
                         span.hasKind(SpanKind.CONSUMER)
-                            .hasName(topic + " process")
-                            .hasStatus(StatusData.unset())
-                            // As the child of send span.
-                            .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(MESSAGING_ROCKETMQ_CLIENT_GROUP, consumerGroup),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
-                                equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
-                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(
-                                    MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
-                                equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                equalTo(MESSAGING_OPERATION, "process")),
+                            .hasName("process " + topic)
+                            .hasParent(trace.getSpan(1)),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(2))));
+                            .hasParent(trace.getSpan(2)));
+                return;
+              }
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                  span ->
+                      span.hasKind(SpanKind.PRODUCER)
+                          .hasName(topic + " publish")
+                          .hasStatus(StatusData.unset())
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
+                              equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
+                              equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, NORMAL),
+                              equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
+                              equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                              equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
+                              equalTo(MESSAGING_DESTINATION_NAME, topic),
+                              equalTo(MESSAGING_OPERATION, "publish")),
+                  span ->
+                      span.hasKind(SpanKind.CONSUMER)
+                          .hasName(topic + " process")
+                          .hasStatus(StatusData.unset())
+                          // As the child of send span.
+                          .hasParent(trace.getSpan(1))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(MESSAGING_ROCKETMQ_CLIENT_GROUP, consumerGroup),
+                              equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
+                              equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
+                              equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
+                              equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                              equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
+                              equalTo(MESSAGING_DESTINATION_NAME, topic),
+                              equalTo(MESSAGING_OPERATION, "process")),
+                  span ->
+                      span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(2)));
+            });
   }
 }

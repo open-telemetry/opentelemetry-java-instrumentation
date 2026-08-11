@@ -48,11 +48,19 @@ final class ConsumerImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
+        @Advice.This Object consumer,
         @Advice.Argument(0) ReceiveMessageRequest request,
         @Advice.Enter Timer timer,
         @Advice.Return ListenableFuture<ReceiveMessageResult> future) {
       ReceiveSpanFinishingCallback spanFinishingCallback =
-          new ReceiveSpanFinishingCallback(request, timer);
+          new ReceiveSpanFinishingCallback(
+              request,
+              timer,
+              consumer
+                  .getClass()
+                  .getName()
+                  .equals("org.apache.rocketmq.client.java.impl.consumer.SimpleConsumerImpl"),
+              RocketMqSingletons.receiveTelemetryExplicitlyEnabled());
       Futures.addCallback(future, spanFinishingCallback, MoreExecutors.directExecutor());
     }
   }

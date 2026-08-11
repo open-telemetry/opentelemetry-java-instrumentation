@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.spring.kafka.v2_7.internal.SpringKafkaEr
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /** A builder of {@link SpringKafkaTelemetry}. */
 public final class SpringKafkaTelemetryBuilder {
@@ -23,7 +24,7 @@ public final class SpringKafkaTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes = false;
-  private boolean messagingReceiveInstrumentationEnabled = false;
+  @Nullable private Boolean messagingReceiveInstrumentationEnabled;
 
   SpringKafkaTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -64,8 +65,10 @@ public final class SpringKafkaTelemetryBuilder {
         new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
             .setCapturedHeaders(capturedHeaders)
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
-            .setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled)
             .setErrorCauseExtractor(new SpringKafkaErrorCauseExtractor());
+    if (messagingReceiveInstrumentationEnabled != null) {
+      factory.setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled);
+    }
 
     return new SpringKafkaTelemetry(
         factory.createConsumerProcessInstrumenter(), factory.createBatchProcessInstrumenter());

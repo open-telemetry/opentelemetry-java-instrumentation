@@ -30,15 +30,12 @@ public class SpringPulsarSingletons {
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     SpringPulsarMessageAttributesGetter getter = new SpringPulsarMessageAttributesGetter();
-    boolean messagingReceiveInstrumentationEnabled =
-        ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
-
-    instrumenter =
-        createInstrumenter(openTelemetry, getter, messagingReceiveInstrumentationEnabled, false);
+    boolean receiveTelemetryEnabled =
+        Boolean.TRUE.equals(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
+    instrumenter = createInstrumenter(openTelemetry, getter, receiveTelemetryEnabled, false);
     instrumenterWithConsumedMessages =
         emitStableMessagingSemconv()
-            ? createInstrumenter(
-                openTelemetry, getter, messagingReceiveInstrumentationEnabled, true)
+            ? createInstrumenter(openTelemetry, getter, false, true)
             : instrumenter;
   }
 

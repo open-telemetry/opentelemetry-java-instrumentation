@@ -13,6 +13,7 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
+import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetryBuilder;
 import java.util.List;
 
 /**
@@ -41,46 +42,50 @@ public final class AwsSdkTelemetryFactory {
     DeclarativeConfigProperties awsSdk =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "aws_sdk");
 
-    return AwsSdkTelemetry.builder(openTelemetry)
-        .setCapturedHeaders(
-            messaging.getScalarList(
-                "capture_headers/development",
-                String.class,
-                systemProperties.getList(
-                    "otel.instrumentation.messaging.experimental.capture-headers", emptyList())))
-        .setCaptureExperimentalSpanAttributes(
-            awsSdk.getBoolean(
-                "experimental_span_attributes/development",
-                systemProperties.getBoolean(
-                    "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
-        .setMessagingReceiveTelemetryEnabled(
-            messaging
-                .get("receive_telemetry/development")
-                .getBoolean(
-                    "enabled",
+    AwsSdkTelemetryBuilder builder =
+        AwsSdkTelemetry.builder(openTelemetry)
+            .setCapturedHeaders(
+                messaging.getScalarList(
+                    "capture_headers/development",
+                    String.class,
+                    systemProperties.getList(
+                        "otel.instrumentation.messaging.experimental.capture-headers",
+                        emptyList())))
+            .setCaptureExperimentalSpanAttributes(
+                awsSdk.getBoolean(
+                    "experimental_span_attributes/development",
                     systemProperties.getBoolean(
-                        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
+                        "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
+            .setUseConfiguredPropagatorForMessaging(
+                awsSdk.getBoolean(
+                    "use_propagator_for_messaging/development",
+                    systemProperties.getBoolean(
+                        "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging",
                         false)))
-        .setUseConfiguredPropagatorForMessaging(
-            awsSdk.getBoolean(
-                "use_propagator_for_messaging/development",
-                systemProperties.getBoolean(
-                    "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging",
-                    false)))
-        .setRecordIndividualHttpError(
-            awsSdk.getBoolean(
-                "record_individual_http_error/development",
-                systemProperties.getBoolean(
-                    "otel.instrumentation.aws-sdk.experimental-record-individual-http-error",
-                    false)))
-        .setGenaiCaptureMessageContent(
-            commonConfig
-                .get("gen_ai")
-                .getBoolean(
-                    "capture_message_content",
+            .setRecordIndividualHttpError(
+                awsSdk.getBoolean(
+                    "record_individual_http_error/development",
                     systemProperties.getBoolean(
-                        "otel.instrumentation.genai.capture-message-content", false)))
-        .build();
+                        "otel.instrumentation.aws-sdk.experimental-record-individual-http-error",
+                        false)))
+            .setGenaiCaptureMessageContent(
+                commonConfig
+                    .get("gen_ai")
+                    .getBoolean(
+                        "capture_message_content",
+                        systemProperties.getBoolean(
+                            "otel.instrumentation.genai.capture-message-content", false)));
+    Boolean receiveTelemetryEnabled =
+        messaging.get("receive_telemetry/development").getBoolean("enabled");
+    if (receiveTelemetryEnabled == null) {
+      receiveTelemetryEnabled =
+          systemProperties.getBoolean(
+              "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
+    }
+    if (receiveTelemetryEnabled != null) {
+      builder.setMessagingReceiveTelemetryEnabled(receiveTelemetryEnabled);
+    }
+    return builder.build();
   }
 
   private AwsSdkTelemetryFactory() {}
@@ -96,6 +101,11 @@ public final class AwsSdkTelemetryFactory {
       boolean getBoolean(String key, boolean defaultValue) {
         return SystemProperty.getBoolean(key, defaultValue);
       }
+
+      @Override
+      Boolean getBoolean(String key) {
+        return SystemProperty.getBoolean(key);
+      }
     },
     DISABLED {
       @Override
@@ -107,10 +117,17 @@ public final class AwsSdkTelemetryFactory {
       boolean getBoolean(String key, boolean defaultValue) {
         return defaultValue;
       }
+
+      @Override
+      Boolean getBoolean(String key) {
+        return null;
+      }
     };
 
     abstract List<String> getList(String key, List<String> defaultValue);
 
     abstract boolean getBoolean(String key, boolean defaultValue);
+
+    abstract Boolean getBoolean(String key);
   }
 }

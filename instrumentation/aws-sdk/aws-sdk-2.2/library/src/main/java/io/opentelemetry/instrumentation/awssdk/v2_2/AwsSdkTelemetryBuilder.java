@@ -12,6 +12,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /** A builder of {@link AwsSdkTelemetry}. */
 public final class AwsSdkTelemetryBuilder {
@@ -23,7 +24,7 @@ public final class AwsSdkTelemetryBuilder {
   private boolean useMessagingPropagator;
   private boolean recordIndividualHttpError;
   private boolean useXrayPropagator = true;
-  private boolean messagingReceiveTelemetryEnabled;
+  @Nullable private Boolean messagingReceiveTelemetryEnabled;
   private boolean genaiCaptureMessageContent;
 
   AwsSdkTelemetryBuilder(OpenTelemetry openTelemetry) {

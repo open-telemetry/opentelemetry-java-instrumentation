@@ -19,8 +19,12 @@ enum MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
 
   @Override
   public Iterable<String> keys(MessageWithDestination message) {
+    MessageAdapter messageAdapter = message.message();
+    if (messageAdapter == null) {
+      return emptyList();
+    }
     try {
-      return message.message().getPropertyNames();
+      return messageAdapter.getPropertyNames();
     } catch (Exception e) {
       logger.log(FINE, "Failure getting JMS property names", e);
       return emptyList();
@@ -33,10 +37,14 @@ enum MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
     if (carrier == null) {
       return null;
     }
+    MessageAdapter messageAdapter = carrier.message();
+    if (messageAdapter == null) {
+      return null;
+    }
     String propName = key.replace("-", MessagePropertySetter.DASH);
     Object value;
     try {
-      value = carrier.message().getObjectProperty(propName);
+      value = messageAdapter.getObjectProperty(propName);
     } catch (Exception e) {
       logger.log(FINE, "Failure getting JMS property: " + propName, e);
       return null;

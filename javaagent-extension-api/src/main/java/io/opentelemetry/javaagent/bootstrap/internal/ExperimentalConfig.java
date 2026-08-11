@@ -12,6 +12,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -46,11 +47,9 @@ public final class ExperimentalConfig {
     return commonConfig.get("view_telemetry/development").getBoolean("enabled", false);
   }
 
-  public boolean messagingReceiveInstrumentationEnabled() {
-    return commonConfig
-        .get("messaging")
-        .get("receive_telemetry/development")
-        .getBoolean("enabled", false);
+  @Nullable
+  public Boolean messagingReceiveInstrumentationEnabled() {
+    return commonConfig.get("messaging").get("receive_telemetry/development").getBoolean("enabled");
   }
 
   public List<String> getMessagingHeaders() {

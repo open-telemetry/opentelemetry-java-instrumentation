@@ -12,6 +12,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /** A builder of {@link AwsSdkTelemetry}. */
 public final class AwsSdkTelemetryBuilder {
@@ -20,7 +21,7 @@ public final class AwsSdkTelemetryBuilder {
 
   private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes;
-  private boolean messagingReceiveTelemetryEnabled;
+  @Nullable private Boolean messagingReceiveTelemetryEnabled;
 
   AwsSdkTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;

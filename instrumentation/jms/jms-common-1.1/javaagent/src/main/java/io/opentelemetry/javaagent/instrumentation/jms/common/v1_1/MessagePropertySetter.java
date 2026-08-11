@@ -21,9 +21,13 @@ class MessagePropertySetter implements TextMapSetter<MessageWithDestination> {
     if (carrier == null) {
       return;
     }
+    MessageAdapter message = carrier.message();
+    if (message == null) {
+      return;
+    }
     String propName = key.replace("-", DASH);
     try {
-      carrier.message().setStringProperty(propName, value);
+      message.setStringProperty(propName, value);
     } catch (Exception e) {
       if (logger.isLoggable(FINE)) {
         logger.log(FINE, "Failure setting jms property: " + propName, e);

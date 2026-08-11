@@ -17,6 +17,7 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
+import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetryBuilder;
 
 /**
  * A {@link RequestHandler2} for use as an SPI by the AWS SDK to automatically trace all requests.
@@ -28,32 +29,35 @@ public final class TracingRequestHandler extends RequestHandler2 {
   private static RequestHandler2 buildDelegate(OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties messaging =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
-    return AwsSdkTelemetry.builder(openTelemetry)
-        .setCaptureExperimentalSpanAttributes(
-            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "aws_sdk")
-                .getBoolean(
-                    "experimental_span_attributes/development",
-                    // The library-autoconfigure module has no programmatic configuration API,
-                    // and declarative instrumentation configuration is not stable, so it is
-                    // necessary to support configuration via system properties.
-                    SystemProperty.getBoolean(
-                        "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
-        .setMessagingReceiveTelemetryEnabled(
-            messaging
-                .get("receive_telemetry/development")
-                .getBoolean(
-                    "enabled",
-                    SystemProperty.getBoolean(
-                        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
-                        false)))
-        .setCapturedHeaders(
-            messaging.getScalarList(
-                "capture_headers/development",
-                String.class,
-                SystemProperty.getList(
-                    "otel.instrumentation.messaging.experimental.capture-headers", emptyList())))
-        .build()
-        .createRequestHandler();
+    AwsSdkTelemetryBuilder builder =
+        AwsSdkTelemetry.builder(openTelemetry)
+            .setCaptureExperimentalSpanAttributes(
+                DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "aws_sdk")
+                    .getBoolean(
+                        "experimental_span_attributes/development",
+                        // The library-autoconfigure module has no programmatic configuration API,
+                        // and declarative instrumentation configuration is not stable, so it is
+                        // necessary to support configuration via system properties.
+                        SystemProperty.getBoolean(
+                            "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
+            .setCapturedHeaders(
+                messaging.getScalarList(
+                    "capture_headers/development",
+                    String.class,
+                    SystemProperty.getList(
+                        "otel.instrumentation.messaging.experimental.capture-headers",
+                        emptyList())));
+    Boolean receiveTelemetryEnabled =
+        messaging.get("receive_telemetry/development").getBoolean("enabled");
+    if (receiveTelemetryEnabled == null) {
+      receiveTelemetryEnabled =
+          SystemProperty.getBoolean(
+              "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
+    }
+    if (receiveTelemetryEnabled != null) {
+      builder.setMessagingReceiveTelemetryEnabled(receiveTelemetryEnabled);
+    }
+    return builder.build().createRequestHandler();
   }
 
   @Override

@@ -19,6 +19,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -235,6 +236,27 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(topic, msgId.toString(), false))));
+  }
+
+  @Test
+  void testEmptyReceive() throws Exception {
+    String topic = "persistent://public/default/testEmptyReceive";
+    admin.topics().createNonPartitionedTopic(topic);
+    consumer =
+        client.newConsumer(Schema.STRING).subscriptionName("test_sub").topic(topic).subscribe();
+
+    Message<String> message = consumer.receive(100, MILLISECONDS);
+
+    assertThat(message).isNull();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
+                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasTotalRecordedLinks(0)));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv

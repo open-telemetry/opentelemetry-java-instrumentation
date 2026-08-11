@@ -21,9 +21,12 @@ public class JmsSingletons {
   static {
     JmsInstrumenterFactory factory =
         new JmsInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
-            .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
-            .setMessagingReceiveTelemetryEnabled(
-                ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
+            .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders());
+    Boolean receiveTelemetryEnabled =
+        ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+    if (receiveTelemetryEnabled != null) {
+      factory.setMessagingReceiveTelemetryEnabled(receiveTelemetryEnabled);
+    }
 
     producerInstrumenter = factory.createProducerInstrumenter();
     consumerReceiveInstrumenter = factory.createConsumerReceiveInstrumenter();

@@ -35,6 +35,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -59,7 +61,9 @@ import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
 import org.apache.rocketmq.client.apis.consumer.FilterExpression;
 import org.apache.rocketmq.client.apis.consumer.FilterExpressionType;
 import org.apache.rocketmq.client.apis.consumer.PushConsumer;
+import org.apache.rocketmq.client.apis.consumer.SimpleConsumer;
 import org.apache.rocketmq.client.apis.message.Message;
+import org.apache.rocketmq.client.apis.message.MessageView;
 import org.apache.rocketmq.client.apis.producer.Producer;
 import org.apache.rocketmq.client.apis.producer.SendReceipt;
 import org.apache.rocketmq.client.java.impl.ClientImpl;
@@ -128,6 +132,41 @@ abstract class AbstractRocketMqClientTest {
             .setTopics(NORMAL_TOPIC)
             .build();
     cleanup.deferAfterAll(producer);
+  }
+
+  @Test
+  void testEmptyPullReceive() throws ClientException {
+    ClientConfiguration clientConfiguration =
+        ClientConfiguration.newBuilder()
+            .setEndpoints(CONTAINER.endpoints)
+            .setRequestTimeout(Duration.ofSeconds(10))
+            .build();
+    SimpleConsumer simpleConsumer =
+        provider
+            .newSimpleConsumerBuilder()
+            .setClientConfiguration(clientConfiguration)
+            .setConsumerGroup("empty-pull-group")
+            .setSubscriptionExpressions(
+                singletonMap(NORMAL_TOPIC, new FilterExpression(TAG, FilterExpressionType.TAG)))
+            .setAwaitDuration(Duration.ofSeconds(1))
+            .build();
+    cleanup.deferCleanup(simpleConsumer);
+
+    List<MessageView> messages = simpleConsumer.receive(1, Duration.ofSeconds(1));
+
+    assertThat(messages).isEmpty();
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(
+                                emitStableMessagingSemconv()
+                                    ? "receive " + NORMAL_TOPIC
+                                    : NORMAL_TOPIC + " receive")
+                            .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                            .hasNoParent()
+                            .hasTotalRecordedLinks(0)));
   }
 
   @Test

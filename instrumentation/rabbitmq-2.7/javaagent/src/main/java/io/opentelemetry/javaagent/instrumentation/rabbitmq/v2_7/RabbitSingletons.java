@@ -175,7 +175,7 @@ public class RabbitSingletons {
         Instrumenter.<ReceiveRequest, GetResponse>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractors(extractors)
-            .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
+            .setEnabled(receiveInstrumentationEnabled())
             .addSpanLinksExtractor(
                 new PropagatorBasedSpanLinksExtractor<>(
                     GlobalOpenTelemetry.getPropagators().getTextMapPropagator(),
@@ -183,6 +183,11 @@ public class RabbitSingletons {
     setMessagingReceiveExceptionEventExtractor(builder);
     return builder.buildInstrumenter(
         MessagingSpanKindExtractor.create(MessagingOperationType.RECEIVE));
+  }
+
+  private static boolean receiveInstrumentationEnabled() {
+    Boolean configured = ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+    return configured != null ? configured : emitStableMessagingSemconv();
   }
 
   private static Instrumenter<DeliveryRequest, Void> createDeliverInstrumenter() {

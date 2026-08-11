@@ -35,6 +35,10 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.time.Duration;
@@ -162,7 +166,11 @@ public abstract class KafkaClientBaseTest {
       return;
     }
     for (int i = 0; i < 10; i++) {
-      poll(Duration.ofMillis(100));
+      Context suppressed =
+          SpanKey.CONSUMER_RECEIVE.storeInContext(Context.current(), Span.getInvalid());
+      try (Scope ignored = suppressed.makeCurrent()) {
+        poll(Duration.ofMillis(100));
+      }
       if (consumerReady.await(1, SECONDS)) {
         break;
       }

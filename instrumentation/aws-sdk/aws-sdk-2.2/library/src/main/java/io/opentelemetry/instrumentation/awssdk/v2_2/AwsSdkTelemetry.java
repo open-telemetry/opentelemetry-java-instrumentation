@@ -80,7 +80,7 @@ public class AwsSdkTelemetry {
       boolean useMessagingPropagator,
       boolean useXrayPropagator,
       boolean recordIndividualHttpError,
-      boolean messagingReceiveInstrumentationEnabled,
+      @Nullable Boolean messagingReceiveInstrumentationEnabled,
       boolean genAiCaptureMessageContent) {
     this.useXrayPropagator = useXrayPropagator;
     this.messagingPropagator =

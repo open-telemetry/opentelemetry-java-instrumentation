@@ -57,10 +57,6 @@ public final class SqsImpl {
       Context parentContext,
       TracingRequestHandler requestHandler) {
     ReceiveMessageResult receiveMessageResult = (ReceiveMessageResult) response.getAwsResponse();
-    if (receiveMessageResult.getMessages().isEmpty()) {
-      return;
-    }
-
     Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter =
         requestHandler.getConsumerReceiveInstrumenter();
     Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter =

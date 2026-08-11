@@ -50,7 +50,7 @@ public final class AwsSdkTelemetry {
       OpenTelemetry openTelemetry,
       List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes,
-      boolean messagingReceiveInstrumentationEnabled) {
+      @Nullable Boolean messagingReceiveInstrumentationEnabled) {
     AwsSdkInstrumenterFactory instrumenterFactory =
         new AwsSdkInstrumenterFactory(
             openTelemetry,

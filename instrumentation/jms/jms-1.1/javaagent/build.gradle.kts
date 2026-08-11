@@ -22,6 +22,7 @@ muzzle {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
   implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
 
   compileOnly("javax.jms:jms-api:1.1-rev-1")
@@ -80,6 +81,7 @@ tasks {
         includeTestsMatching("Jms1SuppressReceiveSpansTest")
       }
       include("**/Jms1SuppressReceiveSpansTest.*")
+      jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
       jvmArgs("-Dotel.semconv-stability.preview=messaging")
       systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
     }
@@ -91,10 +93,35 @@ tasks {
     filter {
       excludeTestsMatching("Jms1SuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
+
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    filter {
+      excludeTestsMatching("Jms1SuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
+  val testV3PreviewReceiveSpansDisabled =
+    register<Test>("testV3PreviewReceiveSpansDisabled") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
+      filter {
+        includeTestsMatching("Jms1SuppressReceiveSpansTest")
+      }
+      include("**/Jms1SuppressReceiveSpansTest.*")
+      jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+      jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+      systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+    }
 
   val testJms2MessagingPreview = register<Test>("testJms2MessagingPreview") {
     testClassesDirs = sourceSets["jms2Test"].output.classesDirs
@@ -135,6 +162,8 @@ tasks {
       testReceiveSpansDisabled,
       testMessagingPreview,
       testMessagingPreviewReceiveSpansDisabled,
+      testV3Preview,
+      testV3PreviewReceiveSpansDisabled,
       testJms2MessagingPreview,
       testBothSemconv,
     )

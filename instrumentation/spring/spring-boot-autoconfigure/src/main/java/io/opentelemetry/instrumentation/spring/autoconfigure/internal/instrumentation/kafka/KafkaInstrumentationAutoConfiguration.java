@@ -12,6 +12,7 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
+import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetryBuilder;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -39,20 +40,21 @@ public class KafkaInstrumentationAutoConfiguration {
     OpenTelemetry openTelemetry = openTelemetryProvider.getObject();
     DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
-    return SpringKafkaTelemetry.builder(openTelemetry)
-        .setCaptureExperimentalSpanAttributes(
-            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "kafka")
-                .getBoolean("experimental_span_attributes/development", false))
-        .setMessagingReceiveTelemetryEnabled(
-            commonConfig
-                .get("messaging")
-                .get("receive_telemetry/development")
-                .getBoolean("enabled", false))
-        .setCapturedHeaders(
-            commonConfig
-                .get("messaging")
-                .getScalarList("capture_headers/development", String.class, emptyList()))
-        .build();
+    SpringKafkaTelemetryBuilder builder =
+        SpringKafkaTelemetry.builder(openTelemetry)
+            .setCaptureExperimentalSpanAttributes(
+                DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "kafka")
+                    .getBoolean("experimental_span_attributes/development", false))
+            .setCapturedHeaders(
+                commonConfig
+                    .get("messaging")
+                    .getScalarList("capture_headers/development", String.class, emptyList()));
+    Boolean receiveTelemetryEnabled =
+        commonConfig.get("messaging").get("receive_telemetry/development").getBoolean("enabled");
+    if (receiveTelemetryEnabled != null) {
+      builder.setMessagingReceiveTelemetryEnabled(receiveTelemetryEnabled);
+    }
+    return builder.build();
   }
 
   // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning

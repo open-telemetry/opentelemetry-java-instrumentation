@@ -91,6 +91,15 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
   }
 
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*Sqs*")
+    }
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+  }
+
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -120,6 +129,7 @@ tasks {
       testing.suites,
       testStableSemconv,
       testMessagingPreview,
+      testV3Preview,
       testBothSemconv,
       testCoreOnlyStableSemconv,
       testExceptionSignalLogs,

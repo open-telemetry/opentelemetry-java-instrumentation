@@ -380,6 +380,32 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
   }
 
   @Test
+  void testEmptyReceive() {
+    SqsClientBuilder builder = SqsClient.builder();
+    configureSdkClient(builder);
+    SqsClient client = configureSqsClient(builder.build());
+
+    client.createQueue(createQueueRequest);
+    getTesting().clearData();
+    ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest);
+
+    assertThat(response.messages()).isEmpty();
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(
+                                emitStableMessagingSemconv()
+                                    ? "receive testSdkSqs"
+                                    : "testSdkSqs receive")
+                            .hasKind(
+                                emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                            .hasNoParent()
+                            .hasTotalRecordedLinks(0)));
+  }
+
+  @Test
   void testBatchSendMessageCount() {
     assumeTrue(emitStableMessagingSemconv());
     SqsClientBuilder builder = SqsClient.builder();

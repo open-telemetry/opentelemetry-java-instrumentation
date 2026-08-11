@@ -17,14 +17,22 @@ final class ReactorKafkaSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.reactor-kafka-1.0";
 
   private static final Instrumenter<KafkaProcessRequest, Void> processInstrumenter =
-      new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
-          .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
-          .setCaptureExperimentalSpanAttributes(
-              DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "kafka")
-                  .getBoolean("experimental_span_attributes/development", false))
-          .setMessagingReceiveTelemetryEnabled(
-              ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
-          .createConsumerProcessInstrumenter();
+      createProcessInstrumenter();
+
+  private static Instrumenter<KafkaProcessRequest, Void> createProcessInstrumenter() {
+    KafkaInstrumenterFactory factory =
+        new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
+            .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
+            .setCaptureExperimentalSpanAttributes(
+                DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "kafka")
+                    .getBoolean("experimental_span_attributes/development", false));
+    Boolean receiveTelemetryEnabled =
+        ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+    if (receiveTelemetryEnabled != null) {
+      factory.setMessagingReceiveTelemetryEnabled(receiveTelemetryEnabled);
+    }
+    return factory.createConsumerProcessInstrumenter();
+  }
 
   public static Instrumenter<KafkaProcessRequest, Void> processInstrumenter() {
     return processInstrumenter;

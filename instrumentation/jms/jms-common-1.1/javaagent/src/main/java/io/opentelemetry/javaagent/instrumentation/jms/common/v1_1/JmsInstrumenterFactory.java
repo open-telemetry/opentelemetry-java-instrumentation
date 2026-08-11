@@ -25,6 +25,7 @@ import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExt
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javax.annotation.Nullable;
 
 public class JmsInstrumenterFactory {
 
@@ -36,7 +37,7 @@ public class JmsInstrumenterFactory {
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
   private List<String> capturedHeaders = emptyList();
-  private boolean messagingReceiveInstrumentationEnabled = false;
+  @Nullable private Boolean messagingReceiveInstrumentationEnabled;
 
   public JmsInstrumenterFactory(OpenTelemetry openTelemetry, String instrumentationName) {
     this.openTelemetry = openTelemetry;
@@ -81,11 +82,13 @@ public class JmsInstrumenterFactory {
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, RECEIVE_OPERATION_NAME))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(operationType, RECEIVE_OPERATION_NAME));
+                createMessagingAttributesExtractor(operationType, RECEIVE_OPERATION_NAME))
+            .setEnabled(receiveInstrumentationEnabled());
     setMessagingReceiveExceptionEventExtractor(builder);
     // with the stable messaging semantic conventions the producer is always linked, since it is
     // never used as the parent of the receive span
-    if (messagingReceiveInstrumentationEnabled || emitStableMessagingSemconv()) {
+    if (Boolean.TRUE.equals(messagingReceiveInstrumentationEnabled)
+        || emitStableMessagingSemconv()) {
       builder.addSpanLinksExtractor(
           new PropagatorBasedSpanLinksExtractor<>(
               openTelemetry.getPropagators().getTextMapPropagator(),
@@ -111,7 +114,15 @@ public class JmsInstrumenterFactory {
         builder,
         openTelemetry.getPropagators().getTextMapPropagator(),
         MessagePropertyGetter.INSTANCE,
-        canHaveReceiveInstrumentation && messagingReceiveInstrumentationEnabled);
+        canHaveReceiveInstrumentation && receiveInstrumentationEnabled());
+  }
+
+  static boolean receiveInstrumentationEnabled(@Nullable Boolean configured) {
+    return configured != null ? configured : emitStableMessagingSemconv();
+  }
+
+  private boolean receiveInstrumentationEnabled() {
+    return receiveInstrumentationEnabled(messagingReceiveInstrumentationEnabled);
   }
 
   private AttributesExtractor<MessageWithDestination, Void> createMessagingAttributesExtractor(

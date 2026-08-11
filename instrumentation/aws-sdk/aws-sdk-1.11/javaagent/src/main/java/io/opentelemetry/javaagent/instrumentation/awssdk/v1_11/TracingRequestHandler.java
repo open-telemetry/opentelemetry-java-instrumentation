@@ -15,6 +15,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
+import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetryBuilder;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import javax.annotation.Nullable;
 
@@ -34,16 +35,22 @@ public class TracingRequestHandler extends RequestHandler2 {
   public static final HandlerContextKey<Scope> SCOPE =
       new HandlerContextKey<>(Scope.class.getName());
 
-  private static final RequestHandler2 tracingHandler =
-      AwsSdkTelemetry.builder(GlobalOpenTelemetry.get())
-          .setCaptureExperimentalSpanAttributes(
-              DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "aws_sdk")
-                  .getBoolean("experimental_span_attributes/development", false))
-          .setMessagingReceiveTelemetryEnabled(
-              ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
-          .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
-          .build()
-          .createRequestHandler();
+  private static final RequestHandler2 tracingHandler = buildTracingHandler();
+
+  private static RequestHandler2 buildTracingHandler() {
+    AwsSdkTelemetryBuilder builder =
+        AwsSdkTelemetry.builder(GlobalOpenTelemetry.get())
+            .setCaptureExperimentalSpanAttributes(
+                DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "aws_sdk")
+                    .getBoolean("experimental_span_attributes/development", false))
+            .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders());
+    Boolean receiveTelemetryEnabled =
+        ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+    if (receiveTelemetryEnabled != null) {
+      builder.setMessagingReceiveTelemetryEnabled(receiveTelemetryEnabled);
+    }
+    return builder.build().createRequestHandler();
+  }
 
   public static RequestHandler2 tracingHandler() {
     return tracingHandler;

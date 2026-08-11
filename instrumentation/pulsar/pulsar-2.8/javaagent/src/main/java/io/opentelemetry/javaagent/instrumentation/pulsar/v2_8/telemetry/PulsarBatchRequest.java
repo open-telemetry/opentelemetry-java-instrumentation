@@ -20,7 +20,7 @@ public class PulsarBatchRequest extends BasePulsarRequest {
   public static PulsarBatchRequest create(
       Messages<?> messages, @Nullable String url, Consumer<?> consumer) {
     return new PulsarBatchRequest(
-        messages, getTopicName(messages), parseUrl(url), consumer.getSubscription());
+        messages, getTopicName(messages, consumer), parseUrl(url), consumer.getSubscription());
   }
 
   private PulsarBatchRequest(
@@ -32,7 +32,7 @@ public class PulsarBatchRequest extends BasePulsarRequest {
     this.messages = messages;
   }
 
-  private static String getTopicName(Messages<?> messages) {
+  private static String getTopicName(Messages<?> messages, Consumer<?> consumer) {
     String topicName = null;
     for (Message<?> message : messages) {
       String name = message.getTopicName();
@@ -45,7 +45,7 @@ public class PulsarBatchRequest extends BasePulsarRequest {
         return TopicName.get(topicName).getPartitionedTopicName();
       }
     }
-    return topicName;
+    return topicName != null ? topicName : consumer.getTopic();
   }
 
   public Messages<?> getMessages() {

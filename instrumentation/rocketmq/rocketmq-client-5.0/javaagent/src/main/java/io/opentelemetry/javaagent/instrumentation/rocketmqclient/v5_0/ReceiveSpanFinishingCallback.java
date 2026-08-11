@@ -23,22 +23,29 @@ public class ReceiveSpanFinishingCallback implements FutureCallback<ReceiveMessa
 
   private final ReceiveMessageRequest request;
   private final Timer timer;
+  private final boolean pullApi;
+  private final boolean receiveTelemetryExplicitlyEnabled;
 
-  public ReceiveSpanFinishingCallback(ReceiveMessageRequest request, Timer timer) {
+  public ReceiveSpanFinishingCallback(
+      ReceiveMessageRequest request,
+      Timer timer,
+      boolean pullApi,
+      boolean receiveTelemetryExplicitlyEnabled) {
     this.request = request;
     this.timer = timer;
+    this.pullApi = pullApi;
+    this.receiveTelemetryExplicitlyEnabled = receiveTelemetryExplicitlyEnabled;
   }
 
   @Override
   public void onSuccess(ReceiveMessageResult receiveMessageResult) {
     List<MessageView> messageViews = receiveMessageResult.getMessageViews();
-    // Don't create spans when no messages were received.
-    if (messageViews.isEmpty()) {
-      return;
-    }
     String consumerGroup = request.getGroup().getName();
     for (MessageView messageView : messageViews) {
       VirtualFieldStore.setConsumerGroupByMessage(messageView, consumerGroup);
+    }
+    if (!pullApi && (!receiveTelemetryExplicitlyEnabled || messageViews.isEmpty())) {
+      return;
     }
     Instrumenter<RocketMqReceiveRequest, List<MessageView>> receiveInstrumenter =
         consumerReceiveInstrumenter();
@@ -72,6 +79,9 @@ public class ReceiveSpanFinishingCallback implements FutureCallback<ReceiveMessa
 
   @Override
   public void onFailure(Throwable throwable) {
+    if (!pullApi) {
+      return;
+    }
     Instrumenter<RocketMqReceiveRequest, List<MessageView>> receiveInstrumenter =
         consumerReceiveInstrumenter();
     Context parentContext = Context.current();

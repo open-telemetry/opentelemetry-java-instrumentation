@@ -20,7 +20,8 @@ import javax.annotation.Nullable;
 public class JmsReceiveSpanUtil {
   private static final ContextPropagators propagators = GlobalOpenTelemetry.getPropagators();
   private static final boolean receiveInstrumentationEnabled =
-      ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+      JmsInstrumenterFactory.receiveInstrumentationEnabled(
+          ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
 
   public static void createReceiveSpan(
       Instrumenter<MessageWithDestination, Void> receiveInstrumenter,

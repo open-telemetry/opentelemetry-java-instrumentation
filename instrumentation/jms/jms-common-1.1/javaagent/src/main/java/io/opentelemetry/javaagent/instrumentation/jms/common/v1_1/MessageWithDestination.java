@@ -19,6 +19,7 @@ public abstract class MessageWithDestination {
   // visible for tests
   static final String TIBCO_TMP_PREFIX = "$TMP$";
 
+  @Nullable
   public abstract MessageAdapter message();
 
   @Nullable
@@ -27,12 +28,14 @@ public abstract class MessageWithDestination {
   public abstract boolean isTemporaryDestination();
 
   public static MessageWithDestination create(
-      MessageAdapter message, @Nullable DestinationAdapter fallbackDestination) {
+      @Nullable MessageAdapter message, @Nullable DestinationAdapter fallbackDestination) {
     DestinationAdapter jmsDestination = null;
-    try {
-      jmsDestination = message.getJmsDestination();
-    } catch (Exception e) {
-      logger.log(FINE, "Failure getting JMS destination", e);
+    if (message != null) {
+      try {
+        jmsDestination = message.getJmsDestination();
+      } catch (Exception e) {
+        logger.log(FINE, "Failure getting JMS destination", e);
+      }
     }
     if (jmsDestination == null) {
       jmsDestination = fallbackDestination;

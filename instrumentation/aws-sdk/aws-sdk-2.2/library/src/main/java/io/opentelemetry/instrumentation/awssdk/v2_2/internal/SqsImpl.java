@@ -67,10 +67,6 @@ public final class SqsImpl {
     }
 
     ReceiveMessageResponse response = (ReceiveMessageResponse) rawResponse;
-    if (response.messages().isEmpty()) {
-      return false;
-    }
-
     io.opentelemetry.context.Context parentContext =
         TracingExecutionInterceptor.getParentContext(executionAttributes);
     Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter =

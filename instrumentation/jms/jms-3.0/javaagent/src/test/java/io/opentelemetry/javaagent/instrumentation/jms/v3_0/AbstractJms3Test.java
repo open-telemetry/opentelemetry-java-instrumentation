@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
@@ -173,7 +174,7 @@ abstract class AbstractJms3Test {
 
   @ParameterizedTest
   @MethodSource("emptyReceiveArguments")
-  void shouldNotEmitTelemetryOnEmptyReceive(
+  void shouldEmitReceiveTelemetryOnEmptyReceive(
       DestinationFactory destinationFactory, MessageReceiver receiver) throws JMSException {
 
     // given
@@ -188,7 +189,19 @@ abstract class AbstractJms3Test {
     // then
     assertThat(message).isNull();
 
-    testing.waitForTraces(0);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableMessagingSemconv() ? "receive" : "unknown receive")
+                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                        .hasNoParent()
+                        .hasTotalRecordedLinks(0)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            oldOperation("receive"),
+                            operationName("receive"),
+                            operationType("receive"))));
   }
 
   @ParameterizedTest

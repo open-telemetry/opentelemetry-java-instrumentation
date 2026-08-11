@@ -63,8 +63,12 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
         @Advice.Return @Nullable ConsumerRecords<?, ?> records,
         @Advice.Thrown @Nullable Throwable error) {
 
-      // don't create spans when no records were received
-      if (records == null || records.isEmpty()) {
+      if (records == null) {
+        return;
+      }
+      boolean wrapperPoll = !KafkaClientsConsumerProcessTracing.isWrappingEnabled();
+      if (wrapperPoll
+          && (!KafkaSingletons.receiveTelemetryExplicitlyEnabled() || records.isEmpty())) {
         return;
       }
 

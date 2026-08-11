@@ -17,15 +17,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 public class SpringKafkaSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-kafka-2.7";
 
-  private static final SpringKafkaTelemetry telemetry =
-      SpringKafkaTelemetry.builder(GlobalOpenTelemetry.get())
-          .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
-          .setCaptureExperimentalSpanAttributes(
-              DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "kafka")
-                  .getBoolean("experimental_span_attributes/development", false))
-          .setMessagingReceiveTelemetryEnabled(
-              ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
-          .build();
+  private static final SpringKafkaTelemetry telemetry = createTelemetry();
   private static final Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter;
 
   static {
@@ -35,10 +27,28 @@ public class SpringKafkaSingletons {
             .setCaptureExperimentalSpanAttributes(
                 DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "kafka")
                     .getBoolean("experimental_span_attributes/development", false))
-            .setMessagingReceiveTelemetryEnabled(
-                ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
             .setErrorCauseExtractor(new SpringKafkaErrorCauseExtractor());
+    Boolean receiveTelemetryEnabled =
+        ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+    if (receiveTelemetryEnabled != null) {
+      factory.setMessagingReceiveTelemetryEnabled(receiveTelemetryEnabled);
+    }
     batchProcessInstrumenter = factory.createBatchProcessInstrumenter();
+  }
+
+  private static SpringKafkaTelemetry createTelemetry() {
+    io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetryBuilder builder =
+        SpringKafkaTelemetry.builder(GlobalOpenTelemetry.get())
+            .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
+            .setCaptureExperimentalSpanAttributes(
+                DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "kafka")
+                    .getBoolean("experimental_span_attributes/development", false));
+    Boolean receiveTelemetryEnabled =
+        ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+    if (receiveTelemetryEnabled != null) {
+      builder.setMessagingReceiveTelemetryEnabled(receiveTelemetryEnabled);
+    }
+    return builder.build();
   }
 
   public static SpringKafkaTelemetry telemetry() {

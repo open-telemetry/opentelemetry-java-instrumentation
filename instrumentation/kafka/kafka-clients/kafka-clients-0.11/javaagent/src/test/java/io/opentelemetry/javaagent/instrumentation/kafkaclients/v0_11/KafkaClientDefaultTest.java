@@ -40,6 +40,23 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @Test
+  void testEmptyPoll() throws Exception {
+    awaitUntilConsumerIsReady();
+
+    ConsumerRecords<?, ?> records = poll(Duration.ofMillis(100));
+
+    assertThat(records).isEmpty();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableMessagingSemconv() ? "poll" : "unknown receive")
+                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasTotalRecordedLinks(0)));
+  }
+
   @DisplayName("test kafka produce and consume")
   @ParameterizedTest(name = "{index} => test headers: {0}")
   @ValueSource(booleans = {true, false})

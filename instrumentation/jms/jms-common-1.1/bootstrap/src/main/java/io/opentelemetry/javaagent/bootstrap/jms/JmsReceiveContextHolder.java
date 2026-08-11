@@ -27,6 +27,10 @@ public final class JmsReceiveContextHolder implements ImplicitContextKeyed {
     return context.with(new JmsReceiveContextHolder());
   }
 
+  public static boolean isInitialized(Context context) {
+    return context.get(KEY) != null;
+  }
+
   public static void set(Context receiveContext) {
     JmsReceiveContextHolder holder = receiveContext.get(KEY);
     if (holder != null) {

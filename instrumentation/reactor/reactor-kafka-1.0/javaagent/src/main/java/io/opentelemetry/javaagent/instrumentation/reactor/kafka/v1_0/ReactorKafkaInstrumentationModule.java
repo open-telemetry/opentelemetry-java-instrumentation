@@ -25,6 +25,7 @@ public class ReactorKafkaInstrumentationModule extends InstrumentationModule {
         new KafkaReceiverInstrumentation(),
         new ReceiverRecordInstrumentation(),
         new DefaultKafkaReceiverInstrumentation(),
-        new ConsumerHandlerInstrumentation());
+        new ConsumerHandlerInstrumentation(),
+        new PollEventInstrumentation());
   }
 }

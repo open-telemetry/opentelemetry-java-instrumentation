@@ -93,7 +93,7 @@ public final class AwsSdkInstrumenterFactory {
   @Nullable private final TextMapPropagator messagingPropagator;
   private final List<String> capturedHeaders;
   private final boolean captureExperimentalSpanAttributes;
-  private final boolean messagingReceiveInstrumentationEnabled;
+  @Nullable private final Boolean messagingReceiveInstrumentationEnabled;
   private final boolean useXrayPropagator;
 
   public AwsSdkInstrumenterFactory(
@@ -101,7 +101,7 @@ public final class AwsSdkInstrumenterFactory {
       @Nullable TextMapPropagator messagingPropagator,
       List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes,
-      boolean messagingReceiveInstrumentationEnabled,
+      @Nullable Boolean messagingReceiveInstrumentationEnabled,
       boolean useXrayPropagator) {
     this.openTelemetry = openTelemetry;
     this.messagingPropagator = messagingPropagator;
@@ -169,7 +169,7 @@ public final class AwsSdkInstrumenterFactory {
                 });
           }
         },
-        messagingReceiveInstrumentationEnabled);
+        receiveInstrumentationEnabled());
   }
 
   public Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter() {
@@ -186,7 +186,8 @@ public final class AwsSdkInstrumenterFactory {
                 messagingAttributesExtractor(getter, operationType, PROCESS_OPERATION_NAME));
     setMessagingProcessExceptionEventExtractor(builder);
 
-    if (emitStableMessagingSemconv() || messagingReceiveInstrumentationEnabled) {
+    if (emitStableMessagingSemconv()
+        || Boolean.TRUE.equals(messagingReceiveInstrumentationEnabled)) {
       builder.addSpanLinksExtractor(
           (spanLinks, parentContext, request) -> {
             // getCreationContext() extracts against a root context, so it is either a valid
@@ -212,6 +213,12 @@ public final class AwsSdkInstrumenterFactory {
                       useXrayPropagator)));
     }
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+  }
+
+  private boolean receiveInstrumentationEnabled() {
+    return messagingReceiveInstrumentationEnabled != null
+        ? messagingReceiveInstrumentationEnabled
+        : emitStableMessagingSemconv();
   }
 
   private static List<AttributesExtractor<AbstractSqsRequest, Response>> toSqsRequestExtractors(

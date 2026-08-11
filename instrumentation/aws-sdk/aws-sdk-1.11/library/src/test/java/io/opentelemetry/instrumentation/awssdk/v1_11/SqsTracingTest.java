@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.singletonList;
 
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
@@ -24,12 +25,13 @@ class SqsTracingTest extends AbstractSqsTracingTest {
 
   @Override
   public AmazonSQSAsyncClientBuilder configureClient(AmazonSQSAsyncClientBuilder client) {
-    return client.withRequestHandlers(
+    AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)
-            .setMessagingReceiveTelemetryEnabled(true)
-            .setCapturedHeaders(singletonList("Test-Message-Header"))
-            .build()
-            .createRequestHandler());
+            .setCapturedHeaders(singletonList("Test-Message-Header"));
+    if (!emitStableMessagingSemconv()) {
+      telemetryBuilder.setMessagingReceiveTelemetryEnabled(true);
+    }
+    return client.withRequestHandlers(telemetryBuilder.build().createRequestHandler());
   }
 }
