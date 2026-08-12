@@ -17,8 +17,10 @@ configurations:
       Comma-separated list of case-sensitive glob patterns for MDC keys to capture as log
       attributes. "*" matches any number of characters and "?" matches one character. Excluded
       patterns take precedence over included patterns. No MDC attributes are captured unless an
-      included or excluded pattern is configured; configuring only excluded patterns captures all
-      MDC attributes that do not match them.
+      included pattern, an excluded pattern, or the deprecated
+      otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting is configured;
+      configuring only excluded patterns captures all MDC attributes that do not match them.
+      Captured MDC attributes may contain sensitive information.
     type: list
     default: ''
     examples:
@@ -30,8 +32,10 @@ configurations:
       Comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log
       attributes. "*" matches any number of characters and "?" matches one character. Excluded
       patterns take precedence over included patterns. No MDC attributes are captured unless an
-      included or excluded pattern is configured; configuring only excluded patterns captures all
-      MDC attributes that do not match them.
+      included pattern, an excluded pattern, or the deprecated
+      otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting is configured;
+      configuring only excluded patterns captures all MDC attributes that do not match them.
+      Captured MDC attributes may contain sensitive information.
     type: list
     default: ''
     examples:
@@ -43,8 +47,9 @@ configurations:
       Deprecated include-only alias for
       otel.instrumentation.log4j-appender.experimental.mdc-attributes.included. It does not support
       glob patterns: a list containing only "*" captures all MDC attributes, and otherwise every
-      entry, including one containing "*" or "?", is matched as a literal MDC key. It may be removed
-      in the next minor release.
+      entry, including one containing "*" or "?", is matched as a literal MDC key. It is ignored
+      when an included or excluded pattern is configured, and it may be removed in the next minor
+      release.
     type: list
     default: ''
     examples:

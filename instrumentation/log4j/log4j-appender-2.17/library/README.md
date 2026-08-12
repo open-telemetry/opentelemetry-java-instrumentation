@@ -130,9 +130,7 @@ and `contextDataAttributesExcluded` settings, which in turn take precedence over
 does not disable capture and the next configured source is used instead. No context data attributes
 are captured only when every one of these sources is absent or empty.
 
-Context data values can hold sensitive data, so review which keys a selector captures before
-enabling it. An exclude-only selector also captures context data keys that are added later, so
-prefer included patterns when the set of context data keys is not fully known.
+Captured context data attributes may contain sensitive information. Configure included and excluded patterns to limit the data exported as log attributes.
 
 The `otel.event.name` key is supported in `MapMessage` entries and context data entries. When present, its value is used as the log event name and is not emitted as an attribute.
 

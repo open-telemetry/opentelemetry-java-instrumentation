@@ -120,6 +120,15 @@ class Log4jConfigTest {
   }
 
   @Test
+  void deprecatedConfigEmptyListCapturesNothing() {
+    DeclarativeConfigProperties config = mockConfig();
+    when(config.getScalarList("capture_mdc_attributes/development", String.class))
+        .thenReturn(emptyList());
+
+    assertThat(new Log4jConfig(config).getContextDataAttributes()).isNull();
+  }
+
+  @Test
   void newSelectorTakesPrecedenceAndWarnsOnce() {
     DeclarativeConfigProperties config = mockConfig();
     when(config.get("mdc_attributes/development").getScalarList("included", String.class))

@@ -203,8 +203,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
      * any single character and {@code *} matches any number of characters, including none, so
      * {@code included("*")} captures every context data attribute. Excluded patterns take
      * precedence over included patterns. A selector with only excluded patterns captures every
-     * context data attribute that it does not exclude, which can include attributes that are added
-     * later, so prefer included patterns when the context data may hold sensitive values.
+     * context data attribute that it does not exclude.
      *
      * <p>Only a non-empty selector set here takes precedence over the {@code
      * contextDataAttributesIncluded} and {@code contextDataAttributesExcluded} settings, which in
@@ -212,6 +211,9 @@ public class OpenTelemetryAppender extends AbstractAppender {
      * setting. A {@code null} or empty selector carries no configuration, so it does not disable
      * capture and the next configured source is used instead. No context data attributes are
      * captured only when every one of these sources is absent or empty.
+     *
+     * <p>Captured context data attributes may contain sensitive information. Configure included and
+     * excluded patterns to limit the data exported as log attributes.
      */
     @CanIgnoreReturnValue
     public B setContextDataAttributes(@Nullable IncludeExclude contextDataAttributes) {
@@ -259,6 +261,10 @@ public class OpenTelemetryAppender extends AbstractAppender {
      * <p>This setting does not support glob patterns. A comma-separated list containing only {@code
      * *} captures every context data attribute; otherwise every entry, including one that contains
      * {@code *} or {@code ?}, is matched as a literal context data key.
+     *
+     * <p>It is ignored when a non-empty selector is set with {@link
+     * #setContextDataAttributes(IncludeExclude)} or when {@code contextDataAttributesIncluded} or
+     * {@code contextDataAttributesExcluded} is configured.
      *
      * @deprecated Use {@link #setContextDataAttributes(IncludeExclude)} instead. May be removed in
      *     the next minor release.
