@@ -19,7 +19,7 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   static final AttributeKey<String> RPC_METHOD = AttributeKey.stringKey("rpc.method");
-  static final AttributeKey<String> RPC_METHOD_ORIGINAL =
+  private static final AttributeKey<String> RPC_METHOD_ORIGINAL =
       AttributeKey.stringKey("rpc.method_original");
 
   // Stable semconv keys
