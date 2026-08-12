@@ -478,6 +478,9 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                         attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
                         attributes.add(equalTo(MESSAGING_OPERATION_NAME, "delete"));
                         attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
+                        attributes.add(
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "settle" : null));
                       }
 
                       span.hasName(
@@ -542,6 +545,9 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                         attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
                         attributes.add(equalTo(MESSAGING_OPERATION_NAME, "delete"));
                         attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
+                        attributes.add(
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "settle" : null));
                         attributes.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2));
                       }
 
@@ -693,13 +699,17 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                 equalTo(RPC_SERVICE, "Sqs"),
                                 equalTo(RPC_METHOD, "DeleteMessage"),
                                 equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                                satisfies(
+                                    URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, sqsPort),
                                 equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                 equalTo(MESSAGING_DESTINATION_NAME, "missing"),
                                 equalTo(MESSAGING_OPERATION_NAME, "delete"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "settle"),
+                                equalTo(
+                                    MESSAGING_OPERATION,
+                                    emitOldMessagingSemconv() ? "settle" : null),
                                 equalTo(ERROR_TYPE, QueueDoesNotExistException.class.getName()))));
   }
 

@@ -484,6 +484,9 @@ public abstract class AbstractSqsTracingTest {
                         attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
                         attributes.add(equalTo(MESSAGING_OPERATION_NAME, "delete"));
                         attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
+                        attributes.add(
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "settle" : null));
                       }
 
                       span.hasName(
@@ -534,6 +537,9 @@ public abstract class AbstractSqsTracingTest {
                         attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
                         attributes.add(equalTo(MESSAGING_OPERATION_NAME, "delete"));
                         attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
+                        attributes.add(
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "settle" : null));
                         attributes.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2));
                       }
 
@@ -667,6 +673,9 @@ public abstract class AbstractSqsTracingTest {
                                 equalTo(MESSAGING_DESTINATION_NAME, "missing"),
                                 equalTo(MESSAGING_OPERATION_NAME, "delete"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "settle"),
+                                equalTo(
+                                    MESSAGING_OPERATION,
+                                    emitOldMessagingSemconv() ? "settle" : null),
                                 equalTo(ERROR_TYPE, QueueDoesNotExistException.class.getName()))));
   }
 
