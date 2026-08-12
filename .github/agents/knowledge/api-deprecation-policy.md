@@ -3,7 +3,7 @@
 ## Quick Reference
 
 - Use when: reviewing public API removals/renames, `@Deprecated` usage, stable-vs-alpha compatibility, or any module rename that touches user-facing config keys or emitted telemetry identity
-- Review focus: deprecate-then-remove timing driven by the publishing artifact's stability,
+- Review focus: deprecate-then-remove timing (driven by the publishing artifact's stability),
   delegation direction, required Javadoc/CHANGELOG coverage, v3-preview gating for config keys and
   scope names
 
@@ -44,16 +44,13 @@ The CHANGELOG uses distinct headings to distinguish:
 ### Determining whether a symbol is stable
 
 Removal timing follows the stability of the **artifact that publishes the symbol**, not how public
-the class looks. A module is stable only when its own `gradle.properties` sets `otel.stable=true`;
-equivalently, its published version has no `-alpha` suffix. Check the module directory before
-deciding on a removal timeline — do not rely on a memorized list of stable artifacts, which goes
-out of date.
+the class looks. A module is stable only when its own `gradle.properties` sets `otel.stable=true`,
+equivalently when its published version has no `-alpha` suffix. Check the module directory rather
+than a memorized list of stable artifacts, which goes out of date.
 
-Classes that look like supported public API are frequently alpha. `*TelemetryBuilder` and
+Classes that look like supported public API are frequently alpha: `*TelemetryBuilder` and
 `internal.Experimental` classes in `instrumentation/**/library` modules, and everything in
-`instrumentation-api-incubator`, are published only from `-alpha` artifacts. A deprecation there
-follows the alpha cycle even when the class is the documented entry point for library
-instrumentation.
+`instrumentation-api-incubator`, are published only from `-alpha` artifacts.
 
 ### Javaagent modules are not a public API
 
@@ -78,14 +75,14 @@ Deprecations in stable modules accumulate over multiple releases and are only **
 next major version** (3.0). Many items carry `// to be removed in 3.0` or `@deprecated ... Will
 be removed in 3.0` comments to make this explicit.
 
-### 3.0 milestone work is a separate thing
+### 3.0 milestone work is separate
 
 Some deprecations are scheduled for 3.0 because 3.0 is where a *behavior* changes, not because the
-symbol is stable. Leave these alone: old-semconv support and the `SemconvStability` clusters,
-`@Override`s of interface methods that are themselves scheduled for 3.0, anything gated on
-`otel.instrumentation.common.v3-preview`, `|deprecated:<old>` instrumentation-name aliases, the
-Zipkin exporter removal, and the flat `ConfigProperties` bridge. They correctly say 3.0 even in
-alpha modules.
+symbol is stable. These correctly say 3.0 even in alpha modules, so leave them alone: old-semconv
+support and the `SemconvStability` clusters, `@Override`s of interface methods that are themselves
+scheduled for 3.0, anything gated on `otel.instrumentation.common.v3-preview`,
+`|deprecated:<old>` instrumentation-name aliases, the Zipkin exporter removal, and the flat
+`ConfigProperties` bridge.
 
 ## Correct `@Deprecated` Usage
 
@@ -103,15 +100,13 @@ Rules:
 
 - Use plain `@Deprecated` — do **not** use `forRemoval=true` or `since="..."` (must stay Java 8 compatible).
 - Always include a `@deprecated` Javadoc tag that names the replacement and states the removal timeline.
-- An inline comment stating the timeline is strongly encouraged. Use
-  `// may be removed in the next minor release` for alpha symbols and `// to be removed in 3.0`
-  for stable ones. Use the same sentence in `metadata.yaml` descriptions, README config tables, and
-  any runtime warning, so one deprecation reads consistently everywhere.
-- Do **not** repeat the removal timeline in the CHANGELOG bullet. A deprecation bullet says what is
-  deprecated and what replaces it; the timeline lives in the Javadoc, the annotation comment, the
-  runtime warning, `metadata.yaml`, and the README, which is where a user actually encounters it.
-  Repeating it in the CHANGELOG adds another copy to keep in sync, and alpha and stable surfaces
-  deprecated by the same PR often differ.
+- An inline comment stating the timeline is strongly encouraged: `// may be removed in the next
+  minor release` for alpha symbols, `// to be removed in 3.0` for stable ones. Reuse the same
+  sentence in `metadata.yaml` descriptions, README config tables, and any runtime warning, so one
+  deprecation reads consistently everywhere.
+- Do **not** repeat the removal timeline in the CHANGELOG bullet — it says what is deprecated and
+  what replaces it. The timeline lives where a user actually encounters it, and alpha and stable
+  surfaces deprecated by the same PR often differ.
 - The **deprecated method must delegate to its replacement**, not the other way around. This ensures
   anyone overriding the deprecated method still gets called.
 - Add the `deprecation` label to the PR — this drives the automated `🚫 Deprecations` CHANGELOG entry.
@@ -156,11 +151,10 @@ public CxfInstrumentationModule() {
 The helper splits the marker and registers both names, so both
 `otel.instrumentation.jaxws-2.0-cxf-3.0.enabled` and
 `otel.instrumentation.jaxws-cxf-3.0.enabled` keep working (flat properties and YAML alike).
-Under `otel.instrumentation.common.v3-preview=true` the deprecated name is dropped and the legacy
-key is silently ignored, matching 3.0 where it will no longer be recognized. Normal minor releases
-preceding 3.0 still warn outside preview mode. Unlike ordinary replacement-property fallback, alias
-warnings are based on explicit legacy-key presence and can occur even when the current name
-determines the effective enablement.
+Under `otel.instrumentation.common.v3-preview=true` the deprecated name is dropped and its key
+silently ignored, matching 3.0; releases before then still warn outside preview mode. Unlike
+ordinary replacement-property fallback, the alias warning is driven by explicit legacy-key presence,
+so it fires even when the current name determines the effective enablement.
 
 No per-module `AgentCommonConfig` branching, `isV3Preview()` checks, or bespoke logging are
 needed — the marker string plus the statically imported `expandDeprecatedNames` call is the
@@ -243,13 +237,10 @@ default in 3.0.
 
 - **`to be removed in 3.0` on an alpha-only symbol**: check the publishing module's
   `gradle.properties`. If it is not `otel.stable=true`, the deprecation should say
-  `may be removed in the next minor release` instead, unless it is 3.0 milestone work
-  (v3-preview-gated behavior, old semconv, instrumentation-name aliases).
+  `may be removed in the next minor release` — unless it is 3.0 milestone work.
 
-- **Removal timing in a CHANGELOG deprecation bullet**: a `🚫 Deprecations` bullet should say what
-  is deprecated and what replaces it, not when it will be removed. Ask for the timing sentence to be
-  dropped; it belongs in the Javadoc, annotation comment, runtime warning, `metadata.yaml`, and
-  README.
+- **Removal timing in a CHANGELOG deprecation bullet**: ask for the timing sentence to be dropped;
+  it belongs in the Javadoc, annotation comment, runtime warning, `metadata.yaml`, and README.
 
 - **`@Deprecated` without Javadoc**: annotation present but no `@deprecated` Javadoc, or the
   Javadoc doesn't name the replacement — ask for both.

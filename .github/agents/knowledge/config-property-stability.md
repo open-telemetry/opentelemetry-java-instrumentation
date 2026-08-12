@@ -49,12 +49,10 @@ Defined in [VERSIONING.md](../../../VERSIONING.md):
 
 `otel.javaagent.testing.*` — always allowed to break, regardless of marker.
 
-A property name is a stable surface even when the code reading it is alpha. Users configure the
+A property name is a stable surface even when the code reading it is alpha: users configure the
 javaagent, which is published as a stable artifact, so its user-facing names outlive the alpha
 classes behind them. A deprecated *property name* and a deprecated *Java method* introduced by the
-same PR therefore often have different removal timelines. Reflect that in the `metadata.yaml`
-description, README config table, and runtime warning for each, rather than in the CHANGELOG, which
-does not carry removal timing.
+same PR therefore often have different removal timelines.
 
 Examples (flat ↔ YAML):
 
@@ -70,59 +68,25 @@ must be communicated through:
 1. A `🚫 Deprecations` CHANGELOG entry naming the old and new property, including instrumentation
    enablement alias renames.
 2. A comment in code near where the old property is read.
-3. **A `WARN`-level log message at startup** if the deprecated property is applied. Name the old and
-   replacement flat properties when they exist; otherwise name the declarative paths. Exact wording
-   is not standardized. Deduplicate warnings with a static, process-wide keyed set for multiple
-   properties or an `AtomicBoolean` for one. Omit the guard only when initialization guarantees one
-   evaluation. Instrumentation enablement aliases are the exception described below.
+3. **A `WARN`-level log message at startup** when the deprecated property is applied, naming the old
+   and replacement flat properties, or the declarative paths when there is no flat form. Exact
+   wording is not standardized. Deduplicate with a static `AtomicBoolean` for a single property or a
+   static keyed set for several, unless initialization guarantees one evaluation. Instrumentation
+   enablement aliases are the exception described below.
 
-### Deprecated Properties Under Common v3 Preview
+### Migration Support Pattern
 
-Configuration names are user-facing API; also see
-[Breaking Changes and Deprecation Policy](api-deprecation-policy.md). This section applies only to
-**stable** property names — those whose deprecated spelling must survive until 3.0. Use this order:
-
-1. Read the replacement first.
-2. Only if the replacement is absent and v3 preview is disabled, read the deprecated value.
-3. Warn only when returning/applying that deprecated value.
-4. Under `otel.instrumentation.common.v3-preview=true`, silently ignore the deprecated value.
-   Preview mode must reproduce 3.0 behavior: 3.0 will no longer know about the deprecated property,
-   so it will not read, apply, or warn about it. Normal preceding minor releases still warn outside
-   preview mode.
-
-**An `experimental`-marked property does not get this treatment.** It can be removed in the next
-minor release, so there is nothing for preview mode to reproduce. Read the replacement first, fall
-back to the deprecated name unconditionally, and warn once — no `v3Preview` parameter, no gate, and
-no `v3-preview` test variant.
-
-The gRPC and servlet request-capture deprecations make the contrast concrete:
-
-| Deprecated property                                                    | Marker         | Treatment                                 |
-| ---------------------------------------------------------------------- | -------------- | ----------------------------------------- |
-| `otel.instrumentation.grpc.capture-metadata.client.request`            | none → stable  | v3-preview gated, removed in 3.0          |
-| `otel.instrumentation.servlet.experimental.capture-request-parameters` | `experimental` | ungated, may be removed in the next minor |
-
-Replacement-first lookup also supports warning-free upgrades with centralized configuration:
-operators can publish both names while old versions use the deprecated property and new versions
-use the replacement, then remove the deprecated property after rollout. A warning identifies a
-deployment that still depends on the deprecated value, not one merely carrying it for compatibility.
-
-Instrumentation enablement name aliases are an exception. Enablement is resolved across an ordered
-list of equivalent names, while deprecation warnings are based on whether the legacy alias is
-explicitly configured. The replacement alias can therefore determine the result while the legacy
-alias still triggers a warning. Under v3 preview, omit the legacy alias from resolution and silently
-ignore its key, matching a future runtime that no longer knows the alias. Do not copy this
-alias-specific warning behavior into ordinary property fallback.
-
-Keep the deprecated read itself inside the `!v3Preview` branch, rather than reading it eagerly and
-discarding it later:
+Configuration names are user-facing API; see also
+[Breaking Changes and Deprecation Policy](api-deprecation-policy.md). Read the replacement first,
+fall back to the deprecated name only when the replacement is absent, and warn only when the
+deprecated value is actually applied:
 
 ```java
 Boolean value = config.getBoolean("new_key");
 if (value != null) {
   return value;
 }
-if (!v3Preview) {
+if (!v3Preview) { // stable names only; see below
   Boolean deprecatedValue = config.getBoolean("old_key");
   if (deprecatedValue != null) {
     warnOnce();
@@ -133,27 +97,31 @@ return defaultValue;
 ```
 
 The nullable reads are intentional: migration code must detect absence before applying the default.
+Keep the deprecated read inside the `!v3Preview` branch rather than reading it eagerly and
+discarding it later.
 
-## Migration Support Without Major-Preview Removal (Optional)
+Replacement-first lookup also supports warning-free upgrades with centralized configuration:
+operators can publish both names while old versions use the deprecated property and new versions use
+the replacement, then remove the deprecated property after rollout. A warning then identifies a
+deployment that still depends on the deprecated value, not one merely carrying it for compatibility.
 
-For a deprecated property that is not being removed by the active major-version preview — including
-every `experimental`-marked name — code may read both old and new names. Do not use this
-unconditional fallback for stable properties being removed by the preview; use the guarded pattern
-above instead.
+The `!v3Preview` guard applies only to **stable** property names, whose deprecated spelling must
+survive until 3.0. Preview mode must reproduce 3.0 behavior: 3.0 will no longer know about the
+deprecated property, so it will not read, apply, or warn about it, while preceding minor releases
+still warn outside preview mode. An `experimental`-marked property can be removed in the next minor
+release, so there is nothing for preview mode to reproduce: drop the guard, the `v3Preview`
+parameter, and the v3-preview test variant, and keep only the warning.
 
-```java
-// Using the declarative config API
-Boolean value = config.getBoolean("new_property_name");
-if (value == null) {
-  Boolean deprecatedValue = config.getBoolean("old_property_name");
-  if (deprecatedValue != null) {
-    warnOnce();
-    value = deprecatedValue;
-  } else {
-    value = defaultValue;
-  }
-}
-```
+| Deprecated property                                                    | Marker         | Treatment                                 |
+| ---------------------------------------------------------------------- | -------------- | ----------------------------------------- |
+| `otel.instrumentation.grpc.capture-metadata.client.request`            | none → stable  | v3-preview gated, removed in 3.0          |
+| `otel.instrumentation.servlet.experimental.capture-request-parameters` | `experimental` | ungated, may be removed in the next minor |
+
+Instrumentation enablement name aliases are an exception. Enablement resolves across an ordered list
+of equivalent names, while the warning is driven by explicit legacy-key presence, so the replacement
+alias can determine the result while the legacy alias still warns. Under v3 preview the legacy alias
+is dropped from resolution and its key silently ignored. Do not copy this behavior into ordinary
+property fallback.
 
 ## Naming Conventions
 
@@ -206,20 +174,20 @@ These have no flat-property fallback, so tests must cover declarative config mod
 
 - **Missing default values in declarative config reads**: provide defaults
   (`getBoolean(name, default)`, etc.) for graceful degradation when YAML is unavailable. Migration
-  probes are the exception: use the nullable overload to detect absence, then apply the default after
-  checking replacement and deprecated names.
+  probes are the exception: use the nullable overload to detect absence, then apply the default
+  after checking replacement and deprecated names.
 - **Wrong config scope**: `getInstrumentationConfig(ot, name)` → `java → <name>`;
   `getGeneralInstrumentationConfig(ot)` → `general`. HTTP header capture lives under `general`.
 
 **Deprecated properties under v3 preview:**
 
 - **`experimental`-marked property gated on v3 preview**: the gate only exists to reproduce 3.0
-  behavior for names that must survive until 3.0. An experimental name can simply be removed in the
-  next minor release, so it needs the warning and nothing else.
+  behavior for names that must survive until 3.0. An experimental name needs the warning and
+  nothing else.
 - **Deprecated value read or warned about under v3 preview**: preview must neither observe nor warn
   about a setting that 3.0 will not recognize.
 - **Warning emitted when the replacement already determines an ordinary property value**: do not
   warn merely because shared configuration carries both names during a mixed-version rollout. This
   does not apply to instrumentation enablement name aliases.
-- **Missing warning deduplication on a repeatable path**: use a per-key concurrent set for multiple
-  properties or a static `AtomicBoolean` for a single property.
+- **Missing warning deduplication on a repeatable path**: use a static `AtomicBoolean` for a single
+  property or a per-key concurrent set for several.
