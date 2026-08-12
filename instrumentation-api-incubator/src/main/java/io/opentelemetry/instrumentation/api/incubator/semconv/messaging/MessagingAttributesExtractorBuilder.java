@@ -64,9 +64,10 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * which case dashes are preserved.
    *
    * @param capturedHeaders A list of messaging header names.
-   * @deprecated Use {@link #setHeaders(IncludeExclude)} instead. Will be removed in 3.0.
+   * @deprecated Use {@link #setHeaders(IncludeExclude)} instead. May be removed in the next minor
+   *     release.
    */
-  @Deprecated // to be removed in 3.0
+  @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedHeaders(
       Collection<String> capturedHeaders) {

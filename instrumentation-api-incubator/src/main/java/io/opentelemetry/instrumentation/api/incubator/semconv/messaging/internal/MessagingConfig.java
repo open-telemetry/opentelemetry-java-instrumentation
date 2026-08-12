@@ -11,7 +11,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import java.util.List;
 import java.util.Set;
@@ -60,15 +59,12 @@ public final class MessagingConfig {
       OpenTelemetry openTelemetry, boolean systemPropertyFallback) {
     return getHeaders(
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging"),
-        SemconvStability.v3Preview(openTelemetry),
         systemPropertyFallback);
   }
 
   // visible for testing
   static IncludeExclude getHeaders(
-      DeclarativeConfigProperties messagingConfig,
-      boolean v3Preview,
-      boolean systemPropertyFallback) {
+      DeclarativeConfigProperties messagingConfig, boolean systemPropertyFallback) {
     DeclarativeConfigProperties headers = messagingConfig.get("headers/development");
     List<String> included = getList(headers, "included", HEADERS_INCLUDED, systemPropertyFallback);
     List<String> excluded = getList(headers, "excluded", HEADERS_EXCLUDED, systemPropertyFallback);
@@ -81,10 +77,6 @@ public final class MessagingConfig {
     // empty property values cannot be distinguished from unset ones
     if (!selector.isEmpty()) {
       return selector;
-    }
-
-    if (v3Preview) {
-      return NONE;
     }
 
     List<String> deprecatedIncluded =
@@ -102,7 +94,7 @@ public final class MessagingConfig {
           "The "
               + DEPRECATED_CAPTURE_HEADERS
               + " setting and the equivalent declarative configuration property"
-              + " are deprecated and will be removed in 3.0. Use "
+              + " are deprecated and may be removed in the next minor release. Use "
               + HEADERS_INCLUDED
               + " or equivalent declarative configuration instead.");
     }

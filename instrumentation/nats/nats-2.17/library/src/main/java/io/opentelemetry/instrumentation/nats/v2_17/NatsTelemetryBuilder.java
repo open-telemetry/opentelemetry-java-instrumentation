@@ -44,9 +44,10 @@ public final class NatsTelemetryBuilder {
    * Configures the messaging headers that will be captured as span attributes.
    *
    * @param capturedHeaders A list of messaging header names.
-   * @deprecated Use {@link #setHeaders(IncludeExclude)} instead. Will be removed in 3.0.
+   * @deprecated Use {@link #setHeaders(IncludeExclude)} instead. May be removed in the next minor
+   *     release.
    */
-  @Deprecated // to be removed in 3.0
+  @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public NatsTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
     return setHeaders(IncludeExclude.builder().setIncluded(capturedHeaders).build());

@@ -29,7 +29,7 @@
   in favor of `otel.instrumentation.messaging.experimental.headers.included` /
   `otel.instrumentation.messaging.experimental.headers.excluded` and `setHeaders(IncludeExclude)`,
   which select message headers by glob pattern instead of by exact name only. The deprecated
-  property and methods still select the same headers and will be removed in 3.0.
+  property and methods still select the same headers.
 - Deprecate `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` and
   `io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental#setPreferJfrMetrics(RuntimeTelemetryBuilder, boolean)`
   in favor of `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included` and

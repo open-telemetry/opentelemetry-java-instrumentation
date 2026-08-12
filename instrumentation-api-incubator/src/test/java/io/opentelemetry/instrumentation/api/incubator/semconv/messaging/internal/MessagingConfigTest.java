@@ -43,7 +43,7 @@ class MessagingConfigTest {
     when(config.get("headers/development").getScalarList("excluded", String.class))
         .thenReturn(singletonList("*-secret"));
 
-    IncludeExclude headers = MessagingConfig.getHeaders(config, false, false);
+    IncludeExclude headers = MessagingConfig.getHeaders(config, false);
 
     assertThat(headers.getIncluded()).containsExactly("Test-*", "other");
     assertThat(headers.getExcluded()).containsExactly("*-secret");
@@ -55,7 +55,7 @@ class MessagingConfigTest {
     when(config.get("headers/development").getScalarList("excluded", String.class))
         .thenReturn(singletonList("secret"));
 
-    IncludeExclude headers = MessagingConfig.getHeaders(config, false, false);
+    IncludeExclude headers = MessagingConfig.getHeaders(config, false);
 
     assertThat(headers.getIncluded()).isEmpty();
     assertThat(headers.getExcluded()).containsExactly("secret");
@@ -69,7 +69,7 @@ class MessagingConfigTest {
     when(config.getScalarList("capture_headers/development", String.class))
         .thenReturn(singletonList("deprecated"));
 
-    IncludeExclude headers = MessagingConfig.getHeaders(config, false, false);
+    IncludeExclude headers = MessagingConfig.getHeaders(config, false);
 
     assertThat(headers.getIncluded()).containsExactly("new");
   }
@@ -83,8 +83,8 @@ class MessagingConfigTest {
     TestHandler handler = new TestHandler();
     logger.addHandler(handler);
     try {
-      IncludeExclude first = MessagingConfig.getHeaders(config, false, false);
-      IncludeExclude second = MessagingConfig.getHeaders(config, false, false);
+      IncludeExclude first = MessagingConfig.getHeaders(config, false);
+      IncludeExclude second = MessagingConfig.getHeaders(config, false);
 
       assertThat(first.getIncluded()).containsExactly("deprecated");
       assertThat(first.getExcluded()).isEmpty();
@@ -93,8 +93,8 @@ class MessagingConfigTest {
       assertThat(handler.records.get(0).getMessage())
           .isEqualTo(
               "The otel.instrumentation.messaging.experimental.capture-headers setting and the"
-                  + " equivalent declarative configuration property are deprecated and will be"
-                  + " removed in 3.0. Use"
+                  + " equivalent declarative configuration property are deprecated and may be"
+                  + " removed in the next minor release. Use"
                   + " otel.instrumentation.messaging.experimental.headers.included or equivalent"
                   + " declarative configuration instead.");
     } finally {
@@ -107,12 +107,12 @@ class MessagingConfigTest {
     DeclarativeConfigProperties config = mockConfig();
     when(config.getScalarList("capture_headers/development", String.class)).thenReturn(emptyList());
 
-    assertThat(MessagingConfig.getHeaders(config, false, false).isEmpty()).isTrue();
+    assertThat(MessagingConfig.getHeaders(config, false).isEmpty()).isTrue();
   }
 
   @Test
   void absentSelectorCapturesNothing() {
-    assertThat(MessagingConfig.getHeaders(mockConfig(), false, false).isEmpty()).isTrue();
+    assertThat(MessagingConfig.getHeaders(mockConfig(), false).isEmpty()).isTrue();
   }
 
   @Test
@@ -123,16 +123,7 @@ class MessagingConfigTest {
     when(config.get("headers/development").getScalarList("excluded", String.class))
         .thenReturn(emptyList());
 
-    assertThat(MessagingConfig.getHeaders(config, false, false).isEmpty()).isTrue();
-  }
-
-  @Test
-  void deprecatedConfigIsIgnoredInV3Preview() {
-    DeclarativeConfigProperties config = mockConfig();
-    when(config.getScalarList("capture_headers/development", String.class))
-        .thenReturn(singletonList("deprecated"));
-
-    assertThat(MessagingConfig.getHeaders(config, true, false).isEmpty()).isTrue();
+    assertThat(MessagingConfig.getHeaders(config, false).isEmpty()).isTrue();
   }
 
   @Test
@@ -140,8 +131,8 @@ class MessagingConfigTest {
     DeclarativeConfigProperties config = mockConfig();
     System.setProperty("otel.instrumentation.messaging.experimental.headers.included", "from-prop");
     try {
-      assertThat(MessagingConfig.getHeaders(config, false, false).isEmpty()).isTrue();
-      assertThat(MessagingConfig.getHeaders(config, false, true).getIncluded())
+      assertThat(MessagingConfig.getHeaders(config, false).isEmpty()).isTrue();
+      assertThat(MessagingConfig.getHeaders(config, true).getIncluded())
           .containsExactly("from-prop");
     } finally {
       System.clearProperty("otel.instrumentation.messaging.experimental.headers.included");
@@ -149,16 +140,16 @@ class MessagingConfigTest {
   }
 
   @Test
-  void createUsesV3PreviewFromOpenTelemetryInstance() {
+  void readsDeprecatedConfigFromOpenTelemetryInstance() {
     ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
     when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
-    when(commonConfig.getBoolean("v3_preview")).thenReturn(true);
     when(commonConfig.get("messaging").getScalarList("capture_headers/development", String.class))
         .thenReturn(singletonList("deprecated"));
 
-    assertThat(MessagingConfig.getHeaders(openTelemetry).isEmpty()).isTrue();
+    assertThat(MessagingConfig.getHeaders(openTelemetry).getIncluded())
+        .containsExactly("deprecated");
   }
 
   private static DeclarativeConfigProperties mockConfig() {
