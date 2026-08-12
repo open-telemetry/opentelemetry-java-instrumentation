@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.log4j.appender.v2_17;
 
-import static java.util.Collections.emptyList;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
@@ -18,7 +17,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
@@ -49,8 +47,8 @@ public class Log4jHelper {
         config.getBoolean("capture_marker_attribute/development", false);
     boolean captureTemplate = config.getBoolean("capture_template/development", false);
     boolean captureArguments = config.getBoolean("capture_arguments/development", false);
-    List<String> captureContextDataAttributes =
-        config.getScalarList("capture_mdc_attributes/development", String.class, emptyList());
+    IncludeExclude contextDataAttributes =
+        Log4jConfig.create(GlobalOpenTelemetry.get()).getContextDataAttributes();
     boolean v3Preview = commonConfig.getBoolean("v3_preview", false);
 
     mapper =
@@ -62,7 +60,7 @@ public class Log4jHelper {
             captureMarkerAttribute,
             captureTemplate,
             captureArguments,
-            captureContextDataAttributes,
+            contextDataAttributes,
             v3Preview);
   }
 

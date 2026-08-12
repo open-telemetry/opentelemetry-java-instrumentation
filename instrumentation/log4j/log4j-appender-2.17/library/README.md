@@ -82,6 +82,7 @@ Setting can be configured as XML attributes, for example:
 
 ```xml
 <Appenders>
+  <!-- captureContextDataAttributes is retained for deprecated XML compatibility. -->
   <OpenTelemetry name="OpenTelemetryAppender"
       captureMapMessageAttributes="true"
       captureMarkerAttribute="true"
@@ -100,8 +101,28 @@ The available settings are:
 | `captureMarkerAttribute`           | Boolean | `false` | Enable the capture of Log4j markers as attributes.                                                                                                                                                         |
 | `captureTemplate`                  | Boolean | `false` | Enable the capture of the log message template (if arguments are provided).                                                                                                                                |
 | `captureArguments`                 | Boolean | `false` | Enable the capture of the log message arguments.                                                                                                                                                           |
-| `captureContextDataAttributes`     | String  |         | Comma separated list of context data attributes to capture. Use the wildcard character `*` to capture all attributes.                                                                                      |
+| `captureContextDataAttributes`     | String  |         | Deprecated include-only compatibility setting for XML and programmatic configurations. Prefer `setContextDataAttributes(IncludeExclude)` for new programmatic configurations. Will be removed in 3.0.      |
 | `numLogsCapturedBeforeOtelInstall` | Integer | 1000    | Log telemetry is emitted after the initialization of the OpenTelemetry Log4j appender with an OpenTelemetry object. This setting allows you to modify the size of the cache used to replay the first logs. |
+
+For programmatic configuration, use an `IncludeExclude` selector:
+
+```java
+OpenTelemetryAppender appender =
+    OpenTelemetryAppender.builder()
+        .setName("OpenTelemetryAppender")
+        .setContextDataAttributes(
+            IncludeExclude.builder()
+                .setIncluded("request-*", "user-?")
+                .setExcluded("*-secret")
+                .build())
+        .build();
+```
+
+Context data keys and selector patterns are matched case-sensitively. `?` matches any single
+character and `*` matches any number of characters, including none. Excluded patterns take
+precedence over included patterns. No context data attributes are captured when the selector is
+absent or empty; a selector with only excluded patterns captures every context data attribute that
+it does not exclude.
 
 The `otel.event.name` key is supported in `MapMessage` entries and context data entries. When present, its value is used as the log event name and is not emitted as an attribute.
 

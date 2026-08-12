@@ -29,20 +29,68 @@ configurations {
 
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental log attributes
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
 }
 
 tasks {
+  test {
+    jvmArgs(
+      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
+      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
+    )
+  }
+
   val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=code")
+    jvmArgs(
+      "-Dotel.semconv-stability.opt-in=code",
+      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
+      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
+    )
+  }
+
+  val testLegacyMdcAttributes = register<Test>("testLegacyMdcAttributes") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*Log4jMdcSelectorTest")
+
+    jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=legacy")
+    systemProperty("testMdcConfiguration", "legacy")
+  }
+
+  val testMdcAttributePrecedence = register<Test>("testMdcAttributePrecedence") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*Log4jMdcSelectorTest")
+
+    jvmArgs(
+      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=new",
+      "-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=legacy",
+    )
+    systemProperty("testMdcConfiguration", "precedence")
+  }
+
+  val testLegacyMdcAttributesV3 = register<Test>("testLegacyMdcAttributesV3") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*Log4jMdcSelectorTest")
+
+    jvmArgs(
+      "-Dotel.instrumentation.common.v3-preview=true",
+      "-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=legacy",
+    )
+    systemProperty("testMdcConfiguration", "v3")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(
+      testStableSemconv,
+      testLegacyMdcAttributes,
+      testMdcAttributePrecedence,
+      testLegacyMdcAttributesV3,
+    )
   }
 }

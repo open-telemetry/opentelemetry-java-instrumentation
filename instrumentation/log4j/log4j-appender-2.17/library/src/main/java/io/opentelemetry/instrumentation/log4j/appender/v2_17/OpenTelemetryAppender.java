@@ -20,6 +20,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
@@ -119,6 +120,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @PluginBuilderAttribute private boolean captureTemplate;
     @PluginBuilderAttribute private boolean captureArguments;
     @Nullable @PluginBuilderAttribute private String captureContextDataAttributes;
+    @Nullable private IncludeExclude contextDataAttributes;
     @PluginBuilderAttribute private int numLogsCapturedBeforeOtelInstall;
 
     @Nullable private OpenTelemetry openTelemetry;
@@ -189,7 +191,31 @@ public class OpenTelemetryAppender extends AbstractAppender {
       return asBuilder();
     }
 
-    /** Configures the {@link ThreadContext} attributes that will be copied to logs. */
+    /**
+     * Configures the {@link ThreadContext} attributes that will be copied to logs.
+     *
+     * <p>Context data keys and selector patterns are matched case-sensitively. {@code ?} matches
+     * any single character and {@code *} matches any number of characters, including none. Excluded
+     * patterns take precedence over included patterns. No context data attributes are captured when
+     * the selector is {@code null} or empty; a selector with only excluded patterns captures every
+     * context data attribute that it does not exclude.
+     */
+    @CanIgnoreReturnValue
+    public B setContextDataAttributes(@Nullable IncludeExclude contextDataAttributes) {
+      this.contextDataAttributes =
+          contextDataAttributes == null || contextDataAttributes.isEmpty()
+              ? null
+              : contextDataAttributes;
+      return asBuilder();
+    }
+
+    /**
+     * Configures the {@link ThreadContext} attributes that will be copied to logs.
+     *
+     * @deprecated Use {@link #setContextDataAttributes(IncludeExclude)} instead. Will be removed in
+     *     3.0.
+     */
+    @Deprecated // to be removed in 3.0
     @CanIgnoreReturnValue
     public B setCaptureContextDataAttributes(String captureContextDataAttributes) {
       this.captureContextDataAttributes = captureContextDataAttributes;
@@ -230,9 +256,18 @@ public class OpenTelemetryAppender extends AbstractAppender {
           captureMarkerAttribute,
           captureTemplate,
           captureArguments,
-          captureContextDataAttributes,
+          getEffectiveContextDataAttributes(),
           numLogsCapturedBeforeOtelInstall,
           openTelemetry);
+    }
+
+    @Nullable
+    private IncludeExclude getEffectiveContextDataAttributes() {
+      if (contextDataAttributes != null) {
+        return contextDataAttributes;
+      }
+      List<String> included = splitAndFilterBlanksAndNulls(captureContextDataAttributes);
+      return included.isEmpty() ? null : IncludeExclude.builder().setIncluded(included).build();
     }
   }
 
@@ -248,7 +283,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureMarkerAttribute,
       boolean captureTemplate,
       boolean captureArguments,
-      @Nullable String captureContextDataAttributes,
+      @Nullable IncludeExclude contextDataAttributes,
       int numLogsCapturedBeforeOtelInstall,
       @Nullable OpenTelemetry openTelemetry) {
     super(name, filter, layout, ignoreExceptions, properties);
@@ -265,7 +300,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
             captureMarkerAttribute,
             captureTemplate,
             captureArguments,
-            captureContextDataAttributes,
+            contextDataAttributes,
             v3Preview);
     this.openTelemetry = openTelemetry;
     this.captureCodeAttributes = captureCodeAttributes;
@@ -294,7 +329,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureMarkerAttribute,
       boolean captureTemplate,
       boolean captureArguments,
-      @Nullable String captureContextDataAttributes,
+      @Nullable IncludeExclude contextDataAttributes,
       boolean v3Preview) {
     return new LogEventMapper<>(
         ContextDataAccessorImpl.INSTANCE,
@@ -304,7 +339,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
         captureMarkerAttribute,
         captureTemplate,
         captureArguments,
-        splitAndFilterBlanksAndNulls(captureContextDataAttributes),
+        contextDataAttributes,
         v3Preview);
   }
 

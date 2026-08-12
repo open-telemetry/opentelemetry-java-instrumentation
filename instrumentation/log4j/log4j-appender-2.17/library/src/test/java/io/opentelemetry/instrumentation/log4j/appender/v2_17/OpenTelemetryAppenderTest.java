@@ -5,8 +5,11 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataKeys.OTEL_CONTEXT_DATA_KEY;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
@@ -17,6 +20,7 @@ import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal.ContextDataKeys;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -143,6 +147,38 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     } finally {
       openTelemetry.close();
     }
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void contextDataSelectorTakesPrecedenceOverDeprecatedAlias() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setContextDataAttributes(
+                IncludeExclude.builder().setIncluded(singletonList("new-?")).build())
+            .setCaptureContextDataAttributes("legacy")
+            .build();
+    appender.start();
+
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue("new-1", "captured");
+    contextData.putValue("legacy", "ignored");
+    contextData.putValue("otel.event.name", "MyEventName");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(new FormattedMessage("log message", (Object) null))
+            .setContextData(contextData)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasEventName("MyEventName")
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("new-1"), "captured")));
   }
 
   @Test
