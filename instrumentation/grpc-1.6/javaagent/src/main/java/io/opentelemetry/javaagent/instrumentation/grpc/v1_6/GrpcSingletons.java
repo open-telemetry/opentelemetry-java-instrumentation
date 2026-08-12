@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.Internal;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
@@ -31,6 +32,8 @@ public class GrpcSingletons {
 
   public static final VirtualField<ServerBuilder<?>, Boolean> SERVER_BUILDER_INSTRUMENTED =
       VirtualField.find(ServerBuilder.class, Boolean.class);
+
+  private static final GrpcTelemetry telemetry;
 
   private static final ClientInterceptor clientInterceptor;
 
@@ -57,7 +60,7 @@ public class GrpcSingletons {
             .get("server")
             .getScalarList("request", String.class, emptyList());
 
-    GrpcTelemetry telemetry =
+    GrpcTelemetry configuredTelemetry =
         GrpcTelemetry.builder(GlobalOpenTelemetry.get())
             .setEmitMessageEvents(emitMessageEvents)
             .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes)
@@ -65,8 +68,9 @@ public class GrpcSingletons {
             .setCapturedServerRequestMetadata(serverRequestMetadata)
             .build();
 
-    clientInterceptor = telemetry.createClientInterceptor();
-    serverInterceptor = telemetry.createServerInterceptor();
+    telemetry = configuredTelemetry;
+    clientInterceptor = Internal.createClientInterceptor(configuredTelemetry, null);
+    serverInterceptor = configuredTelemetry.createServerInterceptor();
   }
 
   public static ClientInterceptor clientInterceptor() {
@@ -80,6 +84,10 @@ public class GrpcSingletons {
   @Nullable
   public static Context.Storage storage() {
     return storageReference.get();
+  }
+
+  public static ClientInterceptor createClientInterceptor(@Nullable String target) {
+    return Internal.createClientInterceptor(telemetry, target);
   }
 
   public static Context.Storage setStorage(Context.Storage storage) {
