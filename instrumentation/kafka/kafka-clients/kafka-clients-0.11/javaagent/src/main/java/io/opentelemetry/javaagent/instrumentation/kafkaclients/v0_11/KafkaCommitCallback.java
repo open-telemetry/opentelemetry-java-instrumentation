@@ -11,12 +11,12 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.consumer.OffsetCommitCallback;
 import org.apache.kafka.common.TopicPartition;
 
-public class KafkaCommitCallback implements OffsetCommitCallback {
+class KafkaCommitCallback implements OffsetCommitCallback {
 
   @Nullable private final OffsetCommitCallback callback;
   private final KafkaCommitAsyncTracing.TracingState tracingState;
 
-  public KafkaCommitCallback(
+  KafkaCommitCallback(
       @Nullable OffsetCommitCallback callback, KafkaCommitAsyncTracing.TracingState tracingState) {
     this.callback = callback;
     this.tracingState = tracingState;
