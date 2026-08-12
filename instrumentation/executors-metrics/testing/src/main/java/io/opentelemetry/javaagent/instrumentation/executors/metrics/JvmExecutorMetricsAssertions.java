@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
-import javax.annotation.Nullable;
 
 public class JvmExecutorMetricsAssertions {
 
@@ -34,17 +33,17 @@ public class JvmExecutorMetricsAssertions {
   private final InstrumentationExtension testing;
   private final String instrumentationName;
   private final String executorName;
-  @Nullable private final String executorOwnerName;
+  private final String executorOwnerName;
   private final String executorType;
 
-  @Nullable private Long expectedActiveThreads;
-  @Nullable private Long expectedIdleThreads;
-  @Nullable private Long expectedCoreThreads;
-  @Nullable private Long expectedMaxThreads;
-  @Nullable private Long expectedQueueSize;
-  @Nullable private Long expectedQueueCapacity;
-  @Nullable private Long expectedCompletedTasks;
-  @Nullable private Long expectedRejectedTasks;
+  private Long expectedActiveThreads;
+  private Long expectedIdleThreads;
+  private Long expectedCoreThreads;
+  private Long expectedMaxThreads;
+  private Long expectedQueueSize;
+  private Long expectedQueueCapacity;
+  private Long expectedCompletedTasks;
+  private Long expectedRejectedTasks;
 
   public static JvmExecutorMetricsAssertions create(
       InstrumentationExtension testing,
@@ -90,7 +89,7 @@ public class JvmExecutorMetricsAssertions {
       InstrumentationExtension testing,
       String instrumentationName,
       String executorName,
-      @Nullable String ownerName) {
+      String ownerName) {
     testing.clearData();
     testing
         .getOpenTelemetry()
@@ -132,7 +131,7 @@ public class JvmExecutorMetricsAssertions {
       InstrumentationExtension testing,
       String instrumentationName,
       String executorName,
-      @Nullable String executorOwnerName,
+      String executorOwnerName,
       String executorType) {
     this.testing = testing;
     this.instrumentationName = instrumentationName;
