@@ -33,9 +33,12 @@ public class BasePulsarRequest {
    * embed the {@code -partition-N} suffix.
    */
   static String destination(String topicName) {
-    return emitStableMessagingSemconv()
-        ? TopicName.get(topicName).getPartitionedTopicName()
-        : topicName;
+    if (!emitStableMessagingSemconv() || TopicName.getPartitionIndex(topicName) == -1) {
+      return topicName;
+    }
+    // not using TopicName.getPartitionedTopicName(), because it also expands a topic name that is
+    // not fully qualified, e.g. "my-topic" to "persistent://public/default/my-topic"
+    return topicName.substring(0, topicName.lastIndexOf(TopicName.PARTITIONED_TOPIC_SUFFIX));
   }
 
   /** Returns the value to use for {@code messaging.destination.partition.id}. */
