@@ -29,10 +29,6 @@ public final class Experimental {
   private static volatile BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureEnduserId;
 
   @Nullable
-  private static volatile BiConsumer<ServletTelemetryBuilder, Collection<String>>
-      setCapturedRequestParameters;
-
-  @Nullable
   private static volatile BiConsumer<ServletTelemetryBuilder, IncludeExclude> setRequestParameters;
 
   /**
@@ -97,8 +93,6 @@ public final class Experimental {
       ServletTelemetryBuilder builder, IncludeExclude requestParameters) {
     if (setRequestParameters != null) {
       setRequestParameters.accept(builder, requestParameters);
-    } else if (setCapturedRequestParameters != null && requestParameters.getExcluded().isEmpty()) {
-      setCapturedRequestParameters.accept(builder, requestParameters.getIncluded());
     }
   }
 
@@ -131,11 +125,6 @@ public final class Experimental {
   public static void internalSetCaptureEnduserId(
       BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureEnduserId) {
     Experimental.setCaptureEnduserId = setCaptureEnduserId;
-  }
-
-  public static void internalSetCapturedRequestParameters(
-      BiConsumer<ServletTelemetryBuilder, Collection<String>> setCapturedRequestParameters) {
-    Experimental.setCapturedRequestParameters = setCapturedRequestParameters;
   }
 
   public static void internalSetRequestParameters(
