@@ -68,6 +68,19 @@ class LoggingEventMapperTest {
   }
 
   @Test
+  void newSelectorLoneWildcardCapturesAll() {
+    DeclarativeConfigProperties config = mockConfig();
+    when(config.get("mdc_attributes/development").getScalarList("included", String.class))
+        .thenReturn(singletonList("*"));
+
+    Predicate<String> selector = LoggingEventMapper.getMdcAttributes(config);
+
+    assertThat(selector).isNotNull();
+    assertThat(selector.test("anything")).isTrue();
+    assertThat(selector.test("literal?")).isTrue();
+  }
+
+  @Test
   void absentAndEmptySelectorsCaptureNothing() {
     DeclarativeConfigProperties absent = mockConfig();
     DeclarativeConfigProperties empty = mockConfig();
@@ -122,6 +135,15 @@ class LoggingEventMapperTest {
     assertThat(selector).isNotNull();
     assertThat(selector.test("literal?")).isTrue();
     assertThat(selector.test("embedded-value")).isTrue();
+  }
+
+  @Test
+  void deprecatedEmptyListCapturesNothing() {
+    DeclarativeConfigProperties config = mockConfig();
+    when(config.getScalarList("capture_mdc_attributes/development", String.class))
+        .thenReturn(emptyList());
+
+    assertThat(LoggingEventMapper.getMdcAttributes(config)).isNull();
   }
 
   @Test

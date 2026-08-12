@@ -533,7 +533,7 @@ definitions:
       name: otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes
       declarative_name: java.jboss_logmanager.capture_mdc_attributes/development
       description: |
-        Deprecated: use `otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included` instead. A comma-separated list of exact MDC attribute keys to capture, or `*` to capture all MDC attributes.
+        Deprecated: use `otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included` instead. Entries are matched as exact MDC keys rather than as glob patterns, except that a list containing only `*` captures all MDC attributes; in a multi-entry list, `*` and `?` are literal characters. It is ignored when an included or excluded pattern is configured, and it may be removed in the next minor release.
       type: list
       default: ''
     otel.instrumentation.jboss-logmanager.experimental.capture-template:
@@ -547,7 +547,7 @@ definitions:
       name: otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.excluded
       declarative_name: java.jboss_logmanager.mdc_attributes/development.excluded
       description: |
-        A comma-separated list of case-sensitive MDC attribute key patterns to exclude. Excluded patterns take precedence over included patterns. `?` matches one character and `*` matches zero or more characters. If included is not configured, all non-excluded MDC attributes are captured, which may expose sensitive information.
+        A comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log attributes. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. No MDC attributes are captured unless an included or excluded pattern is configured; configuring only excluded patterns captures all MDC attributes that do not match them. Captured MDC attributes may contain sensitive information.
       type: list
       default: ''
       examples:
@@ -556,7 +556,7 @@ definitions:
       name: otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included
       declarative_name: java.jboss_logmanager.mdc_attributes/development.included
       description: |
-        A comma-separated list of case-sensitive MDC attribute key patterns to capture. `?` matches one character and `*` matches zero or more characters. If neither included nor excluded is configured, no MDC attributes are captured.
+        A comma-separated list of case-sensitive glob patterns for MDC keys to capture as log attributes. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. No MDC attributes are captured unless an included or excluded pattern is configured; configuring only excluded patterns captures all MDC attributes that do not match them. Captured MDC attributes may contain sensitive information.
       type: list
       default: ''
       examples:
