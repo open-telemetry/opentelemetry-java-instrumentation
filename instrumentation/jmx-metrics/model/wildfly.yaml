@@ -187,7 +187,7 @@ groups:
     metric_name: wildfly.session.active.limit
     stability: development
     type: metric
-    brief: The maximum number of active sessions.
+    brief: The maximum supported number of active sessions.
     unit: "{session}"
     instrument: updowncounter
     attributes:
