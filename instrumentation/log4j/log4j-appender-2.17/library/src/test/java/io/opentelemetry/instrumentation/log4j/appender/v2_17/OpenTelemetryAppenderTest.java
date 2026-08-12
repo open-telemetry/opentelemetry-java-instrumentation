@@ -34,6 +34,9 @@ import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.ContextDataInjector;
 import org.apache.logging.log4j.core.config.Property;
 import org.apache.logging.log4j.core.impl.ContextDataFactory;
@@ -209,6 +212,26 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("request-id"), "captured")));
+  }
+
+  @Test
+  void configurationFileContextDataSelector() {
+    Logger selectorLogger = LogManager.getLogger("ContextDataSelectorTestLogger");
+    ThreadContext.put("selector-included", "captured");
+    ThreadContext.put("selector-secret", "ignored");
+    ThreadContext.put("other", "ignored");
+    try {
+      selectorLogger.info("log message");
+    } finally {
+      ThreadContext.clearMap();
+    }
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("log message")
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("selector-included"), "captured")));
   }
 
   @Test
