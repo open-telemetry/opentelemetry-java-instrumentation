@@ -97,10 +97,10 @@ no `v3-preview` test variant.
 
 The gRPC and servlet request-capture deprecations make the contrast concrete:
 
-| Deprecated property                                                | Marker           | Treatment                                  |
-| ------------------------------------------------------------------ | ---------------- | ------------------------------------------ |
-| `otel.instrumentation.grpc.capture-metadata.client.request`          | none → stable    | v3-preview gated, removed in 3.0           |
-| `otel.instrumentation.servlet.experimental.capture-request-parameters` | `experimental` | ungated, may be removed in the next minor  |
+| Deprecated property                                                    | Marker         | Treatment                                 |
+| ---------------------------------------------------------------------- | -------------- | ----------------------------------------- |
+| `otel.instrumentation.grpc.capture-metadata.client.request`            | none → stable  | v3-preview gated, removed in 3.0          |
+| `otel.instrumentation.servlet.experimental.capture-request-parameters` | `experimental` | ungated, may be removed in the next minor |
 
 Replacement-first lookup also supports warning-free upgrades with centralized configuration:
 operators can publish both names while old versions use the deprecated property and new versions
