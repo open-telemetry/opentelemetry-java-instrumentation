@@ -102,10 +102,6 @@ public class KafkaCommitAsyncTracing {
         callDepth, null, tracingState, wrapCallback(callback, tracingState), callbackState);
   }
 
-  public static OffsetCommitCallback wrapCallback(OffsetCommitCallback callback) {
-    return wrapCallback(callback, Context.current().get(TRACING_STATE));
-  }
-
   @Nullable
   private static OffsetCommitCallback wrapCallback(
       @Nullable OffsetCommitCallback callback, @Nullable TracingState tracingState) {
