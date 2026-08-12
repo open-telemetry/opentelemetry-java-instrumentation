@@ -66,7 +66,7 @@ class CamelSpanAssertions {
 
   static SpanDataAssert snsPublish(SpanDataAssert span, String topicName) {
     return span.hasName(emitStableMessagingSemconv() ? "send " + topicName : topicName)
-        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.INTERNAL)
+        .hasKind(emitStableMessagingSemconv() ? SpanKind.PRODUCER : SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
             equalTo(
                 stringKey("camel.uri"),

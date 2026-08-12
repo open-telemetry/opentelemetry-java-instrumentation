@@ -25,7 +25,7 @@ public class DecoratorRegistry {
       registerMessaging(result, "amqp");
     }
     result.put("aws-s3", new S3SpanDecorator());
-    registerMessaging(result, "aws-sns", "aws.sns", false);
+    registerMessaging(result, "aws-sns", "aws.sns");
     registerMessaging(result, "aws-sqs", "aws_sqs", false);
     registerMessaging(result, "cometd");
     registerMessaging(result, "cometds", "cometd");
