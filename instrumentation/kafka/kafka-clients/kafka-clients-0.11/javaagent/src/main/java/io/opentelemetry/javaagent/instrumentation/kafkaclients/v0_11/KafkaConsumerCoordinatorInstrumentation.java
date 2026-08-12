@@ -34,20 +34,38 @@ class KafkaConsumerCoordinatorInstrumentation implements TypeInstrumentation {
             .and(takesArguments(2))
             .and(takesArgument(0, Map.class))
             .and(takesArgument(1, named("org.apache.kafka.clients.consumer.OffsetCommitCallback"))),
-        getClass().getName() + "$CommitOffsetsAsyncAdvice");
+        getClass().getName() + "$WrapCallbackAdvice");
+    transformer.applyAdviceToMethod(
+        named("doCommitOffsetsAsync")
+            .and(takesArguments(2))
+            .and(takesArgument(0, Map.class))
+            .and(takesArgument(1, named("org.apache.kafka.clients.consumer.OffsetCommitCallback"))),
+        getClass().getName() + "$UseDefaultCallbackAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class CommitOffsetsAsyncAdvice {
+  public static class WrapCallbackAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
+    public static OffsetCommitCallback onEnter(
+        @Advice.Argument(1) @Nullable OffsetCommitCallback callback) {
+      return KafkaCommitAsyncTracing.wrapCallbackOrCompletion(callback);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class UseDefaultCallbackAdvice {
+
+    @AssignReturned.ToArguments(@ToArgument(1))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
     public static OffsetCommitCallback onEnter(
         @Advice.Argument(1) @Nullable OffsetCommitCallback callback,
         @Advice.FieldValue("defaultOffsetCommitCallback")
             OffsetCommitCallback defaultOffsetCommitCallback) {
-      return KafkaCommitAsyncTracing.wrapCallback(
-          callback == null ? defaultOffsetCommitCallback : callback);
+      return KafkaCommitAsyncTracing.useDefaultCallback(callback, defaultOffsetCommitCallback);
     }
   }
 }

@@ -410,6 +410,39 @@ class KafkaConsumerCommitTest {
   @Test
   @DisabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
   @DisabledIfSystemProperty(named = "otel.javaagent.experimental.indy", matches = "true")
+  void commitAsyncLookupFailureDoesNotUseDefaultCallback() {
+    assumeTrue(emitStableMessagingSemconv());
+    AtomicInteger defaultCallbackCount = new AtomicInteger();
+    Map<TopicPartition, OffsetAndMetadata> offsets =
+        singletonMap(TOPIC_PARTITION, new OffsetAndMetadata(1));
+    testing.clearData();
+
+    KafkaCommitAsyncTracing.AdviceScope adviceScope = KafkaCommitAsyncTracing.start(offsets, null);
+    OffsetCommitCallback lookupCallback = KafkaCommitAsyncTracing.wrapCallbackOrCompletion(null);
+    OffsetCommitCallback commitCallback =
+        KafkaCommitAsyncTracing.useDefaultCallback(
+            lookupCallback,
+            (committedOffsets, exception) -> defaultCallbackCount.incrementAndGet());
+    adviceScope.end(null);
+    if (lookupCallback == null) {
+      throw new AssertionError("Completion callback was not created");
+    }
+    assertThat(commitCallback).isNotSameAs(lookupCallback);
+    lookupCallback.onComplete(offsets, new CommitFailedException());
+
+    assertThat(defaultCallbackCount).hasValue(0);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertCommitSpan(span, null, TOPIC, CommitFailedException.class.getName())
+                        .hasStatus(StatusData.error())
+                        .hasNoParent()));
+  }
+
+  @Test
+  @DisabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
+  @DisabledIfSystemProperty(named = "otel.javaagent.experimental.indy", matches = "true")
   void commitAsyncFutureEndsSpanAtCompletion() {
     assumeTrue(emitStableMessagingSemconv());
     CompletableFuture<Void> future = new CompletableFuture<>();
@@ -503,8 +536,12 @@ class KafkaConsumerCommitTest {
   private static OffsetCommitCallback startAsyncCommitWithDefaultCallback(
       Map<TopicPartition, OffsetAndMetadata> offsets, OffsetCommitCallback defaultCallback) {
     KafkaCommitAsyncTracing.AdviceScope adviceScope = KafkaCommitAsyncTracing.start(offsets, null);
-    OffsetCommitCallback wrappedCallback = KafkaCommitAsyncTracing.wrapCallback(defaultCallback);
+    OffsetCommitCallback wrappedCallback = KafkaCommitAsyncTracing.wrapCallbackOrCompletion(null);
+    wrappedCallback = KafkaCommitAsyncTracing.useDefaultCallback(wrappedCallback, defaultCallback);
     adviceScope.end(null);
+    if (wrappedCallback == null) {
+      throw new AssertionError("Callback was not wrapped");
+    }
     return wrappedCallback;
   }
 

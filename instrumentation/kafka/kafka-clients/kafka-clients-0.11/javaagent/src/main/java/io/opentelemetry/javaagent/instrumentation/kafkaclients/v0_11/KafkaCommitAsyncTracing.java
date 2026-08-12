@@ -114,6 +114,25 @@ public class KafkaCommitAsyncTracing {
     return new KafkaCommitCallback(callback, tracingState);
   }
 
+  @Nullable
+  public static OffsetCommitCallback wrapCallbackOrCompletion(
+      @Nullable OffsetCommitCallback callback) {
+    TracingState tracingState = Context.current().get(TRACING_STATE);
+    if (tracingState == null || callback instanceof KafkaCommitCallback) {
+      return callback;
+    }
+    return new KafkaCommitCallback(callback, tracingState);
+  }
+
+  @Nullable
+  public static OffsetCommitCallback useDefaultCallback(
+      @Nullable OffsetCommitCallback callback, OffsetCommitCallback defaultCallback) {
+    if (callback instanceof KafkaCommitCallback) {
+      return ((KafkaCommitCallback) callback).withDefaultCallback(defaultCallback);
+    }
+    return callback;
+  }
+
   public static void endOnCompletion(@Nullable CompletableFuture<?> future) {
     TracingState tracingState = Context.current().get(TRACING_STATE);
     CallbackState callbackState = Context.current().get(CALLBACK_STATE);

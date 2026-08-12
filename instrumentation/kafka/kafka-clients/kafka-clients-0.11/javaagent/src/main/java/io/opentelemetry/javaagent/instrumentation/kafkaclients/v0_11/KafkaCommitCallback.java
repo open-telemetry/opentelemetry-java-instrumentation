@@ -22,6 +22,13 @@ class KafkaCommitCallback implements OffsetCommitCallback {
     this.tracingState = tracingState;
   }
 
+  KafkaCommitCallback withDefaultCallback(OffsetCommitCallback defaultCallback) {
+    if (callback != null) {
+      return this;
+    }
+    return new KafkaCommitCallback(defaultCallback, tracingState);
+  }
+
   @Override
   public void onComplete(
       Map<TopicPartition, OffsetAndMetadata> offsets, @Nullable Exception exception) {
