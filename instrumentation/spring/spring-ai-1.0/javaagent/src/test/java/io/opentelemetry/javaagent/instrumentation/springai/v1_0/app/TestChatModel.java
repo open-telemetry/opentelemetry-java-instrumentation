@@ -20,7 +20,6 @@ import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 import reactor.core.publisher.Flux;
 
-@SuppressWarnings("PublicApiNamedStreamShouldReturnStream")
 public class TestChatModel implements ChatModel {
   private SpanContext lastSpanContext;
   private final ChatOptions defaultOptions;
@@ -48,6 +47,7 @@ public class TestChatModel implements ChatModel {
     return callResponse;
   }
 
+  @SuppressWarnings("PublicApiNamedStreamShouldReturnStream")
   @Override
   public Flux<ChatResponse> stream(Prompt prompt) {
     if (streamFailure != null) {

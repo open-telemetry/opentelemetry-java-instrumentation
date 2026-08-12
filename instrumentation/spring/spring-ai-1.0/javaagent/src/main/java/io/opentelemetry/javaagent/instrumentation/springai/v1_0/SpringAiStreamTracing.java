@@ -19,18 +19,22 @@ import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import reactor.core.publisher.Flux;
+import reactor.util.context.ContextView;
 
 public final class SpringAiStreamTracing {
   public static Flux<ChatResponse> wrap(Flux<ChatResponse> source, SpringAiRequest request) {
-    return Flux.defer(() -> start(source, request));
+    return Flux.deferContextual(reactorContext -> start(source, request, reactorContext));
   }
 
-  private static Flux<ChatResponse> start(Flux<ChatResponse> source, SpringAiRequest request) {
+  private static Flux<ChatResponse> start(
+      Flux<ChatResponse> source, SpringAiRequest request, ContextView reactorContext) {
     Instrumenter<SpringAiRequest, ChatResponse> instrumenter;
     Context context;
     try {
       instrumenter = SpringAiSingletons.instrumenter();
-      Context parentContext = Context.current();
+      Context parentContext =
+          ContextPropagationOperator.getOpenTelemetryContextFromContextView(
+              reactorContext, Context.current());
       if (!instrumenter.shouldStart(parentContext, request)) {
         return source;
       }

@@ -39,6 +39,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.springai.v1_0.app.TestChatModel;
@@ -59,7 +61,7 @@ import org.springframework.ai.openai.OpenAiChatModel;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
-@SuppressWarnings({"OtelDeprecatedApiUsage", "PublicApiNamedStreamShouldReturnStream"})
+@SuppressWarnings("OtelDeprecatedApiUsage")
 class ChatModelTest {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-ai-1.0";
@@ -88,6 +90,7 @@ class ChatModelTest {
     assertMessageEvents(spanContext);
   }
 
+  @SuppressWarnings("PublicApiNamedStreamShouldReturnStream")
   @Test
   void stream() {
     testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
@@ -96,6 +99,23 @@ class ChatModelTest {
     assertCurrentSpanContext(chatModel.getLastSpanContext(), spanContext);
     assertTraces("test");
     assertMessageEvents(spanContext);
+  }
+
+  @Test
+  void streamUsesParentFromReactorContext() {
+    Context parentContext = testing.runWithSpan("parent", Context::current);
+
+    chatModel.stream(prompt())
+        .contextWrite(
+            reactorContext ->
+                ContextPropagationOperator.storeOpenTelemetryContext(reactorContext, parentContext))
+        .blockLast();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
   }
 
   @Test
