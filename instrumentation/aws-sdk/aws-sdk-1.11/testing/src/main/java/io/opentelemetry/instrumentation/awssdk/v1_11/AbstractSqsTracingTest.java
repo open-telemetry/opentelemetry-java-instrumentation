@@ -365,7 +365,8 @@ public abstract class AbstractSqsTracingTest {
     sqsClient.createQueue("testSdkSqs");
     sqsClient.sendMessage(new SendMessageRequest(queueUrl, "hello"));
     ReceiveMessageResult response = sqsClient.receiveMessage(queueUrl);
-    Message message = response.getMessages().get(0);
+    String messageId = response.getMessages().get(0).getMessageId();
+    // iterating the returned message list is what starts the process spans
     response.getMessages().forEach(unused -> {});
 
     AtomicReference<SpanData> publishSpan = new AtomicReference<>();
@@ -380,6 +381,8 @@ public abstract class AbstractSqsTracingTest {
                       publishSpan.set(trace.getSpan(0));
                       span.hasName("send testSdkSqs").hasKind(SpanKind.PRODUCER);
                     },
+                    // the process span accounts for a single message, so its link carries no
+                    // per-message attributes
                     span ->
                         span.hasName("process testSdkSqs")
                             .hasKind(SpanKind.CONSUMER)
@@ -390,10 +393,8 @@ public abstract class AbstractSqsTracingTest {
                                         .singleElement()
                                         .satisfies(
                                             link ->
-                                                assertMessageLink(
-                                                    link,
-                                                    publishSpan.get(),
-                                                    message.getMessageId())))),
+                                                assertThat(link.getSpanContext().getSpanId())
+                                                    .isEqualTo(publishSpan.get().getSpanId())))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -407,9 +408,7 @@ public abstract class AbstractSqsTracingTest {
                                         .satisfies(
                                             link ->
                                                 assertMessageLink(
-                                                    link,
-                                                    publishSpan.get(),
-                                                    message.getMessageId())))));
+                                                    link, publishSpan.get(), messageId)))));
   }
 
   @Test

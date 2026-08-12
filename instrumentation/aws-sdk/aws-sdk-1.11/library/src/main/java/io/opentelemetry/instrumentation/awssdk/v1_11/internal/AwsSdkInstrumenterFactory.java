@@ -173,15 +173,13 @@ public final class AwsSdkInstrumenterFactory {
             // span. the creation context is linked even when it ends up being this span's parent,
             // which happens when there is no ambient span, because semconv asks for a link to the
             // creation context for every message the span accounts for
-            SqsMessage message = request.getMessage();
+            //
+            // the link carries no messaging.message.id: a process span accounts for a single
+            // message, so that attribute belongs on the span itself, where it already is
             SpanContext creationSpanContext =
-                Span.fromContext(message.getCreationContext()).getSpanContext();
+                Span.fromContext(request.getMessage().getCreationContext()).getSpanContext();
             if (creationSpanContext.isValid()) {
-              if (emitStableMessagingSemconv()) {
-                spanLinks.addLink(creationSpanContext, messageLinkAttributes(message));
-              } else {
-                spanLinks.addLink(creationSpanContext);
-              }
+              spanLinks.addLink(creationSpanContext);
             }
           });
     }

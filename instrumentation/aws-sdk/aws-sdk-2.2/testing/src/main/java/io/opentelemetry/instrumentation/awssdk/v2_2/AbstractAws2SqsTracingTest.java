@@ -51,7 +51,6 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.SqsClientBuilder;
-import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
@@ -353,7 +352,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
     client.createQueue(createQueueRequest);
     client.sendMessage(sendMessageRequest);
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest);
-    Message message = response.messages().get(0);
+    String messageId = response.messages().get(0).messageId();
+    // iterating the returned message list is what starts the process spans
     response.messages().forEach(unused -> {});
 
     AtomicReference<SpanData> publishSpan = new AtomicReference<>();
@@ -368,6 +368,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                       publishSpan.set(trace.getSpan(0));
                       span.hasName("send testSdkSqs").hasKind(SpanKind.PRODUCER);
                     },
+                    // the process span accounts for a single message, so its link carries no
+                    // per-message attributes
                     span ->
                         span.hasName("process testSdkSqs")
                             .hasKind(SpanKind.CONSUMER)
@@ -378,10 +380,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                         .singleElement()
                                         .satisfies(
                                             link ->
-                                                assertMessageLink(
-                                                    link,
-                                                    publishSpan.get(),
-                                                    message.messageId())))),
+                                                assertThat(link.getSpanContext().getSpanId())
+                                                    .isEqualTo(publishSpan.get().getSpanId())))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -395,9 +395,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                         .satisfies(
                                             link ->
                                                 assertMessageLink(
-                                                    link,
-                                                    publishSpan.get(),
-                                                    message.messageId())))));
+                                                    link, publishSpan.get(), messageId)))));
   }
 
   @Test
