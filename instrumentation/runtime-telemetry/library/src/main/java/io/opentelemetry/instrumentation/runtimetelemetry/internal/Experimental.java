@@ -138,9 +138,9 @@ public final class Experimental {
    * @param builder the runtime telemetry builder
    * @param preferJfrMetrics {@code true} to prefer JFR over JMX where both are available
    * @deprecated Use {@link #setJfrMetrics(RuntimeTelemetryBuilder, IncludeExclude)} instead,
-   *     passing the metric names to source from JFR. Will be removed in the next release.
+   *     passing the metric names to source from JFR. May be removed in the next minor release.
    */
-  @Deprecated // will be removed in the next release
+  @Deprecated // may be removed in the next minor release
   public static void setPreferJfrMetrics(
       RuntimeTelemetryBuilder builder, boolean preferJfrMetrics) {
     if (setPreferJfrMetrics != null) {

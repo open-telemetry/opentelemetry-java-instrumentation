@@ -364,8 +364,8 @@ public final class Internal {
       }
       if (preferJfrMetrics) {
         logger.warning(
-            "otel.instrumentation.runtime-telemetry.experimental.prefer-jfr is deprecated and will be"
-                + " removed in the next release. Use"
+            "otel.instrumentation.runtime-telemetry.experimental.prefer-jfr is deprecated and may be"
+                + " removed in the next minor release. Use"
                 + " otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included instead.");
       }
 

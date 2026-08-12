@@ -23,7 +23,7 @@
   in favor of `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included` and
   `Experimental#setJfrMetrics(RuntimeTelemetryBuilder, IncludeExclude)`, which select JFR metrics by
   metric name instead of by an all-or-nothing toggle. The deprecated property and method still
-  select the same metrics and will be removed in the next release.
+  select the same metrics.
   ([#19495](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19495))
 - Deprecate the `opentelemetry-zipkin-spring-boot-starter` artifact. Use
   `opentelemetry-spring-boot-starter` with the OTLP exporter instead. It will be removed in 3.0.
