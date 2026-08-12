@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import io.opentelemetry.instrumentation.spring.jms.v2_0.AbstractJmsTest;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -39,7 +41,7 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractJmsTest {
                 span ->
                     assertConsumerSpan(
                         span,
-                        null,
+                        emitStableMessagingSemconv() ? trace.getSpan(0) : null,
                         trace.getSpan(0),
                         "SpringListenerJms2",
                         "process",
