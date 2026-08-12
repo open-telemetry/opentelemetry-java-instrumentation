@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.runtimetelemetry;
 
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.UNIT_UTILIZATION;
 
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -15,11 +14,7 @@ class JfrOverallCpuLoadHandlerTest {
 
   @RegisterExtension
   JfrExtension jfrExtension =
-      new JfrExtension(
-          jfrConfig -> {
-            jfrConfig.disableAllFeatures();
-            jfrConfig.enableFeature(JfrFeature.CPU_UTILIZATION_METRICS);
-          });
+      new JfrExtension("jvm.cpu.recent_utilization", "jvm.system.cpu.utilization");
 
   @Test
   void shouldHaveCpuLoadEvents() {

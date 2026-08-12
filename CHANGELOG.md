@@ -14,6 +14,16 @@
   `Experimental.setSpanSuppressionStrategy(...)` or declarative instrumentation configuration.
   The Java agent continues to support the system property through its declarative config bridge.
   ([#19180](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19180))
+- Deprecate the gRPC `capture-metadata.client.request` and `capture-metadata.server.request`
+  configuration properties and `GrpcTelemetryBuilder` captured request metadata methods in favor of
+  include/exclude request metadata selectors.
+- Deprecate `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` and
+  `io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental#setPreferJfrMetrics(RuntimeTelemetryBuilder, boolean)`
+  in favor of `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included` and
+  `Experimental#setJfrMetrics(RuntimeTelemetryBuilder, IncludeExclude)`, which select JFR metrics by
+  metric name instead of by an all-or-nothing toggle. The deprecated property and method still
+  select the same metrics.
+  ([#19495](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19495))
 - Deprecate the `opentelemetry-zipkin-spring-boot-starter` artifact. Use
   `opentelemetry-spring-boot-starter` with the OTLP exporter instead. It will be removed in 3.0.
 - Deprecate `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)` in the
