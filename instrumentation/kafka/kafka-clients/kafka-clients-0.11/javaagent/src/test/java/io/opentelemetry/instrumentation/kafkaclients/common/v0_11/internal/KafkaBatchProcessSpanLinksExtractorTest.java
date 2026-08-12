@@ -88,6 +88,65 @@ class KafkaBatchProcessSpanLinksExtractorTest {
   }
 
   @Test
+  void movesPartitionAndOffsetToRecordLinksWhenDestinationVaries() {
+    assumeTrue(emitStableMessagingSemconv());
+    ConsumerRecord<String, String> first = record("topic-a", 0, 5, "key");
+    ConsumerRecord<String, String> second = record("topic-b", 0, 6, "key");
+    KafkaReceiveRequest request = request(first, second);
+
+    AttributesBuilder spanAttributes = Attributes.builder();
+    new KafkaReceiveAttributesExtractor().onStart(spanAttributes, Context.root(), request);
+    RecordingSpanLinksBuilder links = extractLinks(request);
+
+    // the batch spans two topics, so no destination name is emitted on the batch span, which means
+    // the partition id would be orphaned there
+    assertThat(new KafkaReceiveAttributesGetter().getDestination(request)).isNull();
+    assertThat(spanAttributes.build())
+        .isEqualTo(Attributes.builder().put(MESSAGING_KAFKA_MESSAGE_KEY, "key").build());
+    assertThat(links.attributes)
+        .containsExactly(linkAttributes("topic-a", "0", 5), linkAttributes("topic-b", "0", 6));
+    assertThat(links.linksWithAttributes).isEqualTo(2);
+  }
+
+  @Test
+  void movesOffsetToRecordLinksWhenDestinationVariesAndOffsetDoesNot() {
+    assumeTrue(emitStableMessagingSemconv());
+    ConsumerRecord<String, String> first = record("topic-a", 0, 5, "key");
+    ConsumerRecord<String, String> second = record("topic-b", 0, 5, "key");
+    KafkaReceiveRequest request = request(first, second);
+
+    AttributesBuilder spanAttributes = Attributes.builder();
+    new KafkaReceiveAttributesExtractor().onStart(spanAttributes, Context.root(), request);
+    RecordingSpanLinksBuilder links = extractLinks(request);
+
+    assertThat(new KafkaReceiveAttributesGetter().getDestination(request)).isNull();
+    assertThat(spanAttributes.build())
+        .isEqualTo(Attributes.builder().put(MESSAGING_KAFKA_MESSAGE_KEY, "key").build());
+    assertThat(links.attributes)
+        .containsExactly(linkAttributes("topic-a", "0", 5), linkAttributes("topic-b", "0", 5));
+    assertThat(links.linksWithAttributes).isEqualTo(2);
+  }
+
+  @Test
+  void keepsDestinationOnBatchSpanWhenOnlyPartitionVaries() {
+    assumeTrue(emitStableMessagingSemconv());
+    ConsumerRecord<String, String> first = record("topic", 0, 5, "key");
+    ConsumerRecord<String, String> second = record("topic", 1, 5, "key");
+    KafkaReceiveRequest request = request(first, second);
+
+    AttributesBuilder spanAttributes = Attributes.builder();
+    new KafkaReceiveAttributesExtractor().onStart(spanAttributes, Context.root(), request);
+    RecordingSpanLinksBuilder links = extractLinks(request);
+
+    assertThat(new KafkaReceiveAttributesGetter().getDestination(request)).isEqualTo("topic");
+    assertThat(spanAttributes.build())
+        .isEqualTo(Attributes.builder().put(MESSAGING_KAFKA_MESSAGE_KEY, "key").build());
+    assertThat(links.attributes)
+        .containsExactly(linkAttributes(null, "0", 5), linkAttributes(null, "1", 5));
+    assertThat(links.linksWithAttributes).isEqualTo(2);
+  }
+
+  @Test
   void keepsLegacyLinksUnchanged() {
     assumeFalse(emitStableMessagingSemconv());
     KafkaReceiveRequest request =
@@ -127,6 +186,15 @@ class KafkaBatchProcessSpanLinksExtractorTest {
   private static ConsumerRecord<String, String> record(
       String topic, int partition, long offset, String key) {
     return new ConsumerRecord<>(topic, partition, offset, key, "value");
+  }
+
+  private static Attributes linkAttributes(String destination, String partition, long offset) {
+    AttributesBuilder attributes = Attributes.builder();
+    attributes.put(MESSAGING_DESTINATION_NAME, destination);
+    return attributes
+        .put(MESSAGING_DESTINATION_PARTITION_ID, partition)
+        .put(MESSAGING_KAFKA_OFFSET, offset)
+        .build();
   }
 
   private static Attributes recordAttributes(

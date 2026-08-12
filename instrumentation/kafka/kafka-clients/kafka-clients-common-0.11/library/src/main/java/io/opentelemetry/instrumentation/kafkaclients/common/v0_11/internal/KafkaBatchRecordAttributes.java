@@ -50,10 +50,10 @@ final class KafkaBatchRecordAttributes {
     if (!initialized) {
       return;
     }
-    if (!partitionVaries) {
+    if (!partitionBelongsOnLinks()) {
       attributes.put(MESSAGING_DESTINATION_PARTITION_ID, commonPartition);
     }
-    if (!offsetVaries) {
+    if (!offsetBelongsOnLinks()) {
       attributes.put(MESSAGING_KAFKA_OFFSET, commonOffset);
     }
     if (!keyVaries) {
@@ -66,16 +66,27 @@ final class KafkaBatchRecordAttributes {
     if (destinationVaries) {
       attributes.put(MESSAGING_DESTINATION_NAME, record.topic());
     }
-    if (partitionVaries) {
+    if (partitionBelongsOnLinks()) {
       attributes.put(MESSAGING_DESTINATION_PARTITION_ID, Integer.toString(record.partition()));
     }
-    if (offsetVaries) {
+    if (offsetBelongsOnLinks()) {
       attributes.put(MESSAGING_KAFKA_OFFSET, record.offset());
     }
     if (keyVaries) {
       attributes.put(MESSAGING_KAFKA_MESSAGE_KEY, KafkaUtil.serializeKey(record.key()));
     }
     return attributes.build();
+  }
+
+  // a partition id only identifies a partition within a destination, so it has to follow the
+  // destination name down to the links when the batch spans more than one topic
+  private boolean partitionBelongsOnLinks() {
+    return destinationVaries || partitionVaries;
+  }
+
+  // an offset only identifies a record within a destination and partition
+  private boolean offsetBelongsOnLinks() {
+    return partitionBelongsOnLinks() || offsetVaries;
   }
 
   private void accept(ConsumerRecord<?, ?> record) {

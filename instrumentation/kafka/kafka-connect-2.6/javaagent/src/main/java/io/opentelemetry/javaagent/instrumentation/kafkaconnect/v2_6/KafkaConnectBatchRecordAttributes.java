@@ -45,10 +45,10 @@ final class KafkaConnectBatchRecordAttributes {
     if (!initialized) {
       return;
     }
-    if (!partitionVaries) {
+    if (!partitionBelongsOnLinks()) {
       attributes.put(MESSAGING_DESTINATION_PARTITION_ID, commonPartition);
     }
-    if (!offsetVaries) {
+    if (!offsetBelongsOnLinks()) {
       attributes.put(MESSAGING_KAFKA_OFFSET, commonOffset);
     }
     if (!keyVaries) {
@@ -61,16 +61,27 @@ final class KafkaConnectBatchRecordAttributes {
     if (destinationVaries) {
       attributes.put(MESSAGING_DESTINATION_NAME, record.topic());
     }
-    if (partitionVaries) {
+    if (partitionBelongsOnLinks()) {
       attributes.put(MESSAGING_DESTINATION_PARTITION_ID, partitionId(record));
     }
-    if (offsetVaries) {
+    if (offsetBelongsOnLinks()) {
       attributes.put(MESSAGING_KAFKA_OFFSET, record.kafkaOffset());
     }
     if (keyVaries) {
       attributes.put(MESSAGING_KAFKA_MESSAGE_KEY, serializeKey(record.key()));
     }
     return attributes.build();
+  }
+
+  // a partition id only identifies a partition within a destination, so it has to follow the
+  // destination name down to the links when the batch spans more than one topic
+  private boolean partitionBelongsOnLinks() {
+    return destinationVaries || partitionVaries;
+  }
+
+  // an offset only identifies a record within a destination and partition
+  private boolean offsetBelongsOnLinks() {
+    return partitionBelongsOnLinks() || offsetVaries;
   }
 
   private void accept(SinkRecord record) {
