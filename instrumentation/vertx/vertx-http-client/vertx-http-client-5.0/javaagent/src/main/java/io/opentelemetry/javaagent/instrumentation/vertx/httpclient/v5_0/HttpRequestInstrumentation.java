@@ -92,6 +92,17 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(HttpClientRequest request) {
+        // Vert.x can call sendHead()/end() more than once for a single request, and from a
+        // thread other than the connection's event loop. Start the span and inject the
+        // trace-context headers only on the first such call. Injecting on every call would
+        // repeatedly mutate the request's HeadersMultiMap, which is not thread-safe, while
+        // Vert.x may be serializing those same headers on the event loop. That data race can
+        // surface as a NullPointerException in HeadersMultiMap.names(). Injecting once keeps the
+        // instrumentation from adding a second, unsynchronized writer of the header map.
+        Contexts contexts = CONTEXTS.get(request);
+        if (contexts != null) {
+          return new AdviceScope(contexts.context);
+        }
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
