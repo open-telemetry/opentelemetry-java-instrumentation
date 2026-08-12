@@ -261,8 +261,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * these are absent or empty. Only a non-empty selector configured with this method takes
    * precedence over the other settings.
    *
-   * <p>MDC attributes are application-controlled and can contain sensitive data such as credentials
-   * or personal information, so make sure that the captured keys are safe to export.
+   * <p>Captured MDC attributes may contain sensitive information. Configure included and excluded
+   * patterns to limit the data exported as log attributes.
    */
   public void setMdcAttributes(@Nullable IncludeExclude mdcAttributes) {
     this.mdcAttributes = mdcAttributes == null || mdcAttributes.isEmpty() ? null : mdcAttributes;
