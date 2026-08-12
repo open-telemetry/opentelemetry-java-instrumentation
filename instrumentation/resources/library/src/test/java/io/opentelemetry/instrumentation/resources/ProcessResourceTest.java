@@ -46,7 +46,7 @@ class ProcessResourceTest {
   }
 
   @Test
-  @SetSystemProperty(key = "sun.java.command", value = "app.jar -DappSecret=abc def --other=test")
+  @SetSystemProperty(key = "sun.java.command", value = "app.jar -DappSecret=abc\ndef --other=test")
   void commandAttributesEnabled() {
     Resource resource = ProcessResource.create(true);
     Attributes attributes = resource.getAttributes();

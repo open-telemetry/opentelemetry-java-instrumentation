@@ -39,7 +39,8 @@ public final class ProcessResource {
   private static final Pattern SCRUB_PATTERN =
       Pattern.compile("(-D.*(password|secret).*=).*", Pattern.CASE_INSENSITIVE);
   private static final Pattern SCRUB_COMMAND_LINE_PATTERN =
-      Pattern.compile("(-D[^\\s=]*(password|secret)[^\\s=]*=).*", Pattern.CASE_INSENSITIVE);
+      Pattern.compile(
+          "(-D[^\\s=]*(password|secret)[^\\s=]*=).*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
   @Deprecated // to be removed in 3.0
   private static final Resource INSTANCE = create(true);
