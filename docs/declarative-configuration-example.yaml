@@ -24,7 +24,7 @@ instrumentation/development:
       url:
         # List of URL query parameter names whose values are redacted in URL attributes. See
         # https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-        sensitive_query_parameters/development:
+        sensitive_query_parameters:
           - AWSAccessKeyId
           - Signature
           - X-Amz-Signature
@@ -32,12 +32,12 @@ instrumentation/development:
           - X-Amz-Security-Token
           - sig
           - X-Goog-Signature
-    semconv_stability:
-      # Opt-in to emit stable semantic conventions instead of the old experimental semantic
-      # conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`,
-      # `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously.
-      # Stable semantic conventions will become the default in version 3.0 of the agent.
-      opt_in: []
+
+    # Opt-in to emit stable semantic conventions instead of the old experimental semantic
+    # conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`,
+    # `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously.
+    # Stable semantic conventions will become the default in version 3.0 of the agent.
+    stability_opt_in_list: ''
   java:
     apache_elasticjob:
       # Enables experimental span attributes `job.system`, `scheduling.apache-elasticjob.job.name`,

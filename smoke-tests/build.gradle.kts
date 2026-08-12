@@ -33,6 +33,12 @@ dependencies {
 }
 
 tasks {
+  // makes the generated declarative configuration example available on the test classpath, so that
+  // DeclarativeConfigurationExampleSmokeTest can verify that the agent starts up with it
+  processTestResources {
+    from(rootProject.file("docs/declarative-configuration-example.yaml"))
+  }
+
   test {
     testLogging.showStandardStreams = true
 

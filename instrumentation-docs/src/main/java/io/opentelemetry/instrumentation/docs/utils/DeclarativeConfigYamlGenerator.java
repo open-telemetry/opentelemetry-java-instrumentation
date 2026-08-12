@@ -170,7 +170,10 @@ public class DeclarativeConfigYamlGenerator {
    */
   private static Object convertValue(ConfigurationOption config) {
     String defaultValue = config.defaultValue();
-    ConfigurationType type = config.type();
+    // the flat type describes the system property, so prefer declarative_type when the declarative
+    // form has a different shape (e.g. a comma-separated string for a flat list property)
+    ConfigurationType type =
+        config.declarativeType() != null ? config.declarativeType() : config.type();
 
     // A structured list always defaults to an empty list; the shape of an entry is documented in
     // the comment block written above the key rather than emitted as (non-default) sample config.

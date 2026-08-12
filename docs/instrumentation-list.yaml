@@ -1119,14 +1119,15 @@ definitions:
       default: ''
     otel.semconv-stability.opt-in:
       name: otel.semconv-stability.opt-in
-      declarative_name: general.semconv_stability.opt_in
+      declarative_name: general.stability_opt_in_list
       description: |
         Opt-in to emit stable semantic conventions instead of the old experimental semantic conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`, `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously. Stable semantic conventions will become the default in version 3.0 of the agent.
       type: list
       default: ''
+      declarative_type: string
     sanitization.url.sensitive-query-parameters:
       name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-      declarative_name: general.sanitization.url.sensitive_query_parameters/development
+      declarative_name: general.sanitization.url.sensitive_query_parameters
       description: List of URL query parameter names whose values are redacted in
         URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
       type: list
