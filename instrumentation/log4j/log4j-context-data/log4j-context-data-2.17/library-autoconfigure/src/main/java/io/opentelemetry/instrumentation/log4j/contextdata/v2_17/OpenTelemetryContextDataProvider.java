@@ -57,16 +57,19 @@ public final class OpenTelemetryContextDataProvider implements ContextDataProvid
   }
 
   /**
-   * Returns context from the current span when available.
+   * Returns context from the current span and baggage when available.
    *
-   * @return A map containing string versions of the traceId, spanId, and traceFlags, which can then
-   *     be accessed from layout components
+   * @return A map containing string versions of the traceId, spanId, traceFlags and baggage
+   *     entries, which can then be accessed from layout components
    */
   @Override
   public Map<String, String> supplyContextData() {
     Context context = Context.current();
-    Span currentSpan = Span.fromContext(context);
-    if (!currentSpan.getSpanContext().isValid()) {
+    SpanContext spanContext = Span.fromContext(context).getSpanContext();
+    Baggage baggage = Baggage.fromContext(context);
+    // checking baggage.isEmpty() first to avoid initializing Configuration when possible
+    boolean addBaggage = !baggage.isEmpty() && Configuration.baggageEnabled;
+    if (!spanContext.isValid() && !addBaggage) {
       return staticContextData;
     }
 
@@ -77,13 +80,13 @@ public final class OpenTelemetryContextDataProvider implements ContextDataProvid
     }
 
     Map<String, String> contextData = new HashMap<>(staticContextData);
-    SpanContext spanContext = currentSpan.getSpanContext();
-    contextData.put(contextDataKeys.getTraceIdKey(), spanContext.getTraceId());
-    contextData.put(contextDataKeys.getSpanIdKey(), spanContext.getSpanId());
-    contextData.put(contextDataKeys.getTraceFlagsKey(), spanContext.getTraceFlags().asHex());
+    if (spanContext.isValid()) {
+      contextData.put(contextDataKeys.getTraceIdKey(), spanContext.getTraceId());
+      contextData.put(contextDataKeys.getSpanIdKey(), spanContext.getSpanId());
+      contextData.put(contextDataKeys.getTraceFlagsKey(), spanContext.getTraceFlags().asHex());
+    }
 
-    if (Configuration.baggageEnabled) {
-      Baggage baggage = Baggage.fromContext(context);
+    if (addBaggage) {
       for (Map.Entry<String, BaggageEntry> entry : baggage.asMap().entrySet()) {
         // prefix all baggage values to avoid clashes with existing context
         contextData.put("baggage." + entry.getKey(), entry.getValue().getValue());

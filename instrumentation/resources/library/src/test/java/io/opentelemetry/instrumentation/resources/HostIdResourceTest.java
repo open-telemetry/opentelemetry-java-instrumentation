@@ -11,6 +11,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -23,6 +24,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import org.assertj.core.api.MapAssert;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -195,5 +198,44 @@ class HostIdResourceTest {
                     singletonMap("otel.resource.attributes", "host.id=foo")),
                 null))
         .isFalse();
+  }
+
+  @Test
+  @DisabledOnOs(OS.WINDOWS)
+  void runCommandReturnsOutput() {
+    assertThat(HostIdResource.runCommand(asList("/bin/sh", "-c", "echo hello"), 5000))
+        .containsExactly("hello");
+  }
+
+  @Test
+  @DisabledOnOs(OS.WINDOWS)
+  void runCommandTimesOut() {
+    long startNanos = System.nanoTime();
+    assertThat(HostIdResource.runCommand(asList("/bin/sh", "-c", "sleep 30"), 200)).isEmpty();
+    // the command would take 30s to complete, so anything close to that means the timeout was
+    // not applied
+    assertThat(NANOSECONDS.toMillis(System.nanoTime() - startNanos)).isLessThan(10_000);
+  }
+
+  @Test
+  @DisabledOnOs(OS.WINDOWS)
+  void runCommandNonZeroExitCode() {
+    assertThat(HostIdResource.runCommand(asList("/bin/sh", "-c", "echo out; exit 3"), 5000))
+        .isEmpty();
+  }
+
+  @Test
+  @DisabledOnOs(OS.WINDOWS)
+  void runCommandLargeOutputDoesNotDeadlock() {
+    // more output than fits in the pipe buffer: waiting for the process to exit before reading
+    // its output would deadlock here
+    assertThat(HostIdResource.runCommand(asList("/bin/sh", "-c", "seq 1 50000"), 30_000))
+        .hasSize(50_000);
+  }
+
+  @Test
+  void runCommandThatDoesNotExist() {
+    assertThat(HostIdResource.runCommand(singletonList("/nonexistent/otel-test-command"), 5000))
+        .isEmpty();
   }
 }

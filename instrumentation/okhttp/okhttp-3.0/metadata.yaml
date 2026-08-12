@@ -3,7 +3,7 @@ display_name: OkHttp
 semantic_conventions:
   - HTTP_CLIENT_SPANS
   - HTTP_CLIENT_METRICS
-library_link: https://square.github.io/okhttp/
+library_link: https://lysine.dev/okhttp/
 configurations:
   - ref: http.known-methods
   - ref: http.client.capture-request-headers

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
+import io.opentelemetry.context.Context;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,11 @@ final class SqsMessageImpl implements SqsMessage {
       result.add(wrap(message));
     }
     return result;
+  }
+
+  @Override
+  public Context getCreationContext() {
+    return SqsParentContext.ofSystemAttributes(message.getAttributes());
   }
 
   @Override
