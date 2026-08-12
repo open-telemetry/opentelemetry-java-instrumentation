@@ -25,7 +25,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
@@ -151,7 +150,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
   }
 
   @Test
-  void testCommitAsyncKip848FutureEndsSpanAfterBrokerCompletion() {
+  void testCommitAsyncKip848FutureEndsSpanAfterBrokerCompletion() throws InterruptedException {
     assumeTrue(emitStableMessagingSemconv());
     assumeTrue(testLatestDeps());
     Map<String, Object> properties = consumerProps();
@@ -162,27 +161,52 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
       asyncConsumer.assign(singleton(TOPIC_PARTITION));
       Map<TopicPartition, OffsetAndMetadata> offsets =
           singletonMap(TOPIC_PARTITION, new OffsetAndMetadata(0));
+      AtomicBoolean callbackInvoked = new AtomicBoolean();
+      AtomicReference<Exception> callbackException = new AtomicReference<>();
       testing.clearData();
 
-      testing.runWithSpan("KIP-848 commit parent", () -> asyncConsumer.commitAsync(offsets, null));
+      testing.runWithSpan(
+          "KIP-848 async parent",
+          () ->
+              asyncConsumer.commitAsync(
+                  offsets,
+                  (committedOffsets, exception) -> {
+                    callbackException.set(exception);
+                    testing.runWithSpan(
+                        "KIP-848 sync parent", () -> asyncConsumer.commitSync(offsets));
+                    callbackInvoked.set(true);
+                  }));
 
       assertThat(testing.spans()).hasSize(1);
-      for (int i = 0; i < 10 && testing.spans().size() == 1; i++) {
-        poll(asyncConsumer, Duration.ofMillis(500));
+      for (int i = 0; i < 10 && !callbackInvoked.get(); i++) {
+        Thread.sleep(100);
+        asyncConsumer.commitAsync(offsets, null);
       }
 
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("KIP-848 commit parent")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasNoParent(),
-                  span ->
-                      span.hasName("commit " + SHARED_TOPIC)
-                          .hasKind(SpanKind.CLIENT)
-                          .hasParent(trace.getSpan(0))));
+      assertThat(callbackInvoked).isTrue();
+      assertThat(callbackException).hasValue(null);
+      SpanData asyncParent = findSpan("KIP-848 async parent");
+      SpanData syncParent = findSpan("KIP-848 sync parent");
+      assertThat(testing.spans())
+          .filteredOn(
+              span ->
+                  span.getParentSpanId().equals(asyncParent.getSpanContext().getSpanId())
+                      && span.getName().equals("commit " + SHARED_TOPIC))
+          .hasSize(1);
+      assertThat(testing.spans())
+          .filteredOn(
+              span ->
+                  span.getParentSpanId().equals(syncParent.getSpanContext().getSpanId())
+                      && span.getName().equals("commit " + SHARED_TOPIC))
+          .hasSize(1);
     }
+  }
+
+  private static SpanData findSpan(String name) {
+    return testing.spans().stream()
+        .filter(span -> span.getName().equals(name))
+        .findFirst()
+        .orElseThrow(AssertionError::new);
   }
 
   @DisplayName("test kafka produce and consume")
@@ -627,14 +651,5 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasAttributesSatisfyingExactly(
                             processAttributes("10", greeting, false, false)),
                 span -> span.hasName("processing").hasParent(trace.getSpan(1))));
-  }
-
-  private static void poll(Consumer<?, ?> consumer, Duration duration) {
-    try {
-      Method method = consumer.getClass().getMethod("poll", Duration.class);
-      method.invoke(consumer, duration);
-    } catch (ReflectiveOperationException e) {
-      throw new IllegalStateException(e);
-    }
   }
 }

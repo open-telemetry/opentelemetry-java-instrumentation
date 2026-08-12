@@ -433,6 +433,34 @@ class KafkaConsumerCommitTest {
   @Test
   @DisabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
   @DisabledIfSystemProperty(named = "otel.javaagent.experimental.indy", matches = "true")
+  void commitAsyncFutureIgnoresCallbackSyncCompletion() {
+    assumeTrue(emitStableMessagingSemconv());
+    CompletableFuture<Void> asyncFuture = new CompletableFuture<>();
+    CompletableFuture<Void> syncFuture = new CompletableFuture<>();
+    testing.clearData();
+
+    KafkaCommitAsyncTracing.AdviceScope adviceScope = KafkaCommitAsyncTracing.start(null, null);
+    KafkaCommitAsyncTracing.endOnCompletion(asyncFuture);
+    try (KafkaCommitAsyncTracing.CallbackScope ignored = KafkaCommitAsyncTracing.enterCallback()) {
+      KafkaCommitAsyncTracing.endOnCompletion(syncFuture);
+    }
+    adviceScope.end(null);
+    syncFuture.completeExceptionally(new CommitFailedException());
+    assertThat(testing.spans()).isEmpty();
+    asyncFuture.complete(null);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertCommitSpan(span, null, null, null)
+                        .hasStatus(StatusData.unset())
+                        .hasNoParent()));
+  }
+
+  @Test
+  @DisabledIfSystemProperty(named = "otel.instrumentation.common.v3-preview", matches = "true")
+  @DisabledIfSystemProperty(named = "otel.javaagent.experimental.indy", matches = "true")
   void commitAsyncPropagatesCallbackException() {
     assumeTrue(emitStableMessagingSemconv());
     AtomicInteger callbackCount = new AtomicInteger();

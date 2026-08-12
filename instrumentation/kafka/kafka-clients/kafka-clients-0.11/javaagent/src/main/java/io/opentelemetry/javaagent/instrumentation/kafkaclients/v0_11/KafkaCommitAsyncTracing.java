@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetCommitCallback;
 
 public class KafkaCommitAsyncTracing {
@@ -26,7 +25,7 @@ public class KafkaCommitAsyncTracing {
 
   public static AdviceScope start(
       @Nullable Object offsets, @Nullable OffsetCommitCallback callback) {
-    CallDepth callDepth = CallDepth.forClass(KafkaConsumer.class);
+    CallDepth callDepth = CallDepth.forClass(KafkaCommitAsyncTracing.class);
     int callDepthValue = callDepth.getAndIncrement();
     CallbackState callbackState = Context.current().get(CALLBACK_STATE);
     int callbackCommitDepth = callbackState == null ? -1 : callbackState.enterCommit();
@@ -79,7 +78,7 @@ public class KafkaCommitAsyncTracing {
   }
 
   public static AdviceScope join(@Nullable OffsetCommitCallback callback) {
-    CallDepth callDepth = CallDepth.forClass(KafkaConsumer.class);
+    CallDepth callDepth = CallDepth.forClass(KafkaCommitAsyncTracing.class);
     callDepth.getAndIncrement();
     boolean adviceScopeCreated = false;
     try {
@@ -117,7 +116,10 @@ public class KafkaCommitAsyncTracing {
 
   public static void endOnCompletion(@Nullable CompletableFuture<?> future) {
     TracingState tracingState = Context.current().get(TRACING_STATE);
-    if (tracingState != null && future != null) {
+    CallbackState callbackState = Context.current().get(CALLBACK_STATE);
+    if (tracingState != null
+        && future != null
+        && (callbackState == null || callbackState.hasCommitInProgress())) {
       future.whenComplete((unused, error) -> tracingState.end(error));
     }
   }
@@ -173,6 +175,10 @@ public class KafkaCommitAsyncTracing {
 
     private synchronized void exitCommit() {
       commitDepth--;
+    }
+
+    private synchronized boolean hasCommitInProgress() {
+      return commitDepth > 0;
     }
 
     private synchronized void deactivate() {
