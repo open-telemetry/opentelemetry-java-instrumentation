@@ -18,7 +18,7 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 
 /** Adds opt-in message content attributes for backends that display trace tags. */
-public final class SpringAiMessageAttributes {
+public class SpringAiMessageAttributes {
   private static final AttributeKey<String> GEN_AI_INPUT_MESSAGES =
       stringKey("gen_ai.input.messages");
   private static final AttributeKey<String> GEN_AI_OUTPUT_MESSAGES =

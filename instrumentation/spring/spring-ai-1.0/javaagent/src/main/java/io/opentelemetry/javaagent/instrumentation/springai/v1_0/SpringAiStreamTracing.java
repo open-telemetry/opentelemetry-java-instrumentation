@@ -21,7 +21,7 @@ import org.springframework.ai.chat.model.Generation;
 import reactor.core.publisher.Flux;
 import reactor.util.context.ContextView;
 
-public final class SpringAiStreamTracing {
+public class SpringAiStreamTracing {
   public static Flux<ChatResponse> wrap(Flux<ChatResponse> source, SpringAiRequest request) {
     return Flux.deferContextual(reactorContext -> start(source, request, reactorContext));
   }

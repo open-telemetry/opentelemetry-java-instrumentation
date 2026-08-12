@@ -14,12 +14,14 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import reactor.core.publisher.Flux;
@@ -109,13 +111,24 @@ class ChatModelInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class StreamAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static CallDepth onEnter() {
+      CallDepth callDepth = CallDepth.forClass(ChatModel.class);
+      callDepth.getAndIncrement();
+      return callDepth;
+    }
+
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
     public static Flux<ChatResponse> onExit(
         @Advice.This Object chatModel,
         @Advice.Argument(0) Prompt prompt,
         @Advice.Return @Nullable Flux<ChatResponse> publisher,
-        @Advice.Thrown @Nullable Throwable throwable) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable CallDepth callDepth) {
+      if (callDepth == null || callDepth.decrementAndGet() > 0) {
+        return publisher;
+      }
       if (throwable != null) {
         CallAdvice.AdviceScope adviceScope = CallAdvice.AdviceScope.start(chatModel, prompt);
         if (adviceScope != null) {

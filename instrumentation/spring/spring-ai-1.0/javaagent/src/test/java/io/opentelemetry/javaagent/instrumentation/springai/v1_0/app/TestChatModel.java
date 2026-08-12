@@ -27,6 +27,7 @@ public class TestChatModel implements ChatModel {
   private RuntimeException streamFailure;
   private ChatResponse callResponse;
   private Flux<ChatResponse> streamPublisher;
+  private TestChatModel streamDelegate;
 
   public TestChatModel() {
     this(null);
@@ -52,6 +53,9 @@ public class TestChatModel implements ChatModel {
   public Flux<ChatResponse> stream(Prompt prompt) {
     if (streamFailure != null) {
       throw streamFailure;
+    }
+    if (streamDelegate != null) {
+      return streamDelegate.stream(prompt);
     }
     return Flux.defer(
         () -> {
@@ -83,6 +87,10 @@ public class TestChatModel implements ChatModel {
 
   public void setStreamFailure(RuntimeException streamFailure) {
     this.streamFailure = streamFailure;
+  }
+
+  public void setStreamDelegate(TestChatModel streamDelegate) {
+    this.streamDelegate = streamDelegate;
   }
 
   private static ChatResponse response() {

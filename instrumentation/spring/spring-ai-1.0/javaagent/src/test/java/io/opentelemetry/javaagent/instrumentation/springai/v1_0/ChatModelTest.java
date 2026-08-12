@@ -308,6 +308,19 @@ class ChatModelTest {
   }
 
   @Test
+  void nestedSynchronousStreamErrorEndsOneSpan() {
+    IllegalStateException error = new IllegalStateException("nested stream failed synchronously");
+    TestChatModel delegate = new TestChatModel(defaultOptions());
+    delegate.setStreamFailure(error);
+    chatModel.setStreamDelegate(delegate);
+
+    assertThatThrownBy(() -> testing.runWithSpan("parent", () -> chatModel.stream(prompt())))
+        .isSameAs(error);
+
+    assertErrorTrace(error);
+  }
+
+  @Test
   void streamCancellationEndsSpan() {
     chatModel.setStreamPublisher(Flux.never());
 

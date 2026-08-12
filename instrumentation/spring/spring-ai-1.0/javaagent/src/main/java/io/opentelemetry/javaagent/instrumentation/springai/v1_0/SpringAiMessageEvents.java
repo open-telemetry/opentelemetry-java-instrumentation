@@ -21,7 +21,7 @@ import org.springframework.ai.chat.metadata.ChatGenerationMetadata;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 
-public final class SpringAiMessageEvents {
+public class SpringAiMessageEvents {
   public static void emitPromptEvents(Context context, SpringAiRequest request) {
     try {
       for (Message message : request.prompt().getInstructions()) {

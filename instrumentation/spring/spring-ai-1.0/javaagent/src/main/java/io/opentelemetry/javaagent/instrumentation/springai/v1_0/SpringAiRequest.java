@@ -12,7 +12,7 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 
-public final class SpringAiRequest {
+public class SpringAiRequest {
   private final Prompt prompt;
   @Nullable private final ChatOptions defaultOptions;
   private final String provider;
