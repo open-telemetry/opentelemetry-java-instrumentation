@@ -46,7 +46,7 @@ final class SqsEventAttributesGetter extends SqsAttributesGetter<SQSEvent> {
         return null;
       }
       if (!messageDestination.equals(destination)) {
-        return "multiple_sources";
+        return null;
       }
     }
     return destination;

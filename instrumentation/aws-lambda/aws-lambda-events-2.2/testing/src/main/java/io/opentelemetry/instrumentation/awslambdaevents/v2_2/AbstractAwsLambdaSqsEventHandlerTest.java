@@ -151,10 +151,7 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(FAAS_INVOCATION_ID, "1-22-333")),
                     span ->
-                        span.hasName(
-                                emitStableMessagingSemconv()
-                                    ? "process multiple_sources"
-                                    : "aws:sqs process")
+                        span.hasName(emitStableMessagingSemconv() ? "process" : "aws:sqs process")
                             .hasKind(SpanKind.CONSUMER)
                             .hasParentSpanId(trace.getSpan(0).getSpanId())
                             .hasAttributesSatisfyingExactly(
@@ -162,9 +159,7 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                                 equalTo(
                                     MESSAGING_OPERATION,
                                     emitOldMessagingSemconv() ? "process" : null),
-                                equalTo(
-                                    MESSAGING_DESTINATION_NAME,
-                                    emitStableMessagingSemconv() ? "multiple_sources" : null),
+                                equalTo(MESSAGING_DESTINATION_NAME, null),
                                 equalTo(
                                     MESSAGING_OPERATION_NAME,
                                     emitStableMessagingSemconv() ? "process" : null),
