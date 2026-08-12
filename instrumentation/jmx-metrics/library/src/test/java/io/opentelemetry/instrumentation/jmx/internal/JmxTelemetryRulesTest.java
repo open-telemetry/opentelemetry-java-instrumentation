@@ -18,19 +18,19 @@ import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
-public class JmxTelemetryRulesTest {
+class JmxTelemetryRulesTest {
 
   private static final Path YAML_ROOT_FOLDER =
       Paths.get("src", "main", "resources", "jmx", "rules");
 
-  private static final ClassLoader CLASS_LOADER = JmxTelemetryRulesTest.class.getClassLoader();
+  private static final ClassLoader classLoader = JmxTelemetryRulesTest.class.getClassLoader();
 
   @Test
   void locateStableUnstable() {
-    assertThat(locateRulesForSystem(CLASS_LOADER, "fake-rules", false))
+    assertThat(locateRulesForSystem(classLoader, "fake-rules", false))
         .containsExactly("jmx/rules/fake-rules.yaml");
 
-    assertThat(locateRulesForSystem(CLASS_LOADER, "fake-rules", true))
+    assertThat(locateRulesForSystem(classLoader, "fake-rules", true))
         .containsExactlyInAnyOrder(
             "jmx/rules/fake-rules.yaml", "jmx/rules/fake-rules_unstable.yaml");
   }
@@ -51,7 +51,7 @@ public class JmxTelemetryRulesTest {
 
     Set<String> allRules = new HashSet<>();
     for (String system : JmxTelemetryRules.getSupportedSystems()) {
-      Set<String> rulesForSystem = locateRulesForSystem(CLASS_LOADER, system, true);
+      Set<String> rulesForSystem = locateRulesForSystem(classLoader, system, true);
       assertThat(rulesForSystem).isNotEmpty();
       allRules.addAll(rulesForSystem);
     }
@@ -59,7 +59,7 @@ public class JmxTelemetryRulesTest {
     assertThat(allRules).containsExactlyInAnyOrderElementsOf(getYamlFilesFromFileSystem());
   }
 
-  Set<String> getYamlFilesFromFileSystem() throws IOException {
+  private static Set<String> getYamlFilesFromFileSystem() throws IOException {
     Path rulesRoot = YAML_ROOT_FOLDER;
     try (Stream<Path> stream = Files.walk(rulesRoot)) {
       return stream

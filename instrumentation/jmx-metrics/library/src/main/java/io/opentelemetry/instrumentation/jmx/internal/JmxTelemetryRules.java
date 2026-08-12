@@ -40,11 +40,11 @@ public class JmxTelemetryRules {
    *
    * @param classLoader class loader
    * @param system system
-   * @param includeInstable {@literal true} to include unstable metrics definitions
+   * @param includeUnstable {@literal true} to include unstable metrics definitions
    * @return matching JMX rule resource paths, empty if none are found
    */
   public static Set<String> locateRulesForSystem(
-      ClassLoader classLoader, String system, boolean includeInstable) {
+      ClassLoader classLoader, String system, boolean includeUnstable) {
 
     Set<String> result = new HashSet<>();
 
@@ -52,7 +52,7 @@ public class JmxTelemetryRules {
     if (classLoader.getResource(path) != null) {
       result.add(path);
     }
-    if (includeInstable) {
+    if (includeUnstable) {
       path = String.format("jmx/rules/%s_unstable.yaml", system);
       if (classLoader.getResource(path) != null) {
         result.add(path);
