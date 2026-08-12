@@ -38,8 +38,7 @@ final class KafkaConnectBatchProcessSpanLinksExtractor
       return;
     }
 
-    KafkaConnectBatchRecordAttributes attributes =
-        KafkaConnectBatchRecordAttributes.create(request.getRecords());
+    KafkaConnectBatchRecordAttributes attributes = request.getBatchRecordAttributes();
     for (SinkRecord record : request.getRecords()) {
       Context extracted = propagator.extract(Context.root(), record, recordGetter);
       spanLinks.addLink(

@@ -19,8 +19,7 @@ final class KafkaConnectBatchAttributesExtractor
   public void onStart(
       AttributesBuilder attributes, Context parentContext, KafkaConnectTask request) {
     if (emitStableMessagingSemconv()) {
-      KafkaConnectBatchRecordAttributes.create(request.getRecords())
-          .putCommonAttributes(attributes);
+      request.getBatchRecordAttributes().putCommonAttributes(attributes);
     }
   }
 

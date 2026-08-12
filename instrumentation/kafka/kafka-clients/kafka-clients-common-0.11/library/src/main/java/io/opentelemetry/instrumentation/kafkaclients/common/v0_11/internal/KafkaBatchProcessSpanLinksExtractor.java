@@ -42,7 +42,7 @@ final class KafkaBatchProcessSpanLinksExtractor implements SpanLinksExtractor<Ka
       return;
     }
 
-    KafkaBatchRecordAttributes attributes = KafkaBatchRecordAttributes.create(request.getRecords());
+    KafkaBatchRecordAttributes attributes = request.getBatchRecordAttributes();
     for (ConsumerRecord<?, ?> record : request.getRecords()) {
       KafkaProcessRequest processRequest =
           KafkaProcessRequest.create(record, request.getConsumerGroup(), request.getClientId());
