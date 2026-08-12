@@ -231,7 +231,7 @@ jobs:
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
           gradle-home-cache-excludes: >-
-            ${{ secrets.DEVELOCITY_ACCESS_KEY != '' && 'caches/build-cache-1' || '' }}
+            ${{ secrets.DEVELOCITY_ACCESS_KEY != '' && github.ref_name == github.event.repository.default_branch && 'caches/build-cache-1' || '' }}
 
       - name: Build
         env:
