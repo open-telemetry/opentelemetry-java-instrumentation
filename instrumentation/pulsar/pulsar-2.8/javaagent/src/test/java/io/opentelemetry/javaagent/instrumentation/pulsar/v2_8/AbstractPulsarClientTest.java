@@ -30,6 +30,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -190,7 +191,7 @@ abstract class AbstractPulsarClientTest {
                     span.hasName(
                             emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
                         .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(batchLink(producerSpan.get(), msgId.toString()))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             batchReceiveAttributes(topic, null, false))));
@@ -317,7 +318,7 @@ abstract class AbstractPulsarClientTest {
                             emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
                         .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
                         .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(batchLink(producerSpan.get(), msgId.toString()))
                         .hasAttributesSatisfyingExactly(batchReceiveAttributes(topic, null, false)),
                 span ->
                     span.hasName("callback")
@@ -427,6 +428,14 @@ abstract class AbstractPulsarClientTest {
   static List<AttributeAssertion> batchReceiveAttributes(
       String destination, String messageId, boolean testHeaders) {
     return receiveAttributes(destination, messageId, testHeaders, true);
+  }
+
+  private static LinkData batchLink(SpanData producerSpan, String messageId) {
+    return LinkData.create(
+        producerSpan.getSpanContext(),
+        emitStableMessagingSemconv()
+            ? Attributes.of(MESSAGING_MESSAGE_ID, messageId)
+            : Attributes.empty());
   }
 
   static List<AttributeAssertion> receiveAttributes(
