@@ -111,12 +111,14 @@ class JmsCamelTest {
     assertions.add(span -> span.hasName("input").hasKind(SpanKind.INTERNAL).hasNoParent());
     assertions.add(
         span ->
-            span.hasName(emitStableMessagingSemconv() ? "send queue:testQueue" : "queue:testQueue")
+            span.hasName(emitStableMessagingSemconv() ? "send testQueue" : "queue:testQueue")
                 .hasKind(SpanKind.PRODUCER)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
                     equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "jms" : null),
-                    equalTo(MESSAGING_DESTINATION_NAME, "queue:testQueue"),
+                    equalTo(
+                        MESSAGING_DESTINATION_NAME,
+                        emitStableMessagingSemconv() ? "testQueue" : "queue:testQueue"),
                     equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
                     equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
                     equalTo(stringKey("camel.uri"), experimental("jms://queue:testQueue"))));
@@ -136,12 +138,14 @@ class JmsCamelTest {
     int processSpanIndex = assertions.size();
     assertions.add(
         span -> {
-          span.hasName(emitStableMessagingSemconv() ? "process queue:testQueue" : "queue:testQueue")
+          span.hasName(emitStableMessagingSemconv() ? "process testQueue" : "queue:testQueue")
               .hasKind(SpanKind.CONSUMER)
               .hasParent(trace.getSpan(1))
               .hasAttributesSatisfyingExactly(
                   equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "jms" : null),
-                  equalTo(MESSAGING_DESTINATION_NAME, "queue:testQueue"),
+                  equalTo(
+                      MESSAGING_DESTINATION_NAME,
+                      emitStableMessagingSemconv() ? "testQueue" : "queue:testQueue"),
                   equalTo(
                       MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
                   equalTo(

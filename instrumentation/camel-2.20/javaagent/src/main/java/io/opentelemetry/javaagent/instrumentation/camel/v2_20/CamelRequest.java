@@ -29,7 +29,9 @@ abstract class CamelRequest {
     if (spanDecorator instanceof MessagingSpanDecorator) {
       MessagingSpanDecorator messagingSpanDecorator = (MessagingSpanDecorator) spanDecorator;
       messagingSystem = messagingSpanDecorator.getSystem();
-      messagingDestination = messagingSpanDecorator.getDestination(exchange, endpoint);
+      messagingDestination =
+          normalizeStableMessagingDestination(
+              messagingSystem, messagingSpanDecorator.getDestination(exchange, endpoint));
       messagingMessageId = messagingSpanDecorator.getMessageId(exchange);
       messagingDestinationPartitionId = messagingSpanDecorator.getDestinationPartitionId(exchange);
       messagingSpanContextPropagated = messagingSpanDecorator.isSpanContextPropagated();
@@ -45,6 +47,21 @@ abstract class CamelRequest {
         messagingMessageId,
         messagingDestinationPartitionId,
         messagingSpanContextPropagated);
+  }
+
+  @Nullable
+  private static String normalizeStableMessagingDestination(
+      String messagingSystem, @Nullable String messagingDestination) {
+    if (!messagingSystem.equals("jms") || messagingDestination == null) {
+      return messagingDestination;
+    }
+    if (messagingDestination.startsWith("queue:")) {
+      return messagingDestination.substring("queue:".length());
+    }
+    if (messagingDestination.startsWith("topic:")) {
+      return messagingDestination.substring("topic:".length());
+    }
+    return messagingDestination;
   }
 
   abstract SpanDecorator getSpanDecorator();
