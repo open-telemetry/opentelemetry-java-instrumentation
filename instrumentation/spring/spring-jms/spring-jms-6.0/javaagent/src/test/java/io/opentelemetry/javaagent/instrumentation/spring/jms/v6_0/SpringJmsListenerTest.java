@@ -43,7 +43,7 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
 
   @Override
   void assertSpringJmsListener() {
-    if (!receiveTelemetryExplicitlyEnabled()) {
+    if (!receiveTelemetryEnabled()) {
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -165,7 +165,7 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
         applicationContext.getBean("receivedMessage", CompletableFuture.class);
     assertThat(receivedMessage.get(10, SECONDS)).isEqualTo(message);
 
-    if (!receiveTelemetryExplicitlyEnabled()) {
+    if (!receiveTelemetryEnabled()) {
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -291,8 +291,9 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
     return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
   }
 
-  private static boolean receiveTelemetryExplicitlyEnabled() {
-    return Boolean.getBoolean(
-        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
+  private static boolean receiveTelemetryEnabled() {
+    String configured =
+        System.getProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
+    return configured != null ? Boolean.parseBoolean(configured) : emitStableMessagingSemconv();
   }
 }

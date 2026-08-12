@@ -68,8 +68,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
       }
       boolean wrapperPoll = !KafkaClientsConsumerProcessTracing.isWrappingEnabled();
       Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(currentContext());
-      if (wrapperPoll
-          && (!KafkaSingletons.receiveTelemetryExplicitlyEnabled() || records.isEmpty())) {
+      if (wrapperPoll && (!KafkaSingletons.receiveTelemetryEnabled() || records.isEmpty())) {
         KafkaConsumerContextUtil.set(records, parentContext, consumer);
         for (ConsumerRecord<?, ?> record : records) {
           KafkaConsumerContextUtil.set(record, parentContext, consumer);

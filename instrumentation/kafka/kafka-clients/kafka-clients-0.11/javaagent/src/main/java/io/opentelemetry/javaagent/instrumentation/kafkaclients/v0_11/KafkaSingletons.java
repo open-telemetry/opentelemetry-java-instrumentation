@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
@@ -32,14 +34,17 @@ public class KafkaSingletons {
   private static final Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter;
   private static final Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter;
   private static final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
-  private static final boolean receiveTelemetryExplicitlyEnabled;
+  private static final boolean receiveTelemetryEnabled;
 
   static {
     DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common");
     Boolean messagingReceiveInstrumentationEnabled =
         commonConfig.get("messaging").get("receive_telemetry/development").getBoolean("enabled");
-    receiveTelemetryExplicitlyEnabled = Boolean.TRUE.equals(messagingReceiveInstrumentationEnabled);
+    receiveTelemetryEnabled =
+        messagingReceiveInstrumentationEnabled != null
+            ? messagingReceiveInstrumentationEnabled
+            : emitStableMessagingSemconv();
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
             .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
@@ -67,8 +72,8 @@ public class KafkaSingletons {
     return consumerProcessInstrumenter;
   }
 
-  public static boolean receiveTelemetryExplicitlyEnabled() {
-    return receiveTelemetryExplicitlyEnabled;
+  public static boolean receiveTelemetryEnabled() {
+    return receiveTelemetryEnabled;
   }
 
   private KafkaSingletons() {}

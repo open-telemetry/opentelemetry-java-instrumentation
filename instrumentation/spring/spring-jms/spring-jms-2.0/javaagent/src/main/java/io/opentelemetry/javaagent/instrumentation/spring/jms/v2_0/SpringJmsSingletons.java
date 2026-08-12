@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
@@ -14,8 +16,7 @@ import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDes
 public class SpringJmsSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-jms-2.0";
 
-  public static final boolean RECEIVE_TELEMETRY_ENABLED =
-      Boolean.TRUE.equals(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
+  public static final boolean RECEIVE_TELEMETRY_ENABLED = receiveTelemetryEnabled();
   private static final Instrumenter<MessageWithDestination, Void> listenerInstrumenter;
   private static final Instrumenter<MessageWithDestination, Void> receiveInstrumenter;
 
@@ -39,6 +40,11 @@ public class SpringJmsSingletons {
 
   public static Instrumenter<MessageWithDestination, Void> receiveInstrumenter() {
     return receiveInstrumenter;
+  }
+
+  private static boolean receiveTelemetryEnabled() {
+    Boolean configured = ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+    return configured != null ? configured : emitStableMessagingSemconv();
   }
 
   private SpringJmsSingletons() {}
