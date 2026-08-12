@@ -105,8 +105,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                 (committedOffsets, exception) -> {
                   callbackInvoked.set(true);
                   callbackException.set(exception);
-                  testing.runWithSpan(
-                      "reentrant commit parent", () -> consumer.commitAsync(offsets, null));
+                  consumer.commitAsync(offsets, null);
                 }));
 
     for (int i = 0; i < 10 && !callbackInvoked.get(); i++) {
@@ -115,38 +114,23 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
 
     assertThat(callbackInvoked).isTrue();
     assertThat(callbackException).hasValue(null);
-    for (int i = 0; i < 10 && !hasReentrantCommitSpan(); i++) {
+    for (int i = 0; i < 10 && commitSpanCount() < 2; i++) {
       poll(Duration.ofMillis(500));
     }
 
-    SpanData reentrantParent =
-        testing.spans().stream()
-            .filter(span -> span.getName().equals("reentrant commit parent"))
-            .findFirst()
-            .orElseThrow(AssertionError::new);
+    SpanData parent = findSpan("first commit parent");
     assertThat(testing.spans())
         .filteredOn(
             span ->
-                span.getParentSpanId().equals(reentrantParent.getSpanContext().getSpanId())
+                span.getParentSpanId().equals(parent.getSpanContext().getSpanId())
                     && span.getName().equals("commit " + SHARED_TOPIC))
-        .hasSize(1);
-    assertThat(testing.spans())
-        .filteredOn(span -> span.getName().equals("commit " + SHARED_TOPIC))
         .hasSize(2);
   }
 
-  private static boolean hasReentrantCommitSpan() {
-    SpanData reentrantParent =
-        testing.spans().stream()
-            .filter(span -> span.getName().equals("reentrant commit parent"))
-            .findFirst()
-            .orElse(null);
-    return reentrantParent != null
-        && testing.spans().stream()
-            .anyMatch(
-                span ->
-                    span.getParentSpanId().equals(reentrantParent.getSpanContext().getSpanId())
-                        && span.getName().equals("commit " + SHARED_TOPIC));
+  private static long commitSpanCount() {
+    return testing.spans().stream()
+        .filter(span -> span.getName().equals("commit " + SHARED_TOPIC))
+        .count();
   }
 
   @Test

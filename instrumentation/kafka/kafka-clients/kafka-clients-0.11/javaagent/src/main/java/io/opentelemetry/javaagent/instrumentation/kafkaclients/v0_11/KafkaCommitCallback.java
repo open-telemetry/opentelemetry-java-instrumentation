@@ -35,7 +35,7 @@ class KafkaCommitCallback implements OffsetCommitCallback {
     tracingState.end(exception);
     if (callback != null) {
       try (KafkaCommitAsyncTracing.CallbackScope ignored =
-          KafkaCommitAsyncTracing.enterCallback()) {
+          KafkaCommitAsyncTracing.enterCallback(tracingState)) {
         callback.onComplete(offsets, exception);
       }
     }

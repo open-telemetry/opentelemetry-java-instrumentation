@@ -470,25 +470,52 @@ class KafkaConsumerCommitTest {
     assumeTrue(emitStableMessagingSemconv());
     CompletableFuture<Void> asyncFuture = new CompletableFuture<>();
     CompletableFuture<Void> syncFuture = new CompletableFuture<>();
+    AtomicReference<OffsetCommitCallback> callback = new AtomicReference<>();
+    Map<TopicPartition, OffsetAndMetadata> offsets =
+        singletonMap(TOPIC_PARTITION, new OffsetAndMetadata(1));
     testing.clearData();
 
-    KafkaCommitAsyncTracing.AdviceScope adviceScope = KafkaCommitAsyncTracing.start(null, null);
-    KafkaCommitAsyncTracing.endOnCompletion(asyncFuture);
-    try (KafkaCommitAsyncTracing.CallbackScope ignored = KafkaCommitAsyncTracing.enterCallback()) {
-      KafkaCommitAsyncTracing.endOnCompletion(syncFuture);
-    }
-    adviceScope.end(null);
+    testing.runWithSpan(
+        "callback parent",
+        () -> {
+          KafkaCommitAsyncTracing.AdviceScope adviceScope =
+              KafkaCommitAsyncTracing.start(
+                  offsets,
+                  (committedOffsets, exception) ->
+                      testing.runWithSpan(
+                          "callback", () -> KafkaCommitAsyncTracing.endOnCompletion(syncFuture)));
+          callback.set(adviceScope.callback());
+          adviceScope.end(null);
+        });
+    testing.runWithSpan(
+        "outer parent",
+        () -> {
+          KafkaCommitAsyncTracing.AdviceScope adviceScope =
+              KafkaCommitAsyncTracing.start(offsets, null);
+          KafkaCommitAsyncTracing.endOnCompletion(asyncFuture);
+          callback.get().onComplete(offsets, null);
+          adviceScope.end(null);
+        });
     syncFuture.completeExceptionally(new CommitFailedException());
-    assertThat(testing.spans()).isEmpty();
+    SpanData callbackParent =
+        testing.spans().stream()
+            .filter(span -> span.getName().equals("callback parent"))
+            .findFirst()
+            .orElseThrow(AssertionError::new);
+    assertThat(testing.spans())
+        .filteredOn(
+            span ->
+                span.getParentSpanId().equals(callbackParent.getSpanContext().getSpanId())
+                    && span.getName().equals("callback"))
+        .hasSize(1);
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals("commit " + TOPIC))
+        .hasSize(1);
     asyncFuture.complete(null);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    assertCommitSpan(span, null, null, null)
-                        .hasStatus(StatusData.unset())
-                        .hasNoParent()));
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals("commit " + TOPIC))
+        .hasSize(2);
   }
 
   @Test

@@ -50,7 +50,7 @@ public class KafkaCommitAsyncTracing {
       }
 
       Context context = consumerCommitInstrumenter().start(parentContext, request);
-      TracingState tracingState = new TracingState(context, request);
+      TracingState tracingState = new TracingState(parentContext, context, request);
       Scope scope = context.with(TRACING_STATE, tracingState).makeCurrent();
       AdviceScope adviceScope =
           new AdviceScope(
@@ -71,10 +71,11 @@ public class KafkaCommitAsyncTracing {
     }
   }
 
-  public static CallbackScope enterCallback() {
+  public static CallbackScope enterCallback(TracingState tracingState) {
     CallbackState callbackState = new CallbackState();
     return new CallbackScope(
-        Context.current().with(CALLBACK_STATE, callbackState).makeCurrent(), callbackState);
+        tracingState.parentContext.with(CALLBACK_STATE, callbackState).makeCurrent(),
+        callbackState);
   }
 
   public static AdviceScope join(@Nullable OffsetCommitCallback callback) {
@@ -222,11 +223,13 @@ public class KafkaCommitAsyncTracing {
   }
 
   public static class TracingState {
+    private final Context parentContext;
     private final Context context;
     private final KafkaCommitRequest request;
     private boolean ended;
 
-    private TracingState(Context context, KafkaCommitRequest request) {
+    private TracingState(Context parentContext, Context context, KafkaCommitRequest request) {
+      this.parentContext = parentContext;
       this.context = context;
       this.request = request;
     }
