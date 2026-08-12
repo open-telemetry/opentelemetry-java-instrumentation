@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.springai.v1_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.semconv.incubating.EventIncubatingAttributes.EVENT_NAME;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.context.Context;
@@ -22,10 +22,6 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 
 public final class SpringAiMessageEvents {
-  private static final AttributeKey<String> EVENT_NAME = stringKey("event.name");
-  private static final AttributeKey<String> GEN_AI_PROVIDER_NAME =
-      stringKey("gen_ai.provider.name");
-
   public static void emitPromptEvents(Context context, SpringAiRequest request) {
     try {
       for (Message message : request.prompt().getInstructions()) {
@@ -84,6 +80,7 @@ public final class SpringAiMessageEvents {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static LogRecordBuilder newEvent(SpringAiRequest request, String eventName) {
     return SpringAiSingletons.eventLogger()
         .logRecordBuilder()
