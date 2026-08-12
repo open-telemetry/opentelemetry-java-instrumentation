@@ -258,6 +258,14 @@ class JbossLogmanagerTest {
             attributeAsserts.add(equalTo(stringKey("legacy"), "legacy-value"));
           } else if (MDC_CONFIGURATION.equals("precedence")) {
             attributeAsserts.add(equalTo(stringKey("new"), "new-value"));
+          } else if (MDC_CONFIGURATION.equals("excludedOnly")) {
+            // excluded patterns are prefix.secret and excluded*, so every other MDC key is captured
+            attributeAsserts.add(equalTo(stringKey("exact"), "exact-value"));
+            attributeAsserts.add(equalTo(stringKey("prefix.public"), "prefix-value"));
+            attributeAsserts.add(equalTo(stringKey("single1"), "single-value"));
+            attributeAsserts.add(equalTo(stringKey("single22"), "double-value"));
+            attributeAsserts.add(equalTo(stringKey("legacy"), "legacy-value"));
+            attributeAsserts.add(equalTo(stringKey("new"), "new-value"));
           }
           logRecord
               .hasBody("xyz")

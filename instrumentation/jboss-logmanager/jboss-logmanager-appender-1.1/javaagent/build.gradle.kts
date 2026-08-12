@@ -68,11 +68,24 @@ tasks {
     systemProperty("testMdcConfiguration", "precedence")
   }
 
+  val testExcludedOnlyMdcAttributes = register<Test>("testExcludedOnlyMdcAttributes") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("JbossLogmanagerTest.testMdc")
+    }
+
+    jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental.mdc-attributes.excluded=prefix.secret,excluded*")
+    systemProperty("testMdcConfiguration", "excludedOnly")
+  }
+
   check {
     dependsOn(
       testCaptureTemplateAndArguments,
       testLegacyMdcAttributes,
       testMdcAttributePrecedence,
+      testExcludedOnlyMdcAttributes,
     )
   }
 }
