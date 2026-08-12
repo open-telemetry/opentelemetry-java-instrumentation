@@ -100,7 +100,8 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
    * <p>This is used to resolve header selectors that cannot be turned into a list of exact header
    * names, such as selectors containing wildcard patterns or selectors that only exclude headers.
    * Selectors that only list exact header names are resolved with {@link #getMessageHeader(Object,
-   * String)} alone, so implementing this method is optional.
+   * String)} alone. To preserve compatibility with existing implementations, overriding this method
+   * is optional until 3.0.
    *
    * <p>Implementations of this method <b>must not</b> return a null value; an empty collection
    * should be returned instead. The returned collection is only read, so implementations may return
