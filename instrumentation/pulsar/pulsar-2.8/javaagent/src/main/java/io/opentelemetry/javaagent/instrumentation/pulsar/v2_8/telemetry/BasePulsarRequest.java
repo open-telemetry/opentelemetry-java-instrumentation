@@ -27,18 +27,28 @@ public class BasePulsarRequest {
   }
 
   /**
-   * Returns the value to use for {@code messaging.destination.name}. The stable messaging semantic
-   * conventions model the partition separately, in {@code messaging.destination.partition.id},
-   * which is defined as being unique within the destination name, so the destination name must not
-   * embed the {@code -partition-N} suffix.
+   * Returns the value to use for {@code messaging.destination.name}. Under the stable messaging
+   * semantic conventions this is the fully qualified topic name without the {@code -partition-N}
+   * suffix, e.g. {@code persistent://public/default/my-topic}. The partition is modeled separately,
+   * in {@code messaging.destination.partition.id}, which is defined as being unique within the
+   * destination name, so the destination name must not embed it. Under the old semantic conventions
+   * the topic name is reported as is.
    */
   static String destination(String topicName) {
-    if (!emitStableMessagingSemconv() || TopicName.getPartitionIndex(topicName) == -1) {
+    if (!emitStableMessagingSemconv()) {
       return topicName;
     }
-    // not using TopicName.getPartitionedTopicName(), because it also expands a topic name that is
-    // not fully qualified, e.g. "my-topic" to "persistent://public/default/my-topic"
-    return topicName.substring(0, topicName.lastIndexOf(TopicName.PARTITIONED_TOPIC_SUFFIX));
+    // getPartitionedTopicName() strips the "-partition-N" suffix and also expands a topic name that
+    // is not fully qualified, e.g. "my-topic" to "persistent://public/default/my-topic". A producer
+    // can be created with a short topic name while a consumer always sees the fully qualified form,
+    // so expanding here is what lets producer and consumer spans for the same topic agree on the
+    // destination name.
+    //
+    // TopicName.get() throws IllegalArgumentException on a malformed topic name, but one cannot
+    // reach this method: producer and consumer topic names are rejected by PulsarClientImpl with
+    // InvalidTopicNameException unless TopicName.isValid() accepts them, and TopicName.isValid() is
+    // TopicName.get() wrapped in a try/catch.
+    return TopicName.get(topicName).getPartitionedTopicName();
   }
 
   /** Returns the value to use for {@code messaging.destination.partition.id}. */
