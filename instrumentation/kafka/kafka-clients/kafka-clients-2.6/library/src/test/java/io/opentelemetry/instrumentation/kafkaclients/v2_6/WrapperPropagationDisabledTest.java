@@ -43,7 +43,7 @@ class WrapperPropagationDisabledTest extends AbstractWrapperTest {
                           .hasNoParent()
                           .hasLinks()
                           .hasAttributesSatisfyingExactly(
-                              WrapperTest.receiveAttributes(testHeaders))),
+                              WrapperTest.receiveAttributes(testHeaders, testExperimental))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->

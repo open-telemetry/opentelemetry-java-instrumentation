@@ -104,7 +104,6 @@ public final class KafkaProducerRequest {
         record, clientId, bootstrapServers, spanContextPropagated, clusterId, producer);
   }
 
-
   private KafkaProducerRequest(
       ProducerRecord<?, ?> record,
       @Nullable String clientId,

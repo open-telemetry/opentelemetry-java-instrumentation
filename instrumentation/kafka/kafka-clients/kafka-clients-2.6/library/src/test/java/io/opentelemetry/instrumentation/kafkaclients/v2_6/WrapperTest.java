@@ -100,7 +100,8 @@ class WrapperTest extends AbstractWrapperTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasLinks(LinkData.create(producerSpanContext.get()))
-                          .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
+                          .hasAttributesSatisfyingExactly(
+                              receiveAttributes(testHeaders, testExperimental))));
       return;
     }
 
