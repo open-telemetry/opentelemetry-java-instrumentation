@@ -63,7 +63,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     testing.runWithSpan("second commit parent", () -> consumer.commitAsync(offsets, null));
 
     assertThat(testing.spans()).hasSize(2);
-    for (int i = 0; i < 10 && testing.spans().size() == 2; i++) {
+    for (int i = 0; i < 10 && commitSpanCount() < 2; i++) {
       poll(Duration.ofMillis(500));
     }
 
