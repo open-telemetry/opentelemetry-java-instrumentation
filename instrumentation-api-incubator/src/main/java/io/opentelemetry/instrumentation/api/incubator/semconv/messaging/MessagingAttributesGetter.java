@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static java.util.Collections.emptyList;
 
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -89,6 +90,24 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
    * returned instead.
    */
   default List<String> getMessageHeader(REQUEST request, String name) {
+    return emptyList();
+  }
+
+  /**
+   * Extracts the names of all headers present on the request, or an empty collection if there were
+   * none.
+   *
+   * <p>This is used to resolve header selectors that cannot be turned into a list of exact header
+   * names, such as selectors containing wildcard patterns or selectors that only exclude headers.
+   * Selectors that only list exact header names are resolved with {@link #getMessageHeader(Object,
+   * String)} alone, so implementing this method is optional.
+   *
+   * <p>Implementations of this method <b>must not</b> return a null value; an empty collection
+   * should be returned instead. The returned collection is only read, so implementations may return
+   * a view over the underlying header names as long as that view cannot change while the returned
+   * collection is being read.
+   */
+  default Collection<String> getMessageHeaderNames(REQUEST request) {
     return emptyList();
   }
 }

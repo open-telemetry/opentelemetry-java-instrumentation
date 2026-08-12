@@ -5,7 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.message.MessageView;
@@ -74,5 +77,12 @@ class RocketMqConsumerReceiveAttributeGetter
   public Long getBatchMessageCount(
       RocketMqReceiveRequest request, @Nullable List<MessageView> messages) {
     return messages != null ? (long) messages.size() : null;
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(RocketMqReceiveRequest request) {
+    // per-message headers that vary across a batch belong on the span links, so the receive span
+    // does not capture any headers
+    return emptyList();
   }
 }

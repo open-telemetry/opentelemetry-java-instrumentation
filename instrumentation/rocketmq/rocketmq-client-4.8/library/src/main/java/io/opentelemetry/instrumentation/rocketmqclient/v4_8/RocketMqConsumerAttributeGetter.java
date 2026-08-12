@@ -9,8 +9,11 @@ import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.consumer.listener.ConsumeReturnType;
 import org.apache.rocketmq.client.hook.ConsumeMessageContext;
@@ -134,5 +137,21 @@ final class RocketMqConsumerAttributeGetter
       }
     }
     return values;
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(RocketMqConsumerRequest request) {
+    if (request.isBatch()) {
+      // batched messages do not report headers, see getMessageHeader above
+      return emptyList();
+    }
+    Set<String> names = new LinkedHashSet<>();
+    for (MessageExt message : request.getMessages()) {
+      Map<String, String> properties = message.getProperties();
+      if (properties != null) {
+        names.addAll(properties.keySet());
+      }
+    }
+    return names;
   }
 }

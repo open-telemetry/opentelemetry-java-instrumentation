@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import java.util.List;
@@ -24,7 +25,7 @@ public class RocketMqSingletons {
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-    List<String> messagingHeaders = ExperimentalConfig.get().getMessagingHeaders();
+    IncludeExclude messagingHeaders = ExperimentalConfig.get().getMessagingHeaders();
     boolean receiveInstrumentationEnabled =
         ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
 

@@ -115,7 +115,26 @@ definitions:
     messaging.capture-headers:
       name: otel.instrumentation.messaging.experimental.capture-headers
       declarative_name: java.common.messaging.capture_headers/development
-      description: A comma-separated list of header names to capture as span attributes.
+      description: 'Deprecated: use `otel.instrumentation.messaging.experimental.headers.included`
+        instead. A comma-separated list of header names to capture as span attributes.'
+      type: list
+      default: ''
+    messaging.headers.excluded:
+      name: otel.instrumentation.messaging.experimental.headers.excluded
+      declarative_name: java.common.messaging.headers/development.excluded
+      description: A comma-separated list of message header name patterns to exclude
+        from span attributes. Excluded patterns take precedence over included patterns.
+        Matching is case-sensitive. `?` matches one character and `*` matches zero
+        or more characters. If included is not configured, all non-excluded headers
+        are captured, which may expose sensitive information.
+      type: list
+      default: ''
+    messaging.headers.included:
+      name: otel.instrumentation.messaging.experimental.headers.included
+      declarative_name: java.common.messaging.headers/development.included
+      description: A comma-separated list of message header name patterns to capture
+        as span attributes. Matching is case-sensitive. `?` matches one character
+        and `*` matches zero or more characters.
       type: list
       default: ''
     otel.experimental.javascript-snippet-ad834761:
@@ -3911,6 +3930,8 @@ libraries:
   - com.amazonaws:aws-java-sdk-sqs:[1.10.33,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.aws-sdk.experimental-span-attributes-f30ad240
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
@@ -4275,6 +4296,8 @@ libraries:
   - software.amazon.awssdk:sqs:[2.2.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.aws-sdk.experimental-record-individual-http-error
   - otel.instrumentation.aws-sdk.experimental-span-attributes-0c4c01de
   - otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging
@@ -8642,6 +8665,8 @@ libraries:
   - javax.jms:jms-api:(,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
   - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
@@ -8730,6 +8755,8 @@ libraries:
   - jakarta.jms:jakarta.jms-api:[3.0.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
   - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
@@ -9002,6 +9029,8 @@ libraries:
   - org.apache.kafka:kafka-clients:[0.11.0.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.kafka.experimental-span-attributes-5d2fc7d4
   - otel.instrumentation.kafka.producer-propagation.enabled
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
@@ -9307,6 +9336,8 @@ libraries:
   - org.apache.kafka:kafka-streams:[0.11.0.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.kafka.experimental-span-attributes-5d2fc7d4
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
@@ -10561,6 +10592,8 @@ libraries:
   - io.nats:jnats:[2.17.2,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   telemetry:
   - when: default
     spans:
@@ -11847,6 +11880,8 @@ libraries:
   - org.apache.pulsar:pulsar-client:[2.8.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   - otel.instrumentation.pulsar.experimental-span-attributes-5ac8c0d9
   telemetry:
@@ -12133,6 +12168,8 @@ libraries:
   - com.rabbitmq:amqp-client:[2.7.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-59c44ca8
   - otel.instrumentation.rabbitmq.experimental-span-attributes
   telemetry:
@@ -12524,6 +12561,8 @@ libraries:
   - io.projectreactor.kafka:reactor-kafka:[1.0.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.kafka.experimental-span-attributes-956cabd8
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
@@ -13032,6 +13071,8 @@ libraries:
   - org.apache.rocketmq:rocketmq-client:[4.0.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.rocketmq-client.experimental-span-attributes
   telemetry:
   - when: default
@@ -13149,6 +13190,8 @@ libraries:
   - org.apache.rocketmq:rocketmq-client-java:[5.0.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
   - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
@@ -13807,6 +13850,8 @@ libraries:
   - org.springframework.integration:spring-integration-core:[4.1.0.RELEASE,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.spring-integration.global-channel-interceptor-patterns
   - otel.instrumentation.spring-integration.producer.enabled
   telemetry:
@@ -13863,6 +13908,8 @@ libraries:
   - org.springframework:spring-jms:[2.0,6)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
   - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
@@ -13907,6 +13954,8 @@ libraries:
   - org.springframework:spring-jms:[6.0.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
   - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
@@ -13951,6 +14000,8 @@ libraries:
   - org.springframework.kafka:spring-kafka:[2.7.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.kafka.experimental-span-attributes-6596b308
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
@@ -14046,6 +14097,8 @@ libraries:
   - org.springframework.pulsar:spring-pulsar:[1.0.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   - otel.instrumentation.pulsar.experimental-span-attributes-1d77bf4d
   telemetry:
@@ -14094,6 +14147,8 @@ libraries:
   - org.springframework.amqp:spring-rabbit:(,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   telemetry:
   - when: default
     spans:
@@ -15354,6 +15409,8 @@ libraries:
   - io.vertx:vertx-kafka-client:[3.5.1,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.kafka.experimental-span-attributes-5d2fc7d4
   - otel.instrumentation.kafka.producer-propagation.enabled
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6

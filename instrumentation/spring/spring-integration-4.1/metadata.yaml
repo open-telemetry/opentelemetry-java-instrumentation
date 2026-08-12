@@ -17,4 +17,6 @@ configurations:
     type: list
     description: A list of Spring channel name patterns that will be intercepted.
     default: "*"
+  - ref: messaging.headers.included
+  - ref: messaging.headers.excluded
   - ref: messaging.capture-headers

@@ -176,11 +176,7 @@ class MessagingAttributesExtractorTest {
   void shouldReturnSpanKey(MessagingOperationType operationType, SpanKey spanKey) {
     MessagingAttributesExtractor<Map<String, String>, String> underTest =
         new MessagingAttributesExtractor<>(
-            TestGetter.INSTANCE,
-            operationType,
-            operationType.legacyOperationName(),
-            true,
-            new ArrayList<>());
+            TestGetter.INSTANCE, operationType, operationType.legacyOperationName(), true, null);
 
     assertThat(underTest.internalGetSpanKey()).isSameAs(spanKey);
   }

@@ -7,11 +7,11 @@ package io.opentelemetry.instrumentation.spring.integration.v4_1;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
-import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
@@ -37,7 +37,7 @@ public final class SpringIntegrationTelemetryBuilder {
   private final List<AttributesExtractor<MessageWithChannel, Void>> additionalAttributeExtractors =
       new ArrayList<>();
 
-  private List<String> capturedHeaders = emptyList();
+  private IncludeExclude headers = IncludeExclude.builder().build();
   private boolean producerSpanEnabled = false;
 
   SpringIntegrationTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -56,14 +56,33 @@ public final class SpringIntegrationTelemetryBuilder {
   }
 
   /**
+   * Configures which message headers are captured as span attributes.
+   *
+   * <p>Header values are captured under the {@code messaging.header.<name>} attribute key. The
+   * {@code <name>} part in the attribute key is the header name with dashes replaced by
+   * underscores.
+   *
+   * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
+   * of characters, including none. Excluded patterns take precedence over included patterns. A
+   * selector with no included patterns captures every header that is not excluded, and an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
+   */
+  @CanIgnoreReturnValue
+  public SpringIntegrationTelemetryBuilder setHeaders(IncludeExclude headers) {
+    this.headers = headers;
+    return this;
+  }
+
+  /**
    * Configures the messaging headers that will be captured as span attributes.
    *
    * @param capturedHeaders A list of messaging header names.
+   * @deprecated Use {@link #setHeaders(IncludeExclude)} instead. Will be removed in 3.0.
    */
+  @Deprecated // to be removed in 3.0
   @CanIgnoreReturnValue
   public SpringIntegrationTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
-    this.capturedHeaders = new ArrayList<>(capturedHeaders);
-    return this;
+    return setHeaders(IncludeExclude.builder().setIncluded(capturedHeaders).build());
   }
 
   /**
@@ -95,7 +114,7 @@ public final class SpringIntegrationTelemetryBuilder {
                     consumerGetter,
                     MessagingOperationType.PROCESS,
                     PROCESS_OPERATION_NAME,
-                    capturedHeaders));
+                    headers));
     setMessagingProcessExceptionEventExtractor(consumerBuilder);
     Instrumenter<MessageWithChannel, Void> consumerInstrumenter =
         MessagingProcessInstrumenterFactory.create(
@@ -115,10 +134,7 @@ public final class SpringIntegrationTelemetryBuilder {
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
-                    producerGetter,
-                    MessagingOperationType.SEND,
-                    SEND_OPERATION_NAME,
-                    capturedHeaders));
+                    producerGetter, MessagingOperationType.SEND, SEND_OPERATION_NAME, headers));
     setMessagingSendExceptionEventExtractor(producerBuilder);
     Instrumenter<MessageWithChannel, Void> producerInstrumenter =
         producerBuilder.buildInstrumenter(SpanKindExtractor.alwaysProducer());
@@ -133,9 +149,9 @@ public final class SpringIntegrationTelemetryBuilder {
       MessagingAttributesGetter<MessageWithChannel, Void> getter,
       MessagingOperationType operationType,
       String operationName,
-      List<String> capturedHeaders) {
+      IncludeExclude headers) {
     return MessagingAttributesExtractor.builder(getter, operationType, operationName)
-        .setCapturedHeaders(capturedHeaders)
+        .setHeaders(headers)
         .build();
   }
 }

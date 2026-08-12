@@ -22,6 +22,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
@@ -91,7 +92,7 @@ public final class AwsSdkInstrumenterFactory {
 
   private final OpenTelemetry openTelemetry;
   @Nullable private final TextMapPropagator messagingPropagator;
-  private final List<String> capturedHeaders;
+  private final IncludeExclude headers;
   private final boolean captureExperimentalSpanAttributes;
   private final boolean messagingReceiveInstrumentationEnabled;
   private final boolean useXrayPropagator;
@@ -99,13 +100,13 @@ public final class AwsSdkInstrumenterFactory {
   public AwsSdkInstrumenterFactory(
       OpenTelemetry openTelemetry,
       @Nullable TextMapPropagator messagingPropagator,
-      List<String> capturedHeaders,
+      IncludeExclude headers,
       boolean captureExperimentalSpanAttributes,
       boolean messagingReceiveInstrumentationEnabled,
       boolean useXrayPropagator) {
     this.openTelemetry = openTelemetry;
     this.messagingPropagator = messagingPropagator;
-    this.capturedHeaders = capturedHeaders;
+    this.headers = headers;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
     this.useXrayPropagator = useXrayPropagator;
@@ -138,7 +139,7 @@ public final class AwsSdkInstrumenterFactory {
       MessagingOperationType operationType,
       String operationName) {
     return MessagingAttributesExtractor.builder(getter, operationType, operationName)
-        .setCapturedHeaders(capturedHeaders)
+        .setHeaders(headers)
         .build();
   }
 

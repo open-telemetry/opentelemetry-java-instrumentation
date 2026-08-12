@@ -18,4 +18,6 @@ configurations:
       measure the time between receiving a message and the consumer processing that message.
     type: boolean
     default: false
+  - ref: messaging.headers.included
+  - ref: messaging.headers.excluded
   - ref: messaging.capture-headers
