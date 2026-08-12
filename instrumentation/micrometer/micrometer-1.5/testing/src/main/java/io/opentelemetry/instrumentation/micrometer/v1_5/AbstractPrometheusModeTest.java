@@ -373,6 +373,45 @@ public abstract class AbstractPrometheusModeTest {
   }
 
   @Test
+  void testSameNameDifferentTypeKeepsOwnDescription() {
+    // given a counter and a timer that share a Micrometer name, but that the prometheus naming
+    // convention maps onto two different OpenTelemetry instrument names
+    Counter counter =
+        Counter.builder("testPrometheusSharedName")
+            .description("This is a test counter")
+            .tags("type", "counter")
+            .baseUnit("")
+            .register(Metrics.globalRegistry);
+    Timer timer =
+        Timer.builder("testPrometheusSharedName")
+            .description("This is a test timer")
+            .tags("type", "timer")
+            .register(Metrics.globalRegistry);
+
+    // when
+    counter.increment(12);
+    timer.record(1, SECONDS);
+
+    // then each instrument keeps its own description
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("testPrometheusSharedName")
+                    .hasDescription("This is a test counter")
+                    .hasDoubleSumSatisfying(sum -> sum.isMonotonic()));
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("testPrometheusSharedName.seconds")
+                    .hasDescription("This is a test timer")
+                    .hasHistogramSatisfying(histogram -> {}));
+  }
+
+  @Test
   void testTimerCustomBucketBoundaryFormatting() {
     // given
     Timer timer =

@@ -45,7 +45,7 @@ final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
     this.observableCount =
         otelMeter
             .counterBuilder(name + ".count")
-            .setDescription(Bridging.description(id))
+            .setDescription(Bridging.description(name + ".count", id))
             .setUnit("{invocation}")
             .buildWithCallback(new LongMeasurementRecorder<>(obj, countFunction, attributes));
 
@@ -53,7 +53,7 @@ final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
         otelMeter
             .counterBuilder(name + ".sum")
             .ofDoubles()
-            .setDescription(Bridging.description(id))
+            .setDescription(Bridging.description(name + ".sum", id))
             .setUnit(TimeUnitHelper.getUnitString(baseTimeUnit))
             .buildWithCallback(
                 new DoubleMeasurementRecorder<>(

@@ -36,9 +36,16 @@ final class Bridging {
     return namingConvention.name(id.getName(), id.getType(), id.getBaseUnit());
   }
 
-  static String description(Meter.Id id) {
+  // Micrometer allows every set of tags to carry its own description, while in OpenTelemetry the
+  // description is one of an instrument's identifying fields. Bridging the descriptions through
+  // unchanged would turn a single Micrometer metric into conflicting OpenTelemetry instruments that
+  // share a name, which the SDK exports as separate metric streams instead of aggregating into one.
+  // So the first description seen for an instrument name wins, which is also what Micrometer's own
+  // PrometheusMeterRegistry does. Callers must pass the name the instrument is actually emitted
+  // under, including any suffix such as ".max", since that is the name a conflict would occur on.
+  static String description(String instrumentName, Meter.Id id) {
     return descriptionsCache.computeIfAbsent(
-        id.getName(),
+        instrumentName,
         n -> {
           String description = id.getDescription();
           return description != null ? description : "";

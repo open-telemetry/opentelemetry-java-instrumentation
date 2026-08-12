@@ -78,7 +78,7 @@ final class OpenTelemetryTimer extends AbstractTimer
     DoubleHistogramBuilder otelHistogramBuilder =
         otelMeter
             .histogramBuilder(name)
-            .setDescription(Bridging.description(id))
+            .setDescription(Bridging.description(name, id))
             .setUnit(TimeUnitHelper.getUnitString(baseTimeUnit));
     setExplicitBucketsIfConfigured(otelHistogramBuilder, distributionStatisticConfig, baseTimeUnit);
     this.otelHistogram = otelHistogramBuilder.build();
@@ -86,7 +86,7 @@ final class OpenTelemetryTimer extends AbstractTimer
         emitMaxGauge
             ? otelMeter
                 .gaugeBuilder(name + ".max")
-                .setDescription(Bridging.description(id))
+                .setDescription(Bridging.description(name + ".max", id))
                 .setUnit(TimeUnitHelper.getUnitString(baseTimeUnit))
                 .buildWithCallback(
                     new DoubleMeasurementRecorder<>(max, m -> m.poll(baseTimeUnit), attributes))
