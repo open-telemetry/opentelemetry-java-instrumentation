@@ -511,19 +511,9 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
   @SuppressWarnings("deprecation") // using deprecated semconv
   protected static AttributeAssertion[] processAttributes(
       String destination, long batchSize, String messageKey) {
-    return processAttributes(destination, batchSize, true, messageKey);
-  }
-
-  @SuppressWarnings("deprecation") // using deprecated semconv
-  protected static AttributeAssertion[] processAttributes(long batchSize) {
-    return processAttributes("", batchSize, false, null);
-  }
-
-  private static AttributeAssertion[] processAttributes(
-      String destination, long batchSize, boolean hasDestination, String messageKey) {
     return new AttributeAssertion[] {
       equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize),
-      equalTo(MESSAGING_DESTINATION_NAME, hasDestination ? destination : null),
+      equalTo(MESSAGING_DESTINATION_NAME, destination),
       equalTo(MESSAGING_DESTINATION_PARTITION_ID, emitStableMessagingSemconv() ? "0" : null),
       equalTo(MESSAGING_KAFKA_OFFSET, emitStableMessagingSemconv() ? Long.valueOf(0) : null),
       equalTo(MESSAGING_KAFKA_MESSAGE_KEY, emitStableMessagingSemconv() ? messageKey : null),
