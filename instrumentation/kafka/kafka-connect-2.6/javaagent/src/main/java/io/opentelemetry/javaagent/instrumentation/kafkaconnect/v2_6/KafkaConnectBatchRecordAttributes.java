@@ -37,12 +37,11 @@ final class KafkaConnectBatchRecordAttributes {
     return attributes;
   }
 
+  // the common destination is not emitted here, MessagingAttributesExtractor already emits it via
+  // KafkaConnectAttributesGetter#getDestination, which returns the topic under the same condition
   void putCommonAttributes(AttributesBuilder attributes) {
     if (!initialized) {
       return;
-    }
-    if (!destinationVaries) {
-      attributes.put(MESSAGING_DESTINATION_NAME, commonDestination);
     }
     if (!partitionVaries) {
       attributes.put(MESSAGING_DESTINATION_PARTITION_ID, commonPartition);

@@ -56,10 +56,10 @@ class KafkaBatchProcessSpanLinksExtractorTest {
     new KafkaReceiveAttributesExtractor().onStart(spanAttributes, Context.root(), request);
     RecordingSpanLinksBuilder links = extractLinks(request);
 
+    // the destination is emitted by MessagingAttributesExtractor, not by the extractor under test
     assertThat(spanAttributes.build())
         .isEqualTo(
             Attributes.builder()
-                .put(MESSAGING_DESTINATION_NAME, "topic")
                 .put(MESSAGING_DESTINATION_PARTITION_ID, "1")
                 .put(MESSAGING_KAFKA_OFFSET, 10)
                 .put(MESSAGING_KAFKA_MESSAGE_KEY, "key")
