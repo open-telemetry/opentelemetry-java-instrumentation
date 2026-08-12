@@ -15,6 +15,7 @@ import ch.qos.logback.core.spi.AppenderAttachable;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EarlyConfig;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -193,17 +194,17 @@ class LogbackAppenderInstaller {
   }
 
   static MdcAttributesConfiguration getMdcAttributes(ConfigurableEnvironment environment) {
-    String includedProperty = getLoggingProperty(environment, MDC_ATTRIBUTES_INCLUDED);
-    String excludedProperty = getLoggingProperty(environment, MDC_ATTRIBUTES_EXCLUDED);
+    List<String> included = getLoggingListProperty(environment, MDC_ATTRIBUTES_INCLUDED);
+    List<String> excluded = getLoggingListProperty(environment, MDC_ATTRIBUTES_EXCLUDED);
     IncludeExclude selector =
         IncludeExclude.builder()
-            .setIncluded(parseList(includedProperty))
-            .setExcluded(parseList(excludedProperty))
+            .setIncluded(included == null ? emptyList() : included)
+            .setExcluded(excluded == null ? emptyList() : excluded)
             .build();
 
-    String deprecatedProperty = getLoggingProperty(environment, DEPRECATED_MDC_ATTRIBUTES);
+    List<String> deprecated = getLoggingListProperty(environment, DEPRECATED_MDC_ATTRIBUTES);
     if (!selector.isEmpty()) {
-      if (deprecatedProperty != null && warnedDeprecatedProperties.add("ignored")) {
+      if (deprecated != null && warnedDeprecatedProperties.add("ignored")) {
         logger.warn(
             "The '{}' property and the equivalent declarative configuration property are deprecated"
                 + " and ignored because '{}' or '{}' is configured. They may be removed in the next"
@@ -215,7 +216,7 @@ class LogbackAppenderInstaller {
       return MdcAttributesConfiguration.selector(selector);
     }
 
-    if (deprecatedProperty != null) {
+    if (deprecated != null) {
       if (warnedDeprecatedProperties.add("deprecated")) {
         logger.warn(
             "The '{}' property and the equivalent declarative configuration property are"
@@ -224,20 +225,53 @@ class LogbackAppenderInstaller {
             DEPRECATED_MDC_ATTRIBUTES,
             MDC_ATTRIBUTES_INCLUDED);
       }
-      return MdcAttributesConfiguration.deprecated(deprecatedProperty);
+      // the deprecated appender setting splits its value on commas, so joining the configured keys
+      // reproduces them exactly, including the single "*" that selects every MDC key
+      return MdcAttributesConfiguration.deprecated(String.join(",", deprecated));
     }
 
     // an empty selector is equivalent to no selector at all, matching declarative configuration
     // where empty property values cannot be distinguished from unset ones
-    return includedProperty != null || excludedProperty != null
+    return included != null || excluded != null
         ? MdcAttributesConfiguration.selector(null)
         : MdcAttributesConfiguration.unconfigured();
   }
 
-  private static List<String> parseList(@Nullable String value) {
-    if (value == null) {
-      return emptyList();
+  /**
+   * Reads a list-valued property, which declarative configuration flattens into indexed properties
+   * (e.g. {@code ...included[0]}) and flat configuration provides as a comma-separated value.
+   * Returns {@code null} when the property is not configured at all.
+   *
+   * <p>{@link org.springframework.boot.context.properties.bind.Binder} is not used here because the
+   * declarative property names contain {@code /}, which is not a valid character in a canonical
+   * Spring configuration property name.
+   */
+  @Nullable
+  private static List<String> getLoggingListProperty(
+      ConfigurableEnvironment environment, String property) {
+    String propertyName = getEnvironmentPropertyName(environment, property);
+    String value = environment.getProperty(propertyName, String.class);
+    if (value != null) {
+      return parseList(value);
     }
+
+    List<String> values = new ArrayList<>();
+    boolean configured = false;
+    for (int i = 0; ; i++) {
+      String item = environment.getProperty(propertyName + "[" + i + "]", String.class);
+      if (item == null) {
+        break;
+      }
+      configured = true;
+      item = item.trim();
+      if (!item.isEmpty()) {
+        values.add(item);
+      }
+    }
+    return configured ? values : null;
+  }
+
+  private static List<String> parseList(String value) {
     return Arrays.stream(value.split(","))
         .map(String::trim)
         .filter(item -> !item.isEmpty())

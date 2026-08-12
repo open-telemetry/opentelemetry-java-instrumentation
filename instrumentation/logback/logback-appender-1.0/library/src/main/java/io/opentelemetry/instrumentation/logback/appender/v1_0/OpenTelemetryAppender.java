@@ -251,13 +251,15 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    *
    * <p>MDC keys and selector patterns are matched case-sensitively. {@code ?} matches any single
    * character and {@code *} matches any number of characters, including none, so {@code *} captures
-   * all MDC attributes. Excluded patterns take precedence over included patterns. No MDC attributes
-   * are captured when the selector is {@code null} or empty; a selector with only excluded patterns
-   * captures every MDC attribute that it does not exclude.
+   * all MDC attributes. Excluded patterns take precedence over included patterns, so a selector
+   * with only excluded patterns captures every MDC attribute that it does not exclude.
    *
-   * <p>A selector configured with this method takes precedence over {@link
-   * #setMdcAttributesIncluded(String)} and {@link #setMdcAttributesExcluded(String)}, which in turn
-   * take precedence over the deprecated {@link #setCaptureMdcAttributes(String)}.
+   * <p>A {@code null} or empty selector leaves this appender without a programmatic selector, in
+   * which case the MDC attributes are selected by {@link #setMdcAttributesIncluded(String)} and
+   * {@link #setMdcAttributesExcluded(String)}, or, when those are absent or empty too, by the
+   * deprecated {@link #setCaptureMdcAttributes(String)}. No MDC attributes are captured when all of
+   * these are absent or empty. Only a non-empty selector configured with this method takes
+   * precedence over the other settings.
    *
    * <p>MDC attributes are application-controlled and can contain sensitive data such as credentials
    * or personal information, so make sure that the captured keys are safe to export.
@@ -270,8 +272,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * Configures the comma-separated {@link MDC} key patterns that will be copied to logs.
    *
    * <p>This setter backs the {@code mdcAttributesIncluded} element in {@code logback.xml}. It is
-   * ignored when a selector is configured with {@link #setMdcAttributes(IncludeExclude)}, and it
-   * takes precedence over the deprecated {@link #setCaptureMdcAttributes(String)}.
+   * ignored when a non-empty selector is configured with {@link #setMdcAttributes(IncludeExclude)},
+   * and it takes precedence over the deprecated {@link #setCaptureMdcAttributes(String)}.
    *
    * <p>MDC keys and patterns are matched case-sensitively. {@code ?} matches any single character
    * and {@code *} matches any number of characters, including none, so {@code *} captures all MDC
@@ -285,8 +287,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * Configures the comma-separated {@link MDC} key patterns that will not be copied to logs.
    *
    * <p>This setter backs the {@code mdcAttributesExcluded} element in {@code logback.xml}. It is
-   * ignored when a selector is configured with {@link #setMdcAttributes(IncludeExclude)}, and it
-   * takes precedence over the deprecated {@link #setCaptureMdcAttributes(String)}.
+   * ignored when a non-empty selector is configured with {@link #setMdcAttributes(IncludeExclude)},
+   * and it takes precedence over the deprecated {@link #setCaptureMdcAttributes(String)}.
    *
    * <p>MDC keys and patterns are matched case-sensitively. {@code ?} matches any single character
    * and {@code *} matches any number of characters, including none. Excluded patterns take
@@ -301,9 +303,9 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * Configures the comma-separated {@link MDC} keys that will be copied to logs.
    *
    * <p>Keys are matched by exact, case-sensitive equality, except that the single value {@code *}
-   * captures all MDC attributes. This setting is ignored when {@link
-   * #setMdcAttributes(IncludeExclude)}, {@link #setMdcAttributesIncluded(String)} or {@link
-   * #setMdcAttributesExcluded(String)} is configured.
+   * captures all MDC attributes. This setting is ignored when a non-empty selector is configured
+   * with {@link #setMdcAttributes(IncludeExclude)}, {@link #setMdcAttributesIncluded(String)} or
+   * {@link #setMdcAttributesExcluded(String)}.
    *
    * @deprecated Use {@link #setMdcAttributesIncluded(String)} and {@link
    *     #setMdcAttributesExcluded(String)}, or {@link #setMdcAttributes(IncludeExclude)}, which
