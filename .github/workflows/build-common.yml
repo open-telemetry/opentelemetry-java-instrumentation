@@ -224,7 +224,7 @@ jobs:
 
       - name: Increase gradle daemon heap size
         run: |
-          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
+          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx4g /" gradle.properties
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
@@ -510,7 +510,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
-          cache-read-only: ${{ inputs.cache-read-only }}
+          cache-read-only: true
 
       - name: Build
         run: ./gradlew build ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
