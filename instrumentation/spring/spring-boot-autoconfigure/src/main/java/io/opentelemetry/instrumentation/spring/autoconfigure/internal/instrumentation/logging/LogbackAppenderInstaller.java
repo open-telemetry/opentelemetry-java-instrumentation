@@ -188,26 +188,35 @@ class LogbackAppenderInstaller {
     MdcAttributesConfiguration mdcAttributes =
         getMdcAttributes(applicationEnvironmentPreparedEvent.getEnvironment());
     if (mdcAttributes.configured) {
-      openTelemetryAppender.setMdcAttributes(mdcAttributes.selector);
+      mdcAttributes.applyTo(openTelemetryAppender);
     }
   }
 
   static MdcAttributesConfiguration getMdcAttributes(ConfigurableEnvironment environment) {
     String includedProperty = getLoggingProperty(environment, MDC_ATTRIBUTES_INCLUDED);
     String excludedProperty = getLoggingProperty(environment, MDC_ATTRIBUTES_EXCLUDED);
-    List<String> included = parseList(includedProperty);
-    List<String> excluded = parseList(excludedProperty);
     IncludeExclude selector =
-        IncludeExclude.builder().setIncluded(included).setExcluded(excluded).build();
-    if (!selector.isEmpty()) {
-      return MdcAttributesConfiguration.configured(selector);
-    }
-
-    boolean newSelectorConfigured = includedProperty != null || excludedProperty != null;
+        IncludeExclude.builder()
+            .setIncluded(parseList(includedProperty))
+            .setExcluded(parseList(excludedProperty))
+            .build();
 
     String deprecatedProperty = getLoggingProperty(environment, DEPRECATED_MDC_ATTRIBUTES);
+    if (!selector.isEmpty()) {
+      if (deprecatedProperty != null && warnedDeprecatedProperties.add("ignored")) {
+        logger.warn(
+            "The '{}' property and the equivalent declarative configuration property are deprecated"
+                + " and ignored because '{}' or '{}' is configured. They may be removed in the next"
+                + " minor release.",
+            DEPRECATED_MDC_ATTRIBUTES,
+            MDC_ATTRIBUTES_INCLUDED,
+            MDC_ATTRIBUTES_EXCLUDED);
+      }
+      return MdcAttributesConfiguration.selector(selector);
+    }
+
     if (deprecatedProperty != null) {
-      if (warnedDeprecatedProperties.add(DEPRECATED_MDC_ATTRIBUTES)) {
+      if (warnedDeprecatedProperties.add("deprecated")) {
         logger.warn(
             "The '{}' property and the equivalent declarative configuration property are"
                 + " deprecated and may be removed in the next minor release. Use '{}' or equivalent"
@@ -215,15 +224,13 @@ class LogbackAppenderInstaller {
             DEPRECATED_MDC_ATTRIBUTES,
             MDC_ATTRIBUTES_INCLUDED);
       }
-      List<String> deprecatedIncluded = parseList(deprecatedProperty);
-      return MdcAttributesConfiguration.configured(
-          deprecatedIncluded.isEmpty()
-              ? null
-              : IncludeExclude.builder().setIncluded(deprecatedIncluded).build());
+      return MdcAttributesConfiguration.deprecated(deprecatedProperty);
     }
 
-    return newSelectorConfigured
-        ? MdcAttributesConfiguration.configured(null)
+    // an empty selector is equivalent to no selector at all, matching declarative configuration
+    // where empty property values cannot be distinguished from unset ones
+    return includedProperty != null || excludedProperty != null
+        ? MdcAttributesConfiguration.selector(null)
         : MdcAttributesConfiguration.unconfigured();
   }
 
@@ -410,22 +417,41 @@ class LogbackAppenderInstaller {
 
   static final class MdcAttributesConfiguration {
     private static final MdcAttributesConfiguration UNCONFIGURED =
-        new MdcAttributesConfiguration(false, null);
+        new MdcAttributesConfiguration(false, null, null);
 
     private final boolean configured;
     @Nullable private final IncludeExclude selector;
+    @Nullable private final String deprecatedIncluded;
 
-    private static MdcAttributesConfiguration configured(@Nullable IncludeExclude selector) {
-      return new MdcAttributesConfiguration(true, selector);
+    private static MdcAttributesConfiguration selector(@Nullable IncludeExclude selector) {
+      return new MdcAttributesConfiguration(true, selector, null);
+    }
+
+    private static MdcAttributesConfiguration deprecated(String deprecatedIncluded) {
+      return new MdcAttributesConfiguration(true, null, deprecatedIncluded);
     }
 
     private static MdcAttributesConfiguration unconfigured() {
       return UNCONFIGURED;
     }
 
-    private MdcAttributesConfiguration(boolean configured, @Nullable IncludeExclude selector) {
+    private MdcAttributesConfiguration(
+        boolean configured,
+        @Nullable IncludeExclude selector,
+        @Nullable String deprecatedIncluded) {
       this.configured = configured;
       this.selector = selector;
+      this.deprecatedIncluded = deprecatedIncluded;
+    }
+
+    // configuration properties replace the MDC settings of an appender declared in logback.xml, so
+    // every source the appender resolves is set, including the ones that are not configured
+    @SuppressWarnings("deprecation") // the deprecated setter preserves the deprecated semantics
+    private void applyTo(OpenTelemetryAppender openTelemetryAppender) {
+      openTelemetryAppender.setMdcAttributes(selector);
+      openTelemetryAppender.setMdcAttributesIncluded(null);
+      openTelemetryAppender.setMdcAttributesExcluded(null);
+      openTelemetryAppender.setCaptureMdcAttributes(deprecatedIncluded);
     }
   }
 

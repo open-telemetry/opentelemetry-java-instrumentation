@@ -5,8 +5,7 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
+import static io.opentelemetry.instrumentation.logback.appender.v1_0.internal.MdcAttributeSelectors.split;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
@@ -17,8 +16,8 @@ import ch.qos.logback.core.spi.AppenderAttachable;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
+import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.MdcAttributeSelectors;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -27,6 +26,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
@@ -44,6 +44,9 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureLogstashMarkerAttributes = false;
   private boolean captureLogstashStructuredArguments = false;
   @Nullable private IncludeExclude mdcAttributes;
+  @Nullable private String mdcAttributesIncluded;
+  @Nullable private String mdcAttributesExcluded;
+  @Nullable private String captureMdcAttributes;
 
   private volatile OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
@@ -98,7 +101,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     mapper =
         LoggingEventMapper.builder()
             .setCaptureExperimentalAttributes(captureExperimentalAttributes)
-            .setMdcAttributes(mdcAttributes)
+            .setMdcAttributes(resolveMdcAttributes())
             .setCaptureCodeAttributes(captureCodeAttributes)
             .setCaptureMarkerAttribute(captureMarkerAttribute)
             .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
@@ -110,6 +113,28 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             .build();
     eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     super.start();
+  }
+
+  @Nullable
+  private Predicate<String> resolveMdcAttributes() {
+    Predicate<String> selector = MdcAttributeSelectors.create(mdcAttributes);
+    if (selector == null) {
+      selector =
+          MdcAttributeSelectors.create(
+              IncludeExclude.builder()
+                  .setIncluded(split(mdcAttributesIncluded))
+                  .setExcluded(split(mdcAttributesExcluded))
+                  .build());
+    }
+    if (selector != null) {
+      if (captureMdcAttributes != null) {
+        addWarn(
+            "The deprecated captureMdcAttributes setting of the OpenTelemetry appender is ignored"
+                + " because an MDC attribute selector is configured.");
+      }
+      return selector;
+    }
+    return MdcAttributeSelectors.createDeprecated(split(captureMdcAttributes));
   }
 
   @SuppressWarnings("SystemOut")
@@ -229,28 +254,64 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * all MDC attributes. Excluded patterns take precedence over included patterns. No MDC attributes
    * are captured when the selector is {@code null} or empty; a selector with only excluded patterns
    * captures every MDC attribute that it does not exclude.
+   *
+   * <p>A selector configured with this method takes precedence over {@link
+   * #setMdcAttributesIncluded(String)} and {@link #setMdcAttributesExcluded(String)}, which in turn
+   * take precedence over the deprecated {@link #setCaptureMdcAttributes(String)}.
+   *
+   * <p>MDC attributes are application-controlled and can contain sensitive data such as credentials
+   * or personal information, so make sure that the captured keys are safe to export.
    */
   public void setMdcAttributes(@Nullable IncludeExclude mdcAttributes) {
     this.mdcAttributes = mdcAttributes == null || mdcAttributes.isEmpty() ? null : mdcAttributes;
   }
 
   /**
-   * Configures the {@link MDC} attributes that will be copied to logs.
+   * Configures the comma-separated {@link MDC} key patterns that will be copied to logs.
    *
-   * <p>This setter backs the {@code captureMdcAttributes} element in {@code logback.xml} and is
-   * currently the only way to select MDC attributes from XML, because {@link
-   * #setMdcAttributes(IncludeExclude)} takes a type that Logback cannot construct from a
-   * configuration file.
+   * <p>This setter backs the {@code mdcAttributesIncluded} element in {@code logback.xml}. It is
+   * ignored when a selector is configured with {@link #setMdcAttributes(IncludeExclude)}, and it
+   * takes precedence over the deprecated {@link #setCaptureMdcAttributes(String)}.
    *
-   * @deprecated Use {@link #setMdcAttributes(IncludeExclude)} instead. May be removed in the next
-   *     minor release.
+   * <p>MDC keys and patterns are matched case-sensitively. {@code ?} matches any single character
+   * and {@code *} matches any number of characters, including none, so {@code *} captures all MDC
+   * attributes. Excluded patterns take precedence over included patterns.
+   */
+  public void setMdcAttributesIncluded(@Nullable String mdcAttributesIncluded) {
+    this.mdcAttributesIncluded = mdcAttributesIncluded;
+  }
+
+  /**
+   * Configures the comma-separated {@link MDC} key patterns that will not be copied to logs.
+   *
+   * <p>This setter backs the {@code mdcAttributesExcluded} element in {@code logback.xml}. It is
+   * ignored when a selector is configured with {@link #setMdcAttributes(IncludeExclude)}, and it
+   * takes precedence over the deprecated {@link #setCaptureMdcAttributes(String)}.
+   *
+   * <p>MDC keys and patterns are matched case-sensitively. {@code ?} matches any single character
+   * and {@code *} matches any number of characters, including none. Excluded patterns take
+   * precedence over included patterns, so configuring only excluded patterns captures every MDC
+   * attribute that they do not exclude.
+   */
+  public void setMdcAttributesExcluded(@Nullable String mdcAttributesExcluded) {
+    this.mdcAttributesExcluded = mdcAttributesExcluded;
+  }
+
+  /**
+   * Configures the comma-separated {@link MDC} keys that will be copied to logs.
+   *
+   * <p>Keys are matched by exact, case-sensitive equality, except that the single value {@code *}
+   * captures all MDC attributes. This setting is ignored when {@link
+   * #setMdcAttributes(IncludeExclude)}, {@link #setMdcAttributesIncluded(String)} or {@link
+   * #setMdcAttributesExcluded(String)} is configured.
+   *
+   * @deprecated Use {@link #setMdcAttributesIncluded(String)} and {@link
+   *     #setMdcAttributesExcluded(String)}, or {@link #setMdcAttributes(IncludeExclude)}, which
+   *     select MDC keys by glob pattern. May be removed in the next minor release.
    */
   @Deprecated // may be removed in the next minor release
-  public void setCaptureMdcAttributes(String attributes) {
-    List<String> included =
-        attributes == null ? emptyList() : filterBlanksAndNulls(attributes.split(","));
-    setMdcAttributes(
-        included.isEmpty() ? null : IncludeExclude.builder().setIncluded(included).build());
+  public void setCaptureMdcAttributes(@Nullable String captureMdcAttributes) {
+    this.captureMdcAttributes = captureMdcAttributes;
   }
 
   /**
@@ -300,10 +361,5 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   private void emit(OpenTelemetry openTelemetry, ILoggingEvent event) {
     mapper.emit(openTelemetry.getLogsBridge(), event, -1);
-  }
-
-  // copied from SDK's DefaultConfigProperties
-  private static List<String> filterBlanksAndNulls(String[] values) {
-    return Arrays.stream(values).map(String::trim).filter(s -> !s.isEmpty()).collect(toList());
   }
 }

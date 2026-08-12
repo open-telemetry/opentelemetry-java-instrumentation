@@ -22,6 +22,7 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
 
@@ -102,7 +103,8 @@ class LoggingEventMapperTest {
     LoggingEventMapper mapper =
         LoggingEventMapper.builder()
             .setMdcAttributes(
-                IncludeExclude.builder().setExcluded(singletonList("*secret*")).build())
+                MdcAttributeSelectors.create(
+                    IncludeExclude.builder().setExcluded(singletonList("*secret*")).build()))
             .build();
     Map<String, String> contextData = new HashMap<>();
     contextData.put("request-id", "123");
@@ -120,10 +122,11 @@ class LoggingEventMapperTest {
     LoggingEventMapper mapper =
         LoggingEventMapper.builder()
             .setMdcAttributes(
-                IncludeExclude.builder()
-                    .setIncluded(singletonList("request-*"))
-                    .setExcluded(singletonList("*-secret"))
-                    .build())
+                MdcAttributeSelectors.create(
+                    IncludeExclude.builder()
+                        .setIncluded(singletonList("request-*"))
+                        .setExcluded(singletonList("*-secret"))
+                        .build()))
             .build();
     Map<String, String> contextData = new HashMap<>();
     contextData.put("request-id", "123");
@@ -139,7 +142,9 @@ class LoggingEventMapperTest {
   @Test
   void testEmptySelectorCapturesNothing() {
     LoggingEventMapper mapper =
-        LoggingEventMapper.builder().setMdcAttributes(IncludeExclude.builder().build()).build();
+        LoggingEventMapper.builder()
+            .setMdcAttributes(MdcAttributeSelectors.create(IncludeExclude.builder().build()))
+            .build();
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     LogRecordBuilder builder = mock(LogRecordBuilder.class);
@@ -251,7 +256,8 @@ class LoggingEventMapperTest {
     verifyNoMoreInteractions(builder);
   }
 
-  private static IncludeExclude include(String... patterns) {
-    return IncludeExclude.builder().setIncluded(asList(patterns)).build();
+  private static Predicate<String> include(String... patterns) {
+    return MdcAttributeSelectors.create(
+        IncludeExclude.builder().setIncluded(asList(patterns)).build());
   }
 }

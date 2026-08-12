@@ -23,8 +23,13 @@
   minor release.
   ([#19519](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19519))
 - Deprecate the Logback appender `experimental.capture-mdc-attributes` configuration property and
-  `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of include/exclude MDC attribute
-  selectors and `OpenTelemetryAppender#setMdcAttributes(IncludeExclude)`.
+  `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of the new
+  `experimental.mdc-attributes.included` and `experimental.mdc-attributes.excluded` selectors, which
+  are also available in `logback.xml` as `mdcAttributesIncluded` and `mdcAttributesExcluded` and
+  programmatically as `OpenTelemetryAppender#setMdcAttributes(IncludeExclude)`. The deprecated
+  setting continues to select MDC keys literally, except that the single value `*` selects every MDC
+  key, and it may be removed in the next minor release.
+  ([#19520](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19520))
 - Deprecate `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` and
   `io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental#setPreferJfrMetrics(RuntimeTelemetryBuilder, boolean)`
   in favor of `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included` and
@@ -58,6 +63,17 @@
   `MessagingProducerMetrics.getForOperationType()` and
   `MessagingConsumerMetrics.getForOperationType()`.
   ([#19357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19357))
+
+### 📈 Enhancements
+
+- Add `otel.instrumentation.logback-appender.experimental.mdc-attributes.included` and
+  `otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded`, which select the MDC
+  keys captured as log attributes using case-sensitive glob patterns where `?` matches one character
+  and `*` matches any number of characters. Excluded patterns take precedence over included
+  patterns, and configuring only excluded patterns captures every MDC attribute that they do not
+  exclude. The same selector is available in `logback.xml` as `mdcAttributesIncluded` and
+  `mdcAttributesExcluded`.
+  ([#19520](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19520))
 
 ## Version 2.30.0 (2026-07-22)
 

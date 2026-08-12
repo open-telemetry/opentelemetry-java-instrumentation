@@ -24,7 +24,6 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.lang.reflect.Array;
@@ -37,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import net.logstash.logback.marker.LogstashMarker;
 import net.logstash.logback.marker.MapEntriesAppendingMarker;
@@ -75,7 +75,7 @@ public final class LoggingEventMapper {
       AttributeKey.stringArrayKey("log.body.parameters");
 
   private final boolean captureExperimentalAttributes;
-  @Nullable private final IncludeExclude mdcAttributes;
+  @Nullable private final Predicate<String> mdcAttributes;
   private final boolean captureCodeAttributes;
   private final boolean captureMarkerAttribute;
   private final boolean captureKeyValuePairAttributes;
@@ -95,10 +95,7 @@ public final class LoggingEventMapper {
     this.captureArguments = builder.captureArguments;
     this.captureLogstashMarkerAttributes = builder.captureLogstashMarkerAttributes;
     this.captureLogstashStructuredArguments = builder.captureLogstashStructuredArguments;
-    this.mdcAttributes =
-        builder.mdcAttributes == null || builder.mdcAttributes.isEmpty()
-            ? null
-            : builder.mdcAttributes;
+    this.mdcAttributes = builder.mdcAttributes;
   }
 
   public static Builder builder() {
@@ -266,7 +263,7 @@ public final class LoggingEventMapper {
     }
     for (Map.Entry<String, String> entry : mdcProperties.entrySet()) {
       String key = entry.getKey();
-      if (!OTEL_EVENT_NAME.getKey().equals(key) && mdcAttributes.matches(key)) {
+      if (!OTEL_EVENT_NAME.getKey().equals(key) && mdcAttributes.test(key)) {
         builder.setAttribute(getAttributeKey(key), entry.getValue());
       }
     }
@@ -682,7 +679,7 @@ public final class LoggingEventMapper {
    */
   public static final class Builder {
     private boolean captureExperimentalAttributes;
-    @Nullable private IncludeExclude mdcAttributes;
+    @Nullable private Predicate<String> mdcAttributes;
     private boolean captureCodeAttributes;
     private boolean captureMarkerAttribute;
     private boolean captureKeyValuePairAttributes;
@@ -700,8 +697,12 @@ public final class LoggingEventMapper {
       return this;
     }
 
+    /**
+     * Sets the selector that decides which MDC keys are captured as log attributes. A {@code null}
+     * selector captures no MDC attributes.
+     */
     @CanIgnoreReturnValue
-    public Builder setMdcAttributes(@Nullable IncludeExclude mdcAttributes) {
+    public Builder setMdcAttributes(@Nullable Predicate<String> mdcAttributes) {
       this.mdcAttributes = mdcAttributes;
       return this;
     }

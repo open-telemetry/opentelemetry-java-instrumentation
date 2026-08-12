@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
@@ -12,11 +13,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -26,10 +27,10 @@ import org.junit.jupiter.api.Test;
 class LogbackConfigTest {
 
   @AfterEach
-  void clearWarning() throws ReflectiveOperationException {
-    Field field = LogbackConfig.class.getDeclaredField("warnedDeprecatedProperty");
+  void clearWarnings() throws ReflectiveOperationException {
+    Field field = LogbackConfig.class.getDeclaredField("warnings");
     field.setAccessible(true);
-    ((AtomicBoolean) field.get(null)).set(false);
+    ((Set<?>) field.get(null)).clear();
   }
 
   @Test
@@ -38,42 +39,81 @@ class LogbackConfigTest {
     when(config.get("mdc_attributes/development").getScalarList("excluded", String.class))
         .thenReturn(singletonList("*-secret"));
 
-    LogbackConfig logbackConfig = new LogbackConfig(config);
+    Predicate<String> mdcAttributes = new LogbackConfig(config).getMdcAttributes();
 
-    IncludeExclude mdcAttributes = logbackConfig.getMdcAttributes();
     assertThat(mdcAttributes).isNotNull();
-    assertThat(mdcAttributes.getIncluded()).isEmpty();
-    assertThat(mdcAttributes.getExcluded()).containsExactly("*-secret");
+    assertThat(mdcAttributes.test("request-id")).isTrue();
+    assertThat(mdcAttributes.test("request-secret")).isFalse();
   }
 
   @Test
-  void newSelectorTakesPrecedenceOverDeprecatedConfig() {
+  void readsGlobPatterns() {
+    DeclarativeConfigProperties config = mockConfig();
+    when(config.get("mdc_attributes/development").getScalarList("included", String.class))
+        .thenReturn(asList("request-*", "user-?"));
+
+    Predicate<String> mdcAttributes = new LogbackConfig(config).getMdcAttributes();
+
+    assertThat(mdcAttributes).isNotNull();
+    assertThat(mdcAttributes.test("request-id")).isTrue();
+    assertThat(mdcAttributes.test("user-1")).isTrue();
+    assertThat(mdcAttributes.test("user-name")).isFalse();
+  }
+
+  @Test
+  void emptySelectorSelectsNothing() {
+    assertThat(new LogbackConfig(mockConfig()).getMdcAttributes()).isNull();
+  }
+
+  @Test
+  void newSelectorTakesPrecedenceOverDeprecatedConfigAndWarnsOnce() {
     DeclarativeConfigProperties config = mockConfig();
     when(config.get("mdc_attributes/development").getScalarList("included", String.class))
         .thenReturn(singletonList("new"));
-    when(config.getScalarList("capture_mdc_attributes/development", String.class))
-        .thenReturn(singletonList("deprecated"));
-
-    LogbackConfig logbackConfig = new LogbackConfig(config);
-
-    assertThat(logbackConfig.getMdcAttributes().getIncluded()).containsExactly("new");
-  }
-
-  @Test
-  void deprecatedConfigIsIncludeOnlyFallbackAndWarnsOnce() {
-    DeclarativeConfigProperties config = mockConfig();
     when(config.getScalarList("capture_mdc_attributes/development", String.class))
         .thenReturn(singletonList("deprecated"));
     Logger logger = Logger.getLogger(LogbackConfig.class.getName());
     TestHandler handler = new TestHandler();
     logger.addHandler(handler);
     try {
-      LogbackConfig first = new LogbackConfig(config);
-      LogbackConfig second = new LogbackConfig(config);
+      Predicate<String> mdcAttributes = new LogbackConfig(config).getMdcAttributes();
+      new LogbackConfig(config);
 
-      assertThat(first.getMdcAttributes().getIncluded()).containsExactly("deprecated");
-      assertThat(first.getMdcAttributes().getExcluded()).isEmpty();
-      assertThat(second.getMdcAttributes()).isEqualTo(first.getMdcAttributes());
+      assertThat(mdcAttributes).isNotNull();
+      assertThat(mdcAttributes.test("new")).isTrue();
+      assertThat(mdcAttributes.test("deprecated")).isFalse();
+      assertThat(handler.records).hasSize(1);
+      assertThat(handler.records.get(0).getMessage())
+          .isEqualTo(
+              "The otel.instrumentation.logback-appender.experimental.capture-mdc-attributes"
+                  + " setting and the equivalent declarative configuration property are deprecated"
+                  + " and ignored because"
+                  + " otel.instrumentation.logback-appender.experimental.mdc-attributes.included or"
+                  + " otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded is"
+                  + " configured. They may be removed in the next minor release.");
+    } finally {
+      logger.removeHandler(handler);
+    }
+  }
+
+  @Test
+  void deprecatedConfigSelectsKeysLiterallyAndWarnsOnce() {
+    DeclarativeConfigProperties config = mockConfig();
+    when(config.getScalarList("capture_mdc_attributes/development", String.class))
+        .thenReturn(asList("*", "key?", "userId"));
+    Logger logger = Logger.getLogger(LogbackConfig.class.getName());
+    TestHandler handler = new TestHandler();
+    logger.addHandler(handler);
+    try {
+      Predicate<String> mdcAttributes = new LogbackConfig(config).getMdcAttributes();
+      new LogbackConfig(config);
+
+      assertThat(mdcAttributes).isNotNull();
+      assertThat(mdcAttributes.test("*")).isTrue();
+      assertThat(mdcAttributes.test("key?")).isTrue();
+      assertThat(mdcAttributes.test("userId")).isTrue();
+      assertThat(mdcAttributes.test("key1")).isFalse();
+      assertThat(mdcAttributes.test("anything")).isFalse();
       assertThat(handler.records).hasSize(1);
       assertThat(handler.records.get(0).getMessage())
           .isEqualTo(
@@ -85,6 +125,18 @@ class LogbackConfigTest {
     } finally {
       logger.removeHandler(handler);
     }
+  }
+
+  @Test
+  void deprecatedConfigSelectsEverythingWithSoleWildcard() {
+    DeclarativeConfigProperties config = mockConfig();
+    when(config.getScalarList("capture_mdc_attributes/development", String.class))
+        .thenReturn(singletonList("*"));
+
+    Predicate<String> mdcAttributes = new LogbackConfig(config).getMdcAttributes();
+
+    assertThat(mdcAttributes).isNotNull();
+    assertThat(mdcAttributes.test("anything")).isTrue();
   }
 
   private static DeclarativeConfigProperties mockConfig() {

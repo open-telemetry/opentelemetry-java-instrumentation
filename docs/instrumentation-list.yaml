@@ -791,7 +791,7 @@ definitions:
       name: otel.instrumentation.logback-appender.experimental.capture-mdc-attributes
       declarative_name: java.logback_appender.capture_mdc_attributes/development
       description: |
-        Deprecated include-only alias for otel.instrumentation.logback-appender.experimental.mdc-attributes.included. It may be removed in the next minor release.
+        Deprecated comma-separated list of MDC keys to capture as log attributes. Keys are matched literally, including "*" and "?", except that the single value "*" captures all MDC attributes. It is ignored when otel.instrumentation.logback-appender.experimental.mdc-attributes.included or otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded is configured, and it may be removed in the next minor release. Use otel.instrumentation.logback-appender.experimental.mdc-attributes.included instead.
       type: list
       default: ''
       examples:
