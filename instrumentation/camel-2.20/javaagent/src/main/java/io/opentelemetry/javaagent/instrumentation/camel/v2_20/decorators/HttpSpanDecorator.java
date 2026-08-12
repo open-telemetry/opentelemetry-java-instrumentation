@@ -56,11 +56,6 @@ class HttpSpanDecorator extends BaseSpanDecorator {
     return "http";
   }
 
-  @Override
-  public boolean isHttp() {
-    return true;
-  }
-
   protected static String getHttpMethod(Exchange exchange, Endpoint endpoint) {
     // 1. Use method provided in header.
     Object method = exchange.getIn().getHeader(Exchange.HTTP_METHOD);
