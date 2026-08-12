@@ -1,0 +1,42 @@
+---
+id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+name: model_amazonnova-micro-v10_converse-stream_empty_tool_args
+request:
+  url: /model/amazon.nova-micro-v1%3A0/converse-stream
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "role" : "user",
+          "content" : [ {
+            "text" : "What time is it?"
+          } ]
+        } ],
+        "toolConfig" : {
+          "tools" : [ {
+            "toolSpec" : {
+              "name" : "get_server_time",
+              "description" : "Get the current server time.",
+              "inputSchema" : {
+                "json" : {
+                  "type" : "object",
+                  "properties" : { }
+                }
+              }
+            }
+          } ]
+        }
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  base64Body: AAAAnQAAAFLJ0QwQCzpldmVudC10eXBlBwAMbWVzc2FnZVN0YXJ0DTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsicm9sZSI6ImFzc2lzdGFudCIsInAiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRiJ94fNKfAAAAPwAAABXHemmYgs6ZXZlbnQtdHlwZQcAEWNvbnRlbnRCbG9ja1N0YXJ0DTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiY29udGVudEJsb2NrSW5kZXgiOjAsInAiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRiIsInN0YXJ0Ijp7InRvb2xVc2UiOnsibmFtZSI6ImdldF9zZXJ2ZXJfdGltZSIsInRvb2xVc2VJZCI6InRvb2x1c2VfZW1wdHlfcGFyYW1zX3Rlc3QifX19ecyMJQAAAKQAAABWYo0S/gs6ZXZlbnQtdHlwZQcAEGNvbnRlbnRCbG9ja1N0b3ANOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJjb250ZW50QmxvY2tJbmRleCI6MCwicCI6ImFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6QUJDREVGIn07lyU5AAAAlQAAAFFgqBZrCzpldmVudC10eXBlBwALbWVzc2FnZVN0b3ANOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJwIjoiYWJjZGVmZ2hpamtsbW5vcHFyc3QiLCJzdG9wUmVhc29uIjoidG9vbF91c2UifUV9XIkAAADgAAAATtySdCELOmV2ZW50LXR5cGUHAAhtZXRhZGF0YQ06Y29udGVudC10eXBlBwAQYXBwbGljYXRpb24vanNvbg06bWVzc2FnZS10eXBlBwAFZXZlbnR7Im1ldHJpY3MiOnsibGF0ZW5jeU1zIjoxMDB9LCJwIjoiYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXpBQkNERUYiLCJ1c2FnZSI6eyJpbnB1dFRva2VucyI6NTAsIm91dHB1dFRva2VucyI6MTAsInRvdGFsVG9rZW5zIjo2MH198F6oVg==
+  headers:
+    Date: "Mon, 18 May 2026 10:00:00 GMT"
+    Content-Type: application/vnd.amazon.eventstream
+    x-amzn-RequestId: test-empty-tool-args-request-id
+uuid: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+persistent: true
+insertionIndex: 100

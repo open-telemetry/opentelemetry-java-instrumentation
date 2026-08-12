@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_31.incuba
 
 import io.opentelemetry.api.incubator.metrics.ExtendedDoubleCounterBuilder;
 import io.opentelemetry.api.metrics.DoubleCounterBuilder;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace.Bridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationDoubleCounterBuilder;
 import java.util.List;
 

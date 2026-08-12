@@ -20,6 +20,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   @Nullable AttributeKey<String> oldSemconvTableAttribute = DB_SQL_TABLE;
   boolean querySanitizationEnabled = true;
   boolean captureQueryParameters = false;
+  boolean singleOperationAndCollection = false;
 
   SqlClientAttributesExtractorBuilder(SqlClientAttributesGetter<REQUEST, RESPONSE> getter) {
     this.getter = getter;
@@ -67,11 +68,30 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
+   * Sets whether {@code db.operation.name} and {@code db.collection.name} can be derived from
+   * {@code db.query.text}.
+   *
+   * <p>Enable this only when the database system does not support query text with multiple
+   * operations or multiple collections in non-batch operations. For most instrumentations, enabling
+   * this will produce invalid semantic conventions.
+   */
+  @CanIgnoreReturnValue
+  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setSingleOperationAndCollection(
+      boolean singleOperationAndCollection) {
+    this.singleOperationAndCollection = singleOperationAndCollection;
+    return this;
+  }
+
+  /**
    * Returns a new {@link SqlClientAttributesExtractor} with the settings of this {@link
    * SqlClientAttributesExtractorBuilder}.
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
     return new SqlClientAttributesExtractor<>(
-        getter, oldSemconvTableAttribute, querySanitizationEnabled, captureQueryParameters);
+        getter,
+        oldSemconvTableAttribute,
+        querySanitizationEnabled,
+        captureQueryParameters,
+        singleOperationAndCollection);
   }
 }

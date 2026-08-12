@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace.Bridging;
 
 final class ApplicationObservableDoubleMeasurement
     implements application.io.opentelemetry.api.metrics.ObservableDoubleMeasurement,

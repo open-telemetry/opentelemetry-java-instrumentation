@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_38.incuba
 
 import io.opentelemetry.api.incubator.metrics.ExtendedLongGaugeBuilder;
 import io.opentelemetry.api.metrics.LongGaugeBuilder;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace.Bridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_38.metrics.ApplicationLongGaugeBuilder138;
 import java.util.List;
 

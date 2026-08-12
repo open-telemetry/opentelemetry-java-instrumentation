@@ -9,6 +9,8 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.MeterBuilder;
+import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import java.util.ArrayList;
 import java.util.List;
 import oshi.SystemInfo;
@@ -19,6 +21,9 @@ import oshi.hardware.NetworkIF;
 
 /** System Metrics Utility. */
 public final class SystemMetrics {
+
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.oshi-5.0";
+
   private static final AttributeKey<String> DEVICE_KEY = AttributeKey.stringKey("device");
   private static final AttributeKey<String> DIRECTION_KEY = AttributeKey.stringKey("direction");
 
@@ -29,7 +34,17 @@ public final class SystemMetrics {
 
   /** Register observers for system metrics. */
   public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
-    Meter meter = openTelemetry.getMeterProvider().get("io.opentelemetry.oshi");
+    return registerObservers(buildMeter(openTelemetry));
+  }
+
+  /**
+   * Like {@link #registerObservers(OpenTelemetry)}, but accepts a pre-built {@link Meter}.
+   *
+   * @deprecated Exists only so the javaagent can emit the pre-rename {@code io.opentelemetry.oshi}
+   *     scope by default; to be removed in 3.0 once v3-preview becomes the default.
+   */
+  @Deprecated
+  public static List<AutoCloseable> registerObservers(Meter meter) {
     SystemInfo systemInfo = new SystemInfo();
     HardwareAbstractionLayer hal = systemInfo.getHardware();
     List<AutoCloseable> observables = new ArrayList<>();
@@ -146,6 +161,15 @@ public final class SystemMetrics {
                 }));
 
     return observables;
+  }
+
+  private static Meter buildMeter(OpenTelemetry openTelemetry) {
+    MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(INSTRUMENTATION_NAME);
+    String version = EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME);
+    if (version != null) {
+      meterBuilder.setInstrumentationVersion(version);
+    }
+    return meterBuilder.build();
   }
 
   private SystemMetrics() {}

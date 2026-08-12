@@ -1,20 +1,20 @@
 pluginManagement {
   plugins {
-    id("com.github.jk1.dependency-license-report") version "3.1.2"
-    id("com.google.cloud.tools.jib") version "3.5.3"
+    id("com.github.jk1.dependency-license-report") version "3.1.4"
+    id("com.google.cloud.tools.jib") version "3.5.4"
     id("com.gradle.plugin-publish") version "2.1.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.3.21"
+    id("org.jetbrains.kotlin.jvm") version "2.4.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.1"
-    id("org.graalvm.buildtools.native") version "1.1.1"
+    id("org.graalvm.buildtools.native") version "1.1.8"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
 }
 
 plugins {
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.6.0"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.8.0"
   id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.4.2"
+  id("com.gradle.develocity") version "4.5.0"
 }
 
 dependencyResolutionManagement {
@@ -183,7 +183,7 @@ include(":smoke-tests-otel-starter:spring-boot-reactive-common")
 
 include(":instrumentation:activej-http-6.0:javaagent")
 include(":instrumentation:akka:akka-actor-2.3:javaagent")
-include(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
+include(":instrumentation:akka:akka-actor-forkjoin-2.5:javaagent")
 include(":instrumentation:akka:akka-http-10.0:javaagent")
 include(":instrumentation:alibaba-druid-1.0:javaagent")
 include(":instrumentation:alibaba-druid-1.0:library")
@@ -306,6 +306,11 @@ include(":instrumentation:grpc-1.6:testing")
 include(":instrumentation:guava-10.0:javaagent")
 include(":instrumentation:guava-10.0:library")
 include(":instrumentation:gwt-2.0:javaagent")
+include(":instrumentation:hbase:hbase-client-1.0:javaagent")
+include(":instrumentation:hbase:hbase-client-1.4:javaagent")
+include(":instrumentation:hbase:hbase-client-2.0:javaagent")
+include(":instrumentation:hbase:hbase-client-common-1.0:javaagent")
+include(":instrumentation:hbase:hbase-client-common-1.0:testing")
 include(":instrumentation:helidon-4.3:javaagent")
 include(":instrumentation:helidon-4.3:library")
 include(":instrumentation:helidon-4.3:testing")
@@ -390,10 +395,11 @@ include(":instrumentation:jboss-logmanager:jboss-logmanager-appender-1.1:javaage
 include(":instrumentation:jboss-logmanager:jboss-logmanager-mdc-1.1:javaagent")
 include(":instrumentation:jdbc:bootstrap")
 include(":instrumentation:jdbc:javaagent")
+include(":instrumentation:jdbc:javaagent-common")
 include(":instrumentation:jdbc:library")
 include(":instrumentation:jdbc:testing")
 include(":instrumentation:jedis:jedis-1.4:javaagent")
-include(":instrumentation:jedis:jedis-1.4:testing")
+include(":instrumentation:jedis:jedis-2.0:javaagent")
 include(":instrumentation:jedis:jedis-3.0:javaagent")
 include(":instrumentation:jedis:jedis-4.0:javaagent")
 include(":instrumentation:jedis:jedis-common-1.4:javaagent")
@@ -529,11 +535,13 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.56:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.57:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.59:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.61:testing")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.63:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.65:javaagent")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")
-include(":instrumentation:opentelemetry-instrumentation-api:javaagent")
-include(":instrumentation:opentelemetry-instrumentation-api:testing")
+include(":instrumentation:opentelemetry-instrumentation-api:opentelemetry-instrumentation-api-1.14:javaagent")
+include(":instrumentation:opentelemetry-instrumentation-api:opentelemetry-instrumentation-api-1.14:testing")
 include(":instrumentation:oracle-ucp-11.2:javaagent")
 include(":instrumentation:oracle-ucp-11.2:library")
 include(":instrumentation:oracle-ucp-11.2:testing")
@@ -615,7 +623,7 @@ include(":instrumentation:rxjava:rxjava-3.1.1:javaagent")
 include(":instrumentation:rxjava:rxjava-3.1.1:library")
 include(":instrumentation:rxjava:rxjava-common-3.0:library")
 include(":instrumentation:rxjava:rxjava-common-3.0:testing")
-include(":instrumentation:scala-fork-join-2.8:javaagent")
+include(":instrumentation:scala-forkjoin-2.8:javaagent")
 include(":instrumentation:servlet:servlet-2.2:javaagent")
 include(":instrumentation:servlet:servlet-3.0:javaagent")
 include(":instrumentation:servlet:servlet-3.0:javaagent-testing")
@@ -633,6 +641,10 @@ include(":instrumentation:servlet:servlet-common:bootstrap")
 include(":instrumentation:servlet:servlet-common:javaagent")
 include(":instrumentation:servlet:servlet-common:library")
 include(":instrumentation:servlet:servlet-common-javax:library")
+include(":instrumentation:sofa-rpc-5.4:javaagent")
+include(":instrumentation:sofa-rpc-5.4:library")
+include(":instrumentation:sofa-rpc-5.4:library-autoconfigure")
+include(":instrumentation:sofa-rpc-5.4:testing")
 include(":instrumentation:spark-2.3:javaagent")
 include(":instrumentation:spring:spring-batch-3.0:javaagent")
 include(":instrumentation:spring:spring-boot-actuator-autoconfigure-2.0:javaagent")

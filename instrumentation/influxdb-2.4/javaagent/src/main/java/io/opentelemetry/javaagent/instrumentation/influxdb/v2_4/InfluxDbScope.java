@@ -5,32 +5,35 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
-import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.instrumenter;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import javax.annotation.Nullable;
 
 /** Container used to carry state between enter and exit advices */
-public class InfluxDbScope {
-  private final InfluxDbRequest influxDbRequest;
+public class InfluxDbScope<REQUEST> {
+  private final Instrumenter<REQUEST, Void> instrumenter;
+  private final REQUEST request;
   private final Context context;
   private final Scope scope;
 
-  private InfluxDbScope(InfluxDbRequest influxDbRequest, Context context, Scope scope) {
-    this.influxDbRequest = influxDbRequest;
+  private InfluxDbScope(
+      Instrumenter<REQUEST, Void> instrumenter, REQUEST request, Context context, Scope scope) {
+    this.instrumenter = instrumenter;
+    this.request = request;
     this.context = context;
     this.scope = scope;
   }
 
-  public static InfluxDbScope start(Context parentContext, InfluxDbRequest influxDbRequest) {
-    Context context = instrumenter().start(parentContext, influxDbRequest);
-    return new InfluxDbScope(influxDbRequest, context, context.makeCurrent());
+  public static <REQUEST> InfluxDbScope<REQUEST> start(
+      Instrumenter<REQUEST, Void> instrumenter, Context parentContext, REQUEST request) {
+    Context context = instrumenter.start(parentContext, request);
+    return new InfluxDbScope<>(instrumenter, request, context, context.makeCurrent());
   }
 
   public void end(@Nullable Throwable throwable) {
     scope.close();
 
-    instrumenter().end(context, influxDbRequest, null, throwable);
+    instrumenter.end(context, request, null, throwable);
   }
 }

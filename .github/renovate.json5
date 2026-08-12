@@ -1,13 +1,15 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    "github>grafana/flint#v0.22.4",
+    "github>grafana/flint#v0.22.10",
     'config:best-practices',
     'helpers:pinGitHubActionDigestsToSemver',
     ':semanticCommits',
   ],
   ignorePaths: [
-    'instrumentation/**',
+    // instrumentation modules intentionally pin old library versions in order to test the oldest
+    // supported version, so renovate must not update their build files
+    'instrumentation/**/*.gradle.kts',
   ],
   packageRules: [
 
@@ -35,6 +37,24 @@
         '* 0-7 * * 2', // weekly, before 8am on Tuesday
       ],
       groupName: 'weekly update',
+    },
+    {
+      // gh-aw updates need a dedicated branch so CI can regenerate their workflow lockfiles
+      matchPackageNames: [
+        'github/gh-aw',
+      ],
+      groupName: 'gh-aw',
+    },
+    {
+      // do not update these workflow lockfiles
+      matchManagers: [
+        'github-actions',
+      ],
+      matchFileNames: [
+        '.github/workflows/module-cleanup.lock.yml',
+        '.github/workflows/pr-review.lock.yml',
+      ],
+      enabled: false,
     },
     {
       // keep Kotlin Gradle plugin updates out of the catch-all patch PR because CodeQL often
@@ -386,6 +406,18 @@
     },
   ],
   customManagers: [
+    {
+      customType: 'regex',
+      datasourceTemplate: 'github-releases',
+      depNameTemplate: 'github/gh-aw',
+      versioningTemplate: 'semver-coerced',
+      managerFilePatterns: [
+        '.github/scripts/compile-gh-aw-workflows.sh',
+      ],
+      matchStrings: [
+        'gh extension install github/gh-aw --pin (?<currentValue>v\\d+\\.\\d+\\.\\d+)',
+      ],
+    },
 // commented out to see whether weekly update passes without this block
 //    {
 //      customType: 'regex',
@@ -431,6 +463,16 @@
       ],
       matchStrings: [
         'npx (?<depName>[^@]+)@(?<currentValue>[^\\s]+)',
+      ],
+    },
+    {
+      customType: 'regex',
+      datasourceTemplate: 'docker',
+      managerFilePatterns: [
+        '**/*.java',
+      ],
+      matchStrings: [
+        '"(?<depName>otel/weaver):(?<currentValue>[^"]+)"',
       ],
     },
   ],

@@ -5,20 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
-import apache.rocketmq.v2.ReceiveMessageRequest;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import java.util.List;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
 import org.apache.rocketmq.client.apis.message.MessageView;
@@ -28,44 +31,58 @@ import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 final class RocketMqInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rocketmq-client-5.0";
 
+  // messaging.operation.name values, named after the RocketMQ API operations
+  private static final String SEND_OPERATION_NAME = "send";
+  private static final String RECEIVE_OPERATION_NAME = "receive";
+  private static final String PROCESS_OPERATION_NAME = "process";
+
   private RocketMqInstrumenterFactory() {}
 
   public static Instrumenter<PublishingMessageImpl, SendReceiptImpl> createProducerInstrumenter(
       OpenTelemetry openTelemetry, List<String> capturedHeaders) {
     RocketMqProducerAttributeGetter getter = new RocketMqProducerAttributeGetter();
-    MessageOperation operation = MessageOperation.PUBLISH;
+    MessagingOperationType operationType = MessagingOperationType.SEND;
 
     AttributesExtractor<PublishingMessageImpl, SendReceiptImpl> attributesExtractor =
-        buildMessagingAttributesExtractor(getter, operation, capturedHeaders);
+        buildMessagingAttributesExtractor(
+            getter, operationType, SEND_OPERATION_NAME, capturedHeaders);
 
     InstrumenterBuilder<PublishingMessageImpl, SendReceiptImpl> instrumenterBuilder =
         Instrumenter.<PublishingMessageImpl, SendReceiptImpl>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operation))
+                MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME))
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(new RocketMqProducerAttributeExtractor());
+    setMessagingSendExceptionEventExtractor(instrumenterBuilder);
     return instrumenterBuilder.buildProducerInstrumenter(new MessageMapSetter());
   }
 
-  public static Instrumenter<ReceiveMessageRequest, List<MessageView>>
+  public static Instrumenter<RocketMqReceiveRequest, List<MessageView>>
       createConsumerReceiveInstrumenter(
           OpenTelemetry openTelemetry, List<String> capturedHeaders, boolean enabled) {
     RocketMqConsumerReceiveAttributeGetter getter = new RocketMqConsumerReceiveAttributeGetter();
-    MessageOperation operation = MessageOperation.RECEIVE;
+    MessagingOperationType operationType = MessagingOperationType.RECEIVE;
 
-    AttributesExtractor<ReceiveMessageRequest, List<MessageView>> attributesExtractor =
-        buildMessagingAttributesExtractor(getter, operation, capturedHeaders);
+    AttributesExtractor<RocketMqReceiveRequest, List<MessageView>> attributesExtractor =
+        buildMessagingAttributesExtractor(
+            getter, operationType, RECEIVE_OPERATION_NAME, capturedHeaders);
 
-    InstrumenterBuilder<ReceiveMessageRequest, List<MessageView>> instrumenterBuilder =
-        Instrumenter.<ReceiveMessageRequest, List<MessageView>>builder(
+    InstrumenterBuilder<RocketMqReceiveRequest, List<MessageView>> instrumenterBuilder =
+        Instrumenter.<RocketMqReceiveRequest, List<MessageView>>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operation))
+                MessagingSpanNameExtractor.create(getter, operationType, RECEIVE_OPERATION_NAME))
             .setEnabled(enabled)
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(new RocketMqConsumerReceiveAttributeExtractor());
-    return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    if (emitStableMessagingSemconv()) {
+      instrumenterBuilder.addSpanLinksExtractor(
+          new RocketMqReceiveSpanLinksExtractor(
+              openTelemetry.getPropagators().getTextMapPropagator()));
+    }
+    setMessagingReceiveExceptionEventExtractor(instrumenterBuilder);
+    return instrumenterBuilder.buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
   public static Instrumenter<MessageView, ConsumeResult> createConsumerProcessInstrumenter(
@@ -73,16 +90,17 @@ final class RocketMqInstrumenterFactory {
       List<String> capturedHeaders,
       boolean receiveInstrumentationEnabled) {
     RocketMqConsumerProcessAttributeGetter getter = new RocketMqConsumerProcessAttributeGetter();
-    MessageOperation operation = MessageOperation.PROCESS;
+    MessagingOperationType operationType = MessagingOperationType.PROCESS;
 
     AttributesExtractor<MessageView, ConsumeResult> attributesExtractor =
-        buildMessagingAttributesExtractor(getter, operation, capturedHeaders);
+        buildMessagingAttributesExtractor(
+            getter, operationType, PROCESS_OPERATION_NAME, capturedHeaders);
 
     InstrumenterBuilder<MessageView, ConsumeResult> instrumenterBuilder =
         Instrumenter.<MessageView, ConsumeResult>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operation))
+                MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(new RocketMqConsumerProcessAttributeExtractor())
             .setSpanStatusExtractor(
@@ -94,22 +112,21 @@ final class RocketMqInstrumenterFactory {
                         .extract(spanStatusBuilder, messageView, consumeResult, error);
                   }
                 });
+    setMessagingProcessExceptionEventExtractor(instrumenterBuilder);
 
-    if (receiveInstrumentationEnabled) {
-      SpanLinksExtractor<MessageView> spanLinksExtractor =
-          new PropagatorBasedSpanLinksExtractor<>(
-              openTelemetry.getPropagators().getTextMapPropagator(), new MessageMapGetter());
-      instrumenterBuilder.addSpanLinksExtractor(spanLinksExtractor);
-      return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
-    }
-    return instrumenterBuilder.buildConsumerInstrumenter(new MessageMapGetter());
+    return MessagingProcessInstrumenterFactory.create(
+        instrumenterBuilder,
+        openTelemetry.getPropagators().getTextMapPropagator(),
+        new MessageMapGetter(),
+        receiveInstrumentationEnabled);
   }
 
   private static <T, R> AttributesExtractor<T, R> buildMessagingAttributesExtractor(
       MessagingAttributesGetter<T, R> getter,
-      MessageOperation operation,
+      MessagingOperationType operationType,
+      String operationName,
       List<String> capturedHeaders) {
-    return MessagingAttributesExtractor.builder(getter, operation)
+    return MessagingAttributesExtractor.builder(getter, operationType, operationName)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }

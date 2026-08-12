@@ -10,7 +10,9 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -25,11 +27,14 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
+import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import java.time.Duration;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.junit.jupiter.api.AfterAll;
@@ -52,7 +57,9 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
 
   @Container
   private static final CassandraContainer cassandra =
-      new CassandraContainer("cassandra:3.11.2").withExposedPorts(9042);
+      new CassandraContainer("cassandra:3.11.2")
+          .withEnv("MAX_HEAP_SIZE", "128M")
+          .withExposedPorts(9042);
 
   private static String host;
 
@@ -95,10 +102,17 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
   }
 
   static void cassandraSetup() {
+    DriverConfigLoader configLoader =
+        DriverConfigLoader.programmaticBuilder()
+            .withDuration(DefaultDriverOption.REQUEST_TIMEOUT, Duration.ofSeconds(0))
+            .withDuration(DefaultDriverOption.CONNECTION_INIT_QUERY_TIMEOUT, Duration.ofSeconds(10))
+            .build();
+
     try (CqlSession cqlSession =
         CqlSession.builder()
             .addContactPoint(cassandra.getContactPoint())
             .withLocalDatacenter(cassandra.getLocalDatacenter())
+            .withConfigLoader(configLoader)
             .build()) {
       cqlSession.execute(
           "CREATE KEYSPACE IF NOT EXISTS test WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};");
@@ -133,11 +147,11 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                           .hasAttributesSatisfyingExactly(
                               equalTo(stringKey("camel.uri"), experimental("direct://input"))),
                   span ->
-                      span.hasName("SELECT test.users")
+                      span.hasName("select test.users")
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              satisfies(NETWORK_TYPE, val -> val.isInstanceOf(String.class)),
+                              equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
                               equalTo(SERVER_ADDRESS, host),
                               equalTo(SERVER_PORT, cassandraPort),
                               satisfies(
@@ -145,10 +159,12 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
                               equalTo(DB_SYSTEM_NAME, CASSANDRA),
                               equalTo(DB_NAMESPACE, "test"),
+                              equalTo(DB_OPERATION_NAME, "select"),
+                              equalTo(DB_COLLECTION_NAME, "test.users"),
                               equalTo(
                                   DB_QUERY_TEXT,
                                   "select * from test.users where id=1 ALLOW FILTERING"),
-                              equalTo(DB_QUERY_SUMMARY, "SELECT test.users"))));
+                              equalTo(DB_QUERY_SUMMARY, "select test.users"))));
     } else {
       testing.waitAndAssertTraces(
           trace ->

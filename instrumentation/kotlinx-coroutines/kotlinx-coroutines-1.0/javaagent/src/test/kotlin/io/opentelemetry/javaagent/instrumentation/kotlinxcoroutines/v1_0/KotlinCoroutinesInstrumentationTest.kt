@@ -80,6 +80,8 @@ class KotlinCoroutinesInstrumentationTest {
 
   val tracer = testing.openTelemetry.getTracer("test")
 
+  private fun v3Preview(): Boolean = java.lang.Boolean.getBoolean("otel.instrumentation.common.v3-preview")
+
   @ParameterizedTest
   @MethodSource("dispatchersSourceArguments")
   fun `cancellation prevents trace`(dispatcher: DispatcherWrapper) {
@@ -377,6 +379,11 @@ class KotlinCoroutinesInstrumentationTest {
       annotated1()
     }
 
+    if (v3Preview()) {
+      assertThat(testing.spans()).isEmpty()
+      return
+    }
+
     val assertions = codeFunctionAssertions(this.javaClass, "annotated2")
     assertions.add(equalTo(AttributeKey.longKey("byteValue"), 1))
     assertions.add(equalTo(AttributeKey.longKey("intValue"), 4))
@@ -437,6 +444,11 @@ class KotlinCoroutinesInstrumentationTest {
     runBlocking {
       val classDefaultConstructorArguments = ClazzWithDefaultConstructorArguments()
       classDefaultConstructorArguments.sayHello()
+    }
+
+    if (v3Preview()) {
+      assertThat(testing.spans()).isEmpty()
+      return
     }
 
     testing.waitAndAssertTraces(

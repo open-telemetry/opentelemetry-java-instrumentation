@@ -13,7 +13,6 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.couchbase.v3_1.shaded.com.couchbase.client.tracing.opentelemetry.OpenTelemetryRequestTracer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -40,7 +39,7 @@ class CouchbaseEnvironmentInstrumentation implements TypeInstrumentation {
               ? "io.opentelemetry.couchbase-3.1"
               : "io.opentelemetry.javaagent.couchbase-3.1";
       builder.requestTracer(
-          OpenTelemetryRequestTracer.wrap(GlobalOpenTelemetry.getTracer(instrumentationName)));
+          CouchbaseRequestTracer.create(GlobalOpenTelemetry.getTracer(instrumentationName)));
     }
   }
 }

@@ -236,7 +236,8 @@ class MetricAggregationTest {
     BeanAttributeExtractor beanExtractor = BeanAttributeExtractor.fromName("Value");
     MetricExtractor extractor = new MetricExtractor(beanExtractor, metricInfo, attributes);
     extractors.add(extractor);
-    MetricDef metricDef = new MetricDef(BeanGroup.forBeans(singletonList(mbean)), extractors);
+    MetricDef metricDef =
+        new MetricDef(BeanGroup.forBeans(singletonList(mbean)), extractors, emptyList());
 
     metricConfiguration.addMetricDef(metricDef);
     metricInsight.startLocal(metricConfiguration);

@@ -12,7 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.extension.kotlin.ContextExtensionsKt;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.context.AgentContextStorage;
 import javax.annotation.Nullable;
 import kotlin.coroutines.CoroutineContext;
 import net.bytebuddy.asm.Advice;

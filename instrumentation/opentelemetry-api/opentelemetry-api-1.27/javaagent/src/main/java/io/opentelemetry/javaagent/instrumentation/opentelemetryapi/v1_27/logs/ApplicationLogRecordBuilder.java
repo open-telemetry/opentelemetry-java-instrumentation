@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.LogRecordBuilder;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.ValueBridging;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.ValueBridging;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.context.AgentContextStorage;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace.Bridging;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 

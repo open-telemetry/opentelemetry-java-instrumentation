@@ -5,11 +5,14 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
@@ -36,18 +39,19 @@ public final class MongoInstrumenterFactory {
       boolean querySanitizationEnabled,
       int maxNormalizedQueryLength) {
 
-    MongoAttributesExtractor attributesExtractor = new MongoAttributesExtractor();
     MongoDbAttributesGetter dbAttributesGetter =
         new MongoDbAttributesGetter(querySanitizationEnabled, maxNormalizedQueryLength);
     SpanNameExtractor<CommandStartedEvent> spanNameExtractor =
-        new MongoSpanNameExtractor(dbAttributesGetter, attributesExtractor);
+        new MongoSpanNameExtractor(dbAttributesGetter);
 
-    return Instrumenter.<CommandStartedEvent, Void>builder(
-            openTelemetry, instrumentationName, spanNameExtractor)
-        .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-        .addAttributesExtractor(attributesExtractor)
-        .addOperationMetrics(DbClientMetrics.get())
-        .buildInstrumenter(SpanKindExtractor.alwaysClient());
+    InstrumenterBuilder<CommandStartedEvent, Void> builder =
+        Instrumenter.<CommandStartedEvent, Void>builder(
+                openTelemetry, instrumentationName, spanNameExtractor)
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(new MongoAttributesExtractor(dbAttributesGetter))
+            .addOperationMetrics(DbClientMetrics.get());
+    setDbClientExceptionEventExtractor(builder);
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   private MongoInstrumenterFactory() {}

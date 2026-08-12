@@ -39,6 +39,12 @@ class SystemMetricsTest extends AbstractSystemMetricsTest {
     return testing;
   }
 
+  @Override
+  @SuppressWarnings("deprecation") // overriding a deprecated abstract method
+  protected String scopeName() {
+    return "io.opentelemetry.oshi-5.0";
+  }
+
   @Test
   void verifyObservablesAreNotEmpty() {
     assertThat(observables).isNotEmpty();

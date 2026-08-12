@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // uses the deprecated scopeName() bridge
 public abstract class AbstractSystemMetricsTest {
 
   private static final AttributeKey<String> STATE = AttributeKey.stringKey("state");
@@ -19,6 +20,13 @@ public abstract class AbstractSystemMetricsTest {
   protected abstract void registerMetrics();
 
   protected abstract InstrumentationExtension testing();
+
+  /**
+   * @deprecated Exists only so the javaagent test can pin the pre-rename {@code
+   *     io.opentelemetry.oshi} scope; to be removed in 3.0 once v3-preview becomes the default.
+   */
+  @Deprecated
+  protected abstract String scopeName();
 
   @Test
   void test() {
@@ -28,7 +36,7 @@ public abstract class AbstractSystemMetricsTest {
     // then
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.oshi",
+            scopeName(),
             "system.memory.usage",
             metrics ->
                 metrics.anySatisfy(
@@ -50,7 +58,7 @@ public abstract class AbstractSystemMetricsTest {
                                                 .hasValueSatisfying(v -> v.isNotNegative())))));
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.oshi",
+            scopeName(),
             "system.memory.utilization",
             metrics ->
                 metrics.anySatisfy(
@@ -72,14 +80,14 @@ public abstract class AbstractSystemMetricsTest {
                                                 .hasValueSatisfying(v -> v.isNotNegative())))));
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.oshi",
+            scopeName(),
             "system.network.io",
             metrics ->
                 metrics.anySatisfy(
                     metric -> assertThat(metric).hasUnit("By").hasLongSumSatisfying(sum -> {})));
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.oshi",
+            scopeName(),
             "system.network.packets",
             metrics ->
                 metrics.anySatisfy(
@@ -87,7 +95,7 @@ public abstract class AbstractSystemMetricsTest {
                         assertThat(metric).hasUnit("{packets}").hasLongSumSatisfying(sum -> {})));
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.oshi",
+            scopeName(),
             "system.network.errors",
             metrics ->
                 metrics.anySatisfy(
@@ -95,14 +103,14 @@ public abstract class AbstractSystemMetricsTest {
                         assertThat(metric).hasUnit("{errors}").hasLongSumSatisfying(sum -> {})));
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.oshi",
+            scopeName(),
             "system.disk.io",
             metrics ->
                 metrics.anySatisfy(
                     metric -> assertThat(metric).hasUnit("By").hasLongSumSatisfying(sum -> {})));
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.oshi",
+            scopeName(),
             "system.disk.operations",
             metrics ->
                 metrics.anySatisfy(

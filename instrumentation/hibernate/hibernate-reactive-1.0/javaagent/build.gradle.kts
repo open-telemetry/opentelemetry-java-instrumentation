@@ -27,7 +27,7 @@ dependencies {
 
 testing {
   suites {
-    val hibernateReactive1Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("hibernateReactive1Test") {
       dependencies {
         implementation("org.testcontainers:testcontainers")
         implementation("org.hibernate.reactive:hibernate-reactive-core:${baseVersion("1.0.0.Final").orLatest("1.+")}")
@@ -36,7 +36,7 @@ testing {
       }
     }
 
-    val hibernateReactive2Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("hibernateReactive2Test") {
       dependencies {
         implementation("org.testcontainers:testcontainers")
         implementation(project(":instrumentation:hibernate:hibernate-reactive-1.0:hibernate-reactive-2.0-testing"))
@@ -46,7 +46,7 @@ testing {
       }
     }
 
-    val hibernateReactive4Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("hibernateReactive4Test") {
       dependencies {
         implementation("org.testcontainers:testcontainers")
         implementation(project(":instrumentation:hibernate:hibernate-reactive-1.0:hibernate-reactive-2.0-testing"))

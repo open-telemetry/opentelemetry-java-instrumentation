@@ -110,9 +110,24 @@ def progress(message: str) -> None:
     print(f"[pr-triage] {message}", flush=True)
 
 
-def run(cmd: list[str], summary: Summary | None = None, check: bool = True) -> subprocess.CompletedProcess[str]:
+def run(
+    cmd: list[str],
+    summary: Summary | None = None,
+    check: bool = True,
+    *,
+    stream_output: bool = False,
+) -> subprocess.CompletedProcess[str]:
     if summary is not None:
         progress(f"Running: {format_cmd(cmd)}")
+    if stream_output:
+        return subprocess.run(
+            cmd,
+            cwd=REPO_ROOT,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=check,
+        )
     return subprocess.run(
         cmd,
         cwd=REPO_ROOT,

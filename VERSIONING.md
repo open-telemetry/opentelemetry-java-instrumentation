@@ -12,7 +12,7 @@ compatible, including public Java APIs and user-facing configuration. Backward-i
 to stable artifacts are only allowed when incrementing the `MAJOR` version number, except for the
 following configuration changes:
 
-- Changes to configuration properties that contain the word `experimental`.
+- Changes to configuration properties that contain the word `experimental` or `preview`.
 - Changes to configuration properties under the namespace `otel.javaagent.testing`.
 
 This means that:

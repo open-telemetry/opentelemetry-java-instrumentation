@@ -20,9 +20,6 @@ dependencies {
   testImplementation("org.hsqldb:hsqldb:2.0.0")
   testImplementation("com.h2database:h2:1.4.197")
   testImplementation("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")
-
-  // latest version of spring data is not yet compatible with spring 7 yet
-  latestDepTestLibrary("org.springframework:spring-test:6.+") // documented limitation
 }
 
 otelJava {
@@ -31,7 +28,7 @@ otelJava {
 
 testing {
   suites {
-    val reactiveTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("reactiveTest") {
       dependencies {
         implementation("org.springframework.data:spring-data-r2dbc:3.0.0")
         implementation("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")

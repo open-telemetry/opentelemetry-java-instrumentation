@@ -1,0 +1,159 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_63.incubator.logs;
+
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
+
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.KeyValue;
+import io.opentelemetry.api.common.Value;
+import io.opentelemetry.api.common.ValueType;
+import io.opentelemetry.api.incubator.logs.ExtendedLogger;
+import io.opentelemetry.api.logs.Logger;
+import io.opentelemetry.api.logs.Severity;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.sdk.trace.IdGenerator;
+import java.time.Instant;
+import java.util.stream.Stream;
+import org.assertj.core.api.AbstractCharSequenceAssert;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+class LoggerTest {
+
+  @RegisterExtension
+  static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  private String instrumentationName;
+  private Logger logger;
+
+  @BeforeEach
+  void setupLogger(TestInfo test) {
+    instrumentationName = "test-" + test.getDisplayName();
+    logger =
+        GlobalOpenTelemetry.get()
+            .getLogsBridge()
+            .loggerBuilder(instrumentationName)
+            .setInstrumentationVersion("1.2.3")
+            .setSchemaUrl("http://schema.org")
+            .build();
+  }
+
+  @Test
+  void logRecordBuilder() {
+    assertThat(logger).isInstanceOf(ExtendedLogger.class);
+
+    SpanContext spanContext =
+        SpanContext.create(
+            IdGenerator.random().generateTraceId(),
+            IdGenerator.random().generateSpanId(),
+            TraceFlags.getDefault(),
+            TraceState.getDefault());
+
+    ((ExtendedLogger) logger)
+        .logRecordBuilder()
+        .setEventName("eventName")
+        .setTimestamp(1, SECONDS)
+        .setTimestamp(Instant.now())
+        .setContext(Context.current().with(Span.wrap(spanContext)))
+        .setSeverity(Severity.DEBUG)
+        .setSeverityText("debug")
+        .setBody("body")
+        .setAttribute(stringKey("key"), "value")
+        .setAllAttributes(Attributes.builder().put("key", "value").build())
+        .setException(new RuntimeException("exception"))
+        .emit();
+
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing.logRecords())
+                    .satisfiesExactly(
+                        logRecordData -> {
+                          assertThat(logRecordData.getInstrumentationScopeInfo().getName())
+                              .isEqualTo(instrumentationName);
+                          assertThat(logRecordData.getEventName()).isEqualTo("eventName");
+                          assertThat(logRecordData.getInstrumentationScopeInfo().getVersion())
+                              .isEqualTo("1.2.3");
+                          assertThat(logRecordData.getTimestampEpochNanos()).isGreaterThan(0);
+                          assertThat(logRecordData.getSpanContext()).isEqualTo(spanContext);
+                          assertThat(logRecordData.getSeverity()).isEqualTo(Severity.DEBUG);
+                          assertThat(logRecordData.getSeverityText()).isEqualTo("debug");
+                          assertThat(logRecordData.getBodyValue().getType())
+                              .isEqualTo(ValueType.STRING);
+                          assertThat(logRecordData.getBodyValue().getValue()).isEqualTo("body");
+                          assertThat(logRecordData)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(stringKey("key"), "value"),
+                                  equalTo(EXCEPTION_MESSAGE, "exception"),
+                                  equalTo(EXCEPTION_TYPE, RuntimeException.class.getName()),
+                                  satisfies(
+                                      EXCEPTION_STACKTRACE,
+                                      AbstractCharSequenceAssert::isNotEmpty));
+                        }));
+  }
+
+  private static Stream<Arguments> bodyValues() {
+    return Stream.of(
+        Arguments.of(Value.of("hello")),
+        Arguments.of(Value.of(42)),
+        Arguments.of(Value.of(42.42)),
+        Arguments.of(Value.of(true)),
+        Arguments.of(Value.of(new byte[] {4, 2})),
+        Arguments.of(Value.of(Value.of("hello"), Value.of(42))),
+        Arguments.of(Value.of(KeyValue.of("key", Value.of(42)))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("bodyValues")
+  void logBodyValue(Value<?> value) {
+    logger.logRecordBuilder().setBody(value).emit();
+
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing.logRecords())
+                    .satisfiesExactly(
+                        logRecordData -> {
+                          assertThat(logRecordData.getBodyValue().getType())
+                              .isEqualTo(value.getType());
+                          assertThat(logRecordData.getBodyValue().getValue())
+                              .isEqualTo(value.getValue());
+                        }));
+  }
+
+  @Test
+  void logNullBody() {
+    Value<?> value = null;
+    logger.logRecordBuilder().setBody(value).emit();
+
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing.logRecords())
+                    .satisfiesExactly(
+                        logRecordData -> assertThat(logRecordData.getBodyValue()).isNull()));
+  }
+}

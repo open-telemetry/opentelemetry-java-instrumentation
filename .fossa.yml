@@ -186,6 +186,9 @@ targets:
       target: ':instrumentation:jdbc:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:jdbc:javaagent-common'
+    - type: gradle
+      path: ./
       target: ':instrumentation:jdbc:library'
     - type: gradle
       path: ./
@@ -220,9 +223,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:opentelemetry-instrumentation-api:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:oracle-ucp-11.2:javaagent'
@@ -279,7 +279,16 @@ targets:
       target: ':instrumentation:runtime-telemetry:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:scala-fork-join-2.8:javaagent'
+      target: ':instrumentation:scala-forkjoin-2.8:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:sofa-rpc-5.4:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:sofa-rpc-5.4:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:sofa-rpc-5.4:library-autoconfigure'
     - type: gradle
       path: ./
       target: ':instrumentation:spark-2.3:javaagent'
@@ -324,7 +333,7 @@ targets:
       target: ':instrumentation:akka:akka-actor-2.3:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:akka:akka-actor-fork-join-2.5:javaagent'
+      target: ':instrumentation:akka:akka-actor-forkjoin-2.5:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:akka:akka-http-10.0:javaagent'
@@ -507,6 +516,18 @@ targets:
       target: ':instrumentation:graphql-java:graphql-java-common-12.0:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:hbase:hbase-client-1.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:hbase:hbase-client-1.4:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:hbase:hbase-client-2.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:hbase:hbase-client-common-1.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:hibernate:hibernate-3.3:javaagent'
     - type: gradle
       path: ./
@@ -586,6 +607,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:jedis:jedis-1.4:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:jedis:jedis-2.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jedis:jedis-3.0:javaagent'
@@ -847,6 +871,15 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.59:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.63:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.65:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opentelemetry-instrumentation-api:opentelemetry-instrumentation-api-1.14:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:pekko:pekko-actor-1.0:javaagent'

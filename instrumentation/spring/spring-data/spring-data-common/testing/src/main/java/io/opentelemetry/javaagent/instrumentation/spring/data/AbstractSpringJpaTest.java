@@ -83,7 +83,7 @@ public abstract class AbstractSpringJpaTest<
                 .hasAttributesSatisfyingExactly(codeFunctionAssertions(repoClassName, "save")),
         span ->
             span.hasName(
-                    emitStableDatabaseSemconv() ? "INSERT JpaCustomer" : "INSERT test.JpaCustomer")
+                    emitStableDatabaseSemconv() ? "insert JpaCustomer" : "INSERT test.JpaCustomer")
                 .hasKind(SpanKind.CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
@@ -95,7 +95,7 @@ public abstract class AbstractSpringJpaTest<
                     satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("insert ")),
                     equalTo(
                         DB_QUERY_SUMMARY,
-                        emitStableDatabaseSemconv() ? "INSERT JpaCustomer" : null),
+                        emitStableDatabaseSemconv() ? "insert JpaCustomer" : null),
                     equalTo(
                         maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "INSERT"),
                     equalTo(
@@ -116,7 +116,7 @@ public abstract class AbstractSpringJpaTest<
                       if (emitStableDatabaseSemconv()) {
                         // Hibernate 5.x uses "hibernate_sequence", 6.x+ uses "JpaCustomer_SEQ"
                         assertThat(spanData.getName())
-                            .isIn("CALL hibernate_sequence", "CALL JpaCustomer_SEQ");
+                            .isIn("call hibernate_sequence", "call JpaCustomer_SEQ");
                       } else {
                         assertThat(spanData.getName()).isEqualTo("CALL test");
                       }
@@ -133,7 +133,7 @@ public abstract class AbstractSpringJpaTest<
                         DB_QUERY_SUMMARY,
                         val -> {
                           if (emitStableDatabaseSemconv()) {
-                            val.isIn("CALL hibernate_sequence", "CALL JpaCustomer_SEQ");
+                            val.isIn("call hibernate_sequence", "call JpaCustomer_SEQ");
                           } else {
                             val.isNull();
                           }
@@ -142,7 +142,7 @@ public abstract class AbstractSpringJpaTest<
                         maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "CALL")),
         span ->
             span.hasName(
-                    emitStableDatabaseSemconv() ? "INSERT JpaCustomer" : "INSERT test.JpaCustomer")
+                    emitStableDatabaseSemconv() ? "insert JpaCustomer" : "INSERT test.JpaCustomer")
                 .hasKind(SpanKind.CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
@@ -154,7 +154,7 @@ public abstract class AbstractSpringJpaTest<
                     satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("insert ")),
                     equalTo(
                         DB_QUERY_SUMMARY,
-                        emitStableDatabaseSemconv() ? "INSERT JpaCustomer" : null),
+                        emitStableDatabaseSemconv() ? "insert JpaCustomer" : null),
                     equalTo(
                         maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "INSERT"),
                     equalTo(
@@ -184,7 +184,7 @@ public abstract class AbstractSpringJpaTest<
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT JpaCustomer"
+                                ? "select JpaCustomer"
                                 : "SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
@@ -198,7 +198,7 @@ public abstract class AbstractSpringJpaTest<
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select ")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT JpaCustomer" : null),
+                                emitStableDatabaseSemconv() ? "select JpaCustomer" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -231,7 +231,7 @@ public abstract class AbstractSpringJpaTest<
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT JpaCustomer"
+                                ? "select JpaCustomer"
                                 : "SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
@@ -245,7 +245,7 @@ public abstract class AbstractSpringJpaTest<
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select ")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT JpaCustomer" : null),
+                                emitStableDatabaseSemconv() ? "select JpaCustomer" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -255,7 +255,7 @@ public abstract class AbstractSpringJpaTest<
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "UPDATE JpaCustomer"
+                                ? "update JpaCustomer"
                                 : "UPDATE test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
@@ -269,7 +269,7 @@ public abstract class AbstractSpringJpaTest<
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("update ")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "UPDATE JpaCustomer" : null),
+                                emitStableDatabaseSemconv() ? "update JpaCustomer" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "UPDATE"),
@@ -290,7 +290,7 @@ public abstract class AbstractSpringJpaTest<
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT JpaCustomer"
+                                ? "select JpaCustomer"
                                 : "SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
@@ -304,7 +304,7 @@ public abstract class AbstractSpringJpaTest<
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select ")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT JpaCustomer" : null),
+                                emitStableDatabaseSemconv() ? "select JpaCustomer" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -325,7 +325,7 @@ public abstract class AbstractSpringJpaTest<
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT JpaCustomer"
+                                ? "select JpaCustomer"
                                 : "SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
@@ -339,7 +339,7 @@ public abstract class AbstractSpringJpaTest<
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select ")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT JpaCustomer" : null),
+                                emitStableDatabaseSemconv() ? "select JpaCustomer" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -349,7 +349,7 @@ public abstract class AbstractSpringJpaTest<
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "DELETE JpaCustomer"
+                                ? "delete JpaCustomer"
                                 : "DELETE test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
@@ -363,7 +363,7 @@ public abstract class AbstractSpringJpaTest<
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("delete ")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "DELETE JpaCustomer" : null),
+                                emitStableDatabaseSemconv() ? "delete JpaCustomer" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "DELETE"),
@@ -391,7 +391,7 @@ public abstract class AbstractSpringJpaTest<
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT JpaCustomer"
+                                ? "select JpaCustomer"
                                 : "SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
@@ -405,7 +405,7 @@ public abstract class AbstractSpringJpaTest<
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select ")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT JpaCustomer" : null),
+                                emitStableDatabaseSemconv() ? "select JpaCustomer" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
@@ -446,7 +446,7 @@ public abstract class AbstractSpringJpaTest<
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()
-                                ? "SELECT JpaCustomer"
+                                ? "select JpaCustomer"
                                 : "SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
@@ -460,7 +460,7 @@ public abstract class AbstractSpringJpaTest<
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select ")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT JpaCustomer" : null),
+                                emitStableDatabaseSemconv() ? "select JpaCustomer" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),

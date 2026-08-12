@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
+import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * Parser for Microsoft SQL Server JDBC URLs.
@@ -53,7 +55,11 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     }
 
     // Layer 3: URL params (SQL Server-specific: servername)
-    ctx.applyCommonParams(jdbcUrl, ";", ";");
+    // Parse semicolon-delimited parameters once and apply both standard and
+    // MSSQL-specific properties from the same map to avoid re-parsing the URL.
+    Map<String, String> urlParams = UrlParsingUtils.extractSemicolonParams(jdbcUrl);
+    ctx.applyCommonParams(urlParams);
+    applyDatabaseAliasParam(ctx, urlParams);
 
     // Layer 4: Parse URL structure (host:port/path)
     String instanceName = parseUrlWithInstance(jdbcUrl, ctx);
@@ -125,11 +131,12 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     // SQL Server-specific: Extract backslash-separated instance name (host\instance)
     int instanceLoc = serverName.indexOf("\\");
     if (instanceLoc > 0) {
-      if (hostPort.ipv6Address() != null) {
+      String ipv6Address = hostPort.ipv6Address();
+      if (ipv6Address != null) {
         int closingBracket = serverName.lastIndexOf(']');
         int instanceEnd = closingBracket > instanceLoc ? closingBracket : serverName.length();
         instanceName = serverName.substring(instanceLoc + 1, instanceEnd);
-        serverName = "[" + hostPort.ipv6Address() + "]";
+        serverName = ipv6Address;
       } else {
         instanceName = serverName.substring(instanceLoc + 1);
         serverName = serverName.substring(0, instanceLoc);
@@ -141,6 +148,33 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     }
 
     return instanceName;
+  }
+
+  /**
+   * Apply the {@code database} URL parameter alias when {@code databasename} has not already been
+   * set by {@link ParseContext#applyCommonParams(Map)}.
+   */
+  private static void applyDatabaseAliasParam(ParseContext ctx, Map<String, String> params) {
+    if (ctx.databaseName() != null) {
+      return;
+    }
+    String databaseName = getDatabaseNameParam(params);
+    if (databaseName != null) {
+      ctx.databaseName(databaseName);
+    }
+  }
+
+  /**
+   * Resolve the SQL Server database name from URL parameters, trying {@code databasename} first and
+   * falling back to {@code database}. Returns {@code null} if neither key has a non-empty value.
+   */
+  @Nullable
+  static String getDatabaseNameParam(Map<String, String> params) {
+    String databaseName = params.get("databasename");
+    if (databaseName == null || databaseName.isEmpty()) {
+      databaseName = params.get("database");
+    }
+    return databaseName == null || databaseName.isEmpty() ? null : databaseName;
   }
 
   /**

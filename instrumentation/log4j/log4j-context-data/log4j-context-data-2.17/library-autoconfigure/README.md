@@ -44,11 +44,11 @@ will be added to the context when a log statement is made when a span is active:
 
 These keys can be customized using the following system properties or environment variables:
 
-| System property                                       | Environment variable                              |
-|-------------------------------------------------------|---------------------------------------------------|
-| `otel.instrumentation.common.logging.trace-id`        | `OTEL_INSTRUMENTATION_COMMON_LOGGING_TRACE_ID`    |
-| `otel.instrumentation.common.logging.span-id`         | `OTEL_INSTRUMENTATION_COMMON_LOGGING_SPAN_ID`     |
-| `otel.instrumentation.common.logging.trace-flags`     | `OTEL_INSTRUMENTATION_COMMON_LOGGING_TRACE_FLAGS` |
+| System property                                       | Environment variable                                  |
+| ----------------------------------------------------- | ----------------------------------------------------- |
+| `otel.instrumentation.common.logging.trace-id-key`    | `OTEL_INSTRUMENTATION_COMMON_LOGGING_TRACE_ID_KEY`    |
+| `otel.instrumentation.common.logging.span-id-key`     | `OTEL_INSTRUMENTATION_COMMON_LOGGING_SPAN_ID_KEY`     |
+| `otel.instrumentation.common.logging.trace-flags-key` | `OTEL_INSTRUMENTATION_COMMON_LOGGING_TRACE_FLAGS_KEY` |
 
 If the `otel.instrumentation.log4j-context-data.add-baggage` system property (or the
 `OTEL_INSTRUMENTATION_LOG4J_CONTEXT_DATA_ADD_BAGGAGE` environment variable) is set to `true`,

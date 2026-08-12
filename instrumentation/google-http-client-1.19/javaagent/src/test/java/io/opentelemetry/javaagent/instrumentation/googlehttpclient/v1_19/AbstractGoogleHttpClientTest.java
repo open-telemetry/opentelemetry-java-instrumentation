@@ -64,7 +64,7 @@ abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTest<HttpR
 
     HttpRequest request = requestFactory.buildRequest(method, genericUrl, null);
     request.setConnectTimeout((int) connectTimeout().toMillis());
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       request.setReadTimeout((int) readTimeout().toMillis());
     }
 

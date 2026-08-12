@@ -20,7 +20,7 @@ dependencies {
 }
 
 tasks {
-  val testPrometheusMode by registering(Test::class) {
+  val testPrometheusMode = register<Test>("testPrometheusMode") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -30,7 +30,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.micrometer.prometheus-mode.enabled=true")
   }
 
-  val testBaseTimeUnit by registering(Test::class) {
+  val testBaseTimeUnit = register<Test>("testBaseTimeUnit") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -40,7 +40,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.micrometer.base-time-unit=milliseconds")
   }
 
-  val testHistogramGauges by registering(Test::class) {
+  val testHistogramGauges = register<Test>("testHistogramGauges") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
@@ -48,6 +48,17 @@ tasks {
     }
     include("**/*HistogramGaugesTest.*")
     jvmArgs("-Dotel.instrumentation.micrometer.histogram-gauges.enabled=true")
+  }
+
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("*TimerMillisecondsTest")
+      excludeTestsMatching("*PrometheusModeTest")
+      excludeTestsMatching("*HistogramGaugesTest")
+    }
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
   }
 
   test {
@@ -59,7 +70,7 @@ tasks {
   }
 
   check {
-    dependsOn(testBaseTimeUnit, testPrometheusMode, testHistogramGauges)
+    dependsOn(testBaseTimeUnit, testPrometheusMode, testHistogramGauges, testV3Preview)
   }
 
   withType<Test>().configureEach {

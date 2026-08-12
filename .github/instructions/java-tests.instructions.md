@@ -25,12 +25,12 @@ modules). Skip them on production sources.
 
 Prefer built-in AssertJ collection/string/map assertions over manual extraction:
 
-| Anti-pattern | Idiomatic |
-| --- | --- |
-| `assertThat(list.size()).isEqualTo(N)` | `assertThat(list).hasSize(N)` |
-| `assertThat(list.isEmpty()).isTrue()` / `.hasSize(0)` | `assertThat(list).isEmpty()` |
-| `assertThat(list.contains(x)).isTrue()` | `assertThat(list).contains(x)` |
-| per-index `get(i)` checks of every element | `assertThat(list).containsExactly(a, b, ...)` |
+| Anti-pattern                                          | Idiomatic                                     |
+| ----------------------------------------------------- | --------------------------------------------- |
+| `assertThat(list.size()).isEqualTo(N)`                | `assertThat(list).hasSize(N)`                 |
+| `assertThat(list.isEmpty()).isTrue()` / `.hasSize(0)` | `assertThat(list).isEmpty()`                  |
+| `assertThat(list.contains(x)).isTrue()`               | `assertThat(list).contains(x)`                |
+| per-index `get(i)` checks of every element            | `assertThat(list).containsExactly(a, b, ...)` |
 
 `containsExactly` already verifies size, so a separate `hasSize` is redundant.
 Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
@@ -66,3 +66,11 @@ reserved). Use `v` only for a nested inner-lambda parameter.
 This guidance applies only to attribute-assertion `satisfies(...)`; for
 `span.satisfies(...)`, `point.satisfies(...)`, etc. use a descriptive name
 (`spanData`, `pointData`, `result`).
+
+It also applies only to lambdas written **directly inline** as the
+`satisfies(AttributeKey, lambda)` argument, where the attribute key already
+documents what is being asserted. Do **not** flag lambdas passed to a custom
+helper method (e.g. `assertExceptionLog(typeAssertion, messageAssertion)`),
+even though the parameter is the same `AbstractStringAssert` type. There a
+descriptive name documents which attribute each lambda asserts, and renaming
+multiple parameters to `val` loses that context.

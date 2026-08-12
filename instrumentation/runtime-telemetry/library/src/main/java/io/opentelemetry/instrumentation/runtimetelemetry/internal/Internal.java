@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetryBuilder;
 import java.util.function.BiConsumer;
@@ -109,13 +110,14 @@ public final class Internal {
   }
 
   /**
-   * Sets whether the GC cause attribute should be captured on GC duration metrics. The default is
-   * {@code true}. This is configurable for backward compatibility with the previous behavior where
-   * {@code capture_gc_cause} defaulted to {@code false}.
+   * Sets whether the GC cause attribute should be captured on GC duration metrics. GC cause is
+   * always captured when emitting stable JVM semantic conventions; otherwise it defaults to {@code
+   * false} and can be enabled via {@code capture_gc_cause} for backward compatibility.
    *
    * @param builder the runtime telemetry builder
-   * @param captureGcCause {@code true} to capture the GC cause attribute (default)
+   * @param captureGcCause {@code true} to capture the GC cause attribute
    */
+  // this method will be removed in 3.0 since GC cause will always be captured in that version
   public static void setCaptureGcCause(RuntimeTelemetryBuilder builder, boolean captureGcCause) {
     if (setCaptureGcCause != null) {
       setCaptureGcCause.accept(builder, captureGcCause);
@@ -370,13 +372,15 @@ public final class Internal {
       Experimental.setPreferJfrMetrics(builder, true);
     }
 
-    // Apply capture_gc_cause
-    boolean captureGcCause = config.getBoolean("capture_gc_cause", false);
-    if (captureGcCause) {
+    // Apply capture_gc_cause. GC cause is always captured when emitting stable JVM semantic
+    // conventions and is no longer configurable; otherwise it defaults to false.
+    Boolean captureGcCauseConfig = config.getBoolean("capture_gc_cause");
+    if (captureGcCauseConfig != null) {
       logger.warning(
-          "otel.instrumentation.runtime-telemetry.capture-gc-cause is deprecated and will be"
-              + " removed in 3.0. GC cause will always be captured.");
+          "otel.instrumentation.runtime-telemetry.capture-gc-cause is deprecated and will be removed in 3.0. GC cause will always be captured.");
     }
+    boolean captureGcCause =
+        SemconvStability.v3Preview() || Boolean.TRUE.equals(captureGcCauseConfig);
     Internal.setCaptureGcCause(builder, captureGcCause);
   }
 

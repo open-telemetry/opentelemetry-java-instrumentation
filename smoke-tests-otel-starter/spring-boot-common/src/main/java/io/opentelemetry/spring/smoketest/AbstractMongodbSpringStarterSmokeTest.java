@@ -23,19 +23,26 @@ abstract class AbstractMongodbSpringStarterSmokeTest extends AbstractSpringStart
   @SuppressWarnings("deprecation") // uses deprecated semconv
   @Test
   void mongodb() {
-    testing.runWithSpan(
-        "server",
+    runMongoClientTest(
         () -> {
-          mongoClient.listDatabaseNames().into(new ArrayList<>());
-        });
+          testing.runWithSpan(
+              "server",
+              () -> {
+                mongoClient.listDatabaseNames().into(new ArrayList<>());
+              });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("server"),
-                span ->
-                    span.hasKind(SpanKind.CLIENT)
-                        .hasName("listDatabases admin")
-                        .hasAttribute(maybeStable(DB_SYSTEM), stableDbSystemName(MONGODB))));
+          testing.waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("server"),
+                      span ->
+                          span.hasKind(SpanKind.CLIENT)
+                              .hasName("listDatabases admin")
+                              .hasAttribute(maybeStable(DB_SYSTEM), stableDbSystemName(MONGODB))));
+        });
+  }
+
+  protected void runMongoClientTest(Runnable runnable) {
+    runnable.run();
   }
 }

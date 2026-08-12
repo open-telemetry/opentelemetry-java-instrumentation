@@ -13,11 +13,19 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
+@SuppressWarnings("deprecation") // uses the deprecated scopeName() bridge
 public abstract class AbstractProcessMetricsTest {
 
   protected abstract void registerMetrics();
 
   protected abstract InstrumentationExtension testing();
+
+  /**
+   * @deprecated Exists only so the javaagent test can pin the pre-rename {@code
+   *     io.opentelemetry.oshi} scope; to be removed in 3.0 once v3-preview becomes the default.
+   */
+  @Deprecated // to be remove
+  protected abstract String scopeName();
 
   @Test
   @EnabledIfSystemProperty(named = "testExperimental", matches = "true")
@@ -28,7 +36,7 @@ public abstract class AbstractProcessMetricsTest {
     // then
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.oshi",
+            scopeName(),
             "runtime.java.memory",
             metrics ->
                 metrics.anySatisfy(
@@ -50,7 +58,7 @@ public abstract class AbstractProcessMetricsTest {
                                                 .hasValueSatisfying(v -> v.isPositive())))));
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.oshi",
+            scopeName(),
             "runtime.java.cpu_time",
             metrics ->
                 metrics.anySatisfy(

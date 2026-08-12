@@ -11,6 +11,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -31,7 +33,7 @@ public class SuppressionListAuditor implements DocumentationAuditor {
 
   // Used for consolidating instrumentation groups where we override the key with the value
   private static final Map<String, String> INSTRUMENTATION_DISABLE_OVERRIDES =
-      Map.of("akka-actor-fork-join", "akka-actor");
+      Map.of("akka-actor-forkjoin", "akka-actor");
 
   private static final List<String> INSTRUMENTATION_EXCLUSIONS =
       List.of("resources", "spring-boot-resources");
@@ -67,14 +69,10 @@ public class SuppressionListAuditor implements DocumentationAuditor {
    * @throws RuntimeException if the file cannot be read
    */
   private static String getInstrumentationListContent() {
-    String baseRepoPath = System.getProperty("basePath");
-    if (baseRepoPath == null) {
-      baseRepoPath = "./";
-    } else {
-      baseRepoPath += "/";
-    }
+    String basePath = System.getProperty("basePath");
+    Path file =
+        Paths.get(basePath == null ? "." : basePath).resolve("docs/instrumentation-list.yaml");
 
-    String file = baseRepoPath + "docs/instrumentation-list.yaml";
     String content = FileManager.readFileToString(file);
     if (content == null) {
       throw new IllegalStateException("Failed to read instrumentation list from: " + file);

@@ -20,6 +20,7 @@ dependencies {
   implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
 
   testInstrumentation(project(":instrumentation:jedis:jedis-1.4:javaagent"))
+  testInstrumentation(project(":instrumentation:jedis:jedis-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-3.0:javaagent"))
 }
 
@@ -31,7 +32,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

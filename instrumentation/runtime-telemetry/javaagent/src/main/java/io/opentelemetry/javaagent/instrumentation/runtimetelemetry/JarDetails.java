@@ -11,7 +11,6 @@ import static java.util.stream.Collectors.toMap;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.net.URL;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
@@ -37,17 +36,18 @@ class JarDetails {
   static final String JAR_EXTENSION = "jar";
   static final String WAR_EXTENSION = "war";
   static final String EAR_EXTENSION = "ear";
+  private static final char[] HEX_DIGITS = "0123456789abcdef".toCharArray();
   private static final Map<String, String> EMBEDDED_FORMAT_TO_EXTENSION =
       Stream.of(JAR_EXTENSION, WAR_EXTENSION, EAR_EXTENSION)
           .collect(
               collectingAndThen(
                   toMap(ext -> ('.' + ext + "!/"), identity()),
                   Collections::<String, String>unmodifiableMap));
-  private static final ThreadLocal<MessageDigest> sha1 =
+  private static final ThreadLocal<MessageDigest> sha256 =
       ThreadLocal.withInitial(
           () -> {
             try {
-              return MessageDigest.getInstance("SHA1");
+              return MessageDigest.getInstance("SHA-256");
             } catch (NoSuchAlgorithmException e) {
               throw new IllegalStateException(e);
             }
@@ -56,14 +56,14 @@ class JarDetails {
   private final URL url;
   @Nullable private final Properties pom;
   @Nullable private final Manifest manifest;
-  private final String sha1Checksum;
+  private final String sha256Checksum;
 
   private JarDetails(
-      URL url, @Nullable Properties pom, @Nullable Manifest manifest, String sha1Checksum) {
+      URL url, @Nullable Properties pom, @Nullable Manifest manifest, String sha256Checksum) {
     this.url = url;
     this.pom = pom;
     this.manifest = manifest;
-    this.sha1Checksum = sha1Checksum;
+    this.sha256Checksum = sha256Checksum;
   }
 
   static JarDetails forUrl(URL url) throws IOException {
@@ -88,14 +88,14 @@ class JarDetails {
                 url,
                 getPom(jarFile, jarEntry),
                 getManifest(jarFile, jarEntry),
-                computeDigest(jarFile, jarEntry, sha1.get()));
+                computeDigest(jarFile, jarEntry, sha256.get()));
           }
         }
       }
     }
     try (JarFile jarFile = new JarFile(UrlPaths.toFile(url))) {
       return new JarDetails(
-          url, getPom(jarFile), getManifest(jarFile), computeDigest(url, sha1.get()));
+          url, getPom(jarFile), getManifest(jarFile), computeDigest(url, sha256.get()));
     }
   }
 
@@ -185,9 +185,9 @@ class JarDetails {
     return name + " by " + vendor;
   }
 
-  /** Returns the SHA1 hash of this file, e.g. {@code 30d16ec2aef6d8094c5e2dce1d95034ca8b6cb42}. */
-  String computeSha1() {
-    return sha1Checksum;
+  /** Returns the lowercase hex-encoded SHA-256 digest of this file as a 64-character string. */
+  String computeSha256() {
+    return sha256Checksum;
   }
 
   private static String computeDigest(URL url, MessageDigest md) throws IOException {
@@ -205,12 +205,23 @@ class JarDetails {
 
   private static String computeDigest(InputStream inputStream, MessageDigest md)
       throws IOException {
-    md.reset();
-    DigestInputStream dis = new DigestInputStream(inputStream, md);
-    byte[] buffer = new byte[8192];
-    while (dis.read(buffer) != -1) {}
-    byte[] digest = md.digest();
-    return String.format(Locale.ROOT, "%040x", new BigInteger(1, digest));
+    try (DigestInputStream digestInputStream = new DigestInputStream(inputStream, md)) {
+      byte[] buffer = new byte[8192];
+      while (digestInputStream.read(buffer) != -1) {}
+      return toHex(md.digest());
+    } finally {
+      md.reset();
+    }
+  }
+
+  static String toHex(byte[] bytes) {
+    char[] chars = new char[bytes.length * 2];
+    for (int i = 0; i < bytes.length; i++) {
+      int value = bytes[i] & 0xff;
+      chars[i * 2] = HEX_DIGITS[value >>> 4];
+      chars[i * 2 + 1] = HEX_DIGITS[value & 0x0f];
+    }
+    return new String(chars);
   }
 
   @Nullable

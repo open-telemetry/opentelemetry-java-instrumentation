@@ -39,20 +39,36 @@ public final class ProcessResource {
   private static final Pattern SCRUB_PATTERN =
       Pattern.compile("(-D.*(password|secret).*=).*", Pattern.CASE_INSENSITIVE);
 
-  private static final Resource INSTANCE = buildResource();
+  @Deprecated // to be removed in 3.0
+  private static final Resource INSTANCE = create(true);
 
   /**
    * Returns a factory for a {@link Resource} which provides information about the current running
-   * process.
+   * process, including the command-line attributes.
+   *
+   * @deprecated Use {@link #create(boolean) create(true)} to retain the current behavior, or {@link
+   *     #create()} to omit the potentially sensitive {@code process.command_args} and {@code
+   *     process.command_line} attributes. Will be removed in 3.0.
    */
+  @Deprecated // to be removed in 3.0
   public static Resource get() {
     return INSTANCE;
   }
 
-  // Visible for testing
-  static Resource buildResource() {
+  /** Returns a {@link Resource} which provides information about the current running process. */
+  public static Resource create() {
+    return create(false);
+  }
+
+  /**
+   * Returns a {@link Resource} which provides information about the current running process.
+   *
+   * <p>Warning: command-line resource attributes may contain sensitive information. Only set {@code
+   * emitCommandAttributes} to {@code true} when this risk is acceptable.
+   */
+  public static Resource create(boolean emitCommandAttributes) {
     try {
-      return doBuildResource();
+      return doBuildResource(emitCommandAttributes);
     } catch (LinkageError ignored) {
       // Will only happen on Android, where these attributes generally don't make much sense
       // anyways.
@@ -60,10 +76,8 @@ public final class ProcessResource {
     }
   }
 
-  private static Resource doBuildResource() {
+  private static Resource doBuildResource(boolean emitCommandAttributes) {
     AttributesBuilder attributes = Attributes.builder();
-
-    RuntimeMXBean runtime = ManagementFactory.getRuntimeMXBean();
 
     long pid = ProcessPid.getPid();
 
@@ -90,40 +104,49 @@ public final class ProcessResource {
         executablePath.append(".exe");
       }
 
-      attributes.put(PROCESS_EXECUTABLE_PATH, executablePath.toString());
+      String executablePathValue = executablePath.toString();
+      attributes.put(PROCESS_EXECUTABLE_PATH, executablePathValue);
 
-      String[] args = ProcessArguments.getProcessArguments();
-      // This will only work with Java 9+ and Linux but provides everything except the
-      // executablePath.
-      // Argument array may be empty on Java 9+ when the command line is too long, see
-      // https://bugs.openjdk.org/browse/JDK-8345117
-      if (args.length > 0) {
-        List<String> commandArgs = new ArrayList<>(args.length + 1);
-        commandArgs.add(executablePath.toString());
-        for (String arg : args) {
-          commandArgs.add(scrub(arg));
-        }
-        attributes.put(PROCESS_COMMAND_ARGS, commandArgs);
-      } else { // Java 8 or Windows or long command line
-        StringBuilder commandLine = new StringBuilder(executablePath);
-        for (String arg : runtime.getInputArguments()) {
-          commandLine.append(' ').append(scrub(arg));
-        }
-        // sun.java.command isn't well document and may not be available on all systems.
-        String javaCommand = System.getProperty("sun.java.command");
-        if (javaCommand != null) {
-          // This property doesn't include -jar when launching a jar directly.  Try to determine
-          // if that's the case and add it back in.
-          if (JAR_FILE_PATTERN.matcher(javaCommand).matches()) {
-            commandLine.append(" -jar");
-          }
-          commandLine.append(' ').append(javaCommand);
-        }
-        attributes.put(PROCESS_COMMAND_LINE, commandLine.toString());
+      if (emitCommandAttributes) {
+        addCommandAttributes(attributes, executablePathValue);
       }
     }
 
     return Resource.create(attributes.build(), SchemaUrls.V1_24_0);
+  }
+
+  private static void addCommandAttributes(AttributesBuilder attributes, String executablePath) {
+    RuntimeMXBean runtime = ManagementFactory.getRuntimeMXBean();
+
+    String[] args = ProcessArguments.getProcessArguments();
+    // This will only work with Java 9+ and Linux but provides everything except the
+    // executablePath.
+    // Argument array may be empty on Java 9+ when the command line is too long, see
+    // https://bugs.openjdk.org/browse/JDK-8345117
+    if (args.length > 0) {
+      List<String> commandArgs = new ArrayList<>(args.length + 1);
+      commandArgs.add(executablePath);
+      for (String arg : args) {
+        commandArgs.add(scrub(arg));
+      }
+      attributes.put(PROCESS_COMMAND_ARGS, commandArgs);
+    } else { // Java 8 or Windows or long command line
+      StringBuilder commandLine = new StringBuilder(executablePath);
+      for (String arg : runtime.getInputArguments()) {
+        commandLine.append(' ').append(scrub(arg));
+      }
+      // sun.java.command isn't well documented and may not be available on all systems.
+      String javaCommand = System.getProperty("sun.java.command");
+      if (javaCommand != null) {
+        // This property doesn't include -jar when launching a jar directly.  Try to determine
+        // if that's the case and add it back in.
+        if (JAR_FILE_PATTERN.matcher(javaCommand).matches()) {
+          commandLine.append(" -jar");
+        }
+        commandLine.append(' ').append(javaCommand);
+      }
+      attributes.put(PROCESS_COMMAND_LINE, commandLine.toString());
+    }
   }
 
   private static String scrub(String argument) {

@@ -72,7 +72,7 @@ class CompilerArgumentsProvider(
 }
 
 tasks {
-  val compileGwt by registering(JavaExec::class) {
+  val compileGwt = register<JavaExec>("compileGwt") {
     dependsOn(classes)
     // versions before 2.9 require java8
     javaLauncher.set(launcher)
@@ -93,7 +93,7 @@ tasks {
     }
   }
 
-  val copyTestWebapp by registering(Copy::class) {
+  val copyTestWebapp = register<Copy>("copyTestWebapp") {
     dependsOn(compileGwt)
 
     from(file("src/testapp/webapp"))

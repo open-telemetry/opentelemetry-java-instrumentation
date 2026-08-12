@@ -71,7 +71,7 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
       // received
       requestBuilder.header("java-http-client-http2", "true");
     }
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       requestBuilder.timeout(READ_TIMEOUT);
     }
     return requestBuilder.build();
@@ -120,7 +120,7 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
           // unopened port or non routable address; or timeout
           if ("http://localhost:61/".equals(uri.toString())
               || "https://192.0.2.1/".equals(uri.toString())
-              || uri.toString().contains("/read-timeout")) {
+              || uri.getPath().endsWith("/read-timeout")) {
             attributes.remove(NETWORK_PROTOCOL_VERSION);
           }
           return attributes;

@@ -31,18 +31,18 @@ configurations.configureEach {
 
 testing {
   suites {
-    val incubatorTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("incubatorTest") {
       dependencies {
         implementation("io.opentelemetry:opentelemetry-api-incubator:1.37.0-alpha")
       }
     }
-    val oldAndNewIncubatorTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("oldAndNewIncubatorTest") {
       dependencies {
         implementation("io.opentelemetry:opentelemetry-api-incubator:1.37.0-alpha")
         implementation("io.opentelemetry:opentelemetry-extension-incubator:1.32.0-alpha")
       }
     }
-    val noopTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("noopTest") {
       dependencies {
         implementation("io.opentelemetry:opentelemetry-api-incubator:1.37.0-alpha")
       }

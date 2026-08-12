@@ -25,7 +25,7 @@ dependencies {
 
 testing {
   suites {
-    val test24 by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("test24") {
       dependencies {
         implementation(project())
         implementation("org.influxdb:influxdb-java:2.4")
@@ -50,7 +50,7 @@ tasks {
     }
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

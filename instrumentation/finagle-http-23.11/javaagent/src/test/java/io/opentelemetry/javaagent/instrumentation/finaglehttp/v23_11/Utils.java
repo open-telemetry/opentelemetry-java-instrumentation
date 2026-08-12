@@ -23,8 +23,6 @@ class Utils {
     Http.Client client =
         Http.client()
             .withTransport()
-            .readTimeout(Duration.fromMilliseconds(READ_TIMEOUT.toMillis()))
-            .withTransport()
             .connectTimeout(Duration.fromMilliseconds(CONNECTION_TIMEOUT.toMillis()))
             // disable automatic retries -- retries will result in under-counting traces in the
             // tests
@@ -37,6 +35,10 @@ class Utils {
       case SINGLE_CONN:
         client = client.withSessionPool().maxSize(1);
         break;
+      case READ_TIMEOUT:
+        client =
+            client.withTransport().readTimeout(Duration.fromMilliseconds(READ_TIMEOUT.toMillis()));
+        break;
       case DEFAULT:
         break;
     }
@@ -47,6 +49,7 @@ class Utils {
   enum ClientType {
     TLS,
     SINGLE_CONN,
+    READ_TIMEOUT,
     DEFAULT;
   }
 

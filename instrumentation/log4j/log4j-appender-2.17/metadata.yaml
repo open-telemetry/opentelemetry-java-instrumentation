@@ -30,6 +30,18 @@ configurations:
       Enables the capture of the Log4j marker attribute.
     type: boolean
     default: false
+  - name: otel.instrumentation.log4j-appender.experimental.capture-template
+    declarative_name: java.log4j_appender.capture_template/development
+    description: >
+      Enables the capture of the log message template (if arguments are provided).
+    type: boolean
+    default: false
+  - name: otel.instrumentation.log4j-appender.experimental.capture-arguments
+    declarative_name: java.log4j_appender.capture_arguments/development
+    description: >
+      Enables the capture of the log message arguments.
+    type: boolean
+    default: false
   - name: otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
     declarative_name: java.log4j_appender.capture_mdc_attributes/development
     description: >

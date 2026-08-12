@@ -127,7 +127,13 @@ public final class UrlParsingUtils {
     }
     if (host != null) {
       url.append("//");
-      url.append(host);
+      if (host.contains(":") && !host.startsWith("[")) {
+        url.append('[');
+        url.append(host);
+        url.append(']');
+      } else {
+        url.append(host);
+      }
       if (port != null) {
         url.append(':');
         url.append(port);
@@ -228,7 +234,7 @@ public final class UrlParsingUtils {
       this.ipv6Address = ipv6Address;
     }
 
-    /** The host, with IPv6 addresses bracketed. */
+    /** The host, with IPv6 addresses unbracketed. */
     public String host() {
       return host;
     }
@@ -248,7 +254,10 @@ public final class UrlParsingUtils {
 
   /**
    * Extract host and port from a server string, handling IPv6 addresses. Supports formats: host,
-   * host:port, [ipv6], [ipv6]:port, ipv6 (auto-bracketed).
+   * host:port, [ipv6], [ipv6]:port, ipv6.
+   *
+   * <p>The returned host never carries the enclosing brackets of a literal IPv6 address, matching
+   * the {@code server.address} semantic convention, which holds the address alone.
    *
    * @param serverName the server string to parse
    * @return the extracted host and port
@@ -262,8 +271,6 @@ public final class UrlParsingUtils {
     if (isIpv6) {
       if (serverName.startsWith("[")) {
         portLoc = serverName.indexOf("]:") + 1;
-      } else {
-        serverName = "[" + serverName + "]";
       }
     } else {
       portLoc = serverName.indexOf(":");
@@ -275,7 +282,21 @@ public final class UrlParsingUtils {
       serverName = serverName.substring(0, portLoc);
     }
 
-    return new HostPort(serverName, port, ipv6Address);
+    return new HostPort(stripIpv6Brackets(serverName), port, ipv6Address);
+  }
+
+  /**
+   * Remove the enclosing brackets from a literal IPv6 address, e.g. {@code [::1]} becomes {@code
+   * ::1}. Any other value is returned unchanged.
+   *
+   * @param host the host to unbracket
+   * @return the host without enclosing brackets
+   */
+  public static String stripIpv6Brackets(String host) {
+    if (host.length() > 1 && host.charAt(0) == '[' && host.endsWith("]")) {
+      return host.substring(1, host.length() - 1);
+    }
+    return host;
   }
 
   /**

@@ -46,7 +46,7 @@ tasks {
     }
   }
 
-  val testDisabledCaptureSearchQuery by registering(Test::class) {
+  val testDisabledCaptureSearchQuery = register<Test>("testDisabledCaptureSearchQuery") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -60,7 +60,7 @@ tasks {
     )
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

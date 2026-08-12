@@ -10,21 +10,21 @@
 The system property `otel.semconv-stability.opt-in` (or env `OTEL_SEMCONV_STABILITY_OPT_IN`)
 controls which attributes are emitted at runtime. Tests must run in all applicable modes.
 
-| Property value | Old attrs emitted | Stable attrs emitted | Purpose |
-| --- | :-: | :-: | --- |
-| *(unset)* | ✅ | ❌ | Default / legacy mode — what most users run today |
-| `database` | ❌ | ✅ | Stable-only — users who have opted in |
-| `database/dup` | ✅ | ✅ | Both — migration period support |
+| Property value | Old attrs emitted | Stable attrs emitted | Purpose                                           |
+| -------------- | :---------------: | :------------------: | ------------------------------------------------- |
+| _(unset)_      |        ✅         |          ❌          | Default / legacy mode — what most users run today |
+| `database`     |        ❌         |          ✅          | Stable-only — users who have opted in             |
+| `database/dup` |        ✅         |          ✅          | Both — migration period support                   |
 
 Multiple domains can be comma-separated: `database,code,service.peer`.
 
 Available domains and their `SemconvStability` methods:
 
-| Domain | `opt-in` value | Methods |
-| --- | --- | --- |
-| Database | `database` / `database/dup` | `emitOldDatabaseSemconv()`, `emitStableDatabaseSemconv()` |
-| Code | `code` / `code/dup` | `emitOldCodeSemconv()`, `emitStableCodeSemconv()` |
-| RPC | `rpc` / `rpc/dup` | `emitOldRpcSemconv()`, `emitStableRpcSemconv()` |
+| Domain       | `opt-in` value                      | Methods                                                         |
+| ------------ | ----------------------------------- | --------------------------------------------------------------- |
+| Database     | `database` / `database/dup`         | `emitOldDatabaseSemconv()`, `emitStableDatabaseSemconv()`       |
+| Code         | `code` / `code/dup`                 | `emitOldCodeSemconv()`, `emitStableCodeSemconv()`               |
+| RPC          | `rpc` / `rpc/dup`                   | `emitOldRpcSemconv()`, `emitStableRpcSemconv()`                 |
 | Service peer | `service.peer` / `service.peer/dup` | `emitOldServicePeerSemconv()`, `emitStableServicePeerSemconv()` |
 
 All methods are in `io.opentelemetry.instrumentation.api.internal.SemconvStability`.
@@ -83,7 +83,7 @@ The semconv-specific patterns below build on that shape.
 
 ### `maybeStable(OLD_KEY)` for 1:1 key renames
 
-Use `maybeStable(OLD_KEY)` when only the attribute *key* flips between old and stable
+Use `maybeStable(OLD_KEY)` when only the attribute _key_ flips between old and stable
 semconv and the value is identical:
 
 ```java
@@ -96,7 +96,7 @@ span.hasAttribute(equalTo(maybeStable(DB_STATEMENT), "SELECT ?"));
 
 ### `if` blocks (not `if/else`) when structure differs
 
-When the *set* of asserted attributes differs between modes — not just values — use
+When the _set_ of asserted attributes differs between modes — not just values — use
 separate top-level `if` blocks rather than `if/else`. For domains that support `/dup` mode
 (currently RPC), this is required so both branches run; for other domains it's a habit
 that keeps the assertion `/dup`-safe if the domain ever adopts it:

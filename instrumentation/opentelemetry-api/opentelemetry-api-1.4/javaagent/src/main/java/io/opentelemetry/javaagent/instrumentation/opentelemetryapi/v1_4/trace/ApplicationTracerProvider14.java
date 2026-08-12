@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_4.trace;
 
 import io.opentelemetry.api.trace.TracerProvider;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.ApplicationTracer;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.ApplicationTracerFactory;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.ApplicationTracerProvider;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace.ApplicationTracer;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace.ApplicationTracerFactory;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace.ApplicationTracerProvider;
 
 // this class is used from opentelemetry-api-1.0 via reflection
 public class ApplicationTracerProvider14 extends ApplicationTracerProvider {

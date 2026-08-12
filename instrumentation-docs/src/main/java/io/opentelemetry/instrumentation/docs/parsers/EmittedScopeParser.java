@@ -21,7 +21,6 @@ import io.opentelemetry.sdk.common.InstrumentationScopeInfoBuilder;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -47,26 +46,17 @@ public class EmittedScopeParser {
       return null;
     }
 
-    EmittedScope.Scope scope =
-        scopes.stream()
-            .filter(
-                item ->
-                    item.getName() != null
-                        && item.getName().contains(module.getInstrumentationName()))
-            .min(Comparator.comparing(item -> item.getSchemaUrl() == null ? 1 : 0))
-            .orElse(null);
+    String defaultScopeName = module.getScopeInfo().getName();
+    EmittedScope.Scope scope = getMatchingScope(scopes, defaultScopeName);
     if (scope == null) {
       return null;
     }
 
-    String instrumentationName = "io.opentelemetry." + module.getInstrumentationName();
-    InstrumentationScopeInfoBuilder builder = InstrumentationScopeInfo.builder(instrumentationName);
-
-    // This will identify any module that might deviate from the standard naming convention
-    if (scope.getName() != null && !scope.getName().equals(instrumentationName)) {
-      logger.severe(
-          "Scope name mismatch. Expected: " + instrumentationName + ", got: " + scope.getName());
+    String scopeName = scope.getName();
+    if (scopeName == null) {
+      return null;
     }
+    InstrumentationScopeInfoBuilder builder = InstrumentationScopeInfo.builder(scopeName);
 
     if (scope.getSchemaUrl() != null) {
       builder.setSchemaUrl(scope.getSchemaUrl());
@@ -76,6 +66,39 @@ public class EmittedScopeParser {
     }
 
     return builder.build();
+  }
+
+  @Nullable
+  private static EmittedScope.Scope getMatchingScope(
+      Set<EmittedScope.Scope> scopes, String defaultScopeName) {
+    EmittedScope.Scope exactMatch = findScopeByName(scopes, defaultScopeName);
+    if (exactMatch != null) {
+      return exactMatch;
+    }
+
+    String baseScopeName = stripTrailingVersion(defaultScopeName);
+    if (!baseScopeName.equals(defaultScopeName)) {
+      return findScopeByName(scopes, baseScopeName);
+    }
+
+    return null;
+  }
+
+  @Nullable
+  private static EmittedScope.Scope findScopeByName(
+      Set<EmittedScope.Scope> scopes, String scopeName) {
+    return scopes.stream()
+        .filter(scope -> scopeName.equals(scope.getName()))
+        .min(Comparator.comparingInt(scope -> scope.getSchemaUrl() == null ? 1 : 0))
+        .orElse(null);
+  }
+
+  /**
+   * Removes a trailing version suffix (e.g. {@code -5.0}, {@code -8.5}, {@code -3.1.6}) from a
+   * scope name. Returns the input unchanged if it has no such suffix.
+   */
+  private static String stripTrailingVersion(String scopeName) {
+    return scopeName.replaceFirst("-\\d+(\\.\\d+)*$", "");
   }
 
   /**
@@ -114,8 +137,8 @@ public class EmittedScopeParser {
    * @return set of all unique scopes found in scope files
    */
   public static Set<EmittedScope.Scope> getScopesFromFiles(
-      String rootDir, String instrumentationDirectory) {
-    Path telemetryDir = Paths.get(rootDir + "/" + instrumentationDirectory, ".telemetry");
+      Path rootDir, String instrumentationDirectory) {
+    Path telemetryDir = rootDir.resolve(instrumentationDirectory).resolve(".telemetry");
 
     Set<EmittedScope.Scope> allScopes = new HashSet<>();
 
@@ -125,7 +148,7 @@ public class EmittedScopeParser {
             .filter(path -> path.getFileName().toString().startsWith("scope-"))
             .forEach(
                 path -> {
-                  String content = FileManager.readFileToString(path.toString());
+                  String content = FileManager.readFileToString(path);
                   if (content != null) {
                     EmittedScope parsed;
                     try {

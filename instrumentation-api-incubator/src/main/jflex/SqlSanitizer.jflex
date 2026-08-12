@@ -217,15 +217,15 @@ WHITESPACE           = [ \t\r\n]+
 
     boolean shouldHandleIdentifier() {
       // Return true only if the provided value corresponds to a table, as it will be used to set the attribute `db.sql.table`.
-      return "TABLE".equals(operationTarget);
+      return operationTarget.equalsIgnoreCase("TABLE");
     }
 
     /** Returns true for DDL targets where PASSWORD is treated as an identifier, not a secret clause. */
     boolean hasSafeDdlTarget() {
-      return "TABLE".equals(operationTarget)
-          || "INDEX".equals(operationTarget)
-          || "PROCEDURE".equals(operationTarget)
-          || "VIEW".equals(operationTarget);
+      return operationTarget.equalsIgnoreCase("TABLE")
+          || operationTarget.equalsIgnoreCase("INDEX")
+          || operationTarget.equalsIgnoreCase("PROCEDURE")
+          || operationTarget.equalsIgnoreCase("VIEW");
     }
 
     boolean shouldSanitizeRemainderAfterPassword() {

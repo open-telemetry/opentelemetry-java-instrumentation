@@ -1,0 +1,8 @@
+---
+
+rules:
+
+  - bean: java.lang:type=Threading
+    handlers:
+      - thread-handler
+      - thread-handler2

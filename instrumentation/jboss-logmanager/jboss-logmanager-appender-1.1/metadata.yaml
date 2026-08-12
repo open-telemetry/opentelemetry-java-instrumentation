@@ -11,6 +11,18 @@ configurations:
       Enables the capture of experimental log attributes, including thread name and thread ID.
     type: boolean
     default: false
+  - name: otel.instrumentation.jboss-logmanager.experimental.capture-template
+    declarative_name: java.jboss_logmanager.capture_template/development
+    description: >
+      Enables the capture of the log message template (if arguments are provided).
+    type: boolean
+    default: false
+  - name: otel.instrumentation.jboss-logmanager.experimental.capture-arguments
+    declarative_name: java.jboss_logmanager.capture_arguments/development
+    description: >
+      Enables the capture of the log message arguments.
+    type: boolean
+    default: false
   - name: otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes
     declarative_name: java.jboss_logmanager.capture_mdc_attributes/development
     description: >

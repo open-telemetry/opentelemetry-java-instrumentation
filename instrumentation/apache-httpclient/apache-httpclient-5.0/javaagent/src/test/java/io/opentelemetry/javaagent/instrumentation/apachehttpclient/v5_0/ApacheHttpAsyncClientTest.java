@@ -101,7 +101,7 @@ class ApacheHttpAsyncClientTest {
       SimpleHttpRequest httpRequest = super.buildRequest(method, uri, headers);
       RequestConfig.Builder configBuilder = RequestConfig.custom();
       configBuilder.setConnectTimeout(getTimeout(connectTimeout()));
-      if (uri.toString().contains("/read-timeout")) {
+      if (uri.getPath().endsWith("/read-timeout")) {
         configBuilder.setResponseTimeout(getTimeout(readTimeout()));
       }
       RequestConfig requestConfig = configBuilder.build();

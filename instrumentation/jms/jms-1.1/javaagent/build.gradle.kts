@@ -33,7 +33,7 @@ dependencies {
 
 testing {
   suites {
-    val jms2Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("jms2Test") {
       dependencies {
         implementation("org.hornetq:hornetq-jms-client:2.4.7.Final")
         implementation("org.hornetq:hornetq-jms-server:2.4.7.Final")
@@ -59,7 +59,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testReceiveSpansDisabled by registering(Test::class) {
+  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
@@ -68,6 +68,53 @@ tasks {
       includeTestsMatching("Jms1SuppressReceiveSpansTest")
     }
     include("**/Jms1SuppressReceiveSpansTest.*")
+  }
+
+  val testMessagingPreviewReceiveSpansDisabled =
+    register<Test>("testMessagingPreviewReceiveSpansDisabled") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
+      filter {
+        includeTestsMatching("Jms1SuppressReceiveSpansTest")
+      }
+      include("**/Jms1SuppressReceiveSpansTest.*")
+      jvmArgs("-Dotel.semconv-stability.preview=messaging")
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+    }
+
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    filter {
+      excludeTestsMatching("Jms1SuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
+  val testJms2MessagingPreview = register<Test>("testJms2MessagingPreview") {
+    testClassesDirs = sourceSets["jms2Test"].output.classesDirs
+    classpath = sourceSets["jms2Test"].runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    filter {
+      includeTestsMatching("Jms1InstrumentationTest")
+    }
+    include("**/Jms1InstrumentationTest.*")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
 
   test {
@@ -83,7 +130,14 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testReceiveSpansDisabled)
+    dependsOn(
+      testing.suites,
+      testReceiveSpansDisabled,
+      testMessagingPreview,
+      testMessagingPreviewReceiveSpansDisabled,
+      testJms2MessagingPreview,
+      testBothSemconv,
+    )
   }
 }
 

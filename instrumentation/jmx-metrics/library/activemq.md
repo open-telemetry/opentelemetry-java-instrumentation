@@ -5,7 +5,7 @@ Here is the list of metrics based on MBeans exposed by ActiveMQ.
 For now, only ActiveMQ classic is supported.
 
 | Metric Name                               | Type          | Unit         | Attributes                                                                  | Description                                                           |
-|-------------------------------------------|---------------|--------------|-----------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| ----------------------------------------- | ------------- | ------------ | --------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | activemq.producer.count                   | UpDownCounter | {producer}   | messaging.destination.name, activemq.broker.name, activemq.destination.type | The number of producers attached to this destination                  |
 | activemq.consumer.count                   | UpDownCounter | {consumer}   | messaging.destination.name, activemq.broker.name, activemq.destination.type | The number of consumers subscribed to this destination                |
 | activemq.destination.memory.usage         | UpDownCounter | By           | messaging.destination.name, activemq.broker.name, activemq.destination.type | The amount of used memory by this destination                         |

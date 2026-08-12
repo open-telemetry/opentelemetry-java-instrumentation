@@ -22,6 +22,7 @@ import io.vertx.core.internal.PromiseInternal;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import io.vertx.sqlclient.internal.PreparedStatement;
+import java.util.Collection;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -72,7 +73,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         this.scope = scope;
       }
 
-      public static AdviceScope start(Object queryExecutor, Object[] arguments) {
+      public static AdviceScope start(Object queryExecutor, String methodName, Object[] arguments) {
         CallDepth callDepth = CallDepth.forClass(queryExecutor.getClass());
         if (callDepth.getAndIncrement() > 0) {
           return new AdviceScope(callDepth);
@@ -85,6 +86,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         String sql = null;
         boolean preparedStatement = false;
         PromiseInternal<?> promiseInternal = null;
+        Long batchSize = null;
         for (Object argument : arguments) {
           if (sql == null) {
             if (argument instanceof String) {
@@ -95,6 +97,10 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
             }
           } else if (argument instanceof PromiseInternal) {
             promiseInternal = (PromiseInternal<?>) argument;
+          }
+          if (methodName.equals("executeBatchQuery") && argument instanceof Collection) {
+            int size = ((Collection<?>) argument).size();
+            batchSize = size == 1 ? null : (long) size;
           }
         }
         if (sql == null || promiseInternal == null) {
@@ -110,7 +116,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         }
         String dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
         VertxSqlClientRequest otelRequest =
-            new VertxSqlClientRequest(sql, connectOptions, preparedStatement, dbSystem);
+            new VertxSqlClientRequest(sql, connectOptions, preparedStatement, dbSystem, batchSize);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
           return new AdviceScope(callDepth);
@@ -139,8 +145,10 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
-        @Advice.This Object queryExecutor, @Advice.AllArguments Object[] arguments) {
-      return AdviceScope.start(queryExecutor, arguments);
+        @Advice.This Object queryExecutor,
+        @Advice.Origin("#m") String methodName,
+        @Advice.AllArguments Object[] arguments) {
+      return AdviceScope.start(queryExecutor, methodName, arguments);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

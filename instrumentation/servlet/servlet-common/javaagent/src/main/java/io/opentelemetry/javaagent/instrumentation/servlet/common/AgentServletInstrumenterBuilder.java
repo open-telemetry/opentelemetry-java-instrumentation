@@ -68,7 +68,7 @@ public class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
                 instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter, accessor)
             .setCaptureRequestParameters(CAPTURE_REQUEST_PARAMETERS)
             .setCaptureExperimentalAttributes(CAPTURE_EXPERIMENTAL_ATTRIBUTES)
-            .setCaptureEnduserId(AgentCommonConfig.get().getEnduserConfig().isIdEnabled());
+            .setCaptureEnduserId(AgentCommonConfig.get().getUserConfig().isNameEnabled());
     for (ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer :
         contextCustomizers) {
       builder.addContextCustomizer(contextCustomizer);

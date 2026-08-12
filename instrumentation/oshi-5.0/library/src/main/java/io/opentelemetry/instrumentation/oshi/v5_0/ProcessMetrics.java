@@ -9,6 +9,8 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.MeterBuilder;
+import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +21,9 @@ import oshi.software.os.OperatingSystem;
 
 /** Java Runtime Metrics Utility. */
 public final class ProcessMetrics {
+
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.oshi-5.0";
+
   private static final AttributeKey<String> TYPE_KEY = AttributeKey.stringKey("type");
 
   // getResidentSetSize() was deprecated in oshi 6.11.0 and removed in 7.0.0; the replacement
@@ -39,7 +44,17 @@ public final class ProcessMetrics {
 
   /** Register observers for java runtime metrics. */
   public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
-    Meter meter = openTelemetry.getMeterProvider().get("io.opentelemetry.oshi");
+    return registerObservers(buildMeter(openTelemetry));
+  }
+
+  /**
+   * Like {@link #registerObservers(OpenTelemetry)}, but accepts a pre-built {@link Meter}.
+   *
+   * @deprecated Exists only so the javaagent can emit the pre-rename {@code io.opentelemetry.oshi}
+   *     scope by default; to be removed in 3.0 once v3-preview becomes the default.
+   */
+  @Deprecated
+  public static List<AutoCloseable> registerObservers(Meter meter) {
     SystemInfo systemInfo = new SystemInfo();
     OperatingSystem osInfo = systemInfo.getOperatingSystem();
     OSProcess processInfo = osInfo.getProcess(osInfo.getProcessId());
@@ -80,6 +95,15 @@ public final class ProcessMetrics {
     } catch (ReflectiveOperationException ignored) {
       return 0;
     }
+  }
+
+  private static Meter buildMeter(OpenTelemetry openTelemetry) {
+    MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(INSTRUMENTATION_NAME);
+    String version = EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME);
+    if (version != null) {
+      meterBuilder.setInstrumentationVersion(version);
+    }
+    return meterBuilder.build();
   }
 
   private ProcessMetrics() {}

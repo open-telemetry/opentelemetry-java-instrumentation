@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.common;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER_FILTER;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
+import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_NAME;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -29,6 +31,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletAsyncContext;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.UserIncubatingAttributes;
 import java.security.Principal;
 import java.util.List;
 import java.util.function.Function;
@@ -166,21 +169,22 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   /**
-   * Capture {@link EnduserIncubatingAttributes#ENDUSER_ID} as span attributes when SERVER span is
-   * not created by servlet instrumentation.
+   * Capture {@link EnduserIncubatingAttributes#ENDUSER_ID}, or {@link
+   * UserIncubatingAttributes#USER_NAME} when v3 preview is enabled, as a span attribute when SERVER
+   * span is not created by servlet instrumentation.
    *
    * <p>When SERVER span is created by servlet instrumentation we register {@link
    * ServletAdditionalAttributesExtractor} as an attribute extractor. When SERVER span is not
    * created by servlet instrumentation we call this method on exit from the last servlet or filter.
    */
   private void captureEnduserId(Span serverSpan, REQUEST request) {
-    if (!AgentCommonConfig.get().getEnduserConfig().isIdEnabled()) {
+    if (!AgentCommonConfig.get().getUserConfig().isNameEnabled()) {
       return;
     }
 
     Principal principal = accessor.getRequestUserPrincipal(request);
     if (principal != null) {
-      serverSpan.setAttribute(ENDUSER_ID, principal.getName());
+      serverSpan.setAttribute(v3Preview() ? USER_NAME : ENDUSER_ID, principal.getName());
     }
   }
 

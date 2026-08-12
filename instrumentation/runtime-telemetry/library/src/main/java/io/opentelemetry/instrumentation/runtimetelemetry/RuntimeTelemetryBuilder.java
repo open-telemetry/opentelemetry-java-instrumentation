@@ -118,7 +118,10 @@ public final class RuntimeTelemetryBuilder {
 
   private static Meter getMeter(OpenTelemetry openTelemetry, String instrumentationName) {
     MeterBuilder meterBuilder = openTelemetry.meterBuilder(instrumentationName);
-    String version = EmbeddedInstrumentationProperties.findVersion(instrumentationName);
+    // version file is generated from the gradle module name; the emitted scope may be a legacy
+    // name from a previously-renamed module (e.g. runtime-telemetry-java8) that has no version
+    // file of its own, so always look the version up under the current module name
+    String version = EmbeddedInstrumentationProperties.findVersion(DEFAULT_INSTRUMENTATION_NAME);
     if (version != null) {
       meterBuilder.setInstrumentationVersion(version);
     }

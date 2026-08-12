@@ -26,7 +26,7 @@ dependencies {
 
 testing {
   suites {
-    val testArmeria19 by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testArmeria19") {
       sources {
         java {
           setSrcDirs(listOf("src/test/java", "src/testArmeria19/java"))
@@ -48,7 +48,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")

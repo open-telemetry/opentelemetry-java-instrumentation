@@ -49,7 +49,6 @@ public class TestAgentListener implements AgentBuilder.Listener {
     return builder.buildIgnoredTypesTrie();
   }
 
-  @SuppressWarnings("deprecation") // supporting deprecated method for backward compatibility
   private static Trie<IgnoreAllow> buildOtherConfiguredIgnores() {
     IgnoredTypesBuilderImpl builder = new IgnoredTypesBuilderImpl();
     for (IgnoredTypesConfigurer configurer :

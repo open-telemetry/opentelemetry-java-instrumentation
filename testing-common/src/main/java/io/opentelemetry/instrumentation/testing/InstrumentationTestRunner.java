@@ -185,6 +185,8 @@ public abstract class InstrumentationTestRunner {
                             data.getInstrumentationScopeInfo().getName().equals(instrumentationName)
                                 && data.getName().equals(metricName))));
 
+    TelemetryDataUtil.assertMetricScopeVersion(metricsForScope(instrumentationName));
+
     if (Boolean.getBoolean("collectMetadata")) {
       collectEmittedMetrics(getExportedMetrics());
     }
@@ -206,9 +208,17 @@ public abstract class InstrumentationTestRunner {
           }
         });
 
+    TelemetryDataUtil.assertMetricScopeVersion(metricsForScope(instrumentationName));
+
     if (Boolean.getBoolean("collectMetadata")) {
       collectEmittedMetrics(getExportedMetrics());
     }
+  }
+
+  private List<MetricData> metricsForScope(String instrumentationName) {
+    return getExportedMetrics().stream()
+        .filter(m -> m.getInstrumentationScopeInfo().getName().equals(instrumentationName))
+        .collect(toList());
   }
 
   private void collectEmittedMetrics(List<MetricData> metrics) {

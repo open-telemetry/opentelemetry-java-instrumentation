@@ -32,6 +32,8 @@ import com.azure.core.util.Context;
 import com.azure.core.util.TracingOptions;
 import com.azure.core.util.tracing.Tracer;
 import com.azure.core.util.tracing.TracerProvider;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -76,6 +78,32 @@ class AzureSdkTest {
                         .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(
                             equalTo(stringKey("az.namespace"), "otel.tests"))));
+  }
+
+  @Test
+  void testExplicitParentContextBridge() {
+    // Azure's bundled OpenTelemetryTracer expects the value stored under
+    // Tracer.PARENT_TRACE_CONTEXT_KEY to be the agent (shaded) Context.
+    // This test verifies our Context#getData instrumentation bridges an explicitly supplied
+    // application io.opentelemetry.context.Context into an agent io.opentelemetry.context.Context.
+    // The parent span is never made current, so correct parenting requires this bridge.
+    Tracer azTracer = createAzTracer();
+
+    Span parentSpan = GlobalOpenTelemetry.getTracer("test").spanBuilder("parent").startSpan();
+    // application (unshaded) context carrying the parent span, NOT made current
+    io.opentelemetry.context.Context parentContext =
+        io.opentelemetry.context.Context.root().with(parentSpan);
+
+    Context azContext = new Context(Tracer.PARENT_TRACE_CONTEXT_KEY, parentContext);
+    Context child = azTracer.start("child", azContext);
+    azTracer.end(null, null, child);
+    parentSpan.end();
+
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("child").hasParent(trace.getSpan(0))));
   }
 
   @Test

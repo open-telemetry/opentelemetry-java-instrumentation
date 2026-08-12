@@ -8,7 +8,7 @@ plugins {
   id("otel.java-conventions")
 
   id("com.google.cloud.tools.jib")
-  id("org.springframework.boot") version "4.0.6"
+  id("org.springframework.boot") version "4.1.0"
 }
 
 dependencies {
@@ -60,7 +60,7 @@ springBoot {
 val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
 val bootJarTask = tasks.named<Jar>("bootJar")
 
-val prepareBootJarForImage by tasks.registering(Sync::class) {
+val prepareBootJarForImage = tasks.register<Sync>("prepareBootJarForImage") {
   // Preserve Spring Boot's packaged runtime instead of Jib's default exploded layout so
   // smoke tests exercise the typical bootJar launcher/classloader behavior used by java -jar.
   from(bootJarTask)
@@ -90,7 +90,7 @@ tasks {
     notCompatibleWithConfigurationCache("Jib task accesses Task.project at execution time")
   }
 
-  val springBootJar by configurations.creating {
+  configurations.create("springBootJar") {
     isCanBeConsumed = true
     isCanBeResolved = false
   }

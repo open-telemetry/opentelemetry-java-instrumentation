@@ -22,7 +22,7 @@ muzzle {
 
 // Test suites don't allow excluding transitive dependencies. We use this configuration to declare
 // dependency to latest finatra and exclude netty-transport-native-epoll.
-val finatraLatest by configurations.creating {
+val finatraLatest = configurations.create("finatraLatest") {
   isCanBeConsumed = false
   isCanBeResolved = false
 }
@@ -51,7 +51,7 @@ dependencies {
 
 testing {
   suites {
-    val latestDepTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("latestDepTest") {
       dependencies {
         // finatra is included via finatraLatest configuration
         implementation("io.netty:netty-transport-native-epoll:4.1.51.Final:linux-x86_64")

@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_47.incubator.trace;
 
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.ApplicationTracer;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.ApplicationTracerFactory;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace.ApplicationTracer;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace.ApplicationTracerFactory;
 
 // this class is used from opentelemetry-api-1.27.0 via reflection
 public class ApplicationTracerFactory147Incubator implements ApplicationTracerFactory {
