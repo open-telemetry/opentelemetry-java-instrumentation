@@ -879,6 +879,9 @@ targets:
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.63:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.65:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:opentelemetry-instrumentation-api:opentelemetry-instrumentation-api-1.14:javaagent'
     - type: gradle
       path: ./
