@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.hasConsumedMessages;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -70,6 +71,7 @@ class MessagingConsumerMetricsTest {
             .build();
 
     Context context = listener.onStart(Context.root(), requestAttributes, nanos(100));
+    assertThat(hasConsumedMessages(context)).isEqualTo(emitStableMessagingSemconv());
     listener.onEnd(context, responseAttributes, nanos(300));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();

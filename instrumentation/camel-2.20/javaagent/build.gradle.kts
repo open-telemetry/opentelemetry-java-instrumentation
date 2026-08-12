@@ -33,6 +33,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:aws-sdk:aws-sdk-1.11:javaagent"))
   testInstrumentation(project(":instrumentation:jms:jms-1.1:javaagent"))
+  testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
 
   testInstrumentation(project(":instrumentation:cassandra:cassandra-3.0:javaagent"))
 
@@ -45,6 +46,7 @@ dependencies {
   testImplementation("org.apache.camel:camel-aws:$camelversion")
   testImplementation("org.apache.camel:camel-cassandraql:$camelversion")
   testImplementation("org.apache.camel:camel-jms:$camelversion")
+  testImplementation("org.apache.camel:camel-kafka:$camelversion")
   testImplementation("org.apache.activemq:activemq-broker:5.16.5")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")
@@ -54,6 +56,7 @@ dependencies {
   testImplementation("org.elasticmq:elasticmq-rest-sqs_2.13")
 
   testImplementation("org.testcontainers:testcontainers-cassandra")
+  testImplementation("org.testcontainers:testcontainers-kafka")
   testImplementation("org.testcontainers:testcontainers-junit-jupiter")
   testImplementation("com.datastax.oss:java-driver-core:4.16.0") {
     exclude(group = "io.dropwizard.metrics", module = "metrics-core")
@@ -102,6 +105,15 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging")
   }
 
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,messaging/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging/dup")
+  }
+
   val testV3Preview = register<Test>("testV3Preview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -111,8 +123,28 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
+  val testStableSemconvNoLowerMessaging = register<Test>("testStableSemconvNoLowerMessaging") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,messaging")
+    jvmArgs("-Dotel.instrumentation.jms.enabled=false")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging")
+    systemProperty("testNoLowerMessaging", "true")
+    filter {
+      includeTestsMatching("*JmsCamelStandaloneTest")
+    }
+  }
+
   check {
-    dependsOn(testStableSemconv, testExperimental, testV3Preview)
+    dependsOn(
+      testStableSemconv,
+      testBothSemconv,
+      testExperimental,
+      testV3Preview,
+      testStableSemconvNoLowerMessaging,
+    )
   }
 
   if (otelProps.denyUnsafe) {
