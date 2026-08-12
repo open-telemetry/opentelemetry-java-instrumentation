@@ -100,14 +100,15 @@ fun registerOsgiSuite(
 
   // Run the OSGi container on -PtestJavaVersion (falling back to the build toolchain) and derive
   // -runee from it, so the java-version test matrix actually exercises OSGi resolution on each
-  // target execution environment instead of always using the build JVM. otelProps.testJavaVersion
-  // is normalized (e.g. "25-deny-unsafe" -> 25).
+  // target execution environment instead of always using the build JVM. CI passes the raw matrix
+  // value (e.g. -PtestJavaVersion=25-deny-unsafe), which Gradle's JavaVersion.toVersion truncates
+  // to the major version.
   val suiteJavaVersion = the<OtelPropsExtension>().testJavaVersion?.majorVersion?.toInt()
     ?: java.toolchain.languageVersion.get().asInt()
   // The bnd OSGi launcher (biz.aQute.launcher 7.3.0) is compiled for Java 17, so the container can
   // only boot on Java 17+ - below that it fails with UnsupportedClassVersionError. (Java 8 also
   // can't resolve the bundle set, which needs a JavaSE>=9 EE.) Skip the suites below 17; the matrix
-  // still exercises 17, 21, 25 and 26.
+  // still exercises every Java 17+ entry.
   val suiteEnabledForJavaVersion = suiteJavaVersion >= 17
   val runee = "JavaSE-$suiteJavaVersion"
   // Honor -PtestJavaVM too, so in the openj9 matrix job the container boots on J9 like the rest of
