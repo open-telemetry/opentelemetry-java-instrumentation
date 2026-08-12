@@ -129,7 +129,8 @@ warnings are based on explicit legacy-key presence and can occur even when the c
 determines the effective enablement.
 
 No per-module `AgentCommonConfig` branching, `isV3Preview()` checks, or bespoke logging are
-needed — one string literal is the entire change.
+needed — the marker string plus the statically imported `expandDeprecatedNames` call is the
+entire change.
 
 ### 2. Emitted instrumentation scope name (`INSTRUMENTATION_NAME` in `*Singletons`)
 
