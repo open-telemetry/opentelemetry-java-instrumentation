@@ -136,7 +136,8 @@ class CamelSingletons {
       }
       return messagingProcessInstrumenter;
     }
-    if (request.getCamelDirection() == CamelDirection.OUTBOUND
+    if (emitStableMessagingSemconv()
+        && request.getCamelDirection() == CamelDirection.OUTBOUND
         && request.getSpanDecorator().isHttp()) {
       return httpClientInstrumenter;
     }
