@@ -36,6 +36,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -769,6 +770,8 @@ abstract class AbstractRocketMqClientTest {
 
   private static SpanDataAssert assertReceiveSpan(
       SpanDataAssert span, String topic, String consumerGroup, SpanData linkedSpan) {
+    Attributes linkedAttributes =
+        linkedSpan == null ? Attributes.empty() : linkedSpan.getAttributes();
     SpanDataAssert result =
         span.hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
             .hasName(emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
@@ -786,7 +789,20 @@ abstract class AbstractRocketMqClientTest {
                 oldOperation("receive"),
                 operationName("receive"),
                 operationType("receive"),
-                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
+                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
+                equalTo(MESSAGING_MESSAGE_ID, linkedAttributes.get(MESSAGING_MESSAGE_ID)),
+                equalTo(
+                    MESSAGING_ROCKETMQ_MESSAGE_TAG,
+                    linkedAttributes.get(MESSAGING_ROCKETMQ_MESSAGE_TAG)),
+                equalTo(
+                    MESSAGING_ROCKETMQ_MESSAGE_GROUP,
+                    linkedAttributes.get(MESSAGING_ROCKETMQ_MESSAGE_GROUP)),
+                equalTo(
+                    MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP,
+                    linkedAttributes.get(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP)),
+                equalTo(
+                    MESSAGING_ROCKETMQ_MESSAGE_KEYS,
+                    linkedAttributes.get(MESSAGING_ROCKETMQ_MESSAGE_KEYS)));
     if (linkedSpan != null) {
       // one link per received message
       result.hasLinks(LinkData.create(linkedSpan.getSpanContext()));
