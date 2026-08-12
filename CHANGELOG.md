@@ -19,8 +19,7 @@
   include/exclude request metadata selectors.
 - Deprecate `otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes` in favor of
   the `otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.{included,excluded}`
-  selector. The deprecated property remains as an include-only alias through 2.x and is ignored
-  under v3 configuration.
+  selector. The deprecated property remains as an include-only alias.
   ([#19519](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19519))
 - Deprecate `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` and
   `io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental#setPreferJfrMetrics(RuntimeTelemetryBuilder, boolean)`

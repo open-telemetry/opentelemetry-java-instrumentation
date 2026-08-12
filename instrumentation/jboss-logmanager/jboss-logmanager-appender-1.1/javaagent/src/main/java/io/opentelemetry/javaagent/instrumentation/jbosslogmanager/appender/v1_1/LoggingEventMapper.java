@@ -20,7 +20,6 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -68,11 +67,11 @@ public class LoggingEventMapper {
         config.getBoolean("experimental_log_attributes/development", false);
     captureTemplate = config.getBoolean("capture_template/development", false);
     captureArguments = config.getBoolean("capture_arguments/development", false);
-    mdcAttributes = getMdcAttributes(config, SemconvStability.v3Preview(GlobalOpenTelemetry.get()));
+    mdcAttributes = getMdcAttributes(config);
   }
 
   @Nullable
-  static Predicate<String> getMdcAttributes(DeclarativeConfigProperties config, boolean v3Preview) {
+  static Predicate<String> getMdcAttributes(DeclarativeConfigProperties config) {
     DeclarativeConfigProperties mdcAttributes = config.get("mdc_attributes/development");
     List<String> included = mdcAttributes.getScalarList("included", String.class);
     List<String> excluded = mdcAttributes.getScalarList("excluded", String.class);
@@ -82,11 +81,7 @@ public class LoggingEventMapper {
             .setExcluded(excluded == null ? emptyList() : excluded)
             .build();
 
-    if (v3Preview) {
-      return selector.isEmpty() ? null : selector::matches;
-    }
-
-    // Deprecated include-only alias retained through 2.x.
+    // Deprecated include-only alias.
     List<String> deprecatedIncluded =
         config.getScalarList("capture_mdc_attributes/development", String.class);
     if (!selector.isEmpty()) {
@@ -100,7 +95,7 @@ public class LoggingEventMapper {
                 + MDC_ATTRIBUTES_INCLUDED
                 + " or "
                 + MDC_ATTRIBUTES_EXCLUDED
-                + " is configured. They will be removed in 3.0.");
+                + " is configured. They may be removed in the next minor release.");
       }
       return selector::matches;
     }
@@ -113,7 +108,7 @@ public class LoggingEventMapper {
         "The "
             + DEPRECATED_CAPTURE_MDC_ATTRIBUTES
             + " setting and the equivalent declarative configuration property are deprecated and"
-            + " will be removed in 3.0. Use "
+            + " may be removed in the next minor release. Use "
             + MDC_ATTRIBUTES_INCLUDED
             + " or equivalent declarative configuration instead.");
     if (deprecatedIncluded.isEmpty()) {

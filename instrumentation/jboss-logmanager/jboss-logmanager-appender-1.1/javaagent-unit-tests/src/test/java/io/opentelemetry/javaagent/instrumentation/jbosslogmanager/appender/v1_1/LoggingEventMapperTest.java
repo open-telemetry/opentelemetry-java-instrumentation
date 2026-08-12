@@ -43,7 +43,7 @@ class LoggingEventMapperTest {
     when(mdcAttributes.getScalarList("excluded", String.class))
         .thenReturn(singletonList("prefix.secret"));
 
-    Predicate<String> selector = LoggingEventMapper.getMdcAttributes(config, false);
+    Predicate<String> selector = LoggingEventMapper.getMdcAttributes(config);
 
     assertThat(selector).isNotNull();
     assertThat(selector.test("exact")).isTrue();
@@ -60,7 +60,7 @@ class LoggingEventMapperTest {
     when(config.get("mdc_attributes/development").getScalarList("excluded", String.class))
         .thenReturn(singletonList("secret*"));
 
-    Predicate<String> selector = LoggingEventMapper.getMdcAttributes(config, false);
+    Predicate<String> selector = LoggingEventMapper.getMdcAttributes(config);
 
     assertThat(selector).isNotNull();
     assertThat(selector.test("public")).isTrue();
@@ -76,8 +76,8 @@ class LoggingEventMapperTest {
     when(empty.get("mdc_attributes/development").getScalarList("excluded", String.class))
         .thenReturn(emptyList());
 
-    assertThat(LoggingEventMapper.getMdcAttributes(absent, false)).isNull();
-    assertThat(LoggingEventMapper.getMdcAttributes(empty, false)).isNull();
+    assertThat(LoggingEventMapper.getMdcAttributes(absent)).isNull();
+    assertThat(LoggingEventMapper.getMdcAttributes(empty)).isNull();
   }
 
   @Test
@@ -87,8 +87,8 @@ class LoggingEventMapperTest {
         .thenReturn(asList("literal?", "embedded*", "*"));
     TestHandler handler = attachWarningHandler();
     try {
-      Predicate<String> first = LoggingEventMapper.getMdcAttributes(config, false);
-      Predicate<String> second = LoggingEventMapper.getMdcAttributes(config, false);
+      Predicate<String> first = LoggingEventMapper.getMdcAttributes(config);
+      Predicate<String> second = LoggingEventMapper.getMdcAttributes(config);
 
       assertThat(first).isNotNull();
       assertThat(first.test("literal?")).isTrue();
@@ -103,7 +103,7 @@ class LoggingEventMapperTest {
           .isEqualTo(
               "The otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes"
                   + " setting and the equivalent declarative configuration property are deprecated"
-                  + " and will be removed in 3.0. Use"
+                  + " and may be removed in the next minor release. Use"
                   + " otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included"
                   + " or equivalent declarative configuration instead.");
     } finally {
@@ -117,7 +117,7 @@ class LoggingEventMapperTest {
     when(config.getScalarList("capture_mdc_attributes/development", String.class))
         .thenReturn(singletonList("*"));
 
-    Predicate<String> selector = LoggingEventMapper.getMdcAttributes(config, false);
+    Predicate<String> selector = LoggingEventMapper.getMdcAttributes(config);
 
     assertThat(selector).isNotNull();
     assertThat(selector.test("literal?")).isTrue();
@@ -133,8 +133,8 @@ class LoggingEventMapperTest {
         .thenReturn(singletonList("legacy"));
     TestHandler handler = attachWarningHandler();
     try {
-      Predicate<String> first = LoggingEventMapper.getMdcAttributes(config, false);
-      Predicate<String> second = LoggingEventMapper.getMdcAttributes(config, false);
+      Predicate<String> first = LoggingEventMapper.getMdcAttributes(config);
+      Predicate<String> second = LoggingEventMapper.getMdcAttributes(config);
 
       assertThat(first).isNotNull();
       assertThat(first.test("new")).isTrue();
@@ -149,21 +149,7 @@ class LoggingEventMapperTest {
                   + " otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included"
                   + " or"
                   + " otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.excluded"
-                  + " is configured. They will be removed in 3.0.");
-    } finally {
-      detachWarningHandler(handler);
-    }
-  }
-
-  @Test
-  void deprecatedConfigIsIgnoredInV3Preview() {
-    DeclarativeConfigProperties config = mockConfig();
-    when(config.getScalarList("capture_mdc_attributes/development", String.class))
-        .thenReturn(singletonList("legacy"));
-    TestHandler handler = attachWarningHandler();
-    try {
-      assertThat(LoggingEventMapper.getMdcAttributes(config, true)).isNull();
-      assertThat(handler.records).isEmpty();
+                  + " is configured. They may be removed in the next minor release.");
     } finally {
       detachWarningHandler(handler);
     }

@@ -68,22 +68,11 @@ tasks {
     systemProperty("testMdcConfiguration", "precedence")
   }
 
-  val testLegacyMdcAttributesV3 = register<Test>("testLegacyMdcAttributesV3") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs(
-      "-Dotel.instrumentation.common.v3-preview=true",
-      "-Dotel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes=legacy",
-    )
-  }
-
   check {
     dependsOn(
       testCaptureTemplateAndArguments,
       testLegacyMdcAttributes,
       testMdcAttributePrecedence,
-      testLegacyMdcAttributesV3,
     )
   }
 }
