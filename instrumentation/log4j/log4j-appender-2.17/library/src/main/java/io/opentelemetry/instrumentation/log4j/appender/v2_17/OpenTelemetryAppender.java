@@ -120,6 +120,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @PluginBuilderAttribute private boolean captureTemplate;
     @PluginBuilderAttribute private boolean captureArguments;
     @Nullable @PluginBuilderAttribute private String captureContextDataAttributes;
+    @Nullable @PluginBuilderAttribute private String contextDataAttributesIncluded;
+    @Nullable @PluginBuilderAttribute private String contextDataAttributesExcluded;
     @Nullable private IncludeExclude contextDataAttributes;
     @PluginBuilderAttribute private int numLogsCapturedBeforeOtelInstall;
 
@@ -210,6 +212,32 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
 
     /**
+     * Configures the comma-separated {@link ThreadContext} attribute key patterns that will be
+     * copied to logs.
+     *
+     * <p>This is the configuration-file form of {@link #setContextDataAttributes(IncludeExclude)}
+     * and is ignored when a selector is set with that method.
+     */
+    @CanIgnoreReturnValue
+    public B setContextDataAttributesIncluded(String contextDataAttributesIncluded) {
+      this.contextDataAttributesIncluded = contextDataAttributesIncluded;
+      return asBuilder();
+    }
+
+    /**
+     * Configures the comma-separated {@link ThreadContext} attribute key patterns that will not be
+     * copied to logs.
+     *
+     * <p>This is the configuration-file form of {@link #setContextDataAttributes(IncludeExclude)}
+     * and is ignored when a selector is set with that method.
+     */
+    @CanIgnoreReturnValue
+    public B setContextDataAttributesExcluded(String contextDataAttributesExcluded) {
+      this.contextDataAttributesExcluded = contextDataAttributesExcluded;
+      return asBuilder();
+    }
+
+    /**
      * Configures the {@link ThreadContext} attributes that will be copied to logs.
      *
      * @deprecated Use {@link #setContextDataAttributes(IncludeExclude)} instead. Will be removed in
@@ -265,6 +293,14 @@ public class OpenTelemetryAppender extends AbstractAppender {
     private IncludeExclude getEffectiveContextDataAttributes() {
       if (contextDataAttributes != null) {
         return contextDataAttributes;
+      }
+      IncludeExclude selector =
+          IncludeExclude.builder()
+              .setIncluded(splitAndFilterBlanksAndNulls(contextDataAttributesIncluded))
+              .setExcluded(splitAndFilterBlanksAndNulls(contextDataAttributesExcluded))
+              .build();
+      if (!selector.isEmpty()) {
+        return selector;
       }
       List<String> included = splitAndFilterBlanksAndNulls(captureContextDataAttributes);
       return included.isEmpty() ? null : IncludeExclude.builder().setIncluded(included).build();

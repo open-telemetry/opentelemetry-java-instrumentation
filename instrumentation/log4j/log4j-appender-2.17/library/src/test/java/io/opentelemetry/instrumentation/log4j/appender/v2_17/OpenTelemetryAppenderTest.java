@@ -182,6 +182,36 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation")
+  void configurationFileContextDataSelectorTakesPrecedenceOverDeprecatedAlias() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setContextDataAttributesIncluded("request-*")
+            .setContextDataAttributesExcluded("*-secret")
+            .setCaptureContextDataAttributes("legacy")
+            .build();
+    appender.start();
+
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue("request-id", "captured");
+    contextData.putValue("request-secret", "ignored");
+    contextData.putValue("legacy", "ignored");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(new FormattedMessage("log message", (Object) null))
+            .setContextData(contextData)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("request-id"), "captured")));
+  }
+
+  @Test
   void logWithSpanContextFromContextData() {
     assumeFalse(Boolean.getBoolean("otel.instrumentation.common.v3-preview"));
 

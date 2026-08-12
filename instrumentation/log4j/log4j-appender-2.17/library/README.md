@@ -82,11 +82,11 @@ Setting can be configured as XML attributes, for example:
 
 ```xml
 <Appenders>
-  <!-- captureContextDataAttributes is retained for deprecated XML compatibility. -->
   <OpenTelemetry name="OpenTelemetryAppender"
       captureMapMessageAttributes="true"
       captureMarkerAttribute="true"
-      captureContextDataAttributes="*"
+      contextDataAttributesIncluded="request-*,user-?"
+      contextDataAttributesExcluded="*-secret"
   />
 </Appenders>
 ```
@@ -101,7 +101,9 @@ The available settings are:
 | `captureMarkerAttribute`           | Boolean | `false` | Enable the capture of Log4j markers as attributes.                                                                                                                                                         |
 | `captureTemplate`                  | Boolean | `false` | Enable the capture of the log message template (if arguments are provided).                                                                                                                                |
 | `captureArguments`                 | Boolean | `false` | Enable the capture of the log message arguments.                                                                                                                                                           |
-| `captureContextDataAttributes`     | String  |         | Deprecated include-only compatibility setting for XML and programmatic configurations. Prefer `setContextDataAttributes(IncludeExclude)` for new programmatic configurations. Will be removed in 3.0.      |
+| `contextDataAttributesIncluded`    | String  |         | Comma-separated list of case-sensitive glob patterns for context data keys to capture as log attributes.                                                                                                    |
+| `contextDataAttributesExcluded`    | String  |         | Comma-separated list of case-sensitive glob patterns for context data keys not to capture as log attributes.                                                                                                |
+| `captureContextDataAttributes`     | String  |         | Deprecated include-only compatibility setting. Use `contextDataAttributesIncluded` instead. Will be removed in 3.0.                                                                                        |
 | `numLogsCapturedBeforeOtelInstall` | Integer | 1000    | Log telemetry is emitted after the initialization of the OpenTelemetry Log4j appender with an OpenTelemetry object. This setting allows you to modify the size of the cache used to replay the first logs. |
 
 For programmatic configuration, use an `IncludeExclude` selector:
@@ -122,7 +124,9 @@ Context data keys and selector patterns are matched case-sensitively. `?` matche
 character and `*` matches any number of characters, including none. Excluded patterns take
 precedence over included patterns. No context data attributes are captured when the selector is
 absent or empty; a selector with only excluded patterns captures every context data attribute that
-it does not exclude.
+it does not exclude. A selector set with `setContextDataAttributes(IncludeExclude)` takes precedence
+over the `contextDataAttributesIncluded` and `contextDataAttributesExcluded` settings, which in turn
+take precedence over the deprecated `captureContextDataAttributes` setting.
 
 The `otel.event.name` key is supported in `MapMessage` entries and context data entries. When present, its value is used as the log event name and is not emitted as an attribute.
 
