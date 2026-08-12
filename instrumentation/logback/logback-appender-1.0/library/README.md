@@ -87,7 +87,7 @@ Settings can be configured in `logback.xml`, for example:
 ```xml
 <appender name="OpenTelemetry" class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
   <captureExperimentalAttributes>true</captureExperimentalAttributes>
-  <!-- Deprecated compatibility setting; prefer setMdcAttributes(IncludeExclude). -->
+  <!-- Include-only MDC selector; excluded patterns are only available programmatically. -->
   <captureMdcAttributes>request-*,user-?</captureMdcAttributes>
 </appender>
 ```
@@ -105,7 +105,7 @@ The available settings are:
 | `captureArguments`                   | Boolean | `false` | Enable the capture of Logback log event arguments.                                                                                                                                                                                                |
 | `captureLogstashMarkerAttributes`    | Boolean | `false` | Enable the capture of Logstash markers, supported are those added to logs via `Markers.append()`, `Markers.appendEntries()`, `Markers.appendArray()` and `Markers.appendRaw()` methods.                                                           |
 | `captureLogstashStructuredArguments` | Boolean | `false` | Enable the capture of Logstash StructuredArguments as attributes (e.g., `StructuredArguments.v()` and `StructuredArguments.keyValue()`).                                                                                                          |
-| `captureMdcAttributes`               | String  |         | Deprecated include-only compatibility setting for XML and programmatic configurations. Prefer `setMdcAttributes(IncludeExclude)` for new programmatic configurations. Will be removed in 3.0.                                                     |
+| `captureMdcAttributes`               | String  |         | Include-only MDC selector, and the only MDC setting that can be configured from `logback.xml`. Deprecated in favor of `setMdcAttributes(IncludeExclude)`, which is not reachable from XML, and will be removed in 3.0.                            |
 | `numLogsCapturedBeforeOtelInstall`   | Integer | 1000    | Log telemetry is emitted after the initialization of the OpenTelemetry Logback appender with an OpenTelemetry object. This setting allows you to modify the size of the cache used to replay the first logs. thread.id attribute is not captured. |
 
 For programmatic configuration, use an `IncludeExclude` selector:

@@ -237,6 +237,11 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   /**
    * Configures the {@link MDC} attributes that will be copied to logs.
    *
+   * <p>This setter backs the {@code captureMdcAttributes} element in {@code logback.xml} and is
+   * currently the only way to select MDC attributes from XML, because {@link
+   * #setMdcAttributes(IncludeExclude)} takes a type that Logback cannot construct from a
+   * configuration file.
+   *
    * @deprecated Use {@link #setMdcAttributes(IncludeExclude)} instead. Will be removed in 3.0.
    */
   @Deprecated // to be removed in 3.0
