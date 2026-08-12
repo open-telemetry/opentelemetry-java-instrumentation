@@ -12,9 +12,37 @@ configurations:
     description: Enables capturing the experimental `servlet.timeout` span attribute.
     type: boolean
     default: false
+  - name: otel.instrumentation.servlet.experimental.request-parameters.included
+    declarative_name: java.servlet.request_parameters/development.included
+    description: >
+      A comma-separated list of case-sensitive request parameter name patterns to capture as span
+      attributes. `?` matches one character and `*` matches zero or more characters. Excluded
+      patterns take precedence over included patterns. No request parameters are captured unless an
+      included or excluded pattern is configured; configuring only excluded patterns captures all
+      request parameters that do not match them, which may expose sensitive information.
+    type: list
+    default: ""
+    examples:
+      - "request-id"
+      - "user-*,search-?"
+  - name: otel.instrumentation.servlet.experimental.request-parameters.excluded
+    declarative_name: java.servlet.request_parameters/development.excluded
+    description: >
+      A comma-separated list of case-sensitive request parameter name patterns to exclude from span
+      attributes. `?` matches one character and `*` matches zero or more characters. Excluded
+      patterns take precedence over included patterns. No request parameters are captured unless an
+      included or excluded pattern is configured; configuring only excluded patterns captures all
+      request parameters that do not match them, which may expose sensitive information.
+    type: list
+    default: ""
+    examples:
+      - "password,*-token"
   - name: otel.instrumentation.servlet.experimental.capture-request-parameters
     declarative_name: java.servlet.capture_request_parameters/development
-    description: List of request parameter names to capture as span attributes.
+    description: >
+      Deprecated include-only alias for
+      `otel.instrumentation.servlet.experimental.request-parameters.included`. It is ignored when
+      the v3 preview is enabled and will be removed in 3.0.
     type: list
     default: ""
   - name: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled

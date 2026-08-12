@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.api.internal.InstrumenterUtil.con
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -48,7 +49,12 @@ public final class ServletTelemetryBuilder {
     Experimental.internalSetAddTraceIdRequestAttribute(
         (builder, value) -> builder.addTraceIdRequestAttribute = value);
     Experimental.internalSetCapturedRequestParameters(
-        (builder, params) -> builder.servletBuilder.setCaptureRequestParameters(params));
+        (builder, params) ->
+            builder.servletBuilder.setRequestParameters(
+                IncludeExclude.builder().setIncluded(params).build()));
+    Experimental.internalSetRequestParameters(
+        (builder, requestParameters) ->
+            builder.servletBuilder.setRequestParameters(requestParameters));
     Experimental.internalSetCaptureEnduserId(
         (builder, value) -> builder.servletBuilder.setCaptureEnduserId(value));
   }

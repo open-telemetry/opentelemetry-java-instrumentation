@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.servlet.v5_0.internal;
 
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.servlet.v5_0.ServletTelemetryBuilder;
 import java.util.Collection;
 import java.util.function.BiConsumer;
@@ -30,6 +31,9 @@ public final class Experimental {
   @Nullable
   private static volatile BiConsumer<ServletTelemetryBuilder, Collection<String>>
       setCapturedRequestParameters;
+
+  @Nullable
+  private static volatile BiConsumer<ServletTelemetryBuilder, IncludeExclude> setRequestParameters;
 
   /**
    * Sets whether experimental HTTP telemetry should be emitted.
@@ -73,20 +77,45 @@ public final class Experimental {
   }
 
   /**
-   * Sets the request parameters to be captured as span attributes.
+   * Sets which request parameters should be captured as span attributes.
    *
    * <p>Request parameters will be captured as attributes with the format {@code
    * servlet.request.parameter.<name>}.
    *
+   * <p>Parameter names and selector patterns are matched case-sensitively. {@code ?} matches any
+   * single character and {@code *} matches any number of characters, including none. Excluded
+   * patterns take precedence over included patterns. An absent or empty selector captures no
+   * parameters; a selector with only excluded patterns captures every parameter that it does not
+   * exclude.
+   *
+   * @param builder the telemetry builder
+   * @param requestParameters request parameter selector
+   * @see jakarta.servlet.ServletRequest#getParameterNames()
+   * @see jakarta.servlet.ServletRequest#getParameterValues(String)
+   */
+  public static void setRequestParameters(
+      ServletTelemetryBuilder builder, IncludeExclude requestParameters) {
+    if (setRequestParameters != null) {
+      setRequestParameters.accept(builder, requestParameters);
+    } else if (setCapturedRequestParameters != null && requestParameters.getExcluded().isEmpty()) {
+      setCapturedRequestParameters.accept(builder, requestParameters.getIncluded());
+    }
+  }
+
+  /**
+   * Sets the request parameters to be captured as span attributes.
+   *
+   * @deprecated Use {@link #setRequestParameters(ServletTelemetryBuilder, IncludeExclude)} instead.
+   *     Will be removed in 3.0.
    * @param builder the telemetry builder
    * @param captureRequestParameters request parameter names to capture
    * @see jakarta.servlet.ServletRequest#getParameterValues(String)
    */
+  @Deprecated // to be removed in 3.0
   public static void setCaptureRequestParameters(
       ServletTelemetryBuilder builder, Collection<String> captureRequestParameters) {
-    if (setCapturedRequestParameters != null) {
-      setCapturedRequestParameters.accept(builder, captureRequestParameters);
-    }
+    setRequestParameters(
+        builder, IncludeExclude.builder().setIncluded(captureRequestParameters).build());
   }
 
   public static void internalSetEmitExperimentalTelemetry(
@@ -107,6 +136,11 @@ public final class Experimental {
   public static void internalSetCapturedRequestParameters(
       BiConsumer<ServletTelemetryBuilder, Collection<String>> setCapturedRequestParameters) {
     Experimental.setCapturedRequestParameters = setCapturedRequestParameters;
+  }
+
+  public static void internalSetRequestParameters(
+      BiConsumer<ServletTelemetryBuilder, IncludeExclude> setRequestParameters) {
+    Experimental.setRequestParameters = setRequestParameters;
   }
 
   private Experimental() {}

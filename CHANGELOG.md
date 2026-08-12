@@ -22,6 +22,11 @@
   selector. The deprecated property keeps its exact-key matching and may be removed in the next
   minor release.
   ([#19519](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19519))
+- Deprecate `otel.instrumentation.servlet.experimental.capture-request-parameters` and
+  `Experimental#setCaptureRequestParameters(...)` in favor of the
+  `otel.instrumentation.servlet.experimental.request-parameters.{included,excluded}` properties and
+  `Experimental#setRequestParameters(ServletTelemetryBuilder, IncludeExclude)`. The deprecated
+  property and method remain as include-only aliases and will be removed in 3.0.
 - Deprecate `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` and
   `io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental#setPreferJfrMetrics(RuntimeTelemetryBuilder, boolean)`
   in favor of `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included` and
