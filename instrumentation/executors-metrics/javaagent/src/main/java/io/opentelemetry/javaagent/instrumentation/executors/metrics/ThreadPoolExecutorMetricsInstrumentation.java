@@ -19,9 +19,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -40,12 +38,6 @@ public class ThreadPoolExecutorMetricsInstrumentation implements TypeInstrumenta
             .and(takesArguments(7))
             .and(methodIsDeclaredByType(named(ThreadPoolExecutor.class.getName()))),
         getClass().getName() + "$ConstructorAdvice");
-    transformer.applyAdviceToMethod(
-        named("setThreadFactory")
-            .and(takesArgument(0, ThreadFactory.class))
-            .and(takesArguments(1))
-            .and(methodIsDeclaredByType(named(ThreadPoolExecutor.class.getName()))),
-        getClass().getName() + "$SetThreadFactoryAdvice");
     transformer.applyAdviceToMethod(
         named("runWorker")
             .and(takesArguments(1))
@@ -70,22 +62,6 @@ public class ThreadPoolExecutorMetricsInstrumentation implements TypeInstrumenta
       if (!(executor instanceof ScheduledThreadPoolExecutor)) {
         ExecutorMetricsRegistry.preRegister(
             executor, JdkExecutorMetrics.DEFAULT_NAME_NORMALIZATION);
-      }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SetThreadFactoryAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This ThreadPoolExecutor executor,
-        @Advice.Argument(0) @Nullable ThreadFactory threadFactory,
-        @Advice.FieldValue("threadFactory") ThreadFactory currentThreadFactory) {
-      if (!(executor instanceof ScheduledThreadPoolExecutor)
-          && threadFactory != null
-          && threadFactory != currentThreadFactory) {
-        ExecutorMetricsRegistry.onThreadFactoryChanged(executor);
       }
     }
   }

@@ -109,7 +109,6 @@ class ExecutorMetricsRegistryTest {
     try {
       ExecutorMetricsRegistry.onWorkerThreadStarted(executor, threadFactory, "initial", metrics);
 
-      ExecutorMetricsRegistry.onThreadFactoryChanged(executor);
       ExecutorMetricsRegistry.onWorkerThreadStarted(executor, threadFactory, "later", metrics);
 
       assertThat(metrics.executorNames).containsExactly("initial");
@@ -357,65 +356,25 @@ class ExecutorMetricsRegistryTest {
   }
 
   @Test
-  void keepsExistingCallbackAndRetriesRegistrationAfterFailure() {
+  void retriesInitialRegistrationAfterFailure() {
     TestMetricsRegistrar metrics = new TestMetricsRegistrar();
     ThreadPoolExecutor executor = newExecutor();
     try {
       ExecutorMetricsRegistry.preRegister(executor, "all");
-      ExecutorMetricsRegistry.onWorkerThreadStarted(executor, "pool-1-thread-1", metrics);
-      TestCallback originalCallback = metrics.callbacks.get(0);
-
       metrics.failuresRemaining = 1;
-      ExecutorMetricsRegistry.onThreadFactoryChanged(executor);
       assertThatThrownBy(
               () ->
                   ExecutorMetricsRegistry.onWorkerThreadStarted(
-                      executor, "other-2-thread-2", metrics))
+                      executor, "first-1-thread-1", metrics))
           .isInstanceOf(IllegalStateException.class)
           .hasMessage("registration failed");
-      assertThat(metrics.callbacks).containsExactly(originalCallback);
-      assertThat(originalCallback.closeCount).hasValue(0);
-
-      ExecutorMetricsRegistry.onWorkerThreadStarted(executor, "other-3-thread-3", metrics);
+      ExecutorMetricsRegistry.onWorkerThreadStarted(executor, "second-2-thread-2", metrics);
+      ExecutorMetricsRegistry.onWorkerThreadStarted(executor, "third-3-thread-3", metrics);
 
       assertThat(metrics.executorNames)
-          .containsExactly("pool-*-thread-*", "other-*-thread-*", "other-*-thread-*");
-      assertThat(metrics.callbacks).hasSize(2);
-      assertThat(originalCallback.closeCount).hasValue(1);
-      LongAdder rejectedTaskCount = metrics.rejectedTaskCounts.get(0);
-      assertThat(metrics.rejectedTaskCounts)
-          .allSatisfy(count -> assertThat(count).isSameAs(rejectedTaskCount));
-
-      ExecutorMetricsRegistry.onThreadFactoryChanged(executor);
-      ExecutorMetricsRegistry.onWorkerThreadStarted(executor, "other-4-thread-4", metrics);
-
-      assertThat(metrics.executorNames).hasSize(3);
-      assertThat(metrics.callbacks).hasSize(2);
-      assertThat(metrics.callbacks.get(1).closeCount).hasValue(0);
-    } finally {
-      ExecutorMetricsRegistry.unregister(executor);
-      executor.shutdownNow();
-    }
-  }
-
-  @Test
-  void staleWorkerDoesNotConsumeThreadFactoryChangeNotification() {
-    TestMetricsRegistrar metrics = new TestMetricsRegistrar();
-    ThreadPoolExecutor executor = newExecutor();
-    try {
-      ExecutorMetricsRegistry.preRegister(executor, "all");
-      ExecutorMetricsRegistry.onWorkerThreadStarted(executor, "factory-a-thread-1", metrics);
-      TestCallback originalCallback = metrics.callbacks.get(0);
-
-      ExecutorMetricsRegistry.onThreadFactoryChanged(executor);
-      ExecutorMetricsRegistry.onWorkerThreadStarted(executor, "factory-a-thread-2", metrics);
-      ExecutorMetricsRegistry.onWorkerThreadStarted(executor, "factory-b-thread-1", metrics);
-      ExecutorMetricsRegistry.onWorkerThreadStarted(executor, "factory-a-thread-3", metrics);
-
-      assertThat(metrics.executorNames).containsExactly("factory-a-thread-*", "factory-b-thread-*");
-      assertThat(metrics.callbacks).hasSize(2);
-      assertThat(originalCallback.closeCount).hasValue(1);
-      assertThat(metrics.callbacks.get(1).closeCount).hasValue(0);
+          .containsExactly("first-*-thread-*", "second-*-thread-*");
+      assertThat(metrics.callbacks).hasSize(1);
+      assertThat(metrics.callbacks.get(0).closeCount).hasValue(0);
     } finally {
       ExecutorMetricsRegistry.unregister(executor);
       executor.shutdownNow();

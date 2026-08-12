@@ -68,7 +68,7 @@ class ThreadPerTaskExecutorMetricsTest {
   }
 
   @Test
-  void retainsInitialNameAfterThreadFactoryChangeNotification() throws Exception {
+  void retainsInitialNameWhenLaterThreadsHaveDifferentNames() throws Exception {
     AtomicInteger sequence = new AtomicInteger();
     ThreadFactory threadFactory =
         runnable -> {
@@ -90,13 +90,6 @@ class ThreadPerTaskExecutorMetricsTest {
           .withActiveThreads(1)
           .assertExecutorEmitsMetrics();
       testing.clearData();
-
-      Class<?> executorMetrics =
-          Class.forName(
-              "io.opentelemetry.javaagent.bootstrap.executors.metrics.ExecutorMetricsRegistry",
-              false,
-              null);
-      executorMetrics.getMethod("onThreadFactoryChanged", Executor.class).invoke(null, executor);
 
       Future<?> secondFuture = submitBlockingTask(executor, secondStarted, release);
 

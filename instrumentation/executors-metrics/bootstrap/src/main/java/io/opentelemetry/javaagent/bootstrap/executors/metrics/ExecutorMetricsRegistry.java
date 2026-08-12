@@ -69,13 +69,6 @@ public final class ExecutorMetricsRegistry {
     }
   }
 
-  public static void onThreadFactoryChanged(Executor executor) {
-    Registration registration = registrations.get(executor);
-    if (registration != null) {
-      registration.awaitNextWorkerThread();
-    }
-  }
-
   public static void onWorkerThreadStarted(
       Executor executor, @Nullable String threadName, MetricsRegistrar metricsRegistrar) {
     Registration registration = registrations.get(executor);
@@ -153,12 +146,6 @@ public final class ExecutorMetricsRegistry {
     private Registration(Set<Thread> threads, String threadNameNormalization) {
       threadsRef = new WeakReference<>(threads);
       this.threadNameNormalization = threadNameNormalization;
-    }
-
-    private synchronized void awaitNextWorkerThread() {
-      if (!closed) {
-        awaitingWorkerThread = true;
-      }
     }
 
     private void onWorkerThreadStarted(
