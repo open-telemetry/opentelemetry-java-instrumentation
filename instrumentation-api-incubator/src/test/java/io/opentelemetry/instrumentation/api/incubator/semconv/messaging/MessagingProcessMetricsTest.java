@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState.hasProcessDuration;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -50,6 +51,7 @@ class MessagingProcessMetricsTest {
 
     Context root = Context.root();
     Context context = listener.onStart(root, attributes, nanos(100));
+    assertThat(hasProcessDuration(context)).isEqualTo(emitStableMessagingSemconv());
     Attributes endAttributes =
         Attributes.builder()
             .put(

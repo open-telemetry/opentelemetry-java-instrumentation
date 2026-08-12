@@ -22,6 +22,7 @@ import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
@@ -144,9 +145,13 @@ public final class MessagingConsumerMetrics implements OperationListener {
     if (!enabled) {
       return context;
     }
-    return context.with(
-        MESSAGING_CONSUMER_METRICS_STATE,
-        new AutoValue_MessagingConsumerMetrics_State(startAttributes, startNanos));
+    Context contextWithState =
+        context.with(
+            MESSAGING_CONSUMER_METRICS_STATE,
+            new AutoValue_MessagingConsumerMetrics_State(startAttributes, startNanos));
+    return consumedMessagesCounter != null
+        ? MessagingMetricsState.markConsumedMessages(contextWithState)
+        : contextWithState;
   }
 
   @Override
