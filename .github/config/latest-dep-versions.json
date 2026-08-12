@@ -145,6 +145,7 @@
     "io.dropwizard:dropwizard-client#+": "5.0.2",
     "io.dropwizard:dropwizard-views#+": "5.0.2",
     "io.github.rediscala:rediscala_2.13#+": "1.17.0",
+    "io.github.resilience4j:resilience4j-circuitbreaker#+": "2.4.0",
     "io.grpc:grpc-core#+": "1.83.1",
     "io.grpc:grpc-netty#+": "1.83.1",
     "io.grpc:grpc-protobuf#+": "1.83.1",

@@ -1,0 +1,3 @@
+display_name: Resilience4j CircuitBreaker
+description: This instrumentation adds Resilience4j circuit breaker information to active spans.
+library_link: https://resilience4j.readme.io/docs/circuitbreaker
