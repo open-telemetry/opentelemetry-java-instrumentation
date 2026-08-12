@@ -407,7 +407,7 @@ abstract class AbstractPulsarClientTest {
                 equalTo(MESSAGING_SYSTEM, "pulsar"),
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort),
-                equalTo(MESSAGING_DESTINATION_NAME, destination),
+                equalTo(MESSAGING_DESTINATION_NAME, destinationName(destination)),
                 oldOperation("publish"),
                 operationName("send"),
                 operationType("send"),
@@ -443,7 +443,7 @@ abstract class AbstractPulsarClientTest {
                 equalTo(MESSAGING_SYSTEM, "pulsar"),
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort),
-                equalTo(MESSAGING_DESTINATION_NAME, destination),
+                equalTo(MESSAGING_DESTINATION_NAME, destinationName(destination)),
                 oldOperation("receive"),
                 operationName("receive"),
                 operationType("receive"),
@@ -470,7 +470,7 @@ abstract class AbstractPulsarClientTest {
         new ArrayList<>(
             asList(
                 equalTo(MESSAGING_SYSTEM, "pulsar"),
-                equalTo(MESSAGING_DESTINATION_NAME, destination),
+                equalTo(MESSAGING_DESTINATION_NAME, destinationName(destination)),
                 oldOperation("process"),
                 operationName("process"),
                 operationType("process"),
@@ -485,6 +485,12 @@ abstract class AbstractPulsarClientTest {
       assertions.add(equalTo(MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(partitionIndex)));
     }
     return assertions;
+  }
+
+  // the stable semantic conventions record the partition in messaging.destination.partition.id, so
+  // the destination name does not include the "-partition-N" suffix there
+  static String destinationName(String topic) {
+    return emitStableMessagingSemconv() ? TopicName.get(topic).getPartitionedTopicName() : topic;
   }
 
   // messaging.destination.subscription.name only exists in the v1.43 messaging semantic conventions
