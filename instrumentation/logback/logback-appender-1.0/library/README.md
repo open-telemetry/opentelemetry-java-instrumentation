@@ -119,9 +119,10 @@ appender.setMdcAttributes(
 ```
 
 MDC keys and selector patterns are matched case-sensitively. `?` matches any single character and
-`*` matches any number of characters, including none. Excluded patterns take precedence over
-included patterns. No MDC attributes are captured when the selector is absent or empty; a selector
-with only excluded patterns captures every MDC attribute that it does not exclude.
+`*` matches any number of characters, including none, so `*` captures all MDC attributes. Excluded
+patterns take precedence over included patterns. No MDC attributes are captured when the selector is
+absent or empty; a selector with only excluded patterns captures every MDC attribute that it does
+not exclude.
 
 The `otel.event.name` key is supported in key-value pairs (SLF4J 2.x fluent API), MDC entries, Logstash markers (e.g., `Markers.append("otel.event.name", ...)`), and Logstash structured arguments (e.g., `StructuredArguments.keyValue("otel.event.name", ...)`). When present, its value is used as the log event name and is not emitted as an attribute.
 

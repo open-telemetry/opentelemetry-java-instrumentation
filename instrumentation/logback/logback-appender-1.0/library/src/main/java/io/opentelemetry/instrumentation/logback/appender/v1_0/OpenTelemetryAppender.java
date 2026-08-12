@@ -225,10 +225,10 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * Configures the {@link MDC} attributes that will be copied to logs.
    *
    * <p>MDC keys and selector patterns are matched case-sensitively. {@code ?} matches any single
-   * character and {@code *} matches any number of characters, including none. Excluded patterns
-   * take precedence over included patterns. No MDC attributes are captured when the selector is
-   * {@code null} or empty; a selector with only excluded patterns captures every MDC attribute that
-   * it does not exclude.
+   * character and {@code *} matches any number of characters, including none, so {@code *} captures
+   * all MDC attributes. Excluded patterns take precedence over included patterns. No MDC attributes
+   * are captured when the selector is {@code null} or empty; a selector with only excluded patterns
+   * captures every MDC attribute that it does not exclude.
    */
   public void setMdcAttributes(@Nullable IncludeExclude mdcAttributes) {
     this.mdcAttributes = mdcAttributes == null || mdcAttributes.isEmpty() ? null : mdcAttributes;

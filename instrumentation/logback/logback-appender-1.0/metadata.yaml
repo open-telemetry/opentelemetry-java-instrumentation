@@ -64,15 +64,16 @@ configurations:
     declarative_name: java.logback_appender.mdc_attributes/development.included
     description: >
       Comma-separated list of case-sensitive glob patterns for MDC keys to capture as log
-      attributes. "*" matches any number of characters and "?" matches one character. Excluded
-      patterns take precedence over included patterns. No MDC attributes are captured unless an
-      included or excluded pattern is configured; configuring only excluded patterns captures all
-      MDC attributes that do not match them.
+      attributes. "*" matches any number of characters and "?" matches one character, so "*"
+      captures all MDC attributes. Excluded patterns take precedence over included patterns. No MDC
+      attributes are captured unless an included or excluded pattern is configured; configuring only
+      excluded patterns captures all MDC attributes that do not match them.
     type: list
     default: ''
     examples:
       - "custom-mdc-key"
       - "request-*,user-?"
+      - "*"
   - name: otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded
     declarative_name: java.logback_appender.mdc_attributes/development.excluded
     description: >
