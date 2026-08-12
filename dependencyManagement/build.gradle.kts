@@ -128,7 +128,7 @@ val DEPENDENCIES = listOf(
   "org.osgi:osgi.core:8.0.0",
   "org.osgi:org.osgi.test.junit5:1.3.0",
   "org.junit.jupiter:junit-jupiter:5.14.4",
-  "org.junit.platform:junit-platform-launcher:1.14.4"
+  "org.junit.platform:junit-platform-launcher:6.1.3"
 )
 
 javaPlatform {
