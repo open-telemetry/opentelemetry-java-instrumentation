@@ -42,6 +42,23 @@ class PulsarRequestDestinationTest {
   }
 
   @Test
+  void keepsTopicNameThatIsNotFullyQualified() {
+    PulsarRequest request = request(message("test"));
+
+    assertThat(request.getDestination()).isEqualTo("test");
+    assertThat(request.getDestinationPartitionId()).isNull();
+  }
+
+  @Test
+  void keepsTopicNameThatIsNotFullyQualifiedWhenSeparatingPartition() {
+    PulsarRequest request = request(message("test-partition-1"));
+
+    assertThat(request.getDestination())
+        .isEqualTo(emitStableMessagingSemconv() ? "test" : "test-partition-1");
+    assertThat(request.getDestinationPartitionId()).isEqualTo("1");
+  }
+
+  @Test
   void separatesPartitionFromBatchDestinationName() {
     String partitionTopic = TOPIC + "-partition-0";
     PulsarBatchRequest request = batchRequest(message(partitionTopic), message(partitionTopic));
