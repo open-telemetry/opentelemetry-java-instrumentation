@@ -392,9 +392,7 @@ public abstract class AbstractSqsTracingTest {
                                     assertThat(links)
                                         .singleElement()
                                         .satisfies(
-                                            link ->
-                                                assertThat(link.getSpanContext().getSpanId())
-                                                    .isEqualTo(publishSpan.get().getSpanId())))),
+                                            link -> assertBareLink(link, publishSpan.get())))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -756,5 +754,10 @@ public abstract class AbstractSqsTracingTest {
   private static void assertMessageLink(LinkData link, SpanData creationContext, String messageId) {
     assertThat(link.getSpanContext().getSpanId()).isEqualTo(creationContext.getSpanId());
     assertThat(link.getAttributes()).isEqualTo(Attributes.of(MESSAGING_MESSAGE_ID, messageId));
+  }
+
+  private static void assertBareLink(LinkData link, SpanData creationContext) {
+    assertThat(link.getSpanContext().getSpanId()).isEqualTo(creationContext.getSpanId());
+    assertThat(link.getAttributes()).isEqualTo(Attributes.empty());
   }
 }
