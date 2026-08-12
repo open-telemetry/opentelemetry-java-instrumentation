@@ -156,10 +156,10 @@ public final class GrpcTelemetryBuilder {
   /**
    * Sets which metadata request values should be captured as span attributes on client spans.
    *
-   * @deprecated Use {@link #setClientRequestMetadata(IncludeExclude)} instead. Will be removed in
-   *     3.0.
+   * @deprecated Use {@link #setClientRequestMetadata(IncludeExclude)} instead. May be removed in
+   *     the next minor release.
    */
-  @Deprecated // to be removed in 3.0
+  @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setCapturedClientRequestMetadata(
       List<String> capturedClientRequestMetadata) {
@@ -188,10 +188,10 @@ public final class GrpcTelemetryBuilder {
   /**
    * Sets which metadata request values should be captured as span attributes on server spans.
    *
-   * @deprecated Use {@link #setServerRequestMetadata(IncludeExclude)} instead. Will be removed in
-   *     3.0.
+   * @deprecated Use {@link #setServerRequestMetadata(IncludeExclude)} instead. May be removed in
+   *     the next minor release.
    */
-  @Deprecated // to be removed in 3.0
+  @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setCapturedServerRequestMetadata(
       List<String> capturedServerRequestMetadata) {

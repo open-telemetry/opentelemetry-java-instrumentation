@@ -16,8 +16,7 @@
   ([#19180](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19180))
 - Deprecate the gRPC `capture-metadata.client.request` and `capture-metadata.server.request`
   configuration properties and `GrpcTelemetryBuilder` captured request metadata methods in favor of
-  include/exclude request metadata selectors. The deprecated properties and methods will be removed
-  in 3.0.
+  include/exclude request metadata selectors.
 - Deprecate the `opentelemetry-zipkin-spring-boot-starter` artifact. Use
   `opentelemetry-spring-boot-starter` with the OTLP exporter instead. It will be removed in 3.0.
 - Deprecate `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)` in the
