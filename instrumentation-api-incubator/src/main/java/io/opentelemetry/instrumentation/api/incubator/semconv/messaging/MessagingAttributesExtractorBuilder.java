@@ -35,8 +35,9 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * Configures which message headers are captured as span attributes.
    *
    * <p>Header values are captured under the {@code messaging.header.<name>} attribute key. The
-   * {@code <name>} part in the attribute key is the header name with dashes replaced by
-   * underscores.
+   * {@code <name>} part in the attribute key is the header name with dashes replaced by underscores
+   * unless {@code otel.instrumentation.common.v3-preview} is enabled, in which case dashes are
+   * preserved.
    *
    * <p>Matching is case-sensitive, unless the underlying messaging library treats header names
    * case-insensitively. {@code ?} matches one character and {@code *} matches any number of
@@ -59,7 +60,8 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    *
    * <p>The messaging header values will be captured under the {@code messaging.header.<name>}
    * attribute key. The {@code <name>} part in the attribute key is the header name with dashes
-   * replaced by underscores.
+   * replaced by underscores unless {@code otel.instrumentation.common.v3-preview} is enabled, in
+   * which case dashes are preserved.
    *
    * @param capturedHeaders A list of messaging header names.
    * @deprecated Use {@link #setHeaders(IncludeExclude)} instead. Will be removed in 3.0.

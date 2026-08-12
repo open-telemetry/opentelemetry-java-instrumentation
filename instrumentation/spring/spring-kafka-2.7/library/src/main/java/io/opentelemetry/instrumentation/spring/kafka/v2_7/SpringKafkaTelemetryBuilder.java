@@ -30,8 +30,9 @@ public final class SpringKafkaTelemetryBuilder {
    * Configures which message headers are captured as span attributes.
    *
    * <p>Header values are captured under the {@code messaging.header.<name>} attribute key. The
-   * {@code <name>} part in the attribute key is the header name with dashes replaced by
-   * underscores.
+   * {@code <name>} part in the attribute key is the header name with dashes replaced by underscores
+   * unless {@code otel.instrumentation.common.v3-preview} is enabled, in which case dashes are
+   * preserved.
    *
    * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
    * of characters, including none. Excluded patterns take precedence over included patterns. A
