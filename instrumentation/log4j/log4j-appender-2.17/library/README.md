@@ -103,7 +103,7 @@ The available settings are:
 | `captureArguments`                 | Boolean | `false` | Enable the capture of the log message arguments.                                                                                                                                                           |
 | `contextDataAttributesIncluded`    | String  |         | Comma-separated list of case-sensitive glob patterns for context data keys to capture as log attributes.                                                                                                   |
 | `contextDataAttributesExcluded`    | String  |         | Comma-separated list of case-sensitive glob patterns for context data keys not to capture as log attributes.                                                                                               |
-| `captureContextDataAttributes`     | String  |         | Deprecated include-only compatibility setting. Use `contextDataAttributesIncluded` instead. Will be removed in 3.0.                                                                                        |
+| `captureContextDataAttributes`     | String  |         | Deprecated include-only compatibility setting. Use `contextDataAttributesIncluded` instead. May be removed in the next minor release.                                                                                        |
 | `numLogsCapturedBeforeOtelInstall` | Integer | 1000    | Log telemetry is emitted after the initialization of the OpenTelemetry Log4j appender with an OpenTelemetry object. This setting allows you to modify the size of the cache used to replay the first logs. |
 
 For programmatic configuration, use an `IncludeExclude` selector:

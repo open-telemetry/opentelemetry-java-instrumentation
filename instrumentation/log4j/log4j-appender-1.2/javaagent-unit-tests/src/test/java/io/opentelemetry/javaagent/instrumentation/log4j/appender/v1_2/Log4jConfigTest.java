@@ -43,7 +43,7 @@ class Log4jConfigTest {
     when(mdcAttributes.getScalarList("excluded", String.class))
         .thenReturn(singletonList("prefix.secret"));
 
-    IncludeExclude selector = new Log4jConfig(config, false).getContextDataAttributes();
+    IncludeExclude selector = new Log4jConfig(config).getContextDataAttributes();
 
     assertThat(selector).isNotNull();
     assertThat(selector.matches("exact")).isTrue();
@@ -60,7 +60,7 @@ class Log4jConfigTest {
     when(config.get("mdc_attributes/development").getScalarList("excluded", String.class))
         .thenReturn(singletonList("secret*"));
 
-    IncludeExclude selector = new Log4jConfig(config, false).getContextDataAttributes();
+    IncludeExclude selector = new Log4jConfig(config).getContextDataAttributes();
 
     assertThat(selector).isNotNull();
     assertThat(selector.matches("public")).isTrue();
@@ -76,8 +76,8 @@ class Log4jConfigTest {
     when(empty.get("mdc_attributes/development").getScalarList("excluded", String.class))
         .thenReturn(emptyList());
 
-    assertThat(new Log4jConfig(absent, false).getContextDataAttributes()).isNull();
-    assertThat(new Log4jConfig(empty, false).getContextDataAttributes()).isNull();
+    assertThat(new Log4jConfig(absent).getContextDataAttributes()).isNull();
+    assertThat(new Log4jConfig(empty).getContextDataAttributes()).isNull();
   }
 
   @Test
@@ -87,8 +87,8 @@ class Log4jConfigTest {
         .thenReturn(singletonList("legacy"));
     TestHandler handler = attachWarningHandler();
     try {
-      IncludeExclude first = new Log4jConfig(config, false).getContextDataAttributes();
-      IncludeExclude second = new Log4jConfig(config, false).getContextDataAttributes();
+      IncludeExclude first = new Log4jConfig(config).getContextDataAttributes();
+      IncludeExclude second = new Log4jConfig(config).getContextDataAttributes();
 
       assertThat(first).isNotNull();
       assertThat(first.getIncluded()).containsExactly("legacy");
@@ -111,8 +111,8 @@ class Log4jConfigTest {
         .thenReturn(singletonList("legacy"));
     TestHandler handler = attachWarningHandler();
     try {
-      IncludeExclude first = new Log4jConfig(config, false).getContextDataAttributes();
-      IncludeExclude second = new Log4jConfig(config, false).getContextDataAttributes();
+      IncludeExclude first = new Log4jConfig(config).getContextDataAttributes();
+      IncludeExclude second = new Log4jConfig(config).getContextDataAttributes();
 
       assertThat(first).isNotNull();
       assertThat(first.getIncluded()).containsExactly("new");
@@ -121,20 +121,6 @@ class Log4jConfigTest {
       assertThat(handler.records).hasSize(1);
       assertThat(handler.records.get(0).getMessage())
           .contains("capture-mdc-attributes", "ignored", "mdc-attributes.excluded");
-    } finally {
-      detachWarningHandler(handler);
-    }
-  }
-
-  @Test
-  void deprecatedConfigIsIgnoredInV3Preview() {
-    DeclarativeConfigProperties config = mockConfig();
-    when(config.getScalarList("capture_mdc_attributes/development", String.class))
-        .thenReturn(singletonList("legacy"));
-    TestHandler handler = attachWarningHandler();
-    try {
-      assertThat(new Log4jConfig(config, true).getContextDataAttributes()).isNull();
-      assertThat(handler.records).isEmpty();
     } finally {
       detachWarningHandler(handler);
     }

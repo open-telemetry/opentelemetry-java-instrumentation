@@ -240,10 +240,10 @@ public class OpenTelemetryAppender extends AbstractAppender {
     /**
      * Configures the {@link ThreadContext} attributes that will be copied to logs.
      *
-     * @deprecated Use {@link #setContextDataAttributes(IncludeExclude)} instead. Will be removed in
-     *     3.0.
+     * @deprecated Use {@link #setContextDataAttributes(IncludeExclude)} instead. May be removed in
+     *     the next minor release.
      */
-    @Deprecated // to be removed in 3.0
+    @Deprecated // may be removed in the next minor release
     @CanIgnoreReturnValue
     public B setCaptureContextDataAttributes(String captureContextDataAttributes) {
       this.captureContextDataAttributes = captureContextDataAttributes;

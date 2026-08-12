@@ -11,7 +11,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,12 +33,11 @@ class Log4jConfig {
 
   static Log4jConfig create(OpenTelemetry openTelemetry) {
     return new Log4jConfig(
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "log4j_appender"),
-        SemconvStability.v3Preview(openTelemetry));
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "log4j_appender"));
   }
 
-  Log4jConfig(DeclarativeConfigProperties config, boolean v3Preview) {
-    contextDataAttributes = getContextDataAttributes(config, v3Preview);
+  Log4jConfig(DeclarativeConfigProperties config) {
+    contextDataAttributes = getContextDataAttributes(config);
   }
 
   @Nullable
@@ -48,8 +46,7 @@ class Log4jConfig {
   }
 
   @Nullable
-  private static IncludeExclude getContextDataAttributes(
-      DeclarativeConfigProperties config, boolean v3Preview) {
+  private static IncludeExclude getContextDataAttributes(DeclarativeConfigProperties config) {
     DeclarativeConfigProperties mdcAttributes = config.get("mdc_attributes/development");
     List<String> included = mdcAttributes.getScalarList("included", String.class);
     List<String> excluded = mdcAttributes.getScalarList("excluded", String.class);
@@ -59,11 +56,7 @@ class Log4jConfig {
             .setExcluded(excluded == null ? emptyList() : excluded)
             .build();
 
-    if (v3Preview) {
-      return selector.isEmpty() ? null : selector;
-    }
-
-    // Deprecated include-only alias retained through 2.x.
+    // Deprecated include-only alias.
     List<String> deprecatedIncluded =
         config.getScalarList("capture_mdc_attributes/development", String.class);
     if (!selector.isEmpty()) {
@@ -77,7 +70,7 @@ class Log4jConfig {
                 + MDC_ATTRIBUTES_INCLUDED
                 + " or "
                 + MDC_ATTRIBUTES_EXCLUDED
-                + " is configured. They will be removed in 3.0.");
+                + " is configured. They may be removed in the next minor release.");
       }
       return selector;
     }
@@ -90,7 +83,7 @@ class Log4jConfig {
         "The "
             + DEPRECATED_CAPTURE_MDC_ATTRIBUTES
             + " setting and the equivalent declarative configuration property are deprecated and"
-            + " will be removed in 3.0. Use "
+            + " may be removed in the next minor release. Use "
             + MDC_ATTRIBUTES_INCLUDED
             + " or equivalent declarative configuration instead.");
     return deprecatedIncluded.isEmpty()
