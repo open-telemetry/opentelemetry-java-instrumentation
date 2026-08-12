@@ -49,10 +49,10 @@ final class JvmExecutorMetrics {
     }
 
     AttributesBuilder attributes =
-        Attributes.builder().put(EXECUTOR_NAME, executorName).put(EXECUTOR_TYPE, executorType);
-    if (executorOwnerName != null) {
-      attributes.put(EXECUTOR_OWNER_NAME, executorOwnerName);
-    }
+        Attributes.builder()
+            .put(EXECUTOR_NAME, executorName)
+            .put(EXECUTOR_TYPE, executorType)
+            .put(EXECUTOR_OWNER_NAME, executorOwnerName);
 
     return new JvmExecutorMetrics(meterBuilder.build(), attributes.build());
   }

@@ -167,13 +167,9 @@ public final class ExecutorMetricsRegistry {
         return;
       }
 
-      String newExecutorName = executorName(threadName, threadNameNormalization);
-      if (newExecutorName.equals(executorName)) {
-        return;
-      }
-
       @Nullable BatchCallback previous;
       synchronized (this) {
+        String newExecutorName = executorName(threadName, threadNameNormalization);
         if (closed || !awaitingWorkerThread || newExecutorName.equals(executorName)) {
           return;
         }

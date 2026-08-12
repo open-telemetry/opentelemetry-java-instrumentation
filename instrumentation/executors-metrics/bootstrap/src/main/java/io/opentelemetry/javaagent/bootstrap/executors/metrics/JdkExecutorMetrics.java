@@ -73,8 +73,7 @@ public final class JdkExecutorMetrics {
     ObservableLongMeasurement coreThreads = metrics.coreThreads();
     ObservableLongMeasurement maxThreads = metrics.maxThreads();
     ObservableLongMeasurement queueSize = metrics.queueSize();
-    ObservableLongMeasurement queueCapacity =
-        queueCapacityValue < Integer.MAX_VALUE ? metrics.queueCapacity() : null;
+    ObservableLongMeasurement queueCapacity = metrics.queueCapacity();
     ObservableLongMeasurement completedTasks = metrics.completedTasks();
     ObservableLongMeasurement rejectedTasks = metrics.rejectedTasks();
 
@@ -97,7 +96,7 @@ public final class JdkExecutorMetrics {
               coreThreads.record(threadPoolExecutor.getCorePoolSize(), metrics.getAttributes());
               maxThreads.record(threadPoolExecutor.getMaximumPoolSize(), metrics.getAttributes());
               queueSize.record(threadPoolExecutor.getQueue().size(), metrics.getAttributes());
-              if (queueCapacity != null) {
+              if (queueCapacityValue < Integer.MAX_VALUE) {
                 queueCapacity.record(queueCapacityValue, metrics.getAttributes());
               }
               completedTasks.record(

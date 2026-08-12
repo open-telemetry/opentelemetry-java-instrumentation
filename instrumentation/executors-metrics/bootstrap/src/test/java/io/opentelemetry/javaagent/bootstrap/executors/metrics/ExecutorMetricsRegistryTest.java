@@ -9,9 +9,13 @@ import static java.util.Collections.emptySet;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.metrics.BatchCallback;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -202,6 +206,40 @@ class ExecutorMetricsRegistryTest {
     } finally {
       ExecutorMetricsRegistry.unregister(executor);
       executor.shutdownNow();
+    }
+  }
+
+  @Test
+  void workerUsesLatestNormalizationWhenReregisteredConcurrently() throws Exception {
+    TestMetricsRegistrar metrics = new TestMetricsRegistrar();
+    ThreadPoolExecutor executor = newExecutor();
+    ExecutorMetricsRegistry.preRegister(executor, "all");
+    Thread worker =
+        new Thread(
+            () ->
+                ExecutorMetricsRegistry.onWorkerThreadStarted(
+                    executor, "pool-12-thread-34", metrics));
+
+    try {
+      Object registration = registrationFor(executor);
+      synchronized (registration) {
+        worker.start();
+        await()
+            .atMost(Duration.ofSeconds(10))
+            .until(() -> worker.getState() == Thread.State.BLOCKED);
+
+        ExecutorMetricsRegistry.reregister(executor, "tomcat", "trailing", metrics);
+      }
+
+      worker.join(10_000);
+
+      assertThat(worker.isAlive()).isFalse();
+      assertThat(metrics.executorNames).containsExactly("pool-12-thread-*");
+      assertThat(metrics.ownerNames).containsExactly("tomcat");
+    } finally {
+      ExecutorMetricsRegistry.unregister(executor);
+      executor.shutdownNow();
+      worker.join(10_000);
     }
   }
 
@@ -406,6 +444,14 @@ class ExecutorMetricsRegistryTest {
 
   private static ThreadPoolExecutor newExecutor() {
     return new ThreadPoolExecutor(0, 1, 1, MINUTES, new LinkedBlockingQueue<>());
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Object registrationFor(Executor executor) throws Exception {
+    Field registrationsField = ExecutorMetricsRegistry.class.getDeclaredField("registrations");
+    registrationsField.setAccessible(true);
+    Cache<Executor, ?> registrations = (Cache<Executor, ?>) registrationsField.get(null);
+    return registrations.get(executor);
   }
 
   private static final class TestMetricsRegistrar
