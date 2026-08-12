@@ -25,7 +25,10 @@
 - Deprecate the Log4j appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender.Builder#setCaptureContextDataAttributes(String)` in favor of
   include/exclude context data selectors and
-  `OpenTelemetryAppender.Builder#setContextDataAttributes(IncludeExclude)`.
+  `OpenTelemetryAppender.Builder#setContextDataAttributes(IncludeExclude)`. The deprecated property
+  and method keep their existing behavior, which matches keys literally unless the list contains
+  only `*`, and may be removed in the next minor release.
+  ([#19521](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19521))
 - Deprecate `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` and
   `io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental#setPreferJfrMetrics(RuntimeTelemetryBuilder, boolean)`
   in favor of `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included` and

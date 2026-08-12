@@ -14,11 +14,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -43,15 +43,15 @@ class Log4jConfigTest {
     when(mdcAttributes.getScalarList("excluded", String.class))
         .thenReturn(singletonList("prefix.secret"));
 
-    IncludeExclude selector = new Log4jConfig(config).getContextDataAttributes();
+    Predicate<String> selector = new Log4jConfig(config).getContextDataAttributes();
 
     assertThat(selector).isNotNull();
-    assertThat(selector.matches("exact")).isTrue();
-    assertThat(selector.matches("prefix.value")).isTrue();
-    assertThat(selector.matches("single1")).isTrue();
-    assertThat(selector.matches("single22")).isFalse();
-    assertThat(selector.matches("prefix.secret")).isFalse();
-    assertThat(selector.matches("other")).isFalse();
+    assertThat(selector.test("exact")).isTrue();
+    assertThat(selector.test("prefix.value")).isTrue();
+    assertThat(selector.test("single1")).isTrue();
+    assertThat(selector.test("single22")).isFalse();
+    assertThat(selector.test("prefix.secret")).isFalse();
+    assertThat(selector.test("other")).isFalse();
   }
 
   @Test
@@ -60,11 +60,11 @@ class Log4jConfigTest {
     when(config.get("mdc_attributes/development").getScalarList("excluded", String.class))
         .thenReturn(singletonList("secret*"));
 
-    IncludeExclude selector = new Log4jConfig(config).getContextDataAttributes();
+    Predicate<String> selector = new Log4jConfig(config).getContextDataAttributes();
 
     assertThat(selector).isNotNull();
-    assertThat(selector.matches("public")).isTrue();
-    assertThat(selector.matches("secret-token")).isFalse();
+    assertThat(selector.test("public")).isTrue();
+    assertThat(selector.test("secret-token")).isFalse();
   }
 
   @Test
@@ -81,25 +81,42 @@ class Log4jConfigTest {
   }
 
   @Test
-  void deprecatedConfigIsIncludeOnlyFallbackAndWarnsOnce() {
+  void deprecatedConfigMatchesKeysLiterallyAndWarnsOnce() {
     DeclarativeConfigProperties config = mockConfig();
     when(config.getScalarList("capture_mdc_attributes/development", String.class))
-        .thenReturn(singletonList("legacy"));
+        .thenReturn(asList("literal?", "embedded*", "*"));
     TestHandler handler = attachWarningHandler();
     try {
-      IncludeExclude first = new Log4jConfig(config).getContextDataAttributes();
-      IncludeExclude second = new Log4jConfig(config).getContextDataAttributes();
+      Predicate<String> first = new Log4jConfig(config).getContextDataAttributes();
+      Predicate<String> second = new Log4jConfig(config).getContextDataAttributes();
 
       assertThat(first).isNotNull();
-      assertThat(first.getIncluded()).containsExactly("legacy");
-      assertThat(first.getExcluded()).isEmpty();
-      assertThat(second).isEqualTo(first);
+      assertThat(first.test("literal?")).isTrue();
+      assertThat(first.test("literal1")).isFalse();
+      assertThat(first.test("embedded*")).isTrue();
+      assertThat(first.test("embedded-value")).isFalse();
+      assertThat(first.test("*")).isTrue();
+      assertThat(first.test("other")).isFalse();
+      assertThat(second.test("other")).isFalse();
       assertThat(handler.records).hasSize(1);
       assertThat(handler.records.get(0).getMessage())
           .contains("capture-mdc-attributes", "deprecated", "mdc-attributes.included");
     } finally {
       detachWarningHandler(handler);
     }
+  }
+
+  @Test
+  void deprecatedConfigLoneWildcardCapturesAll() {
+    DeclarativeConfigProperties config = mockConfig();
+    when(config.getScalarList("capture_mdc_attributes/development", String.class))
+        .thenReturn(singletonList("*"));
+
+    Predicate<String> selector = new Log4jConfig(config).getContextDataAttributes();
+
+    assertThat(selector).isNotNull();
+    assertThat(selector.test("literal?")).isTrue();
+    assertThat(selector.test("embedded-value")).isTrue();
   }
 
   @Test
@@ -111,13 +128,13 @@ class Log4jConfigTest {
         .thenReturn(singletonList("legacy"));
     TestHandler handler = attachWarningHandler();
     try {
-      IncludeExclude first = new Log4jConfig(config).getContextDataAttributes();
-      IncludeExclude second = new Log4jConfig(config).getContextDataAttributes();
+      Predicate<String> first = new Log4jConfig(config).getContextDataAttributes();
+      Predicate<String> second = new Log4jConfig(config).getContextDataAttributes();
 
       assertThat(first).isNotNull();
-      assertThat(first.getIncluded()).containsExactly("new");
-      assertThat(first.getExcluded()).isEmpty();
-      assertThat(second).isEqualTo(first);
+      assertThat(first.test("new")).isTrue();
+      assertThat(first.test("legacy")).isFalse();
+      assertThat(second.test("new")).isTrue();
       assertThat(handler.records).hasSize(1);
       assertThat(handler.records.get(0).getMessage())
           .contains("capture-mdc-attributes", "ignored", "mdc-attributes.excluded");

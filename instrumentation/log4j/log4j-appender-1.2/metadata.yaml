@@ -41,7 +41,9 @@ configurations:
     declarative_name: java.log4j_appender.capture_mdc_attributes/development
     description: >
       Deprecated include-only alias for
-      otel.instrumentation.log4j-appender.experimental.mdc-attributes.included. It may be removed
+      otel.instrumentation.log4j-appender.experimental.mdc-attributes.included. It does not support
+      glob patterns: a list containing only "*" captures all MDC attributes, and otherwise every
+      entry, including one containing "*" or "?", is matched as a literal MDC key. It may be removed
       in the next minor release.
     type: list
     default: ''

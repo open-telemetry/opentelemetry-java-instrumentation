@@ -11,9 +11,11 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -29,7 +31,7 @@ class Log4jConfig {
   private static final String MDC_ATTRIBUTES_EXCLUDED =
       "otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded";
 
-  @Nullable private final IncludeExclude contextDataAttributes;
+  @Nullable private final Predicate<String> contextDataAttributes;
 
   static Log4jConfig create(OpenTelemetry openTelemetry) {
     return new Log4jConfig(
@@ -41,12 +43,12 @@ class Log4jConfig {
   }
 
   @Nullable
-  IncludeExclude getContextDataAttributes() {
+  Predicate<String> getContextDataAttributes() {
     return contextDataAttributes;
   }
 
   @Nullable
-  private static IncludeExclude getContextDataAttributes(DeclarativeConfigProperties config) {
+  private static Predicate<String> getContextDataAttributes(DeclarativeConfigProperties config) {
     DeclarativeConfigProperties mdcAttributes = config.get("mdc_attributes/development");
     List<String> included = mdcAttributes.getScalarList("included", String.class);
     List<String> excluded = mdcAttributes.getScalarList("excluded", String.class);
@@ -56,7 +58,8 @@ class Log4jConfig {
             .setExcluded(excluded == null ? emptyList() : excluded)
             .build();
 
-    // Deprecated include-only alias.
+    // Deprecated include-only alias. Its entries are matched literally, except that a list
+    // containing only "*" captures every context data attribute.
     List<String> deprecatedIncluded =
         config.getScalarList("capture_mdc_attributes/development", String.class);
     if (!selector.isEmpty()) {
@@ -72,7 +75,7 @@ class Log4jConfig {
                 + MDC_ATTRIBUTES_EXCLUDED
                 + " is configured. They may be removed in the next minor release.");
       }
-      return selector;
+      return selector::matches;
     }
 
     if (deprecatedIncluded == null) {
@@ -86,9 +89,14 @@ class Log4jConfig {
             + " may be removed in the next minor release. Use "
             + MDC_ATTRIBUTES_INCLUDED
             + " or equivalent declarative configuration instead.");
-    return deprecatedIncluded.isEmpty()
-        ? null
-        : IncludeExclude.builder().setIncluded(deprecatedIncluded).build();
+    if (deprecatedIncluded.isEmpty()) {
+      return null;
+    }
+    if (deprecatedIncluded.size() == 1 && deprecatedIncluded.get(0).equals("*")) {
+      return key -> true;
+    }
+    Set<String> exactKeys = new HashSet<>(deprecatedIncluded);
+    return exactKeys::contains;
   }
 
   private static void logWarningOnce(String warning, String message) {

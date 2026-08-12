@@ -101,9 +101,9 @@ The available settings are:
 | `captureMarkerAttribute`           | Boolean | `false` | Enable the capture of Log4j markers as attributes.                                                                                                                                                         |
 | `captureTemplate`                  | Boolean | `false` | Enable the capture of the log message template (if arguments are provided).                                                                                                                                |
 | `captureArguments`                 | Boolean | `false` | Enable the capture of the log message arguments.                                                                                                                                                           |
-| `contextDataAttributesIncluded`    | String  |         | Comma-separated list of case-sensitive glob patterns for context data keys to capture as log attributes.                                                                                                   |
-| `contextDataAttributesExcluded`    | String  |         | Comma-separated list of case-sensitive glob patterns for context data keys not to capture as log attributes.                                                                                               |
-| `captureContextDataAttributes`     | String  |         | Deprecated include-only compatibility setting. Use `contextDataAttributesIncluded` instead. May be removed in the next minor release.                                                                                        |
+| `contextDataAttributesIncluded`    | String  |         | Comma-separated list of case-sensitive glob patterns for context data keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all context data attributes. |
+| `contextDataAttributesExcluded`    | String  |         | Comma-separated list of case-sensitive glob patterns for context data keys not to capture as log attributes. Excluded patterns take precedence over included patterns.                                     |
+| `captureContextDataAttributes`     | String  |         | Deprecated include-only compatibility setting. It does not support glob patterns: a list containing only `*` captures all context data attributes, and otherwise every entry, including one containing `*` or `?`, is matched as a literal context data key. Use `contextDataAttributesIncluded` instead. May be removed in the next minor release. |
 | `numLogsCapturedBeforeOtelInstall` | Integer | 1000    | Log telemetry is emitted after the initialization of the OpenTelemetry Log4j appender with an OpenTelemetry object. This setting allows you to modify the size of the cache used to replay the first logs. |
 
 For programmatic configuration, use an `IncludeExclude` selector:
@@ -127,6 +127,10 @@ absent or empty; a selector with only excluded patterns captures every context d
 it does not exclude. A selector set with `setContextDataAttributes(IncludeExclude)` takes precedence
 over the `contextDataAttributesIncluded` and `contextDataAttributesExcluded` settings, which in turn
 take precedence over the deprecated `captureContextDataAttributes` setting.
+
+Context data values can hold sensitive data, so review which keys a selector captures before
+enabling it. An exclude-only selector also captures context data keys that are added later, so
+prefer included patterns when the set of context data keys is not fully known.
 
 The `otel.event.name` key is supported in `MapMessage` entries and context data entries. When present, its value is used as the log event name and is not emitted as an attribute.
 

@@ -215,6 +215,94 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation")
+  void deprecatedAliasMatchesKeysLiterally() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setCaptureContextDataAttributes("request.*,user?,*,userId")
+            .build();
+    appender.start();
+
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue("request.*", "captured");
+    contextData.putValue("request.secret", "ignored");
+    contextData.putValue("user?", "captured");
+    contextData.putValue("user1", "ignored");
+    contextData.putValue("*", "captured");
+    contextData.putValue("userId", "captured");
+    contextData.putValue("other", "ignored");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(new FormattedMessage("log message", (Object) null))
+            .setContextData(contextData)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("request.*"), "captured"),
+                equalTo(stringKey("user?"), "captured"),
+                equalTo(stringKey("*"), "captured"),
+                equalTo(stringKey("userId"), "captured")));
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void deprecatedAliasWithSoleWildcardCapturesEverything() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setCaptureContextDataAttributes("*")
+            .build();
+    appender.start();
+
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue("request.secret", "captured");
+    contextData.putValue("userId", "captured");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(new FormattedMessage("log message", (Object) null))
+            .setContextData(contextData)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("request.secret"), "captured"),
+                equalTo(stringKey("userId"), "captured")));
+  }
+
+  @Test
+  void emptySelectorCapturesNothing() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setContextDataAttributes(IncludeExclude.builder().build())
+            .build();
+    appender.start();
+
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue("userId", "ignored");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(new FormattedMessage("log message", (Object) null))
+            .setContextData(contextData)
+            .build());
+
+    testing.waitAndAssertLogRecords(logRecord -> logRecord.hasTotalAttributeCount(0));
+  }
+
+  @Test
   void configurationFileContextDataSelector() {
     Logger selectorLogger = LogManager.getLogger("ContextDataSelectorTestLogger");
     ThreadContext.put("selector-included", "captured");

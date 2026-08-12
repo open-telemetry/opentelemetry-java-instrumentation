@@ -24,6 +24,7 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.message.ParameterizedMessage;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -180,7 +181,7 @@ class LogEventMapperTest {
             false,
             false,
             false,
-            IncludeExclude.builder().setExcluded(singletonList("*secret*")).build(),
+            IncludeExclude.builder().setExcluded(singletonList("*secret*")).build()::matches,
             false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("request-id", "123");
@@ -205,9 +206,10 @@ class LogEventMapperTest {
             false,
             false,
             IncludeExclude.builder()
-                .setIncluded(singletonList("request-*"))
-                .setExcluded(singletonList("*-secret"))
-                .build(),
+                    .setIncluded(singletonList("request-*"))
+                    .setExcluded(singletonList("*-secret"))
+                    .build()
+                ::matches,
             false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("request-id", "123");
@@ -218,28 +220,6 @@ class LogEventMapperTest {
 
     verify(builder).setAttribute(stringKey("request-id"), "123");
     verifyNoMoreInteractions(builder);
-  }
-
-  @Test
-  void testEmptySelectorCapturesNothing() {
-    LogEventMapper<Map<String, String>> mapper =
-        new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE,
-            false,
-            false,
-            false,
-            false,
-            false,
-            false,
-            IncludeExclude.builder().build(),
-            false);
-    Map<String, String> contextData = new HashMap<>();
-    contextData.put("key1", "value1");
-    LogRecordBuilder builder = mock(LogRecordBuilder.class);
-
-    mapper.captureContextDataAttributes(builder, contextData);
-
-    verifyNoInteractions(builder);
   }
 
   @Test
@@ -435,8 +415,8 @@ class LogEventMapperTest {
     verify(builder, never()).setAttribute(eq(stringArrayKey("log.body.parameters")), any());
   }
 
-  private static IncludeExclude include(String... patterns) {
-    return IncludeExclude.builder().setIncluded(asList(patterns)).build();
+  private static Predicate<String> include(String... patterns) {
+    return IncludeExclude.builder().setIncluded(asList(patterns)).build()::matches;
   }
 
   private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, String>> {

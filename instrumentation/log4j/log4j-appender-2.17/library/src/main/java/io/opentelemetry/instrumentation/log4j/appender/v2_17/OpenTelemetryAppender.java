@@ -28,7 +28,9 @@ import io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal.Context
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -37,6 +39,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.ThreadContext;
@@ -197,10 +200,16 @@ public class OpenTelemetryAppender extends AbstractAppender {
      * Configures the {@link ThreadContext} attributes that will be copied to logs.
      *
      * <p>Context data keys and selector patterns are matched case-sensitively. {@code ?} matches
-     * any single character and {@code *} matches any number of characters, including none. Excluded
-     * patterns take precedence over included patterns. No context data attributes are captured when
-     * the selector is {@code null} or empty; a selector with only excluded patterns captures every
-     * context data attribute that it does not exclude.
+     * any single character and {@code *} matches any number of characters, including none, so
+     * {@code included("*")} captures every context data attribute. Excluded patterns take
+     * precedence over included patterns. No context data attributes are captured when the selector
+     * is {@code null} or empty; a selector with only excluded patterns captures every context data
+     * attribute that it does not exclude, which can include attributes that are added later, so
+     * prefer included patterns when the context data may hold sensitive values.
+     *
+     * <p>A selector set here takes precedence over the {@code contextDataAttributesIncluded} and
+     * {@code contextDataAttributesExcluded} settings, which in turn take precedence over the
+     * deprecated {@link #setCaptureContextDataAttributes(String)} setting.
      */
     @CanIgnoreReturnValue
     public B setContextDataAttributes(@Nullable IncludeExclude contextDataAttributes) {
@@ -216,7 +225,9 @@ public class OpenTelemetryAppender extends AbstractAppender {
      * copied to logs.
      *
      * <p>This is the configuration-file form of {@link #setContextDataAttributes(IncludeExclude)}
-     * and is ignored when a selector is set with that method.
+     * and is ignored when a selector is set with that method. Patterns use the same case-sensitive
+     * glob syntax, where {@code ?} matches any single character and {@code *} matches any number of
+     * characters, including none.
      */
     @CanIgnoreReturnValue
     public B setContextDataAttributesIncluded(String contextDataAttributesIncluded) {
@@ -229,7 +240,9 @@ public class OpenTelemetryAppender extends AbstractAppender {
      * copied to logs.
      *
      * <p>This is the configuration-file form of {@link #setContextDataAttributes(IncludeExclude)}
-     * and is ignored when a selector is set with that method.
+     * and is ignored when a selector is set with that method. Patterns use the same case-sensitive
+     * glob syntax, where {@code ?} matches any single character and {@code *} matches any number of
+     * characters, including none. Excluded patterns take precedence over included patterns.
      */
     @CanIgnoreReturnValue
     public B setContextDataAttributesExcluded(String contextDataAttributesExcluded) {
@@ -239,6 +252,10 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
     /**
      * Configures the {@link ThreadContext} attributes that will be copied to logs.
+     *
+     * <p>This setting does not support glob patterns. A comma-separated list containing only {@code
+     * *} captures every context data attribute; otherwise every entry, including one that contains
+     * {@code *} or {@code ?}, is matched as a literal context data key.
      *
      * @deprecated Use {@link #setContextDataAttributes(IncludeExclude)} instead. May be removed in
      *     the next minor release.
@@ -290,9 +307,9 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
 
     @Nullable
-    private IncludeExclude getEffectiveContextDataAttributes() {
+    private Predicate<String> getEffectiveContextDataAttributes() {
       if (contextDataAttributes != null) {
-        return contextDataAttributes;
+        return contextDataAttributes::matches;
       }
       IncludeExclude selector =
           IncludeExclude.builder()
@@ -300,10 +317,19 @@ public class OpenTelemetryAppender extends AbstractAppender {
               .setExcluded(splitAndFilterBlanksAndNulls(contextDataAttributesExcluded))
               .build();
       if (!selector.isEmpty()) {
-        return selector;
+        return selector::matches;
       }
+      // The deprecated setting does not support glob patterns: a list containing only "*" captures
+      // every context data attribute and every other entry is matched as a literal key.
       List<String> included = splitAndFilterBlanksAndNulls(captureContextDataAttributes);
-      return included.isEmpty() ? null : IncludeExclude.builder().setIncluded(included).build();
+      if (included.isEmpty()) {
+        return null;
+      }
+      if (included.size() == 1 && included.get(0).equals("*")) {
+        return key -> true;
+      }
+      Set<String> exactKeys = new HashSet<>(included);
+      return exactKeys::contains;
     }
   }
 
@@ -319,7 +345,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureMarkerAttribute,
       boolean captureTemplate,
       boolean captureArguments,
-      @Nullable IncludeExclude contextDataAttributes,
+      @Nullable Predicate<String> contextDataAttributes,
       int numLogsCapturedBeforeOtelInstall,
       @Nullable OpenTelemetry openTelemetry) {
     super(name, filter, layout, ignoreExceptions, properties);
@@ -365,7 +391,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean captureMarkerAttribute,
       boolean captureTemplate,
       boolean captureArguments,
-      @Nullable IncludeExclude contextDataAttributes,
+      @Nullable Predicate<String> contextDataAttributes,
       boolean v3Preview) {
     return new LogEventMapper<>(
         ContextDataAccessorImpl.INSTANCE,

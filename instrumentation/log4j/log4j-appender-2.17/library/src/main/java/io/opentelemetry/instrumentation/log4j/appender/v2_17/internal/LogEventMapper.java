@@ -18,10 +18,10 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
@@ -64,7 +64,7 @@ public final class LogEventMapper<T> {
   private final boolean captureMarkerAttribute;
   private final boolean captureTemplate;
   private final boolean captureArguments;
-  @Nullable private final IncludeExclude contextDataAttributes;
+  @Nullable private final Predicate<String> contextDataAttributes;
   private final boolean v3Preview;
 
   @SuppressWarnings("TooManyParameters")
@@ -76,7 +76,7 @@ public final class LogEventMapper<T> {
       boolean captureMarkerAttribute,
       boolean captureTemplate,
       boolean captureArguments,
-      @Nullable IncludeExclude contextDataAttributes,
+      @Nullable Predicate<String> contextDataAttributes,
       boolean v3Preview) {
 
     this.contextDataAccessor = contextDataAccessor;
@@ -86,10 +86,7 @@ public final class LogEventMapper<T> {
     this.captureMarkerAttribute = captureMarkerAttribute;
     this.captureTemplate = captureTemplate;
     this.captureArguments = captureArguments;
-    this.contextDataAttributes =
-        contextDataAttributes == null || contextDataAttributes.isEmpty()
-            ? null
-            : contextDataAttributes;
+    this.contextDataAttributes = contextDataAttributes;
     this.v3Preview = v3Preview;
   }
 
@@ -245,7 +242,7 @@ public final class LogEventMapper<T> {
     contextDataAccessor.forEach(
         contextData,
         (key, value) -> {
-          if (!OTEL_EVENT_NAME.getKey().equals(key) && contextDataAttributes.matches(key)) {
+          if (!OTEL_EVENT_NAME.getKey().equals(key) && contextDataAttributes.test(key)) {
             builder.setAttribute(getContextDataAttributeKey(key), value);
           }
         });

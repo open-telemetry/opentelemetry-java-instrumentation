@@ -19,12 +19,12 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.time.Instant;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.apache.log4j.Category;
 import org.apache.log4j.MDC;
@@ -49,7 +49,7 @@ public class LogEventMapper {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender")
           .getBoolean("experimental_log_attributes/development", false);
 
-  @Nullable private final IncludeExclude mdcAttributes;
+  @Nullable private final Predicate<String> mdcAttributes;
 
   private final boolean captureCodeAttributes =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender")
@@ -165,7 +165,7 @@ public class LogEventMapper {
 
     for (Map.Entry<?, ?> entry : context.entrySet()) {
       String key = String.valueOf(entry.getKey());
-      if (!OTEL_EVENT_NAME.getKey().equals(key) && mdcAttributes.matches(key)) {
+      if (!OTEL_EVENT_NAME.getKey().equals(key) && mdcAttributes.test(key)) {
         Object value = entry.getValue();
         if (value != null) {
           builder.setAttribute(getMdcAttributeKey(key), value.toString());

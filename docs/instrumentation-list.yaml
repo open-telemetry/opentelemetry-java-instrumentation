@@ -697,26 +697,26 @@ definitions:
         Enables the capture of the Log4j marker attribute.
       type: boolean
       default: false
-    otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-86192d6f:
+    otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-4dac5737:
       name: otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
       declarative_name: java.log4j_appender.capture_mdc_attributes/development
       description: |
-        Deprecated include-only alias for otel.instrumentation.log4j-appender.experimental.mdc-attributes.included. It may be removed in the next minor release.
-      type: list
-      default: ''
-      examples:
-      - custom-mdc-key
-      - key1,key2,key3
-    otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-b03c9e54:
-      name: otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
-      declarative_name: java.log4j_appender.capture_mdc_attributes/development
-      description: |
-        Deprecated include-only alias for otel.instrumentation.log4j-appender.experimental.mdc-attributes.included. It may be removed in the next minor release.
+        Deprecated include-only alias for otel.instrumentation.log4j-appender.experimental.mdc-attributes.included. It does not support glob patterns: a list containing only "*" captures all context data attributes, and otherwise every entry, including one containing "*" or "?", is matched as a literal context data key. It may be removed in the next minor release.
       type: list
       default: ''
       examples:
       - '*'
       - key1,key2
+    otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-56255cb4:
+      name: otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
+      declarative_name: java.log4j_appender.capture_mdc_attributes/development
+      description: |
+        Deprecated include-only alias for otel.instrumentation.log4j-appender.experimental.mdc-attributes.included. It does not support glob patterns: a list containing only "*" captures all MDC attributes, and otherwise every entry, including one containing "*" or "?", is matched as a literal MDC key. It may be removed in the next minor release.
+      type: list
+      default: ''
+      examples:
+      - custom-mdc-key
+      - key1,key2,key3
     otel.instrumentation.log4j-appender.experimental.capture-template:
       name: otel.instrumentation.log4j-appender.experimental.capture-template
       declarative_name: java.log4j_appender.capture_template/development
@@ -10198,7 +10198,7 @@ libraries:
   configuration_refs:
   - otel.instrumentation.log4j-appender.experimental-log-attributes
   - otel.instrumentation.log4j-appender.experimental.capture-code-attributes
-  - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-86192d6f
+  - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-56255cb4
   - otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded-bcd726eb
   - otel.instrumentation.log4j-appender.experimental.mdc-attributes.included-b2c152d3
 - name: log4j-appender-2.17
@@ -10221,7 +10221,7 @@ libraries:
   - otel.instrumentation.log4j-appender.experimental.capture-code-attributes
   - otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes
   - otel.instrumentation.log4j-appender.experimental.capture-marker-attribute
-  - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-b03c9e54
+  - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-4dac5737
   - otel.instrumentation.log4j-appender.experimental.capture-template
   - otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded-35672a00
   - otel.instrumentation.log4j-appender.experimental.mdc-attributes.included-4102cf6a

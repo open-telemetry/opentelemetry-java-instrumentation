@@ -57,8 +57,19 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
     filter.includeTestsMatching("*Log4jMdcSelectorTest")
 
-    jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=legacy")
+    // the deprecated setting matches keys literally, so "*" alongside another entry does not
+    // capture every key
+    jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*,legacy")
     systemProperty("testMdcConfiguration", "legacy")
+  }
+
+  val testMdcAttributeExclusionsOnly = register<Test>("testMdcAttributeExclusionsOnly") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*Log4jMdcSelectorTest")
+
+    jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret")
+    systemProperty("testMdcConfiguration", "exclude-only")
   }
 
   val testMdcAttributePrecedence = register<Test>("testMdcAttributePrecedence") {
@@ -77,6 +88,7 @@ tasks {
     dependsOn(
       testStableSemconv,
       testLegacyMdcAttributes,
+      testMdcAttributeExclusionsOnly,
       testMdcAttributePrecedence,
     )
   }
