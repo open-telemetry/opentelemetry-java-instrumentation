@@ -49,6 +49,13 @@ Defined in [VERSIONING.md](../../../VERSIONING.md):
 
 `otel.javaagent.testing.*` — always allowed to break, regardless of marker.
 
+A property name is a stable surface even when the code reading it is alpha. Users configure the
+javaagent, which is published as a stable artifact, so its user-facing names outlive the alpha
+classes behind them. A deprecated *property name* and a deprecated *Java method* introduced by the
+same PR therefore often have different removal timelines. Reflect that in the `metadata.yaml`
+description, README config table, and runtime warning for each, rather than in the CHANGELOG, which
+does not carry removal timing.
+
 Examples (flat ↔ YAML):
 
 - `otel.instrumentation.http.client.capture-request-headers` ↔ `request_captured_headers` — **stable**
@@ -72,8 +79,8 @@ must be communicated through:
 ### Deprecated Properties Under Common v3 Preview
 
 Configuration names are user-facing API; also see
-[Breaking Changes and Deprecation Policy](api-deprecation-policy.md). For ordinary properties whose
-deprecated names will be removed in 3.0, use this order:
+[Breaking Changes and Deprecation Policy](api-deprecation-policy.md). This section applies only to
+**stable** property names — those whose deprecated spelling must survive until 3.0. Use this order:
 
 1. Read the replacement first.
 2. Only if the replacement is absent and v3 preview is disabled, read the deprecated value.
@@ -82,6 +89,18 @@ deprecated names will be removed in 3.0, use this order:
    Preview mode must reproduce 3.0 behavior: 3.0 will no longer know about the deprecated property,
    so it will not read, apply, or warn about it. Normal preceding minor releases still warn outside
    preview mode.
+
+**An `experimental`-marked property does not get this treatment.** It can be removed in the next
+minor release, so there is nothing for preview mode to reproduce. Read the replacement first, fall
+back to the deprecated name unconditionally, and warn once — no `v3Preview` parameter, no gate, and
+no `v3-preview` test variant.
+
+The gRPC and servlet request-capture deprecations make the contrast concrete:
+
+| Deprecated property                                                | Marker           | Treatment                                  |
+| ------------------------------------------------------------------ | ---------------- | ------------------------------------------ |
+| `otel.instrumentation.grpc.capture-metadata.client.request`          | none → stable    | v3-preview gated, removed in 3.0           |
+| `otel.instrumentation.servlet.experimental.capture-request-parameters` | `experimental` | ungated, may be removed in the next minor  |
 
 Replacement-first lookup also supports warning-free upgrades with centralized configuration:
 operators can publish both names while old versions use the deprecated property and new versions
@@ -117,9 +136,10 @@ The nullable reads are intentional: migration code must detect absence before ap
 
 ## Migration Support Without Major-Preview Removal (Optional)
 
-For a deprecated property that is not being removed by the active major-version preview, code may
-read both old and new names. Do not use this unconditional fallback for properties being removed by
-the preview; use the guarded pattern above instead.
+For a deprecated property that is not being removed by the active major-version preview — including
+every `experimental`-marked name — code may read both old and new names. Do not use this
+unconditional fallback for stable properties being removed by the preview; use the guarded pattern
+above instead.
 
 ```java
 // Using the declarative config API
@@ -193,6 +213,9 @@ These have no flat-property fallback, so tests must cover declarative config mod
 
 **Deprecated properties under v3 preview:**
 
+- **`experimental`-marked property gated on v3 preview**: the gate only exists to reproduce 3.0
+  behavior for names that must survive until 3.0. An experimental name can simply be removed in the
+  next minor release, so it needs the warning and nothing else.
 - **Deprecated value read or warned about under v3 preview**: preview must neither observe nor warn
   about a setting that 3.0 will not recognize.
 - **Warning emitted when the replacement already determines an ordinary property value**: do not
