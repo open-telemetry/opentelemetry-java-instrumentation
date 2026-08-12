@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PR
 import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH;
 import static io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes.PROCESS_PID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
@@ -68,6 +69,17 @@ class ProcessResourceTest {
           .contains("-DtestMultilineSecret=***")
           .contains("-DtestNotRedacted=test");
     }
+  }
+
+  @Test
+  @SetSystemProperty(key = "sun.java.command", value = "app.jar -Dmy secret=abc --other=test")
+  void commandLineScrubsPropertyNameContainingSpaces() {
+    assumeTrue(isJava8() || IS_WINDOWS);
+
+    Resource resource = ProcessResource.create(true);
+    Attributes attributes = resource.getAttributes();
+
+    assertThat(attributes.get(PROCESS_COMMAND_LINE)).endsWith(" app.jar -Dmy secret=***");
   }
 
   private static void assertResource(boolean windows) {
