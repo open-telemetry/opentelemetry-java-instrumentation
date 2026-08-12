@@ -103,8 +103,31 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
+  val testV3PreviewReceiveSpansDisabled =
+    register<Test>("testV3PreviewReceiveSpansDisabled") {
+      testClassesDirs = sourceSets["testReceiveSpansDisabled"].output.classesDirs
+      classpath = sourceSets["testReceiveSpansDisabled"].runtimeClasspath
+      jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+      jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+      systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+    }
+
   check {
-    dependsOn(testing.suites, testMessagingPreview, testBothSemconv, testMessagingPreviewReceiveSpansDisabled)
+    dependsOn(
+      testing.suites,
+      testMessagingPreview,
+      testBothSemconv,
+      testMessagingPreviewReceiveSpansDisabled,
+      testV3Preview,
+      testV3PreviewReceiveSpansDisabled,
+    )
   }
 
   if (otelProps.denyUnsafe) {
