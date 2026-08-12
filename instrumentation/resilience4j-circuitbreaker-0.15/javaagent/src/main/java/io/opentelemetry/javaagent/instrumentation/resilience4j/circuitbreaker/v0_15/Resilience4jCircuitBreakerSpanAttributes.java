@@ -6,17 +6,29 @@
 package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v0_15;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 
 public final class Resilience4jCircuitBreakerSpanAttributes {
 
+  private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
+      DeclarativeConfigUtil.getInstrumentationConfig(
+              GlobalOpenTelemetry.get(), "resilience4j-circuitbreaker")
+          .getBoolean("experimental_span_attributes/development", false);
+
   private static final AttributeKey<String> CIRCUIT_BREAKER_NAME =
       AttributeKey.stringKey("resilience4j.circuit_breaker.name");
+
   private static final AttributeKey<String> CIRCUIT_BREAKER_STATE =
       AttributeKey.stringKey("resilience4j.circuit_breaker.state");
 
   public static void set(CircuitBreaker circuitBreaker) {
+    if (!CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+      return;
+    }
+
     Span current = Span.current();
     current.setAttribute(CIRCUIT_BREAKER_NAME, circuitBreaker.getName());
     current.setAttribute(CIRCUIT_BREAKER_STATE, circuitBreaker.getState().name());

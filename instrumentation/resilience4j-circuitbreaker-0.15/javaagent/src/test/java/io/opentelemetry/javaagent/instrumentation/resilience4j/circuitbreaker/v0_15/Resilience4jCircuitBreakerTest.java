@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v0_15;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v0_15.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -85,7 +86,9 @@ class Resilience4jCircuitBreakerTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("resilience4j.circuit_breaker.name"),
-                                "test-circuit-breaker"),
-                            equalTo(stringKey("resilience4j.circuit_breaker.state"), state))));
+                                experimental("test-circuit-breaker")),
+                            equalTo(
+                                stringKey("resilience4j.circuit_breaker.state"),
+                                experimental(state)))));
   }
 }

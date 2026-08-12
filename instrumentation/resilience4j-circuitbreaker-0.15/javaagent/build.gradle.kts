@@ -14,3 +14,22 @@ muzzle {
 dependencies {
   library("io.github.resilience4j:resilience4j-circuitbreaker:0.15.0")
 }
+
+tasks {
+  val testExperimental = register<Test>("testExperimental") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs(
+      "-Dotel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes=true"
+    )
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes=true"
+    )
+  }
+
+  check {
+    dependsOn(testExperimental)
+  }
+}
