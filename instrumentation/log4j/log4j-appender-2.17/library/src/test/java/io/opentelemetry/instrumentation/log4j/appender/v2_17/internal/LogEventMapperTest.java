@@ -435,6 +435,10 @@ class LogEventMapperTest {
     verify(builder, never()).setAttribute(eq(stringArrayKey("log.body.parameters")), any());
   }
 
+  private static IncludeExclude include(String... patterns) {
+    return IncludeExclude.builder().setIncluded(asList(patterns)).build();
+  }
+
   private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, String>> {
     INSTANCE;
 
@@ -447,9 +451,5 @@ class LogEventMapperTest {
     public void forEach(Map<String, String> contextData, BiConsumer<String, String> action) {
       contextData.forEach(action);
     }
-  }
-
-  private static IncludeExclude include(String... patterns) {
-    return IncludeExclude.builder().setIncluded(asList(patterns)).build();
   }
 }
