@@ -15,20 +15,18 @@
   The Java agent continues to support the system property through its declarative config bridge.
   ([#19180](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19180))
 - Deprecate the `opentelemetry-zipkin-spring-boot-starter` artifact. Use
-  `opentelemetry-spring-boot-starter` with the OTLP exporter instead. It will be removed in 3.0.
+  `opentelemetry-spring-boot-starter` with the OTLP exporter instead.
 - Deprecate `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)` in the
   Micrometer 1.5 library in favor of
   `io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`.
   Histogram/percentile gauges are experimental compatibility behavior, and this moves the API to the
   standard experimental surface ahead of stabilization. Behavior and the
-  `otel.instrumentation.micrometer.histogram-gauges.enabled` config property are unchanged. The
-  deprecated builder method will be removed in the next release.
+  `otel.instrumentation.micrometer.histogram-gauges.enabled` config property are unchanged.
   ([#19404](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19404))
 - The decaying `<name>.max` gauge that the Micrometer bridge emits alongside the histogram for
-  `Timer` and `DistributionSummary` is deprecated and will be removed in 3.0. The `<name>` /
-  `<name>.max` pair violates the OpenTelemetry metric naming rules, and OpenTelemetry histograms
-  already expose a max. It is no longer emitted when `otel.instrumentation.common.v3-preview` is
-  enabled.
+  `Timer` and `DistributionSummary` is deprecated. The `<name>` / `<name>.max` pair violates the
+  OpenTelemetry metric naming rules, and OpenTelemetry histograms already expose a max. It is no
+  longer emitted when `otel.instrumentation.common.v3-preview` is enabled.
   ([#19397](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19397))
 - Deprecate `MessageOperation` in favor of `MessagingOperationType`.
   ([#19357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19357))
