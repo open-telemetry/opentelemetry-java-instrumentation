@@ -11,7 +11,6 @@ import io.grpc.ClientInterceptor;
 import io.grpc.Context;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.ServerBuilder;
-import io.grpc.ServerInterceptor;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
@@ -34,7 +33,7 @@ public class GrpcSingletons {
 
   private static final ClientInterceptor clientInterceptor;
 
-  private static final ServerInterceptor serverInterceptor;
+  private static final GrpcTelemetry grpcTelemetry;
 
   private static final AtomicReference<Context.Storage> storageReference = new AtomicReference<>();
 
@@ -57,7 +56,7 @@ public class GrpcSingletons {
             .get("server")
             .getScalarList("request", String.class, emptyList());
 
-    GrpcTelemetry telemetry =
+    grpcTelemetry =
         GrpcTelemetry.builder(GlobalOpenTelemetry.get())
             .setEmitMessageEvents(emitMessageEvents)
             .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes)
@@ -65,16 +64,11 @@ public class GrpcSingletons {
             .setCapturedServerRequestMetadata(serverRequestMetadata)
             .build();
 
-    clientInterceptor = telemetry.createClientInterceptor();
-    serverInterceptor = telemetry.createServerInterceptor();
+    clientInterceptor = grpcTelemetry.createClientInterceptor();
   }
 
   public static ClientInterceptor clientInterceptor() {
     return clientInterceptor;
-  }
-
-  public static ServerInterceptor serverInterceptor() {
-    return serverInterceptor;
   }
 
   @Nullable
@@ -85,6 +79,10 @@ public class GrpcSingletons {
   public static Context.Storage setStorage(Context.Storage storage) {
     storageReference.compareAndSet(null, new ContextStorageBridge(storage));
     return storage();
+  }
+
+  public static void configureServerBuilder(ServerBuilder<?> serverBuilder) {
+    grpcTelemetry.configureServerBuilder(serverBuilder);
   }
 
   private GrpcSingletons() {}

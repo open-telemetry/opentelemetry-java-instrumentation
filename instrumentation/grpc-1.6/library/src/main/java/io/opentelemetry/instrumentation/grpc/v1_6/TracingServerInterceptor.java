@@ -70,6 +70,14 @@ final class TracingServerInterceptor implements ServerInterceptor {
       // field.
       authority = GrpcAuthorityStorage.getAuthority(call);
     }
+
+    // If a ServerStreamTracer is active, mark it as handled so it won't create a span for this
+    // request in streamClosed().
+    TracingServerStreamTracer streamTracer = TracingServerStreamTracer.STREAM_TRACER_KEY.get();
+    if (streamTracer != null) {
+      streamTracer.markInterceptorHandled();
+    }
+
     GrpcRequest request =
         new GrpcRequest(
             call.getMethodDescriptor(),
