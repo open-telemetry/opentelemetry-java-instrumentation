@@ -21,6 +21,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.url.internal.UrlSanitizer;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -37,9 +38,12 @@ final class ApiGatewayProxyAttributesExtractor
   private static final String HTTP = "http";
 
   private final Set<String> knownMethods;
+  private final Set<String> sensitiveQueryParameters;
 
-  ApiGatewayProxyAttributesExtractor(Set<String> knownMethods) {
+  ApiGatewayProxyAttributesExtractor(
+      Set<String> knownMethods, Set<String> sensitiveQueryParameters) {
     this.knownMethods = knownMethods;
+    this.sensitiveQueryParameters = sensitiveQueryParameters;
   }
 
   @Override
@@ -64,12 +68,14 @@ final class ApiGatewayProxyAttributesExtractor
     String userAgent = headers.get("user-agent");
     attributes.put(USER_AGENT_ORIGINAL, userAgent);
 
-    attributes.put(URL_FULL, getHttpUrl(request, headers));
+    attributes.put(URL_FULL, getHttpUrl(request, headers, sensitiveQueryParameters));
   }
 
   @Nullable
   private static String getHttpUrl(
-      APIGatewayProxyRequestEvent request, Map<String, String> headers) {
+      APIGatewayProxyRequestEvent request,
+      Map<String, String> headers,
+      Set<String> sensitiveQueryParameters) {
     StringBuilder str = new StringBuilder();
 
     String scheme = headers.get("x-forwarded-proto");
@@ -97,7 +103,9 @@ final class ApiGatewayProxyAttributesExtractor
     } catch (UnsupportedEncodingException ignored) {
       // Ignore
     }
-    return str.length() == 0 ? null : str.toString();
+    return str.length() == 0
+        ? null
+        : UrlSanitizer.sanitizeUrl(str.toString(), sensitiveQueryParameters);
   }
 
   @Override
