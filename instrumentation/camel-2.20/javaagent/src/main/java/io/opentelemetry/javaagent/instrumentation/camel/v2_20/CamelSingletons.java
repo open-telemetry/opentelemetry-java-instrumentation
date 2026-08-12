@@ -41,7 +41,7 @@ class CamelSingletons {
       createHttpClientInstrumenter();
   private static final Instrumenter<CamelRequest, Void> messagingSendInstrumenter =
       createMessagingInstrumenter(SEND, "send", true);
-  // AWS SQS/SNS sends rely on the nested AWS SDK producer span to inject propagation.
+  // AWS SQS sends rely on the nested AWS SDK producer span to inject propagation.
   private static final Instrumenter<CamelRequest, Void> keylessMessagingSendInstrumenter =
       createMessagingInstrumenter(SEND, "send", false);
   private static final Instrumenter<CamelRequest, Void> messagingProcessInstrumenter =
