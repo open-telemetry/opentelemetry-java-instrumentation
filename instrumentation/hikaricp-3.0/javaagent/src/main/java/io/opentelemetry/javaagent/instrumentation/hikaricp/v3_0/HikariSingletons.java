@@ -38,10 +38,18 @@ public class HikariSingletons {
 
   public static MetricsTrackerFactory createMetricsTrackerFactory(
       @Nullable MetricsTrackerFactory delegate, HikariConfig config) {
-    if (Boolean.TRUE.equals(GENERATED_POOL_NAME_FIELD.get(config))) {
-      return hikariTelemetry.createMetricsTrackerFactory(delegate, getDataSourceName(config));
+    if (!Boolean.TRUE.equals(GENERATED_POOL_NAME_FIELD.get(config))) {
+      return hikariTelemetry.createMetricsTrackerFactory(delegate);
     }
-    return hikariTelemetry.createMetricsTrackerFactory(delegate);
+
+    String dataSourceName = getDataSourceName(config);
+    return (hikariPoolName, poolStats) ->
+        hikariTelemetry
+            .createMetricsTrackerFactory(
+                delegate == null
+                    ? null
+                    : (ignored, stats) -> delegate.create(hikariPoolName, stats))
+            .create(dataSourceName, poolStats);
   }
 
   private static String getDataSourceName(HikariConfig config) {

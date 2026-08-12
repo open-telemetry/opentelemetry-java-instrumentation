@@ -21,15 +21,11 @@ final class OpenTelemetryMetricsTrackerFactory implements MetricsTrackerFactory 
 
   private final OpenTelemetry openTelemetry;
   @Nullable private final MetricsTrackerFactory userMetricsFactory;
-  @Nullable private final String poolNameOverride;
 
   OpenTelemetryMetricsTrackerFactory(
-      OpenTelemetry openTelemetry,
-      @Nullable MetricsTrackerFactory userMetricsFactory,
-      @Nullable String poolNameOverride) {
+      OpenTelemetry openTelemetry, @Nullable MetricsTrackerFactory userMetricsFactory) {
     this.openTelemetry = openTelemetry;
     this.userMetricsFactory = userMetricsFactory;
-    this.poolNameOverride = poolNameOverride;
   }
 
   @Override
@@ -39,9 +35,8 @@ final class OpenTelemetryMetricsTrackerFactory implements MetricsTrackerFactory 
             ? new NoopMetricsTracker()
             : userMetricsFactory.create(poolName, poolStats);
 
-    String metricsPoolName = poolNameOverride != null ? poolNameOverride : poolName;
     DbConnectionPoolMetrics metrics =
-        DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, metricsPoolName);
+        DbConnectionPoolMetrics.create(openTelemetry, INSTRUMENTATION_NAME, poolName);
 
     ObservableLongMeasurement connections = metrics.connections();
     ObservableLongMeasurement minIdleConnections = metrics.minIdleConnections();
