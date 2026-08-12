@@ -43,8 +43,8 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CircuitBreakerAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.This CircuitBreaker circuitBreaker) {
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    public static void onExit(@Advice.This CircuitBreaker circuitBreaker) {
       Resilience4jCircuitBreakerSpanAttributes.set(circuitBreaker);
     }
   }

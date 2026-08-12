@@ -71,7 +71,7 @@ class Resilience4jCircuitBreakerTest {
 
     assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
 
-    assertThat(testing.waitForTraces(0)).isEmpty();
+    assertThat(testing.spans()).isEmpty();
   }
 
   private static void assertCircuitBreakerSpan(String state) {
