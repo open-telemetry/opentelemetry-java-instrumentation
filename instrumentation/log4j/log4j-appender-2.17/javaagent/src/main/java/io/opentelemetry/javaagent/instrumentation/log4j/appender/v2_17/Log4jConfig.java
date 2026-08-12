@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-final class Log4jConfig {
+class Log4jConfig {
 
   private static final Logger logger = Logger.getLogger(Log4jConfig.class.getName());
   private static final Set<String> warnedDeprecatedProperties = ConcurrentHashMap.newKeySet();

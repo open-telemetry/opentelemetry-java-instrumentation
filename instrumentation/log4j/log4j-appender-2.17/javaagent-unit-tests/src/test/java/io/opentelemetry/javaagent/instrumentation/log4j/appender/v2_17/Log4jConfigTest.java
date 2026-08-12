@@ -160,7 +160,7 @@ class Log4jConfigTest {
     Logger.getLogger(Log4jConfig.class.getName()).removeHandler(handler);
   }
 
-  private static final class TestHandler extends Handler {
+  private static class TestHandler extends Handler {
 
     private final List<LogRecord> records = new ArrayList<>();
 
