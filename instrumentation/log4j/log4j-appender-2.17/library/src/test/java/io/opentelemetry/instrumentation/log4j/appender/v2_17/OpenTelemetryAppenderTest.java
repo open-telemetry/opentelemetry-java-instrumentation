@@ -215,6 +215,40 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
   }
 
   @Test
+  void programmaticContextDataSelectorTakesPrecedenceOverConfigurationFileSelector() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setContextDataAttributes(
+                IncludeExclude.builder().setIncluded(singletonList("request-*")).build())
+            .setContextDataAttributesIncluded("other-*")
+            .setContextDataAttributesExcluded("*-secret")
+            .build();
+    appender.start();
+
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue("request-id", "captured");
+    // the configuration file exclusion is ignored, so this is captured
+    contextData.putValue("request-secret", "captured");
+    // the configuration file inclusion is ignored, so this is not captured
+    contextData.putValue("other-1", "ignored");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(new FormattedMessage("log message", (Object) null))
+            .setContextData(contextData)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("request-id"), "captured"),
+                equalTo(stringKey("request-secret"), "captured")));
+  }
+
+  @Test
   @SuppressWarnings("deprecation")
   void deprecatedAliasMatchesKeysLiterally() {
     OpenTelemetryAppender appender =

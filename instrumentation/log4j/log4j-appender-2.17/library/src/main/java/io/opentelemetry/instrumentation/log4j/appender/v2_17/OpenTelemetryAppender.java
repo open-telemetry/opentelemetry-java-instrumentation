@@ -202,14 +202,16 @@ public class OpenTelemetryAppender extends AbstractAppender {
      * <p>Context data keys and selector patterns are matched case-sensitively. {@code ?} matches
      * any single character and {@code *} matches any number of characters, including none, so
      * {@code included("*")} captures every context data attribute. Excluded patterns take
-     * precedence over included patterns. No context data attributes are captured when the selector
-     * is {@code null} or empty; a selector with only excluded patterns captures every context data
-     * attribute that it does not exclude, which can include attributes that are added later, so
-     * prefer included patterns when the context data may hold sensitive values.
+     * precedence over included patterns. A selector with only excluded patterns captures every
+     * context data attribute that it does not exclude, which can include attributes that are added
+     * later, so prefer included patterns when the context data may hold sensitive values.
      *
-     * <p>A selector set here takes precedence over the {@code contextDataAttributesIncluded} and
-     * {@code contextDataAttributesExcluded} settings, which in turn take precedence over the
-     * deprecated {@link #setCaptureContextDataAttributes(String)} setting.
+     * <p>Only a non-empty selector set here takes precedence over the {@code
+     * contextDataAttributesIncluded} and {@code contextDataAttributesExcluded} settings, which in
+     * turn take precedence over the deprecated {@link #setCaptureContextDataAttributes(String)}
+     * setting. A {@code null} or empty selector carries no configuration, so it does not disable
+     * capture and the next configured source is used instead. No context data attributes are
+     * captured only when every one of these sources is absent or empty.
      */
     @CanIgnoreReturnValue
     public B setContextDataAttributes(@Nullable IncludeExclude contextDataAttributes) {
@@ -225,9 +227,9 @@ public class OpenTelemetryAppender extends AbstractAppender {
      * copied to logs.
      *
      * <p>This is the configuration-file form of {@link #setContextDataAttributes(IncludeExclude)}
-     * and is ignored when a selector is set with that method. Patterns use the same case-sensitive
-     * glob syntax, where {@code ?} matches any single character and {@code *} matches any number of
-     * characters, including none.
+     * and is ignored when a non-empty selector is set with that method. Patterns use the same
+     * case-sensitive glob syntax, where {@code ?} matches any single character and {@code *}
+     * matches any number of characters, including none.
      */
     @CanIgnoreReturnValue
     public B setContextDataAttributesIncluded(String contextDataAttributesIncluded) {
@@ -240,9 +242,10 @@ public class OpenTelemetryAppender extends AbstractAppender {
      * copied to logs.
      *
      * <p>This is the configuration-file form of {@link #setContextDataAttributes(IncludeExclude)}
-     * and is ignored when a selector is set with that method. Patterns use the same case-sensitive
-     * glob syntax, where {@code ?} matches any single character and {@code *} matches any number of
-     * characters, including none. Excluded patterns take precedence over included patterns.
+     * and is ignored when a non-empty selector is set with that method. Patterns use the same
+     * case-sensitive glob syntax, where {@code ?} matches any single character and {@code *}
+     * matches any number of characters, including none. Excluded patterns take precedence over
+     * included patterns.
      */
     @CanIgnoreReturnValue
     public B setContextDataAttributesExcluded(String contextDataAttributesExcluded) {

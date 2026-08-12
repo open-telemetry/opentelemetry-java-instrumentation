@@ -122,11 +122,13 @@ OpenTelemetryAppender appender =
 
 Context data keys and selector patterns are matched case-sensitively. `?` matches any single
 character and `*` matches any number of characters, including none. Excluded patterns take
-precedence over included patterns. No context data attributes are captured when the selector is
-absent or empty; a selector with only excluded patterns captures every context data attribute that
-it does not exclude. A selector set with `setContextDataAttributes(IncludeExclude)` takes precedence
-over the `contextDataAttributesIncluded` and `contextDataAttributesExcluded` settings, which in turn
-take precedence over the deprecated `captureContextDataAttributes` setting.
+precedence over included patterns. A selector with only excluded patterns captures every context
+data attribute that it does not exclude. Only a non-empty selector set with
+`setContextDataAttributes(IncludeExclude)` takes precedence over the `contextDataAttributesIncluded`
+and `contextDataAttributesExcluded` settings, which in turn take precedence over the deprecated
+`captureContextDataAttributes` setting. A null or empty selector carries no configuration, so it
+does not disable capture and the next configured source is used instead. No context data attributes
+are captured only when every one of these sources is absent or empty.
 
 Context data values can hold sensitive data, so review which keys a selector captures before
 enabling it. An exclude-only selector also captures context data keys that are added later, so
