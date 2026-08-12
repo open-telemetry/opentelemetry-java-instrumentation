@@ -36,9 +36,11 @@ configurations:
         peer:
           type: string
           description: "Host name or IP address to match against."
+          example: host
         service_name:
           type: string
           description: "Peer service name to record for matching peers."
+          example: serviceName
 
   http.client.capture-request-headers:
     name: otel.instrumentation.http.client.capture-request-headers

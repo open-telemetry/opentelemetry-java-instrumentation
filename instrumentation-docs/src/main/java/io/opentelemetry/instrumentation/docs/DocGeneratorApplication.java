@@ -53,10 +53,12 @@ public class DocGeneratorApplication {
 
     try (BufferedWriter configWriter =
         Files.newBufferedWriter(
-            Paths.get(baseRepoPath + "docs/declarative-configuration-example.yaml"))) {
+            baseRepoPath.resolve("docs/declarative-configuration-example.yaml"))) {
       configWriter.write("# This file is generated and should not be manually edited.\n");
       configWriter.write(
           "# It shows all available instrumentation configurations in declarative config format.\n\n");
+      configWriter.write(
+          "# For an interactive builder, see: https://explorer.opentelemetry.io/java-agent/configuration/builder.\n\n");
       configWriter.write("file_format: '1.0'\n\n");
       DeclarativeConfigYamlGenerator.generateConfigurationYaml(modules, configWriter);
     }

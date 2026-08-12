@@ -7,9 +7,11 @@ package io.opentelemetry.instrumentation.docs.utils;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
+import io.opentelemetry.instrumentation.docs.internal.DeclarativeSchema;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -21,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import javax.annotation.Nullable;
+import org.yaml.snakeyaml.Yaml;
 
 /**
  * Generates a declarative configuration YAML file showing all available instrumentation
@@ -31,8 +34,15 @@ public class DeclarativeConfigYamlGenerator {
   /** Maximum line length for YAML output including indentation. */
   private static final int MAX_LINE_LENGTH = 100;
 
-  /** Wrapper class to hold both a value and its description for YAML output. */
-  private record ConfigValue(Object value, String description) {}
+  /**
+   * Wrapper class to hold a value, its description, and (for structured lists) the schema of a
+   * single list entry, for YAML output.
+   */
+  private record ConfigValue(
+      Object value, String description, @Nullable DeclarativeSchema schema) {}
+
+  /** Used to render individual scalar values so they are always valid YAML. */
+  private static final Yaml SCALAR_YAML = new Yaml();
 
   /**
    * Generates a declarative configuration YAML file from instrumentation modules.
@@ -131,8 +141,25 @@ public class DeclarativeConfigYamlGenerator {
     // Insert the final key with its value and description
     String lastPart = filteredParts.get(filteredParts.size() - 1);
     Object value = convertValue(config);
-    ConfigValue configValue = new ConfigValue(value, config.description());
+    ConfigValue configValue =
+        new ConfigValue(
+            value,
+            config.description(),
+            isStructuredList(config) ? config.declarativeSchema() : null);
     current.put(lastPart, configValue);
+  }
+
+  /**
+   * Returns whether the declarative form of a configuration is a list of objects. The flat {@code
+   * type} describes the system property (e.g. {@code map} for the {@code host=service} peer service
+   * mapping), so the declarative shape can differ and is then marked by {@code declarative_type}.
+   *
+   * @param config the configuration option
+   * @return true if the declarative form is a structured list
+   */
+  private static boolean isStructuredList(ConfigurationOption config) {
+    return config.type() == ConfigurationType.STRUCTURED_LIST
+        || config.declarativeType() == ConfigurationType.STRUCTURED_LIST;
   }
 
   /**
@@ -144,6 +171,12 @@ public class DeclarativeConfigYamlGenerator {
   private static Object convertValue(ConfigurationOption config) {
     String defaultValue = config.defaultValue();
     ConfigurationType type = config.type();
+
+    // A structured list always defaults to an empty list; the shape of an entry is documented in
+    // the comment block written above the key rather than emitted as (non-default) sample config.
+    if (isStructuredList(config)) {
+      return emptyList();
+    }
 
     if (defaultValue == null || defaultValue.isEmpty() || defaultValue.equals("null")) {
       return switch (type) {
@@ -220,27 +253,34 @@ public class DeclarativeConfigYamlGenerator {
 
       // Extract ConfigValue if present
       String description = null;
+      DeclarativeSchema schema = null;
       Object actualValue = value;
       if (value instanceof ConfigValue configValue) {
-        description = configValue.description;
-        actualValue = configValue.value;
+        description = configValue.description();
+        schema = configValue.schema();
+        actualValue = configValue.value();
       }
 
-      // Write description as comment if present
+      List<String> commentLines = new ArrayList<>();
       if (description != null && !description.isEmpty()) {
+        for (String line : description.split("\n")) {
+          commentLines.addAll(wrapText(line.trim(), indent));
+        }
+      }
+      if (schema != null && !schema.properties().isEmpty()) {
+        commentLines.addAll(schemaCommentLines(key, schema, indent));
+      }
+
+      if (!commentLines.isEmpty()) {
         // Add blank line before comment (except for first entry)
         if (!first) {
           writer.write("\n");
         }
-        String[] descLines = description.split("\n");
-        for (String line : descLines) {
-          List<String> wrappedLines = wrapText(line.trim(), indent);
-          for (String wrappedLine : wrappedLines) {
-            writer.write("  ".repeat(indent));
-            writer.write("# ");
-            writer.write(wrappedLine);
-            writer.write("\n");
-          }
+        for (String commentLine : commentLines) {
+          writer.write("  ".repeat(indent));
+          writer.write("# ");
+          writer.write(commentLine);
+          writer.write("\n");
         }
       }
       first = false;
@@ -278,6 +318,86 @@ public class DeclarativeConfigYamlGenerator {
         writer.write("\n");
       }
     }
+  }
+
+  /**
+   * Documents the per-entry object shape of a structured list, since the emitted value is only the
+   * empty-list default. Produces the property list followed by a sample entry, e.g.
+   *
+   * <pre>
+   * Each list entry is an object with the following properties:
+   *   peer (string, required): Host name or IP address to match against.
+   *   service_name (string, required): Peer service name to record for matching peers.
+   * Example:
+   *   service_peer_mapping:
+   *     - peer: host
+   *       service_name: serviceName
+   * </pre>
+   *
+   * @param key the configuration key the schema belongs to
+   * @param schema the schema of a single list entry
+   * @param indent the current indentation level
+   * @return the comment lines, without their leading "# "
+   */
+  private static List<String> schemaCommentLines(String key, DeclarativeSchema schema, int indent) {
+
+    List<String> lines = new ArrayList<>();
+    Set<String> required =
+        schema.required() == null ? emptySet() : new HashSet<>(schema.required());
+
+    lines.add("Each list entry is an object with the following properties:");
+    schema
+        .properties()
+        .forEach(
+            (name, property) -> {
+              StringBuilder line = new StringBuilder(name).append(" (").append(property.type());
+              if (required.contains(name)) {
+                line.append(", required");
+              }
+              line.append(")");
+              if (property.description() != null && !property.description().isBlank()) {
+                line.append(": ").append(property.description().trim());
+              }
+              // Indent the property under the introduction line, hanging-indenting any
+              // continuation lines so they don't read as separate properties.
+              List<String> wrapped = wrapText(line.toString(), indent + 2);
+              for (int i = 0; i < wrapped.size(); i++) {
+                lines.add((i == 0 ? "  " : "    ") + wrapped.get(i));
+              }
+            });
+
+    lines.add("Example:");
+    lines.add("  " + key + ":");
+    boolean firstProperty = true;
+    for (Map.Entry<String, DeclarativeSchema.Property> entry : schema.properties().entrySet()) {
+      // The first property carries the "- " sequence indicator; the rest align beneath it.
+      lines.add(
+          (firstProperty ? "    - " : "      ")
+              + entry.getKey()
+              + ": "
+              + formatValue(exampleValue(entry.getKey(), entry.getValue())));
+      firstProperty = false;
+    }
+
+    return lines;
+  }
+
+  /**
+   * Returns the sample value to show for a schema property: its {@code example} when the metadata
+   * provides one, otherwise its {@code default}, otherwise a placeholder built from its name.
+   *
+   * @param name the property name
+   * @param property the property
+   * @return the sample value
+   */
+  private static Object exampleValue(String name, DeclarativeSchema.Property property) {
+    if (property.example() != null) {
+      return property.example();
+    }
+    if (property.defaultValue() != null) {
+      return property.defaultValue();
+    }
+    return "<" + name + ">";
   }
 
   /**
@@ -347,11 +467,9 @@ public class DeclarativeConfigYamlGenerator {
       return "\"\"";
     }
     if (value instanceof String str) {
-      // Quote strings if they're empty or contain special characters
-      if (str.isEmpty() || str.contains(":") || str.contains("#") || str.contains("\"")) {
-        return "\"" + str.replace("\"", "\\\"") + "\"";
-      }
-      return str;
+      // Delegate to SnakeYAML so scalars that would otherwise be misinterpreted (e.g. "*",
+      // "true", "null", leading "- ") are quoted, guaranteeing the output is valid YAML.
+      return SCALAR_YAML.dump(str).strip();
     }
     if (value instanceof Boolean || value instanceof Number) {
       return value.toString();

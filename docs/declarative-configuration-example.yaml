@@ -1,6 +1,8 @@
 # This file is generated and should not be manually edited.
 # It shows all available instrumentation configurations in declarative config format.
 
+# For an interactive builder, see: https://explorer.opentelemetry.io/java-agent/configuration/builder.
+
 file_format: '1.0'
 
 instrumentation/development:
@@ -25,6 +27,9 @@ instrumentation/development:
         sensitive_query_parameters/development:
           - AWSAccessKeyId
           - Signature
+          - X-Amz-Signature
+          - X-Amz-Credential
+          - X-Amz-Security-Token
           - sig
           - X-Goog-Signature
     semconv_stability:
@@ -80,13 +85,16 @@ instrumentation/development:
           enabled: true
       enduser:
         id:
-          # Enables capturing the enduser.id attribute.
+          # Enables capturing the enduser.id attribute. This property and the associated attribute
+          # are not supported when v3 preview is enabled.
           enabled: false
         role:
-          # Enables capturing the enduser.role attribute.
+          # Enables capturing the enduser.role attribute. This property and the associated attribute
+          # are not supported when v3 preview is enabled.
           enabled: false
         scope:
-          # Enables capturing the enduser.scope attribute.
+          # Enables capturing the enduser.scope attribute when v3 preview is not enabled. This
+          # property is not honored when v3 preview is enabled.
           enabled: false
       gen_ai:
         # Determines whether Generative AI events include full content of user and assistant
@@ -97,8 +105,21 @@ instrumentation/development:
         client:
           # Enable the capture of experimental HTTP client telemetry. Adds the
           # `http.request.body.size` and `http.response.body.size` attributes to spans, and records
-          # `http.client.request.size` and `http.client.response.size` metrics.
+          # `http.client.request.body.size` and `http.client.response.body.size` metrics.
           emit_experimental_telemetry/development: false
+
+          # Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs.
+          # Only applied when experimental HTTP client telemetry is enabled.
+          # Each list entry is an object with the following properties:
+          #   pattern (string, required): Regular expression matched against the request URL.
+          #   template (string, required): Template used to derive the low-cardinality route.
+          #   override (boolean): Whether this rule overrides an already-applied template.
+          # Example:
+          #   url_template_rules:
+          #     - pattern: /users/\d+
+          #       template: /users/{id}
+          #       override: false
+          url_template_rules: []
 
         # Configures the instrumentation to recognize an alternative set of HTTP request methods.
         # All other methods will be treated as `_OTHER`.
@@ -115,17 +136,17 @@ instrumentation/development:
         server:
           # Enable the capture of experimental HTTP server telemetry. Adds the
           # `http.request.body.size` and `http.response.body.size` attributes to spans, and records
-          # `http.server.request.size` and `http.server.response.size` metrics.
+          # `http.server.request.body.size` and `http.server.response.body.size` metrics.
           emit_experimental_telemetry/development: false
       logging:
         # Specifies the key name used to store the span ID in the logging context.
-        span_id: span_id
+        span_id_key: span_id
 
         # Specifies the key name used to store the trace flags in the logging context.
-        trace_flags: trace_flags
+        trace_flags_key: trace_flags
 
         # Specifies the key name used to store the trace ID in the logging context.
-        trace_id: trace_id
+        trace_id_key: trace_id
       mdc:
         # Specifies which resource attributes to add to the logging context as a comma-separated
         # list of attribute keys.
@@ -139,13 +160,28 @@ instrumentation/development:
           enabled: false
 
       # Used to specify a mapping from host names or IP addresses to peer services.
-      peer_service_mapping: {}
+      # Each list entry is an object with the following properties:
+      #   peer (string, required): Host name or IP address to match against.
+      #   service_name (string, required): Peer service name to record for matching peers.
+      # Example:
+      #   service_peer_mapping:
+      #     - peer: host
+      #       service_name: serviceName
+      service_peer_mapping: []
+      user:
+        name:
+          # Enables capturing the user.name attribute when v3 preview is enabled. This property and
+          # the associated attribute are not supported when v3 preview is disabled.
+          enabled: false
+        roles:
+          # Enables capturing the user.roles attribute when v3 preview is enabled. This property and
+          # the associated attribute are not supported when v3 preview is disabled.
+          enabled: false
       view_telemetry/development:
         # Enables the creation of experimental view spans.
         enabled: false
     couchbase:
-      # Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`.
-      # Different operation types receive different experimental attributes.
+      # Enables experimental span attributes emitted from the underlying Couchbase library.
       experimental_span_attributes/development: false
     dropwizard_metrics:
       # Enables the dropwizard metrics instrumentation.
@@ -170,7 +206,7 @@ instrumentation/development:
       include_all: false
     external_annotations:
       # All methods to be excluded from auto-instrumentation by annotation-based advices.
-      exclude_methods: ""
+      exclude_methods: ''
 
       # Semicolon-separated list of annotation class names to instrument.
       include: []
@@ -221,15 +257,27 @@ instrumentation/development:
       # `hystrix.group` span attributes.
       experimental_span_attributes/development: false
     java_util_logging:
+      # Enables the capture of the log message arguments.
+      capture_arguments/development: false
+
+      # Enables the capture of the log message template (if arguments are provided).
+      capture_template/development: false
+
       # Enables capturing the experimental `thread.name` and `thread.id` log attributes.
       experimental_log_attributes/development: false
     jaxrs:
       # Enables the experimental `jaxrs.canceled` span attribute.
       experimental_span_attributes/development: false
     jboss_logmanager:
+      # Enables the capture of the log message arguments.
+      capture_arguments/development: false
+
       # Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a
       # comma-separated list of specific keys.
       capture_mdc_attributes/development: []
+
+      # Enables the capture of the log message template (if arguments are provided).
+      capture_template/development: false
 
       # Enables the capture of experimental log attributes, including thread name and thread ID.
       experimental_log_attributes/development: false
@@ -294,6 +342,9 @@ instrumentation/development:
       # `lettuce.command.results.count`.
       experimental_span_attributes/development: false
     log4j_appender:
+      # Enables the capture of the log message arguments.
+      capture_arguments/development: false
+
       # Enables the capture of code location attributes, including file path, class name, method
       # name, and line number.
       capture_code_attributes/development: false
@@ -307,6 +358,9 @@ instrumentation/development:
       # Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a
       # comma-separated list of specific keys.
       capture_mdc_attributes/development: []
+
+      # Enables the capture of the log message template (if arguments are provided).
+      capture_template/development: false
 
       # Enables the capture of experimental log attributes, including thread name and thread ID.
       experimental_log_attributes/development: false
@@ -381,10 +435,10 @@ instrumentation/development:
       capture_search_query: true
     opentelemetry_extension_annotations:
       # All methods to be excluded from auto-instrumentation by annotation-based advices.
-      exclude_methods: ""
+      exclude_methods: ''
     opentelemetry_instrumentation_annotations:
       # All methods to be excluded from auto-instrumentation by annotation-based advices.
-      exclude_methods: ""
+      exclude_methods: ''
     oshi:
       experimental_metrics/development:
         # Enable the experimental `runtime.java.memory` and `runtime.java.cpu_time` metrics.
@@ -457,7 +511,7 @@ instrumentation/development:
 
       # Experimental setting to inject a JavaScript snippet into HTML responses after the opening
       # `<head>` tag.
-      javascript_snippet/development: ""
+      javascript_snippet/development: ''
       trace_id_request_attribute/development:
         # Enables adding the trace ID and span ID as request attributes for downstream servlet
         # access.
@@ -481,7 +535,7 @@ instrumentation/development:
     spring_integration:
       # A list of Spring channel name patterns that will be intercepted.
       global_channel_interceptor_patterns:
-        - *
+        - '*'
       producer:
         # Create producer spans when messages are sent to an output channel. Enable when you're
         # using a messaging library that doesn't have its own instrumentation for generating
@@ -495,12 +549,20 @@ instrumentation/development:
       enduser:
         role:
           # Prefix of granted authorities identifying roles to capture in the `enduser.role`
-          # semantic attribute.
+          # semantic attribute. This property is not honored when v3 preview is enabled; use the
+          # `user.roles` variant instead.
           granted_authority_prefix: ROLE_
         scope:
           # Prefix of granted authorities identifying scopes to capture in the `enduser.scope`
-          # semantic attribute.
+          # semantic attribute. This property and the associated attribute are not supported when v3
+          # preview is enabled.
           granted_authority_prefix: SCOPE_
+      user:
+        roles:
+          # Prefix of granted authorities identifying roles to capture in the `user.roles` semantic
+          # attribute when v3 preview is enabled. This property is not honored when v3 preview is
+          # disabled; use the `enduser.role` variant instead.
+          granted_authority_prefix: ROLE_
     spring_webmvc:
       # Enables the capture of experimental span attributes `spring-webmvc.view.name` and
       # `spring-webmvc.view.type`.
