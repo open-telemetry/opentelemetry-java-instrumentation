@@ -96,7 +96,6 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
         singletonMap(TOPIC_PARTITION, new OffsetAndMetadata(consumer.position(TOPIC_PARTITION)));
     AtomicBoolean callbackInvoked = new AtomicBoolean();
     AtomicReference<Exception> callbackException = new AtomicReference<>();
-    int drivingCommitCount = 0;
     testing.clearData();
 
     testing.runWithSpan(
@@ -111,10 +110,8 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                       "reentrant commit parent", () -> consumer.commitAsync(offsets, null));
                 }));
 
-    for (int i = 0; i < 20 && !callbackInvoked.get(); i++) {
-      int commitNumber = ++drivingCommitCount;
-      testing.runWithSpan(
-          "driving commit parent " + commitNumber, () -> consumer.commitAsync(offsets, null));
+    for (int i = 0; i < 10 && !callbackInvoked.get(); i++) {
+      poll(Duration.ofMillis(500));
     }
 
     assertThat(callbackInvoked).isTrue();
