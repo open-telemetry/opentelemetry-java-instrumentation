@@ -37,7 +37,7 @@ class ServletConfig {
   }
 
   ServletConfig(DeclarativeConfigProperties config, boolean v3Preview) {
-    requestParameters = readRequestParameters(config, v3Preview);
+    requestParameters = readRequestParameters(config);
     captureExperimentalAttributes =
         config.getBoolean("experimental_span_attributes/development", false);
     traceIdRequestAttributeEnabled =
@@ -58,8 +58,7 @@ class ServletConfig {
   }
 
   @Nullable
-  private static IncludeExclude readRequestParameters(
-      DeclarativeConfigProperties config, boolean v3Preview) {
+  private static IncludeExclude readRequestParameters(DeclarativeConfigProperties config) {
     DeclarativeConfigProperties requestParameters = config.get("request_parameters/development");
     List<String> included = requestParameters.getScalarList("included", String.class);
     List<String> excluded = requestParameters.getScalarList("excluded", String.class);
@@ -74,10 +73,6 @@ class ServletConfig {
       return selector;
     }
 
-    if (v3Preview) {
-      return null;
-    }
-
     List<String> deprecatedIncluded =
         config.getScalarList("capture_request_parameters/development", String.class);
     if (deprecatedIncluded == null) {
@@ -89,7 +84,7 @@ class ServletConfig {
           "The "
               + DEPRECATED_REQUEST_PARAMETERS
               + " setting and the equivalent declarative configuration property"
-              + " are deprecated and will be removed in 3.0. Use "
+              + " are deprecated and may be removed in the next minor release. Use "
               + REQUEST_PARAMETERS_INCLUDED
               + " or equivalent declarative configuration instead.");
     }

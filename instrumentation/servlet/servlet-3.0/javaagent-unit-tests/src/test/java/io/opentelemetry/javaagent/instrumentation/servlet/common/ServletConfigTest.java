@@ -83,7 +83,7 @@ class ServletConfigTest {
           .isEqualTo(
               "The otel.instrumentation.servlet.experimental.capture-request-parameters setting"
                   + " and the equivalent declarative configuration property are deprecated and"
-                  + " will be removed in 3.0. Use"
+                  + " may be removed in the next minor release. Use"
                   + " otel.instrumentation.servlet.experimental.request-parameters.included or"
                   + " equivalent declarative configuration instead.");
     } finally {
@@ -113,17 +113,6 @@ class ServletConfigTest {
 
     assertThat(new ServletConfig(absentConfig, false).getRequestParameters()).isNull();
     assertThat(new ServletConfig(emptyConfig, false).getRequestParameters()).isNull();
-  }
-
-  @Test
-  void deprecatedConfigIsIgnoredInV3Preview() {
-    DeclarativeConfigProperties config = mockConfig();
-    when(config.getScalarList("capture_request_parameters/development", String.class))
-        .thenReturn(singletonList("deprecated"));
-
-    ServletConfig servletConfig = new ServletConfig(config, true);
-
-    assertThat(servletConfig.getRequestParameters()).isNull();
   }
 
   private static DeclarativeConfigProperties mockConfig() {

@@ -100,12 +100,12 @@ public final class Experimental {
    * Sets the request parameters to be captured as span attributes.
    *
    * @deprecated Use {@link #setRequestParameters(ServletTelemetryBuilder, IncludeExclude)} instead.
-   *     Will be removed in 3.0.
+   *     May be removed in the next minor release.
    * @param builder the telemetry builder
    * @param captureRequestParameters request parameter names to capture
    * @see jakarta.servlet.ServletRequest#getParameterValues(String)
    */
-  @Deprecated // to be removed in 3.0
+  @Deprecated // may be removed in the next minor release
   public static void setCaptureRequestParameters(
       ServletTelemetryBuilder builder, Collection<String> captureRequestParameters) {
     setRequestParameters(
