@@ -48,8 +48,6 @@ public class AwsLambdaSqsMetricsAssertions {
                     assertThat(metric)
                         .hasUnit("s")
                         .hasDescription("Duration of processing operation.")
-                        .satisfies(
-                            data -> assertThat(data.getHistogramData().getPoints()).hasSize(1))
                         .hasHistogramSatisfying(
                             histogram ->
                                 histogram.hasPointsSatisfying(
@@ -75,7 +73,6 @@ public class AwsLambdaSqsMetricsAssertions {
                         .hasUnit("{message}")
                         .hasDescription(
                             "Number of messages that were delivered to the application.")
-                        .satisfies(data -> assertThat(data.getLongSumData().getPoints()).hasSize(1))
                         .hasLongSumSatisfying(
                             sum ->
                                 sum.hasPointsSatisfying(
