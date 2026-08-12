@@ -68,8 +68,10 @@ class KafkaConsumerDelegateInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable error,
-        @Advice.Enter KafkaCommitAsyncTracing.AdviceScope adviceScope) {
-      adviceScope.end(error);
+        @Advice.Enter @Nullable KafkaCommitAsyncTracing.AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(error);
+      }
     }
   }
 
@@ -85,8 +87,10 @@ class KafkaConsumerDelegateInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown @Nullable Throwable error, @Advice.Enter Object[] enterResult) {
-      ((KafkaCommitAsyncTracing.AdviceScope) enterResult[0]).end(error);
+        @Advice.Thrown @Nullable Throwable error, @Advice.Enter @Nullable Object[] enterResult) {
+      if (enterResult != null) {
+        ((KafkaCommitAsyncTracing.AdviceScope) enterResult[0]).end(error);
+      }
     }
   }
 
@@ -102,8 +106,10 @@ class KafkaConsumerDelegateInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown @Nullable Throwable error, @Advice.Enter Object[] enterResult) {
-      ((KafkaCommitAsyncTracing.AdviceScope) enterResult[0]).end(error);
+        @Advice.Thrown @Nullable Throwable error, @Advice.Enter @Nullable Object[] enterResult) {
+      if (enterResult != null) {
+        ((KafkaCommitAsyncTracing.AdviceScope) enterResult[0]).end(error);
+      }
     }
   }
 
