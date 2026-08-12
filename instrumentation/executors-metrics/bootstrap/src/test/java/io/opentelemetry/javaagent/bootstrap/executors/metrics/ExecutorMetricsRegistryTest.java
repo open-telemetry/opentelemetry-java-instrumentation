@@ -371,8 +371,7 @@ class ExecutorMetricsRegistryTest {
       ExecutorMetricsRegistry.onWorkerThreadStarted(executor, "second-2-thread-2", metrics);
       ExecutorMetricsRegistry.onWorkerThreadStarted(executor, "third-3-thread-3", metrics);
 
-      assertThat(metrics.executorNames)
-          .containsExactly("first-*-thread-*", "second-*-thread-*");
+      assertThat(metrics.executorNames).containsExactly("first-*-thread-*", "second-*-thread-*");
       assertThat(metrics.callbacks).hasSize(1);
       assertThat(metrics.callbacks.get(0).closeCount).hasValue(0);
     } finally {
