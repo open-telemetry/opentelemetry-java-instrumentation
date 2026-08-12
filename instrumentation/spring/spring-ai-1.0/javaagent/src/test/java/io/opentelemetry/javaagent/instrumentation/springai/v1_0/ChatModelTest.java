@@ -90,6 +90,24 @@ class ChatModelTest {
     assertMessageEvents(spanContext);
   }
 
+  @Test
+  void nestedCallEndsOneSpan() {
+    chatModel.setCallDelegate(new TestChatModel(defaultOptions()));
+
+    testing.runWithSpan("parent", () -> chatModel.call(prompt()));
+
+    assertTraces("test");
+  }
+
+  @Test
+  void callImplementedWithStreamEndsOneSpan() {
+    chatModel.setCallStreamDelegate(new TestChatModel(defaultOptions()));
+
+    testing.runWithSpan("parent", () -> chatModel.call(prompt()));
+
+    assertTraces("test");
+  }
+
   @SuppressWarnings("PublicApiNamedStreamShouldReturnStream")
   @Test
   void stream() {

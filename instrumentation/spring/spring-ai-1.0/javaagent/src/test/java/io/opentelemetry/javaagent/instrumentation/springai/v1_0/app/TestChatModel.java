@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.springai.v1_0.app;
 
 import static java.util.Collections.singletonList;
+import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -26,6 +27,8 @@ public class TestChatModel implements ChatModel {
   private RuntimeException callFailure;
   private RuntimeException streamFailure;
   private ChatResponse callResponse;
+  private TestChatModel callDelegate;
+  private TestChatModel callStreamDelegate;
   private Flux<ChatResponse> streamPublisher;
   private TestChatModel streamDelegate;
 
@@ -44,6 +47,12 @@ public class TestChatModel implements ChatModel {
     lastSpanContext = Span.current().getSpanContext();
     if (callFailure != null) {
       throw callFailure;
+    }
+    if (callDelegate != null) {
+      return callDelegate.call(prompt);
+    }
+    if (callStreamDelegate != null) {
+      return requireNonNull(callStreamDelegate.stream(prompt).blockLast());
     }
     return callResponse;
   }
@@ -79,6 +88,14 @@ public class TestChatModel implements ChatModel {
 
   public void setCallResponse(ChatResponse callResponse) {
     this.callResponse = callResponse;
+  }
+
+  public void setCallDelegate(TestChatModel callDelegate) {
+    this.callDelegate = callDelegate;
+  }
+
+  public void setCallStreamDelegate(TestChatModel callStreamDelegate) {
+    this.callStreamDelegate = callStreamDelegate;
   }
 
   public void setStreamPublisher(Flux<ChatResponse> streamPublisher) {

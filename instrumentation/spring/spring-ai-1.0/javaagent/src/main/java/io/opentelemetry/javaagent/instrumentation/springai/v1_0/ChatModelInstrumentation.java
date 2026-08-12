@@ -56,31 +56,47 @@ class ChatModelInstrumentation implements TypeInstrumentation {
   public static class CallAdvice {
 
     public static class AdviceScope {
-      private final Context context;
-      private final Scope scope;
-      private final SpringAiRequest request;
+      private final CallDepth callDepth;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
+      @Nullable private final SpringAiRequest request;
 
-      private AdviceScope(Context context, SpringAiRequest request) {
+      private AdviceScope(
+          CallDepth callDepth,
+          @Nullable Context context,
+          @Nullable Scope scope,
+          @Nullable SpringAiRequest request) {
+        this.callDepth = callDepth;
         this.context = context;
-        this.scope = context.makeCurrent();
+        this.scope = scope;
         this.request = request;
       }
 
-      @Nullable
       public static AdviceScope start(Object chatModel, Prompt prompt) {
+        CallDepth callDepth = CallDepth.forClass(ChatModel.class);
+        if (callDepth.getAndIncrement() > 0) {
+          return new AdviceScope(callDepth, null, null, null);
+        }
         SpringAiRequest request = SpringAiRequest.create(prompt, chatModel);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
-          return null;
+          return new AdviceScope(callDepth, null, null, null);
         }
         Context context = instrumenter().start(parentContext, request);
-        AdviceScope adviceScope = new AdviceScope(context, request);
+        AdviceScope adviceScope =
+            new AdviceScope(callDepth, context, context.makeCurrent(), request);
         SpringAiMessageAttributes.setInputMessages(context, request);
         SpringAiMessageEvents.emitPromptEvents(context, request);
         return adviceScope;
       }
 
       public void end(@Nullable ChatResponse response, @Nullable Throwable throwable) {
+        if (callDepth.decrementAndGet() > 0
+            || scope == null
+            || context == null
+            || request == null) {
+          return;
+        }
         try {
           scope.close();
         } finally {
@@ -131,9 +147,7 @@ class ChatModelInstrumentation implements TypeInstrumentation {
       }
       if (throwable != null) {
         CallAdvice.AdviceScope adviceScope = CallAdvice.AdviceScope.start(chatModel, prompt);
-        if (adviceScope != null) {
-          adviceScope.end(null, throwable);
-        }
+        adviceScope.end(null, throwable);
         return publisher;
       }
       if (publisher == null) {
