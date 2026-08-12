@@ -566,7 +566,22 @@
       "name": "otel.instrumentation.runtime-telemetry.experimental.prefer-jfr",
       "type": "java.lang.Boolean",
       "description": "Prefer JFR over JMX for metrics available from both sources, on Java 17+.",
-      "defaultValue": false
+      "defaultValue": false,
+      "deprecation": {
+        "level": "warning",
+        "reason": "Use the JFR metric selectors instead.",
+        "replacement": "otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included"
+      }
+    },
+    {
+      "name": "otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Include JVM runtime metrics to source from JFR on Java 17+ using case-sensitive * and ? glob patterns. Configuring either selector property activates JFR; omitted included patterns select all metrics not excluded."
+    },
+    {
+      "name": "otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Exclude JVM runtime metrics from JFR on Java 17+ using case-sensitive * and ? glob patterns. Exclusions take precedence."
     },
     {
       "name": "otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters",

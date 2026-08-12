@@ -71,6 +71,9 @@ dependencyResolutionManagement {
 val develocityServer = "https://develocity.opentelemetry.io"
 val isCI = System.getenv("CI") != null
 val develocityAccessKey = System.getenv("DEVELOCITY_ACCESS_KEY") ?: ""
+val isRemoteBuildCachePushEnabled = isCI && develocityAccessKey.isNotEmpty()
+val shouldDisableLocalBuildCache =
+  isRemoteBuildCachePushEnabled && System.getenv("GITHUB_REF_NAME") == "main"
 
 develocity {
   if (develocityAccessKey.isNotEmpty()) {
@@ -106,9 +109,16 @@ develocity {
 }
 
 buildCache {
+  // a task loaded from the local build cache is never pushed to the remote build cache, so on main
+  // builds that write the remote cache the local cache is disabled, otherwise everything that
+  // doesn't change is served locally, never re-executed, and never reaches the remote cache
+  local {
+    isEnabled = !shouldDisableLocalBuildCache
+  }
+
   remote(develocity.buildCache) {
     server = develocityServer
-    isPush = isCI && develocityAccessKey.isNotEmpty()
+    isPush = isRemoteBuildCachePushEnabled
   }
 }
 

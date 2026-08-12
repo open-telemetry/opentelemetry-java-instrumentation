@@ -6,6 +6,10 @@
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,14 +25,19 @@ import io.grpc.ServerBuilder;
 import io.grpc.Status;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class GrpcTest extends AbstractGrpcTest {
 
@@ -42,7 +51,10 @@ class GrpcTest extends AbstractGrpcTest {
   protected ServerBuilder<?> configureServer(ServerBuilder<?> server) {
     return server.intercept(
         GrpcTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedServerRequestMetadata(singletonList(SERVER_REQUEST_METADATA_KEY))
+            .setServerRequestMetadata(
+                IncludeExclude.builder()
+                    .setIncluded(singletonList(SERVER_REQUEST_METADATA_KEY))
+                    .build())
             .build()
             .createServerInterceptor());
   }
@@ -51,7 +63,10 @@ class GrpcTest extends AbstractGrpcTest {
   protected ManagedChannelBuilder<?> configureClient(ManagedChannelBuilder<?> client) {
     return client.intercept(
         GrpcTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedClientRequestMetadata(singletonList(CLIENT_REQUEST_METADATA_KEY))
+            .setClientRequestMetadata(
+                IncludeExclude.builder()
+                    .setIncluded(singletonList(CLIENT_REQUEST_METADATA_KEY))
+                    .build())
             .build()
             .createClientInterceptor());
   }
@@ -59,6 +74,118 @@ class GrpcTest extends AbstractGrpcTest {
   @Override
   protected InstrumentationExtension testing() {
     return testing;
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  @SuppressWarnings("deprecation")
+  void deprecatedRequestMetadataSetters(boolean captureMetadata) throws Exception {
+    List<String> clientCapturedMetadata =
+        captureMetadata ? singletonList(CLIENT_REQUEST_METADATA_KEY) : emptyList();
+    List<String> serverCapturedMetadata =
+        captureMetadata ? singletonList(SERVER_REQUEST_METADATA_KEY) : emptyList();
+
+    BindableService greeter =
+        new GreeterGrpc.GreeterImplBase() {
+          @Override
+          public void sayHello(
+              Helloworld.Request req, StreamObserver<Helloworld.Response> responseObserver) {
+            responseObserver.onNext(
+                Helloworld.Response.newBuilder().setMessage("Hello " + req.getName()).build());
+            responseObserver.onCompleted();
+          }
+        };
+
+    Server server =
+        ServerBuilder.forPort(0)
+            .addService(greeter)
+            .intercept(
+                GrpcTelemetry.builder(testing.getOpenTelemetry())
+                    .setCapturedServerRequestMetadata(serverCapturedMetadata)
+                    .build()
+                    .createServerInterceptor())
+            .build()
+            .start();
+    ManagedChannel channel =
+        createChannel(
+            ManagedChannelBuilder.forAddress("localhost", server.getPort())
+                .intercept(
+                    GrpcTelemetry.builder(testing.getOpenTelemetry())
+                        .setCapturedClientRequestMetadata(clientCapturedMetadata)
+                        .build()
+                        .createClientInterceptor()));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
+
+    String clientMetadataValue = "client-value";
+    String serverMetadataValue = "server-value";
+    Metadata metadata = new Metadata();
+    metadata.put(
+        Metadata.Key.of(CLIENT_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
+        clientMetadataValue);
+    metadata.put(
+        Metadata.Key.of(SERVER_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
+        serverMetadataValue);
+
+    GreeterGrpc.GreeterBlockingStub client =
+        GreeterGrpc.newBlockingStub(channel)
+            .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata));
+    Helloworld.Response response =
+        testing()
+            .runWithSpan(
+                "parent",
+                () -> client.sayHello(Helloworld.Request.newBuilder().setName("test").build()));
+
+    assertThat(response.getMessage()).isEqualTo("Hello test");
+
+    AttributeKey<List<String>> oldClientAttributeKey =
+        AttributeKey.stringArrayKey("rpc.grpc.request.metadata." + CLIENT_REQUEST_METADATA_KEY);
+    AttributeKey<List<String>> stableClientAttributeKey =
+        AttributeKey.stringArrayKey("rpc.request.metadata." + CLIENT_REQUEST_METADATA_KEY);
+    AttributeKey<List<String>> oldServerAttributeKey =
+        AttributeKey.stringArrayKey("rpc.grpc.request.metadata." + SERVER_REQUEST_METADATA_KEY);
+    AttributeKey<List<String>> stableServerAttributeKey =
+        AttributeKey.stringArrayKey("rpc.request.metadata." + SERVER_REQUEST_METADATA_KEY);
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName("example.Greeter/SayHello")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfying(
+                                equalTo(
+                                    oldClientAttributeKey,
+                                    emitOldRpcSemconv() && captureMetadata
+                                        ? singletonList(clientMetadataValue)
+                                        : null),
+                                equalTo(
+                                    stableClientAttributeKey,
+                                    emitStableRpcSemconv() && captureMetadata
+                                        ? singletonList(clientMetadataValue)
+                                        : null),
+                                equalTo(oldServerAttributeKey, null),
+                                equalTo(stableServerAttributeKey, null)),
+                    span ->
+                        span.hasName("example.Greeter/SayHello")
+                            .hasKind(SpanKind.SERVER)
+                            .hasParent(trace.getSpan(1))
+                            .hasAttributesSatisfying(
+                                equalTo(oldClientAttributeKey, null),
+                                equalTo(stableClientAttributeKey, null),
+                                equalTo(
+                                    oldServerAttributeKey,
+                                    emitOldRpcSemconv() && captureMetadata
+                                        ? singletonList(serverMetadataValue)
+                                        : null),
+                                equalTo(
+                                    stableServerAttributeKey,
+                                    emitStableRpcSemconv() && captureMetadata
+                                        ? singletonList(serverMetadataValue)
+                                        : null))));
   }
 
   /**
