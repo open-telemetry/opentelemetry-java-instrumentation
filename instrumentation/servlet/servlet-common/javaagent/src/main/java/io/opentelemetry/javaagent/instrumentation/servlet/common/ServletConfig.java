@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-public final class ServletConfig {
+class ServletConfig {
 
   private static final Logger logger = Logger.getLogger(ServletConfig.class.getName());
   private static final Set<String> warnedDeprecatedProperties = ConcurrentHashMap.newKeySet();
