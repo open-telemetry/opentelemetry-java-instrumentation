@@ -25,10 +25,10 @@ public class PulsarBatchRequest extends BasePulsarRequest {
 
   private PulsarBatchRequest(
       Messages<?> messages,
-      String destination,
+      String topicName,
       @Nullable UrlData urlData,
       @Nullable String subscription) {
-    super(destination, urlData, subscription);
+    super(topicName, urlData, subscription);
     this.messages = messages;
   }
 

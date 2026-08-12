@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
-import org.apache.pulsar.common.naming.TopicName;
 
 final class PulsarMessagingAttributesGetter
     implements MessagingAttributesGetter<PulsarRequest, Void> {
@@ -82,11 +81,7 @@ final class PulsarMessagingAttributesGetter
   @Nullable
   @Override
   public String getDestinationPartitionId(PulsarRequest request) {
-    int partitionIndex = TopicName.getPartitionIndex(request.getDestination());
-    if (partitionIndex == -1) {
-      return null;
-    }
-    return String.valueOf(partitionIndex);
+    return request.getDestinationPartitionId();
   }
 
   @Nullable
