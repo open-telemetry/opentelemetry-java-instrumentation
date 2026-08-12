@@ -51,6 +51,7 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.SqsClientBuilder;
+import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
@@ -454,9 +455,15 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
     client.sendMessageBatch(sendMessageBatchRequest);
 
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageBatchRequest);
-    List<String> messageIds = new ArrayList<>();
+    // ids of the messages that carry a creation context, in the order they were received, which is
+    // the order the receive span links them in. indexed access avoids the tracing iterator, which
+    // would start the process spans too early
+    List<String> propagatedMessageIds = new ArrayList<>();
     for (int i = 0; i < response.messages().size(); i++) {
-      messageIds.add(response.messages().get(i).messageId());
+      Message message = response.messages().get(i);
+      if (isXrayInjectionEnabled() || message.messageAttributes().containsKey("traceparent")) {
+        propagatedMessageIds.add(message.messageId());
+      }
     }
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
 
@@ -470,6 +477,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
 
     // the last message in the batch has too many attributes for the tracing header to be injected
     int propagatedMessages = isXrayInjectionEnabled() ? 3 : 2;
+    assertThat(propagatedMessageIds).hasSize(propagatedMessages);
     // without an ambient span the process spans are parented to the message creation context, which
     // puts them in the same trace as the publish span
     boolean processInPublishTrace = emitStableMessagingSemconv();
@@ -539,7 +547,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                       links -> {
                         assertThat(links).hasSize(propagatedMessages);
                         for (int i = 0; i < links.size(); i++) {
-                          assertMessageLink(links.get(i), publishSpan.get(), messageIds.get(i));
+                          assertMessageLink(
+                              links.get(i), publishSpan.get(), propagatedMessageIds.get(i));
                         }
                       });
                 } else {
