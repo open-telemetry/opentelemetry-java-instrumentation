@@ -38,7 +38,7 @@ class LogbackConfigTest {
     when(config.get("mdc_attributes/development").getScalarList("excluded", String.class))
         .thenReturn(singletonList("*-secret"));
 
-    LogbackConfig logbackConfig = new LogbackConfig(config, false);
+    LogbackConfig logbackConfig = new LogbackConfig(config);
 
     IncludeExclude mdcAttributes = logbackConfig.getMdcAttributes();
     assertThat(mdcAttributes).isNotNull();
@@ -54,20 +54,9 @@ class LogbackConfigTest {
     when(config.getScalarList("capture_mdc_attributes/development", String.class))
         .thenReturn(singletonList("deprecated"));
 
-    LogbackConfig logbackConfig = new LogbackConfig(config, false);
+    LogbackConfig logbackConfig = new LogbackConfig(config);
 
     assertThat(logbackConfig.getMdcAttributes().getIncluded()).containsExactly("new");
-  }
-
-  @Test
-  void deprecatedConfigIsIgnoredInV3Preview() {
-    DeclarativeConfigProperties config = mockConfig();
-    when(config.getScalarList("capture_mdc_attributes/development", String.class))
-        .thenReturn(singletonList("deprecated"));
-
-    LogbackConfig logbackConfig = new LogbackConfig(config, true);
-
-    assertThat(logbackConfig.getMdcAttributes()).isNull();
   }
 
   @Test
@@ -79,8 +68,8 @@ class LogbackConfigTest {
     TestHandler handler = new TestHandler();
     logger.addHandler(handler);
     try {
-      LogbackConfig first = new LogbackConfig(config, false);
-      LogbackConfig second = new LogbackConfig(config, false);
+      LogbackConfig first = new LogbackConfig(config);
+      LogbackConfig second = new LogbackConfig(config);
 
       assertThat(first.getMdcAttributes().getIncluded()).containsExactly("deprecated");
       assertThat(first.getMdcAttributes().getExcluded()).isEmpty();
@@ -90,7 +79,7 @@ class LogbackConfigTest {
           .isEqualTo(
               "The otel.instrumentation.logback-appender.experimental.capture-mdc-attributes"
                   + " setting and the equivalent declarative configuration property are"
-                  + " deprecated and will be removed in 3.0. Use"
+                  + " deprecated and may be removed in the next minor release. Use"
                   + " otel.instrumentation.logback-appender.experimental.mdc-attributes.included"
                   + " or equivalent declarative configuration instead.");
     } finally {

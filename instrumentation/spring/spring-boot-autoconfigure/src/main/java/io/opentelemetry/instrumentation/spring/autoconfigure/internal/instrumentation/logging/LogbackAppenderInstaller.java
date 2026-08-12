@@ -204,22 +204,14 @@ class LogbackAppenderInstaller {
     }
 
     boolean newSelectorConfigured = includedProperty != null || excludedProperty != null;
-    if (Boolean.TRUE.equals(
-        environment.getProperty(
-            getEnvironmentPropertyName(environment, "otel.instrumentation.common.v3-preview"),
-            Boolean.class))) {
-      return newSelectorConfigured
-          ? MdcAttributesConfiguration.configured(null)
-          : MdcAttributesConfiguration.unconfigured();
-    }
 
     String deprecatedProperty = getLoggingProperty(environment, DEPRECATED_MDC_ATTRIBUTES);
     if (deprecatedProperty != null) {
       if (warnedDeprecatedProperties.add(DEPRECATED_MDC_ATTRIBUTES)) {
         logger.warn(
             "The '{}' property and the equivalent declarative configuration property are"
-                + " deprecated and will be removed in 3.0. Use '{}' or equivalent declarative"
-                + " configuration instead.",
+                + " deprecated and may be removed in the next minor release. Use '{}' or equivalent"
+                + " declarative configuration instead.",
             DEPRECATED_MDC_ATTRIBUTES,
             MDC_ATTRIBUTES_INCLUDED);
       }

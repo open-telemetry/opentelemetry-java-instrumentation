@@ -11,7 +11,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
@@ -31,12 +30,11 @@ final class LogbackConfig {
 
   static LogbackConfig create(OpenTelemetry openTelemetry) {
     return new LogbackConfig(
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "logback_appender"),
-        SemconvStability.v3Preview(openTelemetry));
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "logback_appender"));
   }
 
-  LogbackConfig(DeclarativeConfigProperties config, boolean v3Preview) {
-    mdcAttributes = getMdcAttributes(config, v3Preview);
+  LogbackConfig(DeclarativeConfigProperties config) {
+    mdcAttributes = getMdcAttributes(config);
   }
 
   @Nullable
@@ -45,8 +43,7 @@ final class LogbackConfig {
   }
 
   @Nullable
-  private static IncludeExclude getMdcAttributes(
-      DeclarativeConfigProperties config, boolean v3Preview) {
+  private static IncludeExclude getMdcAttributes(DeclarativeConfigProperties config) {
     DeclarativeConfigProperties mdcAttributes = config.get("mdc_attributes/development");
     List<String> included = mdcAttributes.getScalarList("included", String.class);
     List<String> excluded = mdcAttributes.getScalarList("excluded", String.class);
@@ -61,10 +58,6 @@ final class LogbackConfig {
       return selector;
     }
 
-    if (v3Preview) {
-      return null;
-    }
-
     List<String> deprecatedIncluded =
         config.getScalarList("capture_mdc_attributes/development", String.class);
     if (deprecatedIncluded == null) {
@@ -76,7 +69,7 @@ final class LogbackConfig {
           "The "
               + DEPRECATED_MDC_ATTRIBUTES
               + " setting and the equivalent declarative configuration property are deprecated"
-              + " and will be removed in 3.0. Use "
+              + " and may be removed in the next minor release. Use "
               + MDC_ATTRIBUTES_INCLUDED
               + " or equivalent declarative configuration instead.");
     }

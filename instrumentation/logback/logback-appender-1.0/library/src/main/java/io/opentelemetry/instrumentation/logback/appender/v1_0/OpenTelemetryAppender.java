@@ -242,9 +242,10 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * #setMdcAttributes(IncludeExclude)} takes a type that Logback cannot construct from a
    * configuration file.
    *
-   * @deprecated Use {@link #setMdcAttributes(IncludeExclude)} instead. Will be removed in 3.0.
+   * @deprecated Use {@link #setMdcAttributes(IncludeExclude)} instead. May be removed in the next
+   *     minor release.
    */
-  @Deprecated // to be removed in 3.0
+  @Deprecated // may be removed in the next minor release
   public void setCaptureMdcAttributes(String attributes) {
     List<String> included =
         attributes == null ? emptyList() : filterBlanksAndNulls(attributes.split(","));
