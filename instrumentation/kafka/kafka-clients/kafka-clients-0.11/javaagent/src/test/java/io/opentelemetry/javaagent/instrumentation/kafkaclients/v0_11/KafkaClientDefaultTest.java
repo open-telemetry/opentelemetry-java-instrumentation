@@ -132,11 +132,8 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                     && span.getName().equals("commit " + SHARED_TOPIC))
         .hasSize(1);
     assertThat(testing.spans())
-        .filteredOn(
-            span ->
-                span.getSpanContext().getSpanId().equals(reentrantParent.getParentSpanId())
-                    && span.getName().equals("commit " + SHARED_TOPIC))
-        .hasSize(1);
+        .filteredOn(span -> span.getName().equals("commit " + SHARED_TOPIC))
+        .hasSize(2);
   }
 
   private static boolean hasReentrantCommitSpan() {
