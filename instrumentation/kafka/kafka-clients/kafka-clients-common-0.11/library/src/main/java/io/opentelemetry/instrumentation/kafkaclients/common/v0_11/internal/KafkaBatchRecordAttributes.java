@@ -42,6 +42,8 @@ final class KafkaBatchRecordAttributes {
     return attributes;
   }
 
+  private KafkaBatchRecordAttributes() {}
+
   // the common destination is not emitted here, MessagingAttributesExtractor already emits it via
   // KafkaReceiveAttributesGetter#getDestination, which returns the topic under the same condition
   void putCommonAttributes(AttributesBuilder attributes) {
@@ -94,6 +96,4 @@ final class KafkaBatchRecordAttributes {
     offsetVaries |= !Objects.equals(commonOffset, offset);
     keyVaries |= !Objects.equals(commonKey, key);
   }
-
-  private KafkaBatchRecordAttributes() {}
 }

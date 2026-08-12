@@ -37,6 +37,8 @@ final class KafkaConnectBatchRecordAttributes {
     return attributes;
   }
 
+  private KafkaConnectBatchRecordAttributes() {}
+
   // the common destination is not emitted here, MessagingAttributesExtractor already emits it via
   // KafkaConnectAttributesGetter#getDestination, which returns the topic under the same condition
   void putCommonAttributes(AttributesBuilder attributes) {
@@ -95,6 +97,4 @@ final class KafkaConnectBatchRecordAttributes {
     Integer partition = record.kafkaPartition();
     return partition == null ? null : partition.toString();
   }
-
-  private KafkaConnectBatchRecordAttributes() {}
 }
