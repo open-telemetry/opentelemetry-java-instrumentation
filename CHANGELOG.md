@@ -24,9 +24,10 @@
   `otel.instrumentation.micrometer.histogram-gauges.enabled` config property are unchanged.
   ([#19404](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19404))
 - The decaying `<name>.max` gauge that the Micrometer bridge emits alongside the histogram for
-  `Timer` and `DistributionSummary` is deprecated. The `<name>` / `<name>.max` pair violates the
-  OpenTelemetry metric naming rules, and OpenTelemetry histograms already expose a max. It is no
-  longer emitted when `otel.instrumentation.common.v3-preview` is enabled.
+  `Timer` and `DistributionSummary` is deprecated and will be removed in 3.0. The `<name>` /
+  `<name>.max` pair violates the OpenTelemetry metric naming rules, and OpenTelemetry histograms
+  already expose a max. It is no longer emitted when `otel.instrumentation.common.v3-preview` is
+  enabled.
   ([#19397](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19397))
 - Deprecate `MessageOperation` in favor of `MessagingOperationType`.
   ([#19357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19357))
