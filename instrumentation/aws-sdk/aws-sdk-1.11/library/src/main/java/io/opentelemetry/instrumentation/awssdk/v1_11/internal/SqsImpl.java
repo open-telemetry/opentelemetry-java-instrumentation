@@ -6,11 +6,11 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static java.util.Arrays.asList;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
-import com.amazonaws.handlers.HandlerContextKey;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
@@ -26,6 +26,7 @@ import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,8 +39,8 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class SqsImpl {
-  private static final HandlerContextKey<List<Context>> batchMessageContextsKey =
-      new HandlerContextKey<>(SqsImpl.class.getName() + ".BatchMessageContexts");
+  private static final VirtualField<SendMessageBatchRequest, Context[]> batchMessageContexts =
+      VirtualField.find(SendMessageBatchRequest.class, Context[].class);
 
   static {
     // Force loading of SQS class; this ensures that an exception is thrown at this point when the
@@ -205,7 +206,7 @@ public final class SqsImpl {
       preparedEntries.add(preparedEntry);
     }
     preparedRequest.setEntries(preparedEntries);
-    preparedRequest.addHandlerContext(batchMessageContextsKey, creationContexts);
+    batchMessageContexts.set(preparedRequest, creationContexts.toArray(new Context[0]));
     return preparedRequest;
   }
 
@@ -217,9 +218,9 @@ public final class SqsImpl {
     if (!(request.getOriginalRequest() instanceof SendMessageBatchRequest)) {
       return new ArrayList<>();
     }
-    List<Context> contexts =
-        request.getOriginalRequest().getHandlerContext(batchMessageContextsKey);
-    return contexts != null ? contexts : new ArrayList<>();
+    Context[] contexts =
+        batchMessageContexts.get((SendMessageBatchRequest) request.getOriginalRequest());
+    return contexts != null ? asList(contexts) : new ArrayList<>();
   }
 
   private static Map<String, String> toStringMap(
