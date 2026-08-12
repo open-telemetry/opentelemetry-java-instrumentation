@@ -995,11 +995,29 @@ definitions:
       description: The number of JAR files processed per second by the package emitter.
       type: int
       default: 10
+    otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded:
+      name: otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded
+      declarative_name: java.runtime_telemetry.jfr_metrics/development.excluded
+      description: |
+        Excludes JVM runtime metrics from JFR on Java 17+ using exact names or glob patterns with * and ?. Excluded patterns take precedence over included patterns, including over shorthand and legacy selections. Configuring this property without included selects all metrics except those excluded.
+      type: list
+      default: ''
+      examples:
+      - jvm.memory.allocation,jvm.network.*
+    otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included:
+      name: otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included
+      declarative_name: java.runtime_telemetry.jfr_metrics/development.included
+      description: |
+        Selects JVM runtime metrics to source from JFR on Java 17+. Supports exact names and glob patterns with * and ?. Configuring either JFR metric selector property activates JFR. Use * to select all metrics.
+      type: list
+      default: ''
+      examples:
+      - jvm.memory.*,jvm.cpu.longlock
     otel.instrumentation.runtime-telemetry.experimental.prefer-jfr:
       name: otel.instrumentation.runtime-telemetry.experimental.prefer-jfr
       declarative_name: java.runtime_telemetry.prefer_jfr/development
       description: |
-        Prefer JFR over JMX for metrics available from both sources, on Java 17+. When enabled, overlapping metrics are collected via JFR and the corresponding JMX metrics are suppressed.
+        Deprecated: use `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included` instead. Prefer JFR over JMX for metrics available from both sources, on Java 17+.
       type: boolean
       default: false
     otel.instrumentation.rxjava.experimental-span-attributes:
@@ -13246,6 +13264,8 @@ libraries:
   configuration_refs:
   - otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics
   - otel.instrumentation.runtime-telemetry.emit-experimental-metrics
+  - otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded
+  - otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included
   - otel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled
   - otel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second
   - otel.instrumentation.runtime-telemetry.experimental.prefer-jfr

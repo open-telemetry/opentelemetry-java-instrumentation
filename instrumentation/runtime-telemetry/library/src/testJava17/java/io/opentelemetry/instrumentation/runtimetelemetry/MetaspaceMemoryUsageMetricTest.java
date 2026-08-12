@@ -11,19 +11,12 @@ import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constan
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.METRIC_DESCRIPTION_MEMORY;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.METRIC_NAME_MEMORY;
 
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MetaspaceMemoryUsageMetricTest {
 
-  @RegisterExtension
-  JfrExtension jfrExtension =
-      new JfrExtension(
-          jfrConfig -> {
-            jfrConfig.disableAllFeatures();
-            jfrConfig.enableFeature(JfrFeature.MEMORY_POOL_METRICS);
-          });
+  @RegisterExtension JfrExtension jfrExtension = new JfrExtension("jvm.memory.used");
 
   /** This is a basic test for jvm.memory.used. */
   @Test
