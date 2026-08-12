@@ -37,7 +37,7 @@ public final class ProcessResource {
       Pattern.compile("^\\S+\\.(jar|war)", Pattern.CASE_INSENSITIVE);
   // scrub values for system properties containing "secret" or "password" in the name
   private static final Pattern SCRUB_PATTERN =
-      Pattern.compile("(-D.*(password|secret).*=).*", Pattern.CASE_INSENSITIVE);
+      Pattern.compile("(-D.*(password|secret).*=).*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
   private static final Pattern SCRUB_COMMAND_LINE_PATTERN =
       Pattern.compile(
           "(-D[^\\s=]*(password|secret)[^\\s=]*=).*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);

@@ -56,6 +56,8 @@ class ProcessResourceTest {
           .contains(attributes.get(PROCESS_EXECUTABLE_PATH))
           .contains("-DtestSecret=***")
           .contains("-DtestPassword=***")
+          .contains("-DtestMultilineSecret=***")
+          .doesNotContain("leaked")
           .contains("-DtestNotRedacted=test")
           .endsWith(" app.jar -DappSecret=***");
     } else {
@@ -63,6 +65,7 @@ class ProcessResourceTest {
           .contains(attributes.get(PROCESS_EXECUTABLE_PATH))
           .contains("-DtestSecret=***")
           .contains("-DtestPassword=***")
+          .contains("-DtestMultilineSecret=***")
           .contains("-DtestNotRedacted=test");
     }
   }

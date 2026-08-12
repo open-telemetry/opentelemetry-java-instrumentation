@@ -89,6 +89,7 @@ tasks {
     // use the final jar instead of directories with built classes to test the mrjar functionality
     classpath = project.files(jar) + classpath
     systemProperty("testSecret", "test")
+    systemProperty("testMultilineSecret", "test\nleaked")
     systemProperty("testPassword", "test")
     systemProperty("testNotRedacted", "test")
   }
