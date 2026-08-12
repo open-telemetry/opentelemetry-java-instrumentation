@@ -206,6 +206,47 @@ class LogbackAppenderTest {
                     .isEqualTo(expectMdcAttribute ? "val1" : null));
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void deprecatedMdcPropertyInV3PreviewDoesNotOverrideXmlConfiguration(boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:logback-test-mdc.xml");
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_mdc_attributes/development",
+          "key2");
+      properties.put("otel.instrumentation/development.java.common.v3_preview", true);
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "key2");
+      properties.put("otel.instrumentation.common.v3-preview", true);
+    }
+
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+    testing.clearData();
+
+    MDC.put("key1", "val1");
+    MDC.put("key2", "val2");
+    try {
+      LoggerFactory.getLogger("test").info("legacy MDC property with XML configuration");
+    } finally {
+      MDC.clear();
+    }
+
+    assertThat(testing.logRecords())
+        .satisfiesOnlyOnce(
+            logRecord ->
+                assertThat(logRecord.getAttributes().asMap())
+                    .containsEntry(stringKey("key1"), "val1")
+                    .doesNotContainKey(stringKey("key2")));
+  }
+
   @Test
   void deprecatedMdcPropertyWarnsOnce() throws Exception {
     Field field = LogbackAppenderInstaller.class.getDeclaredField("warnedDeprecatedProperties");

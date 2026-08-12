@@ -208,8 +208,7 @@ class LogbackAppenderInstaller {
         environment.getProperty(
             getEnvironmentPropertyName(environment, "otel.instrumentation.common.v3-preview"),
             Boolean.class))) {
-      String deprecatedProperty = getLoggingProperty(environment, DEPRECATED_MDC_ATTRIBUTES);
-      return deprecatedProperty != null || newSelectorConfigured
+      return newSelectorConfigured
           ? MdcAttributesConfiguration.configured(null)
           : MdcAttributesConfiguration.unconfigured();
     }
