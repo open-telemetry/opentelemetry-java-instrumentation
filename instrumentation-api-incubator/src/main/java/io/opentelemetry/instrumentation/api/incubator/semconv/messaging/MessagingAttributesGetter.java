@@ -107,6 +107,7 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
    * a view over the underlying header names as long as that view cannot change while the returned
    * collection is being read.
    */
+  // TODO: remove the default implementation and make this required to implement in 3.0
   default Collection<String> getMessageHeaderNames(REQUEST request) {
     return emptyList();
   }
