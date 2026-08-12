@@ -21,6 +21,7 @@ if (otelProps.testLatestDeps) {
 
 tasks {
   test {
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
+    // exercises an exclude-only selector, which captures every parameter that it does not exclude
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.excluded=ignored-*")
   }
 }
