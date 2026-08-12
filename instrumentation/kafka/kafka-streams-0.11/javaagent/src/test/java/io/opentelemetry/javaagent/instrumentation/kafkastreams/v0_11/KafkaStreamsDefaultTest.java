@@ -214,7 +214,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                         .hasLinks(LinkData.create(producerProcessedRef.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(assertions));
           };
-      if (receiveTelemetryExplicitlyEnabled()) {
+      if (receiveTelemetryEnabled()) {
         Consumer<TraceAssert> pendingReceiveTrace =
             trace -> {
               List<AttributeAssertion> assertions =
@@ -451,8 +451,9 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
     }
   }
 
-  private static boolean receiveTelemetryExplicitlyEnabled() {
-    return Boolean.getBoolean(
-        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
+  private static boolean receiveTelemetryEnabled() {
+    String configured =
+        System.getProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
+    return configured != null ? Boolean.parseBoolean(configured) : emitStableMessagingSemconv();
   }
 }
