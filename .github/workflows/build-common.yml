@@ -363,7 +363,7 @@ jobs:
         run: >
           ./gradlew
           ${test_tasks}
-          -PtestJavaVersion=${{ matrix.test-java-version }}
+          -PtestJavaVersion=${{ matrix.test-java-version != '25-deny-unsafe' && matrix.test-java-version || '25' }}
           -PtestJavaVM=${{ matrix.vm }}
           -PtestIndy=${{ matrix.test-indy }}
           -PdenyUnsafe=${{ matrix.test-java-version == '25-deny-unsafe' && 'true' || 'false' }}
