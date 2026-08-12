@@ -28,13 +28,15 @@ final class OpenTelemetryMeter extends AbstractMeter
       Id id,
       NamingConvention namingConvention,
       Iterable<Measurement> measurements,
+      boolean v3Preview,
       io.opentelemetry.api.metrics.Meter otelMeter) {
     super(id);
     Attributes attributes = tagsAsAttributes(id, namingConvention);
 
     List<AutoCloseable> observableInstruments = new ArrayList<>();
     for (Measurement measurement : measurements) {
-      String name = statisticInstrumentName(id, measurement.getStatistic(), namingConvention);
+      String name =
+          statisticInstrumentName(id, measurement.getStatistic(), namingConvention, v3Preview);
       String description = Bridging.description(id);
       String baseUnit = baseUnit(id);
       DoubleMeasurementRecorder<Measurement> callback =
