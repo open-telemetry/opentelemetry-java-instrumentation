@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jmx.rules;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
