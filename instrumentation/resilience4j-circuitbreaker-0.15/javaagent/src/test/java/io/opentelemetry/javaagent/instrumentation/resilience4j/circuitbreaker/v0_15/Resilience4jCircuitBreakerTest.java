@@ -85,10 +85,10 @@ class Resilience4jCircuitBreakerTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                stringKey("resilience4j.circuit_breaker.name"),
+                                stringKey("resilience.policy.name"),
                                 experimental("test-circuit-breaker")),
                             equalTo(
-                                stringKey("resilience4j.circuit_breaker.state"),
+                                stringKey("resilience.circuitbreaker.state"),
                                 experimental(state)))));
   }
 }

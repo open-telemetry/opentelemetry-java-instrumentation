@@ -277,6 +277,8 @@ readonly INSTRUMENTATIONS=(
   "reactor:reactor-netty:reactor-netty-1.0:javaagent:testStableSemconv"
   "rediscala-1.8:javaagent:test"
   "rediscala-1.8:javaagent:testStableSemconv"
+  "resilience4j-circuitbreaker-0.15:javaagent:test"
+  "resilience4j-circuitbreaker-0.15:javaagent:testExperimental"
   "redisson:redisson-3.0:javaagent:test"
   "redisson:redisson-3.0:javaagent:testStableSemconv"
   "redisson:redisson-3.17:javaagent:test"

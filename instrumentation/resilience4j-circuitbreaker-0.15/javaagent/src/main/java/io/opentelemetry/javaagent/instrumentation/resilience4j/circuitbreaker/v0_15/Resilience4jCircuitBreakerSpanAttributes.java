@@ -19,10 +19,10 @@ public final class Resilience4jCircuitBreakerSpanAttributes {
           .getBoolean("experimental_span_attributes/development", false);
 
   private static final AttributeKey<String> CIRCUIT_BREAKER_NAME =
-      AttributeKey.stringKey("resilience4j.circuit_breaker.name");
+      AttributeKey.stringKey("resilience.policy.name");
 
   private static final AttributeKey<String> CIRCUIT_BREAKER_STATE =
-      AttributeKey.stringKey("resilience4j.circuit_breaker.state");
+      AttributeKey.stringKey("resilience.circuitbreaker.state");
 
   public static void set(CircuitBreaker circuitBreaker) {
     if (!CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
