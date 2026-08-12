@@ -24,8 +24,7 @@ public final class Resilience4jCircuitBreakerSpanAttributes {
 
   @SuppressWarnings({"ReturnValueIgnored", "unused"})
   private static void limitSupportedVersions(CircuitBreaker circuitBreaker) {
-    // tryAcquirePermission was added in 0.15.0. Using it here ensures that muzzle will disable
-    // this instrumentation on earlier versions where this method does not exist.
+    // Keep a reference to enforce 0.15.0 as the minimum version.
     circuitBreaker.tryAcquirePermission();
   }
 
