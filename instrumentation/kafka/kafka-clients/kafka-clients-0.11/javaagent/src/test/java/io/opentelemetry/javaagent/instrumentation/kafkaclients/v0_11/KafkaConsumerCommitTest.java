@@ -72,6 +72,7 @@ class KafkaConsumerCommitTest {
   @BeforeAll
   static void initializeInstrumentation() {
     closedConsumer();
+    testing.clearData();
   }
 
   @Test
