@@ -17,7 +17,9 @@ final class SqsEventAttributesGetter extends SqsAttributesGetter<SQSEvent> {
   @Nullable
   @Override
   public String getDestination(SQSEvent event) {
-    return emitStableMessagingSemconv() ? destination(event) : null;
+    return emitStableMessagingSemconv()
+        ? SqsEventRecordAttributes.create(event).getCommonDestination()
+        : null;
   }
 
   @Nullable
@@ -28,28 +30,6 @@ final class SqsEventAttributesGetter extends SqsAttributesGetter<SQSEvent> {
     }
     List<SQSMessage> records = event.getRecords();
     return records == null ? null : (long) records.size();
-  }
-
-  @Nullable
-  private static String destination(SQSEvent event) {
-    List<SQSMessage> records = event.getRecords();
-    if (records == null || records.isEmpty()) {
-      return null;
-    }
-    String destination = queueName(records.get(0));
-    if (destination == null) {
-      return null;
-    }
-    for (int i = 1; i < records.size(); i++) {
-      String messageDestination = queueName(records.get(i));
-      if (messageDestination == null) {
-        return null;
-      }
-      if (!messageDestination.equals(destination)) {
-        return null;
-      }
-    }
-    return destination;
   }
 
   static String source(SQSEvent event) {

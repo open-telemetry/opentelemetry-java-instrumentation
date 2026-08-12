@@ -12,6 +12,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
@@ -25,9 +26,12 @@ import static org.mockito.Mockito.when;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import java.lang.reflect.Constructor;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +45,9 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
 
   private static final String AWS_TRACE_HEADER =
       "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;Sampled=1";
+  private static final String AWS_TRACE_HEADER2 =
+      "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad9;Sampled=1";
+  private static final String TRACE_ID = "5759e988bd862e3fe1be46a994272793";
 
   protected abstract RequestHandler<SQSEvent, ?> handler();
 
@@ -112,14 +119,13 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                             .hasLinksSatisfying(
                                 links ->
                                     assertThat(links)
-                                        .singleElement()
-                                        .satisfies(
-                                            link -> {
-                                              assertThat(link.getSpanContext().getTraceId())
-                                                  .isEqualTo("5759e988bd862e3fe1be46a994272793");
-                                              assertThat(link.getSpanContext().getSpanId())
-                                                  .isEqualTo("53995c3f42cd8ad8");
-                                            }))));
+                                        .satisfiesExactly(
+                                            link(
+                                                "53995c3f42cd8ad8",
+                                                emitStableMessagingSemconv()
+                                                    ? Attributes.of(
+                                                        MESSAGING_MESSAGE_ID, "message1")
+                                                    : Attributes.empty())))));
   }
 
   @Test
@@ -131,7 +137,7 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
     message1.setEventSourceArn("arn:aws:sqs:us-east-2:123456789012:queue1");
 
     SQSEvent.SQSMessage message2 = newMessage();
-    message2.setAttributes(emptyMap());
+    message2.setAttributes(singletonMap("AWSTraceHeader", AWS_TRACE_HEADER2));
     message2.setMessageId("message2");
     message2.setEventSource("aws:sqs");
     message2.setEventSourceArn("arn:aws:sqs:us-east-2:123456789012:queue2");
@@ -172,14 +178,33 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                             .hasLinksSatisfying(
                                 links ->
                                     assertThat(links)
-                                        .singleElement()
-                                        .satisfies(
-                                            link -> {
-                                              assertThat(link.getSpanContext().getTraceId())
-                                                  .isEqualTo("5759e988bd862e3fe1be46a994272793");
-                                              assertThat(link.getSpanContext().getSpanId())
-                                                  .isEqualTo("53995c3f42cd8ad8");
-                                            }))));
+                                        .satisfiesExactly(
+                                            link(
+                                                "53995c3f42cd8ad8",
+                                                emitStableMessagingSemconv()
+                                                    ? Attributes.of(
+                                                        MESSAGING_MESSAGE_ID,
+                                                        "message1",
+                                                        MESSAGING_DESTINATION_NAME,
+                                                        "queue1")
+                                                    : Attributes.empty()),
+                                            link(
+                                                "53995c3f42cd8ad9",
+                                                emitStableMessagingSemconv()
+                                                    ? Attributes.of(
+                                                        MESSAGING_MESSAGE_ID,
+                                                        "message2",
+                                                        MESSAGING_DESTINATION_NAME,
+                                                        "queue2")
+                                                    : Attributes.empty())))));
+  }
+
+  private static Consumer<LinkData> link(String spanId, Attributes attributes) {
+    return linkData -> {
+      assertThat(linkData.getSpanContext().getTraceId()).isEqualTo(TRACE_ID);
+      assertThat(linkData.getSpanContext().getSpanId()).isEqualTo(spanId);
+      assertThat(linkData.getAttributes()).isEqualTo(attributes);
+    };
   }
 
   // Constructor private in early versions.

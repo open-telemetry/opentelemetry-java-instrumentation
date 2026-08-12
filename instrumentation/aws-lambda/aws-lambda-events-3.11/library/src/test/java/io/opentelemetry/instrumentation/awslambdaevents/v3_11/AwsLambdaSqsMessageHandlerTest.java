@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.SQSBatchResponse;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
@@ -130,13 +131,19 @@ class AwsLambdaSqsMessageHandlerTest {
                                     "5759e988bd862e3fe1be46a994272793",
                                     "53995c3f42cd8ad8",
                                     TraceFlags.getSampled(),
-                                    TraceState.getDefault())),
+                                    TraceState.getDefault()),
+                                emitStableMessagingSemconv()
+                                    ? Attributes.of(MESSAGING_MESSAGE_ID, "message1")
+                                    : Attributes.empty()),
                             LinkData.create(
                                 SpanContext.createFromRemoteParent(
                                     "5759e988bd862e3fe1be46a994272793",
                                     "53995c3f42cd8ad9",
                                     TraceFlags.getSampled(),
-                                    TraceState.getDefault()))),
+                                    TraceState.getDefault()),
+                                emitStableMessagingSemconv()
+                                    ? Attributes.of(MESSAGING_MESSAGE_ID, "message2")
+                                    : Attributes.empty())),
                 span ->
                     span.hasName(
                             emitStableMessagingSemconv() ? "process queue1" : "aws:sqs process")
