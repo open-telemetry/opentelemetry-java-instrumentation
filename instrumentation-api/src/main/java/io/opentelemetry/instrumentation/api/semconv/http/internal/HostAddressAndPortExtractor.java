@@ -32,6 +32,18 @@ public final class HostAddressAndPortExtractor<REQUEST>
       return;
     }
 
+    if (host.startsWith("[")) {
+      int ipv6End = host.indexOf(']');
+      if (ipv6End == -1) {
+        return;
+      }
+      sink.setAddress(host.substring(1, ipv6End));
+      if (ipv6End + 1 < host.length() && host.charAt(ipv6End + 1) == ':') {
+        setPort(sink, host, ipv6End + 2, host.length());
+      }
+      return;
+    }
+
     int hostHeaderSeparator = host.indexOf(':');
     if (hostHeaderSeparator == -1) {
       sink.setAddress(host);
