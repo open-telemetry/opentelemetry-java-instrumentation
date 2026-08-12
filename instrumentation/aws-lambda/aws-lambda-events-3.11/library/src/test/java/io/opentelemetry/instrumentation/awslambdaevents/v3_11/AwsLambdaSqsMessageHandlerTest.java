@@ -25,15 +25,22 @@ import static org.mockito.Mockito.when;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.SQSBatchResponse;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.lang.reflect.Constructor;
+import java.time.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -184,6 +191,39 @@ class AwsLambdaSqsMessageHandlerTest {
                                     TraceState.getDefault())))));
   }
 
+  @Test
+  void nestedProcessSpan() {
+    SQSEvent.SQSMessage message = newMessage();
+    message.setAttributes(singletonMap("AWSTraceHeader", AWS_TRACE_HEADER1));
+    message.setMessageId("message1");
+    message.setEventSource("aws:sqs");
+    message.setEventSourceArn("arn:aws:sqs:us-east-2:123456789012:queue1");
+
+    SQSEvent event = new SQSEvent();
+    event.setRecords(asList(message));
+
+    OpenTelemetrySdk openTelemetrySdk = testing.getOpenTelemetrySdk();
+    Instrumenter<SQSEvent, Void> eventInstrumenter =
+        Instrumenter.<SQSEvent, Void>builder(openTelemetrySdk, "test", unused -> "custom process")
+            .addAttributesExtractor(new ConsumerProcessAttributesExtractor())
+            .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+    new TestHandler(openTelemetrySdk, eventInstrumenter).handleRequest(event, context);
+
+    testing.waitAndAssertTraces(
+        trace -> {
+          if (emitStableMessagingSemconv()) {
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("my_function"),
+                span -> span.hasName("custom process").hasKind(SpanKind.CONSUMER));
+          } else {
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("my_function"),
+                span -> span.hasName("custom process").hasKind(SpanKind.CONSUMER),
+                span -> span.hasName("aws:sqs process").hasKind(SpanKind.CONSUMER));
+          }
+        });
+  }
+
   // Constructor private in early versions.
   private static SQSEvent.SQSMessage newMessage() {
     try {
@@ -200,9 +240,36 @@ class AwsLambdaSqsMessageHandlerTest {
       super(openTelemetrySdk);
     }
 
+    TestHandler(OpenTelemetrySdk openTelemetrySdk, Instrumenter<SQSEvent, Void> eventInstrumenter) {
+      super(openTelemetrySdk, Duration.ofSeconds(1), eventInstrumenter);
+    }
+
     @Override
     protected boolean handleMessage(SQSEvent.SQSMessage message, Context context) {
       return "message1".equals(message.getMessageId());
+    }
+  }
+
+  private static class ConsumerProcessAttributesExtractor
+      implements AttributesExtractor<SQSEvent, Void>, SpanKeyProvider {
+
+    @Override
+    public void onStart(
+        AttributesBuilder attributes,
+        io.opentelemetry.context.Context parentContext,
+        SQSEvent event) {}
+
+    @Override
+    public void onEnd(
+        AttributesBuilder attributes,
+        io.opentelemetry.context.Context context,
+        SQSEvent event,
+        Void unused,
+        Throwable error) {}
+
+    @Override
+    public SpanKey internalGetSpanKey() {
+      return SpanKey.CONSUMER_PROCESS;
     }
   }
 }
