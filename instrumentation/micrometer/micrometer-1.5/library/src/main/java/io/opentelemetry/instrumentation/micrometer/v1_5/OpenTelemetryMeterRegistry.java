@@ -49,10 +49,10 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
     return new OpenTelemetryMeterRegistryBuilder(openTelemetry);
   }
 
+  private final Bridging bridging;
   private final TimeUnit baseTimeUnit;
   private final DistributionStatisticConfigModifier distributionStatisticConfigModifier;
   private final boolean emitMaxGauge;
-  private final boolean v3Preview;
   private final io.opentelemetry.api.metrics.Meter otelMeter;
 
   OpenTelemetryMeterRegistry(
@@ -63,10 +63,10 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       boolean v3Preview,
       io.opentelemetry.api.metrics.Meter otelMeter) {
     super(clock);
+    this.bridging = new Bridging(v3Preview);
     this.baseTimeUnit = baseTimeUnit;
     this.distributionStatisticConfigModifier = distributionStatisticConfigModifier;
     this.emitMaxGauge = !v3Preview;
-    this.v3Preview = v3Preview;
     this.otelMeter = otelMeter;
 
     this.config()
@@ -76,12 +76,13 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
   @Override
   protected <T> Gauge newGauge(Meter.Id id, @Nullable T obj, ToDoubleFunction<T> valueFunction) {
-    return new OpenTelemetryGauge<>(id, config().namingConvention(), obj, valueFunction, otelMeter);
+    return new OpenTelemetryGauge<>(
+        id, config().namingConvention(), obj, valueFunction, otelMeter, bridging);
   }
 
   @Override
   protected Counter newCounter(Meter.Id id) {
-    return new OpenTelemetryCounter(id, config().namingConvention(), otelMeter);
+    return new OpenTelemetryCounter(id, config().namingConvention(), otelMeter, bridging);
   }
 
   @Override
@@ -94,7 +95,8 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
             clock,
             getBaseTimeUnit(),
             distributionStatisticConfig,
-            otelMeter);
+            otelMeter,
+            bridging);
     if (timer.isUsingMicrometerHistograms()) {
       HistogramGauges.registerWithCommonFormat(timer, this);
     }
@@ -116,7 +118,8 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
             pauseDetector,
             getBaseTimeUnit(),
             emitMaxGauge,
-            otelMeter);
+            otelMeter,
+            bridging);
     if (timer.isUsingMicrometerHistograms()) {
       HistogramGauges.registerWithCommonFormat(timer, this);
     }
@@ -135,7 +138,8 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
             distributionStatisticConfigModifier,
             scale,
             emitMaxGauge,
-            otelMeter);
+            otelMeter,
+            bridging);
     if (distributionSummary.isUsingMicrometerHistograms()) {
       HistogramGauges.registerWithCommonFormat(distributionSummary, this);
     }
@@ -145,7 +149,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   @Override
   protected Meter newMeter(Meter.Id id, Meter.Type type, Iterable<Measurement> measurements) {
     return new OpenTelemetryMeter(
-        id, config().namingConvention(), measurements, v3Preview, otelMeter);
+        id, config().namingConvention(), measurements, otelMeter, bridging);
   }
 
   @Override
@@ -163,14 +167,15 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
         totalTimeFunction,
         totalTimeFunctionUnit,
         getBaseTimeUnit(),
-        otelMeter);
+        otelMeter,
+        bridging);
   }
 
   @Override
   protected <T> FunctionCounter newFunctionCounter(
       Meter.Id id, T obj, ToDoubleFunction<T> countFunction) {
     return new OpenTelemetryFunctionCounter<>(
-        id, config().namingConvention(), obj, countFunction, otelMeter);
+        id, config().namingConvention(), obj, countFunction, otelMeter, bridging);
   }
 
   @Override
