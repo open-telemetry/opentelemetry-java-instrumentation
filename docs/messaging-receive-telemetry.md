@@ -4,7 +4,7 @@
 
 Declarative config: `java.common.messaging.receive_telemetry/development.enabled`
 
-When `true`, messaging instrumentations produce a separate "receive" span for the operation that takes messages off the broker, and process spans become children of that receive span rather than of the message creation context.
+When `true`, messaging instrumentations produce a separate "receive" span for the operation that takes messages off the broker. Under legacy messaging semantic conventions, process spans become children of that receive span rather than of the message creation context.
 
 ## What the setting does not control
 
@@ -26,7 +26,7 @@ Without this, an application that pulls messages directly would have no consumer
 | --- | --- | --- |
 | Default | `false` | `false` (unchanged) |
 | Which instrumentations create receive spans while `false` | see table above | unchanged |
-| Producer context on a receive span | the span's parent when `false`, a span link when `true` | always a span link, never the parent |
+| Producer context on a receive span | the span's parent when `false`; when `true`, a span link for Pulsar and JMS, while Kafka links it from the process span instead | always a span link, never the parent |
 | Process span parent | extracted from the message when `false`, the receive span when `true` | the ambient span if there is one, otherwise the message creation context |
 | Message creation context linked from a process span | only when `true` | always, including when it is also the parent |
 | `messaging.client.consumed.messages` | not recorded | recorded by the receive operation, or by the process operation where the receive span is suppressed |
