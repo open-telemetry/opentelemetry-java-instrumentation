@@ -23,10 +23,6 @@ tasks {
     jvmArgs(
       "-Dotel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes=true"
     )
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes=true"
-    )
   }
 
   check {

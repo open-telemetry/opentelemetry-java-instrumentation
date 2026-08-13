@@ -15,7 +15,7 @@ public final class Resilience4jCircuitBreakerSpanAttributes {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getInstrumentationConfig(
-              GlobalOpenTelemetry.get(), "resilience4j-circuitbreaker")
+              GlobalOpenTelemetry.get(), "resilience4j_circuitbreaker")
           .getBoolean("experimental_span_attributes/development", false);
 
   private static final AttributeKey<String> CIRCUIT_BREAKER_NAME =
