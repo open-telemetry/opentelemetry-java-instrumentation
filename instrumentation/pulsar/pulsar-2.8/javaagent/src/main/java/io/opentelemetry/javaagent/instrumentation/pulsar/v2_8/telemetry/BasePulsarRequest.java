@@ -33,12 +33,34 @@ public class BasePulsarRequest {
    * embed the {@code -partition-N} suffix.
    */
   static String destination(String topicName) {
-    if (!emitStableMessagingSemconv() || TopicName.getPartitionIndex(topicName) == -1) {
+    if (!emitStableMessagingSemconv()) {
+      return topicName;
+    }
+    return stripPartitionSuffix(topicName);
+  }
+
+  /**
+   * Returns {@code topicName} without its {@code -partition-N} suffix, or {@code topicName} when it
+   * does not have one.
+   */
+  static String stripPartitionSuffix(String topicName) {
+    int partitionIndex = TopicName.getPartitionIndex(topicName);
+    if (partitionIndex == -1) {
+      return topicName;
+    }
+    int suffixIndex = topicName.lastIndexOf(TopicName.PARTITIONED_TOPIC_SUFFIX);
+    // pulsar 2.8 reads the partition index from the last '-' instead of from the last
+    // "-partition-", so it reports e.g. "my-topic-partition-key-1" as partition 1, and it accepts a
+    // zero padded suffix that pulsar 2.9+ rejects; only strip a suffix that is exactly the
+    // partition index, otherwise the topic name would lose more than the partition
+    if (!topicName
+        .substring(suffixIndex + TopicName.PARTITIONED_TOPIC_SUFFIX.length())
+        .equals(String.valueOf(partitionIndex))) {
       return topicName;
     }
     // not using TopicName.getPartitionedTopicName(), because it also expands a topic name that is
     // not fully qualified, e.g. "my-topic" to "persistent://public/default/my-topic"
-    return topicName.substring(0, topicName.lastIndexOf(TopicName.PARTITIONED_TOPIC_SUFFIX));
+    return topicName.substring(0, suffixIndex);
   }
 
   /** Returns the value to use for {@code messaging.destination.partition.id}. */

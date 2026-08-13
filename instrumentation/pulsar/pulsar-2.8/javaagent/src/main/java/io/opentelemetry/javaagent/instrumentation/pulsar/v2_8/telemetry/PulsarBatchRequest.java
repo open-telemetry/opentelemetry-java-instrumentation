@@ -12,7 +12,6 @@ import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.Messages;
-import org.apache.pulsar.common.naming.TopicName;
 
 public class PulsarBatchRequest extends BasePulsarRequest {
   private final Messages<?> messages;
@@ -42,7 +41,7 @@ public class PulsarBatchRequest extends BasePulsarRequest {
         // this is a partitioned topic
         // persistent://public/default/test-partition-0 persistent://public/default/test-partition-1
         // return persistent://public/default/test
-        return TopicName.get(topicName).getPartitionedTopicName();
+        return stripPartitionSuffix(topicName);
       }
     }
     return topicName;
