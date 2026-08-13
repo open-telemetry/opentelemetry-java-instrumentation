@@ -32,12 +32,6 @@ instrumentation/development:
           - X-Amz-Security-Token
           - sig
           - X-Goog-Signature
-    semconv_stability:
-      # Opt-in to emit stable semantic conventions instead of the old experimental semantic
-      # conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`,
-      # `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously.
-      # Stable semantic conventions will become the default in version 3.0 of the agent.
-      opt_in: []
 
     # Opt-in to emit stable semantic conventions instead of the old experimental semantic
     # conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`,
