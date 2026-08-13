@@ -312,7 +312,7 @@ class AwsSqsTest {
             .get(10, SECONDS);
     assertThat(response.sdkHttpResponse().isSuccessful()).isTrue();
 
-    if ("false".equals(System.getProperty(RECEIVE_SPANS_ENABLED))) {
+    if (!Boolean.getBoolean(RECEIVE_SPANS_ENABLED)) {
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
