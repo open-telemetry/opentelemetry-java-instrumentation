@@ -70,17 +70,6 @@
   `MessagingConsumerMetrics.getForOperationType()`.
   ([#19357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19357))
 
-### 📈 Enhancements
-
-- Add `otel.instrumentation.logback-appender.experimental.mdc-attributes.included` and
-  `otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded`, which select the MDC
-  keys captured as log attributes using case-sensitive glob patterns where `?` matches one character
-  and `*` matches any number of characters. Excluded patterns take precedence over included
-  patterns, and configuring only excluded patterns captures every MDC attribute that they do not
-  exclude. The same selector is available in `logback.xml` as `mdcAttributesIncluded` and
-  `mdcAttributesExcluded`.
-  ([#19520](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19520))
-
 ## Version 2.30.0 (2026-07-22)
 
 This release targets the OpenTelemetry SDK 1.64.0.
