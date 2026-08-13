@@ -55,6 +55,7 @@ class TracingFilterTest {
   void setUp() {
     filter = new TracingFilter(instrumenter, true);
     consumerConfig = new ConsumerConfig<>();
+    consumerConfig.setInterfaceId(Runnable.class.getName());
     request = new SofaRequest().setInvokeType(RpcConstants.INVOKER_TYPE_FUTURE);
     response = new SofaResponse();
     Filter terminalFilter =
