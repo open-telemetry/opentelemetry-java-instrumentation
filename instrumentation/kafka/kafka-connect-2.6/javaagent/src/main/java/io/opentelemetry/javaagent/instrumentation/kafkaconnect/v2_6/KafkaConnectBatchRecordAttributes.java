@@ -41,6 +41,11 @@ final class KafkaConnectBatchRecordAttributes {
 
   // the common destination is not emitted here, MessagingAttributesExtractor already emits it via
   // KafkaConnectAttributesGetter#getDestination, which returns the topic under the same condition
+  //
+  // these attributes reach the messaging metrics as well as the span. only the partition id
+  // survives the metric attributes advice in MessagingMetricsAdvice; the offset and the message key
+  // are deliberately absent from that list and must stay that way, since either would be unbounded
+  // as a metric dimension
   void putCommonAttributes(AttributesBuilder attributes) {
     if (!initialized) {
       return;
