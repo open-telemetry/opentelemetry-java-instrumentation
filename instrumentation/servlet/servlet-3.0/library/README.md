@@ -55,14 +55,13 @@ Filter filter = telemetry.createFilter();
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.servlet.v3_0.ServletTelemetryBuilder;
 import io.opentelemetry.instrumentation.servlet.v3_0.internal.Experimental;
-import java.util.Arrays;
 
 ServletTelemetryBuilder builder = ServletTelemetry.builder(openTelemetry);
 Experimental.setRequestParameters(
     builder,
     IncludeExclude.builder()
-        .setIncluded(Arrays.asList("user-*", "search-?"))
-        .setExcluded(Arrays.asList("password", "*-token"))
+        .setIncluded("user-*", "search-?")
+        .setExcluded("password", "*-token")
         .build());
 Filter filter = builder.build().createFilter();
 ```
