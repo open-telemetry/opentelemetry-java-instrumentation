@@ -20,23 +20,12 @@ import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import jdk.jfr.FlightRecorder;
 import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class InternalJfrConfigTest {
 
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
-
-  @BeforeEach
-  void setup() {
-    try {
-      Class.forName("jdk.jfr.FlightRecorder");
-    } catch (ClassNotFoundException ignored) {
-      Assumptions.abort("JFR not present");
-    }
-    Assumptions.assumeTrue(FlightRecorder.isAvailable(), "JFR not available");
-  }
 
   @Test
   void absentSelectorKeepsJfrDisabled() {
@@ -50,6 +39,8 @@ class InternalJfrConfigTest {
 
   @Test
   void starPatternSelectsAll() {
+    ensureJfrAvailable();
+
     TestConfig config = new TestConfig();
     when(config.jfrMetrics.getScalarList("included", String.class)).thenReturn(singletonList("*"));
 
@@ -74,6 +65,8 @@ class InternalJfrConfigTest {
 
   @Test
   void exclusionsWinOverShorthandAndLegacySelections() {
+    ensureJfrAvailable();
+
     TestConfig config = new TestConfig();
     when(config.jfrMetrics.getScalarList("included", String.class))
         .thenReturn(singletonList("jvm.cpu.context_switch"));
@@ -89,6 +82,15 @@ class InternalJfrConfigTest {
     assertThat(jfrRuntimeMetrics.getMetricNames())
         .contains("jvm.cpu.context_switch", "jvm.memory.allocation")
         .doesNotContain("jvm.cpu.longlock", "jvm.class.count");
+  }
+
+  private static void ensureJfrAvailable() {
+    try {
+      Class.forName("jdk.jfr.FlightRecorder");
+    } catch (ClassNotFoundException ignored) {
+      Assumptions.abort("JFR not present");
+    }
+    Assumptions.assumeTrue(FlightRecorder.isAvailable(), "JFR not available");
   }
 
   private final class TestConfig {
