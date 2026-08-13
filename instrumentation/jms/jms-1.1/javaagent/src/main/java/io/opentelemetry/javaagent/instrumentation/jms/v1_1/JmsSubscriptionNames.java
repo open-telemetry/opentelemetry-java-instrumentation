@@ -31,12 +31,8 @@ public final class JmsSubscriptionNames {
       VirtualField.find(MessageConsumer.class, String.class);
   private static final VirtualField<Message, String> MESSAGE_SUBSCRIPTION_NAME =
       VirtualField.find(Message.class, String.class);
-  private static final VirtualField<MessageConsumer, ConsumerListenerRegistration>
-      CONSUMER_LISTENER_REGISTRATION =
-          VirtualField.find(MessageConsumer.class, ConsumerListenerRegistration.class);
-  private static final VirtualField<MessageConsumer, SessionRegistrations>
-      CONSUMER_SESSION_REGISTRATIONS =
-          VirtualField.find(MessageConsumer.class, SessionRegistrations.class);
+  private static final VirtualField<MessageConsumer, ConsumerState> CONSUMER_STATE =
+      VirtualField.find(MessageConsumer.class, ConsumerState.class);
   private static final VirtualField<Session, SessionRegistrations> SESSION_REGISTRATIONS =
       VirtualField.find(Session.class, SessionRegistrations.class);
   private static final VirtualField<Connection, ConnectionSessions> CONNECTION_SESSIONS =
@@ -53,7 +49,7 @@ public final class JmsSubscriptionNames {
   }
 
   public static void setSession(MessageConsumer consumer, Session session) {
-    CONSUMER_SESSION_REGISTRATIONS.set(consumer, sessionRegistrations(session));
+    consumerState(consumer).setSessionRegistrations(sessionRegistrations(session));
   }
 
   public static void setConnection(Session session, Connection connection) {
@@ -76,18 +72,7 @@ public final class JmsSubscriptionNames {
 
   public static Object startListenerRegistration(
       MessageConsumer consumer, @Nullable MessageListener messageListener) {
-    ConsumerListenerRegistration previousRegistration =
-        CONSUMER_LISTENER_REGISTRATION.get(consumer);
-    ConsumerListenerRegistration newRegistration = null;
-    SessionRegistrations sessionRegistrations = CONSUMER_SESSION_REGISTRATIONS.get(consumer);
-    if (messageListener != null
-        && (sessionRegistrations == null || sessionRegistrations.add(consumer))) {
-      ListenerRegistrations registrations = listenerRegistrations(messageListener);
-      ListenerRegistration registration =
-          registrations.add(CONSUMER_SUBSCRIPTION_NAME.get(consumer));
-      newRegistration = new ConsumerListenerRegistration(registrations, registration);
-    }
-    return new ListenerRegistrationChange(consumer, previousRegistration, newRegistration);
+    return consumerState(consumer).start(messageListener, CONSUMER_SUBSCRIPTION_NAME.get(consumer));
   }
 
   public static void endListenerRegistration(
@@ -96,26 +81,14 @@ public final class JmsSubscriptionNames {
       return;
     }
     ListenerRegistrationChange change = (ListenerRegistrationChange) registrationChange;
-    if (throwable != null) {
-      deactivate(change.newRegistration);
-      if (change.previousRegistration == null && change.newRegistration != null) {
-        removeSessionRegistration(change.consumer);
-      }
-      return;
-    }
-
-    CONSUMER_LISTENER_REGISTRATION.set(change.consumer, change.newRegistration);
-    deactivate(change.previousRegistration);
-    if (change.newRegistration == null) {
-      removeSessionRegistration(change.consumer);
-    }
+    change.consumerState.end(change, throwable);
   }
 
   public static void clearListenerRegistration(MessageConsumer consumer) {
-    ConsumerListenerRegistration registration = CONSUMER_LISTENER_REGISTRATION.get(consumer);
-    CONSUMER_LISTENER_REGISTRATION.set(consumer, null);
-    deactivate(registration);
-    removeSessionRegistration(consumer);
+    ConsumerState state = CONSUMER_STATE.get(consumer);
+    if (state != null) {
+      state.clear();
+    }
   }
 
   @Nullable
@@ -149,6 +122,21 @@ public final class JmsSubscriptionNames {
     }
   }
 
+  private static ConsumerState consumerState(MessageConsumer consumer) {
+    ConsumerState state = CONSUMER_STATE.get(consumer);
+    if (state != null) {
+      return state;
+    }
+    synchronized (consumer) {
+      state = CONSUMER_STATE.get(consumer);
+      if (state == null) {
+        state = new ConsumerState();
+        CONSUMER_STATE.set(consumer, state);
+      }
+      return state;
+    }
+  }
+
   private static SessionRegistrations sessionRegistrations(Session session) {
     SessionRegistrations registrations = SESSION_REGISTRATIONS.get(session);
     if (registrations != null) {
@@ -179,18 +167,103 @@ public final class JmsSubscriptionNames {
     }
   }
 
-  private static void removeSessionRegistration(MessageConsumer consumer) {
-    SessionRegistrations registrations = CONSUMER_SESSION_REGISTRATIONS.get(consumer);
-    if (registrations != null) {
-      registrations.remove(consumer);
-    }
-  }
-
   private static void deactivate(@Nullable ConsumerListenerRegistration consumerRegistration) {
     if (consumerRegistration == null) {
       return;
     }
     consumerRegistration.registrations.deactivate(consumerRegistration.registration);
+  }
+
+  private static final class ConsumerState {
+    private final Set<ListenerRegistrationChange> pendingChanges =
+        Collections.newSetFromMap(new IdentityHashMap<>());
+    @Nullable private SessionRegistrations sessionRegistrations;
+    @Nullable private ConsumerListenerRegistration currentRegistration;
+    private boolean trackedBySession;
+    private boolean closed;
+
+    private synchronized void setSessionRegistrations(SessionRegistrations registrations) {
+      if (closed) {
+        return;
+      }
+      sessionRegistrations = registrations;
+      if ((currentRegistration != null || !pendingChanges.isEmpty()) && !trackedBySession) {
+        if (registrations.add(this)) {
+          trackedBySession = true;
+        } else {
+          clear();
+        }
+      }
+    }
+
+    @Nullable
+    private synchronized ListenerRegistrationChange start(
+        @Nullable MessageListener messageListener, @Nullable String subscriptionName) {
+      if (closed) {
+        return null;
+      }
+
+      ConsumerListenerRegistration newRegistration = null;
+      if (messageListener != null) {
+        if (!trackedBySession && sessionRegistrations != null) {
+          if (!sessionRegistrations.add(this)) {
+            clear();
+            return null;
+          }
+          trackedBySession = true;
+        }
+        ListenerRegistrations registrations = listenerRegistrations(messageListener);
+        ListenerRegistration registration = registrations.add(subscriptionName);
+        newRegistration = new ConsumerListenerRegistration(registrations, registration);
+      }
+
+      ListenerRegistrationChange change =
+          new ListenerRegistrationChange(this, currentRegistration, newRegistration);
+      pendingChanges.add(change);
+      return change;
+    }
+
+    private synchronized void end(
+        ListenerRegistrationChange change, @Nullable Throwable throwable) {
+      if (!pendingChanges.remove(change) || closed) {
+        deactivate(change.newRegistration);
+        return;
+      }
+      if (throwable != null) {
+        deactivate(change.newRegistration);
+        if (currentRegistration == null) {
+          stopSessionTracking();
+        }
+        return;
+      }
+
+      currentRegistration = change.newRegistration;
+      deactivate(change.previousRegistration);
+      if (currentRegistration == null) {
+        stopSessionTracking();
+      }
+    }
+
+    private synchronized void clear() {
+      if (closed) {
+        return;
+      }
+      closed = true;
+      deactivate(currentRegistration);
+      currentRegistration = null;
+      for (ListenerRegistrationChange change : pendingChanges) {
+        deactivate(change.newRegistration);
+      }
+      pendingChanges.clear();
+      stopSessionTracking();
+    }
+
+    private void stopSessionTracking() {
+      if (trackedBySession && sessionRegistrations != null) {
+        sessionRegistrations.remove(this);
+        trackedBySession = false;
+      }
+    }
   }
 
   private static final class ConsumerListenerRegistration {
@@ -238,8 +311,7 @@ public final class JmsSubscriptionNames {
   }
 
   private static final class SessionRegistrations {
-    private final Set<MessageConsumer> consumers =
-        Collections.newSetFromMap(new IdentityHashMap<>());
+    private final Set<ConsumerState> consumers = Collections.newSetFromMap(new IdentityHashMap<>());
     @Nullable private ConnectionSessions connection;
     private boolean closed;
 
@@ -257,7 +329,7 @@ public final class JmsSubscriptionNames {
       }
     }
 
-    private synchronized boolean add(MessageConsumer consumer) {
+    private synchronized boolean add(ConsumerState consumer) {
       if (closed) {
         return false;
       }
@@ -265,19 +337,19 @@ public final class JmsSubscriptionNames {
       return true;
     }
 
-    private synchronized void remove(MessageConsumer consumer) {
+    private synchronized void remove(ConsumerState consumer) {
       consumers.remove(consumer);
     }
 
     private void clear() {
-      MessageConsumer[] registeredConsumers;
+      ConsumerState[] registeredConsumers;
       ConnectionSessions connection;
       synchronized (this) {
         if (closed) {
           return;
         }
         closed = true;
-        registeredConsumers = consumers.toArray(new MessageConsumer[0]);
+        registeredConsumers = consumers.toArray(new ConsumerState[0]);
         consumers.clear();
         connection = this.connection;
         this.connection = null;
@@ -285,8 +357,8 @@ public final class JmsSubscriptionNames {
       if (connection != null) {
         connection.remove(this);
       }
-      for (MessageConsumer consumer : registeredConsumers) {
-        clearListenerRegistration(consumer);
+      for (ConsumerState consumer : registeredConsumers) {
+        consumer.clear();
       }
     }
   }
@@ -345,15 +417,15 @@ public final class JmsSubscriptionNames {
   }
 
   private static final class ListenerRegistrationChange {
-    private final MessageConsumer consumer;
+    private final ConsumerState consumerState;
     @Nullable private final ConsumerListenerRegistration previousRegistration;
     @Nullable private final ConsumerListenerRegistration newRegistration;
 
     private ListenerRegistrationChange(
-        MessageConsumer consumer,
+        ConsumerState consumerState,
         @Nullable ConsumerListenerRegistration previousRegistration,
         @Nullable ConsumerListenerRegistration newRegistration) {
-      this.consumer = consumer;
+      this.consumerState = consumerState;
       this.previousRegistration = previousRegistration;
       this.newRegistration = newRegistration;
     }

@@ -22,6 +22,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import jakarta.jms.Connection;
 import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
+import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageListener;
 import jakarta.jms.MessageProducer;
@@ -29,6 +30,8 @@ import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
 import jakarta.jms.Topic;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.apache.activemq.artemis.jms.client.ActiveMQDestination;
@@ -207,6 +210,22 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                             operationType("process"),
                             messagingTempDestination(false),
                             subscriptionName(previousSubscription))));
+  }
+
+  @Test
+  void doesNotCommitListenerRegistrationAfterConcurrentClose() throws InterruptedException {
+    BlockingMessageConsumer consumer = new BlockingMessageConsumer();
+    JmsSubscriptionNames.set(consumer, "closed-subscription");
+    MessageListener listener = ignored -> {};
+
+    CompletableFuture<Void> registration =
+        CompletableFuture.runAsync(() -> consumer.setMessageListener(listener));
+    assertThat(consumer.registrationStarted.await(10, SECONDS)).isTrue();
+    consumer.close();
+    consumer.continueRegistration.release();
+    registration.join();
+
+    assertThat(JmsSubscriptionNames.get(listener)).isNull();
   }
 
   @ParameterizedTest
@@ -472,5 +491,44 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
   interface ParentResourceCloser {
 
     void close(Connection connection, Session session) throws JMSException;
+  }
+
+  private static final class BlockingMessageConsumer implements MessageConsumer {
+    private final CountDownLatch registrationStarted = new CountDownLatch(1);
+    private final Semaphore continueRegistration = new Semaphore(0);
+
+    @Override
+    public String getMessageSelector() {
+      return null;
+    }
+
+    @Override
+    public MessageListener getMessageListener() {
+      return null;
+    }
+
+    @Override
+    public void setMessageListener(MessageListener listener) {
+      registrationStarted.countDown();
+      continueRegistration.acquireUninterruptibly();
+    }
+
+    @Override
+    public Message receive() {
+      return null;
+    }
+
+    @Override
+    public Message receive(long timeout) {
+      return null;
+    }
+
+    @Override
+    public Message receiveNoWait() {
+      return null;
+    }
+
+    @Override
+    public void close() {}
   }
 }
