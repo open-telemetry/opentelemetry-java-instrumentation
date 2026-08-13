@@ -110,6 +110,11 @@ class VertxHttpClientTest extends AbstractHttpClientTest<Future<HttpClientReques
   // which left the exported client span different from the context propagated to the server, so
   // the server span was parented to a client span that was never exported. Asserting the full
   // parent -> client -> server chain therefore fails on the old behavior and passes with the fix.
+  //
+  // sendHead() is deprecated for removal in Vert.x 5, but it is called deliberately here: it is one
+  // of the two write-triggering methods the instrumentation advice hooks alongside end(), so it is
+  // exactly the code path this regression test needs to exercise.
+  @SuppressWarnings({"deprecation", "removal"})
   @Test
   void injectsContextOnceWhenSendHeadPrecedesEnd() throws Exception {
     URI uri = resolveAddress("/success");
