@@ -18,7 +18,8 @@ Each configuration entry includes:
 - `default`: Default value
 - `examples` (optional): Only for module-specific configs with non-obvious format
 - `declarative_type` (optional): Overrides the declarative-form shape when it differs from the flat
-  `type`. Currently only `structured_list` (see Structured Lists).
+  `type`. Either `structured_list` (see Structured Lists) or a scalar type — `string`, `boolean`,
+  `int` (see Scalar Overrides).
 - `declarative_schema` (optional): Per-item object schema, required when
   `declarative_type: structured_list` (see Structured Lists).
 
@@ -65,6 +66,35 @@ list, and named `properties` (each with `type`, optional `description`, optional
       template: { type: string }
       override: { type: boolean, default: false }
 ```
+
+## Scalar Overrides
+
+A flat property that parses as a `list` or `map` is sometimes a plain scalar in the declarative
+configuration schema. Set `declarative_type` to the scalar type so the declarative form is described
+correctly; `type` keeps describing the flat system property. No `declarative_schema` is involved.
+
+`otel.semconv-stability.opt-in` is the current case: the flat property is a comma-separated list,
+but `general.stability_opt_in_list` is a single string that the agent splits itself (see
+`SemconvSelectionResolver`), so it is `type: list` + `declarative_type: string`:
+
+```yaml
+- name: otel.semconv-stability.opt-in
+  declarative_name: general.stability_opt_in_list
+  description: Opt-in to emit stable semantic conventions instead of the old experimental ones.
+  type: list
+  declarative_type: string
+  default: ""
+```
+
+## Deprecated Declarative Names
+
+Some declarative names were published under an earlier spelling. The bridge keeps the old spelling
+in `SPECIAL_MAPPINGS` so existing configuration files keep working, but `metadata.yaml` MUST use the
+current name — `DeclarativeConfigValidationTest` fails on the deprecated one.
+
+| Deprecated                         | Use instead                     |
+| ---------------------------------- | ------------------------------- |
+| `general.semconv_stability.opt_in` | `general.stability_opt_in_list` |
 
 ## Special Mappings
 
