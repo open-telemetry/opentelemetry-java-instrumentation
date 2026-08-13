@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
@@ -375,22 +374,20 @@ class LogbackAppenderTest {
   }
 
   @Test
-  void deprecatedMdcPropertyWarns() {
+  void deprecatedMdcPropertyDoesNotWarnWhenReplacementConfigured() {
     ch.qos.logback.classic.Logger installerLogger =
         (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(LogbackAppenderInstaller.class);
     ListAppender<ILoggingEvent> warningAppender = new ListAppender<>();
     warningAppender.start();
     installerLogger.addAppender(warningAppender);
     try {
+      Map<String, Object> properties = new HashMap<>();
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "key1");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.mdc-attributes.included", "key2");
       StandardEnvironment environment = new StandardEnvironment();
-      environment
-          .getPropertySources()
-          .addFirst(
-              new MapPropertySource(
-                  "test",
-                  singletonMap(
-                      "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
-                      "key1")));
+      environment.getPropertySources().addFirst(new MapPropertySource("test", properties));
 
       LogbackAppenderInstaller.initializeMdcAttributesFromProperties(
           environment, new OpenTelemetryAppender());
@@ -402,7 +399,7 @@ class LogbackAppenderTest {
                       .getFormattedMessage()
                       .contains(
                           "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes"))
-          .hasSize(1);
+          .isEmpty();
     } finally {
       installerLogger.detachAppender(warningAppender);
       warningAppender.stop();

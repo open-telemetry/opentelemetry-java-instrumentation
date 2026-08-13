@@ -93,6 +93,7 @@ class LogbackAppenderInstaller {
         (ch.qos.logback.classic.Logger)
             LoggerFactory.getILoggerFactory().getLogger(Logger.ROOT_LOGGER_NAME);
     OpenTelemetryAppender openTelemetryAppender = new OpenTelemetryAppender();
+    openTelemetryAppender.setContext(logbackLogger.getLoggerContext());
     initializeOpenTelemetryAppenderFromProperties(
         applicationEnvironmentPreparedEvent, openTelemetryAppender);
     openTelemetryAppender.start();
@@ -196,15 +197,6 @@ class LogbackAppenderInstaller {
     List<String> deprecated = getLoggingListProperty(environment, DEPRECATED_MDC_ATTRIBUTES);
     if (included == null && excluded == null && deprecated == null) {
       return;
-    }
-
-    if (deprecated != null) {
-      logger.warn(
-          "The '{}' property and the equivalent declarative configuration property are deprecated"
-              + " and may be removed in the next minor release. Use '{}' or equivalent declarative"
-              + " configuration instead.",
-          DEPRECATED_MDC_ATTRIBUTES,
-          MDC_ATTRIBUTES_INCLUDED);
     }
 
     // configuration properties replace the MDC settings of an appender declared in logback.xml, so

@@ -47,6 +47,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   @Nullable private String mdcAttributesIncluded;
   @Nullable private String mdcAttributesExcluded;
   @Nullable private String captureMdcAttributes;
+  private final AtomicBoolean deprecatedMdcAttributesWarningLogged = new AtomicBoolean();
 
   private volatile OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
@@ -127,14 +128,21 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
                   .build());
     }
     if (selector != null) {
-      if (captureMdcAttributes != null) {
-        addWarn(
-            "The deprecated captureMdcAttributes setting of the OpenTelemetry appender is ignored"
-                + " because an MDC attribute selector is configured.");
-      }
       return selector;
     }
-    return MdcAttributeSelectors.createDeprecated(split(captureMdcAttributes));
+    Predicate<String> deprecatedSelector =
+        MdcAttributeSelectors.createDeprecated(split(captureMdcAttributes));
+    if (deprecatedSelector != null
+        && deprecatedMdcAttributesWarningLogged.compareAndSet(false, true)) {
+      addWarn(
+          "The captureMdcAttributes setting of the OpenTelemetry appender and the"
+              + " otel.instrumentation.logback-appender.experimental.capture-mdc-attributes"
+              + " property are deprecated and may be removed in the next minor release. Use"
+              + " mdcAttributesIncluded, mdcAttributesExcluded, or"
+              + " otel.instrumentation.logback-appender.experimental.mdc-attributes.included"
+              + " instead.");
+    }
+    return deprecatedSelector;
   }
 
   @SuppressWarnings("SystemOut")

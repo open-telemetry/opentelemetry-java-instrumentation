@@ -27,6 +27,14 @@ import org.slf4j.MDC;
 
 class OpenTelemetryAppenderMdcSelectorTest {
 
+  private static final String DEPRECATED_MDC_ATTRIBUTES_WARNING =
+      "The captureMdcAttributes setting of the OpenTelemetry appender and the"
+          + " otel.instrumentation.logback-appender.experimental.capture-mdc-attributes"
+          + " property are deprecated and may be removed in the next minor release. Use"
+          + " mdcAttributesIncluded, mdcAttributesExcluded, or"
+          + " otel.instrumentation.logback-appender.experimental.mdc-attributes.included"
+          + " instead.";
+
   @RegisterExtension
   private static final LibraryInstrumentationExtension testing =
       LibraryInstrumentationExtension.create();
@@ -104,10 +112,7 @@ class OpenTelemetryAppenderMdcSelectorTest {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
-    assertThat(warnings())
-        .containsExactly(
-            "The deprecated captureMdcAttributes setting of the OpenTelemetry appender is ignored"
-                + " because an MDC attribute selector is configured.");
+    assertThat(warnings()).isEmpty();
   }
 
   @Test
@@ -121,7 +126,19 @@ class OpenTelemetryAppenderMdcSelectorTest {
         logRecord ->
             logRecord.hasAttributesSatisfyingExactly(
                 equalTo(stringKey("*"), "star"), equalTo(stringKey("key1"), "value1")));
-    assertThat(warnings()).isEmpty();
+    assertThat(warnings()).containsExactly(DEPRECATED_MDC_ATTRIBUTES_WARNING);
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // testing the deprecated setting
+  void deprecatedSettingWarnsOnlyOnce() {
+    appender.setCaptureMdcAttributes("key1");
+
+    appender.start();
+    appender.stop();
+    appender.start();
+
+    assertThat(warnings()).containsExactly(DEPRECATED_MDC_ATTRIBUTES_WARNING);
   }
 
   @Test
@@ -157,6 +174,7 @@ class OpenTelemetryAppenderMdcSelectorTest {
     log(mdc("key1", "value1"));
 
     testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly());
+    assertThat(warnings()).isEmpty();
   }
 
   private void log(Map<String, String> mdcProperties) {
