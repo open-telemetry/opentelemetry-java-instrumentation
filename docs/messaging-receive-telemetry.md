@@ -8,7 +8,7 @@ When `true`, messaging instrumentations produce a separate "receive" span for th
 
 ## What the setting does not control
 
-Most instrumentations suppress receive spans where a "process" span already represents the delivery. Pulsar and JMS keep a receive span for their pull APIs because those calls have no process span:
+Most instrumentations suppress receive spans where a "process" span already represents the delivery, so setting this to `true` adds a receive span wherever the table below says none is created. Pulsar and JMS keep a receive span for their pull APIs either way, because those calls have no process span, and there the setting changes only how that span is parented and linked:
 
 | Instrumentation | Receive span when `false` | Why |
 | --- | --- | --- |
