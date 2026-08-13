@@ -42,19 +42,22 @@ class PulsarRequestDestinationTest {
   }
 
   @Test
-  void keepsTopicNameThatIsNotFullyQualified() {
+  void expandsTopicNameThatIsNotFullyQualified() {
     PulsarRequest request = request(message("test"));
 
-    assertThat(request.getDestination()).isEqualTo("test");
+    // a producer can be created with a short topic name, while a consumer always sees the fully
+    // qualified form, so expanding it here is what makes producer and consumer spans for the same
+    // topic agree on the destination name
+    assertThat(request.getDestination()).isEqualTo(emitStableMessagingSemconv() ? TOPIC : "test");
     assertThat(request.getDestinationPartitionId()).isNull();
   }
 
   @Test
-  void keepsTopicNameThatIsNotFullyQualifiedWhenSeparatingPartition() {
+  void expandsTopicNameThatIsNotFullyQualifiedWhenSeparatingPartition() {
     PulsarRequest request = request(message("test-partition-1"));
 
     assertThat(request.getDestination())
-        .isEqualTo(emitStableMessagingSemconv() ? "test" : "test-partition-1");
+        .isEqualTo(emitStableMessagingSemconv() ? TOPIC : "test-partition-1");
     assertThat(request.getDestinationPartitionId()).isEqualTo("1");
   }
 
@@ -110,11 +113,11 @@ class PulsarRequestDestinationTest {
   }
 
   @Test
-  void keepsBatchTopicNameThatIsNotFullyQualifiedWhenBatchSpansMultiplePartitions() {
+  void expandsBatchTopicNameThatIsNotFullyQualifiedWhenBatchSpansMultiplePartitions() {
     PulsarBatchRequest request =
         batchRequest(message("test-partition-0"), message("test-partition-1"));
 
-    assertThat(request.getDestination()).isEqualTo("test");
+    assertThat(request.getDestination()).isEqualTo(emitStableMessagingSemconv() ? TOPIC : "test");
     assertThat(request.getDestinationPartitionId()).isNull();
   }
 

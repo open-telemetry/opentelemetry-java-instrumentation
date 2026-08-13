@@ -490,16 +490,16 @@ abstract class AbstractPulsarClientTest {
     return assertions;
   }
 
-  // the stable semantic conventions record the partition in messaging.destination.partition.id, so
-  // the destination name does not include the "-partition-N" suffix there
-  // not using TopicName.getPartitionedTopicName(), because it also expands a topic name that is not
-  // fully qualified, which is not what the instrumentation does
+  // the stable semantic conventions use the fully qualified topic name and record the partition in
+  // messaging.destination.partition.id, so the destination name does not include the
+  // "-partition-N" suffix there
   static String destinationName(String topic) {
     if (!emitStableMessagingSemconv()) {
       return topic;
     }
     int suffixIndex = partitionSuffixIndex(topic);
-    return suffixIndex == -1 ? topic : topic.substring(0, suffixIndex);
+    String destination = suffixIndex == -1 ? topic : topic.substring(0, suffixIndex);
+    return TopicName.get(destination).toString();
   }
 
   private static String destinationPartitionId(String topic) {
