@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -27,6 +29,8 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.awspring.cloud.sqs.listener.MessageListenerContainerRegistry;
 import io.awspring.cloud.sqs.operations.SqsTemplate;
@@ -34,6 +38,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -113,6 +118,7 @@ class AwsSqsTest {
     testing.clearData();
     AwsSqsTestApplication.messageHandler = null;
     AwsSqsTestApplication.batchMessageHandler = null;
+    AwsSqsTestApplication.addAmbientBatchSpan = false;
   }
 
   @Test
@@ -227,19 +233,9 @@ class AwsSqsTest {
                   }
                 });
 
-    testing.runWithSpan(
-        "parent1",
-        () ->
-            sqsTemplate.send(
-                "test-batch-queue",
-                messageContent1));
+    testing.runWithSpan("parent1", () -> sqsTemplate.send("test-batch-queue", messageContent1));
 
-    testing.runWithSpan(
-        "parent2",
-        () ->
-            sqsTemplate.send(
-                "test-batch-queue",
-                messageContent2));
+    testing.runWithSpan("parent2", () -> sqsTemplate.send("test-batch-queue", messageContent2));
 
     registry.getContainerById("batchContainer").start();
 
@@ -271,6 +267,7 @@ class AwsSqsTest {
                                   val.startsWith(
                                       "http://localhost:" + AwsSqsTestApplication.sqsPort)),
                           equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                          satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                           equalTo(MESSAGING_OPERATION, "publish"),
                           equalTo(MESSAGING_DESTINATION_NAME, "test-batch-queue"),
                           equalTo(
@@ -302,6 +299,7 @@ class AwsSqsTest {
                                   val.startsWith(
                                       "http://localhost:" + AwsSqsTestApplication.sqsPort)),
                           equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                          satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                           equalTo(MESSAGING_OPERATION, "publish"),
                           equalTo(MESSAGING_DESTINATION_NAME, "test-batch-queue"),
                           equalTo(
@@ -386,5 +384,99 @@ class AwsSqsTest {
                                     + AwsSqsTestApplication.sqsPort
                                     + "/000000000000/test-batch-queue"),
                             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)))));
+  }
+
+  @Test
+  void stableBatchUsesAmbientParentWithReceiveContext() throws Exception {
+    assumeTrue(emitStableMessagingSemconv());
+    assumeTrue(
+        Boolean.getBoolean(
+            "otel.instrumentation.messaging.experimental.receive-telemetry.enabled"));
+
+    registry.getContainerById("batchContainer").stop();
+
+    CompletableFuture<List<String>> messageFuture = new CompletableFuture<>();
+    AwsSqsTestApplication.addAmbientBatchSpan = true;
+    AwsSqsTestApplication.batchMessageHandler = messageFuture::complete;
+
+    testing.runWithSpan(
+        "parent1", () -> sqsTemplate.send("test-batch-queue", "ambient-parent-message-1"));
+    testing.runWithSpan(
+        "parent2", () -> sqsTemplate.send("test-batch-queue", "ambient-parent-message-2"));
+
+    registry.getContainerById("batchContainer").start();
+
+    assertThat(messageFuture.get(10, SECONDS))
+        .containsExactlyInAnyOrder("ambient-parent-message-1", "ambient-parent-message-2");
+
+    await()
+        .atMost(Duration.ofSeconds(20))
+        .untilAsserted(
+            () ->
+                assertThat(testing.spans())
+                    .filteredOn(span -> span.getName().equals("test-batch-queue process"))
+                    .hasSize(1));
+
+    SpanData ambient = getSpan("ambient");
+    SpanData receive = getSpan("test-batch-queue receive");
+    SpanData process = getSpan("test-batch-queue process");
+    List<SpanData> producers =
+        testing.spans().stream()
+            .filter(span -> span.getName().equals("test-batch-queue publish"))
+            .toList();
+
+    assertThat(producers).hasSize(2);
+    assertThat(process.getTraceId()).isEqualTo(ambient.getTraceId());
+    assertThat(process.getParentSpanId()).isEqualTo(ambient.getSpanId());
+    assertThat(process.getParentSpanId()).isNotEqualTo(receive.getSpanId());
+    assertThat(process.getLinks())
+        .extracting(
+            link -> link.getSpanContext().getTraceId() + "/" + link.getSpanContext().getSpanId())
+        .containsExactlyInAnyOrderElementsOf(
+            producers.stream()
+                .map(producer -> producer.getTraceId() + "/" + producer.getSpanId())
+                .toList());
+  }
+
+  @Test
+  void legacyBatchUsesReceiveParent() throws Exception {
+    assumeTrue(emitOldMessagingSemconv() && !emitStableMessagingSemconv());
+    assumeTrue(
+        Boolean.getBoolean(
+            "otel.instrumentation.messaging.experimental.receive-telemetry.enabled"));
+
+    registry.getContainerById("batchContainer").stop();
+
+    CompletableFuture<List<String>> messageFuture = new CompletableFuture<>();
+    AwsSqsTestApplication.batchMessageHandler = messageFuture::complete;
+
+    sqsTemplate.send("test-batch-queue", "receive-parent-message-1");
+    sqsTemplate.send("test-batch-queue", "receive-parent-message-2");
+
+    registry.getContainerById("batchContainer").start();
+
+    assertThat(messageFuture.get(10, SECONDS))
+        .containsExactlyInAnyOrder("receive-parent-message-1", "receive-parent-message-2");
+
+    await()
+        .atMost(Duration.ofSeconds(20))
+        .untilAsserted(
+            () ->
+                assertThat(testing.spans())
+                    .filteredOn(span -> span.getName().equals("test-batch-queue process"))
+                    .hasSize(1));
+
+    SpanData receive = getSpan("test-batch-queue receive");
+    SpanData process = getSpan("test-batch-queue process");
+
+    assertThat(process.getTraceId()).isEqualTo(receive.getTraceId());
+    assertThat(process.getParentSpanId()).isEqualTo(receive.getSpanId());
+  }
+
+  private static SpanData getSpan(String name) {
+    List<SpanData> spans =
+        testing.spans().stream().filter(span -> span.getName().equals(name)).toList();
+    assertThat(spans).hasSize(1);
+    return spans.get(0);
   }
 }

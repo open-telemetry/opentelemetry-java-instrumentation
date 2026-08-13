@@ -42,7 +42,7 @@ public final class SpringAwsSqsSingletons {
             GlobalOpenTelemetry.get(),
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(batchAttributesGetter, MessageOperation.PROCESS));
-    
+
     setMessagingProcessExceptionEventExtractor(builder);
 
     batchProcessInstrumenter =
@@ -57,7 +57,8 @@ public final class SpringAwsSqsSingletons {
                   for (Message<?> message : messages) {
                     TracingContext tracingContext = tracingContextField.get(message);
                     if (tracingContext != null) {
-                      SqsMessage wrappedMessage = SqsMessageImpl.wrap(tracingContext.getSqsMessage());
+                      SqsMessage wrappedMessage =
+                          SqsMessageImpl.wrap(tracingContext.getSqsMessage());
                       Context extracted =
                           SqsParentContext.ofMessage(wrappedMessage, tracingContext.getConfig());
                       spanLinks.addLink(Span.fromContext(extracted).getSpanContext());

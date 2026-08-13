@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor;
 import io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0.SpringAwsUtil.TracingContext;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -108,7 +109,7 @@ class SpringAwsSqsBatchProcessAttributesGetter
 
   @Override
   public List<String> getMessageHeader(Collection<Message<?>> messages, String name) {
-    List<String> values = new java.util.ArrayList<>();
+    List<String> values = new ArrayList<>();
     for (Message<?> message : messages) {
       Object value = message.getHeaders().get(name);
       if (value != null) {

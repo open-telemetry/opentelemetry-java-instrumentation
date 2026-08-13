@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0.SpringAwsSqsSingletons.batchProcessInstrumenter;
 
 import io.opentelemetry.context.Context;
@@ -87,12 +88,12 @@ public class SpringAwsUtil {
       return null;
     }
 
-    // Use the receive context as parent when receive telemetry is enabled
-    // (otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true),
-    // otherwise use Context.current() which starts a new trace for the batch.
-    Context parentContext = tracingContext.getReceiveContext();
-    if (parentContext == null) {
-      parentContext = Context.current();
+    Context parentContext = Context.current();
+    if (!emitStableMessagingSemconv()) {
+      Context receiveContext = tracingContext.getReceiveContext();
+      if (receiveContext != null) {
+        parentContext = receiveContext;
+      }
     }
     if (!batchProcessInstrumenter().shouldStart(parentContext, messages)) {
       return null;
