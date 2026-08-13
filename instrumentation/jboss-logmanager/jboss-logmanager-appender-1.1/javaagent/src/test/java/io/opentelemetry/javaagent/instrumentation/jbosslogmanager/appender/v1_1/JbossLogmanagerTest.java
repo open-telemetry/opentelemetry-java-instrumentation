@@ -50,6 +50,8 @@ class JbossLogmanagerTest {
       Boolean.getBoolean("otel.instrumentation.jboss-logmanager.experimental.capture-template");
   private static final boolean CAPTURE_ARGUMENTS =
       Boolean.getBoolean("otel.instrumentation.jboss-logmanager.experimental.capture-arguments");
+  private static final String MDC_CONFIGURATION =
+      System.getProperty("testMdcConfiguration", "none");
 
   private static final Logger logger = LogContext.getLogContext().getLogger("abc");
 
@@ -218,30 +220,61 @@ class JbossLogmanagerTest {
 
   @Test
   void testMdc() {
-    MDC.put("key1", "val1");
-    MDC.put("key2", "val2");
+    MDC.put("exact", "exact-value");
+    MDC.put("prefix.public", "prefix-value");
+    MDC.put("prefix.secret", "secret-value");
+    MDC.put("single1", "single-value");
+    MDC.put("single22", "double-value");
+    MDC.put("legacy", "legacy-value");
+    MDC.put("new", "new-value");
+    MDC.put("excluded-value", "excluded-value");
     MDC.put("otel.event.name", "MyEventName");
     try {
       logger.info("xyz");
     } finally {
-      MDC.remove("key1");
-      MDC.remove("key2");
+      MDC.remove("exact");
+      MDC.remove("prefix.public");
+      MDC.remove("prefix.secret");
+      MDC.remove("single1");
+      MDC.remove("single22");
+      MDC.remove("legacy");
+      MDC.remove("new");
+      MDC.remove("excluded-value");
       MDC.remove("otel.event.name");
     }
 
     testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasBody("xyz")
-                .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-                .hasSeverity(Severity.INFO)
-                .hasSeverityText("INFO")
-                .hasEventName("MyEventName")
-                .hasAttributesSatisfyingExactly(
-                    equalTo(stringKey("key1"), "val1"),
-                    equalTo(stringKey("key2"), "val2"),
-                    equalTo(THREAD_NAME, Thread.currentThread().getName()),
-                    equalTo(THREAD_ID, Thread.currentThread().getId())));
+        logRecord -> {
+          List<AttributeAssertion> attributeAsserts =
+              new ArrayList<>(
+                  asList(
+                      equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                      equalTo(THREAD_ID, Thread.currentThread().getId())));
+          if (MDC_CONFIGURATION.equals("new")) {
+            attributeAsserts.add(equalTo(stringKey("exact"), "exact-value"));
+            attributeAsserts.add(equalTo(stringKey("prefix.public"), "prefix-value"));
+            attributeAsserts.add(equalTo(stringKey("single1"), "single-value"));
+          } else if (MDC_CONFIGURATION.equals("legacy")) {
+            attributeAsserts.add(equalTo(stringKey("legacy"), "legacy-value"));
+          } else if (MDC_CONFIGURATION.equals("precedence")) {
+            attributeAsserts.add(equalTo(stringKey("new"), "new-value"));
+          } else if (MDC_CONFIGURATION.equals("excludedOnly")) {
+            // excluded patterns are prefix.secret and excluded*, so every other MDC key is captured
+            attributeAsserts.add(equalTo(stringKey("exact"), "exact-value"));
+            attributeAsserts.add(equalTo(stringKey("prefix.public"), "prefix-value"));
+            attributeAsserts.add(equalTo(stringKey("single1"), "single-value"));
+            attributeAsserts.add(equalTo(stringKey("single22"), "double-value"));
+            attributeAsserts.add(equalTo(stringKey("legacy"), "legacy-value"));
+            attributeAsserts.add(equalTo(stringKey("new"), "new-value"));
+          }
+          logRecord
+              .hasBody("xyz")
+              .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+              .hasSeverity(Severity.INFO)
+              .hasSeverityText("INFO")
+              .hasEventName("MyEventName")
+              .hasAttributesSatisfyingExactly(attributeAsserts);
+        });
   }
 
   @FunctionalInterface

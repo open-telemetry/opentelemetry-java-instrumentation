@@ -83,10 +83,10 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   }
 
   /**
-   * @deprecated Use {@link #create(MessagingAttributesGetter, MessagingOperationType, String)}.
-   *     Will be removed in 3.0.
+   * @deprecated Use {@link #create(MessagingAttributesGetter, MessagingOperationType, String)}. May
+   *     be removed in the next minor release.
    */
-  @Deprecated // to be removed in 3.0
+  @Deprecated // may be removed in the next minor release
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter, @Nullable MessageOperation operation) {
     return builder(getter, operation).build();
@@ -109,9 +109,9 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
 
   /**
    * @deprecated Use {@link #builder(MessagingAttributesGetter, MessagingOperationType, String)}.
-   *     Will be removed in 3.0.
+   *     May be removed in the next minor release.
    */
-  @Deprecated // to be removed in 3.0
+  @Deprecated // may be removed in the next minor release
   public static <REQUEST, RESPONSE> MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter, @Nullable MessageOperation operation) {
     return new MessagingAttributesExtractorBuilder<>(
