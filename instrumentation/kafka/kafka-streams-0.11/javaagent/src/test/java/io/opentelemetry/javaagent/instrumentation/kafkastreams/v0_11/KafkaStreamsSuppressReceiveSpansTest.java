@@ -106,13 +106,19 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   // kafka-clients PRODUCER
-                  span ->
-                      span.hasName("send " + STREAM_PENDING)
-                          .hasKind(SpanKind.PRODUCER)
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(
-                              producerAttributes(
-                                  STREAM_PENDING, val -> val.isEqualTo("producer-1"), true)),
+                  span -> {
+                    List<AttributeAssertion> pendingProducerAttrs =
+                        new ArrayList<>(
+                            producerAttributes(
+                                STREAM_PENDING, val -> val.isEqualTo("producer-1"), true));
+                    pendingProducerAttrs.add(
+                        satisfies(
+                            stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+                    span.hasName("send " + STREAM_PENDING)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(pendingProducerAttrs);
+                  },
                   // kafka-stream CONSUMER
                   span ->
                       span.hasName("process " + STREAM_PENDING)
@@ -126,15 +132,25 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                                   val -> val.endsWith("consumer"),
                                   equalTo(stringKey("asdf"), "testing"))),
                   // kafka-clients PRODUCER
-                  span ->
-                      span.hasName("send " + STREAM_PROCESSED)
-                          .hasKind(SpanKind.PRODUCER)
-                          .hasParent(trace.getSpan(1))
-                          .hasTraceId(receivedContext.getTraceId())
-                          .hasSpanId(receivedContext.getSpanId())
-                          .hasAttributesSatisfyingExactly(
-                              producerAttributes(
-                                  STREAM_PROCESSED, val -> val.isInstanceOf(String.class), false)),
+                  span -> {
+                    List<AttributeAssertion> processedProducerAttrs =
+                        new ArrayList<>(
+                            producerAttributes(
+                                STREAM_PROCESSED, val -> val.isInstanceOf(String.class), false));
+                    // cluster.id: best-effort; Streams internal producer may lack it on first send.
+                    if (trace.getSpan(2).getAttributes().get(stringKey("messaging.kafka.cluster.id"))
+                        != null) {
+                      processedProducerAttrs.add(
+                          satisfies(
+                              stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+                    }
+                    span.hasName("send " + STREAM_PROCESSED)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(1))
+                        .hasTraceId(receivedContext.getTraceId())
+                        .hasSpanId(receivedContext.getSpanId())
+                        .hasAttributesSatisfyingExactly(processedProducerAttrs);
+                  },
                   // kafka-clients CONSUMER process
                   span ->
                       span.hasName("process " + STREAM_PROCESSED)
@@ -310,6 +326,8 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
     addOffsetAssertions(assertions, 0);
     assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
     assertions.add(extra);
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(longKey("kafka.record.queue_time_ms"), val -> val.isGreaterThanOrEqualTo(0)));
