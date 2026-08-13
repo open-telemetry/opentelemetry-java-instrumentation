@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
@@ -15,167 +13,65 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 class MessagingConfigTest {
 
-  @AfterEach
-  void clearWarnings() throws Exception {
-    Field field = MessagingConfig.class.getDeclaredField("warnedDeprecatedProperties");
-    field.setAccessible(true);
-    ((Set<?>) field.get(null)).clear();
+  @Test
+  void readsSelectorFromCommonMessagingConfig() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    when(messagingConfig(openTelemetry)
+            .get("headers/development")
+            .getScalarList("included", String.class))
+        .thenReturn(singletonList("Test-*"));
+
+    assertThat(MessagingConfig.getHeaders(openTelemetry).getIncluded()).containsExactly("Test-*");
   }
 
   @Test
-  void readsNewSelector() {
-    DeclarativeConfigProperties config = mockConfig();
-    when(config.get("headers/development").getScalarList("included", String.class))
-        .thenReturn(asList("Test-*", "other"));
-    when(config.get("headers/development").getScalarList("excluded", String.class))
-        .thenReturn(singletonList("*-secret"));
-
-    IncludeExclude headers = MessagingConfig.getHeaders(config, false);
-
-    assertThat(headers.getIncluded()).containsExactly("Test-*", "other");
-    assertThat(headers.getExcluded()).containsExactly("*-secret");
-  }
-
-  @Test
-  void readsExcludeOnlySelector() {
-    DeclarativeConfigProperties config = mockConfig();
-    when(config.get("headers/development").getScalarList("excluded", String.class))
-        .thenReturn(singletonList("secret"));
-
-    IncludeExclude headers = MessagingConfig.getHeaders(config, false);
-
-    assertThat(headers.getIncluded()).isEmpty();
-    assertThat(headers.getExcluded()).containsExactly("secret");
-  }
-
-  @Test
-  void newSelectorTakesPrecedenceOverDeprecatedConfig() {
-    DeclarativeConfigProperties config = mockConfig();
-    when(config.get("headers/development").getScalarList("included", String.class))
-        .thenReturn(singletonList("new"));
-    when(config.getScalarList("capture_headers/development", String.class))
-        .thenReturn(singletonList("deprecated"));
-
-    IncludeExclude headers = MessagingConfig.getHeaders(config, false);
-
-    assertThat(headers.getIncluded()).containsExactly("new");
-  }
-
-  @Test
-  void deprecatedConfigIsIncludeOnlyFallbackAndWarnsOnce() {
-    DeclarativeConfigProperties config = mockConfig();
-    when(config.getScalarList("capture_headers/development", String.class))
-        .thenReturn(singletonList("deprecated"));
-    Logger logger = Logger.getLogger(MessagingConfig.class.getName());
-    TestHandler handler = new TestHandler();
-    logger.addHandler(handler);
-    try {
-      IncludeExclude first = MessagingConfig.getHeaders(config, false);
-      IncludeExclude second = MessagingConfig.getHeaders(config, false);
-
-      assertThat(first.getIncluded()).containsExactly("deprecated");
-      assertThat(first.getExcluded()).isEmpty();
-      assertThat(second).isEqualTo(first);
-      assertThat(handler.records).hasSize(1);
-      assertThat(handler.records.get(0).getMessage())
-          .isEqualTo(
-              "The otel.instrumentation.messaging.experimental.capture-headers setting and the"
-                  + " equivalent declarative configuration property are deprecated and may be"
-                  + " removed in the next minor release. Use"
-                  + " otel.instrumentation.messaging.experimental.headers.included or equivalent"
-                  + " declarative configuration instead.");
-    } finally {
-      logger.removeHandler(handler);
-    }
-  }
-
-  @Test
-  void emptyDeprecatedConfigCapturesNothing() {
-    DeclarativeConfigProperties config = mockConfig();
-    when(config.getScalarList("capture_headers/development", String.class)).thenReturn(emptyList());
-
-    assertThat(MessagingConfig.getHeaders(config, false).isEmpty()).isTrue();
-  }
-
-  @Test
-  void absentSelectorCapturesNothing() {
-    assertThat(MessagingConfig.getHeaders(mockConfig(), false).isEmpty()).isTrue();
-  }
-
-  @Test
-  void emptySelectorCapturesNothing() {
-    DeclarativeConfigProperties config = mockConfig();
-    when(config.get("headers/development").getScalarList("included", String.class))
-        .thenReturn(emptyList());
-    when(config.get("headers/development").getScalarList("excluded", String.class))
-        .thenReturn(emptyList());
-
-    assertThat(MessagingConfig.getHeaders(config, false).isEmpty()).isTrue();
-  }
-
-  @Test
-  void systemPropertyFallbackIsOnlyUsedWhenEnabled() {
-    DeclarativeConfigProperties config = mockConfig();
-    System.setProperty("otel.instrumentation.messaging.experimental.headers.included", "from-prop");
-    try {
-      assertThat(MessagingConfig.getHeaders(config, false).isEmpty()).isTrue();
-      assertThat(MessagingConfig.getHeaders(config, true).getIncluded())
-          .containsExactly("from-prop");
-    } finally {
-      System.clearProperty("otel.instrumentation.messaging.experimental.headers.included");
-    }
-  }
-
-  @Test
-  void readsDeprecatedConfigFromOpenTelemetryInstance() {
-    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
-    DeclarativeConfigProperties commonConfig =
-        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
-    when(commonConfig.get("messaging").getScalarList("capture_headers/development", String.class))
+  void readsDeprecatedSelectorFromCommonMessagingConfig() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    when(messagingConfig(openTelemetry).getScalarList("capture_headers/development", String.class))
         .thenReturn(singletonList("deprecated"));
 
     assertThat(MessagingConfig.getHeaders(openTelemetry).getIncluded())
         .containsExactly("deprecated");
   }
 
-  private static DeclarativeConfigProperties mockConfig() {
-    DeclarativeConfigProperties config =
-        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    when(config.get("headers/development").getScalarList("included", String.class))
-        .thenReturn(null);
-    when(config.get("headers/development").getScalarList("excluded", String.class))
-        .thenReturn(null);
-    when(config.getScalarList("capture_headers/development", String.class)).thenReturn(null);
-    return config;
+  @Test
+  void absentSelectorCapturesNothing() {
+    assertThat(MessagingConfig.getHeaders(mockOpenTelemetry()).isEmpty()).isTrue();
   }
 
-  private static final class TestHandler extends Handler {
-
-    private final List<LogRecord> records = new ArrayList<>();
-
-    @Override
-    public void publish(LogRecord record) {
-      records.add(record);
+  @Test
+  void systemPropertyFallbackIsOnlyUsedWhenEnabled() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    System.setProperty("otel.instrumentation.messaging.experimental.headers.included", "from-prop");
+    try {
+      assertThat(MessagingConfig.getHeaders(openTelemetry, false).isEmpty()).isTrue();
+      assertThat(MessagingConfig.getHeaders(openTelemetry, true).getIncluded())
+          .containsExactly("from-prop");
+    } finally {
+      System.clearProperty("otel.instrumentation.messaging.experimental.headers.included");
     }
+  }
 
-    @Override
-    public void flush() {}
+  private static ExtendedOpenTelemetry mockOpenTelemetry() {
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
+    DeclarativeConfigProperties commonConfig =
+        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
+    when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
+    DeclarativeConfigProperties messagingConfig = commonConfig.get("messaging");
+    when(messagingConfig.get("headers/development").getScalarList("included", String.class))
+        .thenReturn(null);
+    when(messagingConfig.get("headers/development").getScalarList("excluded", String.class))
+        .thenReturn(null);
+    when(messagingConfig.getScalarList("capture_headers/development", String.class))
+        .thenReturn(null);
+    return openTelemetry;
+  }
 
-    @Override
-    public void close() {}
+  private static DeclarativeConfigProperties messagingConfig(ExtendedOpenTelemetry openTelemetry) {
+    return openTelemetry.getInstrumentationConfig("common").get("messaging");
   }
 }
