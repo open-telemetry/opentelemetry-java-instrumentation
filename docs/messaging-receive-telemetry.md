@@ -1,54 +1,56 @@
 # Messaging receive telemetry
 
-`otel.instrumentation.messaging.experimental.receive-telemetry.enabled` (default: `false`)
+`otel.instrumentation.messaging.experimental.receive-telemetry.enabled`, or
+`java.common.messaging.receive_telemetry/development.enabled` in declarative config. It defaults to
+`false` in every semantic convention mode.
 
-Declarative config: `java.common.messaging.receive_telemetry/development.enabled`
+## When a receive span exists
 
-When `true`, messaging instrumentations produce a separate "receive" span for the operation that takes messages off the broker. Under legacy messaging semantic conventions, process spans become children of that receive span rather than of the message creation context.
+Every delivery gets at least one consumer-side span. A "process" span represents it wherever one
+exists, and a "receive" span is created only where nothing else would. So this setting adds a
+receive span exactly where a process span already covers the delivery, and changes nothing about
+which spans exist elsewhere.
 
-## What the setting does not control
-
-Most instrumentations suppress receive spans where a "process" span already represents the delivery, so setting this to `true` adds a receive span wherever the table below says none is created. Pulsar and JMS keep a receive span for their pull APIs either way, because those calls have no process span, and there the setting changes only how that span is parented and linked:
-
-| Instrumentation | Receive span when `false` | Why |
+| Instrumentation | Receive span when `false` | When `true` |
 | --- | --- | --- |
-| Kafka | no | a process span covers each delivery, created by kafka-clients when the application iterates the records, or by the framework when one drives the poll loop |
-| RabbitMQ | no | pushed deliveries create process spans; `basicGet()` has no replacement span |
-| AWS SQS | no | each received message creates a process span |
-| Pulsar | yes, when no `MessageListener` is registered | `consumer.receive()` creates no process span |
-| JMS | yes, for explicit `MessageConsumer.receive()` | an explicit receive creates no process span |
-| RocketMQ 5.0 | no | each consumed message creates a process span |
-| RocketMQ 4.8 | yes with legacy conventions; no with stable conventions | the setting is ignored; the legacy batch receive span is unconditional, while stable conventions use a batch process span |
+| Kafka, RabbitMQ, AWS SQS, RocketMQ 5.0 | none, a process span covers each delivery | adds a receive span |
+| Pulsar with a `MessageListener` | none, the listener produces a process span | adds a receive span |
+| Pulsar `consumer.receive()`, JMS `MessageConsumer.receive()` | yes, nothing else represents the pull | unchanged, apart from parenting and links |
+| RocketMQ 4.8 | legacy only, and unconditional | ignored |
 
-RabbitMQ `basicGet()` is an exception: when this setting is `false`, it produces no consumer-side span.
+RabbitMQ sits in the first row for pushed deliveries, but `basicGet()` is a pull with no process
+span behind it, so turning this off leaves that path with no consumer-side span at all. That is
+inconsistent with row three and worth fixing.
 
-## Empty receives
+## Empty and failed receives
 
-A receive span represents passing messages to the application, so a receive that returns no messages creates no span and records no metrics. This holds in every semantic convention mode and regardless of this setting.
+A receive span represents passing messages to the application, so a receive that returns nothing
+creates no span and records no metrics, in any mode. A receive that *fails* is recorded, because the
+error is meaningful even though no message arrived.
 
-A receive that *fails* is different and is recorded, because the error is meaningful even though no message arrived.
+RabbitMQ deviates here too: an empty `basicGet()` produces a receive span when this setting is on.
 
-Kafka, Pulsar, AWS SQS and JMS all return early on an empty receive. RabbitMQ does not: its `basicGet()` instrumentation treats the response as optional, so an empty pull produces a receive span when this setting is `true`. That is a deviation from the rule rather than an intentional difference.
+## Legacy versus stable
 
-## Application pulls versus framework poll loops
+Under stable conventions the producer is always a span link and never a parent, whether this setting
+is on or off.
 
-Pulsar distinguishes the two at runtime: it checks whether a receive is happening inside a listener dispatch, so it can keep the receive span for `consumer.receive()` while suppressing it for listener-driven receives.
+Under legacy the setting decides. With it off, the producer parents the consumer span. With it on,
+the producer is linked instead, from the receive span for RabbitMQ, Pulsar and JMS, and from the
+process span for Kafka, AWS SQS and RocketMQ 5.0.
 
-Kafka cannot. Its advice matches `KafkaConsumer.poll` itself and does not know its caller, so enabling this setting produces a receive span for every poll, including the idle polls of a framework's own loop. Frameworks that drive their own loop, such as Spring for Apache Kafka, Kafka Streams, Kafka Connect, Reactor Kafka and the Vert.x Kafka client, only suppress the *process* spans that kafka-clients would otherwise create per record, and create their own instead.
+`messaging.client.consumed.messages` is recorded only under stable conventions, by the receive
+operation where one exists and by the process operation otherwise. Today only Pulsar and Spring
+Pulsar record it.
 
-## What changes with stable messaging semantic conventions
+## Known limitation
 
-| | Legacy | Stable |
-| --- | --- | --- |
-| Default | `false` | `false` (unchanged) |
-| Which instrumentations create receive spans while `false` | see table above | see table above |
-| Producer context placement | when `false`, the parent of the consumer span where one extracts it; when `true`, a receive-span link for RabbitMQ, Pulsar, and JMS, and a process-span link for Kafka, AWS SQS, and RocketMQ 5.0; RocketMQ 4.8 ignores the setting and links from its legacy process spans | always a span link, never the receive parent |
-| Process span parent | extracted from the message when `false`, the receive span when `true` | the ambient span if there is one, otherwise the message creation context |
-| Message creation context linked from a process span | only when `true`, except RocketMQ 4.8, which always links it | always, including when it is also the parent |
-| `messaging.client.consumed.messages` | not recorded | recorded only by Pulsar and Spring Pulsar, on the receive operation or on the process operation where the receive span is suppressed |
-
-Under stable semantic conventions the producer is never the parent of a receive span, and is the parent of a process span only when the message is processed outside the scope of any other span. Setting this to `true` therefore adds the receive span without changing how process spans are parented. Under legacy it changes the trace shape for instrumentations that honor the setting: when `false` the producer parents the consumer span directly, and when `true` the receive or process span links to the producer as shown above.
+Kafka's advice matches `KafkaConsumer.poll` and cannot see its caller, so enabling this setting also
+instruments the idle polls of a framework's own loop, such as Spring for Apache Kafka or Kafka
+Streams. Pulsar can tell an application pull from a listener dispatch; Kafka cannot.
 
 ## Library instrumentation
 
-Library instrumentation does not read the configuration property. Where a builder exposes an equivalent setter, such as `KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(boolean)`, it defaults to `false` and must be set explicitly to opt in.
+Library instrumentation does not read the configuration property. Where a builder exposes an
+equivalent setter, such as `KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(boolean)`, it
+defaults to `false` and must be set explicitly.
