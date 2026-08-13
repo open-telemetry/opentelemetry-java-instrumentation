@@ -8,19 +8,27 @@
 
 Every delivery gets at least one consumer-side span. A "process" span represents it wherever one
 exists, and a "receive" span is created only where nothing else would. So this setting adds a
-receive span exactly where a process span already covers the delivery, and changes nothing about
-which spans exist elsewhere.
+receive span where a process span already covers the delivery, and changes only parenting and links
+where it does not.
 
-| Instrumentation | Receive span when `false` | When `true` |
+Consumers reach the broker in two ways, and the distinction matters because most instrumentation
+sits on the call that fetches messages, not on the application's intent:
+
+| Instrumentation | Application calls the pull API | A listener is fed by internal polling |
 | --- | --- | --- |
-| Kafka, RabbitMQ, AWS SQS, RocketMQ 5.0 | none, a process span covers each delivery | adds a receive span |
-| Pulsar with a `MessageListener` | none, the listener produces a process span | adds a receive span |
-| Pulsar `consumer.receive()`, JMS `MessageConsumer.receive()` | yes, nothing else represents the pull | unchanged, apart from parenting and links |
-| RocketMQ 4.8 | legacy only, and unconditional | ignored |
+| Kafka | `poll()`, process span per record, receive span added when `true` | the same `poll()`, so `true` also instruments idle polls |
+| AWS SQS | `receiveMessage()`, process span per message, receive span added when `true` | the same call from `@SqsListener`, indistinguishable |
+| Pulsar | `consumer.receive()`, receive span either way, no process span | detected at runtime, process span, receive span added when `true` |
+| JMS | `MessageConsumer.receive()`, receive span either way, no process span | `MessageListener`, process span, no poll instrumented |
+| RabbitMQ | `basicGet()`, **no span at all when `false`** | pushed delivery, process span, no poll instrumented |
+| RocketMQ 5.0 | not instrumented | internal `ConsumerImpl.receiveMessage`, process span from the listener, receive span added when `true` |
+| RocketMQ 4.8 | not instrumented | legacy batch receive span, unconditional, stable uses a batch process span instead |
 
-RabbitMQ sits in the first row for pushed deliveries, but `basicGet()` is a pull with no process
-span behind it, so turning this off leaves that path with no consumer-side span at all. That is
-inconsistent with row three and worth fixing.
+Two things follow. Kafka and AWS SQS instrument one method that serves both columns and cannot see
+their caller, so enabling this setting also instruments a framework's idle polls; Pulsar can tell the
+two apart at runtime. And RabbitMQ `basicGet()` is a pull with no process span behind it, so turning
+this off leaves it with no consumer-side span at all, which is inconsistent with Pulsar and JMS and
+worth fixing.
 
 ## Empty and failed receives
 
@@ -44,12 +52,6 @@ process span for Kafka, AWS SQS and RocketMQ 5.0.
 `messaging.client.consumed.messages` is recorded only under stable conventions, by the receive
 operation where one exists and by the process operation otherwise. Today only Pulsar and Spring
 Pulsar record it.
-
-## Known limitation
-
-Kafka's advice matches `KafkaConsumer.poll` and cannot see its caller, so enabling this setting also
-instruments the idle polls of a framework's own loop, such as Spring for Apache Kafka or Kafka
-Streams. Pulsar can tell an application pull from a listener dispatch; Kafka cannot.
 
 ## Library instrumentation
 
