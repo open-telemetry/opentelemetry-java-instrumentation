@@ -44,18 +44,8 @@ public class BasePulsarRequest {
    * does not have one.
    */
   static String stripPartitionSuffix(String topicName) {
-    int partitionIndex = TopicName.getPartitionIndex(topicName);
-    if (partitionIndex == -1) {
-      return topicName;
-    }
-    int suffixIndex = topicName.lastIndexOf(TopicName.PARTITIONED_TOPIC_SUFFIX);
-    // pulsar 2.8 reads the partition index from the last '-' instead of from the last
-    // "-partition-", so it reports e.g. "my-topic-partition-key-1" as partition 1, and it accepts a
-    // zero padded suffix that pulsar 2.9+ rejects; only strip a suffix that is exactly the
-    // partition index, otherwise the topic name would lose more than the partition
-    if (!topicName
-        .substring(suffixIndex + TopicName.PARTITIONED_TOPIC_SUFFIX.length())
-        .equals(String.valueOf(partitionIndex))) {
+    int suffixIndex = partitionSuffixIndex(topicName);
+    if (suffixIndex == -1) {
       return topicName;
     }
     // not using TopicName.getPartitionedTopicName(), because it also expands a topic name that is
@@ -66,8 +56,29 @@ public class BasePulsarRequest {
   /** Returns the value to use for {@code messaging.destination.partition.id}. */
   @Nullable
   static String destinationPartitionId(String topicName) {
+    int suffixIndex = partitionSuffixIndex(topicName);
+    return suffixIndex == -1
+        ? null
+        : topicName.substring(suffixIndex + TopicName.PARTITIONED_TOPIC_SUFFIX.length());
+  }
+
+  private static int partitionSuffixIndex(String topicName) {
     int partitionIndex = TopicName.getPartitionIndex(topicName);
-    return partitionIndex == -1 ? null : String.valueOf(partitionIndex);
+    if (partitionIndex == -1) {
+      return -1;
+    }
+    int suffixIndex = topicName.lastIndexOf(TopicName.PARTITIONED_TOPIC_SUFFIX);
+    // pulsar 2.8 reads the partition index from the last '-' instead of from the last
+    // "-partition-", so it reports e.g. "my-topic-partition-key-1" as partition 1, and it accepts a
+    // zero padded suffix that pulsar 2.9+ rejects; only recognize a suffix that is exactly the
+    // partition index
+    if (suffixIndex == -1
+        || !topicName
+            .substring(suffixIndex + TopicName.PARTITIONED_TOPIC_SUFFIX.length())
+            .equals(String.valueOf(partitionIndex))) {
+      return -1;
+    }
+    return suffixIndex;
   }
 
   public String getDestination() {
