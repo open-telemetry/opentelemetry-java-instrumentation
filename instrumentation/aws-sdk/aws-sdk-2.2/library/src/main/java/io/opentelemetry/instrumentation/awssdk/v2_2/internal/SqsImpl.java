@@ -208,9 +208,6 @@ public final class SqsImpl {
         creationContexts.add(customCreationContext);
         continue;
       }
-      if (containsPropagationField(messageAttributes, useXrayPropagator, messagingPropagator)) {
-        continue;
-      }
 
       Map<String, MessageAttributeValue> capacityProbe = new HashMap<>(messageAttributes);
       io.opentelemetry.context.Context propagationCapacityContext =
@@ -240,18 +237,10 @@ public final class SqsImpl {
   }
 
   private static boolean containsPropagationField(
-      Map<String, MessageAttributeValue> messageAttributes,
-      boolean useXrayPropagator,
-      @Nullable TextMapPropagator messagingPropagator) {
-    if (useXrayPropagator
-        && messageAttributes.containsKey(SqsParentContext.AWS_TRACE_MESSAGE_ATTRIBUTE)) {
-      return true;
-    }
-    if (messagingPropagator != null) {
-      for (String field : messagingPropagator.fields()) {
-        if (messageAttributes.containsKey(field)) {
-          return true;
-        }
+      Map<String, MessageAttributeValue> messageAttributes, TextMapPropagator propagator) {
+    for (String field : propagator.fields()) {
+      if (messageAttributes.containsKey(field)) {
+        return true;
       }
     }
     return false;
@@ -263,12 +252,13 @@ public final class SqsImpl {
       boolean useXrayPropagator,
       @Nullable TextMapPropagator messagingPropagator) {
     boolean injected = false;
-    if (useXrayPropagator) {
+    TextMapPropagator xrayPropagator = AwsXrayPropagator.getInstance();
+    if (useXrayPropagator && !containsPropagationField(messageAttributes, xrayPropagator)) {
       injected |=
-          injectIntoMessageAttributesIfCapacity(
-              messageAttributes, otelContext, AwsXrayPropagator.getInstance());
+          injectIntoMessageAttributesIfCapacity(messageAttributes, otelContext, xrayPropagator);
     }
-    if (messagingPropagator != null) {
+    if (messagingPropagator != null
+        && !containsPropagationField(messageAttributes, messagingPropagator)) {
       injected |=
           injectIntoMessageAttributesIfCapacity(
               messageAttributes, otelContext, messagingPropagator);

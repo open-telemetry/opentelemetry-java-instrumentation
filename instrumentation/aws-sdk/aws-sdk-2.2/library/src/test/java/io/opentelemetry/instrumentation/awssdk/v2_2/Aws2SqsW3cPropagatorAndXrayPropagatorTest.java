@@ -12,6 +12,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.sqs.SqsClient;
@@ -26,6 +28,7 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
       "00-11111111111111111111111111111111-1111111111111111-01";
   private static final String CUSTOM_XRAY_CONTEXT =
       "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;Sampled=1";
+  private static final String INVALID_XRAY_CONTEXT = "invalid";
 
   @Override
   void configure(AwsSdkTelemetryBuilder telemetryBuilder) {
@@ -116,5 +119,92 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
               return value == null ? null : value.stringValue();
             })
         .contains(CUSTOM_XRAY_CONTEXT);
+  }
+
+  @Test
+  void testCreatesContextsWhenOnlyOnePropagatorIsOccupied() {
+    assumeTrue(emitStableMessagingSemconv());
+    SqsClientBuilder builder = SqsClient.builder();
+    configureSdkClient(builder);
+    SqsClient client = configureSqsClient(builder.build());
+    client.createQueue(createQueueRequest);
+    SendMessageBatchRequest batchRequest =
+        SendMessageBatchRequest.builder()
+            .queueUrl(queueUrl)
+            .entries(
+                SendMessageBatchRequestEntry.builder()
+                    .id("i1")
+                    .messageBody("baggage-only")
+                    .messageAttributes(
+                        singletonMap(
+                            "baggage",
+                            MessageAttributeValue.builder()
+                                .dataType("String")
+                                .stringValue("user=alice")
+                                .build()))
+                    .build(),
+                SendMessageBatchRequestEntry.builder()
+                    .id("i2")
+                    .messageBody("invalid-xray")
+                    .messageAttributes(
+                        singletonMap(
+                            "X-Amzn-Trace-Id",
+                            MessageAttributeValue.builder()
+                                .dataType("String")
+                                .stringValue(INVALID_XRAY_CONTEXT)
+                                .build()))
+                    .build())
+            .build();
+
+    client.sendMessageBatch(batchRequest);
+
+    List<SpanData> createSpans = new ArrayList<>();
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("Sqs.CreateQueue").hasKind(SpanKind.CLIENT)),
+            trace -> {
+              createSpans.add(trace.getSpan(0));
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("create testSdkSqs").hasKind(SpanKind.PRODUCER));
+            },
+            trace -> {
+              createSpans.add(trace.getSpan(0));
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("create testSdkSqs").hasKind(SpanKind.PRODUCER));
+            },
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("send testSdkSqs")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasLinksSatisfying(
+                                links ->
+                                    assertThat(links)
+                                        .extracting(link -> link.getSpanContext().getSpanId())
+                                        .containsExactlyInAnyOrder(
+                                            createSpans.get(0).getSpanId(),
+                                            createSpans.get(1).getSpanId()))));
+
+    ReceiveMessageResponse response = client.receiveMessage(receiveMessageBatchRequest);
+    assertThat(response.messages())
+        .filteredOn(message -> message.messageAttributes().containsKey("baggage"))
+        .singleElement()
+        .satisfies(
+            message -> {
+              assertThat(message.messageAttributes().get("baggage").stringValue())
+                  .isEqualTo("user=alice");
+              assertThat(message.messageAttributes()).containsKey("X-Amzn-Trace-Id");
+            });
+    assertThat(response.messages())
+        .filteredOn(message -> message.messageAttributes().containsKey("traceparent"))
+        .singleElement()
+        .satisfies(
+            message -> {
+              assertThat(message.messageAttributes().get("X-Amzn-Trace-Id").stringValue())
+                  .isEqualTo(INVALID_XRAY_CONTEXT);
+              assertThat(message.messageAttributes()).containsKey("traceparent");
+            });
   }
 }
