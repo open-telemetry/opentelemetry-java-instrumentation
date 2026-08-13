@@ -24,7 +24,7 @@ instrumentation/development:
       url:
         # List of URL query parameter names whose values are redacted in URL attributes. See
         # https://opentelemetry.io/docs/specs/semconv/http/http-spans.
-        sensitive_query_parameters/development:
+        sensitive_query_parameters:
           - AWSAccessKeyId
           - Signature
           - X-Amz-Signature
@@ -38,6 +38,12 @@ instrumentation/development:
       # `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously.
       # Stable semantic conventions will become the default in version 3.0 of the agent.
       opt_in: []
+
+    # Opt-in to emit stable semantic conventions instead of the old experimental semantic
+    # conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`,
+    # `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously.
+    # Stable semantic conventions will become the default in version 3.0 of the agent.
+    stability_opt_in_list: ''
   java:
     apache_elasticjob:
       # Enables experimental span attributes `job.system`, `scheduling.apache-elasticjob.job.name`,
@@ -457,8 +463,13 @@ instrumentation/development:
       # Enables the capture of the Logback marker attribute.
       capture_marker_attribute/development: false
 
-      # Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a
-      # comma-separated list of specific keys.
+      # Deprecated comma-separated list of MDC keys to capture as log attributes. Keys are matched
+      # literally, including "*" and "?", except that the single value "*" captures all MDC
+      # attributes. It is ignored when
+      # otel.instrumentation.logback-appender.experimental.mdc-attributes.included or
+      # otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded is configured,
+      # and it may be removed in the next minor release. Use
+      # otel.instrumentation.logback-appender.experimental.mdc-attributes.included instead.
       capture_mdc_attributes/development: []
 
       # Enables the capture of the log message template before parameter substitution.
@@ -466,6 +477,24 @@ instrumentation/development:
 
       # Enables the capture of experimental log attributes, including thread name and thread ID.
       experimental_log_attributes/development: false
+      mdc_attributes/development:
+        # Comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log
+        # attributes. "*" matches any number of characters and "?" matches one character. Excluded
+        # patterns take precedence over included patterns. No MDC attributes are captured unless an
+        # included pattern, an excluded pattern, or the deprecated
+        # otel.instrumentation.logback-appender.experimental.capture-mdc-attributes setting is
+        # configured; configuring only excluded patterns captures all MDC attributes that do not
+        # match them. Captured MDC attributes may contain sensitive information.
+        excluded: []
+
+        # Comma-separated list of case-sensitive glob patterns for MDC keys to capture as log
+        # attributes. "*" matches any number of characters and "?" matches one character, so "*"
+        # captures all MDC attributes. Excluded patterns take precedence over included patterns. No
+        # MDC attributes are captured unless an included pattern, an excluded pattern, or the
+        # deprecated otel.instrumentation.logback-appender.experimental.capture-mdc-attributes
+        # setting is configured; configuring only excluded patterns captures all MDC attributes that
+        # do not match them. Captured MDC attributes may contain sensitive information.
+        included: []
     logback_mdc:
       # Enables adding baggage entries to the Logback MDC, prefixed with "baggage.".
       add_baggage: false
@@ -581,7 +610,9 @@ instrumentation/development:
       # Enables the experimental span attribute `rxjava.canceled`.
       experimental_span_attributes/development: false
     servlet:
-      # List of request parameter names to capture as span attributes.
+      # Deprecated include-only alias for
+      # `otel.instrumentation.servlet.experimental.request-parameters.included`. It may be removed
+      # in the next minor release.
       capture_request_parameters/development: []
 
       # Enables capturing the experimental `servlet.timeout` span attribute.
@@ -590,6 +621,22 @@ instrumentation/development:
       # Experimental setting to inject a JavaScript snippet into HTML responses after the opening
       # `<head>` tag.
       javascript_snippet/development: ''
+      request_parameters/development:
+        # A comma-separated list of case-sensitive request parameter name patterns to exclude from
+        # span attributes. `?` matches one character and `*` matches zero or more characters.
+        # Excluded patterns take precedence over included patterns. No request parameters are
+        # captured unless an included or excluded pattern is configured; configuring only excluded
+        # patterns captures all request parameters that do not match them, which may expose
+        # sensitive information.
+        excluded: []
+
+        # A comma-separated list of case-sensitive request parameter name patterns to capture as
+        # span attributes. `?` matches one character and `*` matches zero or more characters.
+        # Excluded patterns take precedence over included patterns. No request parameters are
+        # captured unless an included or excluded pattern is configured; configuring only excluded
+        # patterns captures all request parameters that do not match them, which may expose
+        # sensitive information.
+        included: []
       trace_id_request_attribute/development:
         # Enables adding the trace ID and span ID as request attributes for downstream servlet
         # access.
