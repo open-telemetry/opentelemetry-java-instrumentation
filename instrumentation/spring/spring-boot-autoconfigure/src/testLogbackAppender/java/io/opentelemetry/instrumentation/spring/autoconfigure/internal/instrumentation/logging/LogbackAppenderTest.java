@@ -25,12 +25,10 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -377,11 +375,7 @@ class LogbackAppenderTest {
   }
 
   @Test
-  void deprecatedMdcPropertyWarnsOnce() throws Exception {
-    Field field = LogbackAppenderInstaller.class.getDeclaredField("warnedDeprecatedProperties");
-    field.setAccessible(true);
-    ((Set<?>) field.get(null)).clear();
-
+  void deprecatedMdcPropertyWarns() {
     ch.qos.logback.classic.Logger installerLogger =
         (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(LogbackAppenderInstaller.class);
     ListAppender<ILoggingEvent> warningAppender = new ListAppender<>();
@@ -398,8 +392,8 @@ class LogbackAppenderTest {
                       "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
                       "key1")));
 
-      LogbackAppenderInstaller.getMdcAttributes(environment);
-      LogbackAppenderInstaller.getMdcAttributes(environment);
+      LogbackAppenderInstaller.initializeMdcAttributesFromProperties(
+          environment, new OpenTelemetryAppender());
 
       assertThat(warningAppender.list)
           .filteredOn(
