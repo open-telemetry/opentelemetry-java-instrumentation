@@ -43,7 +43,6 @@ public final class KafkaInstrumenterFactory {
   private IncludeExclude headers = IncludeExclude.builder().build();
   private boolean captureExperimentalSpanAttributes = false;
   private boolean messagingReceiveInstrumentationEnabled = false;
-  private boolean messagingReceiveInstrumentationConfigured = false;
 
   public KafkaInstrumenterFactory(OpenTelemetry openTelemetry, String instrumentationName) {
     this.openTelemetry = openTelemetry;
@@ -73,7 +72,6 @@ public final class KafkaInstrumenterFactory {
   public KafkaInstrumenterFactory setMessagingReceiveTelemetryEnabled(
       boolean messagingReceiveInstrumentationEnabled) {
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
-    this.messagingReceiveInstrumentationConfigured = true;
     return this;
   }
 
@@ -171,9 +169,7 @@ public final class KafkaInstrumenterFactory {
   }
 
   private boolean receiveInstrumentationEnabled() {
-    return messagingReceiveInstrumentationConfigured
-        ? messagingReceiveInstrumentationEnabled
-        : emitStableMessagingSemconv();
+    return messagingReceiveInstrumentationEnabled;
   }
 
   public Instrumenter<KafkaReceiveRequest, Void> createBatchProcessInstrumenter() {

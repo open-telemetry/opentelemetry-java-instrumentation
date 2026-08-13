@@ -4,6 +4,11 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Kafka library instrumentation no longer enables messaging receive telemetry automatically when
+  stable messaging semantic conventions are emitted. `KafkaTelemetryBuilder` and
+  `KafkaInstrumenterFactory` now default to receive telemetry being disabled in every semantic
+  convention mode, matching the javaagent, so library users who want receive spans must call
+  `setMessagingReceiveTelemetryEnabled(true)` explicitly.
 - `jetty.thread.queue.size` Jetty JMX metric unit has been changed from `{thread}` to `{job}`.
 - Normalize the value of `activemq.destination.temp.utilization` JMX Metric for ActiveMQ to be between 0 and 1 (inclusive) instead of between 0 and 100 (inclusive).
 
