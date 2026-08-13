@@ -225,8 +225,7 @@ public final class AwsSdkInstrumenterFactory {
   }
 
   private static Attributes messageLinkAttributes(SqsMessage message) {
-    String messageId = message.getMessageId();
-    return messageId == null ? Attributes.empty() : Attributes.of(MESSAGING_MESSAGE_ID, messageId);
+    return Attributes.of(MESSAGING_MESSAGE_ID, message.getMessageId());
   }
 
   private static List<AttributesExtractor<AbstractSqsRequest, Response>> toSqsRequestExtractors(
