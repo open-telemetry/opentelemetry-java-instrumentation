@@ -5,7 +5,8 @@ plugins {
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.64.0"
+val otelSdkVersion = "1.65.0"
+val otelZipkinVersion = "1.64.0" // last published version, remove with Zipkin support in 3.0
 val otelContribVersion = "1.59.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
@@ -105,6 +106,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-samplers:${otelContribVersion}",
   "io.opentelemetry.proto:opentelemetry-proto:1.11.0-alpha",
+  "io.opentelemetry:opentelemetry-exporter-zipkin:${otelZipkinVersion}",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
   "org.assertj:assertj-core:3.27.7",
   "org.awaitility:awaitility:4.3.0",
@@ -118,7 +120,15 @@ val DEPENDENCIES = listOf(
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.10",
   "org.elasticmq:elasticmq-rest-sqs_2.13:1.7.1",
-  "io.github.netmikey.logunit:logunit-jul:2.0.0"
+  "io.github.netmikey.logunit:logunit-jul:2.0.0",
+
+  // OSGi runtime verification (see :smoke-tests-osgi). Versions track opentelemetry-java's osgi tests.
+  "org.apache.felix:org.apache.felix.framework:7.0.5",
+  "org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.7",
+  "org.osgi:osgi.core:8.0.0",
+  "org.osgi:org.osgi.test.junit5:1.3.0",
+  "org.junit.jupiter:junit-jupiter:5.14.4",
+  "org.junit.platform:junit-platform-launcher:1.14.4"
 )
 
 javaPlatform {

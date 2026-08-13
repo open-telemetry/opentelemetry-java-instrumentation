@@ -37,7 +37,12 @@ public final class ProcessResource {
       Pattern.compile("^\\S+\\.(jar|war)", Pattern.CASE_INSENSITIVE);
   // scrub values for system properties containing "secret" or "password" in the name
   private static final Pattern SCRUB_PATTERN =
-      Pattern.compile("(-D.*(password|secret).*=).*", Pattern.CASE_INSENSITIVE);
+      Pattern.compile("(-D.*(password|secret).*=).*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+  // same as above, except that the property name cannot span "=", since argument boundaries have
+  // been lost in the flattened command line
+  private static final Pattern SCRUB_COMMAND_LINE_PATTERN =
+      Pattern.compile(
+          "(-D[^=]*(password|secret)[^=]*=).*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
   @Deprecated // to be removed in 3.0
   private static final Resource INSTANCE = create(true);
@@ -143,10 +148,15 @@ public final class ProcessResource {
         if (JAR_FILE_PATTERN.matcher(javaCommand).matches()) {
           commandLine.append(" -jar");
         }
-        commandLine.append(' ').append(javaCommand);
+        commandLine.append(' ').append(scrubCommandLine(javaCommand));
       }
       attributes.put(PROCESS_COMMAND_LINE, commandLine.toString());
     }
+  }
+
+  private static String scrubCommandLine(String commandLine) {
+    // Argument boundaries have been lost, so redact the remainder to avoid exposing continuations.
+    return SCRUB_COMMAND_LINE_PATTERN.matcher(commandLine).replaceFirst("$1***");
   }
 
   private static String scrub(String argument) {

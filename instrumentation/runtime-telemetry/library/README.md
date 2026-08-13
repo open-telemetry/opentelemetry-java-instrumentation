@@ -89,19 +89,47 @@ meter_provider:
 
 ### Configuration
 
-The set of emitted metrics depends on three independent knobs. In autoconfigured
-environments, these map to system properties; programmatically, use the corresponding
-builder methods.
+JFR is disabled by default. On Java 17+, select metrics to source from JFR by metric name:
 
-- `otel.instrumentation.runtime-telemetry.emit-experimental-metrics=true`
-  (`emitExperimentalMetrics()`): enables additional JMX-based metrics that are not yet
-  stable in the semantic conventions.
-- `otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics=true` (Java 17+):
-  enables additional JFR-based metrics that are not yet stable in the semantic conventions.
-- `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr=true` (Java 17+): sources
-  metrics from JFR instead of JMX wherever a JFR equivalent exists (see
-  [JFR-based (Overlap with JMX)](#jfr-based-overlap-with-jmx) below). The corresponding
-  JMX metrics are suppressed.
+```properties
+otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included=jvm.memory.*,jvm.cpu.longloc?
+otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded=jvm.memory.allocation
+```
+
+Matching is case-sensitive. `*` matches any number of characters and `?` matches one character. Configuring either selector property activates JFR. An exclude-only selector includes all metrics minus the excluded metrics, and `included=*` selects all metrics explicitly. Excluded patterns take precedence over included patterns, including over shorthand and legacy selections.
+
+JFR registers only matching metrics and starts its recording stream only when at least one handler remains. Metrics whose JFR handlers cannot fully replace the JMX series, such as memory-pool metrics with collector-specific gaps, remain on JMX while overlapping suppression is enabled. JMX also registers JMX-only metrics such as `jvm.cpu.time` and `jvm.system.cpu.load_1m`.
+
+The equivalent declarative configuration is:
+
+```yaml
+instrumentation/development:
+  java:
+    runtime_telemetry:
+      jfr_metrics/development:
+        included:
+          - jvm.memory.*
+          - jvm.cpu.longloc?
+        excluded:
+          - jvm.memory.allocation
+```
+
+Programmatically, configure the same selector through the experimental API:
+
+```java
+RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(openTelemetry);
+Experimental.setJfrMetrics(
+    builder,
+    IncludeExclude.builder()
+        .setIncluded(Arrays.asList("jvm.memory.*", "jvm.cpu.longloc?"))
+        .setExcluded(Collections.singletonList("jvm.memory.allocation"))
+        .build());
+RuntimeTelemetry runtimeTelemetry = builder.build();
+```
+
+`otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics=true` is a shorthand that adds the experimental metrics that JFR can produce to the included patterns: `jvm.buffer.count`, `jvm.buffer.memory.limit`, `jvm.buffer.memory.used`, `jvm.cpu.context_switch`, `jvm.cpu.longlock`, `jvm.memory.allocation`, `jvm.network.io`, `jvm.network.time`, `jvm.thread.virtual.pinned`, and `jvm.thread.virtual.submit_failed`. The `jvm.buffer.*` metrics are also available from JMX, and are sourced from JMX instead whenever `otel.instrumentation.runtime-telemetry.emit-experimental-metrics=true` is also set. Explicit exclusions still win.
+
+`otel.instrumentation.runtime-telemetry.emit-experimental-metrics=true` independently enables additional JMX-based metrics that are not yet stable in the semantic conventions.
 
 > **Warning**: JFR events might not be available for all JVMs or with a GraalVM native
 > image, therefore limiting the produced metrics. The original implementation was done
@@ -111,7 +139,7 @@ builder methods.
 
 ### Stable Metrics (enabled by default)
 
-These metrics are collected via JMX on all Java versions:
+These metrics are collected via JMX on all Java versions unless selected for JFR on Java 17+:
 
 | Metric                          | Description                                                                                     |
 | ------------------------------- | ----------------------------------------------------------------------------------------------- |
@@ -158,8 +186,7 @@ These metrics are collected via JMX on all Java versions:
 
 #### JFR-based (Overlap with JMX)
 
-When `experimental.prefer-jfr=true`, the following metrics are sourced from JFR instead of JMX
-(the JMX-based registration is suppressed to avoid duplicates):
+The following metrics have JFR implementations and can be selected for JFR. JMX suppression is based on the metric names JFR actually registered, so unsupported JFR handlers fall back to JMX. The `jvm.memory.*` implementations do not cover every memory pool and therefore remain sourced from JMX while overlapping suppression is active. The `jvm.buffer.*` and `jvm.memory.init` implementations likewise remain on JMX while experimental JMX metrics are enabled:
 
 | Metric                          |
 | ------------------------------- |
