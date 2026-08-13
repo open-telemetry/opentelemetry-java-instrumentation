@@ -70,6 +70,7 @@ class PulsarRequestDestinationTest {
     PulsarRequest request = request(message(topic));
 
     assertThat(request.getDestination()).isEqualTo(topic);
+    assertThat(request.getDestinationPartitionId()).isNull();
   }
 
   @Test
@@ -79,6 +80,17 @@ class PulsarRequestDestinationTest {
     PulsarRequest request = request(message(topic));
 
     assertThat(request.getDestination()).isEqualTo(topic);
+    assertThat(request.getDestinationPartitionId()).isNull();
+  }
+
+  @Test
+  void keepsTopicNameWithoutPartitionSuffix() {
+    // pulsar 2.8 reads the partition index from the last '-' even without a partition suffix
+    String topic = TOPIC + "-1";
+    PulsarRequest request = request(message(topic));
+
+    assertThat(request.getDestination()).isEqualTo(topic);
+    assertThat(request.getDestinationPartitionId()).isNull();
   }
 
   @Test

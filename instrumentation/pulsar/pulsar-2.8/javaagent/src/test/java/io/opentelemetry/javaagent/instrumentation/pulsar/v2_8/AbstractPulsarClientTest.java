@@ -418,10 +418,8 @@ abstract class AbstractPulsarClientTest {
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
-    int partitionIndex = TopicName.getPartitionIndex(destination);
-    if (partitionIndex != -1) {
-      assertions.add(equalTo(MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(partitionIndex)));
-    }
+    assertions.add(
+        equalTo(MESSAGING_DESTINATION_PARTITION_ID, destinationPartitionId(destination)));
     return assertions;
   }
 
@@ -465,10 +463,8 @@ abstract class AbstractPulsarClientTest {
     if (isBatch) {
       assertions.add(satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive));
     }
-    int partitionIndex = TopicName.getPartitionIndex(destination);
-    if (partitionIndex != -1) {
-      assertions.add(equalTo(MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(partitionIndex)));
-    }
+    assertions.add(
+        equalTo(MESSAGING_DESTINATION_PARTITION_ID, destinationPartitionId(destination)));
     return assertions;
   }
 
@@ -489,10 +485,8 @@ abstract class AbstractPulsarClientTest {
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
-    int partitionIndex = TopicName.getPartitionIndex(destination);
-    if (partitionIndex != -1) {
-      assertions.add(equalTo(MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(partitionIndex)));
-    }
+    assertions.add(
+        equalTo(MESSAGING_DESTINATION_PARTITION_ID, destinationPartitionId(destination)));
     return assertions;
   }
 
@@ -500,7 +494,34 @@ abstract class AbstractPulsarClientTest {
   // messaging.destination.partition.id, so the destination name does not include the
   // "-partition-N" suffix there
   static String destinationName(String topic) {
-    return emitStableMessagingSemconv() ? TopicName.get(topic).getPartitionedTopicName() : topic;
+    if (!emitStableMessagingSemconv()) {
+      return topic;
+    }
+    int suffixIndex = partitionSuffixIndex(topic);
+    String destination = suffixIndex == -1 ? topic : topic.substring(0, suffixIndex);
+    return TopicName.get(destination).toString();
+  }
+
+  private static String destinationPartitionId(String topic) {
+    int suffixIndex = partitionSuffixIndex(topic);
+    return suffixIndex == -1
+        ? null
+        : topic.substring(suffixIndex + TopicName.PARTITIONED_TOPIC_SUFFIX.length());
+  }
+
+  private static int partitionSuffixIndex(String topic) {
+    int partitionIndex = TopicName.getPartitionIndex(topic);
+    if (partitionIndex == -1) {
+      return -1;
+    }
+    int suffixIndex = topic.lastIndexOf(TopicName.PARTITIONED_TOPIC_SUFFIX);
+    if (suffixIndex == -1
+        || !topic
+            .substring(suffixIndex + TopicName.PARTITIONED_TOPIC_SUFFIX.length())
+            .equals(String.valueOf(partitionIndex))) {
+      return -1;
+    }
+    return suffixIndex;
   }
 
   // messaging.destination.subscription.name only exists in the v1.43 messaging semantic conventions
