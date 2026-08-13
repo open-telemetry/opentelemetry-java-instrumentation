@@ -28,6 +28,7 @@ import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelSingle
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelSingletons.instrumenter;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.api.impl.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -56,7 +57,9 @@ final class CamelRoutePolicy extends RoutePolicySupport {
     sd.updateServerSpanName(parentContext, exchange, route.getEndpoint(), CamelDirection.INBOUND);
 
     if (!instrumenter(request).shouldStart(parentContext, request)) {
-      if (request.isMessaging() && emitStableMessagingSemconv()) {
+      if (request.isMessaging()
+          && emitStableMessagingSemconv()
+          && !InstrumentationUtil.shouldSuppressInstrumentation(parentContext)) {
         CamelProcessMetrics.start(route, parentContext, request);
       }
       return null;

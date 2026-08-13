@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Exchange;
@@ -22,6 +23,7 @@ import org.apache.camel.Route;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.DefaultExchange;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -37,6 +39,62 @@ class CamelProcessMetricsTest {
   @BeforeEach
   void clearData() {
     testing.clearData();
+  }
+
+  @Test
+  void explicitSuppressionDoesNotRecordFallbackMetrics() throws ReflectiveOperationException {
+    Exchange exchange = new DefaultExchange(new DefaultCamelContext());
+    Endpoint endpoint = mock(Endpoint.class);
+    when(endpoint.getEndpointUri()).thenReturn("jms:queue:testQueue");
+    Route route = mock(Route.class);
+    when(route.getEndpoint()).thenReturn(endpoint);
+
+    Class<?> contextClass =
+        Class.forName("io.opentelemetry.javaagent.shaded.io.opentelemetry.context.Context");
+    AtomicReference<Object> parentContext = new AtomicReference<>();
+    Runnable captureContext =
+        () -> {
+          try {
+            parentContext.set(contextClass.getMethod("current").invoke(null));
+          } catch (ReflectiveOperationException e) {
+            throw new LinkageError(e.getMessage(), e);
+          }
+        };
+    Class<?> instrumentationUtilClass =
+        Class.forName(
+            "io.opentelemetry.javaagent.shaded.io.opentelemetry.api.impl.InstrumentationUtil");
+    instrumentationUtilClass
+        .getMethod("suppressInstrumentation", Runnable.class)
+        .invoke(null, captureContext);
+
+    Class<?> singletonsClass =
+        Class.forName("io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelSingletons");
+    Object decorator =
+        invokeStatic(
+            singletonsClass, "getSpanDecorator", new Class<?>[] {Endpoint.class}, endpoint);
+    Class<?> decoratorClass =
+        Class.forName("io.opentelemetry.javaagent.instrumentation.camel.v2_20.SpanDecorator");
+    Class<?> routePolicyClass =
+        Class.forName("io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelRoutePolicy");
+    Object context =
+        invokeStatic(
+            routePolicyClass,
+            "spanOnExchangeBegin",
+            new Class<?>[] {Route.class, Exchange.class, decoratorClass, contextClass},
+            route,
+            exchange,
+            decorator,
+            parentContext.get());
+    assertThat(context).isNull();
+
+    Class<?> processMetricsClass =
+        Class.forName("io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelProcessMetrics");
+    invokeStatic(
+        processMetricsClass, "end", new Class<?>[] {Route.class, Exchange.class}, route, exchange);
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric -> INSTRUMENTATION_NAME.equals(metric.getInstrumentationScopeInfo().getName()))
+        .isEmpty();
   }
 
   @ParameterizedTest
