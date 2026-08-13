@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
+import static org.awaitility.Awaitility.await;
+
 import io.opentelemetry.instrumentation.spring.jms.v2_0.AbstractJmsTest;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -13,7 +15,9 @@ import javax.jms.ConnectionFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.jms.config.JmsListenerEndpointRegistry;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
 class SpringListenerSuppressReceiveSpansTest extends AbstractJmsTest {
 
@@ -28,8 +32,16 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractJmsTest {
     AnnotationConfigApplicationContext context =
         new AnnotationConfigApplicationContext(AnnotatedListenerConfig.class);
     cleanup.deferCleanup(context);
+    JmsListenerEndpointRegistry registry = context.getBean(JmsListenerEndpointRegistry.class);
+    await()
+        .until(
+            () ->
+                registry.getListenerContainers().stream()
+                    .map(DefaultMessageListenerContainer.class::cast)
+                    .allMatch(DefaultMessageListenerContainer::isRegisteredWithDestination));
     ConnectionFactory factory = context.getBean(ConnectionFactory.class);
     JmsTemplate template = new JmsTemplate(factory);
+    template.setPubSubDomain(true);
 
     template.convertAndSend("SpringListenerJms2", "a message");
     testing.waitAndAssertTraces(
@@ -44,6 +56,7 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractJmsTest {
                         "SpringListenerJms2",
                         "process",
                         false,
-                        null)));
+                        null,
+                        "durable-subscription")));
   }
 }

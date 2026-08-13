@@ -10,6 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
+import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.instrumentation.spring.jms.v2_0.AbstractJmsTest;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -22,7 +23,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.jms.config.JmsListenerEndpointRegistry;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
 class SpringListenerTest extends AbstractJmsTest {
 
@@ -37,8 +40,16 @@ class SpringListenerTest extends AbstractJmsTest {
   void receivingMessageInSpringListenerGeneratesSpans(Class<? extends AbstractConfig> config) {
     AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(config);
     cleanup.deferCleanup(context);
+    JmsListenerEndpointRegistry registry = context.getBean(JmsListenerEndpointRegistry.class);
+    await()
+        .until(
+            () ->
+                registry.getListenerContainers().stream()
+                    .map(DefaultMessageListenerContainer.class::cast)
+                    .allMatch(DefaultMessageListenerContainer::isRegisteredWithDestination));
     ConnectionFactory factory = context.getBean(ConnectionFactory.class);
     JmsTemplate template = new JmsTemplate(factory);
+    template.setPubSubDomain(true);
 
     template.convertAndSend("SpringListenerJms2", "a message");
 
@@ -60,7 +71,8 @@ class SpringListenerTest extends AbstractJmsTest {
                         "SpringListenerJms2",
                         "receive",
                         false,
-                        null),
+                        null,
+                        "durable-subscription"),
                 span ->
                     assertConsumerSpan(
                         span,
@@ -69,6 +81,7 @@ class SpringListenerTest extends AbstractJmsTest {
                         "SpringListenerJms2",
                         "process",
                         false,
-                        null)));
+                        null,
+                        "durable-subscription")));
   }
 }

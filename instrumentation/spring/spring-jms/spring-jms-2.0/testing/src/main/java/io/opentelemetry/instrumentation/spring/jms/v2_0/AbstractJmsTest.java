@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.jms.v2_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
@@ -23,6 +24,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -32,6 +34,10 @@ import java.util.List;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractJmsTest {
+
+  // messaging.destination.subscription.name only exists in the v1.43 messaging semantic conventions
+  private static final AttributeKey<String> MESSAGING_DESTINATION_SUBSCRIPTION_NAME =
+      stringKey("messaging.destination.subscription.name");
 
   protected void assertProducerSpan(
       SpanDataAssert span, String destinationName, boolean testHeaders) {
@@ -78,6 +84,19 @@ public abstract class AbstractJmsTest {
       String operation,
       boolean testHeaders,
       String msgId) {
+    assertConsumerSpan(
+        span, producer, parent, destinationName, operation, testHeaders, msgId, null);
+  }
+
+  protected void assertConsumerSpan(
+      SpanDataAssert span,
+      SpanData producer,
+      SpanData parent,
+      String destinationName,
+      String operation,
+      boolean testHeaders,
+      String msgId,
+      String subscriptionName) {
     span.hasName(
             emitStableMessagingSemconv()
                 ? destinationName.equals("(temporary)")
@@ -94,11 +113,21 @@ public abstract class AbstractJmsTest {
       span.hasLinks(LinkData.create(producer.getSpanContext()));
     }
     span.hasAttributesSatisfyingExactly(
-        consumerAttributeAssertions(destinationName, testHeaders, operation, msgId));
+        consumerAttributeAssertions(
+            destinationName, testHeaders, operation, msgId, subscriptionName));
   }
 
   protected List<AttributeAssertion> consumerAttributeAssertions(
       String destinationName, boolean testHeaders, String operation, String msgId) {
+    return consumerAttributeAssertions(destinationName, testHeaders, operation, msgId, null);
+  }
+
+  protected List<AttributeAssertion> consumerAttributeAssertions(
+      String destinationName,
+      boolean testHeaders,
+      String operation,
+      String msgId,
+      String subscriptionName) {
     List<AttributeAssertion> attributeAssertions =
         new ArrayList<>(
             asList(
@@ -122,6 +151,12 @@ public abstract class AbstractJmsTest {
       attributeAssertions.add(
           equalTo(
               stringArrayKey("messaging.header.Test_Message_Int_Header"), singletonList("1234")));
+    }
+    if (subscriptionName != null) {
+      attributeAssertions.add(
+          equalTo(
+              MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+              emitStableMessagingSemconv() ? subscriptionName : null));
     }
     return attributeAssertions;
   }

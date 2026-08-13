@@ -42,6 +42,7 @@ class ManualListenerConfig extends AbstractConfig implements JmsListenerConfigur
             AbstractMessageListenerContainer container =
                 (AbstractMessageListenerContainer) listenerContainer;
             container.setDestinationName("SpringListenerJms2");
+            container.setSubscriptionName("durable-subscription");
             container.setupMessageListener(
                 (SessionAwareMessageListener<Message>)
                     (message, session) -> logger.info("received: {}", message));

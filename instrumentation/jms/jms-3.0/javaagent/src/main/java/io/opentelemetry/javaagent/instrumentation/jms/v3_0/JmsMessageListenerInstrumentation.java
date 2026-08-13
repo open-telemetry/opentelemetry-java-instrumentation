@@ -18,6 +18,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
 import jakarta.jms.Message;
+import jakarta.jms.MessageListener;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -52,16 +53,22 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
 
       private AdviceScope(
           MessageWithDestination messageWithDestination, Context context, Scope scope) {
-        this.scope = scope;
-        this.context = context;
         this.messageWithDestination = messageWithDestination;
+        this.context = context;
+        this.scope = scope;
       }
 
       @Nullable
-      public static AdviceScope start(Message message) {
+      public static AdviceScope start(MessageListener messageListener, Message message) {
         Context parentContext = Context.current();
+        String subscriptionName = JmsSubscriptionNames.get(message);
+        if (subscriptionName == null) {
+          subscriptionName = JmsSubscriptionNames.get(messageListener);
+          JmsSubscriptionNames.set(message, subscriptionName);
+        }
         MessageWithDestination messageWithDestination =
-            MessageWithDestination.create(JakartaMessageAdapter.create(message), null);
+            MessageWithDestination.create(
+                JakartaMessageAdapter.create(message), null, subscriptionName);
 
         if (!consumerProcessInstrumenter().shouldStart(parentContext, messageWithDestination)) {
           return null;
@@ -80,8 +87,9 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope onEnter(@Advice.Argument(0) Message message) {
-      return AdviceScope.start(message);
+    public static AdviceScope onEnter(
+        @Advice.This MessageListener messageListener, @Advice.Argument(0) Message message) {
+      return AdviceScope.start(messageListener, message);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
@@ -25,6 +26,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -40,6 +42,10 @@ import org.springframework.jms.core.JmsTemplate;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
+
+  // messaging.destination.subscription.name only exists in the v1.43 messaging semantic conventions
+  private static final AttributeKey<String> MESSAGING_DESTINATION_SUBSCRIPTION_NAME =
+      stringKey("messaging.destination.subscription.name");
 
   @Override
   void assertSpringJmsListener() {
@@ -82,7 +88,8 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                             oldOperation("receive"),
                             operationName("receive"),
                             operationType("receive"),
-                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank)),
+                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                            subscriptionName()),
                 span ->
                     span.hasName(
                             emitStableMessagingSemconv()
@@ -97,7 +104,8 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                             oldOperation("process"),
                             operationName("process"),
                             operationType("process"),
-                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank)),
+                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                            subscriptionName()),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 
@@ -110,8 +118,10 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
     app.setDefaultProperties(defaultConfig());
     ConfigurableApplicationContext applicationContext = app.run();
     cleanup.deferCleanup(applicationContext);
+    awaitDurableSubscriptions(applicationContext);
 
     JmsTemplate jmsTemplate = new JmsTemplate(applicationContext.getBean(ConnectionFactory.class));
+    jmsTemplate.setPubSubDomain(true);
     String message = "hello there";
 
     // when
@@ -174,6 +184,7 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                             operationName("receive"),
                             operationType("receive"),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                            subscriptionName(),
                             equalTo(
                                 stringArrayKey("messaging.header.Test_Message_Header"),
                                 singletonList("test")),
@@ -194,6 +205,7 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                             operationName("process"),
                             operationType("process"),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                            subscriptionName(),
                             equalTo(
                                 stringArrayKey("messaging.header.Test_Message_Header"),
                                 singletonList("test")),
@@ -213,5 +225,10 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
 
   private static AttributeAssertion operationType(String operation) {
     return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
+  }
+  private static AttributeAssertion subscriptionName() {
+    return equalTo(
+        MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+        emitStableMessagingSemconv() ? "durable-subscription" : null);
   }
 }
