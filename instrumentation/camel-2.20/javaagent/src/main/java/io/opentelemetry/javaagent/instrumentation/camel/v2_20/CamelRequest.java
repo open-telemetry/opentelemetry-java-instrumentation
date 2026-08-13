@@ -23,7 +23,6 @@ abstract class CamelRequest {
       SpanKind spanKind) {
     String messagingSystem = null;
     String messagingDestination = null;
-    String messagingMessageId = null;
     String messagingDestinationPartitionId = null;
     boolean messagingSpanContextPropagated = false;
     if (spanDecorator instanceof MessagingSpanDecorator) {
@@ -32,7 +31,6 @@ abstract class CamelRequest {
       messagingDestination =
           normalizeStableMessagingDestination(
               messagingSystem, messagingSpanDecorator.getDestination(exchange, endpoint));
-      messagingMessageId = messagingSpanDecorator.getMessageId(exchange);
       messagingDestinationPartitionId = messagingSpanDecorator.getDestinationPartitionId(exchange);
       messagingSpanContextPropagated = messagingSpanDecorator.isSpanContextPropagated();
     }
@@ -44,7 +42,6 @@ abstract class CamelRequest {
         spanKind,
         messagingSystem,
         messagingDestination,
-        messagingMessageId,
         messagingDestinationPartitionId,
         messagingSpanContextPropagated);
   }
@@ -83,9 +80,6 @@ abstract class CamelRequest {
 
   @Nullable
   abstract String getMessagingDestination();
-
-  @Nullable
-  abstract String getMessagingMessageId();
 
   @Nullable
   abstract String getMessagingDestinationPartitionId();
