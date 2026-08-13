@@ -28,7 +28,8 @@ A receive span represents passing messages to the application, so a receive that
 creates no span and records no metrics, in any mode. A receive that *fails* is recorded, because the
 error is meaningful even though no message arrived.
 
-RabbitMQ deviates here too: an empty `basicGet()` produces a receive span when this setting is on.
+RabbitMQ deviates here too: an empty `basicGet()` produces a receive span when this setting is on,
+because the call site has no guard rather than because an empty pull is worth recording.
 
 ## Legacy versus stable
 
