@@ -106,15 +106,6 @@ public final class JmsSubscriptionNames {
     }
   }
 
-  @Nullable
-  private static ListenerRegistration activeRegistration(
-      @Nullable ListenerRegistration registration) {
-    while (registration != null && !registration.active) {
-      registration = registration.previous;
-    }
-    return registration;
-  }
-
   private static void deactivate(@Nullable ConsumerListenerRegistration consumerRegistration) {
     if (consumerRegistration == null) {
       return;
@@ -137,30 +128,47 @@ public final class JmsSubscriptionNames {
     @Nullable private volatile ListenerRegistration current;
 
     private synchronized ListenerRegistration add(@Nullable String subscriptionName) {
-      ListenerRegistration registration =
-          new ListenerRegistration(subscriptionName, activeRegistration(current));
+      ListenerRegistration previous = current;
+      ListenerRegistration registration = new ListenerRegistration(subscriptionName, previous);
+      if (previous != null) {
+        previous.next = registration;
+      }
       current = registration;
       return registration;
     }
 
     @Nullable
     private String getSubscriptionName() {
-      ListenerRegistration registration = activeRegistration(current);
+      ListenerRegistration registration = current;
       return registration == null ? null : registration.subscriptionName;
     }
 
     private synchronized void deactivate(ListenerRegistration registration) {
-      registration.active = false;
-      if (current == registration) {
-        current = activeRegistration(registration.previous);
+      if (!registration.active) {
+        return;
       }
+      registration.active = false;
+
+      ListenerRegistration previous = registration.previous;
+      ListenerRegistration next = registration.next;
+      if (previous != null) {
+        previous.next = next;
+      }
+      if (next == null) {
+        current = previous;
+      } else {
+        next.previous = previous;
+      }
+      registration.previous = null;
+      registration.next = null;
     }
   }
 
   private static final class ListenerRegistration {
     @Nullable private final String subscriptionName;
-    @Nullable private final ListenerRegistration previous;
-    private volatile boolean active = true;
+    @Nullable private ListenerRegistration previous;
+    @Nullable private ListenerRegistration next;
+    private boolean active = true;
 
     private ListenerRegistration(
         @Nullable String subscriptionName, @Nullable ListenerRegistration previous) {
