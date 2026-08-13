@@ -94,7 +94,11 @@ final class RabbitReceiveAttributesGetter
   @Nullable
   @Override
   public Long getBatchMessageCount(ReceiveRequest request, @Nullable GetResponse response) {
-    return null;
+    return emitStableMessagingSemconv()
+            && request.isCompletedNormally()
+            && request.getResponse() == null
+        ? 0L
+        : null;
   }
 
   @Override
