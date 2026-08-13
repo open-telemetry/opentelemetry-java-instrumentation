@@ -29,7 +29,7 @@
   in favor of `otel.instrumentation.messaging.experimental.headers.included` /
   `otel.instrumentation.messaging.experimental.headers.excluded` and `setHeaders(IncludeExclude)`,
   which select message headers by glob pattern instead of by exact name only. The deprecated
-  property and methods still select the same headers.
+  property and methods remain include-only aliases and use the selector's glob matching.
 - Deprecate the Log4j appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender.Builder#setCaptureContextDataAttributes(String)` in favor of
   include/exclude context data selectors and
