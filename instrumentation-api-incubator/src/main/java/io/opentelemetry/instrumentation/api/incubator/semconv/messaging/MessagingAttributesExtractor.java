@@ -157,10 +157,11 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       // a selector without included patterns matches every header name that is not excluded
       enumerate = included.isEmpty();
       for (String pattern : included) {
+        if (headers.matches(pattern)) {
+          exactNames.add(pattern);
+        }
         if (pattern.indexOf('*') != -1 || pattern.indexOf('?') != -1) {
           enumerate = true;
-        } else if (headers.matches(pattern)) {
-          exactNames.add(pattern);
         }
       }
     }

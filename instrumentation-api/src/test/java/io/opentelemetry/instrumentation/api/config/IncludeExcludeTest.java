@@ -49,6 +49,20 @@ class IncludeExcludeTest {
   }
 
   @Test
+  void literalIncludesDoNotInterpretWildcards() {
+    IncludeExclude selector =
+        IncludeExclude.builder().setIncludedLiteral(asList("literal?", "embedded*")).build();
+
+    assertThat(selector.matches("literal?")).isTrue();
+    assertThat(selector.matches("literal1")).isFalse();
+    assertThat(selector.matches("embedded*")).isTrue();
+    assertThat(selector.matches("embedded-value")).isFalse();
+    assertThat(selector)
+        .isNotEqualTo(
+            IncludeExclude.builder().setIncluded(asList("literal?", "embedded*")).build());
+  }
+
+  @Test
   void selectorIsEmptyOnlyWithoutPatterns() {
     assertThat(IncludeExclude.builder().build().isEmpty()).isTrue();
     assertThat(IncludeExclude.builder().setIncluded(singletonList("included")).build().isEmpty())
@@ -78,6 +92,8 @@ class IncludeExcludeTest {
   @Test
   void rejectsNullPatterns() {
     assertThatThrownBy(() -> IncludeExclude.builder().setIncluded((Collection<String>) null))
+        .isInstanceOf(NullPointerException.class);
+    assertThatThrownBy(() -> IncludeExclude.builder().setIncludedLiteral(null))
         .isInstanceOf(NullPointerException.class);
     assertThatThrownBy(() -> IncludeExclude.builder().setExcluded(asList("foo", null)))
         .isInstanceOf(NullPointerException.class);

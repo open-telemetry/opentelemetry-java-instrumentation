@@ -52,7 +52,7 @@ public final class AwsSdkTelemetryBuilder {
   @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public AwsSdkTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
-    return setHeaders(IncludeExclude.builder().setIncluded(capturedHeaders).build());
+    return setHeaders(IncludeExclude.builder().setIncludedLiteral(capturedHeaders).build());
   }
 
   /**

@@ -76,6 +76,31 @@ public final class SelectorConfig {
   }
 
   /**
+   * Returns the configured selector, or {@code null} when nothing is configured to be captured.
+   *
+   * <p>Unlike {@link #resolve}, the values of the deprecated include-only setting are matched
+   * literally. New included and excluded values retain their glob semantics.
+   */
+  @Nullable
+  public static IncludeExclude resolveLegacyLiteralSelector(
+      DeclarativeConfigProperties config,
+      String instrumentationName,
+      String selectorName,
+      boolean systemPropertyFallback) {
+    IncludeExclude selector =
+        getSelector(config, instrumentationName, selectorName, systemPropertyFallback);
+    List<String> deprecated =
+        getDeprecated(
+            config, instrumentationName, selectorName, systemPropertyFallback, selector != null);
+    if (selector != null) {
+      return selector;
+    }
+    return deprecated == null || deprecated.isEmpty()
+        ? null
+        : IncludeExclude.builder().setIncludedLiteral(deprecated).build();
+  }
+
+  /**
    * Returns a predicate matching the configured selector, or {@code null} when nothing is
    * configured to be captured.
    *
