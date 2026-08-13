@@ -70,7 +70,7 @@ public class PulsarBatchRequest extends BasePulsarRequest {
     return messages != null ? messages : emptyList();
   }
 
-  public long getMessageCount() {
+  long getMessageCount() {
     return messages != null ? messages.size() : 0;
   }
 
