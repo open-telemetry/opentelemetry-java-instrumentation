@@ -835,7 +835,7 @@ definitions:
       name: otel.instrumentation.logback-appender.experimental.capture-mdc-attributes
       declarative_name: java.logback_appender.capture_mdc_attributes/development
       description: |
-        Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys.
+        Deprecated comma-separated list of MDC keys to capture as log attributes. Keys are matched literally, including "*" and "?", except that the single value "*" captures all MDC attributes. It is ignored when otel.instrumentation.logback-appender.experimental.mdc-attributes.included or otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded is configured, and it may be removed in the next minor release. Use otel.instrumentation.logback-appender.experimental.mdc-attributes.included instead.
       type: list
       default: ''
       examples:
@@ -848,6 +848,26 @@ definitions:
         Enables the capture of the log message template before parameter substitution.
       type: boolean
       default: false
+    otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded:
+      name: otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded
+      declarative_name: java.logback_appender.mdc_attributes/development.excluded
+      description: |
+        Comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No MDC attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-mdc-attributes setting is configured; configuring only excluded patterns captures all MDC attributes that do not match them. Captured MDC attributes may contain sensitive information.
+      type: list
+      default: ''
+      examples:
+      - '*-secret'
+      - password,token
+    otel.instrumentation.logback-appender.experimental.mdc-attributes.included:
+      name: otel.instrumentation.logback-appender.experimental.mdc-attributes.included
+      declarative_name: java.logback_appender.mdc_attributes/development.included
+      description: |
+        Comma-separated list of case-sensitive glob patterns for MDC keys to capture as log attributes. "*" matches any number of characters and "?" matches one character, so "*" captures all MDC attributes. Excluded patterns take precedence over included patterns. No MDC attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-mdc-attributes setting is configured; configuring only excluded patterns captures all MDC attributes that do not match them. Captured MDC attributes may contain sensitive information.
+      type: list
+      default: ''
+      examples:
+      - custom-mdc-key
+      - request-*,user-?
     otel.instrumentation.logback-mdc.add-baggage:
       name: otel.instrumentation.logback-mdc.add-baggage
       declarative_name: java.logback_mdc.add_baggage
@@ -1096,9 +1116,29 @@ definitions:
     otel.instrumentation.servlet.experimental.capture-request-parameters:
       name: otel.instrumentation.servlet.experimental.capture-request-parameters
       declarative_name: java.servlet.capture_request_parameters/development
-      description: List of request parameter names to capture as span attributes.
+      description: |
+        Deprecated include-only alias for `otel.instrumentation.servlet.experimental.request-parameters.included`. It may be removed in the next minor release.
       type: list
       default: ''
+    otel.instrumentation.servlet.experimental.request-parameters.excluded:
+      name: otel.instrumentation.servlet.experimental.request-parameters.excluded
+      declarative_name: java.servlet.request_parameters/development.excluded
+      description: |
+        A comma-separated list of case-sensitive request parameter name patterns to exclude from span attributes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. No request parameters are captured unless an included or excluded pattern is configured; configuring only excluded patterns captures all request parameters that do not match them, which may expose sensitive information.
+      type: list
+      default: ''
+      examples:
+      - password,*-token
+    otel.instrumentation.servlet.experimental.request-parameters.included:
+      name: otel.instrumentation.servlet.experimental.request-parameters.included
+      declarative_name: java.servlet.request_parameters/development.included
+      description: |
+        A comma-separated list of case-sensitive request parameter name patterns to capture as span attributes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. No request parameters are captured unless an included or excluded pattern is configured; configuring only excluded patterns captures all request parameters that do not match them, which may expose sensitive information.
+      type: list
+      default: ''
+      examples:
+      - request-id
+      - user-*,search-?
     otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled:
       name: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
       declarative_name: java.servlet.trace_id_request_attribute/development.enabled
@@ -1232,14 +1272,15 @@ definitions:
       default: ''
     otel.semconv-stability.opt-in:
       name: otel.semconv-stability.opt-in
-      declarative_name: general.semconv_stability.opt_in
+      declarative_name: general.stability_opt_in_list
       description: |
         Opt-in to emit stable semantic conventions instead of the old experimental semantic conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`, `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously. Stable semantic conventions will become the default in version 3.0 of the agent.
       type: list
       default: ''
+      declarative_type: string
     sanitization.url.sensitive-query-parameters:
       name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-      declarative_name: general.sanitization.url.sensitive_query_parameters/development
+      declarative_name: general.sanitization.url.sensitive_query_parameters
       description: List of URL query parameter names whose values are redacted in
         URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
       type: list
@@ -10169,6 +10210,8 @@ libraries:
   - http.server.emit-experimental-telemetry
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded
+  - otel.instrumentation.servlet.experimental.request-parameters.included
 - name: liberty-dispatcher-20.0
   display_name: Liberty
   description: |
@@ -10304,6 +10347,8 @@ libraries:
   - otel.instrumentation.logback-appender.experimental.capture-marker-attribute
   - otel.instrumentation.logback-appender.experimental.capture-mdc-attributes
   - otel.instrumentation.logback-appender.experimental.capture-template
+  - otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded
+  - otel.instrumentation.logback-appender.experimental.mdc-attributes.included
 - name: logback-mdc-1.0
   display_name: Logback
   description: |
@@ -13472,6 +13517,8 @@ libraries:
   - otel.experimental.javascript-snippet-ad834761
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded
+  - otel.instrumentation.servlet.experimental.request-parameters.included
   - otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
   telemetry:
   - when: default
@@ -13534,6 +13581,8 @@ libraries:
   - otel.experimental.javascript-snippet-cfa9f908
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded
+  - otel.instrumentation.servlet.experimental.request-parameters.included
   - otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
   telemetry:
   - when: default
@@ -13600,9 +13649,11 @@ libraries:
   - otel.experimental.javascript-snippet-ad834761
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded
+  - otel.instrumentation.servlet.experimental.request-parameters.included
   - otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
   telemetry:
-  - when: otel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter
+  - when: otel.instrumentation.servlet.experimental.request-parameters.included=test-parameter
     metric_refs:
     - http.server.request.duration-1f6f63ed
     spans:
@@ -14931,6 +14982,8 @@ libraries:
   - http.server.emit-experimental-telemetry
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded
+  - otel.instrumentation.servlet.experimental.request-parameters.included
   telemetry:
   - when: default
     metric_refs:
@@ -14992,6 +15045,8 @@ libraries:
   - http.server.emit-experimental-telemetry
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded
+  - otel.instrumentation.servlet.experimental.request-parameters.included
   telemetry:
   - when: default
     metric_refs:
