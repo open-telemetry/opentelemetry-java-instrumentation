@@ -37,6 +37,7 @@ dependencies {
   // Tests use JUnit's built-in assertions rather than assertj: assertj imports net.bytebuddy
   // mandatorily, and byte-buddy 1.18.10's multi-release jar advertises a JavaSE-24 execution
   // environment requirement that the JavaSE-21 OSGi runtime can't satisfy.
+  osgiInfraImplementation(platform("org.junit:junit-bom:5.14.4"))
   osgiInfraImplementation("org.junit.jupiter:junit-jupiter")
   osgiInfraImplementation("org.osgi:org.osgi.test.junit5")
   osgiInfraRuntimeOnly("org.junit.platform:junit-platform-launcher")
