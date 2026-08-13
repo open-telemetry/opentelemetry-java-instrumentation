@@ -17,9 +17,11 @@ import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.Messages;
 
 /**
- * Splits the attributes describing the individual messages of a batch into the ones that are shared
- * by every message in the batch, which belong on the batch span, and the ones that vary, which
- * belong on the links describing the individual messages.
+ * Splits the attributes describing the individual messages of a batch between the batch span and
+ * the links describing the individual messages. Attributes belong on the batch span when they are
+ * shared by every message and meaningful without attributes that vary. In particular, a common
+ * partition id belongs on the links when the destination varies because partition ids are only
+ * unique within a destination.
  */
 class PulsarBatchRecordAttributes {
 
