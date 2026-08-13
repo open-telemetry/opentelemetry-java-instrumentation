@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
  * When the same listener is registered on several consumers, the most recent active registration
  * wins. Removing it exposes the preceding active registration.
  */
-public final class JmsSubscriptionNames {
+public class JmsSubscriptionNames {
 
   private static final VirtualField<MessageConsumer, String> CONSUMER_SUBSCRIPTION_NAME =
       VirtualField.find(MessageConsumer.class, String.class);
