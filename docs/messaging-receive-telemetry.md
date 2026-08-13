@@ -24,9 +24,11 @@ RabbitMQ `basicGet()` is an exception: when this setting is `false`, it produces
 
 ## Empty receives
 
-Most instrumentations create no receive span when a pull returns no messages. Kafka, Pulsar, AWS SQS and JMS all return early before starting one, independently of this setting and identically under legacy and stable semantic conventions.
+A receive span represents passing messages to the application, so a receive that returns no messages creates no span and records no metrics. This holds in every semantic convention mode and regardless of this setting.
 
-RabbitMQ is the exception. Its `basicGet()` instrumentation models the response as optional rather than skipping instrumentation, so when this setting is `true` an empty pull still produces a receive span.
+A receive that *fails* is different and is recorded, because the error is meaningful even though no message arrived.
+
+Kafka, Pulsar, AWS SQS and JMS all return early on an empty receive. RabbitMQ does not: its `basicGet()` instrumentation treats the response as optional, so an empty pull produces a receive span when this setting is `true`. That is a deviation from the rule rather than an intentional difference.
 
 ## What changes with stable messaging semantic conventions
 
