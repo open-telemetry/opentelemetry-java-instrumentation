@@ -67,6 +67,16 @@ public class MicrometerSingletons {
       public boolean contains(Object object) {
         return registries.contains(object);
       }
+
+      @Override
+      public boolean equals(Object object) {
+        return registries.equals(object);
+      }
+
+      @Override
+      public int hashCode() {
+        return registries.hashCode();
+      }
     };
   }
 
