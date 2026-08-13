@@ -19,6 +19,7 @@ import org.apache.tomcat.util.descriptor.web.FilterMap;
 
 class ServletTestUtil {
 
+  @SuppressWarnings("deprecation") // testing deprecated setter
   static Filter newFilter(OpenTelemetry openTelemetry) {
     ServletTelemetryBuilder builder =
         ServletTelemetry.builder(openTelemetry)

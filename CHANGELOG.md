@@ -29,6 +29,12 @@
   and method keep their existing behavior, which matches keys literally unless the list contains
   only `*`, and may be removed in the next minor release.
   ([#19521](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19521))
+- Deprecate `otel.instrumentation.servlet.experimental.capture-request-parameters` and
+  `Experimental#setCaptureRequestParameters(...)` in favor of the
+  `otel.instrumentation.servlet.experimental.request-parameters.{included,excluded}` properties and
+  `Experimental#setRequestParameters(ServletTelemetryBuilder, IncludeExclude)`. The deprecated
+  property and method remain as include-only aliases.
+  ([#19522](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19522))
 - Deprecate `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` and
   `io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental#setPreferJfrMetrics(RuntimeTelemetryBuilder, boolean)`
   in favor of `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included` and
