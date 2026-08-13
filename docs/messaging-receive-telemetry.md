@@ -30,7 +30,7 @@ RabbitMQ `basicGet()` is an exception: when this setting is `false`, it produces
 | Which instrumentations create receive spans while `false` | see table above | see table above |
 | Producer context placement | when `false`, the parent of the consumer span where one extracts it; when `true`, a receive-span link for RabbitMQ, Pulsar, and JMS, and a process-span link for Kafka, AWS SQS, and RocketMQ 5.0; RocketMQ 4.8 ignores the setting and links from its legacy process spans | always a span link, never the receive parent |
 | Process span parent | extracted from the message when `false`, the receive span when `true` | the ambient span if there is one, otherwise the message creation context |
-| Message creation context linked from a process span | only when `true` | always, including when it is also the parent |
+| Message creation context linked from a process span | only when `true`, except RocketMQ 4.8, which always links it | always, including when it is also the parent |
 | `messaging.client.consumed.messages` | not recorded | recorded only by Pulsar and Spring Pulsar, on the receive operation or on the process operation where the receive span is suppressed |
 
 Under stable semantic conventions the producer is never the parent of a receive span, and is the parent of a process span only when the message is processed outside the scope of any other span. Setting this to `true` therefore adds the receive span without changing how process spans are parented. Under legacy it changes the trace shape for instrumentations that honor the setting: when `false` the producer parents the consumer span directly, and when `true` the receive or process span links to the producer as shown above.
