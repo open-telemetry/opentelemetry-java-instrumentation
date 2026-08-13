@@ -10,6 +10,7 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
 import java.lang.invoke.MethodHandle;
@@ -48,7 +49,7 @@ public class Log4jHelper {
     boolean captureTemplate = config.getBoolean("capture_template/development", false);
     boolean captureArguments = config.getBoolean("capture_arguments/development", false);
     Predicate<String> contextDataAttributes =
-        Log4jConfig.create(GlobalOpenTelemetry.get()).getContextDataAttributes();
+        SelectorConfig.resolveLegacyLiteral(config, "log4j-appender", "mdc-attributes");
     boolean v3Preview = commonConfig.getBoolean("v3_preview", false);
 
     mapper =

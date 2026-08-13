@@ -20,6 +20,7 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.time.Instant;
 import java.util.Hashtable;
@@ -56,7 +57,12 @@ public class LogEventMapper {
           .getBoolean("capture_code_attributes/development", false);
 
   private LogEventMapper() {
-    mdcAttributes = Log4jConfig.create(GlobalOpenTelemetry.get()).getContextDataAttributes();
+    mdcAttributes =
+        SelectorConfig.resolveLegacyLiteral(
+            DeclarativeConfigUtil.getInstrumentationConfig(
+                GlobalOpenTelemetry.get(), "log4j_appender"),
+            "log4j-appender",
+            "mdc-attributes");
   }
 
   public void capture(

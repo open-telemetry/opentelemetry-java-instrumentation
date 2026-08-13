@@ -22,15 +22,14 @@ import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
 import io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal.ContextDataKeys;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -328,17 +327,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
       if (!selector.isEmpty()) {
         return selector::matches;
       }
-      // The deprecated setting does not support glob patterns: a list containing only "*" captures
-      // every context data attribute and every other entry is matched as a literal key.
-      List<String> included = splitAndFilterBlanksAndNulls(captureContextDataAttributes);
-      if (included.isEmpty()) {
-        return null;
-      }
-      if (included.size() == 1 && included.get(0).equals("*")) {
-        return key -> true;
-      }
-      Set<String> exactKeys = new HashSet<>(included);
-      return exactKeys::contains;
+      return SelectorConfig.resolveLegacyLiteral(
+          splitAndFilterBlanksAndNulls(captureContextDataAttributes));
     }
   }
 
