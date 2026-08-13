@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static java.util.Collections.emptyList;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
@@ -49,6 +50,33 @@ public final class SqsImpl {
       return true;
     }
     return false;
+  }
+
+  static boolean afterError(
+      Request<?> request,
+      @Nullable Response<?> response,
+      Timer timer,
+      Context parentContext,
+      TracingRequestHandler requestHandler,
+      Throwable error) {
+    if (!(request.getOriginalRequest() instanceof ReceiveMessageRequest)) {
+      return false;
+    }
+
+    Instrumenter<SqsReceiveRequest, Response<?>> instrumenter =
+        requestHandler.getConsumerReceiveInstrumenter();
+    SqsReceiveRequest receiveRequest = SqsReceiveRequest.create(request, emptyList());
+    if (instrumenter.shouldStart(parentContext, receiveRequest)) {
+      InstrumenterUtil.startAndEnd(
+          instrumenter,
+          parentContext,
+          receiveRequest,
+          response,
+          error,
+          timer.startTime(),
+          timer.now());
+    }
+    return true;
   }
 
   private static void afterConsumerResponse(

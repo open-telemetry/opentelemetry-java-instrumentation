@@ -31,6 +31,16 @@ final class SqsAccess {
         && SqsImpl.afterReceiveMessageExecution(context, executionAttributes, config, timer);
   }
 
+  @NoMuzzle
+  static boolean afterReceiveMessageExecutionFailure(
+      ExecutionAttributes executionAttributes,
+      TracingExecutionInterceptor config,
+      Timer timer,
+      Throwable error) {
+    return enabled
+        && SqsImpl.afterReceiveMessageExecutionFailure(executionAttributes, config, timer, error);
+  }
+
   /**
    * Returns {@code null} (not the unmodified {@code request}!) if nothing matched, so that other
    * handling can be tried.

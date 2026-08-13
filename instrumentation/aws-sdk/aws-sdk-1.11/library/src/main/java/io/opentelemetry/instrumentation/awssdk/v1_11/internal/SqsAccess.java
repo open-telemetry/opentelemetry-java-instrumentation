@@ -28,6 +28,18 @@ final class SqsAccess {
   }
 
   @NoMuzzle
+  static boolean afterError(
+      Request<?> request,
+      @Nullable Response<?> response,
+      Timer timer,
+      Context parentContext,
+      TracingRequestHandler requestHandler,
+      Throwable error) {
+    return enabled
+        && SqsImpl.afterError(request, response, timer, parentContext, requestHandler, error);
+  }
+
+  @NoMuzzle
   static boolean beforeMarshalling(AmazonWebServiceRequest request) {
     return enabled && SqsImpl.beforeMarshalling(request);
   }

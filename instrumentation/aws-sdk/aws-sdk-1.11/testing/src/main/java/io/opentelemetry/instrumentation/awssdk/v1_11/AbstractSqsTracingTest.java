@@ -35,6 +35,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -930,6 +931,78 @@ public abstract class AbstractSqsTracingTest {
     sqsClient.sendMessage(send);
     sqsClient.receiveMessage(receive);
     assertThat(receive.getAttributeNames()).containsExactly("AWSTraceHeader");
+  }
+
+  @Test
+  void testProducerMetrics() {
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+    testing().clearData();
+
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "single"));
+    sqsClient.sendMessageBatch(
+        new SendMessageBatchRequest()
+            .withQueueUrl(queueUrl)
+            .withEntries(
+                new SendMessageBatchRequestEntry("i1", "e1"),
+                new SendMessageBatchRequestEntry("i2", "e2"),
+                new SendMessageBatchRequestEntry("i3", "e3")));
+
+    SqsMetricsAssertions.assertProducerMetrics(testing(), sqsPort, 2, 4);
+  }
+
+  @Test
+  void testReceiveAndProcessMetrics() {
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+    sqsClient.sendMessageBatch(
+        new SendMessageBatchRequest()
+            .withQueueUrl(queueUrl)
+            .withEntries(
+                new SendMessageBatchRequestEntry("i1", "e1"),
+                new SendMessageBatchRequestEntry("i2", "e2"),
+                new SendMessageBatchRequestEntry("i3", "e3")));
+    testing().clearData();
+
+    ReceiveMessageResult response =
+        sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl).withMaxNumberOfMessages(10));
+    response.getMessages().forEach(message -> {});
+    ReceiveMessageResult emptyResponse =
+        sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl).withMaxNumberOfMessages(10));
+
+    assertThat(response.getMessages()).hasSize(3);
+    assertThat(emptyResponse.getMessages()).isEmpty();
+    SqsMetricsAssertions.assertReceiveAndProcessMetrics(testing(), sqsPort, 1, 3);
+  }
+
+  @Test
+  void testSettleMetrics() {
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    List<String> receiptHandles = createMessages(queueUrl, 2);
+
+    sqsClient.deleteMessage(new DeleteMessageRequest(queueUrl, receiptHandles.get(0)));
+    sqsClient.deleteMessageBatch(
+        new DeleteMessageBatchRequest()
+            .withQueueUrl(queueUrl)
+            .withEntries(new DeleteMessageBatchRequestEntry("i1", receiptHandles.get(1))));
+
+    SqsMetricsAssertions.assertSettleMetrics(testing(), sqsPort, 2);
+  }
+
+  @Test
+  void testReceiveErrorMetrics() {
+    testing().clearData();
+
+    AtomicReference<String> errorType = new AtomicReference<>();
+    assertThatThrownBy(
+            () ->
+                sqsClient.receiveMessage(
+                    "http://localhost:" + sqsPort + "/000000000000/testSdkSqsMissing"))
+        .isInstanceOf(RuntimeException.class)
+        .satisfies(error -> errorType.set(error.getClass().getName()));
+
+    SqsMetricsAssertions.assertReceiveErrorMetrics(
+        testing(), sqsPort, "testSdkSqsMissing", errorType.get());
   }
 
   static void assertAwsRequestId(AbstractStringAssert<?> val) {
