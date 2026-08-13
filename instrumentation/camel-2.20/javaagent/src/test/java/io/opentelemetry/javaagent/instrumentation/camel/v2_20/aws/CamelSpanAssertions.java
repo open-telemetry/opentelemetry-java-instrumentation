@@ -15,9 +15,13 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import java.util.ArrayList;
+import java.util.List;
 
 class CamelSpanAssertions {
 
@@ -32,17 +36,25 @@ class CamelSpanAssertions {
   }
 
   static SpanDataAssert sqsProduce(SpanDataAssert span, String queueName) {
+    List<AttributeAssertion> attributeAssertions =
+        new ArrayList<>(
+            asList(
+                equalTo(
+                    stringKey("camel.uri"),
+                    experimental(
+                        "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=1000")),
+                equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "aws_sqs" : null),
+                equalTo(MESSAGING_DESTINATION_NAME, queueName),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
+                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null)));
+    if (emitStableMessagingSemconv()) {
+      attributeAssertions.add(
+          satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
+    }
+
     return span.hasName(emitStableMessagingSemconv() ? "send " + queueName : queueName)
         .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.INTERNAL)
-        .hasAttributesSatisfyingExactly(
-            equalTo(
-                stringKey("camel.uri"),
-                experimental(
-                    "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=1000")),
-            equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "aws_sqs" : null),
-            equalTo(MESSAGING_DESTINATION_NAME, queueName),
-            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
-            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null));
+        .hasAttributesSatisfyingExactly(attributeAssertions);
   }
 
   static SpanDataAssert sqsConsume(SpanDataAssert span, String queueName) {
