@@ -1229,6 +1229,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 emitStableMessagingSemconv()
                                     ? error.getClass().getName()
                                     : null))));
+    assertFailedBatchReceiveMetric(topic, error);
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -1291,6 +1292,41 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                 emitStableMessagingSemconv()
                                     ? error.getClass().getName()
                                     : null))));
+    assertFailedBatchReceiveMetric(null, error);
+  }
+
+  private static void assertFailedBatchReceiveMetric(String destination, Throwable error) {
+    if (!emitStableMessagingSemconv()) {
+      return;
+    }
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "messaging.client.operation.duration",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit("s")
+                        .hasDescription(
+                            "Duration of messaging operation initiated by a producer or consumer client.")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasSumGreaterThan(0.0)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                                equalTo(
+                                                    MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                    "test_sub"),
+                                                equalTo(ERROR_TYPE, error.getClass().getName()),
+                                                equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                                                equalTo(SERVER_ADDRESS, brokerHost),
+                                                equalTo(SERVER_PORT, brokerPort))
+                                            .hasBucketBoundaries(DURATION_BUCKETS)))));
   }
 
   @Test
