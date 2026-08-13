@@ -100,6 +100,9 @@ tasks {
     }
     // with the v3 preview off, the legacy opt-in flag selects the new messaging semconv too
     jvmArgs("-Dotel.semconv-stability.opt-in=messaging")
+    // KafkaClientDefaultTest exercises the receive-span topology, so enable receive spans; the
+    // spans-off default is covered by testMessagingPreviewReceiveSpansDisabled
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
   }
 
