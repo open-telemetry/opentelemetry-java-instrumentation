@@ -38,14 +38,7 @@ public final class TracingRequestHandler extends RequestHandler2 {
                     // necessary to support configuration via system properties.
                     SystemProperty.getBoolean(
                         "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
-        .setMessagingReceiveSpansEnabled(
-            messaging
-                .get("receive_spans/development")
-                .getBoolean(
-                    "enabled",
-                    SystemProperty.getBoolean(
-                        "otel.instrumentation.messaging.experimental.receive-spans.enabled",
-                        false)))
+        .setMessagingReceiveSpansEnabled(messagingReceiveSpansEnabled(messaging))
         .setCapturedHeaders(
             messaging.getScalarList(
                 "capture_headers/development",
@@ -54,6 +47,21 @@ public final class TracingRequestHandler extends RequestHandler2 {
                     "otel.instrumentation.messaging.experimental.capture-headers", emptyList())))
         .build()
         .createRequestHandler();
+  }
+
+  // the deprecated receive-telemetry names are still honored, with the receive-spans names winning
+  // when both are set
+  private static boolean messagingReceiveSpansEnabled(DeclarativeConfigProperties messaging) {
+    boolean deprecatedSystemProperty =
+        SystemProperty.getBoolean(
+            "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false);
+    boolean systemProperty =
+        SystemProperty.getBoolean(
+            "otel.instrumentation.messaging.experimental.receive-spans.enabled",
+            deprecatedSystemProperty);
+    boolean deprecatedKey =
+        messaging.get("receive_telemetry/development").getBoolean("enabled", systemProperty);
+    return messaging.get("receive_spans/development").getBoolean("enabled", deprecatedKey);
   }
 
   @Override

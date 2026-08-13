@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaPropagation;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 public class KafkaSingletons {
@@ -37,7 +38,7 @@ public class KafkaSingletons {
     DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common");
     Boolean messagingReceiveSpansEnabled =
-        commonConfig.get("messaging").get("receive_spans/development").getBoolean("enabled");
+        messagingReceiveSpansEnabled(commonConfig.get("messaging"));
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
             .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
@@ -50,6 +51,16 @@ public class KafkaSingletons {
     producerInstrumenter = instrumenterFactory.createProducerInstrumenter();
     consumerReceiveInstrumenter = instrumenterFactory.createConsumerReceiveInstrumenter();
     consumerProcessInstrumenter = instrumenterFactory.createConsumerProcessInstrumenter();
+  }
+
+  // the deprecated receive_telemetry/development key is still honored, with
+  // receive_spans/development winning when both are set
+  @Nullable
+  private static Boolean messagingReceiveSpansEnabled(DeclarativeConfigProperties messaging) {
+    Boolean enabled = messaging.get("receive_spans/development").getBoolean("enabled");
+    return enabled != null
+        ? enabled
+        : messaging.get("receive_telemetry/development").getBoolean("enabled");
   }
 
   public static Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter() {

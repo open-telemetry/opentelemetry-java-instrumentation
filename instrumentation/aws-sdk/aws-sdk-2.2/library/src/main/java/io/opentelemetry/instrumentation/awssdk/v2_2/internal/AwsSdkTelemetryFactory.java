@@ -53,14 +53,7 @@ public final class AwsSdkTelemetryFactory {
                 "experimental_span_attributes/development",
                 systemProperties.getBoolean(
                     "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
-        .setMessagingReceiveSpansEnabled(
-            messaging
-                .get("receive_spans/development")
-                .getBoolean(
-                    "enabled",
-                    systemProperties.getBoolean(
-                        "otel.instrumentation.messaging.experimental.receive-spans.enabled",
-                        false)))
+        .setMessagingReceiveSpansEnabled(messagingReceiveSpansEnabled(messaging, systemProperties))
         .setUseConfiguredPropagatorForMessaging(
             awsSdk.getBoolean(
                 "use_propagator_for_messaging/development",
@@ -81,6 +74,22 @@ public final class AwsSdkTelemetryFactory {
                     systemProperties.getBoolean(
                         "otel.instrumentation.genai.capture-message-content", false)))
         .build();
+  }
+
+  // the deprecated receive-telemetry names are still honored, with the receive-spans names winning
+  // when both are set
+  private static boolean messagingReceiveSpansEnabled(
+      DeclarativeConfigProperties messaging, SystemProperties systemProperties) {
+    boolean deprecatedSystemProperty =
+        systemProperties.getBoolean(
+            "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false);
+    boolean systemProperty =
+        systemProperties.getBoolean(
+            "otel.instrumentation.messaging.experimental.receive-spans.enabled",
+            deprecatedSystemProperty);
+    boolean deprecatedKey =
+        messaging.get("receive_telemetry/development").getBoolean("enabled", systemProperty);
+    return messaging.get("receive_spans/development").getBoolean("enabled", deprecatedKey);
   }
 
   private AwsSdkTelemetryFactory() {}
