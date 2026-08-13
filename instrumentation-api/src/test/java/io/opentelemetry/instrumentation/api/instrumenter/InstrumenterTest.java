@@ -1045,7 +1045,7 @@ class InstrumenterTest {
                     span ->
                         span.hasName("parent")
                             .hasStatus(StatusData.unset())
-                            .hasAttributes(Attributes.empty())
+                            .hasTotalAttributeCount(0)
                             .hasEventsSatisfyingExactly()));
   }
 
