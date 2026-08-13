@@ -766,13 +766,13 @@ class PulsarClientTest extends AbstractPulsarClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("send " + partitionTopic)
+                    span.hasName("send " + topic)
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             sendAttributes(partitionTopic, msgId.toString(), false)),
                 span ->
-                    span.hasName("process " + partitionTopic)
+                    span.hasName("process " + topic)
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -782,7 +782,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName("receive " + partitionTopic)
+                      span.hasName("receive " + topic)
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))

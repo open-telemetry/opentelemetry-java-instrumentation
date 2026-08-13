@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;
-import org.apache.pulsar.common.naming.TopicName;
 
 final class PulsarBatchMessagingAttributesGetter
     implements MessagingAttributesGetter<PulsarBatchRequest, Void> {
@@ -88,11 +87,7 @@ final class PulsarBatchMessagingAttributesGetter
   @Nullable
   @Override
   public String getDestinationPartitionId(PulsarBatchRequest request) {
-    int partitionIndex = TopicName.getPartitionIndex(request.getDestination());
-    if (partitionIndex == -1) {
-      return null;
-    }
-    return String.valueOf(partitionIndex);
+    return request.getDestinationPartitionId();
   }
 
   @Nullable
