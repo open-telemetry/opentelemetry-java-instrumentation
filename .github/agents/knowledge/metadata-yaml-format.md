@@ -76,8 +76,8 @@ Non-standard mappings (see `ConfigPropertiesBackedDeclarativeConfigProperties.ja
 | `otel.instrumentation.http.client.capture-response-headers`                     | `general.http.client.response_captured_headers`                   |
 | `otel.instrumentation.http.server.capture-request-headers`                      | `general.http.server.request_captured_headers`                    |
 | `otel.instrumentation.http.server.capture-response-headers`                     | `general.http.server.response_captured_headers`                   |
-| `otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters` | `general.sanitization.url.sensitive_query_parameters/development` |
-| `otel.semconv-stability.opt-in`                                                 | `general.semconv_stability.opt_in`                                |
+| `otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters` | `general.sanitization.url.sensitive_query_parameters`             |
+| `otel.semconv-stability.opt-in`                                                 | `general.stability_opt_in_list`                                   |
 | `otel.instrumentation.http.known-methods`                                       | `java.common.http.known_methods`                                  |
 | `otel.instrumentation.http.client.emit-experimental-telemetry`                  | `java.common.http.client.emit_experimental_telemetry/development` |
 | `otel.instrumentation.http.server.emit-experimental-telemetry`                  | `java.common.http.server.emit_experimental_telemetry/development` |
