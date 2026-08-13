@@ -11,17 +11,17 @@ configurations:
     type: boolean
     default: false
     description: >
-      Enables including the full content of user and assistant messages in emitted log events.
-      Note that full content can have data privacy and size concerns, and care should be taken when
-      enabling this.
+      Enables including the full content of system, user, assistant, and tool messages in emitted
+      log events. Note that full content can have data privacy and size concerns, and care should be
+      taken when enabling this.
   - name: otel.instrumentation.spring-ai.experimental.capture-message-content-as-span-attributes.enabled
     declarative_name: java.spring_ai.capture_message_content_as_span_attributes/development.enabled
     type: boolean
     default: false
     description: >
-      Enables capture of user and assistant message content in the gen_ai.input.messages and
-      gen_ai.output.messages span attributes. This experimental setting has data privacy and size
-      concerns.
+      Enables capture of system, user, assistant, and tool message content in the
+      gen_ai.input.messages and gen_ai.output.messages span attributes. This experimental setting
+      has data privacy and size concerns.
   - name: otel.instrumentation.spring-ai.experimental.message-content-span-attribute.max-length
     declarative_name: java.spring_ai.message_content_span_attribute/development.max_length
     type: int
