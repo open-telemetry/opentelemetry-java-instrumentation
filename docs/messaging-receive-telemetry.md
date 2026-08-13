@@ -25,16 +25,17 @@ inconsistent with row three and worth fixing.
 ## Empty and failed receives
 
 A receive span represents passing messages to the application, so a receive that returns nothing
-creates no span and records no metrics, in any mode. A receive that *fails* is recorded, because the
-error is meaningful even though no message arrived.
+creates no span and records no metrics, in any mode. Failed receive behavior is
+instrumentation-specific. For example, Kafka and JMS do not create receive telemetry when a receive
+call throws.
 
 RabbitMQ deviates here too: an empty `basicGet()` produces a receive span when this setting is on,
 because the call site has no guard rather than because an empty pull is worth recording.
 
 ## Legacy versus stable
 
-Under stable conventions the producer is always a span link and never a parent, whether this setting
-is on or off.
+Under stable conventions the producer is always a span link. Whether it is also the parent depends
+on the ambient context and the instrumentation, not this setting.
 
 Under legacy the setting decides. With it off, the producer parents the consumer span. With it on,
 the producer is linked instead, from the receive span for RabbitMQ, Pulsar and JMS, and from the
