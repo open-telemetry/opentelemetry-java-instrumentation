@@ -6,7 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20.aws;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import com.amazonaws.services.sqs.model.Message;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
@@ -131,7 +133,13 @@ class SqsCamelTest {
 
     camelApp.start();
     camelApp.producerTemplate().sendBody("direct:inputSdkConsumer", "{\"type\": \"hello\"}");
-    awsConnector.receiveMessage(queueUrl);
+    Message receivedMessage = awsConnector.receiveMessage(queueUrl);
+    assertThat(receivedMessage.getAttributes()).containsKey("AWSTraceHeader");
+    if (emitStableMessagingSemconv()) {
+      assertThat(receivedMessage.getMessageAttributes()).doesNotContainKey("traceparent");
+    } else {
+      assertThat(receivedMessage.getMessageAttributes()).containsKey("traceparent");
+    }
 
     testing.waitAndAssertTraces(
         trace ->
