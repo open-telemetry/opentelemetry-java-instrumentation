@@ -3,7 +3,7 @@
 ## Quick Reference
 
 - Use when: reviewing configuration property definitions, stability, or deprecation
-- Review focus: stable vs experimental policy, deprecation communication, naming conventions
+- Review focus: stable vs unstable property policy, deprecation communication, naming conventions
 
 ## How Configuration Is Read
 
@@ -30,22 +30,23 @@ declarative API.
 
 ### Two User-Facing Surfaces
 
-| Surface       | Experimental marker             | Stable marker                 |
-| ------------- | ------------------------------- | ----------------------------- |
-| Flat property | word `experimental` in the name | no `experimental` in the name |
-| YAML key      | `/development` suffix           | no suffix                     |
+| Surface       | Unstable marker                              | Stable marker                         |
+| ------------- | -------------------------------------------- | ------------------------------------- |
+| Flat property | word `experimental` or `preview` in the name | neither `experimental` nor `preview`  |
+| YAML key      | `/development` suffix or word `preview`      | no suffix and no `preview` in the key |
 
-The bridge translates between them (underscores ↔ hyphens, `/development` ↔ `experimental.`
-prefix, `SPECIAL_MAPPINGS` for legacy renames that don't follow the mechanical rule).
+The bridge translates underscores ↔ hyphens and `/development` ↔ the `experimental.` prefix;
+`preview` remains part of the name. `SPECIAL_MAPPINGS` handles legacy renames that don't follow the
+mechanical rule.
 
 ## The Two Tiers of Stability
 
 Defined in [VERSIONING.md](../../../VERSIONING.md):
 
-| Tier             | Flat property pattern                                           | YAML key pattern          | Breaking changes allowed?                     |
-| ---------------- | --------------------------------------------------------------- | ------------------------- | --------------------------------------------- |
-| **Stable**       | No `experimental` in name, not under `otel.javaagent.testing.*` | No `/development` suffix  | ❌ Deprecate in minor, **remove only in 3.0** |
-| **Experimental** | Contains `experimental` anywhere                                | Has `/development` suffix | ✅ Deprecate in one release, remove in next   |
+| Tier         | Flat property pattern                                                | YAML key pattern                      | Breaking changes allowed?                     |
+| ------------ | -------------------------------------------------------------------- | ------------------------------------- | --------------------------------------------- |
+| **Stable**   | No `experimental` or `preview`, not under `otel.javaagent.testing.*` | No `/development` suffix or `preview` | ❌ Deprecate in minor, **remove only in 3.0** |
+| **Unstable** | Contains `experimental` or `preview` anywhere                        | Has `/development` or `preview`       | ✅ Deprecate in one release, remove in next   |
 
 `otel.javaagent.testing.*` — always allowed to break, regardless of marker.
 
@@ -54,11 +55,12 @@ configure the javaagent, which is published as a stable artifact, so its user-fa
 the alpha classes behind them. A deprecated *stable property name* and a deprecated *Java method*
 introduced by the same PR therefore often have different removal timelines.
 
-Examples (flat ↔ YAML):
+Examples:
 
 - `otel.instrumentation.http.client.capture-request-headers` ↔ `request_captured_headers` — **stable**
 - `otel.instrumentation.common.db.experimental.sqlcommenter.enabled` ↔ `sqlcommenter/development: { enabled: true }` — **experimental**
 - `otel.instrumentation.http.client.emit-experimental-telemetry` ↔ `emit_experimental_telemetry/development: true` — **experimental**
+- `otel.instrumentation.common.v3-preview` — **preview**
 
 ## Deprecation Communication
 
@@ -108,9 +110,9 @@ deployment that still depends on the deprecated value, not one merely carrying i
 The `!v3Preview` guard applies only to **stable** property names, whose deprecated spelling must
 survive until 3.0. Preview mode must reproduce 3.0 behavior: 3.0 will no longer know about the
 deprecated property, so it will not read, apply, or warn about it, while preceding minor releases
-still warn outside preview mode. An `experimental`-marked property can be removed in the next minor
-release, so there is nothing for preview mode to reproduce: drop the guard, the `v3Preview`
-parameter, and the v3-preview test variant, and keep only the warning.
+still warn outside preview mode. An `experimental`- or `preview`-marked property can be removed in
+the next minor release, so there is nothing for preview mode to reproduce: drop the guard, the
+`v3Preview` parameter, and the v3-preview test variant, and keep only the warning.
 
 These hypothetical deprecated names illustrate the two treatments:
 
@@ -118,6 +120,7 @@ These hypothetical deprecated names illustrate the two treatments:
 | -------------------------------------------------------- | -------------- | ----------------------------------------- |
 | `otel.instrumentation.<module>.old-setting`              | none (stable)  | v3-preview gated, removed in 3.0          |
 | `otel.instrumentation.<module>.experimental.old-setting` | `experimental` | ungated, may be removed in the next minor |
+| `otel.instrumentation.<module>.preview-old-setting`      | `preview`      | ungated, may be removed in the next minor |
 
 Instrumentation enablement name aliases are an exception. Enablement resolves across an ordered list
 of equivalent names, while the warning is driven by explicit legacy-key presence, so the replacement
@@ -127,13 +130,13 @@ property fallback.
 
 ## Naming Conventions
 
-| Rule                | Flat property                                                      | YAML key                                                          |
-| ------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| Prefix              | `otel.instrumentation.<module>.` or `otel.instrumentation.common.` | Under `instrumentation/development → java → <module>` or `common` |
-| Word separator      | hyphens (kebab-case)                                               | underscores (snake_case)                                          |
-| Experimental marker | `experimental` in name                                             | `/development` suffix                                             |
-| Boolean toggle      | `.enabled` suffix                                                  | `enabled` leaf key                                                |
-| Env var form        | dots/hyphens → ALL_CAPS underscores                                | N/A                                                               |
+| Rule            | Flat property                                                      | YAML key                                                          |
+| --------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| Prefix          | `otel.instrumentation.<module>.` or `otel.instrumentation.common.` | Under `instrumentation/development → java → <module>` or `common` |
+| Word separator  | hyphens (kebab-case)                                               | underscores (snake_case)                                          |
+| Unstable marker | `experimental` or `preview` in name                                | `/development` suffix or `preview` in name                        |
+| Boolean toggle  | `.enabled` suffix                                                  | `enabled` leaf key                                                |
+| Env var form    | dots/hyphens → ALL_CAPS underscores                                | N/A                                                               |
 
 ## Structured Config (YAML-Only)
 
@@ -158,12 +161,14 @@ These have no flat-property fallback, so tests must cover declarative config mod
   (deprecated) until 3.0.
 - **Zero deprecation window** (deprecated and removed in same PR): needs strong justification.
 
-**Experimental marker issues:**
+**Unstable marker issues:**
 
 - **Experimental feature without marker**: flat property must contain `experimental`; YAML key
   must have `/development` suffix. Both must agree.
-- **Stable feature with marker**: don't use `experimental` / `/development` on features
-  intended to be stable — it misleads users about the guarantee.
+- **Preview property treated as stable**: names containing `preview` have the same breaking-change
+  exemption as names containing `experimental`.
+- **Stable feature with marker**: don't use `experimental`, `preview`, or `/development` on
+  features intended to be stable — it misleads users about the guarantee.
 
 **Naming / mapping issues:**
 
@@ -183,9 +188,9 @@ These have no flat-property fallback, so tests must cover declarative config mod
 
 **Deprecated properties under v3 preview:**
 
-- **`experimental`-marked property gated on v3 preview**: the gate only exists to reproduce 3.0
-  behavior for names that must survive until 3.0. An experimental name needs the warning and
-  nothing else.
+- **`experimental`- or `preview`-marked property gated on v3 preview**: the gate only exists to
+  reproduce 3.0 behavior for names that must survive until 3.0. An unstable name needs the warning
+  and nothing else.
 - **Deprecated value read or warned about under v3 preview**: preview must neither observe nor warn
   about a setting that 3.0 will not recognize.
 - **Warning emitted when the replacement already determines an ordinary property value**: do not
