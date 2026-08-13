@@ -351,6 +351,7 @@
     "org.apache.tomcat.embed:tomcat-embed-logging-juli#9.+": "9.0.0.M6",
     "org.apache.tomcat:jakartaee-migration#+": "1.0.12",
     "org.apache.tomcat:tomcat-catalina#+": "11.0.24",
+    "org.apache.tomcat:tomcat-dbcp#+": "11.0.24",
     "org.apache.tomcat:tomcat-jasper#+": "11.0.24",
     "org.apache.tomcat:tomcat-jdbc#+": "11.0.24",
     "org.apache.tomcat:tomcat-juli#+": "11.0.24",

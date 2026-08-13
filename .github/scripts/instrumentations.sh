@@ -342,6 +342,8 @@ readonly INSTRUMENTATIONS=(
   "thrift-0.13:javaagent:testStableSemconv"
   "tomcat:tomcat-7.0:javaagent:test"
   "tomcat:tomcat-10.0:javaagent:test"
+  "tomcat:tomcat-dbcp-8.0:javaagent:test"
+  "tomcat:tomcat-dbcp-8.0:javaagent:testStableSemconv"
   "tomcat:tomcat-jdbc-8.5:javaagent:test"
   "tomcat:tomcat-jdbc-8.5:javaagent:testStableSemconv"
   "twilio-6.6:javaagent:test"
