@@ -12,7 +12,7 @@ Most instrumentations suppress receive spans where a "process" span already repr
 
 | Instrumentation | Receive span when `false` | Why |
 | --- | --- | --- |
-| Kafka | no | iterating the returned records creates a process span per record |
+| Kafka | no | a process span covers each delivery, created by kafka-clients when the application iterates the records, or by the framework when one drives the poll loop |
 | RabbitMQ | no | pushed deliveries create process spans; `basicGet()` has no replacement span |
 | AWS SQS | no | each received message creates a process span |
 | Pulsar | yes, when no `MessageListener` is registered | `consumer.receive()` creates no process span |
@@ -29,6 +29,12 @@ A receive span represents passing messages to the application, so a receive that
 A receive that *fails* is different and is recorded, because the error is meaningful even though no message arrived.
 
 Kafka, Pulsar, AWS SQS and JMS all return early on an empty receive. RabbitMQ does not: its `basicGet()` instrumentation treats the response as optional, so an empty pull produces a receive span when this setting is `true`. That is a deviation from the rule rather than an intentional difference.
+
+## Application pulls versus framework poll loops
+
+Pulsar distinguishes the two at runtime: it checks whether a receive is happening inside a listener dispatch, so it can keep the receive span for `consumer.receive()` while suppressing it for listener-driven receives.
+
+Kafka cannot. Its advice matches `KafkaConsumer.poll` itself and does not know its caller, so enabling this setting produces a receive span for every poll, including the idle polls of a framework's own loop. Frameworks that drive their own loop, such as Spring for Apache Kafka, Kafka Streams, Kafka Connect, Reactor Kafka and the Vert.x Kafka client, only suppress the *process* spans that kafka-clients would otherwise create per record, and create their own instead.
 
 ## What changes with stable messaging semantic conventions
 
