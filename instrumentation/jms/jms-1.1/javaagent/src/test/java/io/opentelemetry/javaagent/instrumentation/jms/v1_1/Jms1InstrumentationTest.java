@@ -213,11 +213,19 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
   }
 
   @Test
-  void doesNotCommitListenerRegistrationAfterConcurrentClose() throws InterruptedException {
-    BlockingMessageConsumer consumer = new BlockingMessageConsumer();
-    JmsSubscriptionNames.set(consumer, "closed-subscription");
+  void doesNotCommitListenerRegistrationAfterConcurrentClose() throws Exception {
+    String topicName = "concurrently-closed-consumer-topic";
+    Topic topic = session.createTopic(topicName);
+    TextMessage message = session.createTextMessage("a message");
+    message.setJMSDestination(topic);
     MessageListener listener = ignored -> {};
 
+    String previousSubscription = "previous-concurrent-subscription";
+    MessageConsumer previousConsumer = session.createDurableSubscriber(topic, previousSubscription);
+    cleanup.deferCleanup(previousConsumer::close);
+    previousConsumer.setMessageListener(listener);
+
+    BlockingMessageConsumer consumer = new BlockingMessageConsumer();
     CompletableFuture<Void> registration;
     synchronized (listener) {
       registration = CompletableFuture.runAsync(() -> consumer.setMessageListener(listener));
@@ -227,7 +235,22 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
     consumer.continueRegistration.release();
     registration.join();
 
-    assertThat(JmsSubscriptionNames.get(listener)).isNull();
+    listener.onMessage(message);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName(topicName, false),
+                            oldOperation("process"),
+                            operationName("process"),
+                            operationType("process"),
+                            messagingTempDestination(false),
+                            subscriptionName(previousSubscription))));
   }
 
   @SuppressWarnings("deprecation") // using deprecated JMS and semconv APIs
