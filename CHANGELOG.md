@@ -176,6 +176,8 @@ for more details.
 
 ### 🛠️ Bug fixes
 
+- Avoid deprecated GraphQL and runtime telemetry package-emitter configuration warnings when the
+  replacement property already determines the value.
 - Fix a spurious duplicate warning when the application logger bridge is installed multiple times
   during startup.
   ([#19088](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19088))

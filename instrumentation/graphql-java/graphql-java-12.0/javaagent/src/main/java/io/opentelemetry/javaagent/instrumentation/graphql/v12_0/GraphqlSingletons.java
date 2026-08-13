@@ -58,25 +58,30 @@ public class GraphqlSingletons {
 
       this.captureQuery = config.getBoolean("capture_query", true);
       this.querySanitizationEnabled = getQuerySanitizationEnabled(config);
-      Boolean deprecatedAddOperationNameToSpanName =
-          SemconvStability.v3Preview()
-              ? null
-              : config.get("add_operation_name_to_span_name").getBoolean("enabled");
-      if (deprecatedAddOperationNameToSpanName != null) {
-        // Support the deprecated config key until 3.0.
-        logger.warning(
-            "The otel.instrumentation.graphql.add-operation-name-to-span-name.enabled setting is"
-                + " deprecated and will be removed in 3.0. Use "
-                + "otel.instrumentation.graphql.operation-name-in-span-name.enabled instead.");
+      this.operationNameInSpanNameEnabled = getOperationNameInSpanNameEnabled(config);
+    }
+
+    private static boolean getOperationNameInSpanNameEnabled(DeclarativeConfigProperties config) {
+      Boolean operationNameInSpanNameEnabled =
+          config.get("operation_name_in_span_name").getBoolean("enabled");
+      if (operationNameInSpanNameEnabled != null) {
+        return operationNameInSpanNameEnabled;
       }
-      this.operationNameInSpanNameEnabled =
-          config
-              .get("operation_name_in_span_name")
-              .getBoolean(
-                  "enabled",
-                  deprecatedAddOperationNameToSpanName != null
-                      ? deprecatedAddOperationNameToSpanName
-                      : false);
+
+      // Support the deprecated config key until 3.0.
+      if (!SemconvStability.v3Preview()) {
+        Boolean deprecatedAddOperationNameToSpanName =
+            config.get("add_operation_name_to_span_name").getBoolean("enabled");
+        if (deprecatedAddOperationNameToSpanName != null) {
+          logger.warning(
+              "The otel.instrumentation.graphql.add-operation-name-to-span-name.enabled setting is"
+                  + " deprecated and will be removed in 3.0. Use "
+                  + "otel.instrumentation.graphql.operation-name-in-span-name.enabled instead.");
+          return deprecatedAddOperationNameToSpanName;
+        }
+      }
+
+      return false;
     }
 
     private static boolean getQuerySanitizationEnabled(DeclarativeConfigProperties config) {

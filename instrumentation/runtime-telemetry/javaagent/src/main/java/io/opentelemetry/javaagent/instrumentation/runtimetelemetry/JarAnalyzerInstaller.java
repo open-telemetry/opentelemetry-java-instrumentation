@@ -36,7 +36,7 @@ public class JarAnalyzerInstaller implements BeforeAgentListener {
 
     boolean enabledNew = newPackageEmitterConfig.getBoolean("enabled", false);
     boolean enabledOld = oldPackageEmitterConfig.getBoolean("enabled", false);
-    if (enabledOld) {
+    if (enabledOld && !enabledNew) {
       logger.warning(
           "otel.instrumentation.runtime-telemetry.package-emitter.enabled is deprecated and will"
               + " be removed in 3.0. Use"
@@ -60,18 +60,15 @@ public class JarAnalyzerInstaller implements BeforeAgentListener {
     int newJarsPerSecond = newPackageEmitterConfig.getInt("jars_per_second", -1);
     int oldJarsPerSecond = oldPackageEmitterConfig.getInt("jars_per_second", -1);
 
-    if (oldJarsPerSecond >= 0) {
+    int jarsPerSecond;
+    if (newJarsPerSecond >= 0) {
+      jarsPerSecond = newJarsPerSecond;
+    } else if (oldJarsPerSecond >= 0) {
       logger.warning(
           "otel.instrumentation.runtime-telemetry.package-emitter.jars-per-second is deprecated"
               + " and will be removed in 3.0. Use"
               + " otel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second"
               + " instead.");
-    }
-
-    int jarsPerSecond;
-    if (newJarsPerSecond >= 0) {
-      jarsPerSecond = newJarsPerSecond;
-    } else if (oldJarsPerSecond >= 0) {
       jarsPerSecond = oldJarsPerSecond;
     } else {
       jarsPerSecond = DEFAULT_JARS_PER_SECOND;
