@@ -8,17 +8,17 @@ When `true`, messaging instrumentations produce a separate "receive" span for th
 
 ## What the setting does not control
 
-The setting suppresses receive spans only where a "process" span already represents the delivery. Where nothing else would represent it, the receive span is created regardless:
+Most instrumentations suppress receive spans where a "process" span already represents the delivery. Pulsar and JMS keep a receive span for their pull APIs because those calls have no process span:
 
 | Instrumentation | Receive span when `false` | Why |
 | --- | --- | --- |
 | Kafka | no | iterating the returned records creates a process span per record |
-| RabbitMQ | no | each delivery creates a process span |
+| RabbitMQ | no | pushed deliveries create process spans; `basicGet()` has no replacement span |
 | AWS SQS | no | each received message creates a process span |
 | Pulsar | yes, when no `MessageListener` is registered | `consumer.receive()` creates no process span |
 | JMS | yes, for explicit `MessageConsumer.receive()` | an explicit receive creates no process span |
 
-Without this, an application that pulls messages directly would have no consumer-side telemetry at all.
+RabbitMQ `basicGet()` is an exception: when this setting is `false`, it produces no consumer-side span.
 
 ## What changes with stable messaging semantic conventions
 
@@ -29,7 +29,7 @@ Without this, an application that pulls messages directly would have no consumer
 | Producer context on a receive span | the span's parent when `false`; when `true`, a span link for Pulsar and JMS, while Kafka links it from the process span instead | always a span link, never the parent |
 | Process span parent | extracted from the message when `false`, the receive span when `true` | the ambient span if there is one, otherwise the message creation context |
 | Message creation context linked from a process span | only when `true` | always, including when it is also the parent |
-| `messaging.client.consumed.messages` | not recorded | recorded by the receive operation, or by the process operation where the receive span is suppressed |
+| `messaging.client.consumed.messages` | not recorded | recorded by the receive operation, or by the process operation where the receive span is suppressed; not recorded for RabbitMQ `basicGet()` when `false` |
 
 Under stable semantic conventions the producer is never the parent of a receive span, and is the parent of a process span only when the message is processed outside the scope of any other span. Setting this to `true` therefore adds the receive span without changing how process spans are parented. Under legacy it changes the trace shape: when `false` the producer parents the consumer span directly, and when `true` the consumer spans are linked to the producer instead.
 
