@@ -919,7 +919,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
 
     assertThat(response.messages()).hasSize(3);
     assertThat(emptyResponse.messages()).isEmpty();
-    SqsMetricsAssertions.assertReceiveAndProcessMetrics(getTesting(), sqsPort, 1, 3);
+    SqsMetricsAssertions.assertReceiveAndProcessMetrics(getTesting(), sqsPort, 2, 3);
   }
 
   @Test

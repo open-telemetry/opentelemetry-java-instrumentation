@@ -70,10 +70,6 @@ public final class SqsImpl {
     }
 
     ReceiveMessageResponse response = (ReceiveMessageResponse) rawResponse;
-    if (response.messages().isEmpty()) {
-      return false;
-    }
-
     io.opentelemetry.context.Context parentContext =
         TracingExecutionInterceptor.getParentContext(executionAttributes);
     Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter =
@@ -93,6 +89,11 @@ public final class SqsImpl {
               timer.startTime(),
               timer.now());
     }
+
+    if (response.messages().isEmpty()) {
+      return true;
+    }
+
     io.opentelemetry.context.Context processParentContext =
         emitStableMessagingSemconv() ? parentContext : receiveContext;
     // copy ExecutionAttributes as these will get cleared before the process spans are created

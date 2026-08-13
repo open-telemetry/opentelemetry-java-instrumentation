@@ -86,14 +86,8 @@ public final class SqsImpl {
       Context parentContext,
       TracingRequestHandler requestHandler) {
     ReceiveMessageResult receiveMessageResult = (ReceiveMessageResult) response.getAwsResponse();
-    if (receiveMessageResult.getMessages().isEmpty()) {
-      return;
-    }
-
     Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter =
         requestHandler.getConsumerReceiveInstrumenter();
-    Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter =
-        requestHandler.getConsumerProcessInstrumenter();
 
     Context receiveContext = null;
     SqsReceiveRequest receiveRequest =
@@ -110,6 +104,12 @@ public final class SqsImpl {
               timer.now());
     }
 
+    if (receiveMessageResult.getMessages().isEmpty()) {
+      return;
+    }
+
+    Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter =
+        requestHandler.getConsumerProcessInstrumenter();
     Context processParentContext = emitStableMessagingSemconv() ? parentContext : receiveContext;
     addTracing(
         receiveMessageResult, request, response, consumerProcessInstrumenter, processParentContext);

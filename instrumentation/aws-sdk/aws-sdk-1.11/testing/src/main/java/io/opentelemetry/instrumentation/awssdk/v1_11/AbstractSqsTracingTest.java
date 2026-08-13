@@ -972,7 +972,7 @@ public abstract class AbstractSqsTracingTest {
 
     assertThat(response.getMessages()).hasSize(3);
     assertThat(emptyResponse.getMessages()).isEmpty();
-    SqsMetricsAssertions.assertReceiveAndProcessMetrics(testing(), sqsPort, 1, 3);
+    SqsMetricsAssertions.assertReceiveAndProcessMetrics(testing(), sqsPort, 2, 3);
   }
 
   @Test
