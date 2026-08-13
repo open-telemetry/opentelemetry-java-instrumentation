@@ -60,11 +60,46 @@ configurations:
       Enables the capture of attributes from Logstash structured arguments.
     type: boolean
     default: false
+  - name: otel.instrumentation.logback-appender.experimental.mdc-attributes.included
+    declarative_name: java.logback_appender.mdc_attributes/development.included
+    description: >
+      Comma-separated list of case-sensitive glob patterns for MDC keys to capture as log
+      attributes. "*" matches any number of characters and "?" matches one character, so "*"
+      captures all MDC attributes. Excluded patterns take precedence over included patterns. No MDC
+      attributes are captured unless an included pattern, an excluded pattern, or the deprecated
+      otel.instrumentation.logback-appender.experimental.capture-mdc-attributes setting is
+      configured; configuring only excluded patterns captures all MDC attributes that do not match
+      them. Captured MDC attributes may contain sensitive information.
+    type: list
+    default: ''
+    examples:
+      - "custom-mdc-key"
+      - "request-*,user-?"
+  - name: otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded
+    declarative_name: java.logback_appender.mdc_attributes/development.excluded
+    description: >
+      Comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log
+      attributes. "*" matches any number of characters and "?" matches one character. Excluded
+      patterns take precedence over included patterns. No MDC attributes are captured unless an
+      included pattern, an excluded pattern, or the deprecated
+      otel.instrumentation.logback-appender.experimental.capture-mdc-attributes setting is
+      configured; configuring only excluded patterns captures all MDC attributes that do not match
+      them. Captured MDC attributes may contain sensitive information.
+    type: list
+    default: ''
+    examples:
+      - "*-secret"
+      - "password,token"
   - name: otel.instrumentation.logback-appender.experimental.capture-mdc-attributes
     declarative_name: java.logback_appender.capture_mdc_attributes/development
     description: >
-      Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a
-      comma-separated list of specific keys.
+      Deprecated comma-separated list of MDC keys to capture as log attributes. Keys are matched
+      literally, including "*" and "?", except that the single value "*" captures all MDC
+      attributes. It is ignored when
+      otel.instrumentation.logback-appender.experimental.mdc-attributes.included or
+      otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded is configured, and
+      it may be removed in the next minor release. Use
+      otel.instrumentation.logback-appender.experimental.mdc-attributes.included instead.
     type: list
     default: ''
     examples:
