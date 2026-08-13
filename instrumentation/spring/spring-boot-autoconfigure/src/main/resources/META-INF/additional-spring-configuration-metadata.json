@@ -270,7 +270,12 @@
       "name": "otel.exporter.zipkin.endpoint",
       "type": "java.lang.String",
       "description": "The Zipkin endpoint to connect to.<br/>Currently only HTTP is supported.",
-      "defaultValue": "http://localhost:9411/api/v2/spans"
+      "defaultValue": "http://localhost:9411/api/v2/spans",
+      "deprecation": {
+        "level": "warning",
+        "reason": "The Zipkin exporter will be removed in 3.0.",
+        "replacement": "otel.exporter.otlp.traces.endpoint"
+      }
     },
     {
       "name": "otel.instrumentation.annotations.enabled",
@@ -561,13 +566,28 @@
       "name": "otel.instrumentation.runtime-telemetry.experimental.prefer-jfr",
       "type": "java.lang.Boolean",
       "description": "Prefer JFR over JMX for metrics available from both sources, on Java 17+.",
-      "defaultValue": false
+      "defaultValue": false,
+      "deprecation": {
+        "level": "warning",
+        "reason": "Use the JFR metric selectors instead.",
+        "replacement": "otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included"
+      }
+    },
+    {
+      "name": "otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Include JVM runtime metrics to source from JFR on Java 17+ using case-sensitive * and ? glob patterns. Configuring either selector property activates JFR; omitted included patterns select all metrics not excluded."
+    },
+    {
+      "name": "otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Exclude JVM runtime metrics from JFR on Java 17+ using case-sensitive * and ? glob patterns. Exclusions take precedence."
     },
     {
       "name": "otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters",
       "type": "java.util.List<java.lang.String>",
       "description": "List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.",
-      "defaultValue": "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
+      "defaultValue": "AWSAccessKeyId,Signature,X-Amz-Signature,X-Amz-Credential,X-Amz-Security-Token,sig,X-Goog-Signature"
     },
     {
       "name": "otel.instrumentation.spring-web.enabled",
@@ -871,7 +891,7 @@
         },
         {
           "value": "zipkin",
-          "description": "Zipkin exporter."
+          "description": "Zipkin exporter. Deprecated, will be removed in 3.0; use \"otlp\" instead."
         }
       ]
     },

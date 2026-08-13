@@ -65,7 +65,11 @@ public final class MessagingSpanKindExtractor {
     return spanKindExtractor;
   }
 
-  /** Returns a span kind extractor for the given operation. */
+  /**
+   * @deprecated Use {@link #create(MessagingOperationType)}. May be removed in the next minor
+   *     release.
+   */
+  @Deprecated // may be removed in the next minor release
   public static <REQUEST> SpanKindExtractor<REQUEST> create(MessageOperation operation) {
     SpanKind spanKind;
     switch (operation) {

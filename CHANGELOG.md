@@ -2,6 +2,59 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes to non-stable APIs
+
+- `jetty.thread.queue.size` Jetty JMX metric unit has been changed from `{thread}` to `{job}`.
+- Normalize the value of `activemq.destination.temp.utilization` JMX Metric for ActiveMQ to be between 0 and 1 (inclusive) instead of between 0 and 100 (inclusive).
+
+### 🚫 Deprecations
+
+- For library instrumentation users, deprecate configuring span suppression using the
+  `otel.instrumentation.experimental.span-suppression-strategy` system property in favor of
+  `Experimental.setSpanSuppressionStrategy(...)` or declarative instrumentation configuration.
+  The Java agent continues to support the system property through its declarative config bridge.
+  ([#19180](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19180))
+- Deprecate the gRPC `capture-metadata.client.request` and `capture-metadata.server.request`
+  configuration properties and `GrpcTelemetryBuilder` captured request metadata methods in favor of
+  include/exclude request metadata selectors.
+- Deprecate `otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes` in favor of
+  the `otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.{included,excluded}`
+  selector. The deprecated property keeps its exact-key matching and may be removed in the next
+  minor release.
+  ([#19519](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19519))
+- Deprecate `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` and
+  `io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental#setPreferJfrMetrics(RuntimeTelemetryBuilder, boolean)`
+  in favor of `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included` and
+  `Experimental#setJfrMetrics(RuntimeTelemetryBuilder, IncludeExclude)`, which select JFR metrics by
+  metric name instead of by an all-or-nothing toggle. The deprecated property and method still
+  select the same metrics.
+  ([#19495](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19495))
+- Deprecate the `opentelemetry-zipkin-spring-boot-starter` artifact. Use
+  `opentelemetry-spring-boot-starter` with the OTLP exporter instead.
+- Deprecate `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)` in the
+  Micrometer 1.5 library in favor of
+  `io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`.
+  Histogram/percentile gauges are experimental compatibility behavior, and this moves the API to the
+  standard experimental surface ahead of stabilization. Behavior and the
+  `otel.instrumentation.micrometer.histogram-gauges.enabled` config property are unchanged.
+  ([#19404](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19404))
+- The decaying `<name>.max` gauge that the Micrometer bridge emits alongside the histogram for
+  `Timer` and `DistributionSummary` is deprecated and will be removed in 3.0. The `<name>` /
+  `<name>.max` pair violates the OpenTelemetry metric naming rules, and OpenTelemetry histograms
+  already expose a max. It is no longer emitted when `otel.instrumentation.common.v3-preview` is
+  enabled.
+  ([#19397](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19397))
+- Deprecate `MessageOperation` in favor of `MessagingOperationType`.
+  ([#19357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19357))
+- Deprecate the `MessageOperation`-based factory methods on `MessagingAttributesExtractor`,
+  `MessagingSpanNameExtractor` and `MessagingSpanKindExtractor` in favor of their
+  `MessagingOperationType`-based counterparts.
+  ([#19357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19357))
+- Deprecate `MessagingProducerMetrics.get()` and `MessagingConsumerMetrics.get()` in favor of
+  `MessagingProducerMetrics.getForOperationType()` and
+  `MessagingConsumerMetrics.getForOperationType()`.
+  ([#19357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19357))
+
 ## Version 2.30.0 (2026-07-22)
 
 This release targets the OpenTelemetry SDK 1.64.0.
@@ -3496,7 +3549,7 @@ too disruptive to adopt right away.
   ([#7904](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7904))
 - Upgrade to gradle 8.0.2
   ([#7910](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7910),
-  [ 7978](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7978))
+  [7978](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7978))
 - Replace the test-sets plugin with Gradle test suites
   ([#7930](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7930),
   [#7933](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7933),

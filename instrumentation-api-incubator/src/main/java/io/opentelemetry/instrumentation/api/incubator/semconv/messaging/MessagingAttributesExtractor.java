@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -43,6 +44,8 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       AttributeKey.stringKey("messaging.destination.name");
   private static final AttributeKey<String> MESSAGING_DESTINATION_PARTITION_ID =
       AttributeKey.stringKey("messaging.destination.partition.id");
+  private static final AttributeKey<String> MESSAGING_DESTINATION_SUBSCRIPTION_NAME =
+      AttributeKey.stringKey("messaging.destination.subscription.name");
   private static final AttributeKey<String> MESSAGING_DESTINATION_TEMPLATE =
       AttributeKey.stringKey("messaging.destination.template");
   private static final AttributeKey<Boolean> MESSAGING_DESTINATION_TEMPORARY =
@@ -66,13 +69,24 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
 
   static final String TEMP_DESTINATION_NAME = "(temporary)";
 
-  /** Creates the messaging attributes extractor for the given operation type. */
+  /**
+   * Creates the messaging attributes extractor for the given operation type.
+   *
+   * @param operationName the system-specific name of the operation, emitted as {@code
+   *     messaging.operation.name}, e.g. {@code send}, {@code poll} or {@code ack}.
+   */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessagingOperationType operationType) {
-    return builder(getter, operationType).build();
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter,
+      MessagingOperationType operationType,
+      String operationName) {
+    return builder(getter, operationType, operationName).build();
   }
 
-  /** Creates the messaging attributes extractor for the given operation. */
+  /**
+   * @deprecated Use {@link #create(MessagingAttributesGetter, MessagingOperationType, String)}. May
+   *     be removed in the next minor release.
+   */
+  @Deprecated // may be removed in the next minor release
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter, @Nullable MessageOperation operation) {
     return builder(getter, operation).build();
@@ -81,17 +95,27 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   /**
    * Returns a new {@link MessagingAttributesExtractorBuilder} configured for the given operation
    * type.
+   *
+   * @param operationName the system-specific name of the operation, emitted as {@code
+   *     messaging.operation.name}, e.g. {@code send}, {@code poll} or {@code ack}.
    */
   public static <REQUEST, RESPONSE> MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessagingOperationType operationType) {
-    return new MessagingAttributesExtractorBuilder<>(getter, operationType, true);
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter,
+      MessagingOperationType operationType,
+      String operationName) {
+    return new MessagingAttributesExtractorBuilder<>(
+        getter, operationType, requireNonNull(operationName, "operationName"), true);
   }
 
-  /** Returns a new messaging attributes extractor builder for the given operation. */
+  /**
+   * @deprecated Use {@link #builder(MessagingAttributesGetter, MessagingOperationType, String)}.
+   *     May be removed in the next minor release.
+   */
+  @Deprecated // may be removed in the next minor release
   public static <REQUEST, RESPONSE> MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter, @Nullable MessageOperation operation) {
     return new MessagingAttributesExtractorBuilder<>(
-        getter, operation == null ? null : operation.type(), false);
+        getter, operation == null ? null : operation.type(), null, false);
   }
 
   private final MessagingAttributesGetter<REQUEST, RESPONSE> getter;
@@ -138,18 +162,20 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     }
     attributes.put(MESSAGING_MESSAGE_CONVERSATION_ID, getter.getConversationId(request));
     if (emitOldSemconv) {
-      // these attributes are opt-in in the v1.43 messaging semantic conventions
+      // the message size attributes are opt-in in the v1.43 messaging semantic conventions
       attributes.put(MESSAGING_MESSAGE_BODY_SIZE, getter.getMessageBodySize(request));
       attributes.put(MESSAGING_MESSAGE_ENVELOPE_SIZE, getter.getMessageEnvelopeSize(request));
-    }
-    if (emitOldSemconv) {
       attributes.put(MESSAGING_CLIENT_ID_OLD, getter.getClientId(request));
     }
     if (emitStableSemconv) {
       attributes.put(MESSAGING_CLIENT_ID, getter.getClientId(request));
+      // messaging.destination.subscription.name only exists in the v1.43 messaging semantic
+      // conventions
+      attributes.put(
+          MESSAGING_DESTINATION_SUBSCRIPTION_NAME, getter.getDestinationSubscriptionName(request));
     }
     if (emitOldSemconv && operationType != null) {
-      attributes.put(MESSAGING_OPERATION, operationType.defaultOperationName());
+      attributes.put(MESSAGING_OPERATION, operationType.legacyOperationName());
     }
     if (emitStableSemconv) {
       attributes.put(MESSAGING_OPERATION_NAME, operationName);

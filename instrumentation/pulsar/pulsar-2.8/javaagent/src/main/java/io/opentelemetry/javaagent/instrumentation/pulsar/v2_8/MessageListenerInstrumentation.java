@@ -67,7 +67,7 @@ class MessageListenerInstrumentation implements TypeInstrumentation {
       Context parent = VirtualFieldStore.extract(message);
 
       Instrumenter<PulsarRequest, Void> instrumenter = consumerProcessInstrumenter();
-      PulsarRequest request = PulsarRequest.create(message);
+      PulsarRequest request = PulsarRequest.create(message, consumer);
       if (!instrumenter.shouldStart(parent, request)) {
         this.delegate.received(consumer, message);
         return;

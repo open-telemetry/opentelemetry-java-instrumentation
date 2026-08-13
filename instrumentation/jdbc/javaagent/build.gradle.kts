@@ -11,6 +11,7 @@ muzzle {
 
 dependencies {
   bootstrap(project(":instrumentation:jdbc:bootstrap"))
+  implementation(project(":instrumentation:jdbc:javaagent-common"))
   compileOnly(
     project(
       path = ":instrumentation:jdbc:library",
@@ -40,16 +41,6 @@ dependencies {
   // these dependencies are for SlickTest
   testImplementation("org.scala-lang:scala-library:2.11.12")
   testImplementation("com.typesafe.slick:slick_2.11:3.2.0")
-}
-
-sourceSets {
-  main {
-    val shadedDep = project(":instrumentation:jdbc:library")
-    output.dir(
-      shadedDep.file("build/extracted/shadow-javaagent"),
-      "builtBy" to ":instrumentation:jdbc:library:extractShadowJarJavaagent",
-    )
-  }
 }
 
 tasks {

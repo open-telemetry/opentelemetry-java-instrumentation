@@ -186,6 +186,9 @@ targets:
       target: ':instrumentation:jdbc:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:jdbc:javaagent-common'
+    - type: gradle
+      path: ./
       target: ':instrumentation:jdbc:library'
     - type: gradle
       path: ./
@@ -873,6 +876,9 @@ targets:
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.63:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.65:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:opentelemetry-instrumentation-api:opentelemetry-instrumentation-api-1.14:javaagent'
     - type: gradle
       path: ./
@@ -1060,6 +1066,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:tomcat:tomcat-common-7.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:tomcat:tomcat-dbcp-8.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:tomcat:tomcat-jdbc-8.5:javaagent'

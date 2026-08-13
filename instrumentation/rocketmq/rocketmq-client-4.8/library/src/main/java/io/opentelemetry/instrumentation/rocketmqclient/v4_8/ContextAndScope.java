@@ -6,17 +6,17 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
 @AutoValue
 abstract class ContextAndScope {
 
-  static ContextAndScope create(Context context, Scope scope) {
-    return new AutoValue_ContextAndScope(context, scope);
+  static ContextAndScope create(
+      RocketMqConsumerInstrumenter.ConsumerContext consumerContext, Scope scope) {
+    return new AutoValue_ContextAndScope(consumerContext, scope);
   }
 
-  abstract Context getContext();
+  abstract RocketMqConsumerInstrumenter.ConsumerContext getConsumerContext();
 
   abstract Scope getScope();
 
