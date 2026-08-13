@@ -9,7 +9,13 @@ import javax.annotation.Nullable;
 
 /** Stores JMS listener registration state shared across application classloaders. */
 public final class JmsListenerRegistrations {
+  private static final Object initializationLock = new Object();
+
   @Nullable private volatile Registration current;
+
+  public static Object initializationLock() {
+    return initializationLock;
+  }
 
   public synchronized Registration add(@Nullable String subscriptionName) {
     Registration previous = current;

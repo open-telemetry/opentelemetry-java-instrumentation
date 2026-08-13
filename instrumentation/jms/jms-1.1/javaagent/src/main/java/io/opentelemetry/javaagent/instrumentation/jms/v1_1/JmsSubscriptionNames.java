@@ -115,7 +115,7 @@ public class JmsSubscriptionNames {
     if (registrations != null) {
       return registrations;
     }
-    synchronized (messageListener) {
+    synchronized (JmsListenerRegistrations.initializationLock()) {
       registrations = LISTENER_REGISTRATIONS.get(messageListener);
       if (registrations == null) {
         registrations = new JmsListenerRegistrations();

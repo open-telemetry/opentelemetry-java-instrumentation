@@ -221,10 +221,12 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
     JmsSubscriptionNames.set(consumer, "closed-subscription");
     MessageListener listener = ignored -> {};
 
-    CompletableFuture<Void> registration =
-        CompletableFuture.runAsync(() -> consumer.setMessageListener(listener));
-    assertThat(consumer.registrationStarted.await(10, SECONDS)).isTrue();
-    consumer.close();
+    CompletableFuture<Void> registration;
+    synchronized (listener) {
+      registration = CompletableFuture.runAsync(() -> consumer.setMessageListener(listener));
+      assertThat(consumer.registrationStarted.await(10, SECONDS)).isTrue();
+      consumer.close();
+    }
     consumer.continueRegistration.release();
     registration.join();
 
