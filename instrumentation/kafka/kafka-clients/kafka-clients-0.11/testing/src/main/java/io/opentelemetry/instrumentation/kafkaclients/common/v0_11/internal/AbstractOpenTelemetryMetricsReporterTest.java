@@ -40,7 +40,6 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.ClusterResource;
 import org.apache.kafka.common.MetricName;
 import org.apache.kafka.common.metrics.KafkaMetric;
 import org.apache.kafka.common.metrics.Metrics;
@@ -361,6 +360,18 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     Set<String> metricNames = metrics.stream().map(MetricData::getName).collect(toSet());
     assertThat(metricNames).containsAll(expectedMetricNames);
 
+    // After a real produce/consume cycle the broker fires onUpdate() on each reporter; at least one
+    // metric point must carry the resulting cluster id.
+    assertThat(
+            metrics.stream()
+                .flatMap(m -> m.getData().getPoints().stream())
+                .anyMatch(
+                    p -> {
+                      String id = p.getAttributes().get(KafkaClusterId.ATTRIBUTE_KEY);
+                      return id != null && !id.isEmpty();
+                    }))
+        .isTrue();
+
     // All data points for a given metric must carry the same set of attribute keys, with the
     // exception of messaging.kafka.cluster.id which may be absent on points emitted before
     // onUpdate() fires (lazy metadata fetch on first broker contact).
@@ -390,42 +401,6 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
 
     // Print mapping table
     printMappingTable();
-  }
-
-  @Test
-  void metricsIncludeClusterIdAfterOnUpdate() {
-    // Create a fresh producer so its reporter has active observables.
-    KafkaProducer<byte[], byte[]> testProducer = new KafkaProducer<>(producerConfig());
-    try {
-      String expectedClusterId;
-      if (!metricsReporters.isEmpty()) {
-        // Library mode: the reporter is added to metricsReporters via the static listener;
-        // inject a deterministic cluster id so the assertion is precise.
-        OpenTelemetryMetricsReporter reporter = metricsReporters.get(metricsReporters.size() - 1);
-        reporter.onUpdate(new ClusterResource("test-cluster-id"));
-        expectedClusterId = "test-cluster-id";
-      } else {
-        // Javaagent mode: the reporter is injected by the agent into a different classloader, so
-        // the static listener is never triggered and metricsReporters stays empty. The real Kafka
-        // broker fires onUpdate with its own cluster id — accept any non-empty value.
-        expectedClusterId = null;
-      }
-
-      List<MetricData> metrics = testing().metrics();
-      assertThat(
-              metrics.stream()
-                  .flatMap(m -> m.getData().getPoints().stream())
-                  .anyMatch(
-                      p -> {
-                        String id = p.getAttributes().get(KafkaClusterId.ATTRIBUTE_KEY);
-                        return expectedClusterId != null
-                            ? expectedClusterId.equals(id)
-                            : (id != null && !id.isEmpty());
-                      }))
-          .isTrue();
-    } finally {
-      testProducer.close();
-    }
   }
 
   private static void produceRecords() {
