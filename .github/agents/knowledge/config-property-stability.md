@@ -30,23 +30,23 @@ declarative API.
 
 ### Two User-Facing Surfaces
 
-| Surface       | Unstable marker                              | Stable marker                         |
-| ------------- | -------------------------------------------- | ------------------------------------- |
-| Flat property | word `experimental` or `preview` in the name | neither `experimental` nor `preview`  |
-| YAML key      | `/development` suffix or word `preview`      | no suffix and no `preview` in the key |
+| Surface       | Unstable marker                                           | Stable marker                         |
+| ------------- | --------------------------------------------------------- | ------------------------------------- |
+| Flat property | word `experimental` or `preview` in the name              | neither `experimental` nor `preview`  |
+| YAML key      | `/development` suffix or word `experimental` or `preview` | no suffix and neither word in the key |
 
 The bridge translates underscores ↔ hyphens and `/development` ↔ the `experimental.` prefix;
-`preview` remains part of the name. `SPECIAL_MAPPINGS` handles legacy renames that don't follow the
-mechanical rule.
+`experimental` and `preview` can also remain part of a name. `SPECIAL_MAPPINGS` handles legacy
+renames that don't follow the mechanical rule.
 
 ## The Two Tiers of Stability
 
 Defined in [VERSIONING.md](../../../VERSIONING.md):
 
-| Tier         | Flat property pattern                                                | YAML key pattern                      | Breaking changes allowed?                     |
-| ------------ | -------------------------------------------------------------------- | ------------------------------------- | --------------------------------------------- |
-| **Stable**   | No `experimental` or `preview`, not under `otel.javaagent.testing.*` | No `/development` suffix or `preview` | ❌ Deprecate in minor, **remove only in 3.0** |
-| **Unstable** | Contains `experimental` or `preview` anywhere                        | Has `/development` or `preview`       | ✅ Deprecate in one release, remove in next   |
+| Tier         | Flat property pattern                                                | YAML key pattern                                 | Breaking changes allowed?                     |
+| ------------ | -------------------------------------------------------------------- | ------------------------------------------------ | --------------------------------------------- |
+| **Stable**   | No `experimental` or `preview`, not under `otel.javaagent.testing.*` | No `/development`, `experimental`, or `preview`  | ❌ Deprecate in minor, **remove only in 3.0** |
+| **Unstable** | Contains `experimental` or `preview` anywhere                        | Has `/development`, `experimental`, or `preview` | ✅ Deprecate in one release, remove in next   |
 
 `otel.javaagent.testing.*` — always allowed to break, regardless of marker.
 
@@ -134,7 +134,7 @@ property fallback.
 | --------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------- |
 | Prefix          | `otel.instrumentation.<module>.` or `otel.instrumentation.common.` | Under `instrumentation/development → java → <module>` or `common` |
 | Word separator  | hyphens (kebab-case)                                               | underscores (snake_case)                                          |
-| Unstable marker | `experimental` or `preview` in name                                | `/development` suffix or `preview` in name                        |
+| Unstable marker | `experimental` or `preview` in name                                | `/development` suffix or `experimental` or `preview` in name      |
 | Boolean toggle  | `.enabled` suffix                                                  | `enabled` leaf key                                                |
 | Env var form    | dots/hyphens → ALL_CAPS underscores                                | N/A                                                               |
 
