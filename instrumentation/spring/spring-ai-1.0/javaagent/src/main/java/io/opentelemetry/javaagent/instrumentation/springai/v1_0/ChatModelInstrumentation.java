@@ -77,17 +77,51 @@ class ChatModelInstrumentation implements TypeInstrumentation {
         if (callDepth.getAndIncrement() > 0) {
           return new AdviceScope(callDepth, null, null, null);
         }
-        SpringAiRequest request = SpringAiRequest.create(prompt, chatModel);
-        Context parentContext = Context.current();
-        if (!instrumenter().shouldStart(parentContext, request)) {
-          return new AdviceScope(callDepth, null, null, null);
+
+        SpringAiRequest request = null;
+        Context context = null;
+        Scope scope = null;
+        boolean completed = false;
+        try {
+          request = SpringAiRequest.create(prompt, chatModel);
+          Context parentContext = Context.current();
+          if (!instrumenter().shouldStart(parentContext, request)) {
+            AdviceScope adviceScope = new AdviceScope(callDepth, null, null, null);
+            completed = true;
+            return adviceScope;
+          }
+          context = instrumenter().start(parentContext, request);
+          scope = context.makeCurrent();
+          SpringAiMessageAttributes.setInputMessages(context, request);
+          SpringAiMessageEvents.emitPromptEvents(context, request);
+          AdviceScope adviceScope = new AdviceScope(callDepth, context, scope, request);
+          completed = true;
+          return adviceScope;
+        } finally {
+          if (!completed) {
+            cleanupAfterStartFailure(callDepth, context, scope, request);
+          }
         }
-        Context context = instrumenter().start(parentContext, request);
-        AdviceScope adviceScope =
-            new AdviceScope(callDepth, context, context.makeCurrent(), request);
-        SpringAiMessageAttributes.setInputMessages(context, request);
-        SpringAiMessageEvents.emitPromptEvents(context, request);
-        return adviceScope;
+      }
+
+      private static void cleanupAfterStartFailure(
+          CallDepth callDepth,
+          @Nullable Context context,
+          @Nullable Scope scope,
+          @Nullable SpringAiRequest request) {
+        try {
+          if (scope != null) {
+            scope.close();
+          }
+        } finally {
+          try {
+            if (context != null && request != null) {
+              instrumenter().end(context, request, null, null);
+            }
+          } finally {
+            callDepth.decrementAndGet();
+          }
+        }
       }
 
       public void end(@Nullable ChatResponse response, @Nullable Throwable throwable) {

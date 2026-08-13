@@ -44,6 +44,7 @@ import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.springai.v1_0.app.TestChatModel;
+import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -106,6 +107,30 @@ class ChatModelTest {
     testing.runWithSpan("parent", () -> chatModel.call(prompt()));
 
     assertTraces("test");
+  }
+
+  @Test
+  void instrumentationSetupFailureDoesNotLeakCallDepth() {
+    chatModel.setDefaultOptionsFailure(new IllegalStateException("default options failed"));
+    testing.runWithSpan("failed setup", () -> chatModel.call(prompt()));
+    assertThat(TestAgentListenerAccess.getAndResetAdviceFailureCount()).isEqualTo(1);
+
+    chatModel.setDefaultOptionsFailure(null);
+    testing.runWithSpan("call parent", () -> chatModel.call(prompt()));
+    testing.runWithSpan("stream parent", () -> chatModel.stream(prompt()).blockLast());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("failed setup").hasKind(INTERNAL).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("call parent").hasKind(INTERNAL).hasNoParent(),
+                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("stream parent").hasKind(INTERNAL).hasNoParent(),
+                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
   }
 
   @SuppressWarnings("PublicApiNamedStreamShouldReturnStream")

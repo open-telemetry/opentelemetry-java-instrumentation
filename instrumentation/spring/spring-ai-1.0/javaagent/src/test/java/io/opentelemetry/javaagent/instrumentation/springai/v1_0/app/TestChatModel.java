@@ -24,6 +24,7 @@ import reactor.core.publisher.Flux;
 public class TestChatModel implements ChatModel {
   private SpanContext lastSpanContext;
   private final ChatOptions defaultOptions;
+  private RuntimeException defaultOptionsFailure;
   private RuntimeException callFailure;
   private RuntimeException streamFailure;
   private ChatResponse callResponse;
@@ -75,11 +76,18 @@ public class TestChatModel implements ChatModel {
 
   @Override
   public ChatOptions getDefaultOptions() {
+    if (defaultOptionsFailure != null) {
+      throw defaultOptionsFailure;
+    }
     return defaultOptions;
   }
 
   public SpanContext getLastSpanContext() {
     return lastSpanContext;
+  }
+
+  public void setDefaultOptionsFailure(RuntimeException defaultOptionsFailure) {
+    this.defaultOptionsFailure = defaultOptionsFailure;
   }
 
   public void setCallFailure(RuntimeException callFailure) {
