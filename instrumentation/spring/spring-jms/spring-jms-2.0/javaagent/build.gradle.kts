@@ -64,6 +64,15 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
+
+  val testMessagingPreviewReceiveSpansDisabled =
+    register<Test>("testMessagingPreviewReceiveSpansDisabled") {
+      testClassesDirs = sourceSets["testReceiveSpansDisabled"].output.classesDirs
+      classpath = sourceSets["testReceiveSpansDisabled"].runtimeClasspath
+      jvmArgs("-Dotel.semconv-stability.preview=messaging")
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+    }
+
   // this does not apply to testReceiveSpansDisabled
   test {
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
@@ -103,6 +112,12 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testMessagingPreview, testJmsDisabled, testBothSemconv)
+    dependsOn(
+      testing.suites,
+      testMessagingPreview,
+      testMessagingPreviewReceiveSpansDisabled,
+      testJmsDisabled,
+      testBothSemconv,
+    )
   }
 }
