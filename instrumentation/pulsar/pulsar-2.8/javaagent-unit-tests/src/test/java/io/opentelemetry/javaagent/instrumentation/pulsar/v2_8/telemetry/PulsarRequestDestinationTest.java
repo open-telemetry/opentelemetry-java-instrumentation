@@ -59,6 +59,26 @@ class PulsarRequestDestinationTest {
   }
 
   @Test
+  void keepsTopicNameThatOnlyContainsThePartitionSuffix() {
+    // pulsar 2.8 reads the partition index from the last '-' rather than from the last partition
+    // suffix, so it reports this non-partitioned topic as partition 7; the destination name must
+    // not be rewritten based on that
+    String topic = TOPIC + "-partition-key-7";
+    PulsarRequest request = request(message(topic));
+
+    assertThat(request.getDestination()).isEqualTo(topic);
+  }
+
+  @Test
+  void keepsTopicNameWhosePartitionSuffixIsNotTheIndex() {
+    // pulsar 2.9+ rejects a zero padded partition suffix, pulsar 2.8 reads it as partition 1
+    String topic = TOPIC + "-partition-01";
+    PulsarRequest request = request(message(topic));
+
+    assertThat(request.getDestination()).isEqualTo(topic);
+  }
+
+  @Test
   void separatesPartitionFromBatchDestinationName() {
     String partitionTopic = TOPIC + "-partition-0";
     PulsarBatchRequest request = batchRequest(message(partitionTopic), message(partitionTopic));
@@ -74,6 +94,15 @@ class PulsarRequestDestinationTest {
         batchRequest(message(TOPIC + "-partition-0"), message(TOPIC + "-partition-1"));
 
     assertThat(request.getDestination()).isEqualTo(TOPIC);
+    assertThat(request.getDestinationPartitionId()).isNull();
+  }
+
+  @Test
+  void keepsBatchTopicNameThatIsNotFullyQualifiedWhenBatchSpansMultiplePartitions() {
+    PulsarBatchRequest request =
+        batchRequest(message("test-partition-0"), message("test-partition-1"));
+
+    assertThat(request.getDestination()).isEqualTo("test");
     assertThat(request.getDestinationPartitionId()).isNull();
   }
 
