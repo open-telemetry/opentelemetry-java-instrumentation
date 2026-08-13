@@ -104,6 +104,33 @@ class KafkaConnectBatchRecordAttributesTest {
             expectedLinkAttributes(null, "0", 5, null), expectedLinkAttributes(null, "1", 5, null));
   }
 
+  @Test
+  void omitsCommonOffsetWhenPartitionIsMissing() {
+    List<SinkRecord> records =
+        asList(
+            recordWithoutPartition("topic", 5, "key"), recordWithoutPartition("topic", 5, "key"));
+    KafkaConnectBatchRecordAttributes attributes =
+        KafkaConnectBatchRecordAttributes.create(records);
+
+    assertThat(commonAttributes(attributes))
+        .isEqualTo(Attributes.builder().put(MESSAGING_KAFKA_MESSAGE_KEY, "key").build());
+    assertThat(linkAttributes(attributes, records))
+        .containsExactly(Attributes.empty(), Attributes.empty());
+  }
+
+  @Test
+  void omitsLinkOffsetWhenPartitionIsMissing() {
+    List<SinkRecord> records =
+        asList(recordWithoutPartition("topic", 5, "key"), record("topic", 1, 6, "key"));
+    KafkaConnectBatchRecordAttributes attributes =
+        KafkaConnectBatchRecordAttributes.create(records);
+
+    assertThat(commonAttributes(attributes))
+        .isEqualTo(Attributes.builder().put(MESSAGING_KAFKA_MESSAGE_KEY, "key").build());
+    assertThat(linkAttributes(attributes, records))
+        .containsExactly(Attributes.empty(), expectedLinkAttributes(null, "1", 6, null));
+  }
+
   private static Attributes commonAttributes(KafkaConnectBatchRecordAttributes attributes) {
     AttributesBuilder builder = Attributes.builder();
     attributes.putCommonAttributes(builder);
@@ -128,5 +155,15 @@ class KafkaConnectBatchRecordAttributesTest {
   private static SinkRecord record(String topic, int partition, long offset, String key) {
     return new SinkRecord(
         topic, partition, Schema.STRING_SCHEMA, key, Schema.STRING_SCHEMA, "value", offset);
+  }
+
+  private static SinkRecord recordWithoutPartition(String topic, long offset, String key) {
+    return new SinkRecord(
+        topic, 0, Schema.STRING_SCHEMA, key, Schema.STRING_SCHEMA, "value", offset) {
+      @Override
+      public Integer kafkaPartition() {
+        return null;
+      }
+    };
   }
 }

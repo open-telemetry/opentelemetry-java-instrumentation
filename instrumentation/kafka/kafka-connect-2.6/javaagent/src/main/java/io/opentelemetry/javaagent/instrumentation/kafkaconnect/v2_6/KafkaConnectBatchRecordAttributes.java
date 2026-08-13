@@ -53,7 +53,7 @@ final class KafkaConnectBatchRecordAttributes {
     if (!partitionBelongsOnLinks()) {
       attributes.put(MESSAGING_DESTINATION_PARTITION_ID, commonPartition);
     }
-    if (!offsetBelongsOnLinks()) {
+    if (!offsetBelongsOnLinks() && commonPartition != null) {
       attributes.put(MESSAGING_KAFKA_OFFSET, commonOffset);
     }
     if (!keyVaries) {
@@ -63,13 +63,14 @@ final class KafkaConnectBatchRecordAttributes {
 
   Attributes getLinkAttributes(SinkRecord record) {
     AttributesBuilder attributes = Attributes.builder();
+    String partition = partitionId(record);
     if (destinationVaries) {
       attributes.put(MESSAGING_DESTINATION_NAME, record.topic());
     }
     if (partitionBelongsOnLinks()) {
-      attributes.put(MESSAGING_DESTINATION_PARTITION_ID, partitionId(record));
+      attributes.put(MESSAGING_DESTINATION_PARTITION_ID, partition);
     }
-    if (offsetBelongsOnLinks()) {
+    if (offsetBelongsOnLinks() && partition != null) {
       attributes.put(MESSAGING_KAFKA_OFFSET, record.kafkaOffset());
     }
     if (keyVaries) {
