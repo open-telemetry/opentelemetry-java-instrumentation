@@ -34,7 +34,7 @@ class DefaultBedrockRuntimeAsyncClientBuilderInstrumentation implements TypeInst
   public static class BuildClientAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static BedrockRuntimeAsyncClient methodExit(
         @Advice.Return BedrockRuntimeAsyncClient client) {
       return telemetry().wrapBedrockRuntimeClient(client);

@@ -148,6 +148,10 @@ public final class AwsSdkInstrumenterFactory {
     AttributesExtractor<SqsReceiveRequest, Response> messagingAttributeExtractor =
         messagingAttributesExtractor(getter, operationType, RECEIVE_OPERATION_NAME);
 
+    // TODO(receive-spans): under stable/v3 semconv the receive instrumenter must always be built so
+    // metrics flow; the span decision belongs at the SqsImpl call site via
+    // MessagingReceiveTelemetry.record(..., spanEligible). Currently the instrumenter is gated on
+    // messagingReceiveSpansEnabled, which also suppresses receive metrics when spans are off.
     return createInstrumenter(
         openTelemetry,
         MessagingSpanNameExtractor.create(getter, operationType, RECEIVE_OPERATION_NAME),

@@ -41,6 +41,16 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("WrapperTest")
+    }
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -49,7 +59,7 @@ tasks {
   }
 
   check {
-    dependsOn(testExceptionSignalLogs, testMessagingPreview, testBothSemconv)
+    dependsOn(testExceptionSignalLogs, testMessagingPreview, testV3Preview, testBothSemconv)
   }
 }
 

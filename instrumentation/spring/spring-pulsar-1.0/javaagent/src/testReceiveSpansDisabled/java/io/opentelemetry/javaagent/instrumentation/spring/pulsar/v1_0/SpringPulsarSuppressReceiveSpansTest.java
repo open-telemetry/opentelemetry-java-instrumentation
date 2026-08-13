@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.pulsar.v1_0;
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
@@ -43,15 +42,7 @@ class SpringPulsarSuppressReceiveSpansTest extends AbstractSpringPulsarTest {
                     span.hasTotalRecordedLinks(0);
                   }
                 },
-                span -> span.hasName("consumer").hasParent(trace.getSpan(2))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "receive " + OTEL_TOPIC
-                                : OTEL_TOPIC + " receive")
-                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)));
-    assertStableProcessMetrics();
+                span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+    assertStableProcessMetrics(false);
   }
 }

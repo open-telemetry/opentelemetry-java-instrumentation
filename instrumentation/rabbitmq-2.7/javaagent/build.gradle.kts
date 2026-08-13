@@ -40,6 +40,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     jvmArgs("-Dotel.instrumentation.rabbitmq.experimental-span-attributes=true")
     systemProperty("metadataConfig", "otel.instrumentation.rabbitmq.experimental-span-attributes=true")
   }
@@ -54,11 +55,23 @@ tasks {
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
 
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
+  test {
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
+  }
+
   check {
-    dependsOn(testExperimental, testMessagingPreview, testBothSemconv)
+    dependsOn(testExperimental, testMessagingPreview, testV3Preview, testBothSemconv)
   }
 }

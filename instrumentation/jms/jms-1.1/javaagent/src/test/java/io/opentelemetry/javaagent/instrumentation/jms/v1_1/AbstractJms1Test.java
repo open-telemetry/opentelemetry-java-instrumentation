@@ -157,7 +157,7 @@ abstract class AbstractJms1Test {
 
   @ParameterizedTest
   @MethodSource("emptyReceiveArguments")
-  void shouldNotEmitTelemetryOnEmptyReceive(
+  void shouldEmitReceiveTelemetryOnEmptyReceive(
       DestinationFactory destinationFactory, MessageReceiver receiver) throws JMSException {
 
     // given
@@ -172,7 +172,19 @@ abstract class AbstractJms1Test {
     // then
     assertThat(message).isNull();
 
-    testing.waitForTraces(0);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableMessagingSemconv() ? "receive" : "unknown receive")
+                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                        .hasNoParent()
+                        .hasTotalRecordedLinks(0)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            oldOperation("receive"),
+                            operationName("receive"),
+                            operationType("receive"))));
   }
 
   @ParameterizedTest

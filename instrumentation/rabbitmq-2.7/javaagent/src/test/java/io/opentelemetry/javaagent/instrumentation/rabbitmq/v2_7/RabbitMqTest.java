@@ -113,6 +113,28 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   }
 
   @Test
+  void testEmptyPullReceive() throws IOException {
+    String queueName = "empty-pull-queue";
+    channel.queueDeclare(queueName, false, true, true, null);
+    testing.clearData();
+
+    GetResponse response = channel.basicGet(queueName, true);
+
+    assertThat(response).isNull();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "receive " + queueName
+                                : queueName + " receive")
+                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasTotalRecordedLinks(0)));
+  }
+
+  @Test
   void testRabbitPublishGet() throws IOException {
     String exchangeName = "some-exchange";
     String routingKey = "some-routing-key";

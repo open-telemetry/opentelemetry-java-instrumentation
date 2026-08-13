@@ -52,7 +52,7 @@ final class PulsarMessagingAttributesGetter
 
   @Override
   public Long getMessageBodySize(PulsarRequest request) {
-    return (long) request.getMessage().size();
+    return request.hasMessage() ? (long) request.getMessage().size() : null;
   }
 
   @Nullable
@@ -64,7 +64,9 @@ final class PulsarMessagingAttributesGetter
   @Nullable
   @Override
   public String getMessageId(PulsarRequest request, @Nullable Void response) {
-    return Objects.toString(request.getMessage().getMessageId(), null);
+    return request.hasMessage()
+        ? Objects.toString(request.getMessage().getMessageId(), null)
+        : null;
   }
 
   @Nullable
@@ -76,13 +78,17 @@ final class PulsarMessagingAttributesGetter
   @Nullable
   @Override
   public Long getBatchMessageCount(PulsarRequest request, @Nullable Void unused) {
-    return null;
+    return request.hasMessage() ? null : 0L;
   }
 
   @Nullable
   @Override
   public String getDestinationPartitionId(PulsarRequest request) {
-    int partitionIndex = TopicName.getPartitionIndex(request.getDestination());
+    String destination = request.getDestination();
+    if (destination == null) {
+      return null;
+    }
+    int partitionIndex = TopicName.getPartitionIndex(destination);
     if (partitionIndex == -1) {
       return null;
     }
@@ -97,6 +103,9 @@ final class PulsarMessagingAttributesGetter
 
   @Override
   public List<String> getMessageHeader(PulsarRequest request, String name) {
+    if (!request.hasMessage()) {
+      return emptyList();
+    }
     String value = request.getMessage().getProperty(name);
     return value != null ? singletonList(value) : emptyList();
   }

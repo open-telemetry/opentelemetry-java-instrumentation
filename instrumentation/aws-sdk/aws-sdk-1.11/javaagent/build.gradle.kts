@@ -158,8 +158,26 @@ tasks {
     testClassesDirs = sourceSets["testSqsNoReceiveTelemetry"].output.classesDirs
     classpath = sourceSets["testSqsNoReceiveTelemetry"].runtimeClasspath
 
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=false")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets["testSqs"].output.classesDirs
+    classpath = sourceSets["testSqs"].runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
+  val testV3PreviewNoReceiveTelemetry = register<Test>("testV3PreviewNoReceiveTelemetry") {
+    testClassesDirs = sourceSets["testSqsNoReceiveTelemetry"].output.classesDirs
+    classpath = sourceSets["testSqsNoReceiveTelemetry"].runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=false")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
   val testBothSemconv = register<Test>("testBothSemconv") {
@@ -177,6 +195,8 @@ tasks {
       testStableSemconv,
       testMessagingPreview,
       testMessagingPreviewNoReceiveTelemetry,
+      testV3Preview,
+      testV3PreviewNoReceiveTelemetry,
       testBothSemconv
     )
   }

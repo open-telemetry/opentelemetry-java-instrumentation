@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -22,14 +23,61 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import org.apache.pulsar.client.api.BatchReceivePolicy;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.MessageListener;
+import org.apache.pulsar.client.api.Messages;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
 import org.junit.jupiter.api.Test;
 
 class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
+
+  @Test
+  void testEmptyReceive() throws Exception {
+    String topic = "persistent://public/default/testEmptyReceive";
+    admin.topics().createNonPartitionedTopic(topic);
+    consumer =
+        client.newConsumer(Schema.STRING).subscriptionName("test_sub").topic(topic).subscribe();
+    testing.clearData();
+
+    Message<String> message = consumer.receive(100, MILLISECONDS);
+
+    assertThat(message).isNull();
+    assertNoReceiveTelemetry();
+  }
+
+  @Test
+  void testEmptyBatchReceive() throws Exception {
+    String topic = "persistent://public/default/testEmptyBatchReceive";
+    admin.topics().createNonPartitionedTopic(topic);
+    consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(topic)
+            .batchReceivePolicy(
+                BatchReceivePolicy.builder().maxNumMessages(1).timeout(100, MILLISECONDS).build())
+            .subscribe();
+    testing.clearData();
+
+    Messages<String> messages = consumer.batchReceive();
+
+    assertThat(messages).isEmpty();
+    assertNoReceiveTelemetry();
+  }
+
+  private static void assertNoReceiveTelemetry() {
+    assertThat(testing.spans()).isEmpty();
+    assertThat(testing.metrics())
+        .noneMatch(
+            metric ->
+                metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
+                    && (metric.getName().equals("messaging.receive.duration")
+                        || metric.getName().equals("messaging.client.operation.duration")
+                        || metric.getName().equals("messaging.client.consumed.messages")));
+  }
 
   @Test
   void testFailedListenerCountsConsumedMessage() throws Exception {

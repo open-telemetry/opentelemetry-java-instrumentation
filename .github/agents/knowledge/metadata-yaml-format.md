@@ -15,7 +15,9 @@ Each configuration entry includes:
 - `declarative_name`: YAML key path (e.g., `java.grpc.emit_message_events`)
 - `type`: `boolean`, `string`, `list`, `int`, `map`. Describes the **flat** form.
 - `description`: Human-readable explanation
-- `default`: Default value
+- `default`: Default value. Required unless `default_is_conditional: true`.
+- `default_is_conditional` (optional): Set to `true` when the effective default depends on another
+  runtime setting. Omit `default` and explain the conditional behavior in `description`.
 - `examples` (optional): Only for module-specific configs with non-obvious format
 - `declarative_type` (optional): Overrides the declarative-form shape when it differs from the flat
   `type`. Currently only `structured_list` (see Structured Lists).

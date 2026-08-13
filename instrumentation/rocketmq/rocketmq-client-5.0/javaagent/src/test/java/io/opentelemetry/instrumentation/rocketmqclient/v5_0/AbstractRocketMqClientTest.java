@@ -10,7 +10,9 @@ import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.groupTraces;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -35,6 +37,9 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
+import static java.util.stream.Collectors.toList;
+import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -59,7 +64,9 @@ import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
 import org.apache.rocketmq.client.apis.consumer.FilterExpression;
 import org.apache.rocketmq.client.apis.consumer.FilterExpressionType;
 import org.apache.rocketmq.client.apis.consumer.PushConsumer;
+import org.apache.rocketmq.client.apis.consumer.SimpleConsumer;
 import org.apache.rocketmq.client.apis.message.Message;
+import org.apache.rocketmq.client.apis.message.MessageView;
 import org.apache.rocketmq.client.apis.producer.Producer;
 import org.apache.rocketmq.client.apis.producer.SendReceipt;
 import org.apache.rocketmq.client.java.impl.ClientImpl;
@@ -128,6 +135,51 @@ abstract class AbstractRocketMqClientTest {
             .setTopics(NORMAL_TOPIC)
             .build();
     cleanup.deferAfterAll(producer);
+  }
+
+  @Test
+  void testEmptyPullReceive() throws ClientException {
+    ClientConfiguration clientConfiguration =
+        ClientConfiguration.newBuilder()
+            .setEndpoints(CONTAINER.endpoints)
+            .setRequestTimeout(Duration.ofSeconds(10))
+            .build();
+    SimpleConsumer simpleConsumer =
+        provider
+            .newSimpleConsumerBuilder()
+            .setClientConfiguration(clientConfiguration)
+            .setConsumerGroup("empty-pull-group")
+            .setSubscriptionExpressions(
+                singletonMap(
+                    NORMAL_TOPIC, new FilterExpression("empty-pull-tag", FilterExpressionType.TAG)))
+            .setAwaitDuration(Duration.ofSeconds(1))
+            .build();
+    cleanup.deferCleanup(simpleConsumer);
+
+    List<MessageView> messages = simpleConsumer.receive(1, Duration.ofSeconds(1));
+
+    assertThat(messages).isEmpty();
+    List<SpanData> emptyReceiveSpans =
+        testing().waitForTraces(1).stream()
+            .flatMap(List::stream)
+            .filter(
+                span ->
+                    Long.valueOf(0).equals(span.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT)))
+            .collect(toList());
+    assertThat(emptyReceiveSpans)
+        .singleElement()
+        .satisfies(
+            span -> {
+              assertThat(span.getName())
+                  .isEqualTo(
+                      emitStableMessagingSemconv()
+                          ? "receive " + NORMAL_TOPIC
+                          : NORMAL_TOPIC + " receive");
+              assertThat(span.getKind())
+                  .isEqualTo(emitStableMessagingSemconv() ? CLIENT : CONSUMER);
+              assertThat(span.getParentSpanContext().isValid()).isFalse();
+              assertThat(span.getLinks()).isEmpty();
+            });
   }
 
   @Test
@@ -563,13 +615,36 @@ abstract class AbstractRocketMqClientTest {
 
   @Test
   void testCapturedMessageHeaders() throws ClientException {
+    String headerTag = "header-test";
+    String headerConsumerGroup = "header-group";
+    ClientConfiguration clientConfiguration =
+        ClientConfiguration.newBuilder()
+            .setEndpoints(CONTAINER.endpoints)
+            .setRequestTimeout(Duration.ofSeconds(10))
+            .build();
+    PushConsumer headerConsumer =
+        provider
+            .newPushConsumerBuilder()
+            .setClientConfiguration(clientConfiguration)
+            .setConsumerGroup(headerConsumerGroup)
+            .setSubscriptionExpressions(
+                singletonMap(
+                    NORMAL_TOPIC, new FilterExpression(headerTag, FilterExpressionType.TAG)))
+            .setMessageListener(
+                messageView -> {
+                  testing().runWithSpan("messageListener", () -> {});
+                  return ConsumeResult.SUCCESS;
+                })
+            .build();
+    cleanup.deferCleanup(() -> ((ClientImpl) headerConsumer).stopAsync());
+
     String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
     byte[] body = "foobar".getBytes(UTF_8);
     Message message =
         provider
             .newMessageBuilder()
             .setTopic(NORMAL_TOPIC)
-            .setTag(TAG)
+            .setTag(headerTag)
             .setKeys(keys)
             .setBody(body)
             .addProperty("Test-Message-Header", "test")
@@ -581,90 +656,91 @@ abstract class AbstractRocketMqClientTest {
             .runWithSpan(
                 "parent",
                 (ThrowingSupplier<SendReceipt, ClientException>) () -> producer.send(message));
-    AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
-    testing()
-        .waitAndAssertSortedTraces(
-            orderByRootSpanKind(
-                SpanKind.INTERNAL, emitStableMessagingSemconv() ? CLIENT : CONSUMER),
-            trace -> {
+    String messageId = sendReceipt.getMessageId().toString();
+    await()
+        .untilAsserted(
+            () -> {
+              List<List<SpanData>> headerTraces =
+                  groupTraces(testing().spans()).stream()
+                      .filter(
+                          trace ->
+                              trace.stream()
+                                  .anyMatch(
+                                      span ->
+                                          messageId.equals(
+                                                  span.getAttributes().get(MESSAGING_MESSAGE_ID))
+                                              || headerConsumerGroup.equals(
+                                                  span.getAttributes()
+                                                      .get(MESSAGING_CONSUMER_GROUP_NAME))
+                                              || headerConsumerGroup.equals(
+                                                  span.getAttributes()
+                                                      .get(MESSAGING_ROCKETMQ_CLIENT_GROUP))))
+                      .sorted(
+                          orderByRootSpanKind(
+                              SpanKind.INTERNAL, emitStableMessagingSemconv() ? CLIENT : CONSUMER))
+                      .collect(toList());
+              assertThat(headerTraces).hasSize(2);
+
+              List<SpanData> sendTrace = headerTraces.get(0);
+              assertThat(sendTrace.get(0))
+                  .hasName("parent")
+                  .hasKind(SpanKind.INTERNAL)
+                  .hasNoParent();
+              assertProducerSpan(
+                      assertThat(sendTrace.get(1)),
+                      NORMAL_TOPIC,
+                      headerTag,
+                      keys,
+                      body,
+                      sendReceipt,
+                      equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")))
+                  .hasParent(sendTrace.get(0));
+
+              List<SpanData> receiveTrace = headerTraces.get(1);
               if (emitStableMessagingSemconv()) {
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        assertProducerSpan(
-                                span,
-                                NORMAL_TOPIC,
-                                TAG,
-                                keys,
-                                body,
-                                sendReceipt,
-                                equalTo(
-                                    headerAttributeKey("Test-Message-Header"),
-                                    singletonList("test")))
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        assertProcessSpan(
-                                span,
-                                trace.getSpan(1),
-                                NORMAL_TOPIC,
-                                CONSUMER_GROUP,
-                                TAG,
-                                keys,
-                                body,
-                                sendReceipt,
-                                equalTo(
-                                    headerAttributeKey("Test-Message-Header"),
-                                    singletonList("test")))
-                            .hasParent(trace.getSpan(1)),
-                    span ->
-                        span.hasName("messageListener")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(2)));
-              } else {
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        assertProducerSpan(
-                                span,
-                                NORMAL_TOPIC,
-                                TAG,
-                                keys,
-                                body,
-                                sendReceipt,
-                                equalTo(
-                                    headerAttributeKey("Test-Message-Header"),
-                                    singletonList("test")))
-                            .hasParent(trace.getSpan(0)));
-              }
-              sendSpanData.set(trace.getSpan(1));
-            },
-            trace -> {
-              if (emitStableMessagingSemconv()) {
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        assertReceiveSpan(span, NORMAL_TOPIC, CONSUMER_GROUP, sendSpanData.get()));
+                assertThat(sendTrace).hasSize(4);
+                assertProcessSpan(
+                        assertThat(sendTrace.get(2)),
+                        sendTrace.get(1),
+                        NORMAL_TOPIC,
+                        headerConsumerGroup,
+                        headerTag,
+                        keys,
+                        body,
+                        sendReceipt,
+                        equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")))
+                    .hasParent(sendTrace.get(1));
+                assertThat(sendTrace.get(3))
+                    .hasName("messageListener")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(sendTrace.get(2));
+                assertThat(receiveTrace).hasSize(1);
+                assertReceiveSpan(
+                    assertThat(receiveTrace.get(0)),
+                    NORMAL_TOPIC,
+                    headerConsumerGroup,
+                    sendTrace.get(1));
                 return;
               }
-              trace.hasSpansSatisfyingExactly(
-                  span -> assertReceiveSpan(span, NORMAL_TOPIC, CONSUMER_GROUP),
-                  span ->
-                      assertProcessSpan(
-                              span,
-                              sendSpanData.get(),
-                              NORMAL_TOPIC,
-                              CONSUMER_GROUP,
-                              TAG,
-                              keys,
-                              body,
-                              sendReceipt,
-                              equalTo(
-                                  headerAttributeKey("Test-Message-Header"), singletonList("test")))
-                          // As the child of receive span.
-                          .hasParent(trace.getSpan(0)),
-                  span ->
-                      span.hasName("messageListener")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(1)));
+
+              assertThat(sendTrace).hasSize(2);
+              assertThat(receiveTrace).hasSize(3);
+              assertReceiveSpan(assertThat(receiveTrace.get(0)), NORMAL_TOPIC, headerConsumerGroup);
+              assertProcessSpan(
+                      assertThat(receiveTrace.get(1)),
+                      sendTrace.get(1),
+                      NORMAL_TOPIC,
+                      headerConsumerGroup,
+                      headerTag,
+                      keys,
+                      body,
+                      sendReceipt,
+                      equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")))
+                  .hasParent(receiveTrace.get(0));
+              assertThat(receiveTrace.get(2))
+                  .hasName("messageListener")
+                  .hasKind(SpanKind.INTERNAL)
+                  .hasParent(receiveTrace.get(1));
             });
   }
 

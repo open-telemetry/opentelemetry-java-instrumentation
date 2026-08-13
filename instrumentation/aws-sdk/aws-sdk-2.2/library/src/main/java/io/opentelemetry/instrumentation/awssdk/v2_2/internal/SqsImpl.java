@@ -67,19 +67,28 @@ public final class SqsImpl {
     }
 
     ReceiveMessageResponse response = (ReceiveMessageResponse) rawResponse;
-    if (response.messages().isEmpty()) {
-      return false;
-    }
-
     io.opentelemetry.context.Context parentContext =
         TracingExecutionInterceptor.getParentContext(executionAttributes);
+    boolean internalListenerPoll =
+        TracingExecutionInterceptor.isSqsInternalListenerPoll(executionAttributes);
     Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter =
         config.getConsumerReceiveInstrumenter();
     io.opentelemetry.context.Context receiveContext = null;
     SqsReceiveRequest receiveRequest =
         SqsReceiveRequest.create(
             executionAttributes, SqsMessageImpl.wrap(response.messages(), config));
-    if (timer != null && consumerReceiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
+    // TODO(receive-spans): under stable/v3 semconv the receive instrumenter must always be built so
+    // metrics flow; route the span decision through MessagingReceiveTelemetry.record(...,
+    // spanEligible) where spanEligible = receiveSpansEnabled && (!internalListenerPoll ||
+    // !response.messages().isEmpty()). Currently the instrumenter is gated on receive spans being
+    // enabled, which also suppresses receive metrics when spans are off.
+    boolean recordReceiveSpan =
+        !internalListenerPoll
+            || (config.isMessagingReceiveInstrumentationExplicitlyEnabled()
+                && !response.messages().isEmpty());
+    if (timer != null
+        && recordReceiveSpan
+        && consumerReceiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
       receiveContext =
           InstrumenterUtil.startAndEnd(
               consumerReceiveInstrumenter,

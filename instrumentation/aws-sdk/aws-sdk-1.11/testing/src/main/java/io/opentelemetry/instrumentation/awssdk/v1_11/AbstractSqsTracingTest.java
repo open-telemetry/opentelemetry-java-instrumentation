@@ -357,6 +357,31 @@ public abstract class AbstractSqsTracingTest {
   }
 
   @Test
+  void testEmptyReceive() {
+    sqsClient.createQueue("testSdkSqs");
+    testing().clearData();
+
+    ReceiveMessageResult result =
+        sqsClient.receiveMessage(
+            new ReceiveMessageRequest("http://localhost:" + sqsPort + "/000000000000/testSdkSqs"));
+
+    assertThat(result.getMessages()).isEmpty();
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(
+                                emitStableMessagingSemconv()
+                                    ? "receive testSdkSqs"
+                                    : "testSdkSqs receive")
+                            .hasKind(
+                                emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                            .hasNoParent()
+                            .hasTotalRecordedLinks(0)));
+  }
+
+  @Test
   void testReceiveSpanLinksToProducer() {
     assumeTrue(emitStableMessagingSemconv());
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";

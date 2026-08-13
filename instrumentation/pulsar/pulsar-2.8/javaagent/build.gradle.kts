@@ -71,6 +71,28 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
+  val testV3PreviewReceiveSpansEnabled = register<Test>("testV3PreviewReceiveSpansEnabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("PulsarClientSuppressReceiveSpansTest")
+    }
+    include("**/PulsarClientSuppressReceiveSpansTest.*")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -99,6 +121,8 @@ tasks {
       testExperimental,
       testMessagingPreview,
       testMessagingPreviewReceiveSpansDisabled,
+      testV3Preview,
+      testV3PreviewReceiveSpansEnabled,
       testBothSemconv,
     )
   }

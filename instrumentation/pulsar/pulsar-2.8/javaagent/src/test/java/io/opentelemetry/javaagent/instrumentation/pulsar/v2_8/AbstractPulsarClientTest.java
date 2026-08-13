@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.testing.junit.message.MessageHead
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -36,6 +37,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -396,6 +398,53 @@ abstract class AbstractPulsarClientTest {
                                                 equalTo(MESSAGING_OPERATION, "receive"),
                                                 equalTo(SERVER_PORT, brokerPort),
                                                 equalTo(SERVER_ADDRESS, brokerHost))))));
+  }
+
+  @Test
+  void testFailedBatchReceiveAsync() throws Exception {
+    String topic = "persistent://public/default/testFailedBatchReceiveAsync";
+    admin.topics().createNonPartitionedTopic(topic);
+    Throwable error;
+    try (PulsarClient failureClient =
+        PulsarClient.builder().serviceUrl("pulsar://" + brokerHost + ":" + brokerPort).build()) {
+      Consumer<String> failureConsumer =
+          failureClient
+              .newConsumer(Schema.STRING)
+              .subscriptionName("test_sub")
+              .topic(topic)
+              .subscribe();
+      testing.clearData();
+      CompletableFuture<Messages<String>> receive = failureConsumer.batchReceiveAsync();
+      failureClient.close();
+      error = receive.handle((messages, throwable) -> throwable).get(1, MINUTES);
+    }
+
+    assertThat(error).isNotNull();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
+                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(error)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                            equalTo(SERVER_ADDRESS, brokerHost),
+                            equalTo(SERVER_PORT, brokerPort),
+                            equalTo(MESSAGING_DESTINATION_NAME, topic),
+                            oldOperation("receive"),
+                            operationName("receive"),
+                            operationType("receive"),
+                            subscriptionName(),
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableMessagingSemconv()
+                                    ? error.getClass().getName()
+                                    : null))));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv

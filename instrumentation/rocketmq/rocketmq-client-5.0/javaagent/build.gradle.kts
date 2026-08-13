@@ -46,6 +46,39 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
+  val testMessagingPreviewDefault = register<Test>("testMessagingPreviewDefault") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("RocketMqClientTest.testEmptyPullReceive")
+      includeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
+  val testV3PreviewDefault = register<Test>("testV3PreviewDefault") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("RocketMqClientTest.testEmptyPullReceive")
+      includeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
+    }
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -70,7 +103,14 @@ tasks {
   }
 
   check {
-    dependsOn(testReceiveSpanDisabled, testMessagingPreview, testBothSemconv)
+    dependsOn(
+      testReceiveSpanDisabled,
+      testMessagingPreview,
+      testMessagingPreviewDefault,
+      testV3Preview,
+      testV3PreviewDefault,
+      testBothSemconv,
+    )
   }
 
   if (otelProps.denyUnsafe) {

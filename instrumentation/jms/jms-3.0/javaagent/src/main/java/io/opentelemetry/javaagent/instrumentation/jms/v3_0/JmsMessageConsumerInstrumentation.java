@@ -15,6 +15,8 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.instrumentation.api.internal.Timer;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContextHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
@@ -63,13 +65,13 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Enter Timer timer, @Advice.Return @Nullable Message message) {
-      if (message == null) {
-        // Do not create span when no message is received
+      if (message == null
+          && JmsReceiveContextHolder.isInitialized(Java8BytecodeBridge.currentContext())) {
         return;
       }
-
       MessageWithDestination request =
-          MessageWithDestination.create(JakartaMessageAdapter.create(message), null);
+          MessageWithDestination.create(
+              message == null ? null : JakartaMessageAdapter.create(message), null);
 
       createReceiveSpan(consumerReceiveInstrumenter(), request, timer, null);
     }

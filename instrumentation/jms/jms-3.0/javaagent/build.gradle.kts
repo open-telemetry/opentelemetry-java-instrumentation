@@ -22,6 +22,7 @@ muzzle {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
   implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
 
   library("jakarta.jms:jakarta.jms-api:3.0.0")
@@ -71,8 +72,33 @@ tasks {
         includeTestsMatching("Jms3SuppressReceiveSpansTest")
       }
       include("**/Jms3SuppressReceiveSpansTest.*")
+      jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=false")
       jvmArgs("-Dotel.semconv-stability.preview=messaging")
       systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+    }
+
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("Jms3SuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
+  val testV3PreviewReceiveSpansEnabled =
+    register<Test>("testV3PreviewReceiveSpansEnabled") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+
+      filter {
+        includeTestsMatching("Jms3SuppressReceiveSpansTest")
+      }
+      include("**/Jms3SuppressReceiveSpansTest.*")
+      jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
+      jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+      systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
     }
 
   val testBothSemconv = register<Test>("testBothSemconv") {
@@ -103,6 +129,8 @@ tasks {
       testReceiveSpansDisabled,
       testMessagingPreview,
       testMessagingPreviewReceiveSpansDisabled,
+      testV3Preview,
+      testV3PreviewReceiveSpansEnabled,
       testBothSemconv,
     )
   }

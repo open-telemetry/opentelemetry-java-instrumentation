@@ -63,12 +63,19 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
         @Advice.Return @Nullable ConsumerRecords<?, ?> records,
         @Advice.Thrown @Nullable Throwable error) {
 
-      // don't create spans when no records were received
-      if (records == null || records.isEmpty()) {
+      if (records == null) {
+        return;
+      }
+      boolean wrapperPoll = !KafkaClientsConsumerProcessTracing.isWrappingEnabled();
+      Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(currentContext());
+      if (wrapperPoll && (!KafkaSingletons.receiveTelemetryEnabled() || records.isEmpty())) {
+        KafkaConsumerContextUtil.set(records, parentContext, consumer);
+        for (ConsumerRecord<?, ?> record : records) {
+          KafkaConsumerContextUtil.set(record, parentContext, consumer);
+        }
         return;
       }
 
-      Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(currentContext());
       KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
 
       // disable process tracing and store the receive span for each individual record too

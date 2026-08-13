@@ -268,7 +268,7 @@ class Jms2InstrumentationTest {
 
   @MethodSource("emptyReceiveArguments")
   @ParameterizedTest
-  void shouldNotEmitTelemetryOnEmptyReceive(
+  void shouldEmitReceiveTelemetryOnEmptyReceive(
       DestinationFactory destinationFactory, MessageReceiver receiver) throws JMSException {
 
     // given
@@ -283,7 +283,19 @@ class Jms2InstrumentationTest {
     // then
     assertThat(message).isNull();
 
-    testing.waitForTraces(0);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableMessagingSemconv() ? "receive" : "unknown receive")
+                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                        .hasNoParent()
+                        .hasTotalRecordedLinks(0)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            oldOperation("receive"),
+                            operationName("receive"),
+                            operationType("receive"))));
   }
 
   private static AttributeAssertion messagingTempDestination(boolean isTemporary) {

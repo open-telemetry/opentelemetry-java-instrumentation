@@ -97,6 +97,7 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=false")
   }
 
   val testMessagingPreview = register<Test>("testMessagingPreview") {
@@ -126,6 +127,24 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
+  val testV3PreviewReceiveSpansEnabled =
+    register<Test>("testV3PreviewReceiveSpansEnabled") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
+      jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
+      jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+      systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+    }
+
   test {
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
@@ -143,6 +162,8 @@ tasks {
       testMessagingPreview,
       testBothSemconv,
       testMessagingPreviewReceiveSpansDisabled,
+      testV3Preview,
+      testV3PreviewReceiveSpansEnabled,
     )
   }
 }

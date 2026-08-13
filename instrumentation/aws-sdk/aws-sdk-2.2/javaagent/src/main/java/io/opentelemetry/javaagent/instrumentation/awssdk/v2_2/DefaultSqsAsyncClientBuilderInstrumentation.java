@@ -33,7 +33,7 @@ class DefaultSqsAsyncClientBuilderInstrumentation implements TypeInstrumentation
   public static class BuildClientAdvice {
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static SqsAsyncClient methodExit(@Advice.Return SqsAsyncClient sqsClient) {
       return telemetry().wrap(sqsClient);
     }

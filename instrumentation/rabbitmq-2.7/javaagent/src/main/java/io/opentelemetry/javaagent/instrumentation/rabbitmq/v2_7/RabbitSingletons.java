@@ -171,6 +171,9 @@ public class RabbitSingletons {
             ? MessagingSpanNameExtractor.create(
                 getter, MessagingOperationType.RECEIVE, RECEIVE_OPERATION_NAME)
             : ReceiveRequest::spanName;
+    // TODO(receive-spans): under stable/v3 semconv the receive instrumenter must always be built so
+    // metrics flow; route the span decision through MessagingReceiveTelemetry.record(...,
+    // spanEligible) at the call site instead of disabling the whole instrumenter here.
     InstrumenterBuilder<ReceiveRequest, GetResponse> builder =
         Instrumenter.<ReceiveRequest, GetResponse>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)

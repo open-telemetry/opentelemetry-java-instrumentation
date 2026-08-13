@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.VirtualFieldStore;
+import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.MessageListenerContext;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -36,6 +37,21 @@ class DefaultPulsarMessageListenerContainerInstrumentation implements TypeInstru
             .and(takesArguments(3).or(takesArguments(2)))
             .and(takesArgument(0, named("org.apache.pulsar.client.api.Message"))),
         getClass().getName() + "$DispatchMessageToListenerAdvice");
+    transformer.applyAdviceToMethod(named("run"), getClass().getName() + "$RunAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class RunAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter() {
+      MessageListenerContext.startProcessing();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit() {
+      MessageListenerContext.endProcessing();
+    }
   }
 
   @SuppressWarnings("unused")

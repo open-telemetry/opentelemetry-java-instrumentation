@@ -28,6 +28,19 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
 
+  @ParameterizedTest
+  @MethodSource("emptyReceiveArguments")
+  @Override
+  void shouldEmitReceiveTelemetryOnEmptyReceive(
+      DestinationFactory destinationFactory, MessageReceiver receiver) throws JMSException {
+    Destination destination = destinationFactory.create(session);
+    MessageConsumer consumer = session.createConsumer(destination);
+    cleanup.deferCleanup(consumer);
+
+    assertThat(receiver.receive(consumer)).isNull();
+    assertThat(testing.spans()).isEmpty();
+  }
+
   @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("destinationArguments")

@@ -48,8 +48,12 @@ final class JmsMessageAttributesGetter
   @Nullable
   @Override
   public String getConversationId(MessageWithDestination messageWithDestination) {
+    MessageAdapter message = messageWithDestination.message();
+    if (message == null) {
+      return null;
+    }
     try {
-      return messageWithDestination.message().getJmsCorrelationId();
+      return message.getJmsCorrelationId();
     } catch (Exception e) {
       logger.log(FINE, "Failure getting JMS correlation id", e);
       return null;
@@ -71,8 +75,12 @@ final class JmsMessageAttributesGetter
   @Nullable
   @Override
   public String getMessageId(MessageWithDestination messageWithDestination, @Nullable Void unused) {
+    MessageAdapter message = messageWithDestination.message();
+    if (message == null) {
+      return null;
+    }
     try {
-      return messageWithDestination.message().getJmsMessageId();
+      return message.getJmsMessageId();
     } catch (Exception e) {
       logger.log(FINE, "Failure getting JMS message id", e);
       return null;
@@ -94,8 +102,12 @@ final class JmsMessageAttributesGetter
 
   @Override
   public List<String> getMessageHeader(MessageWithDestination messageWithDestination, String name) {
+    MessageAdapter message = messageWithDestination.message();
+    if (message == null) {
+      return emptyList();
+    }
     try {
-      String value = messageWithDestination.message().getStringProperty(name);
+      String value = message.getStringProperty(name);
       if (value != null) {
         return singletonList(value);
       }

@@ -116,6 +116,7 @@ abstract class KafkaStreamsBaseTest {
             consumerReady.countDown();
           }
         });
+    awaitUntilConsumerIsReady();
   }
 
   static Map<String, Object> producerProps(String servers) {

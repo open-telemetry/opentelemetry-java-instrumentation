@@ -13,9 +13,11 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 
 import io.opentelemetry.instrumentation.spring.pulsar.v1_0.AbstractSpringPulsarTest;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 class SpringPulsarTest extends AbstractSpringPulsarTest {
 
@@ -24,8 +26,7 @@ class SpringPulsarTest extends AbstractSpringPulsarTest {
     AtomicReference<SpanData> producer = new AtomicReference<>();
 
     if (emitStableMessagingSemconv()) {
-      testing.waitAndAssertSortedTraces(
-          orderByRootSpanKind(INTERNAL, CLIENT),
+      Consumer<TraceAssert> applicationTrace =
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent").hasNoParent(),
@@ -40,15 +41,23 @@ class SpringPulsarTest extends AbstractSpringPulsarTest {
                           .hasParent(trace.getSpan(1))
                           .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
                           .hasAttributesSatisfyingExactly(processAttributes()),
-                  span -> span.hasName("consumer").hasParent(trace.getSpan(2))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("receive " + OTEL_TOPIC)
-                          .hasKind(CLIENT)
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(receiveAttributes())));
-      assertStableProcessMetrics();
+                  span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
+      boolean receiveTelemetryRecorded = receiveTelemetryExplicitlyEnabled();
+      if (receiveTelemetryRecorded) {
+        testing.waitAndAssertSortedTraces(
+            orderByRootSpanKind(INTERNAL, CLIENT),
+            applicationTrace,
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("receive " + OTEL_TOPIC)
+                            .hasKind(CLIENT)
+                            .hasNoParent()
+                            .hasAttributesSatisfyingExactly(receiveAttributes())));
+      } else {
+        testing.waitAndAssertTraces(applicationTrace);
+      }
+      assertStableProcessMetrics(receiveTelemetryRecorded);
       return;
     }
 
@@ -79,5 +88,10 @@ class SpringPulsarTest extends AbstractSpringPulsarTest {
                         .hasLinks(LinkData.create(producer.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(processAttributes()),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
+  }
+
+  private static boolean receiveTelemetryExplicitlyEnabled() {
+    return Boolean.getBoolean(
+        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
   }
 }

@@ -278,12 +278,17 @@ public class YamlHelper {
     }
     conf.put("description", configuration.description());
     conf.put("type", configuration.type().toString());
-    if (configuration.type().equals(ConfigurationType.BOOLEAN)) {
-      conf.put("default", Boolean.parseBoolean(configuration.defaultValue()));
-    } else if (configuration.type().equals(ConfigurationType.INT)) {
-      conf.put("default", Integer.parseInt(configuration.defaultValue()));
-    } else {
-      conf.put("default", configuration.defaultValue());
+    if (configuration.defaultValue() != null) {
+      if (configuration.type().equals(ConfigurationType.BOOLEAN)) {
+        conf.put("default", Boolean.parseBoolean(configuration.defaultValue()));
+      } else if (configuration.type().equals(ConfigurationType.INT)) {
+        conf.put("default", Integer.parseInt(configuration.defaultValue()));
+      } else {
+        conf.put("default", configuration.defaultValue());
+      }
+    }
+    if (configuration.defaultIsConditional()) {
+      conf.put("default_is_conditional", true);
     }
     if (configuration.examples() != null && !configuration.examples().isEmpty()) {
       conf.put("examples", configuration.examples());

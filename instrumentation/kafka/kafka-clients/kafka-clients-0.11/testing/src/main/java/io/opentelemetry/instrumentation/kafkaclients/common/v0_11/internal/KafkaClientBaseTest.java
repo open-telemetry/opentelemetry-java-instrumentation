@@ -131,6 +131,7 @@ public abstract class KafkaClientBaseTest {
             consumerReady.countDown();
           }
         });
+    awaitUntilConsumerIsReady();
   }
 
   public Map<String, Object> consumerProps() {

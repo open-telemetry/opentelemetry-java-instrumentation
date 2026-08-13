@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
@@ -296,5 +297,26 @@ class WrapperTest extends AbstractWrapperTest {
                   .hasException(error)
                   .hasTotalAttributeCount(3));
     }
+  }
+
+  @Test
+  void testEmptyPoll() {
+    KafkaTelemetryBuilder telemetryBuilder = KafkaTelemetry.builder(testing.getOpenTelemetry());
+    configure(telemetryBuilder);
+    KafkaTelemetry telemetry = telemetryBuilder.build();
+
+    Consumer<?, ?> mockConsumer = mock();
+    when(mockConsumer.poll(Duration.ofSeconds(10))).thenReturn(ConsumerRecords.empty());
+    Consumer<?, ?> wrappedConsumer = telemetry.wrap(mockConsumer);
+
+    assertThat(wrappedConsumer.poll(Duration.ofSeconds(10))).isEmpty();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableMessagingSemconv() ? "poll" : "unknown receive")
+                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasTotalRecordedLinks(0)));
   }
 }

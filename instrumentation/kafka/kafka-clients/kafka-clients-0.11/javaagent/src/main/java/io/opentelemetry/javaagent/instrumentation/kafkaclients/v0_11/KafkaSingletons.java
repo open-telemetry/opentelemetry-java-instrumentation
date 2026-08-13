@@ -33,12 +33,14 @@ public class KafkaSingletons {
   private static final Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter;
   private static final Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter;
   private static final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
+  private static final boolean receiveTelemetryEnabled;
 
   static {
     DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common");
     Boolean messagingReceiveSpansEnabled =
         messagingReceiveSpansEnabled(commonConfig.get("messaging"));
+    receiveTelemetryEnabled = Boolean.TRUE.equals(messagingReceiveSpansEnabled);
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
             .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
@@ -73,6 +75,10 @@ public class KafkaSingletons {
 
   public static Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter() {
     return consumerProcessInstrumenter;
+  }
+
+  public static boolean receiveTelemetryEnabled() {
+    return receiveTelemetryEnabled;
   }
 
   private KafkaSingletons() {}

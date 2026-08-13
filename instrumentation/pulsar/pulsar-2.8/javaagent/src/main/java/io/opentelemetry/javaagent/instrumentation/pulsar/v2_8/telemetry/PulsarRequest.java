@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.parseUrl;
+import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.ProducerData;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.UrlData;
@@ -14,16 +15,19 @@ import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 
 public class PulsarRequest extends BasePulsarRequest {
-  private final Message<?> message;
+  @Nullable private final Message<?> message;
 
   public static PulsarRequest create(Message<?> message, Consumer<?> consumer) {
     return new PulsarRequest(message, message.getTopicName(), null, consumer.getSubscription());
   }
 
   public static PulsarRequest create(
-      Message<?> message, @Nullable String url, Consumer<?> consumer) {
+      @Nullable Message<?> message, @Nullable String url, Consumer<?> consumer) {
     return new PulsarRequest(
-        message, message.getTopicName(), parseUrl(url), consumer.getSubscription());
+        message,
+        message != null ? message.getTopicName() : getConsumerDestination(consumer),
+        parseUrl(url),
+        consumer.getSubscription());
   }
 
   public static PulsarRequest create(
@@ -36,8 +40,8 @@ public class PulsarRequest extends BasePulsarRequest {
   }
 
   private PulsarRequest(
-      Message<?> message,
-      String destination,
+      @Nullable Message<?> message,
+      @Nullable String destination,
       @Nullable UrlData urlData,
       @Nullable String subscription) {
     super(destination, urlData, subscription);
@@ -45,6 +49,10 @@ public class PulsarRequest extends BasePulsarRequest {
   }
 
   public Message<?> getMessage() {
-    return message;
+    return requireNonNull(message);
+  }
+
+  public boolean hasMessage() {
+    return message != null;
   }
 }

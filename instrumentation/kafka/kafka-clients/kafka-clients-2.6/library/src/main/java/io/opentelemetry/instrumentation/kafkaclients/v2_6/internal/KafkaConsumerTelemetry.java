@@ -74,9 +74,6 @@ public class KafkaConsumerTelemetry {
       @Nullable String consumerGroup,
       @Nullable String clientId,
       Timer timer) {
-    if (records.isEmpty()) {
-      return null;
-    }
     Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(Context.current());
     KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumerGroup, clientId);
     Context receiveContext = null;
