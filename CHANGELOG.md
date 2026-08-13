@@ -68,6 +68,12 @@
   `MessagingConsumerMetrics.getForOperationType()`.
   ([#19357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19357))
 
+### 🛠️ Bug fixes
+
+- Avoid deprecated GraphQL and runtime telemetry package-emitter configuration warnings when the
+  replacement property already determines the value.
+  ([#19573](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19573))
+
 ## Version 2.30.0 (2026-07-22)
 
 This release targets the OpenTelemetry SDK 1.64.0.
@@ -176,8 +182,6 @@ for more details.
 
 ### 🛠️ Bug fixes
 
-- Avoid deprecated GraphQL and runtime telemetry package-emitter configuration warnings when the
-  replacement property already determines the value.
 - Fix a spurious duplicate warning when the application logger bridge is installed multiple times
   during startup.
   ([#19088](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19088))
