@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertNoMessagingMetrics;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertProducerMetrics;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertReceiveMetrics;
@@ -125,7 +126,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void testEmptyPullReceive() throws IOException {
     String queueName = "empty-pull-queue";
     channel.queueDeclare(queueName, false, true, true, null);
@@ -134,44 +134,8 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     GetResponse response = channel.basicGet(queueName, true);
 
     assertThat(response).isNull();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "receive " + queueName
-                                : queueName + " receive")
-                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "rabbitmq"),
-                            equalTo(
-                                MESSAGING_DESTINATION_NAME,
-                                emitStableMessagingSemconv() ? queueName : null),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "receive" : null),
-                            equalTo(
-                                MESSAGING_BATCH_MESSAGE_COUNT,
-                                emitStableMessagingSemconv() ? 0L : null),
-                            equalTo(NETWORK_PEER_ADDRESS, rabbitMqIp),
-                            satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6")),
-                            equalTo(NETWORK_PEER_PORT, rabbitMqPort),
-                            equalTo(
-                                SERVER_ADDRESS, emitStableMessagingSemconv() ? rabbitMqIp : null),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableMessagingSemconv() ? (long) rabbitMqPort : null),
-                            equalTo(stringKey("rabbitmq.command"), experimental("basic.get")),
-                            equalTo(stringKey("rabbitmq.queue"), experimental(queueName)))
-                        .hasTotalRecordedLinks(0)));
-    assertReceiveMetrics(testing, queueName, null, 0);
+    assertThat(testing.spans()).isEmpty();
+    assertNoMessagingMetrics(testing);
   }
 
   @Test
