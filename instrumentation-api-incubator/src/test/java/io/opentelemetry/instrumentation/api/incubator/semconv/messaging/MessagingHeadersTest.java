@@ -130,18 +130,6 @@ class MessagingHeadersTest {
     assertThat(attributes.build().asMap()).containsOnly(headerEntry("Test-Message-Header", "one"));
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
-  @Test
-  void deprecatedCapturedHeadersSetterTreatsWildcardsLiterally() {
-    AttributesBuilder attributes = Attributes.builder();
-    builder()
-        .setCapturedHeaders(singletonList("Test-Message-*"))
-        .build()
-        .onEnd(attributes, Context.root(), MESSAGE, null, null);
-
-    assertThat(attributes.build().asMap()).isEmpty();
-  }
-
   @SuppressWarnings("OtelDeprecatedApiUsage") // testing deprecated API
   @Test
   void deprecatedCapturedHeadersSetterWithEmptyCollectionCapturesNothing() {

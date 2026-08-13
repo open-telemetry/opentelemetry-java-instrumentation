@@ -32,10 +32,10 @@ class MessagingConfigTest {
   void readsDeprecatedSelectorFromCommonMessagingConfig() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
     when(messagingConfig(openTelemetry).getScalarList("capture_headers/development", String.class))
-        .thenReturn(singletonList("deprecated*"));
+        .thenReturn(singletonList("deprecated"));
 
-    assertThat(MessagingConfig.getHeaders(openTelemetry).matches("deprecated*")).isTrue();
-    assertThat(MessagingConfig.getHeaders(openTelemetry).matches("deprecated-value")).isFalse();
+    assertThat(MessagingConfig.getHeaders(openTelemetry).getIncluded())
+        .containsExactly("deprecated");
   }
 
   @Test

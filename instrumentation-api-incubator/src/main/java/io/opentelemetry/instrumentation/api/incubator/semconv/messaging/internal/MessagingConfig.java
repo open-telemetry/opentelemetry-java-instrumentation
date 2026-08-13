@@ -49,8 +49,7 @@ public final class MessagingConfig {
   static IncludeExclude getHeaders(
       DeclarativeConfigProperties messagingConfig, boolean systemPropertyFallback) {
     IncludeExclude selector =
-        SelectorConfig.resolveLegacyLiteralSelector(
-            messagingConfig, "messaging", "headers", systemPropertyFallback);
+        SelectorConfig.resolve(messagingConfig, "messaging", "headers", systemPropertyFallback);
     return selector == null ? NONE : selector;
   }
 

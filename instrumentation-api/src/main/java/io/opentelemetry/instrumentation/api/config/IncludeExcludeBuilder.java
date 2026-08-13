@@ -19,7 +19,6 @@ public final class IncludeExcludeBuilder {
 
   private List<String> included = emptyList();
   private List<String> excluded = emptyList();
-  private boolean includedLiteral;
 
   IncludeExcludeBuilder() {}
 
@@ -27,7 +26,6 @@ public final class IncludeExcludeBuilder {
   @CanIgnoreReturnValue
   public IncludeExcludeBuilder setIncluded(Collection<String> included) {
     this.included = copyPatterns(included, "included");
-    this.includedLiteral = false;
     return this;
   }
 
@@ -35,17 +33,6 @@ public final class IncludeExcludeBuilder {
   @CanIgnoreReturnValue
   public IncludeExcludeBuilder setIncluded(String... included) {
     return setIncluded(asList(included));
-  }
-
-  /**
-   * Replaces the included values, matching each value literally instead of interpreting it as a
-   * glob pattern.
-   */
-  @CanIgnoreReturnValue
-  public IncludeExcludeBuilder setIncludedLiteral(Collection<String> included) {
-    this.included = copyPatterns(included, "included");
-    this.includedLiteral = true;
-    return this;
   }
 
   /** Replaces the excluded patterns. */
@@ -63,7 +50,7 @@ public final class IncludeExcludeBuilder {
 
   /** Returns a new immutable {@link IncludeExclude}. */
   public IncludeExclude build() {
-    return new IncludeExclude(included, excluded, includedLiteral);
+    return new IncludeExclude(included, excluded);
   }
 
   private static List<String> copyPatterns(Collection<String> patterns, String name) {

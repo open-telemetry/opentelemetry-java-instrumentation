@@ -55,7 +55,7 @@ public final class SpringKafkaTelemetryBuilder {
   @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public SpringKafkaTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
-    return setHeaders(IncludeExclude.builder().setIncludedLiteral(capturedHeaders).build());
+    return setHeaders(IncludeExclude.builder().setIncluded(capturedHeaders).build());
   }
 
   @CanIgnoreReturnValue

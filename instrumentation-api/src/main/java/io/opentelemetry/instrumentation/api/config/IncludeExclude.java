@@ -21,8 +21,6 @@ import java.util.function.Predicate;
  * number of characters, including none. Excluded patterns take precedence over included patterns.
  * When there are no included patterns, all values that are not excluded match. Callers are
  * responsible for normalizing values and patterns when a domain requires case-insensitive matching.
- * Included values configured with {@link IncludeExcludeBuilder#setIncludedLiteral} are matched
- * literally instead of as glob patterns.
  *
  * <p>An empty selector, one with no included and no excluded patterns, carries no configuration. A
  * setting that uses one should behave as if no selector were configured and fall back to its own
@@ -32,7 +30,6 @@ public final class IncludeExclude {
 
   private final List<String> included;
   private final List<String> excluded;
-  private final boolean includedLiteral;
   private final List<Predicate<String>> includedPredicates;
   private final List<Predicate<String>> excludedPredicates;
 
@@ -41,16 +38,14 @@ public final class IncludeExclude {
     return new IncludeExcludeBuilder();
   }
 
-  IncludeExclude(List<String> included, List<String> excluded, boolean includedLiteral) {
+  IncludeExclude(List<String> included, List<String> excluded) {
     this.included = unmodifiableList(new ArrayList<>(included));
     this.excluded = unmodifiableList(new ArrayList<>(excluded));
-    this.includedLiteral = includedLiteral;
-    this.includedPredicates =
-        includedLiteral ? createLiteralPredicates(included) : createGlobPredicates(included);
+    this.includedPredicates = createGlobPredicates(included);
     this.excludedPredicates = createGlobPredicates(excluded);
   }
 
-  /** Returns the included patterns or literal values. */
+  /** Returns the included patterns. */
   public List<String> getIncluded() {
     return included;
   }
@@ -94,40 +89,17 @@ public final class IncludeExclude {
       return false;
     }
     IncludeExclude that = (IncludeExclude) object;
-    return includedLiteral == that.includedLiteral
-        && included.equals(that.included)
-        && excluded.equals(that.excluded);
+    return included.equals(that.included) && excluded.equals(that.excluded);
   }
 
   @Override
   public int hashCode() {
-    return includedLiteral
-        ? 31 * Objects.hash(included, excluded) + Boolean.hashCode(true)
-        : Objects.hash(included, excluded);
+    return Objects.hash(included, excluded);
   }
 
   @Override
   public String toString() {
-    if (!includedLiteral) {
-      return "IncludeExclude{included=" + included + ", excluded=" + excluded + '}';
-    }
-    return "IncludeExclude{included="
-        + included
-        + ", excluded="
-        + excluded
-        + ", includedLiteral=true}";
-  }
-
-  private static List<Predicate<String>> createLiteralPredicates(List<String> values) {
-    if (values.isEmpty()) {
-      return emptyList();
-    }
-
-    List<Predicate<String>> predicates = new ArrayList<>(values.size());
-    for (String value : values) {
-      predicates.add(value::equals);
-    }
-    return unmodifiableList(predicates);
+    return "IncludeExclude{included=" + included + ", excluded=" + excluded + '}';
   }
 
   private static List<Predicate<String>> createGlobPredicates(List<String> patterns) {

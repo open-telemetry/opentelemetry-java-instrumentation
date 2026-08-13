@@ -50,7 +50,7 @@ public final class NatsTelemetryBuilder {
   @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public NatsTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
-    return setHeaders(IncludeExclude.builder().setIncludedLiteral(capturedHeaders).build());
+    return setHeaders(IncludeExclude.builder().setIncluded(capturedHeaders).build());
   }
 
   /** Returns a new {@link NatsTelemetry} with the settings of this {@link NatsTelemetryBuilder}. */
