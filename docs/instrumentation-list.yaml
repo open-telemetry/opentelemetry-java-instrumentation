@@ -1112,9 +1112,29 @@ definitions:
     otel.instrumentation.servlet.experimental.capture-request-parameters:
       name: otel.instrumentation.servlet.experimental.capture-request-parameters
       declarative_name: java.servlet.capture_request_parameters/development
-      description: List of request parameter names to capture as span attributes.
+      description: |
+        Deprecated include-only alias for `otel.instrumentation.servlet.experimental.request-parameters.included`. It may be removed in the next minor release.
       type: list
       default: ''
+    otel.instrumentation.servlet.experimental.request-parameters.excluded:
+      name: otel.instrumentation.servlet.experimental.request-parameters.excluded
+      declarative_name: java.servlet.request_parameters/development.excluded
+      description: |
+        A comma-separated list of case-sensitive request parameter name patterns to exclude from span attributes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. No request parameters are captured unless an included or excluded pattern is configured; configuring only excluded patterns captures all request parameters that do not match them, which may expose sensitive information.
+      type: list
+      default: ''
+      examples:
+      - password,*-token
+    otel.instrumentation.servlet.experimental.request-parameters.included:
+      name: otel.instrumentation.servlet.experimental.request-parameters.included
+      declarative_name: java.servlet.request_parameters/development.included
+      description: |
+        A comma-separated list of case-sensitive request parameter name patterns to capture as span attributes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. No request parameters are captured unless an included or excluded pattern is configured; configuring only excluded patterns captures all request parameters that do not match them, which may expose sensitive information.
+      type: list
+      default: ''
+      examples:
+      - request-id
+      - user-*,search-?
     otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled:
       name: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
       declarative_name: java.servlet.trace_id_request_attribute/development.enabled
@@ -10185,6 +10205,8 @@ libraries:
   - http.server.emit-experimental-telemetry
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded
+  - otel.instrumentation.servlet.experimental.request-parameters.included
 - name: liberty-dispatcher-20.0
   display_name: Liberty
   description: |
@@ -13490,6 +13512,8 @@ libraries:
   - otel.experimental.javascript-snippet-ad834761
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded
+  - otel.instrumentation.servlet.experimental.request-parameters.included
   - otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
   telemetry:
   - when: default
@@ -13552,6 +13576,8 @@ libraries:
   - otel.experimental.javascript-snippet-cfa9f908
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded
+  - otel.instrumentation.servlet.experimental.request-parameters.included
   - otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
   telemetry:
   - when: default
@@ -13618,9 +13644,11 @@ libraries:
   - otel.experimental.javascript-snippet-ad834761
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded
+  - otel.instrumentation.servlet.experimental.request-parameters.included
   - otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
   telemetry:
-  - when: otel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter
+  - when: otel.instrumentation.servlet.experimental.request-parameters.included=test-parameter
     metric_refs:
     - http.server.request.duration-1f6f63ed
     spans:
@@ -14949,6 +14977,8 @@ libraries:
   - http.server.emit-experimental-telemetry
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded
+  - otel.instrumentation.servlet.experimental.request-parameters.included
   telemetry:
   - when: default
     metric_refs:
@@ -15010,6 +15040,8 @@ libraries:
   - http.server.emit-experimental-telemetry
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded
+  - otel.instrumentation.servlet.experimental.request-parameters.included
   telemetry:
   - when: default
     metric_refs:

@@ -10,13 +10,11 @@ import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteS
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER_FILTER;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
 import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_NAME;
-import static java.util.Collections.emptyList;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
@@ -33,16 +31,11 @@ import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.UserIncubatingAttributes;
 import java.security.Principal;
-import java.util.List;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
-  private static final List<String> CAPTURE_REQUEST_PARAMETERS =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
-          .getScalarList("capture_request_parameters/development", String.class, emptyList());
-  private static final boolean TRACE_ID_REQUEST_ATTRIBUTE_ENABLED =
-      readTraceIdRequestAttributeEnabled();
+  private static final ServletConfig servletConfig = ServletConfig.get();
 
   protected final Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
       instrumenter;
@@ -58,16 +51,11 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     this.accessor = accessor;
     this.spanNameProvider = new ServletSpanNameProvider<>(accessor);
     this.contextPathExtractor = accessor::getRequestContextPath;
+    IncludeExclude requestParameters = servletConfig.getRequestParameters();
     this.parameterExtractor =
-        !CAPTURE_REQUEST_PARAMETERS.isEmpty()
-            ? new ServletRequestParametersExtractor<>(accessor, CAPTURE_REQUEST_PARAMETERS)
+        requestParameters != null
+            ? new ServletRequestParametersExtractor<>(accessor, requestParameters)
             : null;
-  }
-
-  private static boolean readTraceIdRequestAttributeEnabled() {
-    return DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
-        .get("trace_id_request_attribute/development")
-        .getBoolean("enabled", !AgentCommonConfig.get().isV3Preview());
   }
 
   public boolean shouldStart(Context parentContext, ServletRequestContext<REQUEST> requestContext) {
@@ -89,7 +77,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   private void addRequestAttributes(REQUEST request, Context context) {
-    if (!TRACE_ID_REQUEST_ATTRIBUTE_ENABLED) {
+    if (!servletConfig.getTraceIdRequestAttributeEnabled()) {
       return;
     }
 
