@@ -22,6 +22,13 @@
   selector. The deprecated property keeps its exact-key matching and may be removed in the next
   minor release.
   ([#19519](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19519))
+- Deprecate the Log4j appender `experimental.capture-mdc-attributes` configuration property and
+  `OpenTelemetryAppender.Builder#setCaptureContextDataAttributes(String)` in favor of
+  include/exclude context data selectors and
+  `OpenTelemetryAppender.Builder#setContextDataAttributes(IncludeExclude)`. The deprecated property
+  and method keep their existing behavior, which matches keys literally unless the list contains
+  only `*`, and may be removed in the next minor release.
+  ([#19521](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19521))
 - Deprecate the Logback appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of the new
   `experimental.mdc-attributes.included` and `experimental.mdc-attributes.excluded` selectors, which
@@ -38,14 +45,13 @@
   select the same metrics.
   ([#19495](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19495))
 - Deprecate the `opentelemetry-zipkin-spring-boot-starter` artifact. Use
-  `opentelemetry-spring-boot-starter` with the OTLP exporter instead. It will be removed in 3.0.
+  `opentelemetry-spring-boot-starter` with the OTLP exporter instead.
 - Deprecate `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)` in the
   Micrometer 1.5 library in favor of
   `io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`.
   Histogram/percentile gauges are experimental compatibility behavior, and this moves the API to the
   standard experimental surface ahead of stabilization. Behavior and the
-  `otel.instrumentation.micrometer.histogram-gauges.enabled` config property are unchanged. The
-  deprecated builder method will be removed in the next release.
+  `otel.instrumentation.micrometer.histogram-gauges.enabled` config property are unchanged.
   ([#19404](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19404))
 - The decaying `<name>.max` gauge that the Micrometer bridge emits alongside the histogram for
   `Timer` and `DistributionSummary` is deprecated and will be removed in 3.0. The `<name>` /
