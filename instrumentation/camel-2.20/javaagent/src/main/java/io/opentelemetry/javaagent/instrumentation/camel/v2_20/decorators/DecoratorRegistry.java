@@ -53,7 +53,7 @@ public class DecoratorRegistry {
     result.put("netty-http4", new HttpSpanDecorator());
     result.put("netty-http", new HttpSpanDecorator());
     registerMessaging(result, "paho", "mqtt");
-    registerMessaging(result, "rabbitmq");
+    registerMessagingWithSendOperation(result, "rabbitmq", "publish");
     result.put("restlet", new HttpSpanDecorator());
     result.put("rest", new RestSpanDecorator());
     result.put("seda", new InternalSpanDecorator());
@@ -72,7 +72,18 @@ public class DecoratorRegistry {
       String component,
       String system,
       boolean spanContextPropagated) {
-    decorators.put(component, new MessagingSpanDecorator(component, system, spanContextPropagated));
+    registerMessaging(decorators, component, system, spanContextPropagated, "send");
+  }
+
+  private static void registerMessaging(
+      Map<String, SpanDecorator> decorators,
+      String component,
+      String system,
+      boolean spanContextPropagated,
+      String sendOperationName) {
+    decorators.put(
+        component,
+        new MessagingSpanDecorator(component, system, spanContextPropagated, sendOperationName));
   }
 
   private static void registerMessaging(
@@ -82,6 +93,11 @@ public class DecoratorRegistry {
 
   private static void registerMessaging(Map<String, SpanDecorator> decorators, String component) {
     registerMessaging(decorators, component, component);
+  }
+
+  private static void registerMessagingWithSendOperation(
+      Map<String, SpanDecorator> decorators, String component, String sendOperationName) {
+    registerMessaging(decorators, component, component, true, sendOperationName);
   }
 
   public SpanDecorator forComponent(String component) {
