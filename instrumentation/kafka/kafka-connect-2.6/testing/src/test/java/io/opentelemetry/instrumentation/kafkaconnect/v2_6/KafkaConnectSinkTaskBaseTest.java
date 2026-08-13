@@ -298,8 +298,12 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
       SpanData process, LinkData link, AttributeKey<T> attributeKey) {
     T spanValue = process.getAttributes().get(attributeKey);
     T linkValue = link.getAttributes().get(attributeKey);
-    assertThat(spanValue == null).isNotEqualTo(linkValue == null);
-    return linkValue != null ? linkValue : spanValue;
+    if (linkValue != null) {
+      assertThat(spanValue).isNull();
+      return linkValue;
+    }
+    assertThat(spanValue).isNotNull();
+    return spanValue;
   }
 
   private static Attributes recordAttributes(String destination, String messageKey) {
