@@ -1231,6 +1231,68 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                     : null))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  @Test
+  void testFailedMultiTopicsBatchReceive() throws Exception {
+    String topic1 = "persistent://public/default/testFailedMultiTopicsBatchReceive1";
+    String topic2 = "persistent://public/default/testFailedMultiTopicsBatchReceive2";
+    admin.topics().createNonPartitionedTopic(topic1);
+    admin.topics().createNonPartitionedTopic(topic2);
+    // this client is closed to make the batch receive fail, using the shared client would break the
+    // other tests
+    PulsarClient failingClient =
+        PulsarClient.builder().serviceUrl("pulsar://" + brokerHost + ":" + brokerPort).build();
+    // a consumer for multiple topics has a randomly generated topic name that must not be reported
+    // as the destination
+    Consumer<String> failingConsumer =
+        failingClient
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topics(asList(topic1, topic2))
+            // wait for messages until the client is closed, the default policy would complete the
+            // receive with an empty batch after 100ms
+            .batchReceivePolicy(BatchReceivePolicy.builder().timeout(10, MINUTES).build())
+            .subscribe();
+    testing.clearData();
+
+    CompletableFuture<Messages<String>> receive = failingConsumer.batchReceiveAsync();
+    failingClient.close();
+    Throwable error = receive.handle((messages, throwable) -> throwable).get(1, MINUTES);
+    assertThat(error).isNotNull();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableMessagingSemconv() ? "receive" : "unknown receive")
+                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasTotalRecordedLinks(0)
+                        .hasStatus(StatusData.error())
+                        .hasException(error)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                            equalTo(SERVER_ADDRESS, brokerHost),
+                            equalTo(SERVER_PORT, brokerPort),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "receive" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "receive" : null),
+                            equalTo(
+                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                emitStableMessagingSemconv() ? "test_sub" : null),
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableMessagingSemconv()
+                                    ? error.getClass().getName()
+                                    : null))));
+  }
+
   @Test
   void testSendMessageWithTxn() throws Exception {
     String topic = "persistent://public/default/testSendMessageWithTxn";

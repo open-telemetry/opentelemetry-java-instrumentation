@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
 import static java.util.Collections.emptyList;
+import static org.apache.pulsar.client.impl.MultiTopicsConsumerImpl.DUMMY_TOPIC_NAME_PREFIX;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.ArrayList;
@@ -25,7 +26,10 @@ final class PulsarBatchMessagingAttributesGetter
   @Nullable
   @Override
   public String getDestination(PulsarBatchRequest request) {
-    return request.getDestination();
+    String destination = request.getDestination();
+    // a consumer for multiple topics, that isn't backed by a single partitioned topic, has a
+    // randomly generated topic name that must not be reported as the destination
+    return destination.startsWith(DUMMY_TOPIC_NAME_PREFIX) ? null : destination;
   }
 
   @Nullable
