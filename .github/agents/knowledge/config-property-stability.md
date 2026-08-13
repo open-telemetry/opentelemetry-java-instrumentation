@@ -49,10 +49,10 @@ Defined in [VERSIONING.md](../../../VERSIONING.md):
 
 `otel.javaagent.testing.*` — always allowed to break, regardless of marker.
 
-A property name is a stable surface even when the code reading it is alpha: users configure the
-javaagent, which is published as a stable artifact, so its user-facing names outlive the alpha
-classes behind them. A deprecated *property name* and a deprecated *Java method* introduced by the
-same PR therefore often have different removal timelines.
+A stable property name remains a stable surface even when the code reading it is alpha: users
+configure the javaagent, which is published as a stable artifact, so its user-facing names outlive
+the alpha classes behind them. A deprecated *stable property name* and a deprecated *Java method*
+introduced by the same PR therefore often have different removal timelines.
 
 Examples (flat ↔ YAML):
 
@@ -112,10 +112,12 @@ still warn outside preview mode. An `experimental`-marked property can be remove
 release, so there is nothing for preview mode to reproduce: drop the guard, the `v3Preview`
 parameter, and the v3-preview test variant, and keep only the warning.
 
-| Deprecated property                                                    | Marker         | Treatment                                 |
-| ---------------------------------------------------------------------- | -------------- | ----------------------------------------- |
-| `otel.instrumentation.grpc.capture-metadata.client.request`            | none → stable  | v3-preview gated, removed in 3.0          |
-| `otel.instrumentation.servlet.experimental.capture-request-parameters` | `experimental` | ungated, may be removed in the next minor |
+These hypothetical deprecated names illustrate the two treatments:
+
+| Hypothetical deprecated property                         | Marker         | Treatment                                 |
+| -------------------------------------------------------- | -------------- | ----------------------------------------- |
+| `otel.instrumentation.<module>.old-setting`              | none (stable)  | v3-preview gated, removed in 3.0          |
+| `otel.instrumentation.<module>.experimental.old-setting` | `experimental` | ungated, may be removed in the next minor |
 
 Instrumentation enablement name aliases are an exception. Enablement resolves across an ordered list
 of equivalent names, while the warning is driven by explicit legacy-key presence, so the replacement

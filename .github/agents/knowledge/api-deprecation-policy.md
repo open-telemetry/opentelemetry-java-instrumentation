@@ -86,6 +86,8 @@ scheduled for 3.0, anything gated on `otel.instrumentation.common.v3-preview`,
 
 ## Correct `@Deprecated` Usage
 
+For a symbol published from an alpha artifact:
+
 ```java
 /**
  * @deprecated Use {@link #newMethod()} instead. May be removed in the next minor release.
