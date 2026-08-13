@@ -8,8 +8,7 @@
   agent and library instrumentation. Java agent users who want receive spans must set
   `otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true` (or
   `java.common.messaging.receive_telemetry/development.enabled: true` in declarative config).
-  Library users must call `setMessagingReceiveTelemetryEnabled(true)` on `KafkaTelemetryBuilder` or
-  `KafkaInstrumenterFactory`.
+  Library users must call `setMessagingReceiveTelemetryEnabled(true)` on `KafkaTelemetryBuilder`.
 - `jetty.thread.queue.size` Jetty JMX metric unit has been changed from `{thread}` to `{job}`.
 - Normalize the value of `activemq.destination.temp.utilization` JMX Metric for ActiveMQ to be between 0 and 1 (inclusive) instead of between 0 and 100 (inclusive).
 
