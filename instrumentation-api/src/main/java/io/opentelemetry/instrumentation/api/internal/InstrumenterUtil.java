@@ -55,6 +55,27 @@ public final class InstrumenterUtil {
         instrumenter, parentContext, request, response, error, startTime, endTime);
   }
 
+  /**
+   * Records an operation with the given start/end timestamps without creating a span for it.
+   *
+   * <p>Operation listeners, and therefore metrics, are invoked exactly as they are by {@link
+   * #startAndEnd}, and exception logs are emitted as usual. No context is returned because the
+   * resulting context must not be used for parenting: as far as tracing is concerned this operation
+   * did not happen.
+   */
+  public static <REQUEST, RESPONSE> void startAndEndWithoutSpan(
+      Instrumenter<REQUEST, RESPONSE> instrumenter,
+      Context parentContext,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error,
+      Instant startTime,
+      Instant endTime) {
+    // instrumenterAccess is guaranteed to be non-null here
+    instrumenterAccess.startAndEndWithoutSpan(
+        instrumenter, parentContext, request, response, error, startTime, endTime);
+  }
+
   public static <REQUEST, RESPONSE> Context suppressSpan(
       Instrumenter<REQUEST, RESPONSE> instrumenter, Context parentContext, REQUEST request) {
     return instrumenterAccess.suppressSpan(instrumenter, parentContext, request);

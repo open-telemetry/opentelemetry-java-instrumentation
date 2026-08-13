@@ -158,7 +158,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
    * object of this operation.
    */
   public Context start(Context parentContext, REQUEST request) {
-    return doStart(parentContext, request, null);
+    return doStart(parentContext, request, null, /* recordSpan= */ true);
   }
 
   /**
@@ -173,7 +173,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
    */
   public void end(
       Context context, REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
-    doEnd(context, request, response, error, null);
+    doEnd(context, request, response, error, null, /* recordSpan= */ true);
   }
 
   /** Internal method for creating spans with given start/end timestamps. */
@@ -184,31 +184,57 @@ public class Instrumenter<REQUEST, RESPONSE> {
       @Nullable Throwable error,
       Instant startTime,
       Instant endTime) {
-    Context context = doStart(parentContext, request, startTime);
-    doEnd(context, request, response, error, endTime);
+    Context context = doStart(parentContext, request, startTime, /* recordSpan= */ true);
+    doEnd(context, request, response, error, endTime, /* recordSpan= */ true);
     return context;
   }
 
-  private Context doStart(Context parentContext, REQUEST request, @Nullable Instant startTime) {
+  /**
+   * Internal method for recording an operation with given start/end timestamps without creating a
+   * span for it.
+   *
+   * <p>Operation listeners, and therefore metrics, are invoked exactly as they are for a recorded
+   * operation, and exception logs are emitted as usual. No context is returned because the
+   * resulting context must not be used for parenting: as far as tracing is concerned this operation
+   * did not happen.
+   */
+  void startAndEndWithoutSpan(
+      Context parentContext,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error,
+      Instant startTime,
+      Instant endTime) {
+    Context context = doStart(parentContext, request, startTime, /* recordSpan= */ false);
+    doEnd(context, request, response, error, endTime, /* recordSpan= */ false);
+  }
+
+  private Context doStart(
+      Context parentContext, REQUEST request, @Nullable Instant startTime, boolean recordSpan) {
     try {
-      return doStartImpl(parentContext, request, startTime);
+      return doStartImpl(parentContext, request, startTime, recordSpan);
     } finally {
       InstrumenterContext.reset();
     }
   }
 
-  private Context doStartImpl(Context parentContext, REQUEST request, @Nullable Instant startTime) {
+  private Context doStartImpl(
+      Context parentContext, REQUEST request, @Nullable Instant startTime, boolean recordSpan) {
     SpanKind spanKind = spanKindExtractor.extract(request);
     SpanBuilder spanBuilder =
-        tracer.spanBuilder(spanNameExtractor.extract(request)).setSpanKind(spanKind);
+        recordSpan
+            ? tracer.spanBuilder(spanNameExtractor.extract(request)).setSpanKind(spanKind)
+            : null;
 
-    if (startTime != null) {
-      spanBuilder.setStartTimestamp(startTime);
-    }
+    if (spanBuilder != null) {
+      if (startTime != null) {
+        spanBuilder.setStartTimestamp(startTime);
+      }
 
-    SpanLinksBuilder spanLinksBuilder = new SpanLinksBuilderImpl(spanBuilder);
-    for (SpanLinksExtractor<? super REQUEST> spanLinksExtractor : spanLinksExtractors) {
-      spanLinksExtractor.extract(spanLinksBuilder, parentContext, request);
+      SpanLinksBuilder spanLinksBuilder = new SpanLinksBuilderImpl(spanBuilder);
+      for (SpanLinksExtractor<? super REQUEST> spanLinksExtractor : spanLinksExtractors) {
+        spanLinksExtractor.extract(spanLinksBuilder, parentContext, request);
+      }
     }
 
     UnsafeAttributes attributes = new UnsafeAttributes();
@@ -227,9 +253,12 @@ public class Instrumenter<REQUEST, RESPONSE> {
     boolean localRoot = LocalRootSpan.isLocalRoot(parentContext);
     boolean hasLocalRoot = LocalRootSpan.fromContextOrNull(context) != null;
 
-    spanBuilder.setAllAttributes(attributes);
-    Span span = spanBuilder.setParent(context).startSpan();
-    context = context.with(span);
+    Span span = null;
+    if (spanBuilder != null) {
+      spanBuilder.setAllAttributes(attributes);
+      span = spanBuilder.setParent(context).startSpan();
+      context = context.with(span);
+    }
 
     if (operationListeners.length != 0) {
       if (operationListenerAttributesExtractors.length != 0) {
@@ -259,6 +288,10 @@ public class Instrumenter<REQUEST, RESPONSE> {
       context = context.with(START_OPERATION_LISTENERS, operationListeners);
     }
 
+    if (span == null) {
+      return context;
+    }
+
     if (localRoot) {
       context = LocalRootSpan.store(context, span);
     }
@@ -274,8 +307,11 @@ public class Instrumenter<REQUEST, RESPONSE> {
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error,
-      @Nullable Instant endTime) {
-    Span span = Span.fromContext(context);
+      @Nullable Instant endTime,
+      boolean recordSpan) {
+    // when the operation is recorded without a span, all span mutations below are no-ops on the
+    // invalid span; reading the span from the context would incorrectly mutate the parent span
+    Span span = recordSpan ? Span.fromContext(context) : Span.getInvalid();
 
     if (error != null) {
       error = errorCauseExtractor.extract(error);
@@ -380,6 +416,19 @@ public class Instrumenter<REQUEST, RESPONSE> {
               Instant startTime,
               Instant endTime) {
             return instrumenter.startAndEnd(
+                parentContext, request, response, error, startTime, endTime);
+          }
+
+          @Override
+          public <RQ, RS> void startAndEndWithoutSpan(
+              Instrumenter<RQ, RS> instrumenter,
+              Context parentContext,
+              RQ request,
+              @Nullable RS response,
+              @Nullable Throwable error,
+              Instant startTime,
+              Instant endTime) {
+            instrumenter.startAndEndWithoutSpan(
                 parentContext, request, response, error, startTime, endTime);
           }
 

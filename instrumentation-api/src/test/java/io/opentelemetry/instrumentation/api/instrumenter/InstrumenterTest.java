@@ -960,6 +960,173 @@ class InstrumenterTest {
     assertThatSpanKeyWasStored(SpanKey.HTTP_CLIENT, context);
   }
 
+  @Test
+  void startAndEndWithoutSpan_recordsOperationListenerButNoSpan() {
+    AtomicReference<Attributes> startAttributes = new AtomicReference<>();
+    AtomicReference<Attributes> endAttributes = new AtomicReference<>();
+    AtomicReference<Long> startNanos = new AtomicReference<>();
+    AtomicReference<Long> endNanos = new AtomicReference<>();
+
+    OperationListener operationListener =
+        new OperationListener() {
+          @Override
+          public Context onStart(Context context, Attributes attributes, long nanos) {
+            startAttributes.set(attributes);
+            startNanos.set(nanos);
+            return context;
+          }
+
+          @Override
+          public void onEnd(Context context, Attributes attributes, long nanos) {
+            endAttributes.set(attributes);
+            endNanos.set(nanos);
+          }
+        };
+
+    InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addOperationListener(operationListener)
+            .addAttributesExtractor(new AttributesExtractor1());
+    Experimental.addOperationListenerAttributesExtractor(builder, new AttributesExtractor2());
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        builder.buildInstrumenter();
+
+    InstrumenterUtil.startAndEndWithoutSpan(
+        instrumenter,
+        Context.root(),
+        REQUEST,
+        RESPONSE,
+        null,
+        Instant.ofEpochSecond(100),
+        Instant.ofEpochSecond(123, 456));
+
+    assertThat(otelTesting.getSpans()).isEmpty();
+
+    // attributes from both the regular and the operation listener only extractors are visible
+    assertThat(startAttributes.get())
+        .containsEntry(stringKey("req1"), "req1_value")
+        .containsEntry(stringKey("req3"), "req3_value");
+    assertThat(endAttributes.get())
+        .containsEntry(stringKey("resp1"), "resp1_value")
+        .containsEntry(stringKey("resp3"), "resp3_value");
+    assertThat(startNanos.get()).isEqualTo(100_000_000_000L);
+    assertThat(endNanos.get()).isEqualTo(123_000_000_456L);
+  }
+
+  @Test
+  void startAndEndWithoutSpan_doesNotModifyParentSpan() {
+    Instrumenter<Map<String, String>, Map<String, String>> parentInstrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "parent")
+            .buildInstrumenter();
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addAttributesExtractor(new AttributesExtractor1())
+            .buildInstrumenter();
+
+    Context parentContext = parentInstrumenter.start(Context.root(), REQUEST);
+    InstrumenterUtil.startAndEndWithoutSpan(
+        instrumenter,
+        parentContext,
+        REQUEST,
+        RESPONSE,
+        new IllegalStateException("test"),
+        Instant.ofEpochSecond(100),
+        Instant.ofEpochSecond(123));
+    parentInstrumenter.end(parentContext, REQUEST, RESPONSE, null);
+
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("parent")
+                            .hasStatus(StatusData.unset())
+                            .hasAttributes(Attributes.empty())
+                            .hasEventsSatisfyingExactly()));
+  }
+
+  @Test
+  void startAndEndWithoutSpan_emitsExceptionLog() {
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .buildInstrumenter();
+
+    InstrumenterUtil.startAndEndWithoutSpan(
+        instrumenter,
+        Context.root(),
+        REQUEST,
+        RESPONSE,
+        new IllegalStateException("test"),
+        Instant.ofEpochSecond(100),
+        Instant.ofEpochSecond(123, 456));
+
+    assertThat(otelTesting.getSpans()).isEmpty();
+
+    if (emitExceptionAsLogs()) {
+      List<LogRecordData> logs = otelTesting.getLogRecords();
+      assertThat(logs).hasSize(1);
+      assertThat(logs.get(0)).hasSeverity(Severity.WARN).hasEventName("exception");
+      assertThat(logs.get(0).getTimestampEpochNanos()).isEqualTo(123_000_000_456L);
+    }
+  }
+
+  @Test
+  void startAndEndWithoutSpan_honorsSuppression() {
+    RecordingOperationListener listener = new RecordingOperationListener();
+
+    when(((SpanKeyProvider) mockHttpClientAttributes).internalGetSpanKey())
+        .thenReturn(SpanKey.HTTP_CLIENT);
+
+    Instrumenter<Map<String, String>, Map<String, String>> outerInstrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "outer")
+            .addAttributesExtractor(mockHttpClientAttributes)
+            .buildClientInstrumenter(Map::put);
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addOperationListener(listener)
+            .addAttributesExtractor(mockHttpClientAttributes)
+            .buildClientInstrumenter(Map::put);
+
+    Context outerContext = outerInstrumenter.start(Context.root(), new HashMap<>(REQUEST));
+
+    // the outer client instrumentation already covers this operation, so it must not be recorded
+    // again, otherwise its metrics would be double counted
+    assertThat(instrumenter.shouldStart(outerContext, REQUEST)).isFalse();
+    assertThat(listener.started).isFalse();
+  }
+
+  @Test
+  void startAndEndWithoutSpan_propagatedOperationListeners() {
+    RecordingOperationListener listener = new RecordingOperationListener();
+
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        InstrumenterUtil.propagateOperationListenersToOnEnd(
+                Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                        otelTesting.getOpenTelemetry(), "test", unused -> "span")
+                    .addOperationListener(listener))
+            .buildInstrumenter();
+
+    InstrumenterUtil.startAndEndWithoutSpan(
+        instrumenter,
+        Context.root(),
+        REQUEST,
+        RESPONSE,
+        null,
+        Instant.ofEpochSecond(100),
+        Instant.ofEpochSecond(123));
+
+    assertThat(otelTesting.getSpans()).isEmpty();
+    assertThat(listener.started).isTrue();
+    assertThat(listener.ended).isTrue();
+  }
+
   private static void assertThatSpanKeyWasStored(SpanKey spanKey, Context context) {
     Span span = Span.fromContext(context);
     assertThat(span).isNotNull();

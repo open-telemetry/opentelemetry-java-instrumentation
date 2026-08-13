@@ -26,6 +26,15 @@ public interface InstrumenterAccess {
       Instant startTime,
       Instant endTime);
 
+  <REQUEST, RESPONSE> void startAndEndWithoutSpan(
+      Instrumenter<REQUEST, RESPONSE> instrumenter,
+      Context parentContext,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error,
+      Instant startTime,
+      Instant endTime);
+
   <REQUEST, RESPONSE> Context suppressSpan(
       Instrumenter<REQUEST, RESPONSE> instrumenter, Context parentContext, REQUEST request);
 
