@@ -199,6 +199,31 @@ class AwsLambdaSqsMessageHandlerTest {
   }
 
   @Test
+  void missingEventSource() {
+    SQSEvent.SQSMessage message = newMessage();
+    message.setMessageId("message1");
+    message.setEventSourceArn("arn:aws:sqs:us-east-2:123456789012:queue1");
+
+    SQSEvent event = new SQSEvent();
+    event.setRecords(asList(message));
+
+    new TestHandler(testing.getOpenTelemetrySdk()).handleRequest(event, context);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("my_function"),
+                span ->
+                    span.hasName(
+                        emitStableMessagingSemconv()
+                            ? "process queue1"
+                            : "multiple_sources process"),
+                span ->
+                    span.hasName(
+                        emitStableMessagingSemconv() ? "process queue1" : "null process")));
+  }
+
+  @Test
   void nestedProcessSpan() {
     SQSEvent.SQSMessage message = newMessage();
     message.setAttributes(singletonMap("AWSTraceHeader", AWS_TRACE_HEADER1));

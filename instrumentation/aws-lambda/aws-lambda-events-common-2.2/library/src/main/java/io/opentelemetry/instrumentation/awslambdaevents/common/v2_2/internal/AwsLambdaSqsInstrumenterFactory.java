@@ -54,8 +54,10 @@ public final class AwsLambdaSqsInstrumenterFactory {
         Instrumenter.<SQSMessage, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(
-                    getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
+                emitStableMessagingSemconv()
+                    ? MessagingSpanNameExtractor.create(
+                        getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME)
+                    : message -> message.getEventSource() + " process")
             .addAttributesExtractor(
                 emitStableMessagingSemconv()
                     ? MessagingAttributesExtractor.create(
