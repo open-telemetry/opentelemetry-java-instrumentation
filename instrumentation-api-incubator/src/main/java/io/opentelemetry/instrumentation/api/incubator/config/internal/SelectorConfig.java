@@ -93,13 +93,27 @@ public final class SelectorConfig {
     if (selector != null) {
       return selector::matches;
     }
-    if (deprecated == null || deprecated.isEmpty()) {
+    return deprecated == null ? null : resolveLegacyLiteral(deprecated);
+  }
+
+  /**
+   * Returns a predicate matching the given deprecated include-only values, or {@code null} when
+   * nothing is configured to be captured.
+   *
+   * <p>The values are matched literally, except for the single value {@code "*"} which matches
+   * everything. This preserves the behavior of settings that documented {@code "*"} as capturing
+   * all values, where interpreting the remaining values as globs would silently widen what is
+   * captured.
+   */
+  @Nullable
+  public static Predicate<String> resolveLegacyLiteral(List<String> deprecatedValues) {
+    if (deprecatedValues.isEmpty()) {
       return null;
     }
-    if (deprecated.size() == 1 && deprecated.get(0).equals("*")) {
+    if (deprecatedValues.size() == 1 && deprecatedValues.get(0).equals("*")) {
       return value -> true;
     }
-    Set<String> exactValues = new HashSet<>(deprecated);
+    Set<String> exactValues = new HashSet<>(deprecatedValues);
     return exactValues::contains;
   }
 

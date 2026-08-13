@@ -209,6 +209,22 @@ class SelectorConfigTest {
     assertThat(selector.matches("other")).isFalse();
   }
 
+  @Test
+  void resolvesLegacyLiteralValuesDirectly() {
+    assertThat(SelectorConfig.resolveLegacyLiteral(emptyList())).isNull();
+
+    Predicate<String> all = SelectorConfig.resolveLegacyLiteral(singletonList("*"));
+    assertThat(all).isNotNull();
+    assertThat(all.test("anything")).isTrue();
+
+    Predicate<String> literal = SelectorConfig.resolveLegacyLiteral(asList("embedded*", "*"));
+    assertThat(literal).isNotNull();
+    assertThat(literal.test("embedded*")).isTrue();
+    assertThat(literal.test("embedded-value")).isFalse();
+    assertThat(literal.test("*")).isTrue();
+    assertThat(literal.test("other")).isFalse();
+  }
+
   private static DeclarativeConfigProperties mockConfig() {
     DeclarativeConfigProperties config =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
