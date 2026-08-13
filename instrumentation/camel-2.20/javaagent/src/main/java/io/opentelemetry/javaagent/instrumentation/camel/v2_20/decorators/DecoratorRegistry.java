@@ -20,7 +20,7 @@ public class DecoratorRegistry {
   private static Map<String, SpanDecorator> loadDecorators() {
     Map<String, SpanDecorator> result = new HashMap<>();
     result.put("ahc", new HttpSpanDecorator());
-    registerMessaging(result, "ampq");
+    registerMessaging(result, "ampq", "amqp");
     if (emitStableMessagingSemconv()) {
       registerMessaging(result, "amqp");
     }
