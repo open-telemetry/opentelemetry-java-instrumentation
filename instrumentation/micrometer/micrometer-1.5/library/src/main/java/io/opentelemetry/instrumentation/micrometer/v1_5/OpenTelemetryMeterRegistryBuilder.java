@@ -85,9 +85,9 @@ public final class OpenTelemetryMeterRegistryBuilder {
    *
    * @deprecated Use {@link
    *     io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder,
-   *     boolean)} instead. This method will be removed in the next release.
+   *     boolean)} instead. This method may be removed in the next minor release.
    */
-  @Deprecated // will be removed in the next release
+  @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public OpenTelemetryMeterRegistryBuilder setMicrometerHistogramGaugesEnabled(
       boolean histogramGaugesEnabled) {

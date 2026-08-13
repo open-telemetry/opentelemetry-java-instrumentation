@@ -37,6 +37,7 @@ dependencies {
   // Tests use JUnit's built-in assertions rather than assertj: assertj imports net.bytebuddy
   // mandatorily, and byte-buddy 1.18.10's multi-release jar advertises a JavaSE-24 execution
   // environment requirement that the JavaSE-21 OSGi runtime can't satisfy.
+  osgiInfraImplementation(platform("org.junit:junit-bom:5.14.4"))
   osgiInfraImplementation("org.junit.jupiter:junit-jupiter")
   osgiInfraImplementation("org.osgi:org.osgi.test.junit5")
   osgiInfraRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -100,9 +101,7 @@ fun registerOsgiSuite(
 
   // Run the OSGi container on -PtestJavaVersion (falling back to the build toolchain) and derive
   // -runee from it, so the java-version test matrix actually exercises OSGi resolution on each
-  // target execution environment instead of always using the build JVM. CI passes the raw matrix
-  // value (e.g. -PtestJavaVersion=25-deny-unsafe), which Gradle's JavaVersion.toVersion truncates
-  // to the major version.
+  // target execution environment instead of always using the build JVM.
   val suiteJavaVersion = the<OtelPropsExtension>().testJavaVersion?.majorVersion?.toInt()
     ?: java.toolchain.languageVersion.get().asInt()
   // The bnd OSGi launcher (biz.aQute.launcher 7.3.0) is compiled for Java 17, so the container can
