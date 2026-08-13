@@ -77,6 +77,39 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
+  void testMessagingReceiveSpansMapping() {
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.messaging.experimental.receive-spans.enabled", "true");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("messaging")
+                .getStructured("receive_spans/development")
+                .getBoolean("enabled"))
+        .isNotNull()
+        .isTrue();
+  }
+
+  @Test
+  void testDeprecatedMessagingReceiveTelemetryMapping() {
+    DeclarativeConfigProperties config =
+        createConfig(
+            "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("messaging")
+                .getStructured("receive_telemetry/development")
+                .getBoolean("enabled"))
+        .isNotNull()
+        .isTrue();
+  }
+
+  @Test
   void testJmxPrefix() {
     DeclarativeConfigProperties config = createConfig("otel.jmx.enabled", "true");
 

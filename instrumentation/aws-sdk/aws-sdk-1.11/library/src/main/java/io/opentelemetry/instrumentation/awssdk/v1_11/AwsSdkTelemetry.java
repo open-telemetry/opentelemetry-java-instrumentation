@@ -50,13 +50,13 @@ public final class AwsSdkTelemetry {
       OpenTelemetry openTelemetry,
       List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes,
-      boolean messagingReceiveInstrumentationEnabled) {
+      boolean messagingReceiveSpansEnabled) {
     AwsSdkInstrumenterFactory instrumenterFactory =
         new AwsSdkInstrumenterFactory(
             openTelemetry,
             capturedHeaders,
             captureExperimentalSpanAttributes,
-            messagingReceiveInstrumentationEnabled);
+            messagingReceiveSpansEnabled);
     requestInstrumenter = instrumenterFactory.requestInstrumenter();
     consumerReceiveInstrumenter = instrumenterFactory.consumerReceiveInstrumenter();
     consumerProcessInstrumenter = instrumenterFactory.consumerProcessInstrumenter();

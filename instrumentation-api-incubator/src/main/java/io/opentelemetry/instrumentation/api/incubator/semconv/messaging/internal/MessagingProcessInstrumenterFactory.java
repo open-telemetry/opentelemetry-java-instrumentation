@@ -24,7 +24,7 @@ public class MessagingProcessInstrumenterFactory {
       InstrumenterBuilder<REQUEST, RESPONSE> builder,
       TextMapPropagator propagator,
       TextMapGetter<REQUEST> getter,
-      boolean receiveInstrumentationEnabled) {
+      boolean receiveSpansEnabled) {
     if (emitStableMessagingSemconv()) {
       // both the span links extractor below and the context customizer added after it extract the
       // message creation context, so the propagator runs twice per process span. Instrumenter runs
@@ -41,7 +41,7 @@ public class MessagingProcessInstrumenterFactory {
       builder.addContextCustomizer(MessagingProcessContextCustomizer.create(propagator, getter));
       return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
     }
-    if (receiveInstrumentationEnabled) {
+    if (receiveSpansEnabled) {
       builder.addSpanLinksExtractor(new PropagatorBasedSpanLinksExtractor<>(propagator, getter));
       return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
     }

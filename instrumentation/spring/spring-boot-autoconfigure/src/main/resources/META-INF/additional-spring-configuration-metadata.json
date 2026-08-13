@@ -345,10 +345,20 @@
       "defaultValue": false
     },
     {
+      "name": "otel.instrumentation.messaging.experimental.receive-spans.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables experimental receive spans, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.",
+      "defaultValue": false
+    },
+    {
       "name": "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
       "type": "java.lang.Boolean",
-      "description": "Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.",
-      "defaultValue": false
+      "description": "Enables experimental receive spans, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.",
+      "defaultValue": false,
+      "deprecation": {
+        "replacement": "otel.instrumentation.messaging.experimental.receive-spans.enabled",
+        "level": "warning"
+      }
     },
     {
       "name": "otel.instrumentation.messaging.experimental.capture-headers",

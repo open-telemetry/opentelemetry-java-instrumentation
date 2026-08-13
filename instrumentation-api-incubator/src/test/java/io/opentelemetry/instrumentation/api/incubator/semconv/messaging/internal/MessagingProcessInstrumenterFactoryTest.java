@@ -147,14 +147,14 @@ class MessagingProcessInstrumenterFactoryTest {
 
   @ParameterizedTest
   @MethodSource("receiveInstrumentationSettings")
-  void usesExpectedParentAndLink(boolean receiveInstrumentationEnabled, boolean producerIsParent) {
+  void usesExpectedParentAndLink(boolean receiveSpansEnabled, boolean producerIsParent) {
     Instrumenter<Map<String, String>, Void> instrumenter =
         MessagingProcessInstrumenterFactory.create(
             Instrumenter.<Map<String, String>, Void>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "process"),
             W3CTraceContextPropagator.getInstance(),
             getter,
-            receiveInstrumentationEnabled);
+            receiveSpansEnabled);
 
     Map<String, String> carrier =
         singletonMap("traceparent", "00-22222222222222222222222222222222-2222222222222222-01");

@@ -30,22 +30,19 @@ public class SpringPulsarSingletons {
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     SpringPulsarMessageAttributesGetter getter = new SpringPulsarMessageAttributesGetter();
-    boolean messagingReceiveInstrumentationEnabled =
-        ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+    boolean messagingReceiveSpansEnabled = ExperimentalConfig.get().messagingReceiveSpansEnabled();
 
-    instrumenter =
-        createInstrumenter(openTelemetry, getter, messagingReceiveInstrumentationEnabled, false);
+    instrumenter = createInstrumenter(openTelemetry, getter, messagingReceiveSpansEnabled, false);
     instrumenterWithConsumedMessages =
         emitStableMessagingSemconv()
-            ? createInstrumenter(
-                openTelemetry, getter, messagingReceiveInstrumentationEnabled, true)
+            ? createInstrumenter(openTelemetry, getter, messagingReceiveSpansEnabled, true)
             : instrumenter;
   }
 
   private static Instrumenter<Message<?>, Void> createInstrumenter(
       OpenTelemetry openTelemetry,
       SpringPulsarMessageAttributesGetter getter,
-      boolean messagingReceiveInstrumentationEnabled,
+      boolean messagingReceiveSpansEnabled,
       boolean recordConsumedMessages) {
     MessagingOperationType operationType = MessagingOperationType.PROCESS;
     InstrumenterBuilder<Message<?>, Void> builder =
@@ -66,7 +63,7 @@ public class SpringPulsarSingletons {
         builder,
         openTelemetry.getPropagators().getTextMapPropagator(),
         new MessageHeaderGetter(),
-        messagingReceiveInstrumentationEnabled);
+        messagingReceiveSpansEnabled);
   }
 
   public static Instrumenter<Message<?>, Void> instrumenter(boolean receiveTelemetryRecorded) {

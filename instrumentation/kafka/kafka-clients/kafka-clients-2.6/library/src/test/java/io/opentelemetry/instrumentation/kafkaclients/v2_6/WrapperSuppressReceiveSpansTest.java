@@ -16,7 +16,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
 
   @Override
   void configure(KafkaTelemetryBuilder builder) {
-    builder.setMessagingReceiveTelemetryEnabled(false);
+    builder.setMessagingReceiveSpansEnabled(false);
   }
 
   @Override

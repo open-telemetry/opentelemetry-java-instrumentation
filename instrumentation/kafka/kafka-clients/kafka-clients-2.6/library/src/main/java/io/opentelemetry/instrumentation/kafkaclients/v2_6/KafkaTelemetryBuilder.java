@@ -33,8 +33,8 @@ public final class KafkaTelemetryBuilder {
   private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes = false;
   private boolean propagationEnabled = true;
-  private boolean messagingReceiveInstrumentationEnabled = false;
-  private boolean messagingReceiveInstrumentationConfigured = false;
+  private boolean messagingReceiveSpansEnabled = false;
+  private boolean messagingReceiveSpansConfigured = false;
 
   KafkaTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = requireNonNull(openTelemetry);
@@ -98,17 +98,30 @@ public final class KafkaTelemetryBuilder {
   }
 
   /**
-   * Set whether to capture the consumer message receive telemetry in messaging instrumentation.
+   * Set whether to emit receive spans for messaging pull operations.
    *
    * <p>Note that this will cause the consumer side to start a new trace, with only a span link
    * connecting it to the producer trace.
    */
   @CanIgnoreReturnValue
-  public KafkaTelemetryBuilder setMessagingReceiveTelemetryEnabled(
-      boolean messagingReceiveInstrumentationEnabled) {
-    this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
-    this.messagingReceiveInstrumentationConfigured = true;
+  public KafkaTelemetryBuilder setMessagingReceiveSpansEnabled(
+      boolean messagingReceiveSpansEnabled) {
+    this.messagingReceiveSpansEnabled = messagingReceiveSpansEnabled;
+    this.messagingReceiveSpansConfigured = true;
     return this;
+  }
+
+  /**
+   * Set whether to capture the consumer message receive telemetry in messaging instrumentation.
+   *
+   * @deprecated Use {@link #setMessagingReceiveSpansEnabled(boolean)}. May be removed in the next
+   *     minor release.
+   */
+  @Deprecated // may be removed in the next minor release
+  @CanIgnoreReturnValue
+  public KafkaTelemetryBuilder setMessagingReceiveTelemetryEnabled(
+      boolean messagingReceiveTelemetryEnabled) {
+    return setMessagingReceiveSpansEnabled(messagingReceiveTelemetryEnabled);
   }
 
   public KafkaTelemetry build() {
@@ -116,9 +129,8 @@ public final class KafkaTelemetryBuilder {
         new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
             .setCapturedHeaders(capturedHeaders)
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes);
-    if (messagingReceiveInstrumentationConfigured) {
-      instrumenterFactory.setMessagingReceiveTelemetryEnabled(
-          messagingReceiveInstrumentationEnabled);
+    if (messagingReceiveSpansConfigured) {
+      instrumenterFactory.setMessagingReceiveSpansEnabled(messagingReceiveSpansEnabled);
     }
 
     return new KafkaTelemetry(

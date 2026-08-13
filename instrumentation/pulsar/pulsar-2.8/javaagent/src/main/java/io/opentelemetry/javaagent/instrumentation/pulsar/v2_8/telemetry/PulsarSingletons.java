@@ -55,8 +55,8 @@ public class PulsarSingletons {
       telemetry.getPropagators().getTextMapPropagator();
   private static final List<String> capturedHeaders =
       ExperimentalConfig.get().getMessagingHeaders();
-  private static final boolean receiveInstrumentationEnabled =
-      ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+  private static final boolean receiveSpansEnabled =
+      ExperimentalConfig.get().messagingReceiveSpansEnabled();
 
   private static final Instrumenter<PulsarRequest, Void> consumerProcessInstrumenter =
       createConsumerProcessInstrumenter();
@@ -94,7 +94,7 @@ public class PulsarSingletons {
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
     setMessagingReceiveExceptionEventExtractor(instrumenterBuilder);
 
-    if (emitStableMessagingSemconv() || receiveInstrumentationEnabled) {
+    if (emitStableMessagingSemconv() || receiveSpansEnabled) {
       return instrumenterBuilder
           .addSpanLinksExtractor(
               new PropagatorBasedSpanLinksExtractor<>(propagator, MessageTextMapGetter.INSTANCE))
@@ -139,16 +139,13 @@ public class PulsarSingletons {
                 createMessagingAttributesExtractor(
                     getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
             .addOperationMetrics(MessagingProcessMetrics.get());
-    if (!receiveInstrumentationEnabled && emitStableMessagingSemconv()) {
+    if (!receiveSpansEnabled && emitStableMessagingSemconv()) {
       instrumenterBuilder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     }
     setMessagingProcessExceptionEventExtractor(instrumenterBuilder);
 
     return MessagingProcessInstrumenterFactory.create(
-        instrumenterBuilder,
-        propagator,
-        MessageTextMapGetter.INSTANCE,
-        receiveInstrumentationEnabled);
+        instrumenterBuilder, propagator, MessageTextMapGetter.INSTANCE, receiveSpansEnabled);
   }
 
   private static Instrumenter<PulsarRequest, Void> createProducerInstrumenter() {
@@ -200,7 +197,7 @@ public class PulsarSingletons {
     if (!consumerReceiveInstrumenter.shouldStart(parent, request)) {
       return null;
     }
-    if (!receiveInstrumentationEnabled) {
+    if (!receiveSpansEnabled) {
       // suppress receive span when receive telemetry is not enabled and message is going to be
       // processed by a listener
       if (MessageListenerContext.isProcessing()) {
@@ -293,7 +290,7 @@ public class PulsarSingletons {
           // we create a "receive" span when receive telemetry is enabled or when we know that
           // this message will not be passed to a listener that would create the "process" span
           Context context =
-              receiveInstrumentationEnabled || !listenerContextActive
+              receiveSpansEnabled || !listenerContextActive
                   ? startAndEndConsumerReceive(parent, message, timer, consumer, throwable)
                   : parent;
           runWithContext(

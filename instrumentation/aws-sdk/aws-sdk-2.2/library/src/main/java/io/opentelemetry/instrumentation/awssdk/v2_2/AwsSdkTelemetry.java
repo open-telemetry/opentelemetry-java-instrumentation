@@ -80,7 +80,7 @@ public class AwsSdkTelemetry {
       boolean useMessagingPropagator,
       boolean useXrayPropagator,
       boolean recordIndividualHttpError,
-      boolean messagingReceiveInstrumentationEnabled,
+      boolean messagingReceiveSpansEnabled,
       boolean genAiCaptureMessageContent) {
     this.useXrayPropagator = useXrayPropagator;
     this.messagingPropagator =
@@ -92,7 +92,7 @@ public class AwsSdkTelemetry {
             messagingPropagator,
             capturedHeaders,
             captureExperimentalSpanAttributes,
-            messagingReceiveInstrumentationEnabled,
+            messagingReceiveSpansEnabled,
             useXrayPropagator);
 
     this.requestInstrumenter = instrumenterFactory.requestInstrumenter();

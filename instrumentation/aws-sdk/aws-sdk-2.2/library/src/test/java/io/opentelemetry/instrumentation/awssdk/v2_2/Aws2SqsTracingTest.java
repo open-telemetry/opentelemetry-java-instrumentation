@@ -32,7 +32,7 @@ abstract class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest {
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)
-            .setMessagingReceiveTelemetryEnabled(true)
+            .setMessagingReceiveSpansEnabled(true)
             .setCapturedHeaders(singletonList("Test-Message-Header"));
 
     configure(telemetryBuilder);

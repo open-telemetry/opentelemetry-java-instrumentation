@@ -37,7 +37,7 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
 
   private static final KafkaTelemetry kafkaTelemetry =
       KafkaTelemetry.builder(testing.getOpenTelemetry())
-          .setMessagingReceiveTelemetryEnabled(false)
+          .setMessagingReceiveSpansEnabled(false)
           .build();
 
   @Override

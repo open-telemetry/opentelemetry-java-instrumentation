@@ -27,8 +27,8 @@ public class VertxKafkaSingletons {
             .setCaptureExperimentalSpanAttributes(
                 DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "kafka")
                     .getBoolean("experimental_span_attributes/development", false))
-            .setMessagingReceiveTelemetryEnabled(
-                ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
+            .setMessagingReceiveSpansEnabled(
+                ExperimentalConfig.get().messagingReceiveSpansEnabled());
     batchProcessInstrumenter = factory.createBatchProcessInstrumenter();
     processInstrumenter = factory.createConsumerProcessInstrumenter();
   }

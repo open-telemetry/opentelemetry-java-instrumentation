@@ -103,7 +103,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
@@ -112,7 +112,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
@@ -121,17 +121,17 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=false")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
   test {
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+      "otel.instrumentation.messaging.experimental.receive-spans.enabled=true",
     )
   }
 

@@ -86,9 +86,7 @@ final class RocketMqInstrumenterFactory {
   }
 
   public static Instrumenter<MessageView, ConsumeResult> createConsumerProcessInstrumenter(
-      OpenTelemetry openTelemetry,
-      List<String> capturedHeaders,
-      boolean receiveInstrumentationEnabled) {
+      OpenTelemetry openTelemetry, List<String> capturedHeaders, boolean receiveSpansEnabled) {
     RocketMqConsumerProcessAttributeGetter getter = new RocketMqConsumerProcessAttributeGetter();
     MessagingOperationType operationType = MessagingOperationType.PROCESS;
 
@@ -118,7 +116,7 @@ final class RocketMqInstrumenterFactory {
         instrumenterBuilder,
         openTelemetry.getPropagators().getTextMapPropagator(),
         new MessageMapGetter(),
-        receiveInstrumentationEnabled);
+        receiveSpansEnabled);
   }
 
   private static <T, R> AttributesExtractor<T, R> buildMessagingAttributesExtractor(

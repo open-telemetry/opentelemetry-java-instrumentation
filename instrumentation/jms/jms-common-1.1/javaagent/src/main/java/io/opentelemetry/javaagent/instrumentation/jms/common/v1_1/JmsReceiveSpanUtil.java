@@ -19,8 +19,8 @@ import javax.annotation.Nullable;
 
 public class JmsReceiveSpanUtil {
   private static final ContextPropagators propagators = GlobalOpenTelemetry.getPropagators();
-  private static final boolean receiveInstrumentationEnabled =
-      ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+  private static final boolean receiveSpansEnabled =
+      ExperimentalConfig.get().messagingReceiveSpansEnabled();
 
   public static void createReceiveSpan(
       Instrumenter<MessageWithDestination, Void> receiveInstrumenter,
@@ -30,7 +30,7 @@ public class JmsReceiveSpanUtil {
     Context parentContext = Context.current();
     // if receive instrumentation is not enabled we'll use the producer as parent, unless the stable
     // messaging semantic conventions are enabled, where the producer is linked instead
-    if (!receiveInstrumentationEnabled && !emitStableMessagingSemconv()) {
+    if (!receiveSpansEnabled && !emitStableMessagingSemconv()) {
       parentContext =
           propagators
               .getTextMapPropagator()

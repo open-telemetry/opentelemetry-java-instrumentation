@@ -31,7 +31,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
 
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }

@@ -44,8 +44,8 @@ public final class KafkaInstrumenterFactory {
   private ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
   private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes = false;
-  private boolean messagingReceiveInstrumentationEnabled = false;
-  private boolean messagingReceiveInstrumentationConfigured = false;
+  private boolean messagingReceiveSpansEnabled = false;
+  private boolean messagingReceiveSpansConfigured = false;
 
   public KafkaInstrumenterFactory(OpenTelemetry openTelemetry, String instrumentationName) {
     this.openTelemetry = openTelemetry;
@@ -72,10 +72,10 @@ public final class KafkaInstrumenterFactory {
   }
 
   @CanIgnoreReturnValue
-  public KafkaInstrumenterFactory setMessagingReceiveTelemetryEnabled(
-      boolean messagingReceiveInstrumentationEnabled) {
-    this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
-    this.messagingReceiveInstrumentationConfigured = true;
+  public KafkaInstrumenterFactory setMessagingReceiveSpansEnabled(
+      boolean messagingReceiveSpansEnabled) {
+    this.messagingReceiveSpansEnabled = messagingReceiveSpansEnabled;
+    this.messagingReceiveSpansConfigured = true;
     return this;
   }
 
@@ -117,7 +117,7 @@ public final class KafkaInstrumenterFactory {
       Iterable<AttributesExtractor<KafkaReceiveRequest, Void>> extractors) {
     KafkaReceiveAttributesGetter getter = new KafkaReceiveAttributesGetter();
     MessagingOperationType operationType = MessagingOperationType.RECEIVE;
-    boolean receiveInstrumentationEnabled = receiveInstrumentationEnabled();
+    boolean receiveSpansEnabled = receiveSpansEnabled();
 
     InstrumenterBuilder<KafkaReceiveRequest, Void> builder =
         Instrumenter.<KafkaReceiveRequest, Void>builder(
@@ -130,7 +130,7 @@ public final class KafkaInstrumenterFactory {
             .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
             .addAttributesExtractors(extractors)
             .setErrorCauseExtractor(errorCauseExtractor)
-            .setEnabled(receiveInstrumentationEnabled);
+            .setEnabled(receiveSpansEnabled);
     if (emitStableMessagingSemconv()) {
       builder.addSpanLinksExtractor(
           new KafkaBatchProcessSpanLinksExtractor(
@@ -169,12 +169,12 @@ public final class KafkaInstrumenterFactory {
         builder,
         openTelemetry.getPropagators().getTextMapPropagator(),
         new KafkaConsumerRecordGetter(),
-        receiveInstrumentationEnabled());
+        receiveSpansEnabled());
   }
 
-  private boolean receiveInstrumentationEnabled() {
-    return messagingReceiveInstrumentationConfigured
-        ? messagingReceiveInstrumentationEnabled
+  private boolean receiveSpansEnabled() {
+    return messagingReceiveSpansConfigured
+        ? messagingReceiveSpansEnabled
         : emitStableMessagingSemconv();
   }
 

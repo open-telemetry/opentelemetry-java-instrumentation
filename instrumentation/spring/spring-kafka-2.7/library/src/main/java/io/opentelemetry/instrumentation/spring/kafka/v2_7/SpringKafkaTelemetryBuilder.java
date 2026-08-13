@@ -23,7 +23,7 @@ public final class SpringKafkaTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes = false;
-  private boolean messagingReceiveInstrumentationEnabled = false;
+  private boolean messagingReceiveSpansEnabled = false;
 
   SpringKafkaTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -43,16 +43,29 @@ public final class SpringKafkaTelemetryBuilder {
   }
 
   /**
-   * Set whether to capture the consumer message receive telemetry in messaging instrumentation.
+   * Set whether to emit receive spans for messaging pull operations.
    *
    * <p>Note that this will cause the consumer side to start a new trace, with only a span link
    * connecting it to the producer trace.
    */
   @CanIgnoreReturnValue
-  public SpringKafkaTelemetryBuilder setMessagingReceiveTelemetryEnabled(
-      boolean messagingReceiveInstrumentationEnabled) {
-    this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
+  public SpringKafkaTelemetryBuilder setMessagingReceiveSpansEnabled(
+      boolean messagingReceiveSpansEnabled) {
+    this.messagingReceiveSpansEnabled = messagingReceiveSpansEnabled;
     return this;
+  }
+
+  /**
+   * Set whether to capture the consumer message receive telemetry in messaging instrumentation.
+   *
+   * @deprecated Use {@link #setMessagingReceiveSpansEnabled(boolean)}. May be removed in the next
+   *     minor release.
+   */
+  @Deprecated // may be removed in the next minor release
+  @CanIgnoreReturnValue
+  public SpringKafkaTelemetryBuilder setMessagingReceiveTelemetryEnabled(
+      boolean messagingReceiveTelemetryEnabled) {
+    return setMessagingReceiveSpansEnabled(messagingReceiveTelemetryEnabled);
   }
 
   /**
@@ -64,7 +77,7 @@ public final class SpringKafkaTelemetryBuilder {
         new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
             .setCapturedHeaders(capturedHeaders)
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
-            .setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled)
+            .setMessagingReceiveSpansEnabled(messagingReceiveSpansEnabled)
             .setErrorCauseExtractor(new SpringKafkaErrorCauseExtractor());
 
     return new SpringKafkaTelemetry(

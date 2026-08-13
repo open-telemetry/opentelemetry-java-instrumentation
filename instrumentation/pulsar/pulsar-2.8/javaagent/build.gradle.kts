@@ -42,7 +42,7 @@ tasks {
     filter {
       excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
 
     jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
     systemProperty("metadataConfig", "otel.instrumentation.pulsar.experimental-span-attributes=true")
@@ -54,7 +54,7 @@ tasks {
     filter {
       excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
@@ -66,7 +66,7 @@ tasks {
       includeTestsMatching("PulsarClientSuppressReceiveSpansTest")
     }
     include("**/PulsarClientSuppressReceiveSpansTest.*")
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=false")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
@@ -77,7 +77,7 @@ tasks {
     filter {
       includeTestsMatching("PulsarClientTest.testConsumeNonPartitionedTopic")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
@@ -86,10 +86,10 @@ tasks {
     filter {
       excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+      "otel.instrumentation.messaging.experimental.receive-spans.enabled=true",
     )
   }
 

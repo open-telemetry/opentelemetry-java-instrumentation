@@ -38,13 +38,13 @@ public final class TracingRequestHandler extends RequestHandler2 {
                     // necessary to support configuration via system properties.
                     SystemProperty.getBoolean(
                         "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
-        .setMessagingReceiveTelemetryEnabled(
+        .setMessagingReceiveSpansEnabled(
             messaging
-                .get("receive_telemetry/development")
+                .get("receive_spans/development")
                 .getBoolean(
                     "enabled",
                     SystemProperty.getBoolean(
-                        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
+                        "otel.instrumentation.messaging.experimental.receive-spans.enabled",
                         false)))
         .setCapturedHeaders(
             messaging.getScalarList(

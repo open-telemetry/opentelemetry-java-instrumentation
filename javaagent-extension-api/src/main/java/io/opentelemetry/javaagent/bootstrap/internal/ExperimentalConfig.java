@@ -46,11 +46,19 @@ public final class ExperimentalConfig {
     return commonConfig.get("view_telemetry/development").getBoolean("enabled", false);
   }
 
-  public boolean messagingReceiveInstrumentationEnabled() {
-    return commonConfig
-        .get("messaging")
-        .get("receive_telemetry/development")
-        .getBoolean("enabled", false);
+  /**
+   * Returns whether receive spans are enabled for messaging pull operations.
+   *
+   * <p>Reads {@code receive_spans/development}, falling back to the deprecated {@code
+   * receive_telemetry/development} when the new key is not set.
+   */
+  public boolean messagingReceiveSpansEnabled() {
+    DeclarativeConfigProperties messagingConfig = commonConfig.get("messaging");
+    Boolean enabled = messagingConfig.get("receive_spans/development").getBoolean("enabled");
+    if (enabled != null) {
+      return enabled;
+    }
+    return messagingConfig.get("receive_telemetry/development").getBoolean("enabled", false);
   }
 
   public List<String> getMessagingHeaders() {

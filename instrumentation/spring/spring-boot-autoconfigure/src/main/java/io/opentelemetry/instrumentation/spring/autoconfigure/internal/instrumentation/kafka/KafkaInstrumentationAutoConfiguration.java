@@ -43,16 +43,22 @@ public class KafkaInstrumentationAutoConfiguration {
         .setCaptureExperimentalSpanAttributes(
             DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "kafka")
                 .getBoolean("experimental_span_attributes/development", false))
-        .setMessagingReceiveTelemetryEnabled(
-            commonConfig
-                .get("messaging")
-                .get("receive_telemetry/development")
-                .getBoolean("enabled", false))
+        .setMessagingReceiveSpansEnabled(messagingReceiveSpansEnabled(commonConfig))
         .setCapturedHeaders(
             commonConfig
                 .get("messaging")
                 .getScalarList("capture_headers/development", String.class, emptyList()))
         .build();
+  }
+
+  private static boolean messagingReceiveSpansEnabled(DeclarativeConfigProperties commonConfig) {
+    DeclarativeConfigProperties messaging = commonConfig.get("messaging");
+    Boolean enabled = messaging.get("receive_spans/development").getBoolean("enabled");
+    if (enabled != null) {
+      return enabled;
+    }
+    // deprecated, may be removed in the next minor release
+    return messaging.get("receive_telemetry/development").getBoolean("enabled", false);
   }
 
   // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning

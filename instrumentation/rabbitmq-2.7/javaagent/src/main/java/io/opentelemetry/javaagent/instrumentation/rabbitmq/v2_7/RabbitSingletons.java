@@ -175,7 +175,7 @@ public class RabbitSingletons {
         Instrumenter.<ReceiveRequest, GetResponse>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractors(extractors)
-            .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
+            .setEnabled(ExperimentalConfig.get().messagingReceiveSpansEnabled())
             .addSpanLinksExtractor(
                 new PropagatorBasedSpanLinksExtractor<>(
                     GlobalOpenTelemetry.getPropagators().getTextMapPropagator(),

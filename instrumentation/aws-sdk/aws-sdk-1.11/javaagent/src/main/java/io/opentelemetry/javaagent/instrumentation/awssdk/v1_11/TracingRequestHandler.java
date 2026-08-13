@@ -39,8 +39,7 @@ public class TracingRequestHandler extends RequestHandler2 {
           .setCaptureExperimentalSpanAttributes(
               DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "aws_sdk")
                   .getBoolean("experimental_span_attributes/development", false))
-          .setMessagingReceiveTelemetryEnabled(
-              ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
+          .setMessagingReceiveSpansEnabled(ExperimentalConfig.get().messagingReceiveSpansEnabled())
           .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .build()
           .createRequestHandler();

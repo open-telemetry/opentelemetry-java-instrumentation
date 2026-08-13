@@ -36,7 +36,7 @@ public class JmsInstrumenterFactory {
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
   private List<String> capturedHeaders = emptyList();
-  private boolean messagingReceiveInstrumentationEnabled = false;
+  private boolean messagingReceiveSpansEnabled = false;
 
   public JmsInstrumenterFactory(OpenTelemetry openTelemetry, String instrumentationName) {
     this.openTelemetry = openTelemetry;
@@ -50,9 +50,9 @@ public class JmsInstrumenterFactory {
   }
 
   @CanIgnoreReturnValue
-  public JmsInstrumenterFactory setMessagingReceiveTelemetryEnabled(
-      boolean messagingReceiveInstrumentationEnabled) {
-    this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
+  public JmsInstrumenterFactory setMessagingReceiveSpansEnabled(
+      boolean messagingReceiveSpansEnabled) {
+    this.messagingReceiveSpansEnabled = messagingReceiveSpansEnabled;
     return this;
   }
 
@@ -85,7 +85,7 @@ public class JmsInstrumenterFactory {
     setMessagingReceiveExceptionEventExtractor(builder);
     // with the stable messaging semantic conventions the producer is always linked, since it is
     // never used as the parent of the receive span
-    if (messagingReceiveInstrumentationEnabled || emitStableMessagingSemconv()) {
+    if (messagingReceiveSpansEnabled || emitStableMessagingSemconv()) {
       builder.addSpanLinksExtractor(
           new PropagatorBasedSpanLinksExtractor<>(
               openTelemetry.getPropagators().getTextMapPropagator(),
@@ -111,7 +111,7 @@ public class JmsInstrumenterFactory {
         builder,
         openTelemetry.getPropagators().getTextMapPropagator(),
         MessagePropertyGetter.INSTANCE,
-        canHaveReceiveInstrumentation && messagingReceiveInstrumentationEnabled);
+        canHaveReceiveInstrumentation && messagingReceiveSpansEnabled);
   }
 
   private AttributesExtractor<MessageWithDestination, Void> createMessagingAttributesExtractor(

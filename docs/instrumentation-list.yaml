@@ -795,18 +795,18 @@ definitions:
         Enables adding baggage entries to the Logback MDC, prefixed with "baggage.".
       type: boolean
       default: false
-    otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6:
-      name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
-      declarative_name: java.common.messaging.receive_telemetry/development.enabled
-      description: |
-        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
-      type: boolean
-      default: false
-    otel.instrumentation.messaging.experimental.receive-telemetry.enabled-59c44ca8:
-      name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
-      declarative_name: java.common.messaging.receive_telemetry/development.enabled
+    otel.instrumentation.messaging.experimental.receive-spans.enabled-a34e64e9:
+      name: otel.instrumentation.messaging.experimental.receive-spans.enabled
+      declarative_name: java.common.messaging.receive_spans/development.enabled
       description: |
         Enables the creation of consumer spans on messaging receive operations. These spans will measure the time between receiving a message and the consumer processing that message.
+      type: boolean
+      default: false
+    otel.instrumentation.messaging.experimental.receive-spans.enabled-f8b2d1e9:
+      name: otel.instrumentation.messaging.experimental.receive-spans.enabled
+      declarative_name: java.common.messaging.receive_spans/development.enabled
+      description: |
+        Enables experimental receive spans, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
       type: boolean
       default: false
     otel.instrumentation.methods.include:
@@ -3896,7 +3896,7 @@ libraries:
   configuration_refs:
   - messaging.capture-headers
   - otel.instrumentation.aws-sdk.experimental-span-attributes-f30ad240
-  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
+  - otel.instrumentation.messaging.experimental.receive-spans.enabled-f8b2d1e9
   telemetry:
   - when: default
     spans:
@@ -4263,7 +4263,7 @@ libraries:
   - otel.instrumentation.aws-sdk.experimental-span-attributes-0c4c01de
   - otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging
   - otel.instrumentation.genai.capture-message-content-ceb072e9
-  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
+  - otel.instrumentation.messaging.experimental.receive-spans.enabled-f8b2d1e9
   telemetry:
   - when: default
     metric_refs:
@@ -8624,9 +8624,9 @@ libraries:
   - javax.jms:jms-api:(,)
   configuration_refs:
   - messaging.capture-headers
-  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
+  - otel.instrumentation.messaging.experimental.receive-spans.enabled-f8b2d1e9
   telemetry:
-  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
+  - when: otel.instrumentation.messaging.experimental.receive-spans.enabled=true
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -8712,9 +8712,9 @@ libraries:
   - jakarta.jms:jakarta.jms-api:[3.0.0,)
   configuration_refs:
   - messaging.capture-headers
-  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
+  - otel.instrumentation.messaging.experimental.receive-spans.enabled-f8b2d1e9
   telemetry:
-  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
+  - when: otel.instrumentation.messaging.experimental.receive-spans.enabled=true
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -8986,7 +8986,7 @@ libraries:
   - messaging.capture-headers
   - otel.instrumentation.kafka.experimental-span-attributes-5d2fc7d4
   - otel.instrumentation.kafka.producer-propagation.enabled
-  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
+  - otel.instrumentation.messaging.experimental.receive-spans.enabled-f8b2d1e9
   telemetry:
   - when: default
     spans:
@@ -9290,7 +9290,7 @@ libraries:
   configuration_refs:
   - messaging.capture-headers
   - otel.instrumentation.kafka.experimental-span-attributes-5d2fc7d4
-  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
+  - otel.instrumentation.messaging.experimental.receive-spans.enabled-f8b2d1e9
   telemetry:
   - when: default
     spans:
@@ -11829,10 +11829,10 @@ libraries:
   - org.apache.pulsar:pulsar-client:[2.8.0,)
   configuration_refs:
   - messaging.capture-headers
-  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
+  - otel.instrumentation.messaging.experimental.receive-spans.enabled-f8b2d1e9
   - otel.instrumentation.pulsar.experimental-span-attributes-5ac8c0d9
   telemetry:
-  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
+  - when: otel.instrumentation.messaging.experimental.receive-spans.enabled=true
     metric_refs:
     - messaging.publish.duration-05731f17
     - messaging.receive.duration-4b4a91de
@@ -12115,7 +12115,7 @@ libraries:
   - com.rabbitmq:amqp-client:[2.7.0,)
   configuration_refs:
   - messaging.capture-headers
-  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-59c44ca8
+  - otel.instrumentation.messaging.experimental.receive-spans.enabled-a34e64e9
   - otel.instrumentation.rabbitmq.experimental-span-attributes
   telemetry:
   - when: default
@@ -12507,7 +12507,7 @@ libraries:
   configuration_refs:
   - messaging.capture-headers
   - otel.instrumentation.kafka.experimental-span-attributes-956cabd8
-  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
+  - otel.instrumentation.messaging.experimental.receive-spans.enabled-f8b2d1e9
   telemetry:
   - when: otel.instrumentation.kafka.experimental-span-attributes=true
     spans:
@@ -12531,7 +12531,7 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
-  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
+  - when: otel.instrumentation.messaging.experimental.receive-spans.enabled=true
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -13131,9 +13131,9 @@ libraries:
   - org.apache.rocketmq:rocketmq-client-java:[5.0.0,)
   configuration_refs:
   - messaging.capture-headers
-  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
+  - otel.instrumentation.messaging.experimental.receive-spans.enabled-f8b2d1e9
   telemetry:
-  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
+  - when: otel.instrumentation.messaging.experimental.receive-spans.enabled=true
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -13845,9 +13845,9 @@ libraries:
   - org.springframework:spring-jms:[2.0,6)
   configuration_refs:
   - messaging.capture-headers
-  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
+  - otel.instrumentation.messaging.experimental.receive-spans.enabled-f8b2d1e9
   telemetry:
-  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
+  - when: otel.instrumentation.messaging.experimental.receive-spans.enabled=true
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -13889,9 +13889,9 @@ libraries:
   - org.springframework:spring-jms:[6.0.0,)
   configuration_refs:
   - messaging.capture-headers
-  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
+  - otel.instrumentation.messaging.experimental.receive-spans.enabled-f8b2d1e9
   telemetry:
-  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
+  - when: otel.instrumentation.messaging.experimental.receive-spans.enabled=true
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -13934,9 +13934,9 @@ libraries:
   configuration_refs:
   - messaging.capture-headers
   - otel.instrumentation.kafka.experimental-span-attributes-6596b308
-  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
+  - otel.instrumentation.messaging.experimental.receive-spans.enabled-f8b2d1e9
   telemetry:
-  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
+  - when: otel.instrumentation.messaging.experimental.receive-spans.enabled=true
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -13960,7 +13960,7 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
-  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true
+  - when: otel.instrumentation.messaging.experimental.receive-spans.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -14028,10 +14028,10 @@ libraries:
   - org.springframework.pulsar:spring-pulsar:[1.0.0,)
   configuration_refs:
   - messaging.capture-headers
-  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
+  - otel.instrumentation.messaging.experimental.receive-spans.enabled-f8b2d1e9
   - otel.instrumentation.pulsar.experimental-span-attributes-1d77bf4d
   telemetry:
-  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
+  - when: otel.instrumentation.messaging.experimental.receive-spans.enabled=true
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -15338,9 +15338,9 @@ libraries:
   - messaging.capture-headers
   - otel.instrumentation.kafka.experimental-span-attributes-5d2fc7d4
   - otel.instrumentation.kafka.producer-propagation.enabled
-  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
+  - otel.instrumentation.messaging.experimental.receive-spans.enabled-f8b2d1e9
   telemetry:
-  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
+  - when: otel.instrumentation.messaging.experimental.receive-spans.enabled=true
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -15362,7 +15362,7 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
-  - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true
+  - when: otel.instrumentation.messaging.experimental.receive-spans.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true
     spans:
     - span_kind: CONSUMER
       attributes:

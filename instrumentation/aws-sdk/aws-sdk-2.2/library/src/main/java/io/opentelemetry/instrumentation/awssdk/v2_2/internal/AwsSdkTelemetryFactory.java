@@ -53,13 +53,13 @@ public final class AwsSdkTelemetryFactory {
                 "experimental_span_attributes/development",
                 systemProperties.getBoolean(
                     "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
-        .setMessagingReceiveTelemetryEnabled(
+        .setMessagingReceiveSpansEnabled(
             messaging
-                .get("receive_telemetry/development")
+                .get("receive_spans/development")
                 .getBoolean(
                     "enabled",
                     systemProperties.getBoolean(
-                        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
+                        "otel.instrumentation.messaging.experimental.receive-spans.enabled",
                         false)))
         .setUseConfiguredPropagatorForMessaging(
             awsSdk.getBoolean(

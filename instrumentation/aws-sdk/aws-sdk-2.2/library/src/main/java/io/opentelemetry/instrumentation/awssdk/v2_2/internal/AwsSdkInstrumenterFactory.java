@@ -93,7 +93,7 @@ public final class AwsSdkInstrumenterFactory {
   @Nullable private final TextMapPropagator messagingPropagator;
   private final List<String> capturedHeaders;
   private final boolean captureExperimentalSpanAttributes;
-  private final boolean messagingReceiveInstrumentationEnabled;
+  private final boolean messagingReceiveSpansEnabled;
   private final boolean useXrayPropagator;
 
   public AwsSdkInstrumenterFactory(
@@ -101,13 +101,13 @@ public final class AwsSdkInstrumenterFactory {
       @Nullable TextMapPropagator messagingPropagator,
       List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes,
-      boolean messagingReceiveInstrumentationEnabled,
+      boolean messagingReceiveSpansEnabled,
       boolean useXrayPropagator) {
     this.openTelemetry = openTelemetry;
     this.messagingPropagator = messagingPropagator;
     this.capturedHeaders = capturedHeaders;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
-    this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
+    this.messagingReceiveSpansEnabled = messagingReceiveSpansEnabled;
     this.useXrayPropagator = useXrayPropagator;
   }
 
@@ -169,7 +169,7 @@ public final class AwsSdkInstrumenterFactory {
                 });
           }
         },
-        messagingReceiveInstrumentationEnabled);
+        messagingReceiveSpansEnabled);
   }
 
   public Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter() {
@@ -186,7 +186,7 @@ public final class AwsSdkInstrumenterFactory {
                 messagingAttributesExtractor(getter, operationType, PROCESS_OPERATION_NAME));
     setMessagingProcessExceptionEventExtractor(builder);
 
-    if (emitStableMessagingSemconv() || messagingReceiveInstrumentationEnabled) {
+    if (emitStableMessagingSemconv() || messagingReceiveSpansEnabled) {
       builder.addSpanLinksExtractor(
           (spanLinks, parentContext, request) -> {
             // getCreationContext() extracts against a root context, so it is either a valid

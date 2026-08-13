@@ -36,17 +36,16 @@ public class KafkaSingletons {
   static {
     DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common");
-    Boolean messagingReceiveInstrumentationEnabled =
-        commonConfig.get("messaging").get("receive_telemetry/development").getBoolean("enabled");
+    Boolean messagingReceiveSpansEnabled =
+        commonConfig.get("messaging").get("receive_spans/development").getBoolean("enabled");
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
             .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
             .setCaptureExperimentalSpanAttributes(
                 DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "kafka")
                     .getBoolean("experimental_span_attributes/development", false));
-    if (messagingReceiveInstrumentationEnabled != null) {
-      instrumenterFactory.setMessagingReceiveTelemetryEnabled(
-          messagingReceiveInstrumentationEnabled);
+    if (messagingReceiveSpansEnabled != null) {
+      instrumenterFactory.setMessagingReceiveSpansEnabled(messagingReceiveSpansEnabled);
     }
     producerInstrumenter = instrumenterFactory.createProducerInstrumenter();
     consumerReceiveInstrumenter = instrumenterFactory.createConsumerReceiveInstrumenter();

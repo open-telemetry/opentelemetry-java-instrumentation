@@ -71,7 +71,7 @@ tasks {
       includeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
     include("**/KafkaClientSuppressReceiveSpansTest.*")
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=false")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
@@ -124,7 +124,7 @@ tasks {
       excludeTestsMatching("KafkaClientPropagationDisabledTest")
       excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
 
     systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
@@ -137,7 +137,7 @@ tasks {
       excludeTestsMatching("KafkaClientPropagationDisabledTest")
       excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
@@ -147,7 +147,7 @@ tasks {
       excludeTestsMatching("KafkaClientPropagationDisabledTest")
       excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
   }
 
   check {

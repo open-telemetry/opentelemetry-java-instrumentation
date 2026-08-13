@@ -22,8 +22,7 @@ public class KafkaStreamsSingletons {
           .setCaptureExperimentalSpanAttributes(
               DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "kafka")
                   .getBoolean("experimental_span_attributes/development", false))
-          .setMessagingReceiveTelemetryEnabled(
-              ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
+          .setMessagingReceiveSpansEnabled(ExperimentalConfig.get().messagingReceiveSpansEnabled())
           .createConsumerProcessInstrumenter();
 
   public static Instrumenter<KafkaProcessRequest, Void> instrumenter() {

@@ -11,7 +11,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
 
   private static final KafkaTelemetry kafkaTelemetry =
       KafkaTelemetry.builder(testing.getOpenTelemetry())
-          .setMessagingReceiveTelemetryEnabled(true)
+          .setMessagingReceiveSpansEnabled(true)
           .setCapturedHeaders(singletonList("Test-Message-Header"))
           .build();
 

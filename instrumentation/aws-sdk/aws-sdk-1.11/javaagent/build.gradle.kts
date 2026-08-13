@@ -103,7 +103,7 @@ testing {
       targets {
         all {
           testTask.configure {
-            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
           }
         }
       }
@@ -149,7 +149,7 @@ tasks {
     testClassesDirs = sourceSets["testSqs"].output.classesDirs
     classpath = sourceSets["testSqs"].runtimeClasspath
 
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
@@ -166,7 +166,7 @@ tasks {
     testClassesDirs = sourceSets["testSqs"].output.classesDirs
     classpath = sourceSets["testSqs"].runtimeClasspath
 
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     // with the v3 preview off, the legacy opt-in flag selects the new messaging semconv too
     jvmArgs("-Dotel.semconv-stability.opt-in=messaging/dup")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging/dup")

@@ -15,10 +15,10 @@ configurations:
     type: boolean
     default: false
   - ref: messaging.capture-headers
-  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
-    declarative_name: java.common.messaging.receive_telemetry/development.enabled
+  - name: otel.instrumentation.messaging.experimental.receive-spans.enabled
+    declarative_name: java.common.messaging.receive_spans/development.enabled
     description: >
-      Enables experimental receive telemetry, which will cause consumers to start a new trace, with
+      Enables experimental receive spans, which will cause consumers to start a new trace, with
       only a span link connecting it to the producer trace.
     type: boolean
     default: false

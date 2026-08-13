@@ -25,17 +25,16 @@ public class RocketMqSingletons {
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     List<String> messagingHeaders = ExperimentalConfig.get().getMessagingHeaders();
-    boolean receiveInstrumentationEnabled =
-        ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+    boolean receiveSpansEnabled = ExperimentalConfig.get().messagingReceiveSpansEnabled();
 
     producerInstrumenter =
         RocketMqInstrumenterFactory.createProducerInstrumenter(openTelemetry, messagingHeaders);
     consumerReceiveInstrumenter =
         RocketMqInstrumenterFactory.createConsumerReceiveInstrumenter(
-            openTelemetry, messagingHeaders, receiveInstrumentationEnabled);
+            openTelemetry, messagingHeaders, receiveSpansEnabled);
     consumerProcessInstrumenter =
         RocketMqInstrumenterFactory.createConsumerProcessInstrumenter(
-            openTelemetry, messagingHeaders, receiveInstrumentationEnabled);
+            openTelemetry, messagingHeaders, receiveSpansEnabled);
   }
 
   public static Instrumenter<PublishingMessageImpl, SendReceiptImpl> producerInstrumenter() {

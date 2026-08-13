@@ -73,7 +73,7 @@ public abstract class AbstractReactorKafkaTest {
   private static final Logger logger = LoggerFactory.getLogger(AbstractReactorKafkaTest.class);
 
   private static final boolean RECEIVE_TELEMETRY_ENABLED =
-      Boolean.getBoolean("otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
+      Boolean.getBoolean("otel.instrumentation.messaging.experimental.receive-spans.enabled");
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
   private static final boolean HAS_CONSUMER_GROUP = Boolean.getBoolean("hasConsumerGroup");

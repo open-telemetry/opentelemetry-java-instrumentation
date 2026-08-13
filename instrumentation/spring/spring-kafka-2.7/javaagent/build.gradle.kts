@@ -56,7 +56,7 @@ testing {
         all {
           testTask.configure {
             jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=false")
           }
         }
       }
@@ -75,11 +75,11 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true",
+      "otel.instrumentation.messaging.experimental.receive-spans.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true",
     )
   }
 
@@ -92,7 +92,7 @@ tasks {
       includeTestsMatching("SpringKafkaTest.shouldCreateSpansForBatchReceiveAndProcess")
       includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaBatchListener")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
@@ -106,7 +106,7 @@ tasks {
       includeTestsMatching("SpringKafkaTest.shouldCreateSpansForBatchReceiveAndProcess")
       includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaBatchListener")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
   }
@@ -115,16 +115,16 @@ tasks {
     testClassesDirs = sourceSets["testNoReceiveTelemetry"].output.classesDirs
     classpath = sourceSets["testNoReceiveTelemetry"].runtimeClasspath
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=false")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
   test {
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+      "otel.instrumentation.messaging.experimental.receive-spans.enabled=true",
     )
   }
 

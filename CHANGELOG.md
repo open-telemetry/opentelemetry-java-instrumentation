@@ -50,6 +50,15 @@
   `MessagingProducerMetrics.getForOperationType()` and
   `MessagingConsumerMetrics.getForOperationType()`.
   ([#19357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19357))
+- Deprecate the `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` property and
+  the `java.common.messaging.receive_telemetry/development.enabled` declarative configuration key in
+  favor of `otel.instrumentation.messaging.experimental.receive-spans.enabled` and
+  `java.common.messaging.receive_spans/development.enabled`. The setting has only ever controlled
+  whether receive spans are created, and the new name says so. The deprecated names still work and
+  may be removed in the next minor release; the new names win when both are set.
+- Deprecate `setMessagingReceiveTelemetryEnabled` on `AwsSdkTelemetryBuilder` (AWS SDK 1.11 and
+  2.2), `KafkaTelemetryBuilder` and `SpringKafkaTelemetryBuilder` in favor of
+  `setMessagingReceiveSpansEnabled`.
 
 ## Version 2.30.0 (2026-07-22)
 

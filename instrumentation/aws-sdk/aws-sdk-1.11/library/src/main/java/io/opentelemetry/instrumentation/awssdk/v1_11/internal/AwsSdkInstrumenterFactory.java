@@ -60,17 +60,17 @@ public final class AwsSdkInstrumenterFactory {
   private final OpenTelemetry openTelemetry;
   private final List<String> capturedHeaders;
   private final boolean captureExperimentalSpanAttributes;
-  private final boolean messagingReceiveInstrumentationEnabled;
+  private final boolean messagingReceiveSpansEnabled;
 
   public AwsSdkInstrumenterFactory(
       OpenTelemetry openTelemetry,
       List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes,
-      boolean messagingReceiveInstrumentationEnabled) {
+      boolean messagingReceiveSpansEnabled) {
     this.openTelemetry = openTelemetry;
     this.capturedHeaders = capturedHeaders;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
-    this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
+    this.messagingReceiveSpansEnabled = messagingReceiveSpansEnabled;
   }
 
   private static List<AttributesExtractor<Request<?>, Response<?>>> createAttributesExtractors(
@@ -140,7 +140,7 @@ public final class AwsSdkInstrumenterFactory {
                 });
           }
         },
-        messagingReceiveInstrumentationEnabled);
+        messagingReceiveSpansEnabled);
   }
 
   public Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter() {
@@ -158,7 +158,7 @@ public final class AwsSdkInstrumenterFactory {
             .addAttributesExtractor(messagingAttributeExtractor);
     setMessagingProcessExceptionEventExtractor(builder);
 
-    if (emitStableMessagingSemconv() || messagingReceiveInstrumentationEnabled) {
+    if (emitStableMessagingSemconv() || messagingReceiveSpansEnabled) {
       builder.addSpanLinksExtractor(
           (spanLinks, parentContext, request) -> {
             // getCreationContext() extracts against a root context, so it is either a valid
