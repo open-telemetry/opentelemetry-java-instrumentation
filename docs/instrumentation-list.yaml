@@ -37,9 +37,11 @@ definitions:
           peer:
             type: string
             description: Host name or IP address to match against.
+            example: host
           service_name:
             type: string
             description: Peer service name to record for matching peers.
+            example: serviceName
     http.client.capture-request-headers:
       name: otel.instrumentation.http.client.capture-request-headers
       declarative_name: general.http.client.request_captured_headers
@@ -105,9 +107,11 @@ definitions:
           pattern:
             type: string
             description: Regular expression matched against the request URL.
+            example: /users/\d+
           template:
             type: string
             description: Template used to derive the low-cardinality route.
+            example: /users/{id}
           override:
             type: boolean
             description: Whether this rule overrides an already-applied template.

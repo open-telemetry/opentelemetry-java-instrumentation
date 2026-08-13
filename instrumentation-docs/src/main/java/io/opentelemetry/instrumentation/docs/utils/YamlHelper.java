@@ -316,6 +316,9 @@ public class YamlHelper {
               if (property.defaultValue() != null) {
                 propertyMap.put("default", property.defaultValue());
               }
+              if (property.example() != null) {
+                propertyMap.put("example", property.example());
+              }
               properties.put(key, propertyMap);
             });
     schemaMap.put("properties", properties);
