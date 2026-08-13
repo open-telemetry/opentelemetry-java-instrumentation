@@ -489,8 +489,14 @@ abstract class AbstractPulsarClientTest {
 
   // the stable semantic conventions record the partition in messaging.destination.partition.id, so
   // the destination name does not include the "-partition-N" suffix there
+  // not using TopicName.getPartitionedTopicName(), because it also expands a topic name that is not
+  // fully qualified, which is not what the instrumentation does
   static String destinationName(String topic) {
-    return emitStableMessagingSemconv() ? TopicName.get(topic).getPartitionedTopicName() : topic;
+    if (!emitStableMessagingSemconv()) {
+      return topic;
+    }
+    int suffixIndex = topic.lastIndexOf(TopicName.PARTITIONED_TOPIC_SUFFIX);
+    return suffixIndex == -1 ? topic : topic.substring(0, suffixIndex);
   }
 
   // messaging.destination.subscription.name only exists in the v1.43 messaging semantic conventions
