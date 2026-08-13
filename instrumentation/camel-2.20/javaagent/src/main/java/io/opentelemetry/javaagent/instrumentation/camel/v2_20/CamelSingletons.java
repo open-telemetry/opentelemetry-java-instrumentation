@@ -42,10 +42,6 @@ class CamelSingletons {
       createMessagingInstrumenter(SEND, "send", true, true);
   private static final Instrumenter<CamelRequest, Void> messagingPublishInstrumenter =
       createMessagingInstrumenter(SEND, "publish", true, true);
-  // Camel injects context for AWS SNS before the nested AWS SDK instrumentation performs broker
-  // I/O.
-  private static final Instrumenter<CamelRequest, Void> awsSnsMessagingSendInstrumenter =
-      createMessagingInstrumenter(SEND, "send", true, true);
   // AWS SQS sends rely on the nested AWS SDK producer span to inject propagation, while Camel owns
   // the messaging operation metrics.
   private static final Instrumenter<CamelRequest, Void> keylessMessagingSendInstrumenter =
@@ -133,9 +129,6 @@ class CamelSingletons {
       if (request.getCamelDirection() == CamelDirection.OUTBOUND) {
         if (!request.isMessagingSpanContextPropagated()) {
           return keylessMessagingSendInstrumenter;
-        }
-        if (request.getMessagingSystem().equals("aws.sns")) {
-          return awsSnsMessagingSendInstrumenter;
         }
         return "publish".equals(request.getMessagingSendOperationName())
             ? messagingPublishInstrumenter
