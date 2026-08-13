@@ -42,3 +42,6 @@ Follow `docs/contributing/style-guide.md`.
   comment; do not depend on the semconv incubating artifact. In
   `javaagent/src/main/` and tests, use semconv constants directly.
 - **`@Nullable` in tests**: do not add it to test code.
+- **Deprecation suppressions**: use `@SuppressWarnings("deprecation")`, not
+  `@SuppressWarnings("OtelDeprecatedApiUsage")`. Add one only for intentional
+  use of an API verified to be deprecated.
