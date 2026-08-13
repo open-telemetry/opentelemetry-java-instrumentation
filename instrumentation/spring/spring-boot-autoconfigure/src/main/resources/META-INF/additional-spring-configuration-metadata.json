@@ -493,7 +493,12 @@
     {
       "name": "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
       "type": "java.lang.String",
-      "description": "Deprecated comma-separated list of MDC keys to capture as log attributes. Keys are matched literally, including `*` and `?`, except that the single value `*` captures all MDC attributes. It is ignored when `otel.instrumentation.logback-appender.experimental.mdc-attributes.included` or `otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded` is configured, and it may be removed in the next minor release. Use `otel.instrumentation.logback-appender.experimental.mdc-attributes.included` instead."
+      "description": "Deprecated comma-separated list of MDC keys to capture as log attributes. Keys are matched literally, including `*` and `?`, except that the single value `*` captures all MDC attributes. It is ignored when `otel.instrumentation.logback-appender.experimental.mdc-attributes.included` or `otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded` is configured, and it may be removed in the next minor release. Use `otel.instrumentation.logback-appender.experimental.mdc-attributes.included` instead.",
+      "deprecation": {
+        "level": "warning",
+        "reason": "Use the MDC attribute selector properties instead.",
+        "replacement": "otel.instrumentation.logback-appender.experimental.mdc-attributes.included"
+      }
     },
     {
       "name": "otel.instrumentation.logback-appender.experimental.capture-template",
