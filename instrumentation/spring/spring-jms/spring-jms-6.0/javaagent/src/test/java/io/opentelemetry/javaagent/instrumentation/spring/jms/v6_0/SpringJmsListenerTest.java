@@ -180,15 +180,12 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(INTERNAL, emitStableMessagingSemconv() ? CLIENT : CONSUMER),
+        orderByRootSpanKind(INTERNAL, CONSUMER),
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasNoParent(),
               span ->
-                  span.hasName(
-                          emitStableMessagingSemconv()
-                              ? "send spring-jms-listener"
-                              : "spring-jms-listener publish")
+                  span.hasName("spring-jms-listener publish")
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -204,11 +201,8 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "receive spring-jms-listener"
-                                : "spring-jms-listener receive")
-                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                    span.hasName("spring-jms-listener receive")
+                        .hasKind(CONSUMER)
                         .hasNoParent()
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
@@ -219,10 +213,7 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                             operationType("receive"),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank)),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process spring-jms-listener"
-                                : "spring-jms-listener process")
+                    span.hasName("spring-jms-listener process")
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
@@ -337,15 +328,12 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
     }
 
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(INTERNAL, emitStableMessagingSemconv() ? CLIENT : CONSUMER),
+        orderByRootSpanKind(INTERNAL, CONSUMER),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "send spring-jms-listener"
-                                : "spring-jms-listener publish")
+                    span.hasName("spring-jms-listener publish")
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -364,11 +352,8 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "receive spring-jms-listener"
-                                : "spring-jms-listener receive")
-                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                    span.hasName("spring-jms-listener receive")
+                        .hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "jms"),
@@ -384,10 +369,7 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                                 stringArrayKey("messaging.header.Test_Message_Int_Header"),
                                 singletonList("1234"))),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv()
-                                ? "process spring-jms-listener"
-                                : "spring-jms-listener process")
+                    span.hasName("spring-jms-listener process")
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
