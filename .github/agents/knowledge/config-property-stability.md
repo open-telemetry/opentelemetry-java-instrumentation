@@ -191,8 +191,8 @@ These have no flat-property fallback, so tests must cover declarative config mod
 - **`experimental`- or `preview`-marked property gated on v3 preview**: the gate only exists to
   reproduce 3.0 behavior for names that must survive until 3.0. An unstable name needs the warning
   and nothing else.
-- **Deprecated value read or warned about under v3 preview**: preview must neither observe nor warn
-  about a setting that 3.0 will not recognize.
+- **Stable deprecated property value read or warned about under v3 preview**: preview must neither
+  observe nor warn about a setting that 3.0 will not recognize.
 - **Warning emitted when the replacement already determines an ordinary property value**: do not
   warn merely because shared configuration carries both names during a mixed-version rollout. This
   does not apply to instrumentation enablement name aliases.
