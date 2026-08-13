@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.appender.v1_1
 import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
-import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
 
@@ -18,39 +17,27 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.jboss.logmanager.ExtLogRecord;
 import org.jboss.logmanager.Level;
+import org.jboss.logmanager.Logger;
 import org.jboss.logmanager.MDC;
 
 public class LoggingEventMapper {
 
-  private static final Logger logger = Logger.getLogger(LoggingEventMapper.class.getName());
-  private static final Set<String> warnedDeprecatedProperties = ConcurrentHashMap.newKeySet();
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
   private static final AttributeKey<String> LOG_BODY_TEMPLATE =
       AttributeKey.stringKey("log.body.template");
   private static final AttributeKey<List<String>> LOG_BODY_PARAMETERS =
       AttributeKey.stringArrayKey("log.body.parameters");
-
-  private static final String DEPRECATED_CAPTURE_MDC_ATTRIBUTES =
-      "otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes";
-  private static final String MDC_ATTRIBUTES_INCLUDED =
-      "otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included";
-  private static final String MDC_ATTRIBUTES_EXCLUDED =
-      "otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.excluded";
 
   public static final LoggingEventMapper INSTANCE = new LoggingEventMapper();
 
@@ -67,67 +54,11 @@ public class LoggingEventMapper {
         config.getBoolean("experimental_log_attributes/development", false);
     captureTemplate = config.getBoolean("capture_template/development", false);
     captureArguments = config.getBoolean("capture_arguments/development", false);
-    mdcAttributes = getMdcAttributes(config);
+    mdcAttributes =
+        SelectorConfig.resolveLegacyLiteral(config, "jboss-logmanager", "mdc-attributes");
   }
 
-  @Nullable
-  static Predicate<String> getMdcAttributes(DeclarativeConfigProperties config) {
-    DeclarativeConfigProperties mdcAttributes = config.get("mdc_attributes/development");
-    List<String> included = mdcAttributes.getScalarList("included", String.class);
-    List<String> excluded = mdcAttributes.getScalarList("excluded", String.class);
-    IncludeExclude selector =
-        IncludeExclude.builder()
-            .setIncluded(included == null ? emptyList() : included)
-            .setExcluded(excluded == null ? emptyList() : excluded)
-            .build();
-
-    // Deprecated include-only alias.
-    List<String> deprecatedIncluded =
-        config.getScalarList("capture_mdc_attributes/development", String.class);
-    if (!selector.isEmpty()) {
-      if (deprecatedIncluded != null) {
-        logWarningOnce(
-            "precedence",
-            "The "
-                + DEPRECATED_CAPTURE_MDC_ATTRIBUTES
-                + " setting and the equivalent declarative configuration property are deprecated"
-                + " and ignored because "
-                + MDC_ATTRIBUTES_INCLUDED
-                + " or "
-                + MDC_ATTRIBUTES_EXCLUDED
-                + " is configured. They may be removed in the next minor release.");
-      }
-      return selector::matches;
-    }
-
-    if (deprecatedIncluded == null) {
-      return null;
-    }
-    logWarningOnce(
-        "deprecation",
-        "The "
-            + DEPRECATED_CAPTURE_MDC_ATTRIBUTES
-            + " setting and the equivalent declarative configuration property are deprecated and"
-            + " may be removed in the next minor release. Use "
-            + MDC_ATTRIBUTES_INCLUDED
-            + " or equivalent declarative configuration instead.");
-    if (deprecatedIncluded.isEmpty()) {
-      return null;
-    }
-    if (deprecatedIncluded.size() == 1 && deprecatedIncluded.get(0).equals("*")) {
-      return key -> true;
-    }
-    Set<String> exactKeys = new HashSet<>(deprecatedIncluded);
-    return exactKeys::contains;
-  }
-
-  private static void logWarningOnce(String warning, String message) {
-    if (warnedDeprecatedProperties.add(warning)) {
-      logger.warning(message);
-    }
-  }
-
-  public void capture(org.jboss.logmanager.Logger logger, ExtLogRecord record) {
+  public void capture(Logger logger, ExtLogRecord record) {
     String instrumentationName = logger.getName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
