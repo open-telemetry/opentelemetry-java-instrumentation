@@ -18,8 +18,8 @@ import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingReceiveTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -65,16 +65,20 @@ public final class SqsImpl {
     Context receiveContext = null;
     SqsReceiveRequest receiveRequest =
         SqsReceiveRequest.create(request, SqsMessageImpl.wrap(receiveMessageResult.getMessages()));
-    if (timer != null && consumerReceiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
+    // v1.11 receives are always application initiated, so a span is eligible whenever receive spans
+    // are enabled; metrics are recorded either way under stable/v3 semconv via
+    // startAndEndWithoutSpan.
+    boolean spanEligible = requestHandler.isMessagingReceiveSpansEnabled();
+    if (timer != null) {
       receiveContext =
-          InstrumenterUtil.startAndEnd(
+          MessagingReceiveTelemetry.record(
               consumerReceiveInstrumenter,
               parentContext,
               receiveRequest,
               response,
               null,
-              timer.startTime(),
-              timer.now());
+              timer,
+              spanEligible);
     }
 
     Context processParentContext = emitStableMessagingSemconv() ? parentContext : receiveContext;

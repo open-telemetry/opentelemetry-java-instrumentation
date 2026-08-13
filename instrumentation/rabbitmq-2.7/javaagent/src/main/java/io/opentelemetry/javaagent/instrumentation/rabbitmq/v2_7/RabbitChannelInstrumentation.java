@@ -12,6 +12,7 @@ import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitCom
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitInstrumenterHelper.helper;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.channelInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.receiveInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.receiveSpansEnabled;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static net.bytebuddy.matcher.ElementMatchers.canThrow;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
@@ -33,7 +34,7 @@ import com.rabbitmq.client.MessageProperties;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingReceiveTelemetry;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -424,20 +425,17 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
 
         Context parentContext = Context.current();
         ReceiveRequest request = ReceiveRequest.create(queue, response, channel.getConnection());
-        if (!receiveInstrumenter().shouldStart(parentContext, request)) {
-          return;
-        }
 
-        // can't create span and put into scope in method enter above, because can't add parent
-        // after span creation
-        InstrumenterUtil.startAndEnd(
+        // basicGet is an application-initiated pull, so an empty pull is still span-eligible when
+        // receive spans are enabled. Metrics are recorded either way under stable/v3 semconv.
+        MessagingReceiveTelemetry.record(
             receiveInstrumenter(),
             parentContext,
             request,
-            null,
+            response,
             throwable,
-            timer.startTime(),
-            timer.now());
+            timer,
+            receiveSpansEnabled());
       }
     }
 

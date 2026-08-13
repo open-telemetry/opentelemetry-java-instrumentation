@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.JmsReceiveSpanUtil.createReceiveSpan;
@@ -15,8 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.instrumentation.api.internal.Timer;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContextHolder;
+import io.opentelemetry.javaagent.bootstrap.InternalListenerPollContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
@@ -65,15 +65,20 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Enter Timer timer, @Advice.Return @Nullable Message message) {
-      if (message == null
-          && JmsReceiveContextHolder.isInitialized(Java8BytecodeBridge.currentContext())) {
+      // legacy behavior is unchanged: an empty receive never produces telemetry
+      if (message == null && !emitStableMessagingSemconv()) {
+        return;
+      }
+      boolean applicationInitiated = !InternalListenerPollContext.isActive();
+      // under the stable semantic conventions an idle internal listener poll is silent
+      if (message == null && !applicationInitiated) {
         return;
       }
       MessageWithDestination request =
           MessageWithDestination.create(
               message == null ? null : JakartaMessageAdapter.create(message), null);
 
-      createReceiveSpan(consumerReceiveInstrumenter(), request, timer, null);
+      createReceiveSpan(consumerReceiveInstrumenter(), request, timer, null, applicationInitiated);
     }
   }
 }

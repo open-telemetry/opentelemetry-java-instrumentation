@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
@@ -27,13 +28,16 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
+import java.util.List;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
 import org.apache.rocketmq.client.apis.ClientException;
 import org.apache.rocketmq.client.apis.ClientServiceProvider;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
 import org.apache.rocketmq.client.apis.consumer.FilterExpression;
 import org.apache.rocketmq.client.apis.consumer.FilterExpressionType;
+import org.apache.rocketmq.client.apis.consumer.SimpleConsumer;
 import org.apache.rocketmq.client.apis.message.Message;
+import org.apache.rocketmq.client.apis.message.MessageView;
 import org.apache.rocketmq.client.apis.producer.Producer;
 import org.apache.rocketmq.client.apis.producer.SendReceipt;
 import org.junit.jupiter.api.BeforeAll;
@@ -157,5 +161,44 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                   span ->
                       span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(2)));
             });
+  }
+
+  @Test
+  void testEmptyPullReceiveNoReceiveSpan() throws ClientException {
+    // SimpleConsumer.receive is application-initiated, but with receive spans off (the default) an
+    // empty pull produces no receive span. Metrics are still recorded under stable/v3 semconv.
+    ClientConfiguration clientConfiguration =
+        ClientConfiguration.newBuilder()
+            .setEndpoints(CONTAINER.endpoints)
+            .setRequestTimeout(Duration.ofSeconds(10))
+            .build();
+    // Inner topic of the container.
+    String topic = "normal-topic-0";
+    ClientServiceProvider provider = ClientServiceProvider.loadService();
+    SimpleConsumer simpleConsumer =
+        provider
+            .newSimpleConsumerBuilder()
+            .setClientConfiguration(clientConfiguration)
+            .setConsumerGroup("empty-pull-suppress-group")
+            .setSubscriptionExpressions(
+                singletonMap(
+                    topic, new FilterExpression("empty-pull-tag", FilterExpressionType.TAG)))
+            .setAwaitDuration(Duration.ofSeconds(1))
+            .build();
+    cleanup.deferCleanup(simpleConsumer);
+
+    List<MessageView> messages =
+        testing()
+            .runWithSpan(
+                "parent",
+                (ThrowingSupplier<List<MessageView>, ClientException>)
+                    () -> simpleConsumer.receive(1, Duration.ofSeconds(1)));
+
+    assertThat(messages).isEmpty();
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 }

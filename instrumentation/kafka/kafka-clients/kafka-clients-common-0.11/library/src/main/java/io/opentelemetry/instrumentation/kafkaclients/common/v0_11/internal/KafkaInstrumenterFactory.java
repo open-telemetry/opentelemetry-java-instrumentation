@@ -45,7 +45,6 @@ public final class KafkaInstrumenterFactory {
   private List<String> capturedHeaders = emptyList();
   private boolean captureExperimentalSpanAttributes = false;
   private boolean messagingReceiveSpansEnabled = false;
-  private boolean messagingReceiveSpansConfigured = false;
 
   public KafkaInstrumenterFactory(OpenTelemetry openTelemetry, String instrumentationName) {
     this.openTelemetry = openTelemetry;
@@ -75,8 +74,12 @@ public final class KafkaInstrumenterFactory {
   public KafkaInstrumenterFactory setMessagingReceiveSpansEnabled(
       boolean messagingReceiveSpansEnabled) {
     this.messagingReceiveSpansEnabled = messagingReceiveSpansEnabled;
-    this.messagingReceiveSpansConfigured = true;
     return this;
+  }
+
+  /** Returns whether receive spans are enabled for messaging pull operations. */
+  public boolean receiveSpansEnabled() {
+    return messagingReceiveSpansEnabled;
   }
 
   public Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInstrumenter() {
@@ -117,7 +120,6 @@ public final class KafkaInstrumenterFactory {
       Iterable<AttributesExtractor<KafkaReceiveRequest, Void>> extractors) {
     KafkaReceiveAttributesGetter getter = new KafkaReceiveAttributesGetter();
     MessagingOperationType operationType = MessagingOperationType.RECEIVE;
-    boolean receiveSpansEnabled = receiveSpansEnabled();
 
     InstrumenterBuilder<KafkaReceiveRequest, Void> builder =
         Instrumenter.<KafkaReceiveRequest, Void>builder(
@@ -129,8 +131,7 @@ public final class KafkaInstrumenterFactory {
                     getter, operationType, POLL_OPERATION_NAME, capturedHeaders))
             .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
             .addAttributesExtractors(extractors)
-            .setErrorCauseExtractor(errorCauseExtractor)
-            .setEnabled(receiveSpansEnabled);
+            .setErrorCauseExtractor(errorCauseExtractor);
     if (emitStableMessagingSemconv()) {
       builder.addSpanLinksExtractor(
           new KafkaBatchProcessSpanLinksExtractor(
@@ -169,13 +170,7 @@ public final class KafkaInstrumenterFactory {
         builder,
         openTelemetry.getPropagators().getTextMapPropagator(),
         new KafkaConsumerRecordGetter(),
-        receiveSpansEnabled());
-  }
-
-  private boolean receiveSpansEnabled() {
-    return messagingReceiveSpansConfigured
-        ? messagingReceiveSpansEnabled
-        : emitStableMessagingSemconv();
+        messagingReceiveSpansEnabled);
   }
 
   public Instrumenter<KafkaReceiveRequest, Void> createBatchProcessInstrumenter() {

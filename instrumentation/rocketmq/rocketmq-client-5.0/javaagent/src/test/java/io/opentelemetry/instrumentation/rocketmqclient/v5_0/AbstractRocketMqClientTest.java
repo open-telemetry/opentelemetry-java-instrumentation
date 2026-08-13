@@ -156,6 +156,27 @@ abstract class AbstractRocketMqClientTest {
             .build();
     cleanup.deferCleanup(simpleConsumer);
 
+    if (!emitStableMessagingSemconv()) {
+      // In legacy semconv an application-initiated empty pull produces no receive span, matching
+      // the
+      // behavior on main; the application-initiated span-eligibility gate applies only under
+      // stable/v3 semconv. Receive spans are explicitly enabled in this task, so this pins that the
+      // gate does not leak into legacy.
+      List<MessageView> legacyMessages =
+          testing()
+              .runWithSpan(
+                  "parent",
+                  (ThrowingSupplier<List<MessageView>, ClientException>)
+                      () -> simpleConsumer.receive(1, Duration.ofSeconds(1)));
+      assertThat(legacyMessages).isEmpty();
+      testing()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
+      return;
+    }
+
     List<MessageView> messages = simpleConsumer.receive(1, Duration.ofSeconds(1));
 
     assertThat(messages).isEmpty();
@@ -170,13 +191,8 @@ abstract class AbstractRocketMqClientTest {
         .singleElement()
         .satisfies(
             span -> {
-              assertThat(span.getName())
-                  .isEqualTo(
-                      emitStableMessagingSemconv()
-                          ? "receive " + NORMAL_TOPIC
-                          : NORMAL_TOPIC + " receive");
-              assertThat(span.getKind())
-                  .isEqualTo(emitStableMessagingSemconv() ? CLIENT : CONSUMER);
+              assertThat(span.getName()).isEqualTo("receive " + NORMAL_TOPIC);
+              assertThat(span.getKind()).isEqualTo(CLIENT);
               assertThat(span.getParentSpanContext().isValid()).isFalse();
               assertThat(span.getLinks()).isEmpty();
             });

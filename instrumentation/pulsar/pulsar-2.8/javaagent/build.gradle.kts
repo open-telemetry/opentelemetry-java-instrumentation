@@ -75,8 +75,10 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
+      includeTestsMatching("PulsarClientSuppressReceiveSpansTest")
     }
+    include("**/PulsarClientSuppressReceiveSpansTest.*")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=false")
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
@@ -85,9 +87,8 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("PulsarClientSuppressReceiveSpansTest")
+      excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
     }
-    include("**/PulsarClientSuppressReceiveSpansTest.*")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")

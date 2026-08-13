@@ -31,6 +31,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SE
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -40,6 +41,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.pekko.http.scaladsl.Http;
@@ -61,8 +63,8 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
     webEnvironment = SpringBootTest.WebEnvironment.NONE,
     classes = AwsSqsTestApplication.class)
 class AwsSqsTest {
-  private static final String RECEIVE_TELEMETRY_ENABLED =
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled";
+  private static final String RECEIVE_SPANS_ENABLED =
+      "otel.instrumentation.messaging.experimental.receive-spans.enabled";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -88,7 +90,7 @@ class AwsSqsTest {
 
   @Test
   void sqsListener() throws Exception {
-    assumeFalse(Boolean.getBoolean(RECEIVE_TELEMETRY_ENABLED));
+    assumeFalse(Boolean.getBoolean(RECEIVE_SPANS_ENABLED));
 
     String messageContent = "hello";
     CompletableFuture<String> messageFuture = new CompletableFuture<>();
@@ -228,7 +230,10 @@ class AwsSqsTest {
 
   @Test
   void sqsListenerWithReceiveTelemetry() throws Exception {
-    assumeTrue(Boolean.getBoolean(RECEIVE_TELEMETRY_ENABLED));
+    // this test asserts stable messaging span names/kinds and relies on idle listener polls being
+    // suppressed (exactly one receive trace), which only holds under stable/v3 semconv
+    assumeTrue(emitStableMessagingSemconv());
+    assumeTrue(Boolean.getBoolean(RECEIVE_SPANS_ENABLED));
 
     String messageContent = "hello";
     CompletableFuture<String> messageFuture = new CompletableFuture<>();
@@ -259,6 +264,32 @@ class AwsSqsTest {
   }
 
   @Test
+  void sqsListenerEmptyPollCreatesReceiveSpanInLegacyMode() throws Exception {
+    assumeTrue(emitOldMessagingSemconv());
+    assumeTrue(Boolean.getBoolean(RECEIVE_SPANS_ENABLED));
+
+    // make sure the queue exists so the listener performs real (empty) receive polls against it
+    sqsAsyncClient.createQueue(request -> request.queueName("test-queue")).get(10, SECONDS);
+
+    // the listener continuously polls test-queue; with no message sent every poll is an empty
+    // internal listener poll. In legacy mode this behavior is unchanged from main: an empty
+    // internal listener poll still produces a receive span, even though stable/v3 semconv would
+    // suppress it.
+    await()
+        .atMost(Duration.ofSeconds(20))
+        .untilAsserted(
+            () ->
+                assertThat(testing.spans())
+                    .anySatisfy(
+                        span -> {
+                          assertThat(span.getName()).isEqualTo("test-queue receive");
+                          assertThat(span.getKind()).isEqualTo(SpanKind.CONSUMER);
+                          assertThat(span.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT))
+                              .isEqualTo(0L);
+                        }));
+  }
+
+  @Test
   void directReceiveIsNotClassifiedAsListenerPoll() throws Exception {
     assumeTrue(emitStableMessagingSemconv());
 
@@ -281,7 +312,7 @@ class AwsSqsTest {
             .get(10, SECONDS);
     assertThat(response.sdkHttpResponse().isSuccessful()).isTrue();
 
-    if ("false".equals(System.getProperty(RECEIVE_TELEMETRY_ENABLED))) {
+    if ("false".equals(System.getProperty(RECEIVE_SPANS_ENABLED))) {
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(

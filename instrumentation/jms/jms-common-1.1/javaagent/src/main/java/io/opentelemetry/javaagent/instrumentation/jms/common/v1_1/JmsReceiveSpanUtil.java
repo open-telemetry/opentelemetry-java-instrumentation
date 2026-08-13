@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingReceiveTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
@@ -26,11 +27,28 @@ public class JmsReceiveSpanUtil {
       Instrumenter<MessageWithDestination, Void> receiveInstrumenter,
       MessageWithDestination request,
       Timer timer,
-      @Nullable Throwable throwable) {
+      @Nullable Throwable throwable,
+      boolean applicationInitiated) {
     Context parentContext = Context.current();
-    // if receive instrumentation is not enabled we'll use the producer as parent, unless the stable
-    // messaging semantic conventions are enabled, where the producer is linked instead
-    if (!receiveSpansEnabled && !emitStableMessagingSemconv()) {
+
+    if (emitStableMessagingSemconv()) {
+      // under the stable messaging semantic conventions the receive operation is always recorded so
+      // that its metrics flow; whether it also gets a span is decided here per the receive-spans
+      // policy: spans on, and either the pull was application-initiated or a message was received
+      boolean spanEligible =
+          receiveSpansEnabled && (applicationInitiated || request.message() != null);
+      Context receiveContext =
+          MessagingReceiveTelemetry.record(
+              receiveInstrumenter, parentContext, request, null, throwable, timer, spanEligible);
+      if (receiveContext != null) {
+        JmsReceiveContextHolder.set(receiveContext);
+      }
+      return;
+    }
+
+    // legacy behavior is unchanged: the consumer advice suppresses empty receives, so a message is
+    // always present here. If receive spans are not enabled we'll use the producer as parent.
+    if (!receiveSpansEnabled) {
       parentContext =
           propagators
               .getTextMapPropagator()
@@ -48,6 +66,14 @@ public class JmsReceiveSpanUtil {
               timer.startTime(),
               timer.now());
       JmsReceiveContextHolder.set(receiveContext);
+    } else if (JmsReceiveContextHolder.isInitialized(parentContext)) {
+      // the receive span was suppressed, but propagate the incoming context so a following process
+      // span can parent under the producer
+      Context extractedContext =
+          propagators
+              .getTextMapPropagator()
+              .extract(Context.root(), request, MessagePropertyGetter.INSTANCE);
+      JmsReceiveContextHolder.set(parentContext, extractedContext);
     }
   }
 

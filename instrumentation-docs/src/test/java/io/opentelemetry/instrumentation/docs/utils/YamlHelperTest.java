@@ -358,35 +358,6 @@ class YamlHelperTest {
   }
 
   @Test
-  void testMetadataParserWithConditionalDefault() throws Exception {
-    String input =
-        """
-            configurations:
-              - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
-                description: The effective default depends on the messaging semantic conventions.
-                type: boolean
-                default_is_conditional: true
-        """;
-
-    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
-    ConfigurationOption config = metadata.getConfigurations().get(0);
-
-    assertThat(config.defaultValue()).isNull();
-    assertThat(config.defaultIsConditional()).isTrue();
-
-    InstrumentationModule module =
-        new InstrumentationModule.Builder()
-            .srcPath("instrumentation/test")
-            .instrumentationName("test")
-            .namespace("test")
-            .group("test")
-            .metadata(metadata)
-            .build();
-    String generated = generateInstrumentationYaml(List.of(module));
-    assertThat(generated).contains("default_is_conditional: true").doesNotContain("default: ");
-  }
-
-  @Test
   void testMetadataParserWithOnlyFeatures() throws JsonProcessingException {
     String input =
         """

@@ -47,8 +47,8 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
   }
 
-  val testMessagingPreviewReceiveTelemetryDisabled =
-    register<Test>("testMessagingPreviewReceiveTelemetryDisabled") {
+  val testMessagingPreviewReceiveSpansDisabled =
+    register<Test>("testMessagingPreviewReceiveSpansDisabled") {
       testClassesDirs = sourceSets.test.get().output.classesDirs
       classpath = sourceSets.test.get().runtimeClasspath
       filter {
@@ -58,8 +58,8 @@ tasks {
       jvmArgs("-Dotel.semconv-stability.preview=messaging")
     }
 
-  val testMessagingPreviewReceiveTelemetryEnabled =
-    register<Test>("testMessagingPreviewReceiveTelemetryEnabled") {
+  val testMessagingPreviewReceiveSpansEnabled =
+    register<Test>("testMessagingPreviewReceiveSpansEnabled") {
       testClassesDirs = sourceSets.test.get().output.classesDirs
       classpath = sourceSets.test.get().runtimeClasspath
       filter {
@@ -69,12 +69,24 @@ tasks {
       jvmArgs("-Dotel.semconv-stability.preview=messaging")
     }
 
+  // legacy semconv (no preview) with receive spans explicitly enabled: pins that an empty internal
+  // listener poll still creates a receive span, unchanged from main
+  val testReceiveSpansEnabled = register<Test>("testReceiveSpansEnabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0.AwsSqsTest")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
+  }
+
   check {
     dependsOn(
       testMessagingPreview,
       testBothSemconv,
-      testMessagingPreviewReceiveTelemetryDisabled,
-      testMessagingPreviewReceiveTelemetryEnabled,
+      testMessagingPreviewReceiveSpansDisabled,
+      testMessagingPreviewReceiveSpansEnabled,
+      testReceiveSpansEnabled,
     )
   }
 }

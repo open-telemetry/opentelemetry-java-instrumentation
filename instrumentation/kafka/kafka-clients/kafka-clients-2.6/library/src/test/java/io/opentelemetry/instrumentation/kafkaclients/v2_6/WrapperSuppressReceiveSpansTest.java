@@ -6,10 +6,17 @@
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.time.Duration;
 import java.util.List;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
@@ -17,6 +24,26 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
   @Override
   void configure(KafkaTelemetryBuilder builder) {
     builder.setMessagingReceiveSpansEnabled(false);
+  }
+
+  @Test
+  void testEmptyPollDoesNotCreateReceiveSpan() {
+    KafkaTelemetryBuilder telemetryBuilder = KafkaTelemetry.builder(testing.getOpenTelemetry());
+    configure(telemetryBuilder);
+    KafkaTelemetry telemetry = telemetryBuilder.build();
+
+    Consumer<?, ?> mockConsumer = mock();
+    when(mockConsumer.poll(Duration.ofSeconds(10))).thenReturn(ConsumerRecords.empty());
+    Consumer<?, ?> wrappedConsumer = telemetry.wrap(mockConsumer);
+
+    assertThat(wrappedConsumer.poll(Duration.ofSeconds(10))).isEmpty();
+
+    // with receive spans disabled an application-initiated empty poll must not produce a span
+    testing.runWithSpan("marker", () -> {});
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("marker").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Override

@@ -9,8 +9,8 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingReceiveTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
@@ -36,12 +36,15 @@ import org.apache.kafka.common.TopicPartition;
 public class KafkaConsumerTelemetry {
   private final Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter;
   private final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
+  private final boolean receiveSpansEnabled;
 
   public KafkaConsumerTelemetry(
       Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter,
-      Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter) {
+      Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter,
+      boolean receiveSpansEnabled) {
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
+    this.receiveSpansEnabled = receiveSpansEnabled;
   }
 
   public <K, V> ConsumerRecords<K, V> addTracing(
@@ -76,18 +79,15 @@ public class KafkaConsumerTelemetry {
       Timer timer) {
     Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(Context.current());
     KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumerGroup, clientId);
-    Context receiveContext = null;
-    if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
-      receiveContext =
-          InstrumenterUtil.startAndEnd(
-              consumerReceiveInstrumenter,
-              parentContext,
-              request,
-              null,
-              null,
-              timer.startTime(),
-              timer.now());
-    }
+    // the wrapped consumer's poll is always application-initiated, so under stable/v3 a span is
+    // eligible whenever receive spans are enabled, including for an empty poll; in legacy mode the
+    // behavior is unchanged from before this policy, i.e. only non-empty polls get a receive span.
+    // metrics are recorded regardless
+    boolean spanEligible =
+        receiveSpansEnabled && (emitStableMessagingSemconv() || !records.isEmpty());
+    Context receiveContext =
+        MessagingReceiveTelemetry.record(
+            consumerReceiveInstrumenter, parentContext, request, null, null, timer, spanEligible);
 
     return emitStableMessagingSemconv() ? parentContext : receiveContext;
   }
@@ -99,15 +99,13 @@ public class KafkaConsumerTelemetry {
     KafkaReceiveRequest request =
         KafkaReceiveRequest.create(
             records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
-    if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
-      InstrumenterUtil.startAndEnd(
-          consumerReceiveInstrumenter,
-          parentContext,
-          request,
-          null,
-          error,
-          timer.startTime(),
-          timer.now());
-    }
+    MessagingReceiveTelemetry.record(
+        consumerReceiveInstrumenter,
+        parentContext,
+        request,
+        null,
+        error,
+        timer,
+        receiveSpansEnabled);
   }
 }

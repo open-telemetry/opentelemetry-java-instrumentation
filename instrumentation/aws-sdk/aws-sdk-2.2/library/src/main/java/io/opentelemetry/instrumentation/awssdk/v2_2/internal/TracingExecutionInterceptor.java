@@ -106,8 +106,8 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     return useXrayPropagator;
   }
 
-  boolean isMessagingReceiveInstrumentationExplicitlyEnabled() {
-    return messagingReceiveInstrumentationExplicitlyEnabled;
+  boolean isMessagingReceiveSpansEnabled() {
+    return messagingReceiveSpansEnabled;
   }
 
   static boolean isSqsInternalListenerPoll(ExecutionAttributes executionAttributes) {
@@ -118,7 +118,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Nullable private final TextMapPropagator messagingPropagator;
   private final boolean useXrayPropagator;
   private final boolean recordIndividualHttpError;
-  private final boolean messagingReceiveInstrumentationExplicitlyEnabled;
+  private final boolean messagingReceiveSpansEnabled;
   private final boolean genAiCaptureMessageContent;
   private final FieldMapper fieldMapper;
 
@@ -135,7 +135,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       TextMapPropagator messagingPropagator,
       boolean useXrayPropagator,
       boolean recordIndividualHttpError,
-      boolean messagingReceiveInstrumentationExplicitlyEnabled,
+      boolean messagingReceiveSpansEnabled,
       boolean genAiCaptureMessageContent) {
     this.requestInstrumenter = requestInstrumenter;
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
@@ -147,8 +147,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     this.messagingPropagator = messagingPropagator;
     this.useXrayPropagator = useXrayPropagator;
     this.recordIndividualHttpError = recordIndividualHttpError;
-    this.messagingReceiveInstrumentationExplicitlyEnabled =
-        messagingReceiveInstrumentationExplicitlyEnabled;
+    this.messagingReceiveSpansEnabled = messagingReceiveSpansEnabled;
     this.genAiCaptureMessageContent = genAiCaptureMessageContent;
     this.fieldMapper = new FieldMapper(captureExperimentalSpanAttributes);
   }

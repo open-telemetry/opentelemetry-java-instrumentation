@@ -11,8 +11,8 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecu
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingReceiveTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -77,27 +77,25 @@ public final class SqsImpl {
     SqsReceiveRequest receiveRequest =
         SqsReceiveRequest.create(
             executionAttributes, SqsMessageImpl.wrap(response.messages(), config));
-    // TODO(receive-spans): under stable/v3 semconv the receive instrumenter must always be built so
-    // metrics flow; route the span decision through MessagingReceiveTelemetry.record(...,
-    // spanEligible) where spanEligible = receiveSpansEnabled && (!internalListenerPoll ||
-    // !response.messages().isEmpty()). Currently the instrumenter is gated on receive spans being
-    // enabled, which also suppresses receive metrics when spans are off.
-    boolean recordReceiveSpan =
-        !internalListenerPoll
-            || (config.isMessagingReceiveInstrumentationExplicitlyEnabled()
-                && !response.messages().isEmpty());
-    if (timer != null
-        && recordReceiveSpan
-        && consumerReceiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
+    // Under legacy semconv the receive span behavior is unchanged: a span is created whenever
+    // receive spans are enabled (matching main, including empty internal listener polls). Under
+    // stable/v3 semconv the span is additionally gated so that an idle internal listener poll gets
+    // no span, while metrics are still recorded either way via startAndEndWithoutSpan.
+    boolean spanEligible =
+        config.isMessagingReceiveSpansEnabled()
+            && (!emitStableMessagingSemconv()
+                || !internalListenerPoll
+                || !response.messages().isEmpty());
+    if (timer != null) {
       receiveContext =
-          InstrumenterUtil.startAndEnd(
+          MessagingReceiveTelemetry.record(
               consumerReceiveInstrumenter,
               parentContext,
               receiveRequest,
               new Response(context.httpResponse(), response),
               null,
-              timer.startTime(),
-              timer.now());
+              timer,
+              spanEligible);
     }
     io.opentelemetry.context.Context processParentContext =
         emitStableMessagingSemconv() ? parentContext : receiveContext;

@@ -81,8 +81,9 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      excludeTestsMatching("Jms3SuppressReceiveSpansTest")
+      includeTestsMatching("Jms3SuppressReceiveSpansTest")
     }
+    include("**/Jms3SuppressReceiveSpansTest.*")
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
@@ -93,9 +94,8 @@ tasks {
       classpath = sourceSets.test.get().runtimeClasspath
 
       filter {
-        includeTestsMatching("Jms3SuppressReceiveSpansTest")
+        excludeTestsMatching("Jms3SuppressReceiveSpansTest")
       }
-      include("**/Jms3SuppressReceiveSpansTest.*")
       jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
       jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
       systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")

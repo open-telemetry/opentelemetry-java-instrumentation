@@ -93,16 +93,16 @@ tasks {
   }
 
   val testV3Preview = register<Test>("testV3Preview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+    testClassesDirs = sourceSets["testReceiveSpansDisabled"].output.classesDirs
+    classpath = sourceSets["testReceiveSpansDisabled"].runtimeClasspath
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
   val testV3PreviewReceiveSpansEnabled =
     register<Test>("testV3PreviewReceiveSpansEnabled") {
-      testClassesDirs = sourceSets["testReceiveSpansDisabled"].output.classesDirs
-      classpath = sourceSets["testReceiveSpansDisabled"].runtimeClasspath
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
       jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
       jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
       systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")

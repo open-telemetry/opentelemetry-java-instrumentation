@@ -33,23 +33,20 @@ public class KafkaSingletons {
   private static final Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter;
   private static final Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter;
   private static final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
-  private static final boolean receiveTelemetryEnabled;
+  private static final boolean receiveSpansEnabled;
 
   static {
     DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common");
-    Boolean messagingReceiveSpansEnabled =
-        messagingReceiveSpansEnabled(commonConfig.get("messaging"));
-    receiveTelemetryEnabled = Boolean.TRUE.equals(messagingReceiveSpansEnabled);
+    receiveSpansEnabled =
+        Boolean.TRUE.equals(messagingReceiveSpansEnabled(commonConfig.get("messaging")));
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
             .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
             .setCaptureExperimentalSpanAttributes(
                 DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "kafka")
-                    .getBoolean("experimental_span_attributes/development", false));
-    if (messagingReceiveSpansEnabled != null) {
-      instrumenterFactory.setMessagingReceiveSpansEnabled(messagingReceiveSpansEnabled);
-    }
+                    .getBoolean("experimental_span_attributes/development", false))
+            .setMessagingReceiveSpansEnabled(receiveSpansEnabled);
     producerInstrumenter = instrumenterFactory.createProducerInstrumenter();
     consumerReceiveInstrumenter = instrumenterFactory.createConsumerReceiveInstrumenter();
     consumerProcessInstrumenter = instrumenterFactory.createConsumerProcessInstrumenter();
@@ -77,8 +74,8 @@ public class KafkaSingletons {
     return consumerProcessInstrumenter;
   }
 
-  public static boolean receiveTelemetryEnabled() {
-    return receiveTelemetryEnabled;
+  public static boolean receiveSpansEnabled() {
+    return receiveSpansEnabled;
   }
 
   private KafkaSingletons() {}

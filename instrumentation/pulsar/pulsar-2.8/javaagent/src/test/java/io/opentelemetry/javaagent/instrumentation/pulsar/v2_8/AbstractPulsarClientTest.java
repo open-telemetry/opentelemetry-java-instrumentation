@@ -103,6 +103,19 @@ abstract class AbstractPulsarClientTest {
         0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0
       };
 
+  private static final boolean RECEIVE_SPANS_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.messaging.experimental.receive-spans.enabled");
+
+  static boolean receiveSpansEnabled() {
+    return RECEIVE_SPANS_ENABLED;
+  }
+
+  // an application-initiated receive produces a receive span in legacy mode always, and in
+  // stable/v3 mode only when receive spans are enabled
+  static boolean appInitiatedReceiveHasSpan() {
+    return !emitStableMessagingSemconv() || receiveSpansEnabled();
+  }
+
   @BeforeAll
   static void beforeAll() throws PulsarClientException {
     pulsar =
@@ -185,7 +198,8 @@ abstract class AbstractPulsarClientTest {
                           sendAttributes(topic, msgId.toString(), false)));
           producerSpan.set(trace.getSpan(1));
         },
-        trace ->
+        trace -> {
+          if (appInitiatedReceiveHasSpan()) {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
@@ -195,7 +209,14 @@ abstract class AbstractPulsarClientTest {
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            batchReceiveAttributes(topic, null, false))));
+                            batchReceiveAttributes(topic, null, false)));
+          } else {
+            // stable/v3 without receive spans: the application-initiated receive records metrics
+            // only, so no receive span is emitted
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent());
+          }
+        });
 
     if (!emitOldMessagingSemconv()) {
       return;
@@ -311,7 +332,8 @@ abstract class AbstractPulsarClientTest {
 
           producerSpan.set(trace.getSpan(1));
         },
-        trace ->
+        trace -> {
+          if (appInitiatedReceiveHasSpan()) {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
@@ -325,7 +347,18 @@ abstract class AbstractPulsarClientTest {
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(
-                            emitStableMessagingSemconv() ? trace.getSpan(0) : trace.getSpan(1))));
+                            emitStableMessagingSemconv() ? trace.getSpan(0) : trace.getSpan(1)));
+          } else {
+            // stable/v3 without receive spans: the application-initiated receive records metrics
+            // only, so the callback is parented directly to the receive-parent span
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0)));
+          }
+        });
 
     if (!emitOldMessagingSemconv()) {
       return;
@@ -420,31 +453,60 @@ abstract class AbstractPulsarClientTest {
     }
 
     assertThat(error).isNotNull();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
-                        .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(error)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                            equalTo(SERVER_ADDRESS, brokerHost),
-                            equalTo(SERVER_PORT, brokerPort),
-                            equalTo(MESSAGING_DESTINATION_NAME, topic),
-                            oldOperation("receive"),
-                            operationName("receive"),
-                            operationType("receive"),
-                            subscriptionName(),
-                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0),
-                            equalTo(
-                                ERROR_TYPE,
-                                emitStableMessagingSemconv()
-                                    ? error.getClass().getName()
-                                    : null))));
+    if (!emitStableMessagingSemconv()) {
+      // legacy mode is unchanged: a failed (empty) receive records no telemetry
+      assertThat(testing.spans()).isEmpty();
+      return;
+    }
+    if (receiveSpansEnabled()) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName(
+                              emitStableMessagingSemconv()
+                                  ? "receive " + topic
+                                  : topic + " receive")
+                          .hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
+                          .hasNoParent()
+                          .hasStatus(StatusData.error())
+                          .hasException(error)
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(MESSAGING_SYSTEM, "pulsar"),
+                              equalTo(SERVER_ADDRESS, brokerHost),
+                              equalTo(SERVER_PORT, brokerPort),
+                              equalTo(MESSAGING_DESTINATION_NAME, topic),
+                              oldOperation("receive"),
+                              operationName("receive"),
+                              operationType("receive"),
+                              subscriptionName(),
+                              equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0),
+                              equalTo(
+                                  ERROR_TYPE,
+                                  emitStableMessagingSemconv()
+                                      ? error.getClass().getName()
+                                      : null))));
+      return;
+    }
+
+    // stable/v3 without receive spans: the failed application-initiated receive still records the
+    // operation duration (with the error type) but produces no receive span
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "messaging.client.operation.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point.hasAttributesSatisfying(
+                                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(ERROR_TYPE, error.getClass().getName()))))));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv

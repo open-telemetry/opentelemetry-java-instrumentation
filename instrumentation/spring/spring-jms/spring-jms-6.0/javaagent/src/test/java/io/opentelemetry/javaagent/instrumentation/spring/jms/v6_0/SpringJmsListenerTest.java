@@ -91,6 +91,37 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
     }
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    if (!receiveTelemetryEnabled()) {
+      // receive spans off (the opt-in default): the receive records metrics only, so the process
+      // span parents directly under the ambient receive context
+      testing.waitAndAssertSortedTraces(
+          orderByRootSpanName("producer parent", "ambient"),
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("producer parent").hasNoParent(),
+                span ->
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "send spring-jms-listener"
+                                : "spring-jms-listener publish")
+                        .hasKind(PRODUCER)
+                        .hasParent(trace.getSpan(0)));
+            producerSpan.set(trace.getSpan(1));
+          },
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("ambient").hasNoParent(),
+                  span ->
+                      span.hasName(
+                              emitStableMessagingSemconv()
+                                  ? "process spring-jms-listener"
+                                  : "spring-jms-listener process")
+                          .hasKind(CONSUMER)
+                          .hasParent(trace.getSpan(0))
+                          .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))));
+      return;
+    }
+
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName("producer parent", "ambient"),
         trace -> {
@@ -495,9 +526,9 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
   }
 
   private static boolean receiveTelemetryEnabled() {
-    String configured =
-        System.getProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
-    return configured != null ? Boolean.parseBoolean(configured) : emitStableMessagingSemconv();
+    // receive spans are off by default under every semconv mode; they are opt-in
+    return Boolean.parseBoolean(
+        System.getProperty("otel.instrumentation.messaging.experimental.receive-spans.enabled"));
   }
 
   @TestConfiguration

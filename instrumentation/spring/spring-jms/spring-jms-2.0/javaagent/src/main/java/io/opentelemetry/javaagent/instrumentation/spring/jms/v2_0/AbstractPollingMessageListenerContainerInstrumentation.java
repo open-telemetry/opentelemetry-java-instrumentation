@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.bootstrap.InternalListenerPollContext;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContextHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -34,22 +35,43 @@ class AbstractPollingMessageListenerContainerInstrumentation implements TypeInst
   @SuppressWarnings("unused")
   public static class ReceiveAndExecuteAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
-    public static Scope onEnter() {
-      if (RECEIVE_TELEMETRY_ENABLED) {
-        Context context = JmsReceiveContextHolder.init(Java8BytecodeBridge.currentContext());
-        return context.makeCurrent();
+    public static class AdviceScope {
+      private final boolean previouslyActive;
+      @Nullable private final Scope scope;
+
+      private AdviceScope(boolean previouslyActive, @Nullable Scope scope) {
+        this.previouslyActive = previouslyActive;
+        this.scope = scope;
       }
-      return null;
+
+      public static AdviceScope enter() {
+        // mark this receive as an internal listener poll so that the underlying JMS receive
+        // instrumentation can tell it apart from an application-initiated pull
+        boolean previouslyActive = InternalListenerPollContext.enter();
+        Scope scope = null;
+        if (RECEIVE_TELEMETRY_ENABLED) {
+          Context context = JmsReceiveContextHolder.init(Java8BytecodeBridge.currentContext());
+          scope = context.makeCurrent();
+        }
+        return new AdviceScope(previouslyActive, scope);
+      }
+
+      public void exit() {
+        if (scope != null) {
+          scope.close();
+        }
+        InternalListenerPollContext.exit(previouslyActive);
+      }
+    }
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope onEnter() {
+      return AdviceScope.enter();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Scope scope) {
-      if (scope == null) {
-        return;
-      }
-      scope.close();
+    public static void onExit(@Advice.Enter AdviceScope adviceScope) {
+      adviceScope.exit();
     }
   }
 }

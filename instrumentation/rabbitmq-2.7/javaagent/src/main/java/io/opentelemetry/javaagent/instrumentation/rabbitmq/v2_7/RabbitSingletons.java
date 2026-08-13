@@ -55,6 +55,8 @@ public class RabbitSingletons {
       createChannelPublishInstrumenter();
   private static final Map<String, Instrumenter<ChannelAndMethod, Void>>
       channelSettleInstrumenters = createChannelSettleInstrumenters();
+  private static final boolean receiveSpansEnabled =
+      ExperimentalConfig.get().messagingReceiveSpansEnabled();
   private static final Instrumenter<ReceiveRequest, GetResponse> receiveInstrumenter =
       createReceiveInstrumenter();
   private static final Instrumenter<DeliveryRequest, Void> deliverInstrumenter =
@@ -74,6 +76,10 @@ public class RabbitSingletons {
 
   public static Instrumenter<ReceiveRequest, GetResponse> receiveInstrumenter() {
     return receiveInstrumenter;
+  }
+
+  public static boolean receiveSpansEnabled() {
+    return receiveSpansEnabled;
   }
 
   static Instrumenter<DeliveryRequest, Void> deliverInstrumenter() {
@@ -171,14 +177,13 @@ public class RabbitSingletons {
             ? MessagingSpanNameExtractor.create(
                 getter, MessagingOperationType.RECEIVE, RECEIVE_OPERATION_NAME)
             : ReceiveRequest::spanName;
-    // TODO(receive-spans): under stable/v3 semconv the receive instrumenter must always be built so
-    // metrics flow; route the span decision through MessagingReceiveTelemetry.record(...,
-    // spanEligible) at the call site instead of disabling the whole instrumenter here.
+    // The receive instrumenter is always built so that receive metrics flow under stable/v3 semconv
+    // regardless of the receive spans setting; the span decision is made at the call site through
+    // MessagingReceiveTelemetry.record(..., spanEligible).
     InstrumenterBuilder<ReceiveRequest, GetResponse> builder =
         Instrumenter.<ReceiveRequest, GetResponse>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractors(extractors)
-            .setEnabled(ExperimentalConfig.get().messagingReceiveSpansEnabled())
             .addSpanLinksExtractor(
                 new PropagatorBasedSpanLinksExtractor<>(
                     GlobalOpenTelemetry.getPropagators().getTextMapPropagator(),

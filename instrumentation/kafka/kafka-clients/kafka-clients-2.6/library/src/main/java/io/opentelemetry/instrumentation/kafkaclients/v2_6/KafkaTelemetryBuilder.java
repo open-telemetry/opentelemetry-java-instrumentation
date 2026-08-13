@@ -34,7 +34,6 @@ public final class KafkaTelemetryBuilder {
   private boolean captureExperimentalSpanAttributes = false;
   private boolean propagationEnabled = true;
   private boolean messagingReceiveSpansEnabled = false;
-  private boolean messagingReceiveSpansConfigured = false;
 
   KafkaTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = requireNonNull(openTelemetry);
@@ -107,7 +106,6 @@ public final class KafkaTelemetryBuilder {
   public KafkaTelemetryBuilder setMessagingReceiveSpansEnabled(
       boolean messagingReceiveSpansEnabled) {
     this.messagingReceiveSpansEnabled = messagingReceiveSpansEnabled;
-    this.messagingReceiveSpansConfigured = true;
     return this;
   }
 
@@ -128,16 +126,15 @@ public final class KafkaTelemetryBuilder {
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
             .setCapturedHeaders(capturedHeaders)
-            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes);
-    if (messagingReceiveSpansConfigured) {
-      instrumenterFactory.setMessagingReceiveSpansEnabled(messagingReceiveSpansEnabled);
-    }
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
+            .setMessagingReceiveSpansEnabled(messagingReceiveSpansEnabled);
 
     return new KafkaTelemetry(
         openTelemetry,
         instrumenterFactory.createProducerInstrumenter(producerAttributesExtractors),
         instrumenterFactory.createConsumerReceiveInstrumenter(consumerReceiveAttributesExtractors),
         instrumenterFactory.createConsumerProcessInstrumenter(consumerProcessAttributesExtractors),
-        propagationEnabled);
+        propagationEnabled,
+        messagingReceiveSpansEnabled);
   }
 }

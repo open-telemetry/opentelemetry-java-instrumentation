@@ -167,6 +167,7 @@ tasks {
     testClassesDirs = sourceSets["testSqs"].output.classesDirs
     classpath = sourceSets["testSqs"].runtimeClasspath
 
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }

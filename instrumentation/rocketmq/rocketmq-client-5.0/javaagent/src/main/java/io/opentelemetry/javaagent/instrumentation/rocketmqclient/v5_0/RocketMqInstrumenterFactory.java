@@ -59,8 +59,7 @@ final class RocketMqInstrumenterFactory {
   }
 
   public static Instrumenter<RocketMqReceiveRequest, List<MessageView>>
-      createConsumerReceiveInstrumenter(
-          OpenTelemetry openTelemetry, List<String> capturedHeaders, boolean enabled) {
+      createConsumerReceiveInstrumenter(OpenTelemetry openTelemetry, List<String> capturedHeaders) {
     RocketMqConsumerReceiveAttributeGetter getter = new RocketMqConsumerReceiveAttributeGetter();
     MessagingOperationType operationType = MessagingOperationType.RECEIVE;
 
@@ -68,12 +67,14 @@ final class RocketMqInstrumenterFactory {
         buildMessagingAttributesExtractor(
             getter, operationType, RECEIVE_OPERATION_NAME, capturedHeaders);
 
+    // The receive instrumenter is always built so that receive metrics flow under stable/v3
+    // semconv; the span decision is made at the call site through
+    // MessagingReceiveTelemetry.record(..., spanEligible).
     InstrumenterBuilder<RocketMqReceiveRequest, List<MessageView>> instrumenterBuilder =
         Instrumenter.<RocketMqReceiveRequest, List<MessageView>>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operationType, RECEIVE_OPERATION_NAME))
-            .setEnabled(enabled)
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(new RocketMqConsumerReceiveAttributeExtractor());
     if (emitStableMessagingSemconv()) {

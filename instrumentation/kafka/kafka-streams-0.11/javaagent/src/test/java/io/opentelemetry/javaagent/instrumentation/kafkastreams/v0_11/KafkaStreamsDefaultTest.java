@@ -453,7 +453,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
 
   private static boolean receiveTelemetryEnabled() {
     String configured =
-        System.getProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
-    return configured != null ? Boolean.parseBoolean(configured) : emitStableMessagingSemconv();
+        System.getProperty("otel.instrumentation.messaging.experimental.receive-spans.enabled");
+    return Boolean.parseBoolean(configured);
   }
 }

@@ -60,6 +60,9 @@ tasks {
       excludeTestsMatching("KafkaClientPropagationDisabledTest")
       excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
+    // KafkaClientDefaultTest exercises the receive-span topology, so enable receive spans; the
+    // spans-off default is covered by KafkaClientSuppressReceiveSpansTest
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
@@ -108,10 +111,27 @@ tasks {
       excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    // KafkaClientDefaultTest exercises the receive-span topology, so enable receive spans; the
+    // spans-off default is covered by testV3PreviewReceiveSpansDisabled
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     // the v3 preview does not support dual emit for messaging, so this degrades to emitting only
     // the new messaging semconv
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     // kafka metrics are disabled by default with v3-preview enabled
+    jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
+  }
+
+  val testV3PreviewReceiveSpansDisabled = register<Test>("testV3PreviewReceiveSpansDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+    }
+    include("**/KafkaClientSuppressReceiveSpansTest.*")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=false")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
@@ -159,6 +179,7 @@ tasks {
       testMessagingPreviewPropagationDisabled,
       testMessagingOptIn,
       testV3Preview,
+      testV3PreviewReceiveSpansDisabled,
       testExperimental,
       testBothSemconv,
     )

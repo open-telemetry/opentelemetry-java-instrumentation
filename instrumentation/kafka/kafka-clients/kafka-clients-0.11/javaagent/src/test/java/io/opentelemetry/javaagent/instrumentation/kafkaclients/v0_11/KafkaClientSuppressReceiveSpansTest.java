@@ -89,6 +89,21 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
   }
 
   @Test
+  void testEmptyPollDoesNotCreateReceiveSpan() throws Exception {
+    awaitUntilConsumerIsReady();
+    ConsumerRecords<?, ?> records = poll(Duration.ofMillis(100));
+    assertThat(records.count()).isZero();
+
+    // with receive spans disabled an application-initiated empty poll must not produce a span
+    testing.runWithSpan("marker", () -> {});
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("marker").hasKind(SpanKind.INTERNAL).hasNoParent()));
+  }
+
+  @Test
   void testPassThroughTombstone() throws Exception {
     producer.send(new ProducerRecord<>(SHARED_TOPIC, null)).get(5, SECONDS);
     awaitUntilConsumerIsReady();

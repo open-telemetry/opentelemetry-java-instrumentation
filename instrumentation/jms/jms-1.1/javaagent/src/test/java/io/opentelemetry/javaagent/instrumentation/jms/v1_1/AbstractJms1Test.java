@@ -172,6 +172,12 @@ abstract class AbstractJms1Test {
     // then
     assertThat(message).isNull();
 
+    if (!emitStableMessagingSemconv()) {
+      // legacy behavior is unchanged: an empty receive produces no telemetry
+      assertThat(testing.waitForTraces(0)).isEmpty();
+      return;
+    }
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -304,6 +310,31 @@ abstract class AbstractJms1Test {
     // write properties in MessagePropertyTextMap when readOnlyProperties = true.
     // As a result, the consumer span will not be linked to the producer span as we are unable to
     // propagate the trace context as a message property.
+    if (!expectReceiveSpan()) {
+      // receive spans off under the stable semantic conventions: the receive records metrics only,
+      // so only the producer trace is present
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("producer parent").hasNoParent(),
+                  span ->
+                      span.hasName(
+                              destinationName.equals("(temporary)")
+                                  ? "send"
+                                  : "send " + destinationName)
+                          .hasKind(PRODUCER)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(MESSAGING_SYSTEM, "jms"),
+                              messagingDestinationName(destinationName, isTemporary),
+                              oldOperation("publish"),
+                              operationName("send"),
+                              operationType("send"),
+                              equalTo(MESSAGING_MESSAGE_ID, messageId),
+                              messagingTempDestination(isTemporary))));
+      return;
+    }
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -345,6 +376,10 @@ abstract class AbstractJms1Test {
                             operationType("receive"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary))));
+  }
+
+  boolean expectReceiveSpan() {
+    return true;
   }
 
   static AttributeAssertion messagingTempDestination(boolean isTemporary) {

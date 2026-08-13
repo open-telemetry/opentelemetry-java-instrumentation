@@ -135,6 +135,23 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   }
 
   @Test
+  void testEmptyPullReceiveReceiveSpansOff() throws Exception {
+    // With receive spans off (the stable/v3 default), an application-initiated empty basicGet
+    // produces no receive span. Metrics are still recorded under stable/v3, but no span is created.
+    String queueName = "empty-pull-queue-receive-spans-off";
+    channel.queueDeclare(queueName, false, true, true, null);
+    testing.clearData();
+
+    GetResponse response = testing.runWithSpan("parent", () -> channel.basicGet(queueName, true));
+
+    assertThat(response).isNull();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
+  }
+
+  @Test
   void testRabbitPublishGet() throws IOException {
     String exchangeName = "some-exchange";
     String routingKey = "some-routing-key";

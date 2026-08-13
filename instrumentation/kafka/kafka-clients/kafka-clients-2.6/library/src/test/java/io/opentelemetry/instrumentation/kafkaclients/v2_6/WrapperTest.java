@@ -310,13 +310,26 @@ class WrapperTest extends AbstractWrapperTest {
     Consumer<?, ?> wrappedConsumer = telemetry.wrap(mockConsumer);
 
     assertThat(wrappedConsumer.poll(Duration.ofSeconds(10))).isEmpty();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableMessagingSemconv() ? "poll" : "unknown receive")
-                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasTotalRecordedLinks(0)));
+    if (emitStableMessagingSemconv()) {
+      // under stable/v3 semconv an application-initiated poll is worth a receive span even when it
+      // returned no records
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("poll")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasTotalRecordedLinks(0)));
+    } else {
+      // legacy behavior is unchanged from before the receive-spans opt-in policy: an empty poll
+      // produces no receive span even when receive spans are enabled, so only the marker is
+      // recorded
+      testing.runWithSpan("marker", () -> {});
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("marker").hasKind(SpanKind.INTERNAL).hasNoParent()));
+    }
   }
 }

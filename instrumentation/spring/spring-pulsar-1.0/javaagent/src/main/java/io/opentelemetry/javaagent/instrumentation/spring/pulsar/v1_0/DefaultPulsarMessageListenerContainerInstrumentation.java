@@ -78,8 +78,7 @@ class DefaultPulsarMessageListenerContainerInstrumentation implements TypeInstru
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) Message<?> message) {
       Context parentContext = VirtualFieldStore.extract(message);
-      Instrumenter<Message<?>, Void> instrumenter =
-          instrumenter(VirtualFieldStore.wasReceiveTelemetryRecorded(message));
+      Instrumenter<Message<?>, Void> instrumenter = instrumenter();
       if (!instrumenter.shouldStart(parentContext, message)) {
         return null;
       }

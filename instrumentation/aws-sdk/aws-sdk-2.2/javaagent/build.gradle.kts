@@ -235,9 +235,9 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     filter {
-      includeTestsMatching("*Sqs*")
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+      includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
+    include("**/Aws2SqsSuppressReceiveSpansTest.*")
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
@@ -247,9 +247,9 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
 
     filter {
-      includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+      includeTestsMatching("*Sqs*")
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
-    include("**/Aws2SqsSuppressReceiveSpansTest.*")
     systemProperty("otel.instrumentation.messaging.experimental.receive-spans.enabled", "true")
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")

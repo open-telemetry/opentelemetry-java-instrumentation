@@ -47,18 +47,21 @@ public final class TracingRequestHandler extends RequestHandler2 {
   private final Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter;
+  private final boolean messagingReceiveSpansEnabled;
 
   public TracingRequestHandler(
       Instrumenter<Request<?>, Response<?>> requestInstrumenter,
       Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter,
       Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter,
       Instrumenter<Request<?>, Response<?>> producerInstrumenter,
-      Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter) {
+      Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter,
+      boolean messagingReceiveSpansEnabled) {
     this.requestInstrumenter = requestInstrumenter;
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
     this.producerInstrumenter = producerInstrumenter;
     this.dynamoDbInstrumenter = dynamoDbInstrumenter;
+    this.messagingReceiveSpansEnabled = messagingReceiveSpansEnabled;
   }
 
   @Override
@@ -113,6 +116,10 @@ public final class TracingRequestHandler extends RequestHandler2 {
 
   Instrumenter<SqsReceiveRequest, Response<?>> getConsumerReceiveInstrumenter() {
     return consumerReceiveInstrumenter;
+  }
+
+  boolean isMessagingReceiveSpansEnabled() {
+    return messagingReceiveSpansEnabled;
   }
 
   Instrumenter<SqsProcessRequest, Response<?>> getConsumerProcessInstrumenter() {

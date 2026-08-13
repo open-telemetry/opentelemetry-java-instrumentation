@@ -287,9 +287,6 @@ public class YamlHelper {
         conf.put("default", configuration.defaultValue());
       }
     }
-    if (configuration.defaultIsConditional()) {
-      conf.put("default_is_conditional", true);
-    }
     if (configuration.examples() != null && !configuration.examples().isEmpty()) {
       conf.put("examples", configuration.examples());
     }

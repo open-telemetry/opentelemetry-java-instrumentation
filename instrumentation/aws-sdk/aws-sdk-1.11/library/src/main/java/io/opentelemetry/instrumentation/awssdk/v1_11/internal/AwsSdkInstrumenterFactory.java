@@ -140,7 +140,7 @@ public final class AwsSdkInstrumenterFactory {
                 });
           }
         },
-        messagingReceiveSpansEnabled);
+        emitStableMessagingSemconv() || messagingReceiveSpansEnabled);
   }
 
   public Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter() {

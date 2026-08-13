@@ -11,8 +11,7 @@ import static java.util.Collections.emptyList;
 
 import apache.rocketmq.v2.ReceiveMessageRequest;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingReceiveTelemetry;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import java.util.List;
 import org.apache.rocketmq.client.apis.message.MessageView;
@@ -38,12 +37,7 @@ public class ReceiveSpanFinishingCallback implements FutureCallback<ReceiveMessa
     for (MessageView messageView : messageViews) {
       VirtualFieldStore.setConsumerGroupByMessage(messageView, consumerGroup);
     }
-    if (!pullApi
-        && (messageViews.isEmpty() || !RocketMqSingletons.receiveTelemetryExplicitlyEnabled())) {
-      return;
-    }
-    Instrumenter<RocketMqReceiveRequest, List<MessageView>> receiveInstrumenter =
-        consumerReceiveInstrumenter();
+
     Context parentContext = Context.current();
     if (emitStableMessagingSemconv()) {
       // the process span parents to the context that the messages were received in, and links to
@@ -53,43 +47,51 @@ public class ReceiveSpanFinishingCallback implements FutureCallback<ReceiveMessa
         VirtualFieldStore.setContextByMessage(messageView, parentContext);
       }
     }
+
+    // Under stable/v3 semconv SimpleConsumer.receive is application-initiated, so an empty pull is
+    // still span-eligible when receive spans are enabled, while a push consumer's internal poll
+    // gets
+    // a span only when it returned messages. In legacy semconv an empty pull never gets a span,
+    // matching the behavior on main, so the application-initiated gate applies only under
+    // stable/v3.
+    // Metrics are recorded either way under stable/v3 semconv.
+    boolean spanEligible =
+        RocketMqSingletons.receiveSpansEnabled()
+            && (!messageViews.isEmpty() || (emitStableMessagingSemconv() && pullApi));
     RocketMqReceiveRequest receiveRequest = RocketMqReceiveRequest.create(request, messageViews);
-    if (receiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
-      Context context =
-          InstrumenterUtil.startAndEnd(
-              receiveInstrumenter,
-              parentContext,
-              receiveRequest,
-              messageViews,
-              null,
-              timer.startTime(),
-              timer.now());
-      if (!emitStableMessagingSemconv()) {
-        for (MessageView messageView : messageViews) {
-          VirtualFieldStore.setContextByMessage(messageView, context);
-        }
+    Context context =
+        MessagingReceiveTelemetry.record(
+            consumerReceiveInstrumenter(),
+            parentContext,
+            receiveRequest,
+            messageViews,
+            null,
+            timer,
+            spanEligible);
+    if (!emitStableMessagingSemconv() && context != null) {
+      for (MessageView messageView : messageViews) {
+        VirtualFieldStore.setContextByMessage(messageView, context);
       }
     }
   }
 
   @Override
   public void onFailure(Throwable throwable) {
-    if (!pullApi && !RocketMqSingletons.receiveTelemetryExplicitlyEnabled()) {
-      return;
-    }
-    Instrumenter<RocketMqReceiveRequest, List<MessageView>> receiveInstrumenter =
-        consumerReceiveInstrumenter();
+    // A failed poll returned no messages. Under stable/v3 semconv only an application-initiated
+    // receive is span-eligible; in legacy semconv a failed receive keeps a span whenever receive
+    // spans are enabled, matching the behavior on main. Metrics are recorded either way under
+    // stable/v3 semconv.
+    boolean spanEligible =
+        RocketMqSingletons.receiveSpansEnabled() && (!emitStableMessagingSemconv() || pullApi);
     Context parentContext = Context.current();
     RocketMqReceiveRequest receiveRequest = RocketMqReceiveRequest.create(request, emptyList());
-    if (receiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
-      InstrumenterUtil.startAndEnd(
-          receiveInstrumenter,
-          parentContext,
-          receiveRequest,
-          null,
-          throwable,
-          timer.startTime(),
-          timer.now());
-    }
+    MessagingReceiveTelemetry.record(
+        consumerReceiveInstrumenter(),
+        parentContext,
+        receiveRequest,
+        null,
+        throwable,
+        timer,
+        spanEligible);
   }
 }

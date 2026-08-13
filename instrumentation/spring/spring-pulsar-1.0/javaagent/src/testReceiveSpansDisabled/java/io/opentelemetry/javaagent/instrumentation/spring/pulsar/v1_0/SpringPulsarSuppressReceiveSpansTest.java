@@ -10,13 +10,15 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
 import io.opentelemetry.instrumentation.spring.pulsar.v1_0.AbstractSpringPulsarTest;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
+import java.util.function.Consumer;
 
 class SpringPulsarSuppressReceiveSpansTest extends AbstractSpringPulsarTest {
 
   @Override
   protected void assertSpringPulsar() {
-    testing.waitAndAssertTraces(
+    Consumer<TraceAssert> mainTrace =
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
@@ -42,7 +44,22 @@ class SpringPulsarSuppressReceiveSpansTest extends AbstractSpringPulsarTest {
                     span.hasTotalRecordedLinks(0);
                   }
                 },
-                span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
-    assertStableProcessMetrics(false);
+                span -> span.hasName("consumer").hasParent(trace.getSpan(2)));
+
+    if (!emitStableMessagingSemconv()) {
+      // legacy mode is unchanged: a batch receive always emits a standalone "receive" span, even
+      // when receive spans are disabled, because the legacy batch path never suppresses it
+      testing.waitAndAssertTraces(
+          mainTrace,
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName(OTEL_TOPIC + " receive").hasKind(CONSUMER)));
+      return;
+    }
+
+    // stable/v3 with receive spans off: the internal listener poll produces no receive span, but
+    // the pulsar client still records the receive metrics (including the consumed-messages count)
+    testing.waitAndAssertTraces(mainTrace);
+    assertStableProcessMetrics();
   }
 }

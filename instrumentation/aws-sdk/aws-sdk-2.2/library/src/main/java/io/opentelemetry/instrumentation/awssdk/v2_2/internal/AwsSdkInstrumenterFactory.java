@@ -148,10 +148,10 @@ public final class AwsSdkInstrumenterFactory {
     AttributesExtractor<SqsReceiveRequest, Response> messagingAttributeExtractor =
         messagingAttributesExtractor(getter, operationType, RECEIVE_OPERATION_NAME);
 
-    // TODO(receive-spans): under stable/v3 semconv the receive instrumenter must always be built so
-    // metrics flow; the span decision belongs at the SqsImpl call site via
-    // MessagingReceiveTelemetry.record(..., spanEligible). Currently the instrumenter is gated on
-    // messagingReceiveSpansEnabled, which also suppresses receive metrics when spans are off.
+    // Under legacy semconv the receive instrumenter is only built when receive spans are enabled.
+    // Under stable/v3 semconv it is always built so that receive metrics are recorded regardless of
+    // the receive spans setting; the span decision is made at the SqsImpl call site via
+    // MessagingReceiveTelemetry.record(..., spanEligible).
     return createInstrumenter(
         openTelemetry,
         MessagingSpanNameExtractor.create(getter, operationType, RECEIVE_OPERATION_NAME),
@@ -173,7 +173,7 @@ public final class AwsSdkInstrumenterFactory {
                 });
           }
         },
-        messagingReceiveSpansEnabled);
+        emitStableMessagingSemconv() || messagingReceiveSpansEnabled);
   }
 
   public Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter() {

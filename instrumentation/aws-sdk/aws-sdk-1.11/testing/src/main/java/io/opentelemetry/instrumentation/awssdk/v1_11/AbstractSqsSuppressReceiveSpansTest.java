@@ -229,6 +229,25 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
             });
   }
 
+  @Test
+  void testEmptyReceiveDoesNotCreateReceiveSpan() {
+    sqsClient.createQueue("testSdkSqs");
+
+    ReceiveMessageResult result =
+        sqsClient.receiveMessage(
+            new ReceiveMessageRequest("http://localhost:" + sqsPort + "/000000000000/testSdkSqs"));
+
+    assertThat(result.getMessages()).isEmpty();
+    // with receive spans suppressed an application-initiated empty poll produces no receive span,
+    // so
+    // the only span is the queue creation
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    AbstractSqsSuppressReceiveSpansTest::createQueueSpan));
+  }
+
   private static void createQueueSpan(SpanDataAssert span) {
     span.hasName("SQS.CreateQueue")
         .hasKind(SpanKind.CLIENT)

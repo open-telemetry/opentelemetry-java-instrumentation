@@ -103,8 +103,9 @@ tasks {
     classpath = sourceSets.test.get().runtimeClasspath
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     filter {
-      excludeTestsMatching("Jms1SuppressReceiveSpansTest")
+      includeTestsMatching("Jms1SuppressReceiveSpansTest")
     }
+    include("**/Jms1SuppressReceiveSpansTest.*")
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
@@ -116,9 +117,8 @@ tasks {
       usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
       filter {
-        includeTestsMatching("Jms1SuppressReceiveSpansTest")
+        excludeTestsMatching("Jms1SuppressReceiveSpansTest")
       }
-      include("**/Jms1SuppressReceiveSpansTest.*")
       jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
       jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
       systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")

@@ -65,7 +65,8 @@ public final class KafkaTelemetry {
       Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter,
       Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter,
       Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter,
-      boolean producerPropagationEnabled) {
+      boolean producerPropagationEnabled,
+      boolean receiveSpansEnabled) {
     this.openTelemetry = openTelemetry;
     this.producerTelemetry =
         new KafkaProducerTelemetry(
@@ -73,7 +74,8 @@ public final class KafkaTelemetry {
             producerInstrumenter,
             producerPropagationEnabled);
     this.consumerTelemetry =
-        new KafkaConsumerTelemetry(consumerReceiveInstrumenter, consumerProcessInstrumenter);
+        new KafkaConsumerTelemetry(
+            consumerReceiveInstrumenter, consumerProcessInstrumenter, receiveSpansEnabled);
   }
 
   /** Returns a decorated {@link Producer} that emits spans for each sent message. */

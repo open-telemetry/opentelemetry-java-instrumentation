@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
@@ -18,11 +18,8 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.sdk.trace.data.LinkData;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
 import org.apache.pulsar.client.api.BatchReceivePolicy;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
@@ -45,7 +42,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
     Message<String> message = consumer.receive(100, MILLISECONDS);
 
     assertThat(message).isNull();
-    assertNoReceiveTelemetry();
+    assertEmptyReceiveTelemetry(topic);
   }
 
   @Test
@@ -65,18 +62,50 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
     Messages<String> messages = consumer.batchReceive();
 
     assertThat(messages).isEmpty();
-    assertNoReceiveTelemetry();
+    assertEmptyReceiveTelemetry(topic);
   }
 
-  private static void assertNoReceiveTelemetry() {
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private static void assertEmptyReceiveTelemetry(String topic) {
+    // an empty receive never produces a receive span when receive spans are disabled
     assertThat(testing.spans()).isEmpty();
+
+    if (!emitStableMessagingSemconv()) {
+      // legacy mode records no receive metrics at all
+      assertThat(testing.metrics())
+          .noneMatch(
+              metric ->
+                  metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
+                      && (metric.getName().equals("messaging.receive.duration")
+                          || metric.getName().equals("messaging.client.operation.duration")
+                          || metric.getName().equals("messaging.client.consumed.messages")));
+      return;
+    }
+
+    // stable/v3 records the operation duration for every receive, even empty ones, but never counts
+    // a consumed message for them
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "messaging.client.operation.duration",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasSumGreaterThan(0.0)
+                                            .hasAttributesSatisfying(
+                                                equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(MESSAGING_DESTINATION_NAME, topic))))));
     assertThat(testing.metrics())
         .noneMatch(
             metric ->
                 metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
-                    && (metric.getName().equals("messaging.receive.duration")
-                        || metric.getName().equals("messaging.client.operation.duration")
-                        || metric.getName().equals("messaging.client.consumed.messages")));
+                    && metric.getName().equals("messaging.client.consumed.messages"));
   }
 
   @Test
@@ -104,6 +133,8 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
     assertThat(latch.await(1, MINUTES)).isTrue();
 
     if (emitStableMessagingSemconv()) {
+      // the message is delivered to the application and counted at receive; the listener failure is
+      // reflected on the process side, so the consumed-messages counter carries no error.type
       testing.waitAndAssertMetrics(
           INSTRUMENTATION_NAME,
           "messaging.client.consumed.messages",
@@ -118,15 +149,14 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                                           point
                                               .hasValue(1)
                                               .hasAttributesSatisfyingExactly(
-                                                  equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                  equalTo(MESSAGING_OPERATION_NAME, "receive"),
                                                   equalTo(MESSAGING_SYSTEM, "pulsar"),
                                                   equalTo(MESSAGING_DESTINATION_NAME, topic),
                                                   equalTo(
                                                       MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
                                                       "test_sub"),
-                                                  equalTo(
-                                                      ERROR_TYPE,
-                                                      IllegalStateException.class.getName()))))));
+                                                  equalTo(SERVER_ADDRESS, brokerHost),
+                                                  equalTo(SERVER_PORT, brokerPort))))));
     }
   }
 
@@ -157,6 +187,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
     latch.await(1, MINUTES);
 
     if (emitStableMessagingSemconv()) {
+      // with receive spans off the message is still counted exactly once, at receive
       testing.waitAndAssertMetrics(
           INSTRUMENTATION_NAME,
           "messaging.client.consumed.messages",
@@ -176,12 +207,40 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                                           point
                                               .hasValue(1)
                                               .hasAttributesSatisfyingExactly(
-                                                  equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                  equalTo(MESSAGING_OPERATION_NAME, "receive"),
                                                   equalTo(MESSAGING_SYSTEM, "pulsar"),
                                                   equalTo(MESSAGING_DESTINATION_NAME, topic),
                                                   equalTo(
                                                       MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                                      "test_sub"))))));
+                                                      "test_sub"),
+                                                  equalTo(SERVER_ADDRESS, brokerHost),
+                                                  equalTo(SERVER_PORT, brokerPort))))));
+      // the internal listener poll also records the receive operation duration even though no
+      // receive span is produced
+      testing.waitAndAssertMetrics(
+          INSTRUMENTATION_NAME,
+          "messaging.client.operation.duration",
+          metrics ->
+              metrics.anySatisfy(
+                  metric ->
+                      assertThat(metric)
+                          .satisfies(
+                              data ->
+                                  assertThat(data.getHistogramData().getPoints())
+                                      .anySatisfy(
+                                          point -> {
+                                            assertThat(point.getSum()).isGreaterThan(0.0);
+                                            assertThat(
+                                                    point
+                                                        .getAttributes()
+                                                        .get(MESSAGING_OPERATION_NAME))
+                                                .isEqualTo("receive");
+                                            assertThat(
+                                                    point
+                                                        .getAttributes()
+                                                        .get(MESSAGING_DESTINATION_NAME))
+                                                .isEqualTo(topic);
+                                          }))));
     }
 
     testing.waitAndAssertTraces(
@@ -300,29 +359,64 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
       return;
     }
 
-    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span ->
-                  span.hasName(spanName("send", topic))
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          sendAttributes(topic, msgId.toString(), false)));
-          producerSpan.set(trace.getSpan(1));
-        },
+    assertDirectReceiveMetricsOnly(topic, msgId);
+  }
+
+  // stable/v3 with receive spans disabled: the application-initiated receive records metrics but no
+  // receive span, so the trace only contains the producer side.
+  private static void assertDirectReceiveMetricsOnly(String topic, MessageId msgId) {
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(spanName("receive", topic))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                    span.hasName(spanName("send", topic))
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            receiveAttributes(topic, msgId.toString(), false))));
+                            sendAttributes(topic, msgId.toString(), false))));
+    // the receive operation duration is still recorded even though the receive span was suppressed
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "messaging.client.operation.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .satisfies(
+                            data ->
+                                assertThat(data.getHistogramData().getPoints())
+                                    .anySatisfy(
+                                        point -> {
+                                          assertThat(point.getSum()).isGreaterThan(0.0);
+                                          assertThat(
+                                                  point
+                                                      .getAttributes()
+                                                      .get(MESSAGING_OPERATION_NAME))
+                                              .isEqualTo("receive");
+                                          assertThat(
+                                                  point
+                                                      .getAttributes()
+                                                      .get(MESSAGING_DESTINATION_NAME))
+                                              .isEqualTo(topic);
+                                        }))));
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(1)
+                                            .hasAttributesSatisfying(
+                                                equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(MESSAGING_DESTINATION_NAME, topic))))));
   }
 
   @Test

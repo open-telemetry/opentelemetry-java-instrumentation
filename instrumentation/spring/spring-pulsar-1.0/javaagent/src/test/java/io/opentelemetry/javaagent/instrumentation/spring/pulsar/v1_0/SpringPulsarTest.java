@@ -57,7 +57,7 @@ class SpringPulsarTest extends AbstractSpringPulsarTest {
       } else {
         testing.waitAndAssertTraces(applicationTrace);
       }
-      assertStableProcessMetrics(receiveTelemetryRecorded);
+      assertStableProcessMetrics();
       return;
     }
 
@@ -91,7 +91,6 @@ class SpringPulsarTest extends AbstractSpringPulsarTest {
   }
 
   private static boolean receiveTelemetryExplicitlyEnabled() {
-    return Boolean.getBoolean(
-        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
+    return Boolean.getBoolean("otel.instrumentation.messaging.experimental.receive-spans.enabled");
   }
 }

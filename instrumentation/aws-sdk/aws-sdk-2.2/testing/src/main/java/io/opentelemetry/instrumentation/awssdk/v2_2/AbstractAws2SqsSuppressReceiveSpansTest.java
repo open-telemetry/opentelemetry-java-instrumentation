@@ -169,6 +169,26 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
   }
 
   @Test
+  void testEmptyReceiveDoesNotCreateReceiveSpan() {
+    SqsClientBuilder builder = SqsClient.builder();
+    configureSdkClient(builder);
+    SqsClient client = configureSqsClient(builder.build());
+
+    client.createQueue(createQueueRequest);
+    ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest);
+
+    assertThat(response.messages()).isEmpty();
+    // with receive spans suppressed an application-initiated empty poll produces no receive span,
+    // so
+    // the only span is the queue creation
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("Sqs.CreateQueue").hasKind(SpanKind.CLIENT)));
+  }
+
+  @Test
   @SuppressWarnings("deprecation") // using deprecated semconv
   void testBatchSqsProducerConsumerServicesSync() {
     SqsClientBuilder builder = SqsClient.builder();

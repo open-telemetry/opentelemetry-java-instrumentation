@@ -33,6 +33,7 @@ public final class AwsSdkTelemetry {
   private final Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter;
+  private final boolean messagingReceiveSpansEnabled;
 
   /** Returns a new {@link AwsSdkTelemetry} configured with the given {@link OpenTelemetry}. */
   public static AwsSdkTelemetry create(OpenTelemetry openTelemetry) {
@@ -62,6 +63,7 @@ public final class AwsSdkTelemetry {
     consumerProcessInstrumenter = instrumenterFactory.consumerProcessInstrumenter();
     producerInstrumenter = instrumenterFactory.producerInstrumenter();
     dynamoDbInstrumenter = instrumenterFactory.dynamoDbInstrumenter();
+    this.messagingReceiveSpansEnabled = messagingReceiveSpansEnabled;
   }
 
   /**
@@ -74,7 +76,8 @@ public final class AwsSdkTelemetry {
         consumerReceiveInstrumenter,
         consumerProcessInstrumenter,
         producerInstrumenter,
-        dynamoDbInstrumenter);
+        dynamoDbInstrumenter,
+        messagingReceiveSpansEnabled);
   }
 
   /**

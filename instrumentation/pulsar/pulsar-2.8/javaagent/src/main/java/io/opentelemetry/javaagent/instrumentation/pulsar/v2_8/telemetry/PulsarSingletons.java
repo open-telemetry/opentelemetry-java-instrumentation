@@ -25,6 +25,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingReceiveTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -139,9 +140,6 @@ public class PulsarSingletons {
                 createMessagingAttributesExtractor(
                     getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
             .addOperationMetrics(MessagingProcessMetrics.get());
-    if (!receiveSpansEnabled && emitStableMessagingSemconv()) {
-      instrumenterBuilder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
-    }
     setMessagingProcessExceptionEventExtractor(instrumenterBuilder);
 
     return MessagingProcessInstrumenterFactory.create(
@@ -189,6 +187,67 @@ public class PulsarSingletons {
       Timer timer,
       Consumer<?> consumer,
       @Nullable Throwable throwable) {
+    if (!emitStableMessagingSemconv()) {
+      return legacyStartAndEndConsumerReceive(parent, message, timer, consumer, throwable);
+    }
+
+    // stable / v3-preview: always record receive metrics; the receive span is created only when it
+    // is eligible per the policy evaluated below
+    String brokerUrl = VirtualFieldStore.extract(consumer);
+    PulsarRequest request = PulsarRequest.create(message, brokerUrl, consumer);
+    boolean applicationInitiated = !MessageListenerContext.isProcessing();
+    int receivedMessageCount = message != null ? 1 : 0;
+    boolean spanEligible =
+        receiveSpansEnabled && (applicationInitiated || receivedMessageCount > 0);
+    MessagingReceiveTelemetry.record(
+        consumerReceiveInstrumenter, parent, request, null, throwable, timer, spanEligible);
+    if (message != null) {
+      // injected context is used in MessageListenerInstrumentation and also in the spring-pulsar
+      // instrumentation
+      VirtualFieldStore.inject(message, parent);
+    }
+    return parent;
+  }
+
+  @Nullable
+  private static Context startAndEndConsumerReceive(
+      Context parent,
+      @Nullable Messages<?> messages,
+      Timer timer,
+      Consumer<?> consumer,
+      @Nullable Throwable throwable,
+      boolean applicationInitiated) {
+    if (!emitStableMessagingSemconv()) {
+      return legacyStartAndEndConsumerBatchReceive(parent, messages, timer, consumer, throwable);
+    }
+
+    // stable / v3-preview: always record receive metrics; the receive span is created only when it
+    // is eligible per the policy evaluated below. applicationInitiated is captured by the caller
+    // because the batch receive completes on a different thread than the one that set the listener
+    // context, so it cannot be recomputed here.
+    String brokerUrl = VirtualFieldStore.extract(consumer);
+    PulsarBatchRequest request = PulsarBatchRequest.create(messages, brokerUrl, consumer);
+    int receivedMessageCount = request.getMessageCount();
+    boolean spanEligible =
+        receiveSpansEnabled && (applicationInitiated || receivedMessageCount > 0);
+    MessagingReceiveTelemetry.record(
+        consumerBatchReceiveInstrumenter, parent, request, null, throwable, timer, spanEligible);
+    // injected context is used in MessageListenerInstrumentation and also in the spring-pulsar
+    // instrumentation
+    for (Message<?> message : request.getMessages()) {
+      VirtualFieldStore.inject(message, parent);
+    }
+    return parent;
+  }
+
+  @Nullable
+  private static Context legacyStartAndEndConsumerReceive(
+      Context parent,
+      @Nullable Message<?> message,
+      Timer timer,
+      Consumer<?> consumer,
+      @Nullable Throwable throwable) {
+    // legacy behavior must stay byte-for-byte unchanged: an empty receive never produces a span
     if (message == null) {
       return null;
     }
@@ -198,14 +257,12 @@ public class PulsarSingletons {
       return null;
     }
     if (!receiveSpansEnabled) {
-      // suppress receive span when receive telemetry is not enabled and message is going to be
+      // suppress receive span when receive spans are not enabled and message is going to be
       // processed by a listener
       if (MessageListenerContext.isProcessing()) {
         return null;
       }
-      if (!emitStableMessagingSemconv()) {
-        parent = propagator.extract(parent, request, MessageTextMapGetter.INSTANCE);
-      }
+      parent = propagator.extract(parent, request, MessageTextMapGetter.INSTANCE);
     }
     Context receiveContext =
         InstrumenterUtil.startAndEnd(
@@ -216,22 +273,23 @@ public class PulsarSingletons {
             throwable,
             timer.startTime(),
             timer.now());
-    Context processParentContext = emitStableMessagingSemconv() ? parent : receiveContext;
-    VirtualFieldStore.markReceiveTelemetryRecorded(message);
     // injected context is used in MessageListenerInstrumentation and also in the spring-pulsar
     // instrumentation
-    VirtualFieldStore.inject(message, processParentContext);
-    return processParentContext;
+    VirtualFieldStore.inject(message, receiveContext);
+    return receiveContext;
   }
 
   @Nullable
-  private static Context startAndEndConsumerReceive(
+  private static Context legacyStartAndEndConsumerBatchReceive(
       Context parent,
-      Messages<?> messages,
+      @Nullable Messages<?> messages,
       Timer timer,
       Consumer<?> consumer,
       @Nullable Throwable throwable) {
-    if (messages == null || messages.size() == 0) {
+    boolean empty = messages == null || messages.size() == 0;
+    // legacy behavior must stay byte-for-byte unchanged: an empty batch receive never produces a
+    // span
+    if (empty) {
       return null;
     }
     String brokerUrl = VirtualFieldStore.extract(consumer);
@@ -248,14 +306,12 @@ public class PulsarSingletons {
             throwable,
             timer.startTime(),
             timer.now());
-    Context processParentContext = emitStableMessagingSemconv() ? parent : receiveContext;
     // injected context is used in MessageListenerInstrumentation and also in the spring-pulsar
     // instrumentation
-    for (Message<?> message : messages) {
-      VirtualFieldStore.markReceiveTelemetryRecorded(message);
-      VirtualFieldStore.inject(message, processParentContext);
+    for (Message<?> message : request.getMessages()) {
+      VirtualFieldStore.inject(message, receiveContext);
     }
-    return processParentContext;
+    return receiveContext;
   }
 
   public static CompletableFuture<Void> wrap(CompletableFuture<Void> future) {
@@ -287,10 +343,14 @@ public class PulsarSingletons {
     CompletableFuture<Message<?>> result = new CompletableFuture<>();
     future.whenComplete(
         (message, throwable) -> {
-          // we create a "receive" span when receive telemetry is enabled or when we know that
-          // this message will not be passed to a listener that would create the "process" span
+          // under stable/v3 the receive is always recorded so that metrics are emitted for every
+          // receive, including internal listener polls; the receive span itself is gated inside
+          // startAndEndConsumerReceive. legacy behavior is preserved byte-for-byte: an internal
+          // listener poll is left silent unless receive spans are enabled.
+          boolean instrumentReceive =
+              emitStableMessagingSemconv() || receiveSpansEnabled || !listenerContextActive;
           Context context =
-              receiveSpansEnabled || !listenerContextActive
+              instrumentReceive
                   ? startAndEndConsumerReceive(parent, message, timer, consumer, throwable)
                   : parent;
           runWithContext(
@@ -313,12 +373,18 @@ public class PulsarSingletons {
       return future;
     }
 
+    boolean applicationInitiated = !MessageListenerContext.isProcessing();
     Context parent = Context.current();
     CompletableFuture<Messages<?>> result = new CompletableFuture<>();
     future.whenComplete(
         (messages, throwable) -> {
+          // the receive is always recorded so that metrics are emitted for every batch receive
+          // under stable/v3, including internal listener polls; the receive span itself is gated
+          // inside startAndEndConsumerReceive. legacy behavior is preserved: an empty batch receive
+          // is dropped there, and a non-empty one is always instrumented as before.
           Context context =
-              startAndEndConsumerReceive(parent, messages, timer, consumer, throwable);
+              startAndEndConsumerReceive(
+                  parent, messages, timer, consumer, throwable, applicationInitiated);
           runWithContext(
               context,
               () -> {

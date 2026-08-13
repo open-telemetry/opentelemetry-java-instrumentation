@@ -35,46 +35,49 @@ tasks {
     include("**/RocketMqClientSuppressReceiveSpanTest.*")
   }
 
+  // stable messaging semconv with receive spans off (the default): no receive span is created.
   val testMessagingPreview = register<Test>("testMessagingPreview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
-    }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testMessagingPreviewDefault = register<Test>("testMessagingPreviewDefault") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("RocketMqClientTest.testEmptyPullReceive")
       includeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
     }
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
+  // stable messaging semconv with receive spans opted in: the receive-span assertions.
+  val testMessagingPreviewReceiveSpansEnabled =
+    register<Test>("testMessagingPreviewReceiveSpansEnabled") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
+      }
+      jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
+      jvmArgs("-Dotel.semconv-stability.preview=messaging")
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+    }
+
+  // v3-preview with receive spans off (the default): no receive span is created.
   val testV3Preview = register<Test>("testV3Preview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
+      includeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
-  val testV3PreviewDefault = register<Test>("testV3PreviewDefault") {
+  // v3-preview with receive spans opted in: the receive-span assertions.
+  val testV3PreviewReceiveSpansEnabled = register<Test>("testV3PreviewReceiveSpansEnabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("RocketMqClientTest.testEmptyPullReceive")
-      includeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
+      excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
     }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-spans.enabled=true")
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
@@ -106,9 +109,9 @@ tasks {
     dependsOn(
       testReceiveSpanDisabled,
       testMessagingPreview,
-      testMessagingPreviewDefault,
+      testMessagingPreviewReceiveSpansEnabled,
       testV3Preview,
-      testV3PreviewDefault,
+      testV3PreviewReceiveSpansEnabled,
       testBothSemconv,
     )
   }
