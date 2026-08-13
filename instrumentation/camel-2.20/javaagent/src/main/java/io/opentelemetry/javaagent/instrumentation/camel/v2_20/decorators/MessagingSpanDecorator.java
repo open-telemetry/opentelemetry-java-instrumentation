@@ -41,11 +41,18 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
   private final String component;
   private final String system;
   private final boolean spanContextPropagated;
+  private final String sendOperationName;
 
   MessagingSpanDecorator(String component, String system, boolean spanContextPropagated) {
+    this(component, system, spanContextPropagated, "send");
+  }
+
+  MessagingSpanDecorator(
+      String component, String system, boolean spanContextPropagated, String sendOperationName) {
     this.component = component;
     this.system = system;
     this.spanContextPropagated = spanContextPropagated;
+    this.sendOperationName = sendOperationName;
   }
 
   public String getSystem() {
@@ -54,6 +61,10 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
 
   public boolean isSpanContextPropagated() {
     return spanContextPropagated;
+  }
+
+  public String getSendOperationName() {
+    return sendOperationName;
   }
 
   @Override

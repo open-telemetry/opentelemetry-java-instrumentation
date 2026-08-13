@@ -37,6 +37,8 @@ class CamelSingletons {
   private static final Instrumenter<CamelRequest, Void> instrumenter = createInstrumenter();
   private static final Instrumenter<CamelRequest, Void> messagingSendInstrumenter =
       createMessagingInstrumenter(SEND, "send", true);
+  private static final Instrumenter<CamelRequest, Void> messagingPublishInstrumenter =
+      createMessagingInstrumenter(SEND, "publish", true);
   // AWS SQS sends rely on the nested AWS SDK producer span to inject propagation.
   private static final Instrumenter<CamelRequest, Void> keylessMessagingSendInstrumenter =
       createMessagingInstrumenter(SEND, "send", false);
@@ -113,9 +115,12 @@ class CamelSingletons {
   static Instrumenter<CamelRequest, Void> instrumenter(CamelRequest request) {
     if (request.isMessaging()) {
       if (request.getCamelDirection() == CamelDirection.OUTBOUND) {
-        return request.isMessagingSpanContextPropagated()
-            ? messagingSendInstrumenter
-            : keylessMessagingSendInstrumenter;
+        if (!request.isMessagingSpanContextPropagated()) {
+          return keylessMessagingSendInstrumenter;
+        }
+        return "publish".equals(request.getMessagingSendOperationName())
+            ? messagingPublishInstrumenter
+            : messagingSendInstrumenter;
       }
       return messagingProcessInstrumenter;
     }
