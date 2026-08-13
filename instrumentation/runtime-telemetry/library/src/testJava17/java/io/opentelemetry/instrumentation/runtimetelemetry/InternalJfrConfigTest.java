@@ -18,12 +18,25 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Internal;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import jdk.jfr.FlightRecorder;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class InternalJfrConfigTest {
 
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  @BeforeEach
+  void setup() {
+    try {
+      Class.forName("jdk.jfr.FlightRecorder");
+    } catch (ClassNotFoundException ignored) {
+      Assumptions.abort("JFR not present");
+    }
+    Assumptions.assumeTrue(FlightRecorder.isAvailable(), "JFR not available");
+  }
 
   @Test
   void absentSelectorKeepsJfrDisabled() {
