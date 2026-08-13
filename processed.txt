@@ -586,3 +586,4 @@ hbase-client-common-1.0:testing
 jdbc:javaagent-common
 opentelemetry-api-1.65:javaagent
 tomcat-dbcp-8.0:javaagent
+redisson-metrics-3.26:javaagent
