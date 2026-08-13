@@ -6,8 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20.aws;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertNoCamelMessagingMetrics;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertSendAndProcessMetrics;
+import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertSendMetrics;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.services.sqs.model.Message;
@@ -83,7 +84,7 @@ class SqsCamelTest {
                 span ->
                     AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl, queueName)
                         .hasNoParent()));
-    assertProcessMetrics(testing, "aws_sqs", queueName);
+    assertSendAndProcessMetrics(testing, "aws_sqs", queueName);
     camelApp.stop();
   }
 
@@ -172,7 +173,7 @@ class SqsCamelTest {
                             queueName,
                             SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(2))));
-    assertNoCamelMessagingMetrics(testing);
+    assertSendMetrics(testing, "aws_sqs", queueName, null);
     camelApp.stop();
   }
 
