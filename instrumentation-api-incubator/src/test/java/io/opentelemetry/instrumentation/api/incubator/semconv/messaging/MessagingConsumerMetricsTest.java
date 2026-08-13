@@ -309,6 +309,7 @@ class MessagingConsumerMetricsTest {
             .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operationType : null)
             .build();
     Context context = listener.onStart(Context.root(), attributes, nanos(100));
+    assertThat(hasConsumedMessages(context)).isFalse();
     listener.onEnd(context, Attributes.empty(), nanos(300));
 
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
