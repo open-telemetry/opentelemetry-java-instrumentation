@@ -69,63 +69,56 @@ class RedissonConnectionPoolMetricsTest {
   @Test
   void reportsRegularAndSubscriptionPoolMetricsUntilClientShutdown()
       throws ReflectiveOperationException {
-    testing.clearData();
     RedissonClient redisson = createRedissonClient();
+    cleanup.deferCleanup(redisson::shutdown);
+    redisson.getBucket("pool-metrics").set("value");
+
+    String regularPool = "regular-" + endpoint;
+    String subscriptionPool = "subscription-" + endpoint;
+    assertConnectionPoolMetrics(regularPool, subscriptionPool);
+    assertMetricNotEmitted(maxIdleMetricName());
+
+    MasterSlaveEntry entry = getMasterSlaveEntry((Redisson) redisson);
+    ConnectionsHolder<RedisConnection> holder = getMasterConnectionsHolder(entry);
+    AsyncSemaphore semaphore = holder.getFreeConnectionsCounter();
+
+    testing.clearData();
+    RedisConnection connection = entry.connectionWriteOp(RedisCommands.PING).join();
     try {
-      redisson.getBucket("pool-metrics").set("value");
-
-      String regularPool = "regular-" + endpoint;
-      String subscriptionPool = "subscription-" + endpoint;
-      assertConnectionPoolMetrics(regularPool, subscriptionPool);
-      assertMetricNotEmitted(maxIdleMetricName());
-
-      MasterSlaveEntry entry = getMasterSlaveEntry((Redisson) redisson);
-      ConnectionsHolder<RedisConnection> holder = getMasterConnectionsHolder(entry);
-      AsyncSemaphore semaphore = holder.getFreeConnectionsCounter();
-
-      testing.clearData();
-      RedisConnection connection = entry.connectionWriteOp(RedisCommands.PING).join();
-      try {
-        // Delta temporality reports one fewer idle connection and one used connection.
-        assertUsageMetric(regularPool, -1, 1, subscriptionPool, 0, 0);
-      } finally {
-        entry.releaseWrite(connection);
-      }
-
-      testing.clearData();
-      for (int i = 0; i < REGULAR_MAX; i++) {
-        semaphore.acquire().join();
-      }
-      CompletableFuture<Void> queued = semaphore.acquire();
-      try {
-        assertPendingRequests(regularPool, 1, subscriptionPool, 0);
-      } finally {
-        for (int i = 0; i <= REGULAR_MAX; i++) {
-          semaphore.release();
-        }
-      }
-      queued.join();
-
-      redisson.shutdown();
-      redisson = null;
-      testing.clearData();
-
-      await()
-          .untilAsserted(
-              () ->
-                  assertThat(testing.metrics())
-                      .filteredOn(
-                          metric ->
-                              metric
-                                  .getInstrumentationScopeInfo()
-                                  .getName()
-                                  .equals(INSTRUMENTATION_NAME))
-                      .isEmpty());
+      // Delta temporality reports one fewer idle connection and one used connection.
+      assertUsageMetric(regularPool, -1, 1, subscriptionPool, 0, 0);
     } finally {
-      if (redisson != null) {
-        redisson.shutdown();
+      entry.releaseWrite(connection);
+    }
+
+    testing.clearData();
+    for (int i = 0; i < REGULAR_MAX; i++) {
+      semaphore.acquire().join();
+    }
+    CompletableFuture<Void> queued = semaphore.acquire();
+    try {
+      assertPendingRequests(regularPool, 1, subscriptionPool, 0);
+    } finally {
+      for (int i = 0; i <= REGULAR_MAX; i++) {
+        semaphore.release();
       }
     }
+    queued.join();
+
+    redisson.shutdown();
+    testing.clearData();
+
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing.metrics())
+                    .filteredOn(
+                        metric ->
+                            metric
+                                .getInstrumentationScopeInfo()
+                                .getName()
+                                .equals(INSTRUMENTATION_NAME))
+                    .isEmpty());
   }
 
   private RedissonClient createRedissonClient() {
