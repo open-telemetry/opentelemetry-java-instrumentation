@@ -15,11 +15,13 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
@@ -29,6 +31,7 @@ import javax.jms.TextMessage;
 import javax.jms.Topic;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class Jms1InstrumentationTest extends AbstractJms1Test {
@@ -116,6 +119,46 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                             subscriptionName("previous-listener-subscription"))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated JMS and semconv APIs
+  @ParameterizedTest
+  @MethodSource("listenerRegistrationRemovalArguments")
+  void restoresPreviousSubscriptionNameWhenRegistrationRemoved(
+      String scenario, ConsumerRegistrationRemover registrationRemover) throws JMSException {
+    String topicName = "removed-listener-registration-" + scenario;
+    Topic topic = session.createTopic(topicName);
+    TextMessage message = session.createTextMessage("a message");
+    message.setJMSDestination(topic);
+    MessageListener listener = ignored -> {};
+
+    String previousSubscription = "previous-listener-subscription-" + scenario;
+    MessageConsumer previousConsumer = session.createDurableSubscriber(topic, previousSubscription);
+    cleanup.deferCleanup(previousConsumer::close);
+    previousConsumer.setMessageListener(listener);
+
+    MessageConsumer currentConsumer =
+        session.createDurableSubscriber(topic, "current-listener-subscription-" + scenario);
+    cleanup.deferCleanup(currentConsumer::close);
+    currentConsumer.setMessageListener(listener);
+    registrationRemover.remove(currentConsumer);
+
+    previousConsumer.getMessageListener().onMessage(message);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName(topicName, false),
+                            oldOperation("process"),
+                            operationName("process"),
+                            operationType("process"),
+                            messagingTempDestination(false),
+                            subscriptionName(previousSubscription))));
+  }
+
   @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("destinationArguments")
@@ -189,5 +232,25 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                             operationType("receive"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary))));
+  }
+
+  private static Stream<Arguments> listenerRegistrationRemovalArguments() {
+    return Stream.of(
+        argumentSet(
+            "null listener",
+            "null",
+            (ConsumerRegistrationRemover) consumer -> consumer.setMessageListener(null)),
+        argumentSet(
+            "replacement listener",
+            "replacement",
+            (ConsumerRegistrationRemover) consumer -> consumer.setMessageListener(ignored -> {})),
+        argumentSet(
+            "closed consumer", "close", (ConsumerRegistrationRemover) MessageConsumer::close));
+  }
+
+  @FunctionalInterface
+  interface ConsumerRegistrationRemover {
+
+    void remove(MessageConsumer consumer) throws JMSException;
   }
 }

@@ -123,6 +123,46 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                             subscriptionName("previous-listener-subscription"))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  @ParameterizedTest
+  @MethodSource("listenerRegistrationRemovalArguments")
+  void restoresPreviousSubscriptionNameWhenRegistrationRemoved(
+      String scenario, ConsumerRegistrationRemover registrationRemover) throws JMSException {
+    String topicName = "removed-listener-registration-" + scenario;
+    Topic topic = session.createTopic(topicName);
+    TextMessage message = session.createTextMessage("hello there");
+    message.setJMSDestination(topic);
+    MessageListener listener = ignored -> {};
+
+    String previousSubscription = "previous-listener-subscription-" + scenario;
+    MessageConsumer previousConsumer = session.createDurableConsumer(topic, previousSubscription);
+    cleanup.deferCleanup(previousConsumer);
+    previousConsumer.setMessageListener(listener);
+
+    MessageConsumer currentConsumer =
+        session.createDurableConsumer(topic, "current-listener-subscription-" + scenario);
+    cleanup.deferCleanup(currentConsumer);
+    currentConsumer.setMessageListener(listener);
+    registrationRemover.remove(currentConsumer);
+
+    previousConsumer.getMessageListener().onMessage(message);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName(topicName, topicName),
+                            oldOperation("process"),
+                            operationName("process"),
+                            operationType("process"),
+                            messagingTempDestination(false),
+                            subscriptionName(previousSubscription))));
+  }
+
   @ParameterizedTest
   @MethodSource("sharedReceiveConsumerArguments")
   void capturesSharedConsumerNameOnReceive(
@@ -327,6 +367,20 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
     return sharedConsumerArguments("receive");
   }
 
+  private static Stream<Arguments> listenerRegistrationRemovalArguments() {
+    return Stream.of(
+        argumentSet(
+            "null listener",
+            "null",
+            (ConsumerRegistrationRemover) consumer -> consumer.setMessageListener(null)),
+        argumentSet(
+            "replacement listener",
+            "replacement",
+            (ConsumerRegistrationRemover) consumer -> consumer.setMessageListener(ignored -> {})),
+        argumentSet(
+            "closed consumer", "close", (ConsumerRegistrationRemover) MessageConsumer::close));
+  }
+
   private static Stream<Arguments> sharedListenerConsumerArguments() {
     return sharedConsumerArguments("listener");
   }
@@ -350,5 +404,11 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
 
     MessageConsumer create(Session session, Topic topic, String subscriptionName)
         throws JMSException;
+  }
+
+  @FunctionalInterface
+  interface ConsumerRegistrationRemover {
+
+    void remove(MessageConsumer consumer) throws JMSException;
   }
 }

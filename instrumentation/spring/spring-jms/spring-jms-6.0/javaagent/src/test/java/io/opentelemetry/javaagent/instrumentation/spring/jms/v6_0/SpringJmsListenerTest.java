@@ -226,6 +226,7 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
   private static AttributeAssertion operationType(String operation) {
     return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
   }
+
   private static AttributeAssertion subscriptionName() {
     return equalTo(
         MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
