@@ -6,6 +6,11 @@
 
 - `jetty.thread.queue.size` Jetty JMX metric unit has been changed from `{thread}` to `{job}`.
 - Normalize the value of `activemq.destination.temp.utilization` JMX Metric for ActiveMQ to be between 0 and 1 (inclusive) instead of between 0 and 100 (inclusive).
+- Pulsar producer spans under stable messaging semantic conventions now use fully qualified topic
+  names. For `.topic("my-topic")`, `messaging.destination.name` changes from `my-topic` to
+  `persistent://public/default/my-topic`, and the span name changes from `send my-topic` to
+  `send persistent://public/default/my-topic`; update affected queries and dashboards.
+  ([#19544](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19544))
 
 ### 🚫 Deprecations
 
