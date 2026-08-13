@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the message header selector applied by {@link MessagingAttributesExtractor}. */
@@ -118,7 +117,7 @@ class MessagingHeadersTest {
     assertThat(attributes.build().asMap()).isEmpty();
   }
 
-  @SuppressWarnings("OtelDeprecatedApiUsage") // testing deprecated API
+  @SuppressWarnings("deprecation") // testing deprecated API
   @Test
   void deprecatedCapturedHeadersSetterSelectsExactNames() {
     AttributesBuilder attributes = Attributes.builder();
@@ -130,7 +129,7 @@ class MessagingHeadersTest {
     assertThat(attributes.build().asMap()).containsOnly(headerEntry("Test-Message-Header", "one"));
   }
 
-  @SuppressWarnings("OtelDeprecatedApiUsage") // testing deprecated API
+  @SuppressWarnings("deprecation") // testing deprecated API
   @Test
   void deprecatedCapturedHeadersSetterWithEmptyCollectionCapturesNothing() {
     AttributesBuilder attributes = Attributes.builder();
@@ -142,14 +141,14 @@ class MessagingHeadersTest {
     assertThat(attributes.build().asMap()).isEmpty();
   }
 
-  private static Map<AttributeKey<?>, Object> capture(@Nullable IncludeExclude headers) {
+  private static Map<AttributeKey<?>, Object> capture(IncludeExclude headers) {
     AttributesBuilder attributes = Attributes.builder();
     extractor(new MapGetter(true), headers).onEnd(attributes, Context.root(), MESSAGE, null, null);
     return attributes.build().asMap();
   }
 
   private static AttributesExtractor<Map<String, String>, Void> extractor(
-      MapGetter getter, @Nullable IncludeExclude headers) {
+      MapGetter getter, IncludeExclude headers) {
     MessagingAttributesExtractorBuilder<Map<String, String>, Void> builder =
         MessagingAttributesExtractor.builder(getter, MessagingOperationType.PROCESS, "process");
     if (headers != null) {
@@ -182,19 +181,16 @@ class MessagingHeadersTest {
       this.enumerateNames = enumerateNames;
     }
 
-    @Nullable
     @Override
     public String getSystem(Map<String, String> request) {
       return null;
     }
 
-    @Nullable
     @Override
     public String getDestination(Map<String, String> request) {
       return null;
     }
 
-    @Nullable
     @Override
     public String getDestinationTemplate(Map<String, String> request) {
       return null;
@@ -210,39 +206,33 @@ class MessagingHeadersTest {
       return false;
     }
 
-    @Nullable
     @Override
     public String getConversationId(Map<String, String> request) {
       return null;
     }
 
-    @Nullable
     @Override
     public Long getMessageBodySize(Map<String, String> request) {
       return null;
     }
 
-    @Nullable
     @Override
     public Long getMessageEnvelopeSize(Map<String, String> request) {
       return null;
     }
 
-    @Nullable
     @Override
-    public String getMessageId(Map<String, String> request, @Nullable Void response) {
+    public String getMessageId(Map<String, String> request, Void response) {
       return null;
     }
 
-    @Nullable
     @Override
     public String getClientId(Map<String, String> request) {
       return null;
     }
 
-    @Nullable
     @Override
-    public Long getBatchMessageCount(Map<String, String> request, @Nullable Void response) {
+    public Long getBatchMessageCount(Map<String, String> request, Void response) {
       return null;
     }
 
