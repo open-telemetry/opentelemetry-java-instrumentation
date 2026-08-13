@@ -138,7 +138,10 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                             producerAttributes(
                                 STREAM_PROCESSED, val -> val.isInstanceOf(String.class), false));
                     // cluster.id: best-effort; Streams internal producer may lack it on first send.
-                    if (trace.getSpan(2).getAttributes().get(stringKey("messaging.kafka.cluster.id"))
+                    if (trace
+                            .getSpan(2)
+                            .getAttributes()
+                            .get(stringKey("messaging.kafka.cluster.id"))
                         != null) {
                       processedProducerAttrs.add(
                           satisfies(
@@ -326,8 +329,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
     addOffsetAssertions(assertions, 0);
     assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
     assertions.add(extra);
-    assertions.add(
-        satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
+    assertions.add(satisfies(stringKey("messaging.kafka.cluster.id"), val -> val.isNotEmpty()));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(longKey("kafka.record.queue_time_ms"), val -> val.isGreaterThanOrEqualTo(0)));
