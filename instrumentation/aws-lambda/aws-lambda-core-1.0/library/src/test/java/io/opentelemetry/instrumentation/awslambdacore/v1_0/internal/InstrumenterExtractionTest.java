@@ -27,7 +27,6 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 class InstrumenterExtractionTest {
@@ -86,22 +85,17 @@ class InstrumenterExtractionTest {
     }
 
     @Override
-    public <C> void inject(Context context, @Nullable C carrier, TextMapSetter<C> setter) {}
+    public <C> void inject(Context context, C carrier, TextMapSetter<C> setter) {}
 
     @Override
-    public <C> Context extract(Context context, @Nullable C carrier, TextMapGetter<C> getter) {
+    public <C> Context extract(Context context, C carrier, TextMapGetter<C> getter) {
       extractedTraceHeader.set(getter.get(carrier, AWS_TRACE_HEADER_PROP));
       return context;
     }
   }
 
-  private interface XrayTraceIdContext {
-    @SuppressWarnings("UnusedMethod")
-    String getXrayTraceId();
-  }
-
   private static final class ContextWithXrayTraceId
-      implements com.amazonaws.services.lambda.runtime.Context, XrayTraceIdContext {
+      implements com.amazonaws.services.lambda.runtime.Context {
     private final String xrayTraceId;
 
     private ContextWithXrayTraceId(String xrayTraceId) {
@@ -109,7 +103,6 @@ class InstrumenterExtractionTest {
     }
 
     @Override
-    @SuppressWarnings("EffectivelyPrivate")
     public String getXrayTraceId() {
       return xrayTraceId;
     }

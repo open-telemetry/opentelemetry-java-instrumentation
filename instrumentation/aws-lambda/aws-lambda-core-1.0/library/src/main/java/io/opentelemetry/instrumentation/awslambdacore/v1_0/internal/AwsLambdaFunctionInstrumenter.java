@@ -90,9 +90,9 @@ public class AwsLambdaFunctionInstrumenter {
       getXrayTraceId.setAccessible(true);
       Object traceId = getXrayTraceId.invoke(awsContext);
       return traceId instanceof String ? (String) traceId : null;
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       return null;
-    } catch (IllegalAccessException | InvocationTargetException | SecurityException e) {
+    } catch (IllegalAccessException | InvocationTargetException | SecurityException ignored) {
       return null;
     }
   }
