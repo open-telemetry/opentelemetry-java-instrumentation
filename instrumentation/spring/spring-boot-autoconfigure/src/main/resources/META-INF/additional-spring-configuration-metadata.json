@@ -494,9 +494,24 @@
       "defaultValue": false
     },
     {
+      "name": "otel.instrumentation.logback-appender.experimental.mdc-attributes.included",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Comma-separated list of case-sensitive glob patterns for MDC keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all MDC attributes. Excluded patterns take precedence over included patterns. No MDC attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-mdc-attributes` setting is configured; configuring only excluded patterns captures all MDC attributes that do not match them. Captured MDC attributes may contain sensitive information."
+    },
+    {
+      "name": "otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log attributes. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. No MDC attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-mdc-attributes` setting is configured; configuring only excluded patterns captures all MDC attributes that do not match them. Captured MDC attributes may contain sensitive information."
+    },
+    {
       "name": "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
       "type": "java.lang.String",
-      "description": "MDC attributes to capture. Use the wildcard character <code>*</code> to capture all attributes. This is a comma-separated list of attribute names."
+      "description": "Deprecated comma-separated list of MDC keys to capture as log attributes. Keys are matched literally, including `*` and `?`, except that the single value `*` captures all MDC attributes. It is ignored when `otel.instrumentation.logback-appender.experimental.mdc-attributes.included` or `otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded` is configured, and it may be removed in the next minor release. Use `otel.instrumentation.logback-appender.experimental.mdc-attributes.included` instead.",
+      "deprecation": {
+        "level": "warning",
+        "reason": "Use the MDC attribute selector properties instead.",
+        "replacement": "otel.instrumentation.logback-appender.experimental.mdc-attributes.included"
+      }
     },
     {
       "name": "otel.instrumentation.logback-appender.experimental.capture-template",
