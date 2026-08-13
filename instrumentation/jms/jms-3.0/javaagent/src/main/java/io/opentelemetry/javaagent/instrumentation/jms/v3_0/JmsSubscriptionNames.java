@@ -22,38 +22,38 @@ import javax.annotation.Nullable;
  */
 public final class JmsSubscriptionNames {
 
-  private static final VirtualField<MessageConsumer, String> consumerSubscriptionName =
+  private static final VirtualField<MessageConsumer, String> CONSUMER_SUBSCRIPTION_NAME =
       VirtualField.find(MessageConsumer.class, String.class);
-  private static final VirtualField<Message, String> messageSubscriptionName =
+  private static final VirtualField<Message, String> MESSAGE_SUBSCRIPTION_NAME =
       VirtualField.find(Message.class, String.class);
-  private static final VirtualField<MessageListener, String> listenerSubscriptionName =
+  private static final VirtualField<MessageListener, String> LISTENER_SUBSCRIPTION_NAME =
       VirtualField.find(MessageListener.class, String.class);
 
   public static void set(MessageConsumer consumer, String subscriptionName) {
-    consumerSubscriptionName.set(consumer, subscriptionName);
+    CONSUMER_SUBSCRIPTION_NAME.set(consumer, subscriptionName);
   }
 
   public static void set(Message message, @Nullable String subscriptionName) {
-    messageSubscriptionName.set(message, subscriptionName);
+    MESSAGE_SUBSCRIPTION_NAME.set(message, subscriptionName);
   }
 
   public static void set(MessageListener messageListener, @Nullable String subscriptionName) {
-    listenerSubscriptionName.set(messageListener, subscriptionName);
+    LISTENER_SUBSCRIPTION_NAME.set(messageListener, subscriptionName);
   }
 
   @Nullable
   public static String get(MessageConsumer consumer) {
-    return consumerSubscriptionName.get(consumer);
+    return CONSUMER_SUBSCRIPTION_NAME.get(consumer);
   }
 
   @Nullable
   public static String get(Message message) {
-    return messageSubscriptionName.get(message);
+    return MESSAGE_SUBSCRIPTION_NAME.get(message);
   }
 
   @Nullable
   public static String get(MessageListener messageListener) {
-    return listenerSubscriptionName.get(messageListener);
+    return LISTENER_SUBSCRIPTION_NAME.get(messageListener);
   }
 
   private JmsSubscriptionNames() {}
