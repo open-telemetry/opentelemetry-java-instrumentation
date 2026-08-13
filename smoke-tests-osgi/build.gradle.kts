@@ -100,9 +100,7 @@ fun registerOsgiSuite(
 
   // Run the OSGi container on -PtestJavaVersion (falling back to the build toolchain) and derive
   // -runee from it, so the java-version test matrix actually exercises OSGi resolution on each
-  // target execution environment instead of always using the build JVM. CI passes the raw matrix
-  // value (e.g. -PtestJavaVersion=25-deny-unsafe), which Gradle's JavaVersion.toVersion truncates
-  // to the major version.
+  // target execution environment instead of always using the build JVM.
   val suiteJavaVersion = the<OtelPropsExtension>().testJavaVersion?.majorVersion?.toInt()
     ?: java.toolchain.languageVersion.get().asInt()
   // The bnd OSGi launcher (biz.aQute.launcher 7.3.0) is compiled for Java 17, so the container can
