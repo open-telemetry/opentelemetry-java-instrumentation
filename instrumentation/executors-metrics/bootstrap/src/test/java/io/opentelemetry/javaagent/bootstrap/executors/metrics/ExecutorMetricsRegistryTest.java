@@ -36,6 +36,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 class ExecutorMetricsRegistryTest {
 
   private static final String NO_OWNER = "<none>";
+  private static final long TEST_QUEUE_CAPACITY = 10;
 
   @Test
   void registryDoesNotRetainMetricsImplementation() {
@@ -88,12 +89,13 @@ class ExecutorMetricsRegistryTest {
     TestMetricsRegistrar metrics = new TestMetricsRegistrar();
     ThreadPoolExecutor executor = newExecutor();
     try {
-      ExecutorMetricsRegistry.preRegister(executor, "all");
+      ExecutorMetricsRegistry.preRegister(executor, TEST_QUEUE_CAPACITY, "all");
 
       ExecutorMetricsRegistry.onWorkerThreadStarted(
           executor, Thread::new, "pool-1-thread-1", metrics);
 
       assertThat(metrics.executorNames).containsExactly("pool-*-thread-*");
+      assertThat(metrics.queueCapacities).containsExactly(TEST_QUEUE_CAPACITY);
     } finally {
       ExecutorMetricsRegistry.unregister(executor);
       executor.shutdownNow();
@@ -112,6 +114,7 @@ class ExecutorMetricsRegistryTest {
       ExecutorMetricsRegistry.onWorkerThreadStarted(executor, threadFactory, "later", metrics);
 
       assertThat(metrics.executorNames).containsExactly("initial");
+      assertThat(metrics.queueCapacities).containsExactly((long) Integer.MAX_VALUE);
     } finally {
       ExecutorMetricsRegistry.unregister(executor, threadFactory);
       executor.shutdownNow();
@@ -122,7 +125,7 @@ class ExecutorMetricsRegistryTest {
   void registrationThreadFactoryPreRegisterDoesNotResetExistingRegistration() {
     TestMetricsRegistrar metrics = new TestMetricsRegistrar();
     ThreadPoolExecutor executor = newExecutor();
-    ExecutorMetricsRegistry.preRegister(executor, "all");
+    ExecutorMetricsRegistry.preRegister(executor, TEST_QUEUE_CAPACITY, "all");
     ExecutorMetricsRegistry.onWorkerThreadStarted(executor, "initial", metrics);
 
     ThreadFactory threadFactory =
@@ -168,7 +171,7 @@ class ExecutorMetricsRegistryTest {
     TestMetricsRegistrar metrics = new TestMetricsRegistrar();
     ThreadPoolExecutor executor = newExecutor();
     try {
-      ExecutorMetricsRegistry.preRegister(executor, threadNameNormalization);
+      ExecutorMetricsRegistry.preRegister(executor, TEST_QUEUE_CAPACITY, threadNameNormalization);
 
       ExecutorMetricsRegistry.onWorkerThreadStarted(executor, threadName, metrics);
 
@@ -194,7 +197,7 @@ class ExecutorMetricsRegistryTest {
     TestMetricsRegistrar metrics = new TestMetricsRegistrar();
     ThreadPoolExecutor executor = newExecutor();
     try {
-      ExecutorMetricsRegistry.preRegister(executor, "all");
+      ExecutorMetricsRegistry.preRegister(executor, TEST_QUEUE_CAPACITY, "all");
 
       ExecutorMetricsRegistry.reregister(executor, "tomcat", "trailing", metrics);
       ExecutorMetricsRegistry.onWorkerThreadStarted(executor, "pool-12-thread-34", metrics);
@@ -212,7 +215,7 @@ class ExecutorMetricsRegistryTest {
   void workerUsesLatestNormalizationWhenReregisteredConcurrently() throws Exception {
     TestMetricsRegistrar metrics = new TestMetricsRegistrar();
     ThreadPoolExecutor executor = newExecutor();
-    ExecutorMetricsRegistry.preRegister(executor, "all");
+    ExecutorMetricsRegistry.preRegister(executor, TEST_QUEUE_CAPACITY, "all");
     Thread worker =
         new Thread(
             () ->
@@ -247,7 +250,7 @@ class ExecutorMetricsRegistryTest {
     TestMetricsRegistrar metrics = new TestMetricsRegistrar();
     ThreadPoolExecutor executor = newExecutor();
     try {
-      ExecutorMetricsRegistry.preRegister(executor, "all");
+      ExecutorMetricsRegistry.preRegister(executor, TEST_QUEUE_CAPACITY, "all");
       ExecutorMetricsRegistry.onWorkerThreadStarted(executor, "pool-12-thread-34", metrics);
       TestCallback originalCallback = metrics.callbacks.get(0);
       LongAdder rejectedTaskCount = metrics.rejectedTaskCounts.get(0);
@@ -260,6 +263,7 @@ class ExecutorMetricsRegistryTest {
       assertThat(originalCallback.closeCount).hasValue(1);
       assertThat(metrics.rejectedTaskCounts)
           .allSatisfy(count -> assertThat(count).isSameAs(rejectedTaskCount));
+      assertThat(metrics.queueCapacities).containsExactly(TEST_QUEUE_CAPACITY, TEST_QUEUE_CAPACITY);
 
       ExecutorMetricsRegistry.reregister(executor, "tomcat", "trailing", metrics);
 
@@ -288,7 +292,7 @@ class ExecutorMetricsRegistryTest {
     TestMetricsRegistrar metrics = new TestMetricsRegistrar();
     ThreadPoolExecutor executor = newExecutor();
     try {
-      ExecutorMetricsRegistry.preRegister(executor, "all");
+      ExecutorMetricsRegistry.preRegister(executor, TEST_QUEUE_CAPACITY, "all");
       ExecutorMetricsRegistry.onWorkerThreadStarted(executor, "pool-12-thread-34", metrics);
       TestCallback originalCallback = metrics.callbacks.get(0);
 
@@ -319,7 +323,7 @@ class ExecutorMetricsRegistryTest {
     TestMetricsRegistrar metrics = new TestMetricsRegistrar();
     ThreadPoolExecutor executor = newExecutor();
     try {
-      ExecutorMetricsRegistry.preRegister(executor, "all");
+      ExecutorMetricsRegistry.preRegister(executor, TEST_QUEUE_CAPACITY, "all");
       ExecutorMetricsRegistry.onWorkerThreadStarted(executor, "pool-12-thread-34", metrics);
       TestCallback callback = metrics.callbacks.get(0);
 
@@ -341,7 +345,7 @@ class ExecutorMetricsRegistryTest {
     TestMetricsRegistrar metrics = new TestMetricsRegistrar();
     ThreadPoolExecutor executor = newExecutor();
     try {
-      ExecutorMetricsRegistry.preRegister(executor, "all");
+      ExecutorMetricsRegistry.preRegister(executor, TEST_QUEUE_CAPACITY, "all");
       ExecutorMetricsRegistry.recordRejectedTask(executor);
 
       ExecutorMetricsRegistry.onWorkerThreadStarted(executor, "pool-1-thread-1", metrics);
@@ -360,7 +364,7 @@ class ExecutorMetricsRegistryTest {
     TestMetricsRegistrar metrics = new TestMetricsRegistrar();
     ThreadPoolExecutor executor = newExecutor();
     try {
-      ExecutorMetricsRegistry.preRegister(executor, "all");
+      ExecutorMetricsRegistry.preRegister(executor, TEST_QUEUE_CAPACITY, "all");
       metrics.failuresRemaining = 1;
       assertThatThrownBy(
               () ->
@@ -385,7 +389,7 @@ class ExecutorMetricsRegistryTest {
     TestMetricsRegistrar metrics = new TestMetricsRegistrar();
     ThreadPoolExecutor executor = newExecutor();
     try {
-      ExecutorMetricsRegistry.preRegister(executor, "all");
+      ExecutorMetricsRegistry.preRegister(executor, TEST_QUEUE_CAPACITY, "all");
       ExecutorMetricsRegistry.onWorkerThreadStarted(executor, "pool-1-thread-1", metrics);
 
       ExecutorMetricsRegistry.unregister(executor);
@@ -416,6 +420,7 @@ class ExecutorMetricsRegistryTest {
       implements ExecutorMetricsRegistry.MetricsRegistrar {
     private final List<String> executorNames = new ArrayList<>();
     private final List<String> ownerNames = new ArrayList<>();
+    private final List<Long> queueCapacities = new ArrayList<>();
     private final List<LongAdder> rejectedTaskCounts = new ArrayList<>();
     private final List<TestCallback> callbacks = new ArrayList<>();
     private int failuresRemaining;
@@ -426,9 +431,11 @@ class ExecutorMetricsRegistryTest {
         Set<Thread> threads,
         String executorName,
         String ownerName,
+        long queueCapacity,
         LongAdder rejectedTaskCount) {
       executorNames.add(executorName);
       ownerNames.add(ownerName == null ? NO_OWNER : ownerName);
+      queueCapacities.add(queueCapacity);
       rejectedTaskCounts.add(rejectedTaskCount);
       if (failuresRemaining > 0) {
         failuresRemaining--;

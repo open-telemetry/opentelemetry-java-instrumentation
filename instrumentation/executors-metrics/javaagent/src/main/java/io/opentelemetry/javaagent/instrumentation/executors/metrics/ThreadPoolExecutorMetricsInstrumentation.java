@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.bootstrap.executors.metrics.ExecutorMetricsReg
 import io.opentelemetry.javaagent.bootstrap.executors.metrics.JdkExecutorMetrics;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -58,10 +59,13 @@ public class ThreadPoolExecutorMetricsInstrumentation implements TypeInstrumenta
   public static class ConstructorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.This ThreadPoolExecutor executor) {
+    public static void onExit(
+        @Advice.This ThreadPoolExecutor executor,
+        @Advice.Argument(4) BlockingQueue<Runnable> queue) {
       if (!(executor instanceof ScheduledThreadPoolExecutor)) {
+        long queueCapacity = (long) queue.size() + queue.remainingCapacity();
         ExecutorMetricsRegistry.preRegister(
-            executor, JdkExecutorMetrics.DEFAULT_NAME_NORMALIZATION);
+            executor, queueCapacity, JdkExecutorMetrics.DEFAULT_NAME_NORMALIZATION);
       }
     }
   }

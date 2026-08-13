@@ -11,7 +11,6 @@ import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.lang.ref.WeakReference;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -49,6 +48,7 @@ public final class JdkExecutorMetrics {
       Set<Thread> threads,
       String executorName,
       @Nullable String ownerName,
+      long queueCapacity,
       LongAdder rejectedTaskCount) {
     JvmExecutorMetrics metrics =
         JvmExecutorMetrics.create(
@@ -59,16 +59,17 @@ public final class JdkExecutorMetrics {
             executor.getClass().getName());
 
     if (executor instanceof ThreadPoolExecutor) {
-      return createBatchCallback(metrics, (ThreadPoolExecutor) executor, rejectedTaskCount);
+      return createBatchCallback(
+          metrics, (ThreadPoolExecutor) executor, queueCapacity, rejectedTaskCount);
     }
     return createBatchCallback(metrics, threads);
   }
 
   private static BatchCallback createBatchCallback(
-      JvmExecutorMetrics metrics, ThreadPoolExecutor executor, LongAdder rejectedTaskCount) {
-    BlockingQueue<Runnable> queue = executor.getQueue();
-    long queueCapacityValue = (long) queue.size() + queue.remainingCapacity();
-
+      JvmExecutorMetrics metrics,
+      ThreadPoolExecutor executor,
+      long queueCapacityValue,
+      LongAdder rejectedTaskCount) {
     ObservableLongMeasurement threadCount = metrics.threadCount();
     ObservableLongMeasurement coreThreads = metrics.coreThreads();
     ObservableLongMeasurement maxThreads = metrics.maxThreads();

@@ -23,6 +23,7 @@ public final class ExecutorMetricsRegistry {
 
   public static final String UNKNOWN = "unknown";
 
+  private static final long OMIT_QUEUE_CAPACITY = Integer.MAX_VALUE;
   private static final Pattern TRAILING_DIGITS_PATTERN = Pattern.compile("\\d+$");
   private static final Pattern ALL_DIGITS_PATTERN = Pattern.compile("\\d+");
 
@@ -36,17 +37,24 @@ public final class ExecutorMetricsRegistry {
         Set<Thread> threads,
         String executorName,
         @Nullable String ownerName,
+        long queueCapacity,
         LongAdder rejectedTaskCount);
   }
 
-  public static void preRegister(ThreadPoolExecutor executor, String threadNameNormalization) {
-    preRegister(executor, emptySet(), threadNameNormalization);
+  public static void preRegister(
+      ThreadPoolExecutor executor, long queueCapacity, String threadNameNormalization) {
+    preRegister(executor, emptySet(), queueCapacity, threadNameNormalization);
   }
 
   public static void preRegister(
       Executor executor, Set<Thread> threads, String threadNameNormalization) {
+    preRegister(executor, threads, OMIT_QUEUE_CAPACITY, threadNameNormalization);
+  }
+
+  private static void preRegister(
+      Executor executor, Set<Thread> threads, long queueCapacity, String threadNameNormalization) {
     registrations.computeIfAbsent(
-        executor, ignored -> new Registration(threads, threadNameNormalization));
+        executor, ignored -> new Registration(threads, queueCapacity, threadNameNormalization));
   }
 
   public static ThreadFactory preRegister(
@@ -134,6 +142,7 @@ public final class ExecutorMetricsRegistry {
 
   private static final class Registration {
     private final WeakReference<Set<Thread>> threadsRef;
+    private final long queueCapacity;
     private final LongAdder rejectedTaskCount = new LongAdder();
     @Nullable private String ownerName;
     private String threadNameNormalization;
@@ -143,8 +152,9 @@ public final class ExecutorMetricsRegistry {
     private volatile boolean awaitingWorkerThread = true;
     private boolean closed;
 
-    private Registration(Set<Thread> threads, String threadNameNormalization) {
+    private Registration(Set<Thread> threads, long queueCapacity, String threadNameNormalization) {
       threadsRef = new WeakReference<>(threads);
+      this.queueCapacity = queueCapacity;
       this.threadNameNormalization = threadNameNormalization;
     }
 
@@ -168,7 +178,7 @@ public final class ExecutorMetricsRegistry {
 
         BatchCallback newCallback =
             metricsRegistrar.registerMetrics(
-                executor, threads, newExecutorName, ownerName, rejectedTaskCount);
+                executor, threads, newExecutorName, ownerName, queueCapacity, rejectedTaskCount);
         previous = callback;
         callback = newCallback;
         executorName = newExecutorName;
@@ -205,7 +215,7 @@ public final class ExecutorMetricsRegistry {
 
         BatchCallback newCallback =
             metricsRegistrar.registerMetrics(
-                executor, threads, newExecutorName, newOwnerName, rejectedTaskCount);
+                executor, threads, newExecutorName, newOwnerName, queueCapacity, rejectedTaskCount);
         previous = callback;
         callback = newCallback;
         ownerName = newOwnerName;

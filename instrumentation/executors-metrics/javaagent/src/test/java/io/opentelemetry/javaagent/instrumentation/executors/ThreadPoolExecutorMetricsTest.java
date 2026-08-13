@@ -115,15 +115,13 @@ class ThreadPoolExecutorMetricsTest {
   }
 
   @Test
-  void doesNotExportQueueCapacityForUnboundedQueue() throws Exception {
+  void usesQueueCapacityCapturedDuringConstruction() throws Exception {
+    SnapshotChangingQueue queue = new SnapshotChangingQueue(2, 1);
     ThreadPoolExecutor executor =
         new ThreadPoolExecutor(
-            1,
-            1,
-            0,
-            MILLISECONDS,
-            new LinkedBlockingQueue<>(),
-            new NamedThreadFactory("unbounded-pool"));
+            1, 1, 0, MILLISECONDS, queue, new NamedThreadFactory("bounded-pool"));
+    queue.changeSnapshot();
+
     CountDownLatch started = new CountDownLatch(1);
     CountDownLatch release = new CountDownLatch(1);
 
@@ -134,11 +132,40 @@ class ThreadPoolExecutorMetricsTest {
             awaitLatch(release);
           });
       assertThat(started.await(10, SECONDS)).isTrue();
-      executor.execute(() -> {});
+
+      JvmExecutorMetricsAssertions.create(
+              testing, INSTRUMENTATION_NAME, "bounded-pool-*", THREAD_POOL_EXECUTOR_TYPE)
+          .withQueueCapacity(2)
+          .assertExecutorEmitsMetrics();
+    } finally {
+      release.countDown();
+      executor.shutdown();
+      assertThat(executor.awaitTermination(10, SECONDS)).isTrue();
+    }
+  }
+
+  @Test
+  void doesNotExportUnboundedQueueCapacityWhenSnapshotChangesAfterConstruction() throws Exception {
+    SnapshotChangingQueue queue =
+        new SnapshotChangingQueue(Integer.MAX_VALUE, Integer.MAX_VALUE - 1);
+    ThreadPoolExecutor executor =
+        new ThreadPoolExecutor(
+            1, 1, 0, MILLISECONDS, queue, new NamedThreadFactory("unbounded-pool"));
+    queue.changeSnapshot();
+    CountDownLatch started = new CountDownLatch(1);
+    CountDownLatch release = new CountDownLatch(1);
+
+    try {
+      executor.execute(
+          () -> {
+            started.countDown();
+            awaitLatch(release);
+          });
+      assertThat(started.await(10, SECONDS)).isTrue();
 
       JvmExecutorMetricsAssertions.create(
               testing, INSTRUMENTATION_NAME, "unbounded-pool-*", THREAD_POOL_EXECUTOR_TYPE)
-          .withQueueSize(1)
+          .withQueueSize(0)
           .assertExecutorEmitsMetrics();
       assertNoExecutorMetric(
           testing, INSTRUMENTATION_NAME, "jvm.executor.queue.capacity", "unbounded-pool-*");
@@ -458,6 +485,27 @@ class ThreadPoolExecutorMetricsTest {
     }
     if (interrupted) {
       Thread.currentThread().interrupt();
+    }
+  }
+
+  private static final class SnapshotChangingQueue extends LinkedBlockingQueue<Runnable> {
+    private static final long serialVersionUID = 1L;
+
+    private final int changedRemainingCapacity;
+    private volatile boolean snapshotChanged;
+
+    private SnapshotChangingQueue(int capacity, int changedRemainingCapacity) {
+      super(capacity);
+      this.changedRemainingCapacity = changedRemainingCapacity;
+    }
+
+    @Override
+    public int remainingCapacity() {
+      return snapshotChanged ? changedRemainingCapacity : super.remainingCapacity();
+    }
+
+    private void changeSnapshot() {
+      snapshotChanged = true;
     }
   }
 
