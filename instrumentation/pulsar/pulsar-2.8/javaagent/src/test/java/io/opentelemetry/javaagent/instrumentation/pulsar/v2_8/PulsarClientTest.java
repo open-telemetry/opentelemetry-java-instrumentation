@@ -351,6 +351,68 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                         .hasBucketBoundaries(DURATION_BUCKETS))));
   }
 
+  @Test
+  void testShortTopicNameOnProducer() throws Exception {
+    String shortTopic = "testShortTopicNameOnProducer";
+    String topic = "persistent://public/default/" + shortTopic;
+    admin.topics().createNonPartitionedTopic(topic);
+    consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(topic)
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .subscribe();
+    // the producer uses the short topic name, while the consumer uses the fully qualified one
+    producer = client.newProducer(Schema.STRING).topic(shortTopic).enableBatching(false).create();
+
+    String msg = "test";
+    MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
+
+    Message<String> receivedMsg = consumer.receive();
+    consumer.acknowledge(receivedMsg);
+
+    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    AtomicReference<SpanData> consumerSpan = new AtomicReference<>();
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanKind(
+            SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span ->
+                  span.hasName(
+                          emitStableMessagingSemconv() ? "send " + topic : shortTopic + " publish")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          sendAttributes(shortTopic, msgId.toString(), false)));
+
+          producerSpan.set(trace.getSpan(1));
+        },
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName(
+                          emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
+                      .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                      .hasNoParent()
+                      .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                      .hasAttributesSatisfyingExactly(
+                          receiveAttributes(topic, msgId.toString(), false)));
+
+          consumerSpan.set(trace.getSpan(0));
+        });
+
+    if (emitStableMessagingSemconv()) {
+      // a backend can only join producer and consumer spans for a topic when both sides report the
+      // same destination name for it
+      assertThat(producerSpan.get().getAttributes().get(MESSAGING_DESTINATION_NAME))
+          .isEqualTo(consumerSpan.get().getAttributes().get(MESSAGING_DESTINATION_NAME))
+          .isEqualTo(topic);
+    }
+  }
+
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumeNonPartitionedTopicUsingReceiveAsync() throws Exception {
