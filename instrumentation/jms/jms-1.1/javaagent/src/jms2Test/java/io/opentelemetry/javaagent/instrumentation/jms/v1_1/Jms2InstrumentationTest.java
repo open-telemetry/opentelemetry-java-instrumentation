@@ -283,6 +283,12 @@ class Jms2InstrumentationTest {
     // then
     assertThat(message).isNull();
 
+    if (!emitStableMessagingSemconv()) {
+      // legacy behavior is unchanged: an empty receive produces no telemetry
+      assertThat(testing.waitForTraces(0)).isEmpty();
+      return;
+    }
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
