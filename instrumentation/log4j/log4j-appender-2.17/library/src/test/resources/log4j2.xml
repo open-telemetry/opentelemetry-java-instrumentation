@@ -6,7 +6,9 @@
         pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} traceId: %X{trace_id} spanId: %X{span_id} flags: %X{trace_flags} - %msg%n"/>
     </Console>
     <!-- TODO run tests both with and without experimental log attributes -->
+    <!-- captureContextDataAttributes is retained for deprecated XML compatibility. -->
     <OpenTelemetry name="OpenTelemetryAppender" numLogsCapturedBeforeOtelInstall="1" captureMapMessageAttributes="true" captureMarkerAttribute="true" captureContextDataAttributes="key1,key2" captureExperimentalAttributes="true" captureCodeAttributes="true"/>
+    <OpenTelemetry name="OpenTelemetryContextDataSelectorAppender" numLogsCapturedBeforeOtelInstall="1" contextDataAttributesIncluded="selector-*" contextDataAttributesExcluded="*-secret"/>
   </Appenders>
   <Loggers>
     <Logger name="TestLogger" level="All">
@@ -16,6 +18,9 @@
     <Logger name="abc" level="info">
       <AppenderRef ref="OpenTelemetryAppender"/>
       <AppenderRef ref="Console"/>
+    </Logger>
+    <Logger name="ContextDataSelectorTestLogger" level="All">
+      <AppenderRef ref="OpenTelemetryContextDataSelectorAppender"/>
     </Logger>
     <Root level="All">
       <AppenderRef ref="Console"/>
