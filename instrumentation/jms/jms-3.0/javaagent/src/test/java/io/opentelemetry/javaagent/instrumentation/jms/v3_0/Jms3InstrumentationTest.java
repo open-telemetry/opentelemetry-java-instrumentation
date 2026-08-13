@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -81,6 +82,45 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(false),
                             subscriptionName("durable-subscription"))));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  @Test
+  void restoresSubscriptionNameAfterFailedListenerRegistration() throws JMSException {
+    Topic topic = session.createTopic("failed-listener-registration-topic");
+    TextMessage message = session.createTextMessage("hello there");
+    message.setJMSDestination(topic);
+    MessageListener listener = ignored -> {};
+
+    MessageConsumer previousConsumer =
+        session.createDurableConsumer(topic, "previous-listener-subscription");
+    cleanup.deferCleanup(previousConsumer);
+    previousConsumer.setMessageListener(listener);
+
+    MessageConsumer failingConsumer =
+        session.createDurableConsumer(topic, "failed-listener-subscription");
+    failingConsumer.close();
+    assertThatThrownBy(() -> failingConsumer.setMessageListener(listener))
+        .isInstanceOf(JMSException.class);
+
+    previousConsumer.getMessageListener().onMessage(message);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName(
+                                "failed-listener-registration-topic",
+                                "failed-listener-registration-topic"),
+                            oldOperation("process"),
+                            operationName("process"),
+                            operationType("process"),
+                            messagingTempDestination(false),
+                            subscriptionName("previous-listener-subscription"))));
   }
 
   @ParameterizedTest
