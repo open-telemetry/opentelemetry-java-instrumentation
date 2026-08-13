@@ -22,11 +22,13 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
+import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
+import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 import org.junit.jupiter.api.Test;
@@ -159,6 +161,51 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                             subscriptionName(previousSubscription))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated JMS and semconv APIs
+  @ParameterizedTest
+  @MethodSource("parentResourceCloseArguments")
+  void restoresPreviousSubscriptionNameWhenParentResourceClosed(
+      String scenario, ParentResourceCloser resourceCloser) throws JMSException {
+    String topicName = "closed-parent-resource-" + scenario;
+    Topic topic = session.createTopic(topicName);
+    TextMessage message = session.createTextMessage("a message");
+    message.setJMSDestination(topic);
+    MessageListener listener = ignored -> {};
+
+    String previousSubscription = "previous-parent-subscription-" + scenario;
+    MessageConsumer previousConsumer = session.createDurableSubscriber(topic, previousSubscription);
+    cleanup.deferCleanup(previousConsumer::close);
+    previousConsumer.setMessageListener(listener);
+
+    Connection currentConnection = connectionFactory.createConnection();
+    cleanup.deferCleanup(currentConnection::close);
+    currentConnection.setClientID("jms-1-parent-close-" + scenario);
+    currentConnection.start();
+    Session currentSession = currentConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+    MessageConsumer currentConsumer =
+        currentSession.createDurableSubscriber(
+            currentSession.createTopic(topicName), "current-parent-subscription-" + scenario);
+    currentConsumer.setMessageListener(listener);
+
+    resourceCloser.close(currentConnection, currentSession);
+    previousConsumer.getMessageListener().onMessage(message);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName(topicName, false),
+                            oldOperation("process"),
+                            operationName("process"),
+                            operationType("process"),
+                            messagingTempDestination(false),
+                            subscriptionName(previousSubscription))));
+  }
+
   @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("destinationArguments")
@@ -248,9 +295,25 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
             "closed consumer", "close", (ConsumerRegistrationRemover) MessageConsumer::close));
   }
 
+  private static Stream<Arguments> parentResourceCloseArguments() {
+    return Stream.of(
+        argumentSet(
+            "session", "session", (ParentResourceCloser) (connection, session) -> session.close()),
+        argumentSet(
+            "connection",
+            "connection",
+            (ParentResourceCloser) (connection, session) -> connection.close()));
+  }
+
   @FunctionalInterface
   interface ConsumerRegistrationRemover {
 
     void remove(MessageConsumer consumer) throws JMSException;
+  }
+
+  @FunctionalInterface
+  interface ParentResourceCloser {
+
+    void close(Connection connection, Session session) throws JMSException;
   }
 }

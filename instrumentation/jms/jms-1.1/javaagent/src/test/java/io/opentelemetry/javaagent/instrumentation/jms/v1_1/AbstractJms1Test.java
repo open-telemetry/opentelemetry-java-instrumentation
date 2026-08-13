@@ -69,6 +69,7 @@ abstract class AbstractJms1Test {
 
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
+  ActiveMQConnectionFactory connectionFactory;
   Session session;
 
   @BeforeAll
@@ -80,7 +81,7 @@ abstract class AbstractJms1Test {
     broker.start();
     cleanup.deferAfterAll(broker);
 
-    ActiveMQConnectionFactory connectionFactory =
+    connectionFactory =
         new ActiveMQConnectionFactory(
             "tcp://" + broker.getHost() + ":" + broker.getMappedPort(61616));
     Connection connection = connectionFactory.createConnection();

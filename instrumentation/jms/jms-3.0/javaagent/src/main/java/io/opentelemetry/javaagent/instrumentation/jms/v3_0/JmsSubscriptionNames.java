@@ -6,9 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import jakarta.jms.Connection;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageListener;
+import jakarta.jms.Session;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -29,6 +34,13 @@ public final class JmsSubscriptionNames {
   private static final VirtualField<MessageConsumer, ConsumerListenerRegistration>
       CONSUMER_LISTENER_REGISTRATION =
           VirtualField.find(MessageConsumer.class, ConsumerListenerRegistration.class);
+  private static final VirtualField<MessageConsumer, SessionRegistrations>
+      CONSUMER_SESSION_REGISTRATIONS =
+          VirtualField.find(MessageConsumer.class, SessionRegistrations.class);
+  private static final VirtualField<Session, SessionRegistrations> SESSION_REGISTRATIONS =
+      VirtualField.find(Session.class, SessionRegistrations.class);
+  private static final VirtualField<Connection, ConnectionSessions> CONNECTION_SESSIONS =
+      VirtualField.find(Connection.class, ConnectionSessions.class);
   private static final VirtualField<MessageListener, ListenerRegistrations> LISTENER_REGISTRATIONS =
       VirtualField.find(MessageListener.class, ListenerRegistrations.class);
 
@@ -40,12 +52,36 @@ public final class JmsSubscriptionNames {
     MESSAGE_SUBSCRIPTION_NAME.set(message, subscriptionName);
   }
 
+  public static void setSession(MessageConsumer consumer, Session session) {
+    CONSUMER_SESSION_REGISTRATIONS.set(consumer, sessionRegistrations(session));
+  }
+
+  public static void setConnection(Session session, Connection connection) {
+    sessionRegistrations(session).setConnection(connectionSessions(connection));
+  }
+
+  public static void clearSession(Session session) {
+    SessionRegistrations registrations = SESSION_REGISTRATIONS.get(session);
+    if (registrations != null) {
+      registrations.clear();
+    }
+  }
+
+  public static void clearConnection(Connection connection) {
+    ConnectionSessions sessions = CONNECTION_SESSIONS.get(connection);
+    if (sessions != null) {
+      sessions.clear();
+    }
+  }
+
   public static Object startListenerRegistration(
       MessageConsumer consumer, @Nullable MessageListener messageListener) {
     ConsumerListenerRegistration previousRegistration =
         CONSUMER_LISTENER_REGISTRATION.get(consumer);
     ConsumerListenerRegistration newRegistration = null;
-    if (messageListener != null) {
+    SessionRegistrations sessionRegistrations = CONSUMER_SESSION_REGISTRATIONS.get(consumer);
+    if (messageListener != null
+        && (sessionRegistrations == null || sessionRegistrations.add(consumer))) {
       ListenerRegistrations registrations = listenerRegistrations(messageListener);
       ListenerRegistration registration =
           registrations.add(CONSUMER_SUBSCRIPTION_NAME.get(consumer));
@@ -62,17 +98,24 @@ public final class JmsSubscriptionNames {
     ListenerRegistrationChange change = (ListenerRegistrationChange) registrationChange;
     if (throwable != null) {
       deactivate(change.newRegistration);
+      if (change.previousRegistration == null && change.newRegistration != null) {
+        removeSessionRegistration(change.consumer);
+      }
       return;
     }
 
     CONSUMER_LISTENER_REGISTRATION.set(change.consumer, change.newRegistration);
     deactivate(change.previousRegistration);
+    if (change.newRegistration == null) {
+      removeSessionRegistration(change.consumer);
+    }
   }
 
   public static void clearListenerRegistration(MessageConsumer consumer) {
     ConsumerListenerRegistration registration = CONSUMER_LISTENER_REGISTRATION.get(consumer);
     CONSUMER_LISTENER_REGISTRATION.set(consumer, null);
     deactivate(registration);
+    removeSessionRegistration(consumer);
   }
 
   @Nullable
@@ -106,6 +149,43 @@ public final class JmsSubscriptionNames {
     }
   }
 
+  private static SessionRegistrations sessionRegistrations(Session session) {
+    SessionRegistrations registrations = SESSION_REGISTRATIONS.get(session);
+    if (registrations != null) {
+      return registrations;
+    }
+    synchronized (session) {
+      registrations = SESSION_REGISTRATIONS.get(session);
+      if (registrations == null) {
+        registrations = new SessionRegistrations();
+        SESSION_REGISTRATIONS.set(session, registrations);
+      }
+      return registrations;
+    }
+  }
+
+  private static ConnectionSessions connectionSessions(Connection connection) {
+    ConnectionSessions sessions = CONNECTION_SESSIONS.get(connection);
+    if (sessions != null) {
+      return sessions;
+    }
+    synchronized (connection) {
+      sessions = CONNECTION_SESSIONS.get(connection);
+      if (sessions == null) {
+        sessions = new ConnectionSessions();
+        CONNECTION_SESSIONS.set(connection, sessions);
+      }
+      return sessions;
+    }
+  }
+
+  private static void removeSessionRegistration(MessageConsumer consumer) {
+    SessionRegistrations registrations = CONSUMER_SESSION_REGISTRATIONS.get(consumer);
+    if (registrations != null) {
+      registrations.remove(consumer);
+    }
+  }
+
   private static void deactivate(@Nullable ConsumerListenerRegistration consumerRegistration) {
     if (consumerRegistration == null) {
       return;
@@ -121,6 +201,93 @@ public final class JmsSubscriptionNames {
         ListenerRegistrations registrations, ListenerRegistration registration) {
       this.registrations = registrations;
       this.registration = registration;
+    }
+  }
+
+  private static final class ConnectionSessions {
+    private final Set<SessionRegistrations> sessions =
+        Collections.newSetFromMap(new IdentityHashMap<>());
+    private boolean closed;
+
+    private synchronized boolean add(SessionRegistrations registrations) {
+      if (closed) {
+        return false;
+      }
+      sessions.add(registrations);
+      return true;
+    }
+
+    private synchronized void remove(SessionRegistrations registrations) {
+      sessions.remove(registrations);
+    }
+
+    private void clear() {
+      SessionRegistrations[] registrations;
+      synchronized (this) {
+        if (closed) {
+          return;
+        }
+        closed = true;
+        registrations = sessions.toArray(new SessionRegistrations[0]);
+        sessions.clear();
+      }
+      for (SessionRegistrations session : registrations) {
+        session.clear();
+      }
+    }
+  }
+
+  private static final class SessionRegistrations {
+    private final Set<MessageConsumer> consumers =
+        Collections.newSetFromMap(new IdentityHashMap<>());
+    @Nullable private ConnectionSessions connection;
+    private boolean closed;
+
+    private void setConnection(ConnectionSessions connection) {
+      if (!connection.add(this)) {
+        clear();
+        return;
+      }
+      synchronized (this) {
+        if (closed) {
+          connection.remove(this);
+        } else {
+          this.connection = connection;
+        }
+      }
+    }
+
+    private synchronized boolean add(MessageConsumer consumer) {
+      if (closed) {
+        return false;
+      }
+      consumers.add(consumer);
+      return true;
+    }
+
+    private synchronized void remove(MessageConsumer consumer) {
+      consumers.remove(consumer);
+    }
+
+    private void clear() {
+      MessageConsumer[] registeredConsumers;
+      ConnectionSessions connection;
+      synchronized (this) {
+        if (closed) {
+          return;
+        }
+        closed = true;
+        registeredConsumers = consumers.toArray(new MessageConsumer[0]);
+        consumers.clear();
+        connection = this.connection;
+        this.connection = null;
+      }
+      if (connection != null) {
+        connection.remove(this);
+      }
+      for (MessageConsumer consumer : registeredConsumers) {
+        clearListenerRegistration(consumer);
+      }
     }
   }
 
