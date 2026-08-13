@@ -5,16 +5,25 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertCounter;
+import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoMetric;
+import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoStableMetrics;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
@@ -53,6 +62,10 @@ import org.springframework.jms.listener.SessionAwareMessageListener;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 class SpringListenerTest extends AbstractJmsTest {
+
+  // messaging.destination.subscription.name only exists in the v1.43 messaging semantic conventions
+  private static final AttributeKey<String> MESSAGING_DESTINATION_SUBSCRIPTION_NAME =
+      stringKey("messaging.destination.subscription.name");
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -255,6 +268,28 @@ class SpringListenerTest extends AbstractJmsTest {
                         false,
                         null,
                         "durable-subscription")));
+
+    if (!emitStableMessagingSemconv()) {
+      assertNoStableMetrics(testing, "io.opentelemetry.jms-1.1");
+      assertNoStableMetrics(testing, "io.opentelemetry.spring-jms-2.0");
+      return;
+    }
+
+    Attributes receiveAttributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_SYSTEM, "jms")
+            .put(MESSAGING_DESTINATION_NAME, "SpringListenerJms2")
+            .put(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription")
+            .build();
+    assertCounter(
+        testing,
+        "io.opentelemetry.jms-1.1",
+        "messaging.client.consumed.messages",
+        1,
+        receiveAttributes);
+    assertNoMetric(
+        testing, "io.opentelemetry.spring-jms-2.0", "messaging.client.consumed.messages");
   }
 
   @TestConfiguration

@@ -12,6 +12,9 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertCounter;
+import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoMetric;
+import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoStableMetrics;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -27,6 +30,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
@@ -287,6 +291,28 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                             subscriptionName(subscriptionName)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
+
+    if (!emitStableMessagingSemconv()) {
+      assertNoStableMetrics(testing, "io.opentelemetry.jms-3.0");
+      assertNoStableMetrics(testing, "io.opentelemetry.spring-jms-6.0");
+      return;
+    }
+
+    Attributes receiveAttributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_SYSTEM, "jms")
+            .put(MESSAGING_DESTINATION_NAME, "spring-jms-listener")
+            .put(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription")
+            .build();
+    assertCounter(
+        testing,
+        "io.opentelemetry.jms-3.0",
+        "messaging.client.consumed.messages",
+        1,
+        receiveAttributes);
+    assertNoMetric(
+        testing, "io.opentelemetry.spring-jms-6.0", "messaging.client.consumed.messages");
   }
 
   @ParameterizedTest
