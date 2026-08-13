@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.parseUrl;
+import static java.util.Collections.emptyList;
 
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.UrlData;
 import javax.annotation.Nullable;
@@ -15,16 +16,20 @@ import org.apache.pulsar.client.api.Messages;
 import org.apache.pulsar.common.naming.TopicName;
 
 public class PulsarBatchRequest extends BasePulsarRequest {
-  private final Messages<?> messages;
+  @Nullable private final Messages<?> messages;
 
   public static PulsarBatchRequest create(
-      Messages<?> messages, @Nullable String url, Consumer<?> consumer) {
+      @Nullable Messages<?> messages, @Nullable String url, Consumer<?> consumer) {
     return new PulsarBatchRequest(
-        messages, getTopicName(messages), parseUrl(url), consumer.getSubscription());
+        messages,
+        // messages are missing when the receive failed, use the topic the consumer is subscribed to
+        messages != null ? getTopicName(messages) : consumer.getTopic(),
+        parseUrl(url),
+        consumer.getSubscription());
   }
 
   private PulsarBatchRequest(
-      Messages<?> messages,
+      @Nullable Messages<?> messages,
       String destination,
       @Nullable UrlData urlData,
       @Nullable String subscription) {
@@ -48,7 +53,11 @@ public class PulsarBatchRequest extends BasePulsarRequest {
     return topicName;
   }
 
-  public Messages<?> getMessages() {
-    return messages;
+  public Iterable<? extends Message<?>> getMessages() {
+    return messages != null ? messages : emptyList();
+  }
+
+  public long getMessageCount() {
+    return messages != null ? messages.size() : 0;
   }
 }

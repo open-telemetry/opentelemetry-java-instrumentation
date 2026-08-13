@@ -11,8 +11,10 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.or
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
@@ -26,14 +28,18 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import org.apache.pulsar.client.api.BatchReceivePolicy;
+import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.MessageListener;
 import org.apache.pulsar.client.api.MessageRouter;
 import org.apache.pulsar.client.api.Messages;
+import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
 import org.apache.pulsar.client.api.TopicMetadata;
@@ -1163,6 +1169,66 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                           assertThat(point.getAttributes().get(SERVER_ADDRESS))
                                               .isEqualTo(brokerHost);
                                         }))));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  @Test
+  void testFailedBatchReceive() throws Exception {
+    String topic = "persistent://public/default/testFailedBatchReceive";
+    admin.topics().createNonPartitionedTopic(topic);
+    // this client is closed to make the batch receive fail, using the shared client would break the
+    // other tests
+    PulsarClient failingClient =
+        PulsarClient.builder().serviceUrl("pulsar://" + brokerHost + ":" + brokerPort).build();
+    Consumer<String> failingConsumer =
+        failingClient
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(topic)
+            // wait for messages until the client is closed, the default policy would complete the
+            // receive with an empty batch after 100ms
+            .batchReceivePolicy(BatchReceivePolicy.builder().timeout(10, MINUTES).build())
+            .subscribe();
+    testing.clearData();
+
+    CompletableFuture<Messages<String>> receive = failingConsumer.batchReceiveAsync();
+    failingClient.close();
+    Throwable error = receive.handle((messages, throwable) -> throwable).get(1, MINUTES);
+    assertThat(error).isNotNull();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
+                        .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasTotalRecordedLinks(0)
+                        .hasStatus(StatusData.error())
+                        .hasException(error)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                            equalTo(SERVER_ADDRESS, brokerHost),
+                            equalTo(SERVER_PORT, brokerPort),
+                            equalTo(MESSAGING_DESTINATION_NAME, topic),
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "receive" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "receive" : null),
+                            equalTo(
+                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                emitStableMessagingSemconv() ? "test_sub" : null),
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableMessagingSemconv()
+                                    ? error.getClass().getName()
+                                    : null))));
   }
 
   @Test

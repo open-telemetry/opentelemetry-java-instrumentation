@@ -230,11 +230,12 @@ public class PulsarSingletons {
   @Nullable
   private static Context startAndEndConsumerReceive(
       Context parent,
-      Messages<?> messages,
+      @Nullable Messages<?> messages,
       Timer timer,
       Consumer<?> consumer,
       @Nullable Throwable throwable) {
-    if (messages == null || messages.size() == 0) {
+    // a receive that returned no messages is only reported when it failed
+    if (throwable == null && (messages == null || messages.size() == 0)) {
       return null;
     }
     String brokerUrl = VirtualFieldStore.extract(consumer);
@@ -254,7 +255,7 @@ public class PulsarSingletons {
     Context processParentContext = emitStableMessagingSemconv() ? parent : receiveContext;
     // injected context is used in MessageListenerInstrumentation and also in the spring-pulsar
     // instrumentation
-    for (Message<?> message : messages) {
+    for (Message<?> message : request.getMessages()) {
       VirtualFieldStore.markReceiveTelemetryRecorded(message);
       VirtualFieldStore.inject(message, processParentContext);
     }
