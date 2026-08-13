@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.jms.v2_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
@@ -15,6 +14,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -24,7 +24,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -34,10 +33,6 @@ import java.util.List;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractJmsTest {
-
-  // messaging.destination.subscription.name only exists in the v1.43 messaging semantic conventions
-  private static final AttributeKey<String> MESSAGING_DESTINATION_SUBSCRIPTION_NAME =
-      stringKey("messaging.destination.subscription.name");
 
   protected void assertProducerSpan(
       SpanDataAssert span, String destinationName, boolean testHeaders) {
