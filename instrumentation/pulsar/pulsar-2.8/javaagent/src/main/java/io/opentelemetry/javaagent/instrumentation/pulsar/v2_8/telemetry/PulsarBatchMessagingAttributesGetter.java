@@ -6,14 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
 import static java.util.Collections.emptyList;
-import static org.apache.pulsar.client.impl.MultiTopicsConsumerImpl.DUMMY_TOPIC_NAME_PREFIX;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;
-import org.apache.pulsar.common.naming.TopicName;
 
 final class PulsarBatchMessagingAttributesGetter
     implements MessagingAttributesGetter<PulsarBatchRequest, Void> {
@@ -26,10 +24,13 @@ final class PulsarBatchMessagingAttributesGetter
   @Nullable
   @Override
   public String getDestination(PulsarBatchRequest request) {
-    String destination = request.getDestination();
-    // a consumer for multiple topics, that isn't backed by a single partitioned topic, has a
-    // randomly generated topic name that must not be reported as the destination
-    return destination.startsWith(DUMMY_TOPIC_NAME_PREFIX) ? null : destination;
+    if (request.hasGeneratedDestinationName()) {
+      return null;
+    }
+    PulsarBatchRecordAttributes batchRecordAttributes = request.getBatchRecordAttributes();
+    return batchRecordAttributes != null
+        ? batchRecordAttributes.getCommonDestination()
+        : request.getDestination();
   }
 
   @Nullable
@@ -92,11 +93,10 @@ final class PulsarBatchMessagingAttributesGetter
   @Nullable
   @Override
   public String getDestinationPartitionId(PulsarBatchRequest request) {
-    int partitionIndex = TopicName.getPartitionIndex(request.getDestination());
-    if (partitionIndex == -1) {
-      return null;
-    }
-    return String.valueOf(partitionIndex);
+    PulsarBatchRecordAttributes batchRecordAttributes = request.getBatchRecordAttributes();
+    return batchRecordAttributes != null
+        ? batchRecordAttributes.getCommonPartitionId()
+        : request.getDestinationPartitionId();
   }
 
   @Nullable

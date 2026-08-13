@@ -22,6 +22,14 @@
   selector. The deprecated property keeps its exact-key matching and may be removed in the next
   minor release.
   ([#19519](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19519))
+- Deprecate the Logback appender `experimental.capture-mdc-attributes` configuration property and
+  `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of the new
+  `experimental.mdc-attributes.included` and `experimental.mdc-attributes.excluded` selectors, which
+  are also available in `logback.xml` as `mdcAttributesIncluded` and `mdcAttributesExcluded` and
+  programmatically as `OpenTelemetryAppender#setMdcAttributes(IncludeExclude)`. The deprecated
+  setting continues to select MDC keys literally, except that the single value `*` selects every MDC
+  key, and it may be removed in the next minor release.
+  ([#19520](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19520))
 - Deprecate the Log4j appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender.Builder#setCaptureContextDataAttributes(String)` in favor of
   include/exclude context data selectors and
