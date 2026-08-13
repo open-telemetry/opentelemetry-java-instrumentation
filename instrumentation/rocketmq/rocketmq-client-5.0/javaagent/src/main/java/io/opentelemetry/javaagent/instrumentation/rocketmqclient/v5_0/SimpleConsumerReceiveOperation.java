@@ -121,13 +121,7 @@ public class SimpleConsumerReceiveOperation {
         simpleConsumerReceiveInstrumenter();
     if (instrumenter.shouldStart(parentContext, request)) {
       InstrumenterUtil.startAndEnd(
-          instrumenter,
-          parentContext,
-          request,
-          messages,
-          error,
-          timer.startTime(),
-          timer.now());
+          instrumenter, parentContext, request, messages, error, timer.startTime(), timer.now());
     }
   }
 }
