@@ -16,6 +16,7 @@ import javax.annotation.Nullable;
 public final class JarAnalyzerConfig {
 
   private static final Logger logger = Logger.getLogger(JarAnalyzerConfig.class.getName());
+  private static final int DEFAULT_JARS_PER_SECOND = 10;
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.runtime-telemetry";
   private static final String LEGACY_INSTRUMENTATION_NAME =
       "io.opentelemetry.runtime-telemetry-java8";
@@ -39,6 +40,26 @@ public final class JarAnalyzerConfig {
     }
 
     return null;
+  }
+
+  public static int getJarsPerSecond(
+      DeclarativeConfigProperties config, DeclarativeConfigProperties deprecatedConfig) {
+    int jarsPerSecond = config.getInt("jars_per_second", -1);
+    if (jarsPerSecond >= 0) {
+      return jarsPerSecond;
+    }
+
+    int deprecatedJarsPerSecond = deprecatedConfig.getInt("jars_per_second", -1);
+    if (deprecatedJarsPerSecond >= 0) {
+      logger.warning(
+          "otel.instrumentation.runtime-telemetry.package-emitter.jars-per-second is deprecated"
+              + " and will be removed in 3.0. Use"
+              + " otel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second"
+              + " instead.");
+      return deprecatedJarsPerSecond;
+    }
+
+    return DEFAULT_JARS_PER_SECOND;
   }
 
   private JarAnalyzerConfig() {}
