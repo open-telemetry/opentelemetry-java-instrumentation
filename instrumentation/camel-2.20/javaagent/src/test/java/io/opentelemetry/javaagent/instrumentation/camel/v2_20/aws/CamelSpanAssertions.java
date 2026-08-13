@@ -74,7 +74,8 @@ class CamelSpanAssertions {
             equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "aws.sns" : null),
             equalTo(MESSAGING_DESTINATION_NAME, topicName),
             equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
-            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null));
+            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
+            equalTo(MESSAGING_MESSAGE_ID, emitStableMessagingSemconv() ? "message-id" : null));
   }
 
   static SpanDataAssert s3(SpanDataAssert span, String bucketName) {

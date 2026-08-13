@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.MessagingSpanDecorator;
 import javax.annotation.Nullable;
 
 final class CamelMessagingAttributesGetter
@@ -60,7 +61,8 @@ final class CamelMessagingAttributesGetter
   @Nullable
   @Override
   public String getMessageId(CamelRequest request, @Nullable Void unused) {
-    return request.getMessagingMessageId();
+    MessagingSpanDecorator spanDecorator = (MessagingSpanDecorator) request.getSpanDecorator();
+    return spanDecorator.getMessageId(request.getExchange());
   }
 
   @Nullable
