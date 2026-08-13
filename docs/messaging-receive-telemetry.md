@@ -22,6 +22,12 @@ Most instrumentations suppress receive spans where a "process" span already repr
 
 RabbitMQ `basicGet()` is an exception: when this setting is `false`, it produces no consumer-side span.
 
+## Empty receives
+
+Most instrumentations create no receive span when a pull returns no messages. Kafka, Pulsar, AWS SQS and JMS all return early before starting one, independently of this setting and identically under legacy and stable semantic conventions.
+
+RabbitMQ is the exception. Its `basicGet()` instrumentation models the response as optional rather than skipping instrumentation, so when this setting is `true` an empty pull still produces a receive span.
+
 ## What changes with stable messaging semantic conventions
 
 | | Legacy | Stable |
