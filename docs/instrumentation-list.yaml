@@ -533,12 +533,9 @@ definitions:
       name: otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes
       declarative_name: java.jboss_logmanager.capture_mdc_attributes/development
       description: |
-        Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys.
+        Deprecated: use `otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included` instead. Entries are matched as exact MDC keys rather than as glob patterns, except that a list containing only `*` captures all MDC attributes; in a multi-entry list, `*` and `?` are literal characters. It is ignored when an included or excluded pattern is configured, and it may be removed in the next minor release.
       type: list
       default: ''
-      examples:
-      - custom-mdc-key
-      - key1,key2,key3
     otel.instrumentation.jboss-logmanager.experimental.capture-template:
       name: otel.instrumentation.jboss-logmanager.experimental.capture-template
       declarative_name: java.jboss_logmanager.capture_template/development
@@ -546,6 +543,25 @@ definitions:
         Enables the capture of the log message template (if arguments are provided).
       type: boolean
       default: false
+    otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.excluded:
+      name: otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.excluded
+      declarative_name: java.jboss_logmanager.mdc_attributes/development.excluded
+      description: |
+        A comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log attributes. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. No MDC attributes are captured unless an included or excluded pattern, or the deprecated setting, is configured; configuring only excluded patterns captures all MDC attributes that do not match them. Captured MDC attributes may contain sensitive information.
+      type: list
+      default: ''
+      examples:
+      - password,*-token
+    otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included:
+      name: otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included
+      declarative_name: java.jboss_logmanager.mdc_attributes/development.included
+      description: |
+        A comma-separated list of case-sensitive glob patterns for MDC keys to capture as log attributes. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. No MDC attributes are captured unless an included or excluded pattern, or the deprecated setting, is configured; configuring only excluded patterns captures all MDC attributes that do not match them. Captured MDC attributes may contain sensitive information.
+      type: list
+      default: ''
+      examples:
+      - custom-mdc-key
+      - request.*,user-?
     otel.instrumentation.jdbc-datasource.enabled:
       name: otel.instrumentation.jdbc-datasource.enabled
       declarative_name: java.jdbc_datasource.enabled
@@ -681,26 +697,26 @@ definitions:
         Enables the capture of the Log4j marker attribute.
       type: boolean
       default: false
-    otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-436113d6:
+    otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-1a2270b1:
       name: otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
       declarative_name: java.log4j_appender.capture_mdc_attributes/development
       description: |
-        Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys.
-      type: list
-      default: ''
-      examples:
-      - custom-mdc-key
-      - key1,key2,key3
-    otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-e8e19d91:
-      name: otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
-      declarative_name: java.log4j_appender.capture_mdc_attributes/development
-      description: |
-        Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a comma-separated list of specific keys.
+        Deprecated include-only alias for otel.instrumentation.log4j-appender.experimental.mdc-attributes.included. It does not support glob patterns: a list containing only "*" captures all context data attributes, and otherwise every entry, including one containing "*" or "?", is matched as a literal context data key. It is ignored when an included or excluded pattern is configured, and it may be removed in the next minor release.
       type: list
       default: ''
       examples:
       - '*'
       - key1,key2
+    otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-1ef38043:
+      name: otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
+      declarative_name: java.log4j_appender.capture_mdc_attributes/development
+      description: |
+        Deprecated include-only alias for otel.instrumentation.log4j-appender.experimental.mdc-attributes.included. It does not support glob patterns: a list containing only "*" captures all MDC attributes, and otherwise every entry, including one containing "*" or "?", is matched as a literal MDC key. It is ignored when an included or excluded pattern is configured, and it may be removed in the next minor release.
+      type: list
+      default: ''
+      examples:
+      - custom-mdc-key
+      - key1,key2,key3
     otel.instrumentation.log4j-appender.experimental.capture-template:
       name: otel.instrumentation.log4j-appender.experimental.capture-template
       declarative_name: java.log4j_appender.capture_template/development
@@ -708,6 +724,46 @@ definitions:
         Enables the capture of the log message template (if arguments are provided).
       type: boolean
       default: false
+    otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded-44fd371d:
+      name: otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded
+      declarative_name: java.log4j_appender.mdc_attributes/development.excluded
+      description: |
+        Comma-separated list of case-sensitive glob patterns for context data keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No context data attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting is configured; configuring only excluded patterns captures all context data attributes that do not match them. Captured context data attributes may contain sensitive information.
+      type: list
+      default: ''
+      examples:
+      - '*-secret'
+      - password,token
+    otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded-d9baaae0:
+      name: otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded
+      declarative_name: java.log4j_appender.mdc_attributes/development.excluded
+      description: |
+        Comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No MDC attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting is configured; configuring only excluded patterns captures all MDC attributes that do not match them. Captured MDC attributes may contain sensitive information.
+      type: list
+      default: ''
+      examples:
+      - '*-secret'
+      - password,token
+    otel.instrumentation.log4j-appender.experimental.mdc-attributes.included-1e38a871:
+      name: otel.instrumentation.log4j-appender.experimental.mdc-attributes.included
+      declarative_name: java.log4j_appender.mdc_attributes/development.included
+      description: |
+        Comma-separated list of case-sensitive glob patterns for MDC keys to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No MDC attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting is configured; configuring only excluded patterns captures all MDC attributes that do not match them. Captured MDC attributes may contain sensitive information.
+      type: list
+      default: ''
+      examples:
+      - custom-mdc-key
+      - request-*,user-?
+    otel.instrumentation.log4j-appender.experimental.mdc-attributes.included-7522b9e5:
+      name: otel.instrumentation.log4j-appender.experimental.mdc-attributes.included
+      declarative_name: java.log4j_appender.mdc_attributes/development.included
+      description: |
+        Comma-separated list of case-sensitive glob patterns for context data keys to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No context data attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting is configured; configuring only excluded patterns captures all context data attributes that do not match them. Captured context data attributes may contain sensitive information.
+      type: list
+      default: ''
+      examples:
+      - custom-context-key
+      - request-*,user-?
     otel.instrumentation.log4j-context-data.add-baggage:
       name: otel.instrumentation.log4j-context-data.add-baggage
       declarative_name: java.log4j_context_data.add_baggage
@@ -1036,9 +1092,29 @@ definitions:
     otel.instrumentation.servlet.experimental.capture-request-parameters:
       name: otel.instrumentation.servlet.experimental.capture-request-parameters
       declarative_name: java.servlet.capture_request_parameters/development
-      description: List of request parameter names to capture as span attributes.
+      description: |
+        Deprecated include-only alias for `otel.instrumentation.servlet.experimental.request-parameters.included`. It may be removed in the next minor release.
       type: list
       default: ''
+    otel.instrumentation.servlet.experimental.request-parameters.excluded:
+      name: otel.instrumentation.servlet.experimental.request-parameters.excluded
+      declarative_name: java.servlet.request_parameters/development.excluded
+      description: |
+        A comma-separated list of case-sensitive request parameter name patterns to exclude from span attributes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. No request parameters are captured unless an included or excluded pattern is configured; configuring only excluded patterns captures all request parameters that do not match them, which may expose sensitive information.
+      type: list
+      default: ''
+      examples:
+      - password,*-token
+    otel.instrumentation.servlet.experimental.request-parameters.included:
+      name: otel.instrumentation.servlet.experimental.request-parameters.included
+      declarative_name: java.servlet.request_parameters/development.included
+      description: |
+        A comma-separated list of case-sensitive request parameter name patterns to capture as span attributes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. No request parameters are captured unless an included or excluded pattern is configured; configuring only excluded patterns captures all request parameters that do not match them, which may expose sensitive information.
+      type: list
+      default: ''
+      examples:
+      - request-id
+      - user-*,search-?
     otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled:
       name: otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
       declarative_name: java.servlet.trace_id_request_attribute/development.enabled
@@ -7928,6 +8004,8 @@ libraries:
   - otel.instrumentation.jboss-logmanager.experimental.capture-arguments
   - otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes
   - otel.instrumentation.jboss-logmanager.experimental.capture-template
+  - otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.excluded
+  - otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included
 - name: jboss-logmanager-mdc-1.1
   display_name: JBoss Log Manager
   description: |
@@ -10107,6 +10185,8 @@ libraries:
   - http.server.emit-experimental-telemetry
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded
+  - otel.instrumentation.servlet.experimental.request-parameters.included
 - name: liberty-dispatcher-20.0
   display_name: Liberty
   description: |
@@ -10140,7 +10220,9 @@ libraries:
   configuration_refs:
   - otel.instrumentation.log4j-appender.experimental-log-attributes
   - otel.instrumentation.log4j-appender.experimental.capture-code-attributes
-  - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-436113d6
+  - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-1ef38043
+  - otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded-d9baaae0
+  - otel.instrumentation.log4j-appender.experimental.mdc-attributes.included-1e38a871
 - name: log4j-appender-2.17
   display_name: Log4j
   description: |
@@ -10161,8 +10243,10 @@ libraries:
   - otel.instrumentation.log4j-appender.experimental.capture-code-attributes
   - otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes
   - otel.instrumentation.log4j-appender.experimental.capture-marker-attribute
-  - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-e8e19d91
+  - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-1a2270b1
   - otel.instrumentation.log4j-appender.experimental.capture-template
+  - otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded-44fd371d
+  - otel.instrumentation.log4j-appender.experimental.mdc-attributes.included-7522b9e5
 - name: log4j-context-data-2.7
   display_name: Log4j
   description: |
@@ -13406,6 +13490,8 @@ libraries:
   - otel.experimental.javascript-snippet-ad834761
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded
+  - otel.instrumentation.servlet.experimental.request-parameters.included
   - otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
   telemetry:
   - when: default
@@ -13468,6 +13554,8 @@ libraries:
   - otel.experimental.javascript-snippet-cfa9f908
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded
+  - otel.instrumentation.servlet.experimental.request-parameters.included
   - otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
   telemetry:
   - when: default
@@ -13534,9 +13622,11 @@ libraries:
   - otel.experimental.javascript-snippet-ad834761
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded
+  - otel.instrumentation.servlet.experimental.request-parameters.included
   - otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
   telemetry:
-  - when: otel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter
+  - when: otel.instrumentation.servlet.experimental.request-parameters.included=test-parameter
     metric_refs:
     - http.server.request.duration-1f6f63ed
     spans:
@@ -14865,6 +14955,8 @@ libraries:
   - http.server.emit-experimental-telemetry
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded
+  - otel.instrumentation.servlet.experimental.request-parameters.included
   telemetry:
   - when: default
     metric_refs:
@@ -14926,6 +15018,8 @@ libraries:
   - http.server.emit-experimental-telemetry
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded
+  - otel.instrumentation.servlet.experimental.request-parameters.included
   telemetry:
   - when: default
     metric_refs:

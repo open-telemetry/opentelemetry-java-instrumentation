@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static java.util.Collections.emptyList;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -20,9 +20,11 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.message.ParameterizedMessage;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -45,7 +47,7 @@ class LogEventMapperTest {
             false,
             false,
             false,
-            emptyList(),
+            null,
             false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
@@ -71,7 +73,7 @@ class LogEventMapperTest {
             false,
             false,
             false,
-            singletonList("key2"),
+            include("key2"),
             false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
@@ -98,7 +100,7 @@ class LogEventMapperTest {
             false,
             false,
             false,
-            singletonList("*"),
+            include("*"),
             false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
@@ -126,7 +128,7 @@ class LogEventMapperTest {
             false,
             false,
             false,
-            singletonList("*"),
+            include("*"),
             false);
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
@@ -143,6 +145,84 @@ class LogEventMapperTest {
   }
 
   @Test
+  void testWildcardPatterns() {
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            include("request-?d", "user.*"),
+            false);
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("request-id", "123");
+    contextData.put("request-name", "ignored");
+    contextData.put("user.name", "alice");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    mapper.captureContextDataAttributes(builder, contextData);
+
+    verify(builder).setAttribute(stringKey("request-id"), "123");
+    verify(builder).setAttribute(stringKey("user.name"), "alice");
+    verifyNoMoreInteractions(builder);
+  }
+
+  @Test
+  void testExcludeOnly() {
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            IncludeExclude.builder().setExcluded(singletonList("*secret*")).build()::matches,
+            false);
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("request-id", "123");
+    contextData.put("client-secret", "ignored");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    mapper.captureContextDataAttributes(builder, contextData);
+
+    verify(builder).setAttribute(stringKey("request-id"), "123");
+    verifyNoMoreInteractions(builder);
+  }
+
+  @Test
+  void testExclusionsTakePrecedence() {
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            IncludeExclude.builder()
+                    .setIncluded(singletonList("request-*"))
+                    .setExcluded(singletonList("*-secret"))
+                    .build()
+                ::matches,
+            false);
+    Map<String, String> contextData = new HashMap<>();
+    contextData.put("request-id", "123");
+    contextData.put("request-secret", "ignored");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    mapper.captureContextDataAttributes(builder, contextData);
+
+    verify(builder).setAttribute(stringKey("request-id"), "123");
+    verifyNoMoreInteractions(builder);
+  }
+
+  @Test
   void testCaptureMapMessageDisabled() {
     // given
     LogEventMapper<Map<String, String>> mapper =
@@ -154,7 +234,7 @@ class LogEventMapperTest {
             false,
             false,
             false,
-            singletonList("*"),
+            include("*"),
             false);
 
     StringMapMessage message = new StringMapMessage();
@@ -184,7 +264,7 @@ class LogEventMapperTest {
             false,
             false,
             false,
-            singletonList("*"),
+            include("*"),
             v3Preview);
 
     StringMapMessage message = new StringMapMessage();
@@ -216,7 +296,7 @@ class LogEventMapperTest {
             false,
             false,
             false,
-            singletonList("*"),
+            include("*"),
             v3Preview);
 
     StringMapMessage message = new StringMapMessage();
@@ -250,7 +330,7 @@ class LogEventMapperTest {
             false,
             false,
             false,
-            singletonList("*"),
+            include("*"),
             v3Preview);
 
     StructuredDataMessage message = new StructuredDataMessage("an id", "a message", "a type");
@@ -276,15 +356,7 @@ class LogEventMapperTest {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE,
-            false,
-            false,
-            false,
-            false,
-            true,
-            true,
-            emptyList(),
-            false);
+            ContextDataAccessorImpl.INSTANCE, false, false, false, false, true, true, null, false);
     ParameterizedMessage message = new ParameterizedMessage("hello {}", "world");
     LogRecordBuilder builder = mock(LogRecordBuilder.class);
 
@@ -319,7 +391,7 @@ class LogEventMapperTest {
             false,
             false,
             false,
-            emptyList(),
+            null,
             false);
     ParameterizedMessage message = new ParameterizedMessage("hello {}", "world");
     LogRecordBuilder builder = mock(LogRecordBuilder.class);
@@ -341,6 +413,10 @@ class LogEventMapperTest {
     verify(builder).setBody("hello world");
     verify(builder, never()).setAttribute(eq(stringKey("log.body.template")), anyString());
     verify(builder, never()).setAttribute(eq(stringArrayKey("log.body.parameters")), any());
+  }
+
+  private static Predicate<String> include(String... patterns) {
+    return IncludeExclude.builder().setIncluded(asList(patterns)).build()::matches;
   }
 
   private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, String>> {

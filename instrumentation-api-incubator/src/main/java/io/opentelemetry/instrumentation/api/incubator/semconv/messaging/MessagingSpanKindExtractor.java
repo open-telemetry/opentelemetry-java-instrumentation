@@ -66,9 +66,10 @@ public final class MessagingSpanKindExtractor {
   }
 
   /**
-   * @deprecated Use {@link #create(MessagingOperationType)}. Will be removed in 3.0.
+   * @deprecated Use {@link #create(MessagingOperationType)}. May be removed in the next minor
+   *     release.
    */
-  @Deprecated // to be removed in 3.0
+  @Deprecated // may be removed in the next minor release
   public static <REQUEST> SpanKindExtractor<REQUEST> create(MessageOperation operation) {
     SpanKind spanKind;
     switch (operation) {

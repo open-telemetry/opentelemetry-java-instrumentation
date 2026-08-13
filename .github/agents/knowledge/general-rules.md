@@ -108,10 +108,10 @@ Reason about visibility from "what does the advice method directly reference?".
 - Place `@SuppressWarnings` on the single member that needs it, or on the class when two
   or more members in the class need the same suppression. Do not move an existing
   suppression from a member to the class unless multiple members need it.
-- **Do not add `@SuppressWarnings("deprecation")` unless the build fails without it.**
-  The project disables javac's `-Xlint:deprecation` globally and uses a custom Error Prone
-  check (`OtelDeprecatedApiUsage`) instead. Only add the annotation when it is actually
-  required to fix an Error Prone error — not speculatively.
+- Use the standard `@SuppressWarnings("deprecation")`, never the check-specific
+  `@SuppressWarnings("OtelDeprecatedApiUsage")`. The custom check aliases `deprecation` so the
+  standard suppression works; normalize the check-specific spelling when touching it. Add a
+  suppression only after observing the diagnostic or verifying intentional deprecated API usage.
 - Preserve concise explanatory comments attached to existing `@SuppressWarnings` annotations
   when they explain why the suppression exists (for example `// using deprecated semconv`
   or `// using deprecated config property`). This repository has established precedent for

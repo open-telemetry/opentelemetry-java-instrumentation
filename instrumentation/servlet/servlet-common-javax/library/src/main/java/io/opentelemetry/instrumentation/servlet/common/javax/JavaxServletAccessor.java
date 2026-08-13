@@ -90,6 +90,13 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   }
 
   @Override
+  public Iterable<String> getRequestParameterNames(HttpServletRequest httpServletRequest) {
+    @SuppressWarnings("unchecked") // servlet api uses Enumeration without generic type
+    Enumeration<String> names = httpServletRequest.getParameterNames();
+    return names == null ? emptyList() : Collections.list(names);
+  }
+
+  @Override
   public List<String> getRequestParameterValues(
       HttpServletRequest httpServletRequest, String name) {
     String[] values = httpServletRequest.getParameterValues(name);
