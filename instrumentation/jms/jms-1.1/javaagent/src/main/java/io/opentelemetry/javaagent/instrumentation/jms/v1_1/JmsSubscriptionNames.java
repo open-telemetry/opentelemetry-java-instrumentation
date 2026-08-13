@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsListenerRegistrations;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsListenerRegistrations.Registration;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Set;
@@ -37,8 +39,9 @@ public class JmsSubscriptionNames {
       VirtualField.find(Session.class, SessionRegistrations.class);
   private static final VirtualField<Connection, ConnectionSessions> CONNECTION_SESSIONS =
       VirtualField.find(Connection.class, ConnectionSessions.class);
-  private static final VirtualField<MessageListener, ListenerRegistrations> LISTENER_REGISTRATIONS =
-      VirtualField.find(MessageListener.class, ListenerRegistrations.class);
+  private static final VirtualField<MessageListener, JmsListenerRegistrations>
+      LISTENER_REGISTRATIONS =
+          VirtualField.find(MessageListener.class, JmsListenerRegistrations.class);
 
   public static void set(MessageConsumer consumer, String subscriptionName) {
     CONSUMER_SUBSCRIPTION_NAME.set(consumer, subscriptionName);
@@ -103,19 +106,19 @@ public class JmsSubscriptionNames {
 
   @Nullable
   public static String get(MessageListener messageListener) {
-    ListenerRegistrations registrations = LISTENER_REGISTRATIONS.get(messageListener);
+    JmsListenerRegistrations registrations = LISTENER_REGISTRATIONS.get(messageListener);
     return registrations == null ? null : registrations.getSubscriptionName();
   }
 
-  private static ListenerRegistrations listenerRegistrations(MessageListener messageListener) {
-    ListenerRegistrations registrations = LISTENER_REGISTRATIONS.get(messageListener);
+  private static JmsListenerRegistrations listenerRegistrations(MessageListener messageListener) {
+    JmsListenerRegistrations registrations = LISTENER_REGISTRATIONS.get(messageListener);
     if (registrations != null) {
       return registrations;
     }
     synchronized (messageListener) {
       registrations = LISTENER_REGISTRATIONS.get(messageListener);
       if (registrations == null) {
-        registrations = new ListenerRegistrations();
+        registrations = new JmsListenerRegistrations();
         LISTENER_REGISTRATIONS.set(messageListener, registrations);
       }
       return registrations;
@@ -212,8 +215,8 @@ public class JmsSubscriptionNames {
           }
           trackedBySession = true;
         }
-        ListenerRegistrations registrations = listenerRegistrations(messageListener);
-        ListenerRegistration registration = registrations.add(subscriptionName);
+        JmsListenerRegistrations registrations = listenerRegistrations(messageListener);
+        Registration registration = registrations.add(subscriptionName);
         newRegistration = new ConsumerListenerRegistration(registrations, registration);
       }
 
@@ -267,11 +270,11 @@ public class JmsSubscriptionNames {
   }
 
   private static final class ConsumerListenerRegistration {
-    private final ListenerRegistrations registrations;
-    private final ListenerRegistration registration;
+    private final JmsListenerRegistrations registrations;
+    private final Registration registration;
 
     private ConsumerListenerRegistration(
-        ListenerRegistrations registrations, ListenerRegistration registration) {
+        JmsListenerRegistrations registrations, Registration registration) {
       this.registrations = registrations;
       this.registration = registration;
     }
@@ -360,59 +363,6 @@ public class JmsSubscriptionNames {
       for (ConsumerState consumer : registeredConsumers) {
         consumer.clear();
       }
-    }
-  }
-
-  private static final class ListenerRegistrations {
-    @Nullable private volatile ListenerRegistration current;
-
-    private synchronized ListenerRegistration add(@Nullable String subscriptionName) {
-      ListenerRegistration previous = current;
-      ListenerRegistration registration = new ListenerRegistration(subscriptionName, previous);
-      if (previous != null) {
-        previous.next = registration;
-      }
-      current = registration;
-      return registration;
-    }
-
-    @Nullable
-    private String getSubscriptionName() {
-      ListenerRegistration registration = current;
-      return registration == null ? null : registration.subscriptionName;
-    }
-
-    private synchronized void deactivate(ListenerRegistration registration) {
-      if (!registration.active) {
-        return;
-      }
-      registration.active = false;
-
-      ListenerRegistration previous = registration.previous;
-      ListenerRegistration next = registration.next;
-      if (previous != null) {
-        previous.next = next;
-      }
-      if (next == null) {
-        current = previous;
-      } else {
-        next.previous = previous;
-      }
-      registration.previous = null;
-      registration.next = null;
-    }
-  }
-
-  private static final class ListenerRegistration {
-    @Nullable private final String subscriptionName;
-    @Nullable private ListenerRegistration previous;
-    @Nullable private ListenerRegistration next;
-    private boolean active = true;
-
-    private ListenerRegistration(
-        @Nullable String subscriptionName, @Nullable ListenerRegistration previous) {
-      this.subscriptionName = subscriptionName;
-      this.previous = previous;
     }
   }
 

@@ -19,6 +19,9 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.lang.reflect.Constructor;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
@@ -223,6 +226,68 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
     registration.join();
 
     assertThat(JmsSubscriptionNames.get(listener)).isNull();
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated JMS and semconv APIs
+  @Test
+  void capturesSubscriptionNameForChildClassLoaderListener() throws Exception {
+    String topicName = "child-classloader-listener-topic";
+    Topic topic = session.createTopic(topicName);
+    TextMessage message = session.createTextMessage("a message");
+    message.setJMSDestination(topic);
+    MessageConsumer consumer =
+        session.createDurableSubscriber(topic, "child-classloader-subscription");
+    cleanup.deferCleanup(consumer::close);
+
+    String listenerClassName =
+        "io.opentelemetry.javaagent.instrumentation.jms.v1_1.ChildClassLoaderMessageListener";
+    URLClassLoader classLoader = childFirstClassLoader(listenerClassName);
+    cleanup.deferCleanup(classLoader);
+    Constructor<?> constructor = classLoader.loadClass(listenerClassName).getDeclaredConstructor();
+    constructor.setAccessible(true);
+    MessageListener listener = (MessageListener) constructor.newInstance();
+    assertThat(listener.getClass().getClassLoader()).isSameAs(classLoader);
+    consumer.setMessageListener(listener);
+    consumer.getMessageListener().onMessage(message);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName(topicName, false),
+                            oldOperation("process"),
+                            operationName("process"),
+                            operationType("process"),
+                            messagingTempDestination(false),
+                            subscriptionName("child-classloader-subscription"))));
+  }
+
+  private static URLClassLoader childFirstClassLoader(String childClassName) {
+    URL testClasses =
+        Jms1InstrumentationTest.class.getProtectionDomain().getCodeSource().getLocation();
+    return new URLClassLoader(
+        new URL[] {testClasses}, Jms1InstrumentationTest.class.getClassLoader()) {
+      @Override
+      protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        if (!name.equals(childClassName)) {
+          return super.loadClass(name, resolve);
+        }
+        synchronized (getClassLoadingLock(name)) {
+          Class<?> loaded = findLoadedClass(name);
+          if (loaded == null) {
+            loaded = findClass(name);
+          }
+          if (resolve) {
+            resolveClass(loaded);
+          }
+          return loaded;
+        }
+      }
+    };
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
