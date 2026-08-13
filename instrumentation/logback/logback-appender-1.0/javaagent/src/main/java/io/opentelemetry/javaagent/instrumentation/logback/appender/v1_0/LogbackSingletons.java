@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import java.util.function.Predicate;
 
@@ -36,7 +37,7 @@ public class LogbackSingletons {
     boolean captureLogstashStructuredArguments =
         config.getBoolean("capture_logstash_structured_arguments/development", false);
     Predicate<String> mdcAttributes =
-        LogbackConfig.create(GlobalOpenTelemetry.get()).getMdcAttributes();
+        SelectorConfig.resolveLegacyLiteral(config, "logback-appender", "mdc-attributes");
 
     mapper =
         LoggingEventMapper.builder()
