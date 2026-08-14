@@ -14,11 +14,8 @@ import javax.annotation.Nullable;
 public abstract class ReceiveRequest {
 
   public static ReceiveRequest create(
-      String queue,
-      @Nullable GetResponse response,
-      Connection connection,
-      boolean completedNormally) {
-    return new AutoValue_ReceiveRequest(queue, response, connection, completedNormally);
+      String queue, @Nullable GetResponse response, Connection connection) {
+    return new AutoValue_ReceiveRequest(queue, response, connection);
   }
 
   public abstract String getQueue();
@@ -27,8 +24,6 @@ public abstract class ReceiveRequest {
   public abstract GetResponse getResponse();
 
   public abstract Connection getConnection();
-
-  public abstract boolean isCompletedNormally();
 
   String spanName() {
     String queue = getQueue();

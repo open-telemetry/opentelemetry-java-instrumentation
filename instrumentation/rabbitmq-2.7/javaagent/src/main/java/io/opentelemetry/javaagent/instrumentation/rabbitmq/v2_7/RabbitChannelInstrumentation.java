@@ -426,8 +426,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         }
 
         Context parentContext = Context.current();
-        ReceiveRequest request =
-            ReceiveRequest.create(queue, response, channel.getConnection(), throwable == null);
+        ReceiveRequest request = ReceiveRequest.create(queue, response, channel.getConnection());
         if (!receiveInstrumenter().shouldStart(parentContext, request)) {
           return;
         }
