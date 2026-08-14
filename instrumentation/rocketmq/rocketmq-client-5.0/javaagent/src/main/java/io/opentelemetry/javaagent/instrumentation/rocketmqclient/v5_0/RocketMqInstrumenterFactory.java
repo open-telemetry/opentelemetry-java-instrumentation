@@ -82,6 +82,8 @@ final class RocketMqInstrumenterFactory {
             .addAttributesExtractor(new RocketMqConsumerReceiveAttributeExtractor())
             .addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
     if (emitStableMessagingSemconv()) {
+      instrumenterBuilder.addAttributesExtractor(
+          new RocketMqReceiveBatchMessageAttributeExtractor());
       instrumenterBuilder.addSpanLinksExtractor(
           new RocketMqReceiveSpanLinksExtractor(
               openTelemetry.getPropagators().getTextMapPropagator()));

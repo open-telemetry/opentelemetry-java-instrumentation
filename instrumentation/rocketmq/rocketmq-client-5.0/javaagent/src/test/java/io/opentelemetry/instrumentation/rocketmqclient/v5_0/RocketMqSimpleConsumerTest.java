@@ -16,14 +16,18 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -359,7 +363,13 @@ class RocketMqSimpleConsumerTest {
             equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
             equalTo(MESSAGING_OPERATION_NAME, "receive"),
             equalTo(MESSAGING_OPERATION_TYPE, "receive"),
-            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1))
-        .hasLinks(LinkData.create(sendSpan.getSpanContext()));
+            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
+            equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, TAG),
+            equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(KEYS)))
+        .hasLinks(
+            LinkData.create(
+                sendSpan.getSpanContext(),
+                Attributes.of(
+                    MESSAGING_MESSAGE_ID, sendSpan.getAttributes().get(MESSAGING_MESSAGE_ID))));
   }
 }

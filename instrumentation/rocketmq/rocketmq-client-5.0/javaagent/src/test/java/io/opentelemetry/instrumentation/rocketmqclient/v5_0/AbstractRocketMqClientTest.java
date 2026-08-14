@@ -39,6 +39,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -803,6 +804,8 @@ abstract class AbstractRocketMqClientTest {
 
   private static SpanDataAssert assertReceiveSpan(
       SpanDataAssert span, String topic, String consumerGroup, SpanData linkedSpan) {
+    Attributes linkedAttributes =
+        linkedSpan == null ? Attributes.empty() : linkedSpan.getAttributes();
     SpanDataAssert result =
         span.hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
             .hasName(emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
@@ -820,10 +823,27 @@ abstract class AbstractRocketMqClientTest {
                 oldOperation("receive"),
                 operationName("receive"),
                 operationType("receive"),
-                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
+                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
+                // receiving is a batching operation, so the message id is on the link instead
+                equalTo(MESSAGING_MESSAGE_ID, null),
+                equalTo(
+                    MESSAGING_ROCKETMQ_MESSAGE_TAG,
+                    linkedAttributes.get(MESSAGING_ROCKETMQ_MESSAGE_TAG)),
+                equalTo(
+                    MESSAGING_ROCKETMQ_MESSAGE_GROUP,
+                    linkedAttributes.get(MESSAGING_ROCKETMQ_MESSAGE_GROUP)),
+                equalTo(
+                    MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP,
+                    linkedAttributes.get(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP)),
+                equalTo(
+                    MESSAGING_ROCKETMQ_MESSAGE_KEYS,
+                    linkedAttributes.get(MESSAGING_ROCKETMQ_MESSAGE_KEYS)));
     if (linkedSpan != null) {
-      // one link per received message
-      result.hasLinks(LinkData.create(linkedSpan.getSpanContext()));
+      // one link per received message, carrying the attributes of that message
+      result.hasLinks(
+          LinkData.create(
+              linkedSpan.getSpanContext(),
+              Attributes.of(MESSAGING_MESSAGE_ID, linkedAttributes.get(MESSAGING_MESSAGE_ID))));
     }
     return result;
   }
