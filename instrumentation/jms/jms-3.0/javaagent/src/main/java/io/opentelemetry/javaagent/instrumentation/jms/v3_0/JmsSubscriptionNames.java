@@ -205,6 +205,12 @@ public class JmsSubscriptionNames {
       if (closed) {
         return null;
       }
+      Thread thread = Thread.currentThread();
+      for (ListenerRegistrationChange change : pendingChanges) {
+        if (change.thread == thread) {
+          return null;
+        }
+      }
 
       ConsumerListenerRegistration newRegistration = null;
       if (messageListener != null) {
@@ -221,7 +227,7 @@ public class JmsSubscriptionNames {
       }
 
       ListenerRegistrationChange change =
-          new ListenerRegistrationChange(this, currentRegistration, newRegistration);
+          new ListenerRegistrationChange(this, currentRegistration, newRegistration, thread);
       pendingChanges.add(change);
       return change;
     }
@@ -370,14 +376,17 @@ public class JmsSubscriptionNames {
     private final ConsumerState consumerState;
     @Nullable private final ConsumerListenerRegistration previousRegistration;
     @Nullable private final ConsumerListenerRegistration newRegistration;
+    private final Thread thread;
 
     private ListenerRegistrationChange(
         ConsumerState consumerState,
         @Nullable ConsumerListenerRegistration previousRegistration,
-        @Nullable ConsumerListenerRegistration newRegistration) {
+        @Nullable ConsumerListenerRegistration newRegistration,
+        Thread thread) {
       this.consumerState = consumerState;
       this.previousRegistration = previousRegistration;
       this.newRegistration = newRegistration;
+      this.thread = thread;
     }
   }
 

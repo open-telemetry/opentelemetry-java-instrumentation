@@ -213,6 +213,37 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
   }
 
   @Test
+  void suppressesReentrantListenerRegistration() {
+    MessageListener listener = ignored -> {};
+    ReentrantMessageConsumer consumer = new ReentrantMessageConsumer();
+    JmsSubscriptionNames.set(consumer, "reentrant-listener-subscription");
+
+    consumer.setMessageListener(listener);
+    assertThat(JmsSubscriptionNames.get(listener)).isEqualTo("reentrant-listener-subscription");
+
+    consumer.close();
+    assertThat(JmsSubscriptionNames.get(listener)).isNull();
+  }
+
+  @Test
+  void doesNotSuppressNestedListenerRegistrationForDifferentConsumer() {
+    MessageListener listener = ignored -> {};
+    TestMessageConsumer delegate = new TestMessageConsumer();
+    DelegatingMessageConsumer consumer = new DelegatingMessageConsumer(delegate);
+    JmsSubscriptionNames.set(consumer, "outer-listener-subscription");
+    JmsSubscriptionNames.set(delegate, "delegate-listener-subscription");
+
+    consumer.setMessageListener(listener);
+    assertThat(JmsSubscriptionNames.get(listener)).isEqualTo("delegate-listener-subscription");
+
+    delegate.close();
+    assertThat(JmsSubscriptionNames.get(listener)).isEqualTo("outer-listener-subscription");
+
+    consumer.close();
+    assertThat(JmsSubscriptionNames.get(listener)).isNull();
+  }
+
+  @Test
   void doesNotCommitListenerRegistrationAfterConcurrentClose() throws Exception {
     String topicName = "concurrently-closed-consumer-topic";
     Topic topic = session.createTopic(topicName);
@@ -426,9 +457,8 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
     void close(Connection connection, Session session) throws JMSException;
   }
 
-  private static final class BlockingMessageConsumer implements MessageConsumer {
-    private final CountDownLatch registrationStarted = new CountDownLatch(1);
-    private final Semaphore continueRegistration = new Semaphore(0);
+  private static class TestMessageConsumer implements MessageConsumer {
+    private MessageListener listener;
 
     @Override
     public String getMessageSelector() {
@@ -437,13 +467,12 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
 
     @Override
     public MessageListener getMessageListener() {
-      return null;
+      return listener;
     }
 
     @Override
     public void setMessageListener(MessageListener listener) {
-      registrationStarted.countDown();
-      continueRegistration.acquireUninterruptibly();
+      this.listener = listener;
     }
 
     @Override
@@ -463,5 +492,38 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
 
     @Override
     public void close() {}
+  }
+
+  private static final class ReentrantMessageConsumer extends TestMessageConsumer {
+
+    @Override
+    @SuppressWarnings("RedundantOverride")
+    public void setMessageListener(MessageListener listener) {
+      super.setMessageListener(listener);
+    }
+  }
+
+  private static final class DelegatingMessageConsumer extends TestMessageConsumer {
+    private final TestMessageConsumer delegate;
+
+    private DelegatingMessageConsumer(TestMessageConsumer delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    public void setMessageListener(MessageListener listener) {
+      delegate.setMessageListener(listener);
+    }
+  }
+
+  private static final class BlockingMessageConsumer extends TestMessageConsumer {
+    private final CountDownLatch registrationStarted = new CountDownLatch(1);
+    private final Semaphore continueRegistration = new Semaphore(0);
+
+    @Override
+    public void setMessageListener(MessageListener listener) {
+      registrationStarted.countDown();
+      continueRegistration.acquireUninterruptibly();
+    }
   }
 }
