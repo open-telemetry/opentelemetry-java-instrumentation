@@ -17,7 +17,10 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -63,7 +66,8 @@ class RocketMqInstrumenterFactory {
                 MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME))
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
-                    getter, operationType, SEND_OPERATION_NAME, capturedHeaders));
+                    getter, operationType, SEND_OPERATION_NAME, capturedHeaders))
+            .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
     if (emitStableMessagingSemconv()) {
       instrumenterBuilder.addAttributesExtractor(
           new AttributesExtractor<SendMessageContext, Void>() {
@@ -137,6 +141,8 @@ class RocketMqInstrumenterFactory {
             .addSpanLinksExtractor(
                 new RocketMqBatchProcessSpanLinksExtractor(
                     openTelemetry.getPropagators().getTextMapPropagator()))
+            .addOperationMetrics(MessagingProcessMetrics.get())
+            .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages())
             .setSpanStatusExtractor(consumeStatusExtractor());
     setMessagingProcessExceptionEventExtractor(builder);
 
@@ -165,6 +171,8 @@ class RocketMqInstrumenterFactory {
     builder.addAttributesExtractor(
         buildMessagingAttributesExtractor(
             getter, operationType, PROCESS_OPERATION_NAME, capturedHeaders));
+    builder.addOperationMetrics(MessagingProcessMetrics.get());
+    builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     if (emitStableMessagingSemconv()) {
       builder.addAttributesExtractor(consumerAttributesExtractor());
     }
