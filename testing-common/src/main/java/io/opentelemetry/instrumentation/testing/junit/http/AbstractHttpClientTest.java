@@ -117,12 +117,6 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
    */
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {}
 
-  /** Returns the expected service peer name, or null if the attribute should be absent. */
-  @Nullable
-  protected final String expectedServicePeerName(URI uri) {
-    return options.getExpectedServicePeerName().apply(uri);
-  }
-
   // called by the HttpClientInstrumentationExtension
   void setTesting(InstrumentationTestRunner testing, HttpClientTestServer server) {
     this.testing = testing;
@@ -1107,7 +1101,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
             attrs -> {
-              String expectedServicePeerName = expectedServicePeerName(uri);
+              String expectedServicePeerName = testing.isJavaagent() ? "test-peer-service" : null;
               if (expectedServicePeerName != null) {
                 assertThat(attrs).containsEntry(maybeStablePeerService(), expectedServicePeerName);
               } else {

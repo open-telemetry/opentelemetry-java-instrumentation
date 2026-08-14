@@ -38,6 +38,5 @@ class OkHttp3Http2Test extends AbstractOkHttp3Test {
     // https does not work with H2_PRIOR_KNOWLEDGE
     optionsBuilder.disableTestHttps();
     optionsBuilder.setHttpProtocolVersion(uri -> "2");
-    optionsBuilder.setExpectedServicePeerName(uri -> null);
   }
 }

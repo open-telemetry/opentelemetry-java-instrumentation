@@ -63,8 +63,6 @@ public abstract class AbstractDubboTest {
 
   protected abstract InstrumentationExtension testing();
 
-  protected abstract boolean hasServicePeerName();
-
   protected boolean canCaptureUnknownServiceSpans() {
     return false;
   }
@@ -166,7 +164,7 @@ public abstract class AbstractDubboTest {
                                         : "$invoke"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() ? "test-peer-service" : null),
+                                    testing().isJavaagent() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -197,7 +195,7 @@ public abstract class AbstractDubboTest {
                                         : "hello"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() && testLatestDeps()
+                                    testing().isJavaagent() && testLatestDeps()
                                         ? "test-peer-service"
                                         : null),
                                 satisfies(
@@ -350,7 +348,7 @@ public abstract class AbstractDubboTest {
                                         : "$invokeAsync"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() ? "test-peer-service" : null),
+                                    testing().isJavaagent() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -381,7 +379,7 @@ public abstract class AbstractDubboTest {
                                         : "hello"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() && testLatestDeps()
+                                    testing().isJavaagent() && testLatestDeps()
                                         ? "test-peer-service"
                                         : null),
                                 satisfies(
@@ -544,7 +542,7 @@ public abstract class AbstractDubboTest {
                     satisfies(ERROR_TYPE, AbstractDubboTest::assertErrorType),
                     equalTo(
                         maybeStablePeerService(),
-                        hasServicePeerName() ? "test-peer-service" : null),
+                        testing().isJavaagent() ? "test-peer-service" : null),
                     equalTo(SERVER_ADDRESS, "localhost"),
                     satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                     satisfies(
@@ -697,7 +695,7 @@ public abstract class AbstractDubboTest {
                                 satisfies(ERROR_TYPE, val -> val.isNotNull()),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() ? "test-peer-service" : null),
+                                    testing().isJavaagent() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(

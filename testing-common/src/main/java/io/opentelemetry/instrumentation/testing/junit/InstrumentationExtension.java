@@ -65,6 +65,11 @@ public abstract class InstrumentationExtension
     return testRunner.getOpenTelemetry();
   }
 
+  /** Returns whether the instrumentation under test is applied by the Java agent. */
+  public boolean isJavaagent() {
+    return testRunner.isJavaagent();
+  }
+
   /** Return a list of all captured spans. */
   public List<SpanData> spans() {
     return testRunner.getExportedSpans();

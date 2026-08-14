@@ -206,7 +206,9 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
                             equalTo(URL_FULL, uri.toString()),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(maybeStablePeerService(), expectedServicePeerName(uri)),
+                            equalTo(
+                                maybeStablePeerService(),
+                                testing.isJavaagent() ? "test-peer-service" : null),
                             equalTo(ERROR_TYPE, "cancelled")),
                 span ->
                     span.hasName("test-http-server")

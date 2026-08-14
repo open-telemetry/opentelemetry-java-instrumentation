@@ -101,11 +101,6 @@ public abstract class HttpClientTestOptions {
 
   public abstract Function<URI, String> getHttpProtocolVersion();
 
-  /**
-   * Returns a function that returns the expected service peer name, or null if none is expected.
-   */
-  public abstract Function<URI, String> getExpectedServicePeerName();
-
   @Nullable
   abstract SpanEndsAfterType getSpanEndsAfterType();
 
@@ -149,7 +144,6 @@ public abstract class HttpClientTestOptions {
           .setTestNonStandardHttpMethod(true)
           .setTestCaptureHttpHeaders(true)
           .setHasSendRequest(true)
-          .setExpectedServicePeerName(uri -> "test-peer-service")
           .setHttpProtocolVersion(uri -> "1.1");
     }
 
@@ -198,8 +192,6 @@ public abstract class HttpClientTestOptions {
     Builder setTestNonStandardHttpMethod(boolean value);
 
     Builder setHasSendRequest(boolean value);
-
-    Builder setExpectedServicePeerName(Function<URI, String> value);
 
     Builder setHttpProtocolVersion(Function<URI, String> value);
 

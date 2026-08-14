@@ -90,6 +90,11 @@ public abstract class InstrumentationTestRunner {
 
   public abstract boolean forceFlushCalled();
 
+  /** Returns whether the instrumentation under test is applied by the Java agent. */
+  public boolean isJavaagent() {
+    return false;
+  }
+
   /** Return a list of all captured traces, where each trace is a sorted list of spans. */
   public List<List<SpanData>> traces() {
     return TelemetryDataUtil.groupTraces(getExportedSpans());

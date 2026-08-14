@@ -68,8 +68,6 @@ public abstract class AbstractDubboTraceChainTest {
 
   protected abstract InstrumentationExtension testing();
 
-  protected abstract boolean hasServicePeerName();
-
   ReferenceConfig<HelloService> configureClient(int port) {
     ReferenceConfig<HelloService> reference = new ReferenceConfig<>();
     reference.setInterface(HelloService.class);
@@ -199,7 +197,7 @@ public abstract class AbstractDubboTraceChainTest {
                                         : "$invoke"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() ? "test-peer-service" : null),
+                                    testing().isJavaagent() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -230,7 +228,7 @@ public abstract class AbstractDubboTraceChainTest {
                                         : "hello"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() && testLatestDeps()
+                                    testing().isJavaagent() && testLatestDeps()
                                         ? "test-peer-service"
                                         : null),
                                 satisfies(
@@ -255,7 +253,7 @@ public abstract class AbstractDubboTraceChainTest {
                                         : "$invoke"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() ? "test-peer-service" : null),
+                                    testing().isJavaagent() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -286,7 +284,7 @@ public abstract class AbstractDubboTraceChainTest {
                                         : "hello"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() && testLatestDeps()
+                                    testing().isJavaagent() && testLatestDeps()
                                         ? "test-peer-service"
                                         : null),
                                 satisfies(
@@ -480,7 +478,7 @@ public abstract class AbstractDubboTraceChainTest {
                                         : "$invoke"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() ? "test-peer-service" : null),
+                                    testing().isJavaagent() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -511,7 +509,7 @@ public abstract class AbstractDubboTraceChainTest {
                                         : "hello"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() && testLatestDeps()
+                                    testing().isJavaagent() && testLatestDeps()
                                         ? "test-peer-service"
                                         : null),
                                 satisfies(

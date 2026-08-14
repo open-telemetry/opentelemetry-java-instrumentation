@@ -102,10 +102,6 @@ public abstract class AbstractJdbcInstrumentationTest {
     return dataSource;
   }
 
-  protected boolean hasServicePeerName() {
-    return true;
-  }
-
   private static final String DATABASE_NAME = "jdbcUnitTest";
   private static final String DATABASE_NAME_LOWER = DATABASE_NAME.toLowerCase(Locale.ROOT);
   private static final Map<String, String> JDBC_URLS =
@@ -1570,7 +1566,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     emitStableDatabaseSemconv() ? null : "testdb://localhost"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() ? "test-peer-service" : null),
+                                    testing().isJavaagent() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1670,7 +1666,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     emitStableDatabaseSemconv() ? null : table),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() ? "test-peer-service" : null),
+                                    testing().isJavaagent() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1818,7 +1814,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     emitStableDatabaseSemconv() ? null : "table"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    hasServicePeerName() ? "test-peer-service" : null),
+                                    testing().isJavaagent() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 

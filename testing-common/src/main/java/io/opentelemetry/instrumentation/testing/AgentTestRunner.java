@@ -110,4 +110,9 @@ public class AgentTestRunner extends InstrumentationTestRunner {
   public boolean forceFlushCalled() {
     return AgentTestingExporterAccess.forceFlushCalled();
   }
+
+  @Override
+  public boolean isJavaagent() {
+    return true;
+  }
 }
