@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constan
 import static io.opentelemetry.semconv.incubating.JvmIncubatingAttributes.JVM_BUFFER_POOL_NAME;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import java.nio.ByteBuffer;
 import org.junit.jupiter.api.Test;
@@ -36,8 +35,7 @@ class BufferMetricTest {
     ByteBuffer buffer = ByteBuffer.allocateDirect(10000);
     buffer.put("test".getBytes(UTF_8));
 
-    AttributeKey<String> attrBufferPool = JVM_BUFFER_POOL_NAME;
-    Attributes directBuffer = Attributes.of(attrBufferPool, "direct");
+    Attributes directBuffer = Attributes.of(JVM_BUFFER_POOL_NAME, "direct");
     jfrExtension.waitAndAssertMetrics(
         metric ->
             metric
