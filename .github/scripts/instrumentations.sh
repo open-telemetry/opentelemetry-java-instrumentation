@@ -294,6 +294,7 @@ readonly INSTRUMENTATIONS=(
   "spring:spring-ai-1.0:javaagent:test"
   "spring:spring-ai-1.0:javaagent:testContentDisabled"
   "spring:spring-ai-1.0:javaagent:testExperimental"
+  "spring:spring-ai-1.0:javaagent:testExperimentalWithSmallMessageContentLimit"
   "spring:spring-batch-3.0:javaagent:test"
   "spring:spring-batch-3.0:javaagent:testExperimental"
   "spring:spring-data:spring-data-1.8:javaagent:test"
