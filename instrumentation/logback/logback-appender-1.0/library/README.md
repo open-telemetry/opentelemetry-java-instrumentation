@@ -87,25 +87,51 @@ Settings can be configured in `logback.xml`, for example:
 ```xml
 <appender name="OpenTelemetry" class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
   <captureExperimentalAttributes>true</captureExperimentalAttributes>
-  <captureMdcAttributes>*</captureMdcAttributes>
+  <mdcAttributesIncluded>request-*,user-?</mdcAttributesIncluded>
+  <mdcAttributesExcluded>*-secret</mdcAttributesExcluded>
 </appender>
 ```
 
 The available settings are:
 
-| XML Element                          | Type    | Default | Description                                                                                                                                                                                                                                       |
-| ------------------------------------ | ------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `captureExperimentalAttributes`      | Boolean | `false` | Enable the capture of experimental log attributes `thread.name` and `thread.id`.                                                                                                                                                                  |
-| `captureCodeAttributes`              | Boolean | `false` | Enable the capture of [source code attributes]. Note that capturing source code attributes at logging sites might add a performance overhead.                                                                                                     |
-| `captureMarkerAttribute`             | Boolean | `false` | Enable the capture of Logback markers as attributes.                                                                                                                                                                                              |
-| `captureKeyValuePairAttributes`      | Boolean | `false` | Enable the capture of Logback key value pairs as attributes.                                                                                                                                                                                      |
-| `captureLoggerContext`               | Boolean | `false` | Enable the capture of Logback logger context properties as attributes.                                                                                                                                                                            |
-| `captureTemplate`                    | Boolean | `false` | Enable the capture of Logback log event message template (if arguments are provided).                                                                                                                                                             |
-| `captureArguments`                   | Boolean | `false` | Enable the capture of Logback log event arguments.                                                                                                                                                                                                |
-| `captureLogstashMarkerAttributes`    | Boolean | `false` | Enable the capture of Logstash markers, supported are those added to logs via `Markers.append()`, `Markers.appendEntries()`, `Markers.appendArray()` and `Markers.appendRaw()` methods.                                                           |
-| `captureLogstashStructuredArguments` | Boolean | `false` | Enable the capture of Logstash StructuredArguments as attributes (e.g., `StructuredArguments.v()` and `StructuredArguments.keyValue()`).                                                                                                          |
-| `captureMdcAttributes`               | String  |         | Comma separated list of MDC attributes to capture. Use the wildcard character `*` to capture all attributes.                                                                                                                                      |
-| `numLogsCapturedBeforeOtelInstall`   | Integer | 1000    | Log telemetry is emitted after the initialization of the OpenTelemetry Logback appender with an OpenTelemetry object. This setting allows you to modify the size of the cache used to replay the first logs. thread.id attribute is not captured. |
+| XML Element                          | Type    | Default | Description                                                                                                                                                                                                                                                                       |
+| ------------------------------------ | ------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `captureExperimentalAttributes`      | Boolean | `false` | Enable the capture of experimental log attributes `thread.name` and `thread.id`.                                                                                                                                                                                                  |
+| `captureCodeAttributes`              | Boolean | `false` | Enable the capture of [source code attributes]. Note that capturing source code attributes at logging sites might add a performance overhead.                                                                                                                                     |
+| `captureMarkerAttribute`             | Boolean | `false` | Enable the capture of Logback markers as attributes.                                                                                                                                                                                                                              |
+| `captureKeyValuePairAttributes`      | Boolean | `false` | Enable the capture of Logback key value pairs as attributes.                                                                                                                                                                                                                      |
+| `captureLoggerContext`               | Boolean | `false` | Enable the capture of Logback logger context properties as attributes.                                                                                                                                                                                                            |
+| `captureTemplate`                    | Boolean | `false` | Enable the capture of Logback log event message template (if arguments are provided).                                                                                                                                                                                             |
+| `captureArguments`                   | Boolean | `false` | Enable the capture of Logback log event arguments.                                                                                                                                                                                                                                |
+| `captureLogstashMarkerAttributes`    | Boolean | `false` | Enable the capture of Logstash markers, supported are those added to logs via `Markers.append()`, `Markers.appendEntries()`, `Markers.appendArray()` and `Markers.appendRaw()` methods.                                                                                           |
+| `captureLogstashStructuredArguments` | Boolean | `false` | Enable the capture of Logstash StructuredArguments as attributes (e.g., `StructuredArguments.v()` and `StructuredArguments.keyValue()`).                                                                                                                                          |
+| `mdcAttributesIncluded`              | String  |         | Comma-separated list of case-sensitive glob patterns for MDC keys to capture as log attributes.                                                                                                                                                                                   |
+| `mdcAttributesExcluded`              | String  |         | Comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log attributes.                                                                                                                                                                               |
+| `captureMdcAttributes`               | String  |         | **Deprecated.** Comma-separated list of MDC keys to capture as log attributes. Keys are matched literally, including `*` and `?`, except that the single value `*` captures all MDC attributes. It may be removed in the next minor release; use `mdcAttributesIncluded` instead. |
+| `numLogsCapturedBeforeOtelInstall`   | Integer | 1000    | Log telemetry is emitted after the initialization of the OpenTelemetry Logback appender with an OpenTelemetry object. This setting allows you to modify the size of the cache used to replay the first logs. thread.id attribute is not captured.                                 |
+
+The same MDC attribute selector can be configured programmatically:
+
+```java
+appender.setMdcAttributes(
+    IncludeExclude.builder()
+        .setIncluded("request-*", "user-?")
+        .setExcluded("*-secret")
+        .build());
+```
+
+MDC keys and selector patterns are matched case-sensitively. `?` matches any single character and
+`*` matches any number of characters, including none, so `*` captures all MDC attributes. Excluded
+patterns take precedence over included patterns, so a selector with only excluded patterns captures
+every MDC attribute that it does not exclude.
+
+MDC attributes are captured only when at least one of these settings is configured. A non-empty
+`setMdcAttributes(IncludeExclude)` selector takes precedence over `mdcAttributesIncluded` and
+`mdcAttributesExcluded`, which in turn take precedence over the deprecated `captureMdcAttributes`.
+No MDC attributes are captured when all of these are absent or empty.
+
+Captured MDC attributes may contain sensitive information. Configure included and excluded patterns
+to limit the data exported as log attributes.
 
 The `otel.event.name` key is supported in key-value pairs (SLF4J 2.x fluent API), MDC entries, Logstash markers (e.g., `Markers.append("otel.event.name", ...)`), and Logstash structured arguments (e.g., `StructuredArguments.keyValue("otel.event.name", ...)`). When present, its value is used as the log event name and is not emitted as an attribute.
 
