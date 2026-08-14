@@ -6,7 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
@@ -41,6 +43,7 @@ class CamelProcessMetricsTest {
   @BeforeEach
   void clearData() {
     assumeTrue(emitStableMessagingSemconv());
+    assumeFalse(v3Preview());
     testing.clearData();
   }
 

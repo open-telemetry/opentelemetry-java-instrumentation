@@ -48,9 +48,7 @@ class CamelSpanAssertions {
                 equalTo(MESSAGING_DESTINATION_NAME, queueName),
                 equalTo(
                     stringKey("messaging.operation"),
-                    emitStableMessagingSemconv() && emitOldMessagingSemconv()
-                        ? "publish"
-                        : null),
+                    emitStableMessagingSemconv() && emitOldMessagingSemconv() ? "publish" : null),
                 equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
                 equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null)));
     if (emitStableMessagingSemconv()) {
@@ -96,9 +94,7 @@ class CamelSpanAssertions {
                 equalTo(MESSAGING_DESTINATION_NAME, topicName),
                 equalTo(
                     stringKey("messaging.operation"),
-                    emitStableMessagingSemconv() && emitOldMessagingSemconv()
-                        ? "publish"
-                        : null),
+                    emitStableMessagingSemconv() && emitOldMessagingSemconv() ? "publish" : null),
                 equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
                 equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null)));
     if (emitStableMessagingSemconv()) {
