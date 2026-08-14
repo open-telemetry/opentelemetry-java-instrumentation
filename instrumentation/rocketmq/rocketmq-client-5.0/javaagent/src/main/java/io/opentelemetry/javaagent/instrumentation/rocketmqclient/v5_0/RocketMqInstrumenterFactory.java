@@ -15,7 +15,10 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
@@ -53,7 +56,8 @@ final class RocketMqInstrumenterFactory {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME))
             .addAttributesExtractor(attributesExtractor)
-            .addAttributesExtractor(new RocketMqProducerAttributeExtractor());
+            .addAttributesExtractor(new RocketMqProducerAttributeExtractor())
+            .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
     setMessagingSendExceptionEventExtractor(instrumenterBuilder);
     return instrumenterBuilder.buildProducerInstrumenter(new MessageMapSetter());
   }
@@ -74,7 +78,8 @@ final class RocketMqInstrumenterFactory {
                 MessagingSpanNameExtractor.create(getter, operationType, RECEIVE_OPERATION_NAME))
             .setEnabled(enabled)
             .addAttributesExtractor(attributesExtractor)
-            .addAttributesExtractor(new RocketMqConsumerReceiveAttributeExtractor());
+            .addAttributesExtractor(new RocketMqConsumerReceiveAttributeExtractor())
+            .addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
     if (emitStableMessagingSemconv()) {
       instrumenterBuilder.addSpanLinksExtractor(
           new RocketMqReceiveSpanLinksExtractor(
@@ -99,6 +104,7 @@ final class RocketMqInstrumenterFactory {
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(new RocketMqConsumerProcessAttributeExtractor())
+            .addOperationMetrics(MessagingProcessMetrics.get())
             .setSpanStatusExtractor(
                 (spanStatusBuilder, messageView, consumeResult, error) -> {
                   if (consumeResult == ConsumeResult.FAILURE) {
@@ -108,6 +114,9 @@ final class RocketMqInstrumenterFactory {
                         .extract(spanStatusBuilder, messageView, consumeResult, error);
                   }
                 });
+    if (!receiveInstrumentationEnabled && emitStableMessagingSemconv()) {
+      instrumenterBuilder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
+    }
     setMessagingProcessExceptionEventExtractor(instrumenterBuilder);
 
     return MessagingProcessInstrumenterFactory.create(

@@ -22,8 +22,9 @@ class RocketMqConsumerReceiveAttributeGetter
   }
 
   @Override
+  @Nullable
   public String getDestination(RocketMqReceiveRequest request) {
-    return request.getRequest().getMessageQueue().getTopic().getName();
+    return request.getDestination();
   }
 
   @Nullable
