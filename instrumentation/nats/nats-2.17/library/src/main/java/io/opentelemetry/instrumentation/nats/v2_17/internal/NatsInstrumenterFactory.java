@@ -10,7 +10,10 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -55,7 +58,8 @@ public final class NatsInstrumenterFactory {
                         MessagingOperationType.SEND,
                         operationName)
                     .setCapturedHeaders(capturedHeaders)
-                    .build());
+                    .build())
+            .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
     setMessagingSendExceptionEventExtractor(builder);
     return builder.buildProducerInstrumenter(new NatsRequestTextMapSetter());
   }
@@ -76,7 +80,9 @@ public final class NatsInstrumenterFactory {
                         MessagingOperationType.PROCESS,
                         PROCESS_OPERATION_NAME)
                     .setCapturedHeaders(capturedHeaders)
-                    .build());
+                    .build())
+            .addOperationMetrics(MessagingProcessMetrics.get())
+            .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     setMessagingProcessExceptionEventExtractor(builder);
 
     return MessagingProcessInstrumenterFactory.create(
