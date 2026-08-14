@@ -625,6 +625,60 @@ class ChatModelTest {
   }
 
   @Test
+  void streamedToolCallArgumentsUseConfiguredMaxLength() {
+    String arguments = repeatedContent(MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH + 1);
+    ChatResponse firstChunk =
+        response(
+            singletonList(
+                generation(
+                    assistantMessage(
+                        "",
+                        singletonList(
+                            toolCall(
+                                TOOL_CALL_ID,
+                                "function",
+                                TOOL_NAME,
+                                arguments.substring(
+                                    0, MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH)))),
+                    null)),
+            ChatResponseMetadata.builder().id("response-id").model(MODEL).build());
+    ChatResponse secondChunk =
+        response(
+            singletonList(
+                generation(
+                    assistantMessage(
+                        "",
+                        singletonList(
+                            toolCall(
+                                null,
+                                null,
+                                null,
+                                arguments.substring(MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH)))),
+                    "tool_calls")),
+            ChatResponseMetadata.builder().usage(new DefaultUsage(3, 2)).build());
+    chatModel.setStreamPublisher(Flux.just(firstChunk, secondChunk));
+
+    testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
+
+    assertThat(
+            testing
+                .waitForTraces(1)
+                .get(0)
+                .get(1)
+                .getAttributes()
+                .get(stringKey("gen_ai.output.messages")))
+        .isEqualTo(
+            messageSpanAttribute(
+                "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"tool_call\",\"id\":\""
+                    + TOOL_CALL_ID
+                    + "\",\"name\":\""
+                    + TOOL_NAME
+                    + "\",\"arguments\":\""
+                    + repeatedContent(MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH)
+                    + "\"}],\"finish_reason\":\"tool_calls\"}]"));
+  }
+
+  @Test
   void messageSpanAttributeEscapesJsonContent() {
     testing.runWithSpan("parent", () -> chatModel.call(new Prompt("line\n\"quoted\"")));
 

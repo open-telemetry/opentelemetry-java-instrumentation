@@ -54,6 +54,7 @@ tasks {
       filter {
         includeTestsMatching("*ChatModelTest.messageSpanAttributeUsesConfiguredMaxLength")
         includeTestsMatching("*ChatModelTest.streamedMessageSpanAttributeUsesConfiguredMaxLength")
+        includeTestsMatching("*ChatModelTest.streamedToolCallArgumentsUseConfiguredMaxLength")
       }
       jvmArgs(
         "-Dotel.instrumentation.spring-ai.experimental.capture-message-content-as-span-attributes.enabled=true",

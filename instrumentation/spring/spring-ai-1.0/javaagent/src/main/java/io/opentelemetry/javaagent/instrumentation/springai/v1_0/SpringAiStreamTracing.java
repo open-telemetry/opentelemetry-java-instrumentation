@@ -126,11 +126,24 @@ public class SpringAiStreamTracing {
     @Nullable private Usage usage;
     @Nullable private final List<ContentBuffer> streamedContents;
     private final int contentMaxLength;
+    private final boolean captureToolCallArguments;
+    private final int toolCallArgumentMaxLength;
 
     private StreamState(
         boolean captureMessageContent,
         boolean captureMessageContentAsSpanAttributes,
         int spanAttributeMaxLength) {
+      if (captureMessageContent) {
+        captureToolCallArguments = true;
+        toolCallArgumentMaxLength = -1;
+      } else if (captureMessageContentAsSpanAttributes) {
+        captureToolCallArguments = true;
+        toolCallArgumentMaxLength = spanAttributeMaxLength;
+      } else {
+        captureToolCallArguments = false;
+        toolCallArgumentMaxLength = 0;
+      }
+
       if (!captureMessageContent && !captureMessageContentAsSpanAttributes) {
         streamedContents = null;
         contentMaxLength = 0;
@@ -145,7 +158,8 @@ public class SpringAiStreamTracing {
       try {
         List<Generation> generations = response.getResults();
         while (this.generations.size() < generations.size()) {
-          this.generations.add(new GenerationState());
+          this.generations.add(
+              new GenerationState(captureToolCallArguments, toolCallArgumentMaxLength));
           if (streamedContents != null) {
             streamedContents.add(new ContentBuffer(contentMaxLength));
           }
@@ -216,10 +230,17 @@ public class SpringAiStreamTracing {
   }
 
   private static final class GenerationState {
+    private final boolean captureToolCallArguments;
+    private final int toolCallArgumentMaxLength;
     @Nullable private Generation generation;
     @Nullable private String finishReason;
     private final List<ToolCallState> toolCalls = new ArrayList<>();
     private final List<Media> media = new ArrayList<>();
+
+    private GenerationState(boolean captureToolCallArguments, int toolCallArgumentMaxLength) {
+      this.captureToolCallArguments = captureToolCallArguments;
+      this.toolCallArgumentMaxLength = toolCallArgumentMaxLength;
+    }
 
     private void add(Generation generation) {
       this.generation = generation;
@@ -286,7 +307,7 @@ public class SpringAiStreamTracing {
         return toolCalls.get(0);
       }
 
-      ToolCallState state = new ToolCallState();
+      ToolCallState state = new ToolCallState(captureToolCallArguments, toolCallArgumentMaxLength);
       toolCalls.add(state);
       return state;
     }
@@ -317,15 +338,19 @@ public class SpringAiStreamTracing {
     @Nullable private String id;
     @Nullable private String type;
     @Nullable private String name;
-    private final StringBuilder arguments = new StringBuilder();
+    @Nullable private final ContentBuffer arguments;
     private boolean hasArguments;
+
+    private ToolCallState(boolean captureArguments, int argumentMaxLength) {
+      arguments = captureArguments ? new ContentBuffer(argumentMaxLength) : null;
+    }
 
     private void add(AssistantMessage.ToolCall toolCall) {
       id = latestNonEmpty(id, toolCall.id());
       type = latestNonEmpty(type, toolCall.type());
       name = latestNonEmpty(name, toolCall.name());
       String newArguments = toolCall.arguments();
-      if (newArguments != null && !newArguments.isEmpty()) {
+      if (arguments != null && newArguments != null && !newArguments.isEmpty()) {
         arguments.append(newArguments);
         hasArguments = true;
       }
@@ -339,7 +364,7 @@ public class SpringAiStreamTracing {
 
     private AssistantMessage.ToolCall value() {
       return new AssistantMessage.ToolCall(
-          id, type, name, hasArguments ? arguments.toString() : null);
+          id, type, name, hasArguments && arguments != null ? arguments.value() : null);
     }
 
     @Nullable
