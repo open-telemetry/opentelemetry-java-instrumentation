@@ -8,7 +8,9 @@ library_link: https://github.com/couchbase/couchbase-java-client
 configurations:
   - name: otel.instrumentation.couchbase.experimental-span-attributes
     declarative_name: java.couchbase.experimental_span_attributes/development
-    description: Enables experimental span attributes emitted from the underlying Couchbase library.
+    description: >
+      Enables experimental span attributes `db.couchbase.document_id`, `db.couchbase.scope`,
+      `db.couchbase.retries`, and `db.couchbase.service`.
     type: boolean
     default: false
 features:

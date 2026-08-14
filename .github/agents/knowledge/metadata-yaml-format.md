@@ -14,7 +14,8 @@ Each configuration entry includes:
   MUST have a `declarative_name`.
 - `declarative_name`: YAML key path (e.g., `java.grpc.emit_message_events`)
 - `type`: `boolean`, `string`, `list`, `int`, `map`. Describes the **flat** form.
-- `description`: Human-readable explanation
+- `description`: Human-readable explanation. For `experimental-span-attributes`, follow the
+  attribute-key requirements below.
 - `default`: Default value
 - `examples` (optional): Only for module-specific configs with non-obvious format
 - `declarative_type` (optional): Overrides the declarative-form shape when it differs from the flat
@@ -22,6 +23,18 @@ Each configuration entry includes:
   `int` (see Scalar Overrides).
 - `declarative_schema` (optional): Per-item object schema, required when
   `declarative_type: structured_list` (see Structured Lists).
+
+## Experimental Span Attribute Descriptions
+
+Descriptions for `otel.instrumentation.*.experimental-span-attributes` MUST name the exact
+attribute keys that enabling the property can emit. When the implementation creates a genuinely
+dynamic key family, name the narrowest precise prefix or wildcard instead (for example,
+`http.request.header.*`). Do not replace known keys with a generic phrase such as "experimental span
+attributes."
+
+Verify the keys against the implementation or tests before changing the description. Do not
+speculate. When supported keys differ across instrumentation versions, each module's description
+must list only the keys emitted by that version.
 
 ## Structured Lists
 
@@ -231,7 +244,9 @@ FAIL in ../instrumentation/liberty/liberty-20.0/metadata.yaml:
 - name: otel.instrumentation.grpc.experimental-span-attributes
   declarative_name: java.grpc.experimental_span_attributes/development
   type: boolean
-  description: Enable capture of experimental span attributes.
+  description: >
+    Enables experimental span attributes `grpc.received.message_count`, `grpc.sent.message_count`,
+    and `grpc.canceled`.
   default: false
 ```
 
