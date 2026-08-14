@@ -1,5 +1,5 @@
 ---
-applyTo: "**/metadata.yaml"
+applyTo: "**/metadata.yaml,instrumentation-docs/src/main/resources/shared-config-definitions.yaml"
 ---
 
 # Metadata Rules (first-pass review)
