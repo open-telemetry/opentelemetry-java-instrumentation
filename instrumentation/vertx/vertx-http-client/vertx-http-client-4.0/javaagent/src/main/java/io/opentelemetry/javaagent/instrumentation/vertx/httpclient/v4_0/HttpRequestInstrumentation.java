@@ -101,7 +101,7 @@ class HttpRequestInstrumentation implements TypeInstrumentation {
         // instrumentation from adding a second, unsynchronized writer of the header map.
         Contexts contexts = CONTEXTS.get(request);
         if (contexts != null) {
-          return new AdviceScope(contexts.context);
+          return null;
         }
 
         Context parentContext = Context.current();
