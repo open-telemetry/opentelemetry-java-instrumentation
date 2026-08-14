@@ -170,34 +170,6 @@ The `otel.javaagent-instrumentation` convention plugin already provides
 `compileOnly(project(":javaagent-bootstrap"))` to a javaagent module's
 `build.gradle.kts`, and remove it if present.
 
-### Never redeclare dependencies supplied by javaagent conventions
-
-Projects applying `io.opentelemetry.instrumentation.javaagent-testing`,
-`io.opentelemetry.instrumentation.javaagent-instrumentation`, `otel.javaagent-testing`, or
-`otel.javaagent-instrumentation` inherit dependencies from that plugin and its convention chain. Do
-not redeclare an exact dependency in the same configuration. Inspect the `dependencies` and JVM
-test-suite blocks in those convention plugins and the plugins they apply; the inventory is broader
-than test dependencies and includes compile-only, annotation-processor, test-suite, agent, codegen,
-muzzle, and Error Prone configurations.
-
-`otel.java-conventions` substitutes several external modules with repository projects. Treat a
-project dependency as the same dependency when the `dependencySubstitution` block maps the external
-module supplied by the convention to that project. For example,
-`compileOnly(project(":javaagent-tooling"))` duplicates the javaagent testing convention's
-`compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")`.
-
-Compare both configuration and dependency metadata before removing a declaration. Keep dependencies
-needed in another configuration or custom JVM suite, Testcontainers feature modules, test-only
-compile dependencies for upstream API signatures, and declarations with meaningful version
-constraints, strict pins, excludes, classifiers, capabilities, or non-default project
-configurations. Do not apply this rule to projects that only apply `otel.java-conventions` or
-otherwise do not apply the dependency-providing javaagent convention.
-
-Prefer repository-local Gradle enforcement when a convention provides it; do not duplicate a CI
-diagnostic in review. Where no check exists, compare declarations against the convention source and
-the dependency-substitution map directly rather than relying on resolved dependency reports, which
-do not identify duplicate declarations.
-
 ## Custom Test Tasks
 
 Every custom `Test` task registered with `val foo by registering(Test::class)` **must** include
