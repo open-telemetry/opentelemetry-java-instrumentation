@@ -19,6 +19,9 @@ public final class GraphQLTelemetryBuilder {
   private boolean dataFetcherInstrumentationEnabled = false;
   private boolean trivialDataFetcherInstrumentationEnabled = false;
   private boolean addOperationNameToSpanName = false;
+  private boolean operationSpanEnabled = true;
+  private boolean addAttributesToLocalRootSpan = false;
+  private boolean promoteErrorStatusToLocalRootSpan = false;
 
   GraphQLTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -93,6 +96,54 @@ public final class GraphQLTelemetryBuilder {
   }
 
   /**
+   * Sets whether the GraphQL operation span is created. Default is {@code true}.
+   *
+   * <p>When disabled, no {@code GraphQL Operation} span is created; spans for data fetchers, if
+   * enabled, are unaffected and continue to nest under the enclosing span. If this is disabled and
+   * {@link #setAddAttributesToLocalRootSpan(boolean) local root enrichment} is also off, no
+   * operation-level GraphQL telemetry is produced.
+   */
+  @CanIgnoreReturnValue
+  public GraphQLTelemetryBuilder setOperationSpanEnabled(boolean operationSpanEnabled) {
+    this.operationSpanEnabled = operationSpanEnabled;
+    return this;
+  }
+
+  /**
+   * Sets whether GraphQL attributes ({@code graphql.operation.name}, {@code graphql.operation.type}
+   * and, when {@link #setCaptureQuery(boolean) enabled}, {@code graphql.document}) and exception
+   * events are added to the local root span. Default is {@code false}.
+   *
+   * <p>The local root span is the outermost span in the current process, which in an HTTP context
+   * is typically the server span (e.g. {@code POST /graphql}). This lets GraphQL telemetry be
+   * recorded on that span in addition to, or instead of (see {@link
+   * #setOperationSpanEnabled(boolean)}), the dedicated GraphQL operation span. Has no effect when
+   * there is no enclosing local root span.
+   */
+  @CanIgnoreReturnValue
+  public GraphQLTelemetryBuilder setAddAttributesToLocalRootSpan(
+      boolean addAttributesToLocalRootSpan) {
+    this.addAttributesToLocalRootSpan = addAttributesToLocalRootSpan;
+    return this;
+  }
+
+  /**
+   * Sets whether the local root span status is set to {@code ERROR} when the GraphQL result
+   * contains any errors. Default is {@code false}.
+   *
+   * <p>WARNING: This marks the enclosing (e.g. server) span as errored for any GraphQL error,
+   * including partial or expected errors returned on an otherwise successful (HTTP 200) response,
+   * which is why it is off by default. It only ever sets the status to {@code ERROR}; it never
+   * clears an existing status. Independent of {@link #setAddAttributesToLocalRootSpan(boolean)}.
+   */
+  @CanIgnoreReturnValue
+  public GraphQLTelemetryBuilder setPromoteErrorStatusToLocalRootSpan(
+      boolean promoteErrorStatusToLocalRootSpan) {
+    this.promoteErrorStatusToLocalRootSpan = promoteErrorStatusToLocalRootSpan;
+    return this;
+  }
+
+  /**
    * Returns a new {@link GraphQLTelemetry} with the settings of this {@link
    * GraphQLTelemetryBuilder}.
    */
@@ -104,6 +155,9 @@ public final class GraphQLTelemetryBuilder {
         GraphqlInstrumenterFactory.createDataFetcherInstrumenter(
             openTelemetry, dataFetcherInstrumentationEnabled),
         trivialDataFetcherInstrumentationEnabled,
-        addOperationNameToSpanName);
+        addOperationNameToSpanName,
+        operationSpanEnabled,
+        addAttributesToLocalRootSpan,
+        promoteErrorStatusToLocalRootSpan);
   }
 }
