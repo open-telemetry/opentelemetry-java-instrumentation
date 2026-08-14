@@ -9,6 +9,8 @@ import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiS
 import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.captureMessageContentAsSpanAttributes;
 import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.messageContentSpanAttributeMaxLength;
+import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.shouldSuppressNestedChatModelInstrumentation;
+import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.suppressNestedChatModelInstrumentation;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 
@@ -45,10 +47,12 @@ public class SpringAiStreamTracing {
       Context parentContext =
           ContextPropagationOperator.getOpenTelemetryContextFromContextView(
               reactorContext, Context.current());
-      if (!chatInstrumenter.shouldStart(parentContext, request)) {
+      if (shouldSuppressNestedChatModelInstrumentation(parentContext)
+          || !chatInstrumenter.shouldStart(parentContext, request)) {
         return source;
       }
-      context = chatInstrumenter.start(parentContext, request);
+      context =
+          suppressNestedChatModelInstrumentation(chatInstrumenter.start(parentContext, request));
     } catch (Throwable ignored) {
       // This method runs outside of Byte Buddy advice when the publisher is subscribed.
       return source;
@@ -128,6 +132,7 @@ public class SpringAiStreamTracing {
     private final int contentMaxLength;
     private final boolean captureToolCallArguments;
     private final int toolCallArgumentMaxLength;
+    private final boolean captureMedia;
 
     private StreamState(
         boolean captureMessageContent,
@@ -143,6 +148,7 @@ public class SpringAiStreamTracing {
         captureToolCallArguments = false;
         toolCallArgumentMaxLength = 0;
       }
+      captureMedia = captureMessageContentAsSpanAttributes;
 
       if (!captureMessageContent && !captureMessageContentAsSpanAttributes) {
         streamedContents = null;
@@ -159,7 +165,8 @@ public class SpringAiStreamTracing {
         List<Generation> generations = response.getResults();
         while (this.generations.size() < generations.size()) {
           this.generations.add(
-              new GenerationState(captureToolCallArguments, toolCallArgumentMaxLength));
+              new GenerationState(
+                  captureToolCallArguments, toolCallArgumentMaxLength, captureMedia));
           if (streamedContents != null) {
             streamedContents.add(new ContentBuffer(contentMaxLength));
           }
@@ -236,17 +243,22 @@ public class SpringAiStreamTracing {
     @Nullable private String finishReason;
     private final List<ToolCallState> toolCalls = new ArrayList<>();
     private final List<Media> media = new ArrayList<>();
+    private final boolean captureMedia;
 
-    private GenerationState(boolean captureToolCallArguments, int toolCallArgumentMaxLength) {
+    private GenerationState(
+        boolean captureToolCallArguments, int toolCallArgumentMaxLength, boolean captureMedia) {
       this.captureToolCallArguments = captureToolCallArguments;
       this.toolCallArgumentMaxLength = toolCallArgumentMaxLength;
+      this.captureMedia = captureMedia;
     }
 
     private void add(Generation generation) {
       this.generation = generation;
       AssistantMessage output = generation.getOutput();
       addToolCalls(output);
-      addMedia(output);
+      if (captureMedia) {
+        addMedia(output);
+      }
       ChatGenerationMetadata metadata = generation.getMetadata();
       if (metadata != null && metadata.getFinishReason() != null) {
         finishReason = metadata.getFinishReason();
@@ -300,11 +312,9 @@ public class SpringAiStreamTracing {
             return state;
           }
         }
-        if (index < toolCalls.size() && toolCalls.get(index).canMerge(toolCall)) {
-          return toolCalls.get(index);
-        }
-      } else if (toolCalls.size() == 1 && toolCalls.get(0).canMerge(toolCall)) {
-        return toolCalls.get(0);
+      }
+      if (index < toolCalls.size() && toolCalls.get(index).canMerge(toolCall)) {
+        return toolCalls.get(index);
       }
 
       ToolCallState state = new ToolCallState(captureToolCallArguments, toolCallArgumentMaxLength);
@@ -330,7 +340,7 @@ public class SpringAiStreamTracing {
         aggregatedToolCalls.add(toolCall.value());
       }
       return assistantMessage(
-          message, aggregatedToolCalls, media.isEmpty() ? media(message) : media);
+          message, aggregatedToolCalls, captureMedia && !media.isEmpty() ? media : emptyList());
     }
   }
 
@@ -420,11 +430,6 @@ public class SpringAiStreamTracing {
   private static Map<String, Object> metadata(AssistantMessage message) {
     Map<String, Object> metadata = message.getMetadata();
     return metadata == null ? emptyMap() : metadata;
-  }
-
-  private static List<Media> media(AssistantMessage message) {
-    List<Media> media = message.getMedia();
-    return media == null ? emptyList() : media;
   }
 
   private static final class ContentBuffer {

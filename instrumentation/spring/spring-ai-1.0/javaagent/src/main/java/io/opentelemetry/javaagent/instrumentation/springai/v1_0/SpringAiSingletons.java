@@ -9,6 +9,8 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.inter
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
@@ -21,6 +23,8 @@ import org.springframework.ai.chat.model.ChatResponse;
 public class SpringAiSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-ai-1.0";
   private static final int DEFAULT_MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH = 8192;
+  private static final ContextKey<Boolean> SUPPRESS_NESTED_CHAT_MODEL_INSTRUMENTATION =
+      ContextKey.named("opentelemetry-spring-ai-suppress-nested-chat-model-instrumentation");
 
   private static final Instrumenter<SpringAiRequest, ChatResponse> instrumenter;
   private static final Logger eventLogger =
@@ -76,6 +80,14 @@ public class SpringAiSingletons {
 
   public static int messageContentSpanAttributeMaxLength() {
     return messageContentSpanAttributeMaxLength;
+  }
+
+  public static Context suppressNestedChatModelInstrumentation(Context context) {
+    return context.with(SUPPRESS_NESTED_CHAT_MODEL_INSTRUMENTATION, true);
+  }
+
+  public static boolean shouldSuppressNestedChatModelInstrumentation(Context context) {
+    return Boolean.TRUE.equals(context.get(SUPPRESS_NESTED_CHAT_MODEL_INSTRUMENTATION));
   }
 
   private SpringAiSingletons() {}

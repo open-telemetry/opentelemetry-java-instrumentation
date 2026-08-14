@@ -32,6 +32,7 @@ public class TestChatModel implements ChatModel {
   private TestChatModel callStreamDelegate;
   private Flux<ChatResponse> streamPublisher;
   private TestChatModel streamDelegate;
+  private TestChatModel deferredStreamDelegate;
 
   public TestChatModel() {
     this(null);
@@ -66,6 +67,9 @@ public class TestChatModel implements ChatModel {
     }
     if (streamDelegate != null) {
       return streamDelegate.stream(prompt);
+    }
+    if (deferredStreamDelegate != null) {
+      return Flux.defer(() -> deferredStreamDelegate.stream(prompt));
     }
     return Flux.defer(
         () -> {
@@ -116,6 +120,10 @@ public class TestChatModel implements ChatModel {
 
   public void setStreamDelegate(TestChatModel streamDelegate) {
     this.streamDelegate = streamDelegate;
+  }
+
+  public void setDeferredStreamDelegate(TestChatModel deferredStreamDelegate) {
+    this.deferredStreamDelegate = deferredStreamDelegate;
   }
 
   private static ChatResponse response() {

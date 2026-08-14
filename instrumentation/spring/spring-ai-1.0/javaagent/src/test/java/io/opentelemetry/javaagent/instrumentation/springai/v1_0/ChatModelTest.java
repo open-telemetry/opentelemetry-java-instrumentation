@@ -174,6 +174,20 @@ class ChatModelTest {
   }
 
   @Test
+  void deferredStreamDelegateEndsOneSpan() {
+    TestChatModel delegate = new TestChatModel(defaultOptions());
+    chatModel.setDeferredStreamDelegate(delegate);
+
+    testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
+
+    SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
+    assertCurrentSpanContext(delegate.getLastSpanContext(), spanContext);
+    assertTraces("test");
+    assertMetrics();
+    assertMessageEvents(spanContext);
+  }
+
+  @Test
   void streamAggregatesChunksForEachChoice() {
     ChatResponse firstChunk =
         response(
@@ -280,6 +294,51 @@ class ChatModelTest {
                     equalTo(stringKey("event.name"), "gen_ai.choice"))
                 .hasSpanContext(spanContext)
                 .hasBody(choiceBodyWithToolCall("")));
+  }
+
+  @Test
+  void streamAggregatesParallelToolCallDeltasByIndex() {
+    ChatResponse firstChunk =
+        response(
+            singletonList(
+                generation(
+                    assistantMessage(
+                        "",
+                        asList(
+                            toolCall(TOOL_CALL_ID, "function", TOOL_NAME, "{\"loc"),
+                            toolCall("call_time", "function", "get_time", "{\"time"))),
+                    null)),
+            ChatResponseMetadata.builder().id("response-id").model(MODEL).build());
+    ChatResponse secondChunk =
+        response(
+            singletonList(
+                generation(
+                    assistantMessage(
+                        "",
+                        asList(
+                            toolCall(null, null, null, "ation\":\"Paris\"}"),
+                            toolCall(null, null, null, "zone\":\"UTC\"}"))),
+                    "tool_calls")),
+            ChatResponseMetadata.builder().usage(new DefaultUsage(3, 2)).build());
+    chatModel.setStreamPublisher(Flux.just(firstChunk, secondChunk));
+
+    testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
+
+    assertThat(
+            testing
+                .waitForTraces(1)
+                .get(0)
+                .get(1)
+                .getAttributes()
+                .get(stringKey("gen_ai.output.messages")))
+        .isEqualTo(
+            messageSpanAttribute(
+                "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"tool_call\",\"id\":\""
+                    + TOOL_CALL_ID
+                    + "\",\"name\":\""
+                    + TOOL_NAME
+                    + "\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"},"
+                    + "{\"type\":\"tool_call\",\"id\":\"call_time\",\"name\":\"get_time\",\"arguments\":\"{\\\"timezone\\\":\\\"UTC\\\"}\"}],\"finish_reason\":\"tool_calls\"}]"));
   }
 
   @Test

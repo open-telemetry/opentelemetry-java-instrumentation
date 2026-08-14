@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.springai.v1_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.shouldSuppressNestedChatModelInstrumentation;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -74,7 +75,8 @@ class ChatModelInstrumentation implements TypeInstrumentation {
 
       public static AdviceScope start(Object chatModel, Prompt prompt) {
         CallDepth callDepth = CallDepth.forClass(ChatModel.class);
-        if (callDepth.getAndIncrement() > 0) {
+        if (callDepth.getAndIncrement() > 0
+            || shouldSuppressNestedChatModelInstrumentation(Context.current())) {
           return new AdviceScope(callDepth, null, null, null);
         }
 
@@ -161,11 +163,30 @@ class ChatModelInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class StreamAdvice {
+    public static class StreamAdviceScope {
+      private final CallDepth callDepth;
+      private final boolean suppressed;
+
+      private StreamAdviceScope(CallDepth callDepth, boolean suppressed) {
+        this.callDepth = callDepth;
+        this.suppressed = suppressed;
+      }
+
+      public static StreamAdviceScope start() {
+        CallDepth callDepth = CallDepth.forClass(ChatModel.class);
+        boolean nested = callDepth.getAndIncrement() > 0;
+        return new StreamAdviceScope(
+            callDepth, nested || shouldSuppressNestedChatModelInstrumentation(Context.current()));
+      }
+
+      public boolean shouldSuppress() {
+        return callDepth.decrementAndGet() > 0 || suppressed;
+      }
+    }
+
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static CallDepth onEnter() {
-      CallDepth callDepth = CallDepth.forClass(ChatModel.class);
-      callDepth.getAndIncrement();
-      return callDepth;
+    public static StreamAdviceScope onEnter() {
+      return StreamAdviceScope.start();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -175,13 +196,13 @@ class ChatModelInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Prompt prompt,
         @Advice.Return @Nullable Flux<ChatResponse> publisher,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable CallDepth callDepth) {
-      if (callDepth == null || callDepth.decrementAndGet() > 0) {
+        @Advice.Enter @Nullable StreamAdviceScope adviceScope) {
+      if (adviceScope == null || adviceScope.shouldSuppress()) {
         return publisher;
       }
       if (throwable != null) {
-        CallAdvice.AdviceScope adviceScope = CallAdvice.AdviceScope.start(chatModel, prompt);
-        adviceScope.end(null, throwable);
+        CallAdvice.AdviceScope callAdviceScope = CallAdvice.AdviceScope.start(chatModel, prompt);
+        callAdviceScope.end(null, throwable);
         return publisher;
       }
       if (publisher == null) {
