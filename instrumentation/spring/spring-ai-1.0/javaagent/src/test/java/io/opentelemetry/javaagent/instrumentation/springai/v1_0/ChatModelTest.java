@@ -62,7 +62,6 @@ import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.DefaultChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.content.Media;
-import org.springframework.ai.openai.OpenAiChatModel;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
@@ -168,17 +167,6 @@ class ChatModelTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
-  }
-
-  @Test
-  void mapsKnownProviderFromInstrumentedModelClass() {
-    TestChatModel openAiChatModel = new OpenAiChatModel(defaultOptions());
-
-    testing.runWithSpan("parent", () -> openAiChatModel.call(prompt()));
-
-    SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
-    assertCurrentSpanContext(openAiChatModel.getLastSpanContext(), spanContext);
-    assertTraces("openai");
   }
 
   @Test

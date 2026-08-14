@@ -1,0 +1,17 @@
+{
+  "id": "a1d9a0f9-ef3d-4b57-a6d2-a8407b71c9bc",
+  "name": "openai_chat_model_call",
+  "request": {
+    "url": "/chat/completions",
+    "method": "POST"
+  },
+  "response": {
+    "status": 200,
+    "body": "{\n  \"id\": \"chatcmpl-test\",\n  \"object\": \"chat.completion\",\n  \"created\": 1751612521,\n  \"model\": \"gpt-4o-mini-2024-07-18\",\n  \"choices\": [\n    {\n      \"index\": 0,\n      \"message\": {\n        \"role\": \"assistant\",\n        \"content\": \"Atlantic Ocean\"\n      },\n      \"finish_reason\": \"stop\"\n    }\n  ],\n  \"usage\": {\n    \"prompt_tokens\": 22,\n    \"completion_tokens\": 2,\n    \"total_tokens\": 24\n  }\n}\n",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  },
+  "uuid": "a1d9a0f9-ef3d-4b57-a6d2-a8407b71c9bc",
+  "persistent": true
+}
