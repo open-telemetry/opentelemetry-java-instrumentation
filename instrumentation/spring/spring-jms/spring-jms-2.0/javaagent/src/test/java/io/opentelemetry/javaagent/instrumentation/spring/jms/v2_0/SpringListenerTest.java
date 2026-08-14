@@ -204,7 +204,8 @@ class SpringListenerTest extends AbstractJmsTest {
                         "SpringListenerJms2",
                         "process",
                         false,
-                        null));
+                        null,
+                        "durable-subscription"));
             producerSpan.set(trace.getSpan(0));
           },
           trace ->
@@ -217,7 +218,8 @@ class SpringListenerTest extends AbstractJmsTest {
                           "SpringListenerJms2",
                           "receive",
                           false,
-                          null)));
+                          null,
+                          "durable-subscription")));
       return;
     }
 
