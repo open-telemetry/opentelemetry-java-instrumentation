@@ -43,11 +43,6 @@ class RocketMqReceiveRequest {
   }
 
   @Nullable
-  String getMessageId() {
-    return getBatchMessageAttributes().messageId;
-  }
-
-  @Nullable
   String getMessageTag() {
     return getBatchMessageAttributes().messageTag;
   }
@@ -108,7 +103,6 @@ class RocketMqReceiveRequest {
 
   private static class BatchMessageAttributes {
     @Nullable private final String destination;
-    @Nullable private final String messageId;
     @Nullable private final String messageTag;
     @Nullable private final String messageGroup;
     @Nullable private final Long messageDeliveryTimestamp;
@@ -119,7 +113,6 @@ class RocketMqReceiveRequest {
           messages.isEmpty()
               ? request.getMessageQueue().getTopic().getName()
               : commonValue(messages, MessageView::getTopic);
-      messageId = commonValue(messages, message -> Objects.toString(message.getMessageId(), null));
       messageTag = commonValue(messages, message -> message.getTag().orElse(null));
       messageGroup = commonValue(messages, message -> message.getMessageGroup().orElse(null));
       messageDeliveryTimestamp =

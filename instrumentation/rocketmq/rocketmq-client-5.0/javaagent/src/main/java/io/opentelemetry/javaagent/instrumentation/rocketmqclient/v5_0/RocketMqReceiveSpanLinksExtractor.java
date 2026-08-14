@@ -43,9 +43,7 @@ class RocketMqReceiveSpanLinksExtractor implements SpanLinksExtractor<RocketMqRe
         attributes.put(MESSAGING_DESTINATION_NAME, message.getTopic());
       }
       String messageId = Objects.toString(message.getMessageId(), null);
-      if (!Objects.equals(messageId, request.getMessageId())) {
-        attributes.put(MESSAGING_MESSAGE_ID, messageId);
-      }
+      attributes.put(MESSAGING_MESSAGE_ID, messageId);
       String messageTag = message.getTag().orElse(null);
       if (!Objects.equals(messageTag, request.getMessageTag())) {
         attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TAG, messageTag);

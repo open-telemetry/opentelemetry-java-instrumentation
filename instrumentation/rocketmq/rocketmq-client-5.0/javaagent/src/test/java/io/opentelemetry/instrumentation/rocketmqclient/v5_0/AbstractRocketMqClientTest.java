@@ -790,7 +790,8 @@ abstract class AbstractRocketMqClientTest {
                 operationName("receive"),
                 operationType("receive"),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
-                equalTo(MESSAGING_MESSAGE_ID, linkedAttributes.get(MESSAGING_MESSAGE_ID)),
+                // receiving is a batching operation, so the message id is on the link instead
+                equalTo(MESSAGING_MESSAGE_ID, null),
                 equalTo(
                     MESSAGING_ROCKETMQ_MESSAGE_TAG,
                     linkedAttributes.get(MESSAGING_ROCKETMQ_MESSAGE_TAG)),
@@ -804,8 +805,11 @@ abstract class AbstractRocketMqClientTest {
                     MESSAGING_ROCKETMQ_MESSAGE_KEYS,
                     linkedAttributes.get(MESSAGING_ROCKETMQ_MESSAGE_KEYS)));
     if (linkedSpan != null) {
-      // one link per received message
-      result.hasLinks(LinkData.create(linkedSpan.getSpanContext()));
+      // one link per received message, carrying the attributes of that message
+      result.hasLinks(
+          LinkData.create(
+              linkedSpan.getSpanContext(),
+              Attributes.of(MESSAGING_MESSAGE_ID, linkedAttributes.get(MESSAGING_MESSAGE_ID))));
     }
     return result;
   }

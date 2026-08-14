@@ -113,6 +113,20 @@ class RocketMqReceiveSpanLinksExtractorTest {
             entry(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList("key-2")));
   }
 
+  @Test
+  void keepsMessageIdOnLinkOfSingleMessageReceive() {
+    assumeTrue(emitStableMessagingSemconv());
+    RocketMqReceiveRequest request =
+        request(message("topic", "message-1", "tag", "group", 123L, "key", TRACEPARENT));
+
+    RocketMqConsumerReceiveAttributeGetter getter = new RocketMqConsumerReceiveAttributeGetter();
+    assertThat(getter.getMessageId(request, null)).isNull();
+
+    assertThat(linkAttributes(request, 1))
+        .extracting(Attributes::asMap)
+        .containsExactly(singletonMap(MESSAGING_MESSAGE_ID, "message-1"));
+  }
+
   private static RocketMqReceiveRequest request(MessageView... messages) {
     return RocketMqReceiveRequest.create(mock(ReceiveMessageRequest.class), asList(messages));
   }
@@ -146,12 +160,16 @@ class RocketMqReceiveSpanLinksExtractorTest {
   }
 
   private static List<Attributes> linkAttributes(RocketMqReceiveRequest request) {
+    return linkAttributes(request, 2);
+  }
+
+  private static List<Attributes> linkAttributes(RocketMqReceiveRequest request, int linkCount) {
     SpanLinksBuilder spanLinks = mock(SpanLinksBuilder.class);
     new RocketMqReceiveSpanLinksExtractor(W3CTraceContextPropagator.getInstance())
         .extract(spanLinks, Context.root(), request);
 
     ArgumentCaptor<Attributes> attributes = ArgumentCaptor.forClass(Attributes.class);
-    verify(spanLinks, times(2)).addLink(any(SpanContext.class), attributes.capture());
+    verify(spanLinks, times(linkCount)).addLink(any(SpanContext.class), attributes.capture());
     return attributes.getAllValues();
   }
 }

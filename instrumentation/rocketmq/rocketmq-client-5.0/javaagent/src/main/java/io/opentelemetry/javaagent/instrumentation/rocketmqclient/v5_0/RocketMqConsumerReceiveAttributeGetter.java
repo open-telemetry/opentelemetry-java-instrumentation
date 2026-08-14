@@ -65,7 +65,9 @@ class RocketMqConsumerReceiveAttributeGetter
   @Nullable
   @Override
   public String getMessageId(RocketMqReceiveRequest request, @Nullable List<MessageView> unused) {
-    return emitStableMessagingSemconv() ? request.getMessageId() : null;
+    // receiving is a batching operation, so the message id always goes on the links describing the
+    // individual messages
+    return null;
   }
 
   @Nullable
