@@ -138,7 +138,7 @@ class RocketMqSimpleConsumerTest {
   }
 
   @Test
-  void shouldInstrumentEmptySynchronousAndAsynchronousReceive() throws ClientException {
+  void shouldNotInstrumentEmptySynchronousAndAsynchronousReceive() throws ClientException {
     assumeTrue(emitStableMessagingSemconv());
 
     Map<String, FilterExpression> subscriptionExpressions = new HashMap<>();
@@ -172,15 +172,11 @@ class RocketMqSimpleConsumerTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("sync empty parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    assertEmptyReceiveSpan(span, EMPTY_CONSUMER_GROUP).hasParent(trace.getSpan(0))),
+                span -> span.hasName("sync empty parent").hasKind(SpanKind.INTERNAL).hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("async empty parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    assertEmptyReceiveSpan(span, EMPTY_CONSUMER_GROUP)
-                        .hasParent(trace.getSpan(0))));
+                    span.hasName("async empty parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Test
@@ -293,14 +289,13 @@ class RocketMqSimpleConsumerTest {
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName(parentName).hasKind(SpanKind.INTERNAL).hasNoParent(),
                   span ->
-                      span.hasName("receive " + TOPIC)
+                      span.hasName("receive")
                           .hasKind(SpanKind.CLIENT)
                           .hasStatus(StatusData.error())
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
                               equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
                               equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                              equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
                               equalTo(MESSAGING_OPERATION_NAME, "receive"),
                               equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                               equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()))));
@@ -325,18 +320,5 @@ class RocketMqSimpleConsumerTest {
             equalTo(MESSAGING_OPERATION_TYPE, "receive"),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1))
         .hasLinks(LinkData.create(sendSpan.getSpanContext()));
-  }
-
-  private static SpanDataAssert assertEmptyReceiveSpan(SpanDataAssert span, String consumerGroup) {
-    return span.hasKind(SpanKind.CLIENT)
-        .hasName("receive " + TOPIC)
-        .hasStatus(StatusData.unset())
-        .hasAttributesSatisfyingExactly(
-            equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-            equalTo(MESSAGING_SYSTEM, "rocketmq"),
-            equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
-            equalTo(MESSAGING_OPERATION_NAME, "receive"),
-            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
-            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0));
   }
 }

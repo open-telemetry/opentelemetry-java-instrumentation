@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import static java.util.Collections.emptyList;
+
 import apache.rocketmq.v2.ReceiveMessageRequest;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -37,15 +39,11 @@ class RocketMqReceiveRequest {
         messages);
   }
 
-  /**
-   * Creates a request for an application-initiated pull, where the destination comes from the
-   * received messages and falls back to {@code subscribedTopic} when the pull came back empty.
-   */
-  static RocketMqReceiveRequest create(
-      String consumerGroup, @Nullable String subscribedTopic, List<MessageView> messages) {
-    if (messages.isEmpty()) {
-      return new RocketMqReceiveRequest(subscribedTopic, null, consumerGroup, messages);
-    }
+  static RocketMqReceiveRequest create(String consumerGroup) {
+    return new RocketMqReceiveRequest(null, null, consumerGroup, emptyList());
+  }
+
+  static RocketMqReceiveRequest create(String consumerGroup, List<MessageView> messages) {
     MessageView message = messages.get(0);
     String namespace =
         ((MessageViewImpl) message).getMessageQueue().getTopicResource().getNamespace();

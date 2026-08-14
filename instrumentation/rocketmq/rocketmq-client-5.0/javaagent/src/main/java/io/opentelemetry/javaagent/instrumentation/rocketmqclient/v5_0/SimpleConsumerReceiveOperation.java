@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0.RocketMqSingletons.simpleConsumerReceiveInstrumenter;
-import static java.util.Collections.emptyList;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -15,9 +14,7 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.bootstrap.ExceptionLogger;
 import java.util.List;
-import java.util.Map;
 import javax.annotation.Nullable;
-import org.apache.rocketmq.client.apis.consumer.FilterExpression;
 import org.apache.rocketmq.client.apis.consumer.SimpleConsumer;
 import org.apache.rocketmq.client.apis.message.MessageView;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.FutureCallback;
@@ -28,7 +25,6 @@ import org.apache.rocketmq.shaded.com.google.common.util.concurrent.MoreExecutor
 public class SimpleConsumerReceiveOperation {
 
   private final String consumerGroup;
-  @Nullable private final String subscribedTopic;
   private final Context parentContext;
   private final Timer timer;
 
@@ -46,29 +42,11 @@ public class SimpleConsumerReceiveOperation {
       return null;
     }
     return new SimpleConsumerReceiveOperation(
-        consumer.getConsumerGroup(),
-        singleSubscribedTopic(consumer),
-        Context.current(),
-        Timer.start());
+        consumer.getConsumerGroup(), Context.current(), Timer.start());
   }
 
-  /**
-   * Returns the only topic this consumer subscribes to, or {@code null} when it subscribes to
-   * several. It is the destination of a pull that came back with no messages to read it from.
-   */
-  @Nullable
-  private static String singleSubscribedTopic(SimpleConsumer consumer) {
-    Map<String, FilterExpression> subscriptions = consumer.getSubscriptionExpressions();
-    if (subscriptions.size() != 1) {
-      return null;
-    }
-    return subscriptions.keySet().iterator().next();
-  }
-
-  private SimpleConsumerReceiveOperation(
-      String consumerGroup, @Nullable String subscribedTopic, Context parentContext, Timer timer) {
+  private SimpleConsumerReceiveOperation(String consumerGroup, Context parentContext, Timer timer) {
     this.consumerGroup = consumerGroup;
-    this.subscribedTopic = subscribedTopic;
     this.parentContext = parentContext;
     this.timer = timer;
   }
@@ -114,9 +92,13 @@ public class SimpleConsumerReceiveOperation {
   }
 
   private void end(@Nullable List<MessageView> messages, @Nullable Throwable error) {
-    List<MessageView> requestMessages = messages == null ? emptyList() : messages;
+    if (error == null && messages != null && messages.isEmpty()) {
+      return;
+    }
     RocketMqReceiveRequest request =
-        RocketMqReceiveRequest.create(consumerGroup, subscribedTopic, requestMessages);
+        messages == null
+            ? RocketMqReceiveRequest.create(consumerGroup)
+            : RocketMqReceiveRequest.create(consumerGroup, messages);
     Instrumenter<RocketMqReceiveRequest, List<MessageView>> instrumenter =
         simpleConsumerReceiveInstrumenter();
     if (instrumenter.shouldStart(parentContext, request)) {
