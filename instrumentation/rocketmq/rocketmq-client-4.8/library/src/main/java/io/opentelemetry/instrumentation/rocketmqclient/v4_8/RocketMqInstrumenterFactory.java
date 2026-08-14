@@ -17,7 +17,10 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -63,7 +66,8 @@ class RocketMqInstrumenterFactory {
                 MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME))
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
-                    getter, operationType, SEND_OPERATION_NAME, capturedHeaders));
+                    getter, operationType, SEND_OPERATION_NAME, capturedHeaders))
+            .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
     if (emitStableMessagingSemconv()) {
       instrumenterBuilder.addAttributesExtractor(
           new AttributesExtractor<SendMessageContext, Void>() {
@@ -112,7 +116,8 @@ class RocketMqInstrumenterFactory {
         createProcessInstrumenter(
             openTelemetry, capturedHeaders, captureExperimentalSpanAttributes, false),
         emitStableMessagingSemconv()
-            ? createBatchProcessInstrumenter(openTelemetry, capturedHeaders)
+            ? createBatchProcessInstrumenter(
+                openTelemetry, capturedHeaders, captureExperimentalSpanAttributes)
             : createProcessInstrumenter(
                 openTelemetry, capturedHeaders, captureExperimentalSpanAttributes, true),
         batchReceiveInstrumenter);
@@ -120,7 +125,10 @@ class RocketMqInstrumenterFactory {
 
   // only used under the v1.43 conventions, where a single process span accounts for the whole batch
   private static Instrumenter<RocketMqConsumerRequest, ConsumeMessageContext>
-      createBatchProcessInstrumenter(OpenTelemetry openTelemetry, List<String> capturedHeaders) {
+      createBatchProcessInstrumenter(
+          OpenTelemetry openTelemetry,
+          List<String> capturedHeaders,
+          boolean captureExperimentalSpanAttributes) {
 
     RocketMqConsumerAttributeGetter getter = new RocketMqConsumerAttributeGetter();
     MessagingOperationType operationType = MessagingOperationType.PROCESS;
@@ -136,8 +144,14 @@ class RocketMqInstrumenterFactory {
             .addAttributesExtractor(consumerAttributesExtractor())
             .addSpanLinksExtractor(
                 new RocketMqBatchProcessSpanLinksExtractor(
-                    openTelemetry.getPropagators().getTextMapPropagator()))
+                    openTelemetry.getPropagators().getTextMapPropagator(),
+                    captureExperimentalSpanAttributes))
+            .addOperationMetrics(MessagingProcessMetrics.get())
+            .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages())
             .setSpanStatusExtractor(consumeStatusExtractor());
+    if (captureExperimentalSpanAttributes) {
+      builder.addAttributesExtractor(new RocketMqBatchProcessAttributeExtractor());
+    }
     setMessagingProcessExceptionEventExtractor(builder);
 
     // a batch has no single message creation context that could be adopted as the span's parent,
@@ -165,6 +179,8 @@ class RocketMqInstrumenterFactory {
     builder.addAttributesExtractor(
         buildMessagingAttributesExtractor(
             getter, operationType, PROCESS_OPERATION_NAME, capturedHeaders));
+    builder.addOperationMetrics(MessagingProcessMetrics.get());
+    builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     if (emitStableMessagingSemconv()) {
       builder.addAttributesExtractor(consumerAttributesExtractor());
     }
