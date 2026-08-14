@@ -34,19 +34,6 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
-  test {
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
-    )
-  }
-
-  val testReceiveTelemetryDefault = register<Test>("testReceiveTelemetryDefault") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-  }
-
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -70,11 +57,6 @@ tasks {
   }
 
   check {
-    dependsOn(
-      testExperimental,
-      testMessagingPreview,
-      testBothSemconv,
-      testReceiveTelemetryDefault,
-    )
+    dependsOn(testExperimental, testMessagingPreview, testBothSemconv)
   }
 }
