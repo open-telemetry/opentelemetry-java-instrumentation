@@ -4,17 +4,17 @@ applyTo: "**/*.gradle.kts"
 
 # Gradle Rules (first-pass review)
 
-## [Build] Javaagent testing convention dependencies
+## [Build] Javaagent convention dependencies
 
-- Projects applying `io.opentelemetry.instrumentation.javaagent-testing` directly, or through
-  `otel.javaagent-testing` or `otel.javaagent-instrumentation`, must not redeclare
-  `io.opentelemetry.javaagent:opentelemetry-testing-common` in a JVM test suite. The convention
-  supplies it to every JVM test suite.
-- Projects applying `otel.javaagent-testing` directly or through
-  `otel.javaagent-instrumentation` must not redeclare the exact base
-  `org.testcontainers:testcontainers` artifact in `testImplementation`. The convention supplies it
-  to the default test suite.
-- Do not apply these rules to projects that do not apply the providing convention. Do not remove
-  Testcontainers feature modules such as `testcontainers-junit-jupiter` or
-  `testcontainers-cassandra`; they are separate dependencies. A custom test suite may still need
-  its own base Testcontainers dependency because the convention adds it only to the default suite.
+- Projects applying `io.opentelemetry.instrumentation.javaagent-testing`,
+  `io.opentelemetry.instrumentation.javaagent-instrumentation`, `otel.javaagent-testing`, or
+  `otel.javaagent-instrumentation` must not redeclare an exact dependency supplied by that plugin or
+  its convention chain in the same configuration.
+- Treat project dependencies as equivalent when `otel.java-conventions` dependency substitution
+  maps the convention's external module to that project.
+- Preserve different configurations and custom JVM suites, Testcontainers feature modules,
+  test-only compile dependencies for upstream API signatures, and declarations with version
+  constraints, strict pins, excludes, classifiers, capabilities, or non-default project
+  configurations. Do not apply this rule to projects that only apply `otel.java-conventions`.
+- Prefer repository Gradle enforcement when available and do not duplicate its CI diagnostics in
+  review. Resolved dependency reports alone do not prove that declarations are non-duplicative.
