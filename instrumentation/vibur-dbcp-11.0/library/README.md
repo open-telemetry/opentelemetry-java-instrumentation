@@ -44,3 +44,14 @@ void destroy(ViburDBCPDataSource viburDataSource) {
   viburTelemetry.unregisterMetrics(viburDataSource);
 }
 ```
+
+The single-argument `registerMetrics` method uses the data source name provided by Vibur DBCP. To
+use an explicit pool name instead:
+
+```java
+void configureWithExplicitName(
+    OpenTelemetry openTelemetry, ViburDBCPDataSource viburDataSource) {
+  ViburTelemetry telemetry = ViburTelemetry.create(openTelemetry);
+  telemetry.registerMetrics(viburDataSource, "orders-pool");
+}
+```

@@ -26,6 +26,11 @@ public final class ViburTelemetry {
     ConnectionPoolMetrics.registerMetrics(openTelemetry, dataSource);
   }
 
+  /** Start collecting metrics for given data source using the given pool name. */
+  public void registerMetrics(ViburDBCPDataSource dataSource, String poolName) {
+    ConnectionPoolMetrics.registerMetrics(openTelemetry, dataSource, poolName);
+  }
+
   /** Stop collecting metrics for given data source. */
   public void unregisterMetrics(ViburDBCPDataSource dataSource) {
     ConnectionPoolMetrics.unregisterMetrics(dataSource);

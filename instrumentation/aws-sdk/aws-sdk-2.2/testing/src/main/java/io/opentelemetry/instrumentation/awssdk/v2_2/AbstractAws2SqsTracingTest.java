@@ -34,10 +34,12 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.collect.ImmutableList;
 import java.util.ArrayList;
@@ -49,6 +51,7 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.SqsClientBuilder;
+import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
@@ -363,7 +366,10 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
 
     client.createQueue(createQueueRequest);
     client.sendMessage(sendMessageRequest);
-    client.receiveMessage(receiveMessageRequest);
+    ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest);
+    String messageId = response.messages().get(0).messageId();
+    // iterating the returned message list is what starts the process spans
+    response.messages().forEach(unused -> {});
 
     AtomicReference<SpanData> publishSpan = new AtomicReference<>();
     getTesting()
@@ -376,7 +382,19 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                     span -> {
                       publishSpan.set(trace.getSpan(0));
                       span.hasName("send testSdkSqs").hasKind(SpanKind.PRODUCER);
-                    }),
+                    },
+                    // the process span accounts for a single message, so its link carries no
+                    // per-message attributes
+                    span ->
+                        span.hasName("process testSdkSqs")
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasParent(trace.getSpan(0))
+                            .hasLinksSatisfying(
+                                links ->
+                                    assertThat(links)
+                                        .singleElement()
+                                        .satisfies(
+                                            link -> assertBareLink(link, publishSpan.get())))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -389,8 +407,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                         .singleElement()
                                         .satisfies(
                                             link ->
-                                                assertThat(link.getSpanContext().getSpanId())
-                                                    .isEqualTo(publishSpan.get().getSpanId())))));
+                                                assertMessageLink(
+                                                    link, publishSpan.get(), messageId)))));
   }
 
   @Test
@@ -498,6 +516,16 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
     client.sendMessageBatch(sendMessageBatchRequest);
 
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageBatchRequest);
+    // ids of the messages that carry a creation context, in the order they were received, which is
+    // the order the receive span links them in. indexed access avoids the tracing iterator, which
+    // would start the process spans too early
+    List<String> propagatedMessageIds = new ArrayList<>();
+    for (int i = 0; i < response.messages().size(); i++) {
+      Message message = response.messages().get(i);
+      if (isXrayInjectionEnabled() || message.messageAttributes().containsKey("traceparent")) {
+        propagatedMessageIds.add(message.messageId());
+      }
+    }
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
 
     int totalAttrs =
@@ -511,7 +539,6 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                 + (emitStableMessagingSemconv() && isXrayInjectionEnabled() ? 3 : 0)
                 + (isSqsAttributeInjectionEnabled() ? 3 : 0));
 
-    int propagatedMessages = 3;
     if (emitStableMessagingSemconv()) {
       List<SpanData> createSpans = new ArrayList<>();
       List<Consumer<TraceAssert>> stableTraceAsserts = new ArrayList<>();
@@ -539,13 +566,23 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                   span ->
                       publishSpan(span, queueUrl, "SendMessageBatch", 3L)
                           .hasLinksSatisfying(
-                              links ->
-                                  assertThat(links)
-                                      .extracting(link -> link.getSpanContext().getSpanId())
-                                      .containsExactlyInAnyOrder(
-                                          createSpans.get(0).getSpanId(),
-                                          createSpans.get(1).getSpanId(),
-                                          createSpans.get(2).getSpanId()))));
+                              links -> {
+                                assertThat(links)
+                                    .extracting(link -> link.getSpanContext().getSpanId())
+                                    .containsExactlyInAnyOrder(
+                                        createSpans.get(0).getSpanId(),
+                                        createSpans.get(1).getSpanId(),
+                                        createSpans.get(2).getSpanId());
+                                assertThat(links)
+                                    .extracting(LinkData::getAttributes)
+                                    .containsExactlyInAnyOrder(
+                                        Attributes.of(
+                                            MESSAGING_MESSAGE_ID, propagatedMessageIds.get(0)),
+                                        Attributes.of(
+                                            MESSAGING_MESSAGE_ID, propagatedMessageIds.get(1)),
+                                        Attributes.of(
+                                            MESSAGING_MESSAGE_ID, propagatedMessageIds.get(2)));
+                              })));
       stableTraceAsserts.add(
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -584,6 +621,9 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
       return;
     }
 
+    // the last message in the batch has too many attributes for the tracing header to be injected
+    int propagatedMessages = isXrayInjectionEnabled() ? 3 : 2;
+    assertThat(propagatedMessageIds).hasSize(propagatedMessages);
     // without an ambient span the process spans are parented to the message creation context, which
     // puts them in the same trace as the publish span
     boolean processInPublishTrace = emitStableMessagingSemconv();
@@ -650,13 +690,13 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                 if (emitStableMessagingSemconv()) {
                   // one link per message whose creation context could be propagated
                   span.hasLinksSatisfying(
-                      links ->
-                          assertThat(links)
-                              .hasSize(propagatedMessages)
-                              .allSatisfy(
-                                  link ->
-                                      assertThat(link.getSpanContext().getSpanId())
-                                          .isEqualTo(publishSpan.get().getSpanId())));
+                      links -> {
+                        assertThat(links).hasSize(propagatedMessages);
+                        for (int i = 0; i < links.size(); i++) {
+                          assertMessageLink(
+                              links.get(i), publishSpan.get(), propagatedMessageIds.get(i));
+                        }
+                      });
                 } else {
                   span.hasTotalRecordedLinks(0);
                 }
@@ -697,5 +737,15 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
     }
 
     getTesting().waitAndAssertTraces(traceAsserts);
+  }
+
+  private static void assertMessageLink(LinkData link, SpanData creationContext, String messageId) {
+    assertThat(link.getSpanContext().getSpanId()).isEqualTo(creationContext.getSpanId());
+    assertThat(link.getAttributes()).isEqualTo(Attributes.of(MESSAGING_MESSAGE_ID, messageId));
+  }
+
+  private static void assertBareLink(LinkData link, SpanData creationContext) {
+    assertThat(link.getSpanContext().getSpanId()).isEqualTo(creationContext.getSpanId());
+    assertThat(link.getAttributes()).isEqualTo(Attributes.empty());
   }
 }

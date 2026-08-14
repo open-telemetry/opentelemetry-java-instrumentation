@@ -30,6 +30,7 @@ public class ElasticsearchRestJavaagentInstrumenterFactory {
         emptyList(),
         Function.identity(),
         AgentCommonConfig.get().getKnownHttpRequestMethods(),
+        AgentCommonConfig.get().getSensitiveQueryParameters(),
         CAPTURE_SEARCH_QUERY);
   }
 

@@ -119,8 +119,6 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                           .hasUnit("{message}")
                           .hasDescription(
                               "Number of messages that were delivered to the application.")
-                          .satisfies(
-                              data -> assertThat(data.getLongSumData().getPoints()).hasSize(1))
                           .hasLongSumSatisfying(
                               sum ->
                                   sum.hasPointsSatisfying(
@@ -441,7 +439,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
     // the old semantic conventions used "publish" where the stable ones use "send"
     String oldOperation = operationName.equals("send") ? "publish" : operationName;
     return emitStableMessagingSemconv()
-        ? operationName + " " + destination
+        ? operationName + " " + destinationName(destination)
         : destination + " " + oldOperation;
   }
 }

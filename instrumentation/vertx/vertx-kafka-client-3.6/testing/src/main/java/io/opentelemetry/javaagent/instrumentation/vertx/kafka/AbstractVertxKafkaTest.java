@@ -143,6 +143,7 @@ public abstract class AbstractVertxKafkaTest {
 
       // wait a bit to ensure that the consumer has really paused
       Thread.sleep(1000);
+      testing().clearData();
 
       CountDownLatch sent = new CountDownLatch(records.length);
       testing()
