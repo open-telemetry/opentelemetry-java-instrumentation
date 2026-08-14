@@ -9,7 +9,8 @@ configurations:
   - name: otel.instrumentation.couchbase.experimental-span-attributes
     declarative_name: java.couchbase.experimental_span_attributes/development
     description: >
-      Enables experimental span attributes `db.couchbase.scope` and `db.couchbase.service`.
+      Enables experimental span attributes with `db.couchbase.*` keys emitted by the underlying
+      Couchbase library, except `db.couchbase.collection`, which is translated to `db.collection.name`.
     type: boolean
     default: false
 features:
