@@ -58,11 +58,13 @@ import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
@@ -373,7 +375,73 @@ public abstract class AbstractSqsTracingTest {
     String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
     sqsClient.createQueue("testSdkSqs");
     sqsClient.sendMessage(new SendMessageRequest(queueUrl, "hello"));
-    sqsClient.receiveMessage(queueUrl);
+    ReceiveMessageResult response = sqsClient.receiveMessage(queueUrl);
+    String messageId = response.getMessages().get(0).getMessageId();
+    // iterating the returned message list is what starts the process spans
+    response.getMessages().forEach(unused -> {});
+
+    AtomicReference<SpanData> publishSpan = new AtomicReference<>();
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("SQS.CreateQueue").hasKind(SpanKind.CLIENT)),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> {
+                      publishSpan.set(trace.getSpan(0));
+                      span.hasName("send testSdkSqs").hasKind(SpanKind.PRODUCER);
+                    },
+                    // the process span accounts for a single message, so its link carries no
+                    // per-message attributes
+                    span ->
+                        span.hasName("process testSdkSqs")
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasParent(trace.getSpan(0))
+                            .hasLinksSatisfying(
+                                links ->
+                                    assertThat(links)
+                                        .singleElement()
+                                        .satisfies(
+                                            link -> assertBareLink(link, publishSpan.get())))),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("receive testSdkSqs")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasLinksSatisfying(
+                                links ->
+                                    assertThat(links)
+                                        .singleElement()
+                                        .satisfies(
+                                            link ->
+                                                assertMessageLink(
+                                                    link, publishSpan.get(), messageId)))));
+  }
+
+  @Test
+  void testBatchReceiveLinkAttributes() {
+    assumeTrue(emitStableMessagingSemconv());
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+    sqsClient.sendMessageBatch(
+        new SendMessageBatchRequest()
+            .withQueueUrl(queueUrl)
+            .withEntries(
+                new SendMessageBatchRequestEntry("i1", "e1"),
+                new SendMessageBatchRequestEntry("i2", "e2"),
+                new SendMessageBatchRequestEntry("i3", "e3")));
+
+    ReceiveMessageResult response =
+        sqsClient.receiveMessage(
+            new ReceiveMessageRequest(queueUrl).withMaxNumberOfMessages(3).withWaitTimeSeconds(5));
+    assertThat(response.getMessages()).hasSize(3);
+
+    List<String> messageIds = new ArrayList<>();
+    for (int i = 0; i < response.getMessages().size(); i++) {
+      messageIds.add(response.getMessages().get(i).getMessageId());
+    }
 
     AtomicReference<SpanData> publishSpan = new AtomicReference<>();
     testing()
@@ -392,15 +460,14 @@ public abstract class AbstractSqsTracingTest {
                     span ->
                         span.hasName("receive testSdkSqs")
                             .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
                             .hasLinksSatisfying(
-                                links ->
-                                    assertThat(links)
-                                        .singleElement()
-                                        .satisfies(
-                                            link ->
-                                                assertThat(link.getSpanContext().getSpanId())
-                                                    .isEqualTo(publishSpan.get().getSpanId())))));
+                                links -> {
+                                  assertThat(links).hasSize(3);
+                                  for (int i = 0; i < links.size(); i++) {
+                                    assertMessageLink(
+                                        links.get(i), publishSpan.get(), messageIds.get(i));
+                                  }
+                                })));
   }
 
   @Test
@@ -938,5 +1005,15 @@ public abstract class AbstractSqsTracingTest {
     } else {
       val.isInstanceOf(String.class);
     }
+  }
+
+  private static void assertMessageLink(LinkData link, SpanData creationContext, String messageId) {
+    assertThat(link.getSpanContext().getSpanId()).isEqualTo(creationContext.getSpanId());
+    assertThat(link.getAttributes()).isEqualTo(Attributes.of(MESSAGING_MESSAGE_ID, messageId));
+  }
+
+  private static void assertBareLink(LinkData link, SpanData creationContext) {
+    assertThat(link.getSpanContext().getSpanId()).isEqualTo(creationContext.getSpanId());
+    assertThat(link.getAttributes()).isEqualTo(Attributes.empty());
   }
 }

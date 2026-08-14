@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertNoMetrics;
+import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertSendMetrics;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.messagingAttributes;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -75,5 +77,11 @@ abstract class AbstractSpringCloudStreamProducerTest {
                     span.hasName("consumer")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(2))));
+
+    if (emitStableMessagingSemconv()) {
+      assertSendMetrics(testing, "testProducer.output");
+    } else {
+      assertNoMetrics(testing);
+    }
   }
 }

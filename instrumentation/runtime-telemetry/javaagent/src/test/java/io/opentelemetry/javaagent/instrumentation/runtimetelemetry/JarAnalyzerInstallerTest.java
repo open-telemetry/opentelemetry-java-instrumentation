@@ -43,25 +43,28 @@ class JarAnalyzerInstallerTest {
     assertThat(events)
         .isNotEmpty()
         .allSatisfy(
-            logRecord ->
-                assertThat(logRecord.getAttributes())
-                    .containsEntry("package.type", "jar")
-                    .containsEntry("package.checksum_algorithm", "SHA-256")
-                    .hasEntrySatisfying(
-                        stringKey("package.checksum"),
-                        value -> assertThat(value).matches("[0-9a-f]{64}"))
-                    .hasEntrySatisfying(
-                        stringKey("package.path"), value -> assertThat(value).isNotNull())
-                    .satisfies(
-                        attributes -> {
-                          String packageName = attributes.get(stringKey("package.name"));
-                          if (packageName != null) {
-                            assertThat(packageName).matches(".*:.*");
-                          }
-                          String packageVersion = attributes.get(stringKey("package.version"));
-                          if (packageVersion != null) {
-                            assertThat(packageVersion).matches(".*\\..*");
-                          }
-                        }));
+            logRecord -> {
+              assertThat(logRecord.getInstrumentationScopeInfo().getName())
+                  .isEqualTo("io.opentelemetry.runtime-telemetry");
+              assertThat(logRecord.getAttributes())
+                  .containsEntry("package.type", "jar")
+                  .containsEntry("package.checksum_algorithm", "SHA-256")
+                  .hasEntrySatisfying(
+                      stringKey("package.checksum"),
+                      value -> assertThat(value).matches("[0-9a-f]{64}"))
+                  .hasEntrySatisfying(
+                      stringKey("package.path"), value -> assertThat(value).isNotNull())
+                  .satisfies(
+                      attributes -> {
+                        String packageName = attributes.get(stringKey("package.name"));
+                        if (packageName != null) {
+                          assertThat(packageName).matches(".*:.*");
+                        }
+                        String packageVersion = attributes.get(stringKey("package.version"));
+                        if (packageVersion != null) {
+                          assertThat(packageVersion).matches(".*\\..*");
+                        }
+                      });
+            });
   }
 }
