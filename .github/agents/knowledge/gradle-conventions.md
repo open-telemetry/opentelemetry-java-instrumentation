@@ -170,6 +170,24 @@ The `otel.javaagent-instrumentation` convention plugin already provides
 `compileOnly(project(":javaagent-bootstrap"))` to a javaagent module's
 `build.gradle.kts`, and remove it if present.
 
+### Never redeclare dependencies supplied by javaagent testing conventions
+
+Projects applying `io.opentelemetry.instrumentation.javaagent-testing` directly, or through
+`otel.javaagent-testing` or `otel.javaagent-instrumentation`, already receive
+`io.opentelemetry.javaagent:opentelemetry-testing-common` in every JVM test suite. Do not declare
+that exact dependency again in one of those suites.
+
+The `otel.javaagent-testing` convention also supplies the base
+`org.testcontainers:testcontainers` artifact to the default test suite, and
+`otel.javaagent-instrumentation` applies that convention transitively. Projects applying either
+convention must not repeat the exact base artifact in `testImplementation`.
+
+This rule does not apply to projects that do not apply the providing convention. It also does not
+cover Testcontainers feature modules such as `testcontainers-junit-jupiter` or
+`testcontainers-cassandra`; those are separate dependencies and must remain when used. The base
+Testcontainers dependency may still be needed explicitly for a custom suite because
+`otel.javaagent-testing` adds it only to the default test suite.
+
 ## Custom Test Tasks
 
 Every custom `Test` task registered with `val foo by registering(Test::class)` **must** include

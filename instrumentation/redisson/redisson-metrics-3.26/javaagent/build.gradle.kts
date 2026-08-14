@@ -13,8 +13,6 @@ muzzle {
 
 dependencies {
   library("org.redisson:redisson:3.26.0")
-
-  testImplementation("org.testcontainers:testcontainers")
 }
 
 tasks {
