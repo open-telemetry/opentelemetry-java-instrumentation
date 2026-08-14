@@ -34,6 +34,69 @@ final class SqsMetricsAssertions {
       return;
     }
 
+    assertClientOperationDuration(
+        testing, serverPort, operationCount, "send", "send", "testSdkSqs", null);
+    assertMessageCounter(
+        testing, "messaging.client.sent.messages", "send", messageCount, serverPort);
+    assertNoDeprecatedMessagingMetrics(testing);
+  }
+
+  static void assertReceiveAndProcessMetrics(
+      InstrumentationExtension testing,
+      int serverPort,
+      long receiveOperationCount,
+      long messageCount) {
+    if (!emitStableMessagingSemconv()) {
+      assertNoMessagingMetrics(testing);
+      return;
+    }
+
+    assertClientOperationDuration(
+        testing, serverPort, receiveOperationCount, "receive", "receive", "testSdkSqs", null);
+    assertMessageCounter(
+        testing, "messaging.client.consumed.messages", "receive", messageCount, serverPort);
+    assertProcessDuration(testing, serverPort, messageCount);
+    assertNoDeprecatedMessagingMetrics(testing);
+  }
+
+  static void assertReceiveErrorMetrics(
+      InstrumentationExtension testing, int serverPort, String destination, String errorType) {
+    if (!emitStableMessagingSemconv()) {
+      assertNoMessagingMetrics(testing);
+      return;
+    }
+
+    assertClientOperationDuration(
+        testing, serverPort, 1, "receive", "receive", destination, errorType);
+    assertNoDeprecatedMessagingMetrics(testing);
+  }
+
+  static void assertSettleMetrics(
+      InstrumentationExtension testing, int serverPort, long operationCount) {
+    if (!emitStableMessagingSemconv()) {
+      assertNoMessagingMetrics(testing);
+      return;
+    }
+
+    assertClientOperationDuration(
+        testing, serverPort, operationCount, "delete", "settle", "testSdkSqs", null);
+    // settling messages does not deliver anything to the application
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
+        .extracting(MetricData::getName)
+        .doesNotContain("messaging.client.consumed.messages");
+    assertNoDeprecatedMessagingMetrics(testing);
+  }
+
+  private static void assertClientOperationDuration(
+      InstrumentationExtension testing,
+      int serverPort,
+      long operationCount,
+      String operationName,
+      String operationType,
+      String destination,
+      String errorType) {
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.client.operation.duration",
@@ -54,97 +117,6 @@ final class SqsMetricsAssertions {
                                                     assertThat(data.getCount())
                                                         .isEqualTo(operationCount))
                                             .hasSumGreaterThan(0)
-                                            .hasBucketBoundaries(DURATION_BUCKETS)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                                equalTo(ERROR_TYPE, null),
-                                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                                equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(SERVER_PORT, serverPort))))));
-    assertMessageCounter(
-        testing, "messaging.client.sent.messages", "send", messageCount, serverPort);
-    assertNoDeprecatedMessagingMetrics(testing);
-  }
-
-  static void assertReceiveAndProcessMetrics(
-      InstrumentationExtension testing,
-      int serverPort,
-      long receiveOperationCount,
-      long messageCount) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
-
-    assertClientOperationDuration(
-        testing, serverPort, receiveOperationCount, "receive", "receive", "testSdkSqs", null, 0);
-    assertMessageCounter(
-        testing, "messaging.client.consumed.messages", "receive", messageCount, serverPort);
-    assertProcessDuration(testing, serverPort, messageCount);
-    assertNoDeprecatedMessagingMetrics(testing);
-  }
-
-  static void assertReceiveErrorMetrics(
-      InstrumentationExtension testing, int serverPort, String destination, String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
-
-    assertClientOperationDuration(
-        testing, serverPort, 1, "receive", "receive", destination, errorType, 0);
-    assertNoDeprecatedMessagingMetrics(testing);
-  }
-
-  static void assertSettleMetrics(
-      InstrumentationExtension testing, int serverPort, long operationCount) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
-
-    assertClientOperationDuration(
-        testing, serverPort, operationCount, "delete", "settle", "testSdkSqs", null, 0);
-    // settling messages does not deliver anything to the application
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
-        .extracting(MetricData::getName)
-        .doesNotContain("messaging.client.consumed.messages");
-    assertNoDeprecatedMessagingMetrics(testing);
-  }
-
-  private static void assertClientOperationDuration(
-      InstrumentationExtension testing,
-      int serverPort,
-      long operationCount,
-      String operationName,
-      String operationType,
-      String destination,
-      String errorType,
-      double minimumDurationSeconds) {
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        "messaging.client.operation.duration",
-        metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("s")
-                        .hasDescription(
-                            "Duration of messaging operation initiated by a producer or consumer client.")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .satisfies(
-                                                data ->
-                                                    assertThat(data.getCount())
-                                                        .isEqualTo(operationCount))
-                                            .hasSumGreaterThan(minimumDurationSeconds)
                                             .hasBucketBoundaries(DURATION_BUCKETS)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, operationName),
