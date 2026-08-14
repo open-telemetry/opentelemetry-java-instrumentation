@@ -9,7 +9,8 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageListener;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -23,12 +24,18 @@ import javax.annotation.Nullable;
  */
 public class JmsSubscriptionNames {
 
+  private static final int COMMITTED_NAME = 0;
+  private static final int PENDING_REGISTRATIONS = 1;
+  private static final int REGISTRATION_STATE = 0;
+  private static final int REGISTRATION_NAME = 1;
+
   private static final VirtualField<MessageConsumer, String> CONSUMER_SUBSCRIPTION_NAME =
       VirtualField.find(MessageConsumer.class, String.class);
   private static final VirtualField<Message, String> MESSAGE_SUBSCRIPTION_NAME =
       VirtualField.find(Message.class, String.class);
-  private static final VirtualField<MessageListener, String> LISTENER_SUBSCRIPTION_NAME =
-      VirtualField.find(MessageListener.class, String.class);
+  private static final VirtualField<MessageListener, Object[]> LISTENER_STATE =
+      VirtualField.find(MessageListener.class, Object[].class);
+  private static final Object initializationLock = new Object();
 
   public static void set(MessageConsumer consumer, String subscriptionName) {
     CONSUMER_SUBSCRIPTION_NAME.set(consumer, subscriptionName);
@@ -51,18 +58,38 @@ public class JmsSubscriptionNames {
     if (messageListener == null) {
       return null;
     }
-    String previousName = LISTENER_SUBSCRIPTION_NAME.get(messageListener);
-    String subscriptionName = CONSUMER_SUBSCRIPTION_NAME.get(consumer);
-    LISTENER_SUBSCRIPTION_NAME.set(messageListener, subscriptionName);
-    return new ListenerRegistration(messageListener, previousName, subscriptionName);
+    Object[] state = state(messageListener);
+    synchronized (state) {
+      Object[] registration = new Object[] {state, CONSUMER_SUBSCRIPTION_NAME.get(consumer)};
+      pendingRegistrations(state).add(registration);
+      return registration;
+    }
   }
 
   public static void completeListenerRegistration(
       @Nullable Object registration, boolean succeeded) {
-    if (succeeded || !(registration instanceof ListenerRegistration)) {
+    if (!(registration instanceof Object[])) {
       return;
     }
-    ((ListenerRegistration) registration).undo();
+    Object[] listenerRegistration = (Object[]) registration;
+    if (listenerRegistration.length != 2
+        || !(listenerRegistration[REGISTRATION_STATE] instanceof Object[])) {
+      return;
+    }
+    Object[] state = (Object[]) listenerRegistration[REGISTRATION_STATE];
+    synchronized (state) {
+      List<Object[]> pending = pendingRegistrations(state);
+      int index = pending.indexOf(listenerRegistration);
+      if (index < 0) {
+        return;
+      }
+      if (succeeded) {
+        state[COMMITTED_NAME] = listenerRegistration[REGISTRATION_NAME];
+        pending.subList(0, index + 1).clear();
+      } else {
+        pending.remove(index);
+      }
+    }
   }
 
   @Nullable
@@ -77,31 +104,38 @@ public class JmsSubscriptionNames {
 
   @Nullable
   public static String get(MessageListener messageListener) {
-    return LISTENER_SUBSCRIPTION_NAME.get(messageListener);
+    Object[] state = LISTENER_STATE.get(messageListener);
+    if (state == null) {
+      return null;
+    }
+    synchronized (state) {
+      List<Object[]> pending = pendingRegistrations(state);
+      return (String)
+          (pending.isEmpty()
+              ? state[COMMITTED_NAME]
+              : pending.get(pending.size() - 1)[REGISTRATION_NAME]);
+    }
   }
 
-  private static final class ListenerRegistration {
-
-    private final MessageListener messageListener;
-    @Nullable private final String previousName;
-    @Nullable private final String subscriptionName;
-
-    ListenerRegistration(
-        MessageListener messageListener,
-        @Nullable String previousName,
-        @Nullable String subscriptionName) {
-      this.messageListener = messageListener;
-      this.previousName = previousName;
-      this.subscriptionName = subscriptionName;
+  private static Object[] state(MessageListener messageListener) {
+    Object[] state = LISTENER_STATE.get(messageListener);
+    if (state != null) {
+      return state;
     }
-
-    void undo() {
-      // a concurrent registration that already replaced the name wins, its consumer is the one that
-      // the listener ends up registered on
-      if (Objects.equals(LISTENER_SUBSCRIPTION_NAME.get(messageListener), subscriptionName)) {
-        LISTENER_SUBSCRIPTION_NAME.set(messageListener, previousName);
+    synchronized (initializationLock) {
+      state = LISTENER_STATE.get(messageListener);
+      if (state == null) {
+        // Bootstrap types keep the state usable when a listener comes from a child class loader.
+        state = new Object[] {null, new ArrayList<Object[]>()};
+        LISTENER_STATE.set(messageListener, state);
       }
+      return state;
     }
+  }
+
+  @SuppressWarnings("unchecked") // initialized with a List<Object[]> in state
+  private static List<Object[]> pendingRegistrations(Object[] state) {
+    return (List<Object[]>) state[PENDING_REGISTRATIONS];
   }
 
   private JmsSubscriptionNames() {}

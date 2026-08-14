@@ -157,6 +157,29 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                             subscriptionName("registered-subscription"))));
   }
 
+  @Test
+  void restoresSubscriptionNameWhenOverlappingRegistrationsFail() throws JMSException {
+    Topic topic = session.createTopic("overlapping-failed-listener-registration-topic");
+    MessageListener listener = ignored -> {};
+
+    MessageConsumer registeredConsumer =
+        session.createDurableConsumer(topic, "registered-subscription");
+    cleanup.deferCleanup(registeredConsumer);
+    registeredConsumer.setMessageListener(listener);
+
+    MessageConsumer firstConsumer = session.createDurableConsumer(topic, "first-subscription");
+    cleanup.deferCleanup(firstConsumer);
+    MessageConsumer secondConsumer = session.createDurableConsumer(topic, "second-subscription");
+    cleanup.deferCleanup(secondConsumer);
+
+    Object firstRegistration = JmsSubscriptionNames.copyToListener(firstConsumer, listener);
+    Object secondRegistration = JmsSubscriptionNames.copyToListener(secondConsumer, listener);
+    JmsSubscriptionNames.completeListenerRegistration(firstRegistration, false);
+    JmsSubscriptionNames.completeListenerRegistration(secondRegistration, false);
+
+    assertThat(JmsSubscriptionNames.get(listener)).isEqualTo("registered-subscription");
+  }
+
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void capturesSubscriptionNameForChildClassLoaderListener() throws Exception {
