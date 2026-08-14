@@ -30,10 +30,13 @@ class SpringJmsSubscriptionNameInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        namedOneOf("setSubscriptionName", "setDurableSubscriptionName")
+        named("setSubscriptionName").and(takesArguments(1)).and(takesArgument(0, String.class)),
+        getClass().getName() + "$SetSubscriptionNameAdvice");
+    transformer.applyAdviceToMethod(
+        named("setDurableSubscriptionName")
             .and(takesArguments(1))
             .and(takesArgument(0, String.class)),
-        getClass().getName() + "$SetSubscriptionNameAdvice");
+        getClass().getName() + "$SetDurableSubscriptionNameAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("getSubscriptionName", "getDurableSubscriptionName")
             .and(takesArguments(0))
@@ -60,6 +63,18 @@ class SpringJmsSubscriptionNameInstrumentation implements TypeInstrumentation {
         @Advice.This AbstractMessageListenerContainer container,
         @Advice.Argument(0) @Nullable String subscriptionName) {
       SpringJmsSubscriptionNames.set(container, subscriptionName);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SetDurableSubscriptionNameAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This AbstractMessageListenerContainer container,
+        @Advice.Argument(0) @Nullable String subscriptionName) {
+      SpringJmsSubscriptionNames.set(container, subscriptionName);
+      SpringJmsSubscriptionNames.setDurable(container, true);
     }
   }
 

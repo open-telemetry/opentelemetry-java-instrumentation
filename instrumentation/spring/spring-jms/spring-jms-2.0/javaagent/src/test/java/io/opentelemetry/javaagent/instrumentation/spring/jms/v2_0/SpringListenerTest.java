@@ -67,6 +67,11 @@ class SpringListenerTest extends AbstractJmsTest {
   }
 
   @Test
+  void capturesLegacyDurableSubscriptionName() {
+    runListenerTest(LegacyDurableSubscriptionConfig.class, "legacy-durable-subscription");
+  }
+
+  @Test
   @SuppressWarnings("unchecked")
   void processSpanUsesSemconvParentWithReceiveSpan() throws Exception {
     Tracer tracer = testing.getOpenTelemetry().getTracer("test");
