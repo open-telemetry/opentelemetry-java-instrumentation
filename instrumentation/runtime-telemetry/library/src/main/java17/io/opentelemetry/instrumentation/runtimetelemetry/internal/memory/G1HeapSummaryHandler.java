@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal.memory;
 
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_POOL_NAME;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_TYPE;
+
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
@@ -34,14 +37,9 @@ public final class G1HeapSummaryHandler implements RecordedEventHandler {
   private static final String SURVIVOR_USED_SIZE = "survivorUsedSize";
   private static final String WHEN = "when";
   private static final Attributes ATTR_MEMORY_EDEN =
-      Attributes.of(
-          Constants.ATTR_MEMORY_TYPE, Constants.HEAP, Constants.ATTR_MEMORY_POOL, "G1 Eden Space");
+      Attributes.of(JVM_MEMORY_TYPE, Constants.HEAP, JVM_MEMORY_POOL_NAME, "G1 Eden Space");
   private static final Attributes ATTR_MEMORY_SURVIVOR =
-      Attributes.of(
-          Constants.ATTR_MEMORY_TYPE,
-          Constants.HEAP,
-          Constants.ATTR_MEMORY_POOL,
-          "G1 Survivor Space");
+      Attributes.of(JVM_MEMORY_TYPE, Constants.HEAP, JVM_MEMORY_POOL_NAME, "G1 Survivor Space");
   //  private static final Attributes ATTR_MEMORY_OLD_USED =
   //      Attributes.of(ATTR_TYPE, HEAP, ATTR_POOL, "G1 Old Gen"); // TODO needs jdk JFR support
 
