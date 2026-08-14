@@ -22,6 +22,14 @@
   selector. The deprecated property keeps its exact-key matching and may be removed in the next
   minor release.
   ([#19519](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19519))
+- Deprecate `otel.instrumentation.messaging.experimental.capture-headers` and the
+  `setCapturedHeaders(Collection<String>)` methods on `MessagingAttributesExtractorBuilder`,
+  `AwsSdkTelemetryBuilder` (AWS SDK 1.11 and 2.2), `KafkaTelemetryBuilder`, `NatsTelemetryBuilder`,
+  `RocketMqTelemetryBuilder`, `SpringIntegrationTelemetryBuilder` and `SpringKafkaTelemetryBuilder`
+  in favor of `otel.instrumentation.messaging.experimental.headers.included` /
+  `otel.instrumentation.messaging.experimental.headers.excluded` and `setHeaders(IncludeExclude)`,
+  which select message headers by glob pattern instead of by exact name only. The deprecated
+  property and methods remain include-only aliases and use the selector's glob matching.
 - Deprecate the Logback appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of the new
   `experimental.mdc-attributes.included` and `experimental.mdc-attributes.excluded` selectors, which

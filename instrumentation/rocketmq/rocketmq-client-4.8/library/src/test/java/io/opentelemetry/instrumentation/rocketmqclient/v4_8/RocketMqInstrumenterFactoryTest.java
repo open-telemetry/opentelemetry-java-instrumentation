@@ -17,7 +17,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static java.util.Objects.requireNonNull;
@@ -27,6 +26,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -52,7 +52,7 @@ class RocketMqInstrumenterFactoryTest {
     when(request.getMessage()).thenReturn(new Message("topic", new byte[0]));
     Instrumenter<SendMessageContext, Void> instrumenter =
         RocketMqInstrumenterFactory.createProducerInstrumenter(
-            testing.getOpenTelemetry(), emptyList(), false);
+            testing.getOpenTelemetry(), IncludeExclude.builder().build(), false);
     Context parentContext = Context.root();
 
     assertThat(instrumenter.shouldStart(parentContext, request)).isTrue();
@@ -95,7 +95,7 @@ class RocketMqInstrumenterFactoryTest {
     response.setProps(singletonMap(MixAll.CONSUME_CONTEXT_TYPE, ConsumeReturnType.TIME_OUT.name()));
     RocketMqConsumerInstrumenter instrumenter =
         RocketMqInstrumenterFactory.createConsumerInstrumenter(
-            testing.getOpenTelemetry(), emptyList(), false);
+            testing.getOpenTelemetry(), IncludeExclude.builder().build(), false);
 
     RocketMqConsumerInstrumenter.ConsumerContext consumerContext =
         requireNonNull(

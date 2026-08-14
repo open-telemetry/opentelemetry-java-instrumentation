@@ -20,6 +20,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -157,6 +158,11 @@ class SqsParentContextTest {
       @Override
       public String getMessageAttribute(String name) {
         return "";
+      }
+
+      @Override
+      public Collection<String> getMessageAttributeNames() {
+        return messageAttributes.keySet();
       }
 
       @Override

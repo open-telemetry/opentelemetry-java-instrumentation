@@ -5,8 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
-import static java.util.Collections.singletonList;
-
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
@@ -30,7 +29,11 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
         .getDefaultMQProducerImpl()
         .registerSendMessageHook(
             RocketMqTelemetry.builder(testing.getOpenTelemetry())
-                .setCapturedHeaders(singletonList("Test-Message-Header"))
+                .setHeaders(
+                    IncludeExclude.builder()
+                        .setIncluded("Test-Message-*")
+                        .setExcluded("*-Excluded-Header")
+                        .build())
                 .setCaptureExperimentalSpanAttributes(true)
                 .build()
                 .createSendMessageHook());
@@ -42,7 +45,11 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
         .getDefaultMQPushConsumerImpl()
         .registerConsumeMessageHook(
             RocketMqTelemetry.builder(testing.getOpenTelemetry())
-                .setCapturedHeaders(singletonList("Test-Message-Header"))
+                .setHeaders(
+                    IncludeExclude.builder()
+                        .setIncluded("Test-Message-*")
+                        .setExcluded("*-Excluded-Header")
+                        .build())
                 .setCaptureExperimentalSpanAttributes(true)
                 .build()
                 .createConsumeMessageHook());
