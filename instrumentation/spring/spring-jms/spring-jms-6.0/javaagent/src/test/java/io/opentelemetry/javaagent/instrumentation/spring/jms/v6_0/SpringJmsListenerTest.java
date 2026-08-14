@@ -27,12 +27,14 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import jakarta.jms.ConnectionFactory;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractStringAssert;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.SpringApplication;
@@ -208,6 +210,50 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                                 stringArrayKey("messaging.header.Test_Message_Int_Header"),
                                 singletonList("1234"))),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
+  }
+
+  @ParameterizedTest
+  @ValueSource(classes = {AnnotatedListenerConfig.class, ManualListenerConfig.class})
+  @EnabledIfSystemProperty(named = "testJmsDisabled", matches = "true")
+  @SuppressWarnings("unchecked")
+  void testSpringJmsListenerWithJmsDisabled(Class<?> configClass) throws Exception {
+    SpringApplication app = new SpringApplication(configClass);
+    app.setDefaultProperties(defaultConfig());
+    ConfigurableApplicationContext applicationContext = app.run();
+    cleanup.deferCleanup(applicationContext);
+    awaitDurableSubscriptions(applicationContext);
+
+    JmsTemplate jmsTemplate = new JmsTemplate(applicationContext.getBean(ConnectionFactory.class));
+    jmsTemplate.setPubSubDomain(true);
+    String message = "hello there";
+
+    testing.runWithSpan("parent", () -> jmsTemplate.convertAndSend("spring-jms-listener", message));
+
+    CompletableFuture<String> receivedMessage =
+        applicationContext.getBean("receivedMessage", CompletableFuture.class);
+    assertThat(receivedMessage.get(10, SECONDS)).isEqualTo(message);
+
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanKind(INTERNAL, CONSUMER),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent").hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> assertProcessSpanWithSubscription(span),
+                span -> span.hasName("consumer").hasParent(trace.getSpan(0))));
+  }
+
+  private static void assertProcessSpanWithSubscription(SpanDataAssert span) {
+    span.hasName("process spring-jms-listener")
+        .hasKind(CONSUMER)
+        .hasNoParent()
+        .hasAttributesSatisfyingExactly(
+            equalTo(MESSAGING_SYSTEM, "jms"),
+            equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
+            oldOperation("process"),
+            operationName("process"),
+            operationType("process"),
+            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+            subscriptionName());
   }
 
   private static AttributeAssertion oldOperation(String operation) {

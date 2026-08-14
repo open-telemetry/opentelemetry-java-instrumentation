@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.jms.ConnectionFactory;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -78,6 +79,41 @@ class SpringListenerTest extends AbstractJmsTest {
                         span,
                         producerSpan.get(),
                         trace.getSpan(0),
+                        "SpringListenerJms2",
+                        "process",
+                        false,
+                        null,
+                        "durable-subscription")));
+  }
+
+  @ParameterizedTest
+  @ValueSource(classes = {AnnotatedListenerConfig.class, ManualListenerConfig.class})
+  @EnabledIfSystemProperty(named = "testJmsDisabled", matches = "true")
+  void receivingMessageInSpringListenerGeneratesSpansWithJmsDisabled(
+      Class<? extends AbstractConfig> config) {
+    AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(config);
+    cleanup.deferCleanup(context);
+    JmsListenerEndpointRegistry registry = context.getBean(JmsListenerEndpointRegistry.class);
+    await()
+        .until(
+            () ->
+                registry.getListenerContainers().stream()
+                    .map(DefaultMessageListenerContainer.class::cast)
+                    .allMatch(DefaultMessageListenerContainer::isRegisteredWithDestination));
+    ConnectionFactory factory = context.getBean(ConnectionFactory.class);
+    JmsTemplate template = new JmsTemplate(factory);
+    template.setPubSubDomain(true);
+
+    template.convertAndSend("SpringListenerJms2", "a message");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertConsumerSpan(
+                        span,
+                        null,
+                        null,
                         "SpringListenerJms2",
                         "process",
                         false,

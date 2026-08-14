@@ -81,6 +81,19 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
+  val testJmsDisabled = register<Test>("testJmsDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching(
+        "*.receivingMessageInSpringListenerGeneratesSpansWithJmsDisabled",
+      )
+    }
+    jvmArgs("-Dotel.instrumentation.jms.enabled=false")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("testJmsDisabled", "true")
+  }
+
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -90,6 +103,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testMessagingPreview, testBothSemconv)
+    dependsOn(testing.suites, testMessagingPreview, testJmsDisabled, testBothSemconv)
   }
 }
