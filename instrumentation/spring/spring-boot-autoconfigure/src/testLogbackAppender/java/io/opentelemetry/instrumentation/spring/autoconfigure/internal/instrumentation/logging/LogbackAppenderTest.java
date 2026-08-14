@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
@@ -14,6 +15,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.read.ListAppender;
 import ch.qos.logback.core.spi.AppenderAttachable;
+import ch.qos.logback.core.status.Status;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.common.Attributes;
@@ -371,6 +373,90 @@ class LogbackAppenderTest {
             logRecord ->
                 assertThat(logRecord.getAttributes().asMap())
                     .containsExactly(entry(stringKey("key1"), "val1")));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void keyValuePairSelectorFromPropertiesTakesPrecedenceOverDeprecatedProperty(
+      boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_key_value_pair_attributes/development",
+          true);
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.key_value_pair_attributes/development.included",
+          "key1");
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes",
+          true);
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included",
+          "key1");
+    }
+
+    assertThat(keyValuePairDeprecationWarnings(properties)).isEmpty();
+  }
+
+  @Test
+  void declarativeYamlSequenceKeyValuePairSelectorTakesPrecedenceOverDeprecatedProperty() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("otel.file_format", "1.1");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.capture_key_value_pair_attributes/development",
+        true);
+    // a YAML sequence is flattened by the Spring environment into indexed properties
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.key_value_pair_attributes/development.excluded[0]",
+        "secret");
+
+    assertThat(keyValuePairDeprecationWarnings(properties)).isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void deprecatedKeyValuePairPropertyWarns(boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_key_value_pair_attributes/development",
+          true);
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes",
+          true);
+    }
+
+    assertThat(keyValuePairDeprecationWarnings(properties)).hasSize(1);
+  }
+
+  /**
+   * Applies {@code properties} to a fresh appender and returns the deprecation warnings the
+   * appender reported while resolving its key value pair selector.
+   */
+  private static List<Status> keyValuePairDeprecationWarnings(Map<String, Object> properties) {
+    StandardEnvironment environment = new StandardEnvironment();
+    environment.getPropertySources().addFirst(new MapPropertySource("test", properties));
+    OpenTelemetryAppender appender = new OpenTelemetryAppender();
+    appender.setContext(new LoggerContext());
+    appender.setOpenTelemetry(OpenTelemetry.noop());
+
+    LogbackAppenderInstaller.initializeKeyValuePairAttributesFromProperties(environment, appender);
+    appender.start();
+
+    return appender.getContext().getStatusManager().getCopyOfStatusList().stream()
+        .filter(
+            status ->
+                status.getMessage() != null
+                    && status
+                        .getMessage()
+                        .contains(
+                            "otel.instrumentation.logback-appender.experimental"
+                                + ".capture-key-value-pair-attributes"))
+        .collect(toList());
   }
 
   @Test

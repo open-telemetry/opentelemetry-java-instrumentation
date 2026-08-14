@@ -26,8 +26,6 @@ public class LogbackSingletons {
     boolean captureCodeAttributes = config.getBoolean("capture_code_attributes/development", false);
     boolean captureMarkerAttribute =
         config.getBoolean("capture_marker_attribute/development", false);
-    boolean captureKeyValuePairAttributes =
-        config.getBoolean("capture_key_value_pair_attributes/development", false);
     boolean captureLoggerContext =
         config.getBoolean("capture_logger_context_attributes/development", false);
     boolean captureTemplate = config.getBoolean("capture_template/development", false);
@@ -38,6 +36,9 @@ public class LogbackSingletons {
         config.getBoolean("capture_logstash_structured_arguments/development", false);
     Predicate<String> mdcAttributes =
         SelectorConfig.resolveLegacyLiteral(config, "logback-appender", "mdc-attributes");
+    Predicate<String> keyValuePairAttributes =
+        SelectorConfig.resolveLegacyBoolean(
+            config, "logback-appender", "key-value-pair-attributes");
 
     mapper =
         LoggingEventMapper.builder()
@@ -45,7 +46,7 @@ public class LogbackSingletons {
             .setMdcAttributes(mdcAttributes)
             .setCaptureCodeAttributes(captureCodeAttributes)
             .setCaptureMarkerAttribute(captureMarkerAttribute)
-            .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
+            .setKeyValuePairAttributes(keyValuePairAttributes)
             .setCaptureLoggerContext(captureLoggerContext)
             .setCaptureTemplate(captureTemplate)
             .setCaptureArguments(captureArguments)

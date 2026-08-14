@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging;
 
-import static io.opentelemetry.instrumentation.logback.appender.v1_0.internal.MdcAttributeSelectors.split;
+import static io.opentelemetry.instrumentation.logback.appender.v1_0.internal.AttributeSelectors.split;
 import static java.util.Collections.emptyList;
 
 import ch.qos.logback.classic.LoggerContext;
@@ -35,6 +35,12 @@ class LogbackAppenderInstaller {
       "otel.instrumentation.logback-appender.experimental.mdc-attributes.included";
   private static final String MDC_ATTRIBUTES_EXCLUDED =
       "otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded";
+  private static final String DEPRECATED_KEY_VALUE_PAIR_ATTRIBUTES =
+      "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes";
+  private static final String KEY_VALUE_PAIR_ATTRIBUTES_INCLUDED =
+      "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included";
+  private static final String KEY_VALUE_PAIR_ATTRIBUTES_EXCLUDED =
+      "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded";
 
   static void install(ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
     Optional<io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender>
@@ -126,14 +132,6 @@ class LogbackAppenderInstaller {
       openTelemetryAppender.setCaptureMarkerAttribute(markerAttribute);
     }
 
-    Boolean keyValuePairAttributes =
-        evaluateBooleanProperty(
-            applicationEnvironmentPreparedEvent,
-            "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes");
-    if (keyValuePairAttributes != null) {
-      openTelemetryAppender.setCaptureKeyValuePairAttributes(keyValuePairAttributes);
-    }
-
     Boolean logAttributes =
         evaluateBooleanProperty(
             applicationEnvironmentPreparedEvent,
@@ -185,6 +183,8 @@ class LogbackAppenderInstaller {
 
     initializeMdcAttributesFromProperties(
         applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
+    initializeKeyValuePairAttributesFromProperties(
+        applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
   }
 
   // the appender resolves the precedence between these settings, ignoring the deprecated one when
@@ -212,6 +212,35 @@ class LogbackAppenderInstaller {
     // reproduces them exactly, including the single "*" that selects every MDC key
     openTelemetryAppender.setCaptureMdcAttributes(
         deprecated == null ? null : String.join(",", deprecated));
+  }
+
+  // the appender resolves the precedence between these settings, ignoring the deprecated one when
+  // a non-empty selector is configured
+  @SuppressWarnings("deprecation") // the deprecated setter preserves the deprecated semantics
+  static void initializeKeyValuePairAttributesFromProperties(
+      ConfigurableEnvironment environment, OpenTelemetryAppender openTelemetryAppender) {
+    List<String> included = getLoggingListProperty(environment, KEY_VALUE_PAIR_ATTRIBUTES_INCLUDED);
+    List<String> excluded = getLoggingListProperty(environment, KEY_VALUE_PAIR_ATTRIBUTES_EXCLUDED);
+    Boolean deprecated = evaluateBooleanProperty(environment, DEPRECATED_KEY_VALUE_PAIR_ATTRIBUTES);
+    if (included == null && excluded == null && deprecated == null) {
+      return;
+    }
+
+    // configuration properties replace the key value pair settings of an appender declared in
+    // logback.xml, so every source the appender resolves is set, including the ones that are not
+    // configured
+    openTelemetryAppender.setKeyValuePairAttributes(
+        included == null && excluded == null
+            ? null
+            : IncludeExclude.builder()
+                .setIncluded(included == null ? emptyList() : included)
+                .setExcluded(excluded == null ? emptyList() : excluded)
+                .build());
+    openTelemetryAppender.setKeyValuePairAttributesIncluded(null);
+    openTelemetryAppender.setKeyValuePairAttributesExcluded(null);
+    if (deprecated != null) {
+      openTelemetryAppender.setCaptureKeyValuePairAttributes(deprecated);
+    }
   }
 
   /**
@@ -342,7 +371,13 @@ class LogbackAppenderInstaller {
   @Nullable
   private static Boolean evaluateBooleanProperty(
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent, String property) {
-    ConfigurableEnvironment environment = applicationEnvironmentPreparedEvent.getEnvironment();
+    return evaluateBooleanProperty(applicationEnvironmentPreparedEvent.getEnvironment(), property);
+  }
+
+  /** Evaluates a boolean property, taking into account whether declarative config is in use. */
+  @Nullable
+  private static Boolean evaluateBooleanProperty(
+      ConfigurableEnvironment environment, String property) {
     return environment.getProperty(
         getEnvironmentPropertyName(environment, property), Boolean.class);
   }
