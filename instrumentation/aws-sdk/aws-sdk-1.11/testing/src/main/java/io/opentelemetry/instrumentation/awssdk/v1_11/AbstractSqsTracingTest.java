@@ -972,7 +972,9 @@ public abstract class AbstractSqsTracingTest {
 
     assertThat(response.getMessages()).hasSize(3);
     assertThat(emptyResponse.getMessages()).isEmpty();
-    SqsMetricsAssertions.assertReceiveAndProcessMetrics(testing(), sqsPort, 2, 3);
+    // the poll that returned no messages is not instrumented, so only one receive operation is
+    // recorded
+    SqsMetricsAssertions.assertReceiveAndProcessMetrics(testing(), sqsPort, 1, 3);
   }
 
   @Test
