@@ -79,7 +79,6 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
                               "cluster.routing.allocation.disk.threshold_enabled", false)));
         });
     testing.waitForTraces(1);
-    testing.clearData();
   }
 
   @AfterAll

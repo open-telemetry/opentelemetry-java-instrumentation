@@ -72,7 +72,6 @@ public abstract class AbstractElasticsearch6NodeClientTest
                               "cluster.routing.allocation.disk.threshold_enabled", false)));
         });
     testing.waitForTraces(1);
-    testing.clearData();
   }
 
   protected abstract NodeFactory getNodeFactory();

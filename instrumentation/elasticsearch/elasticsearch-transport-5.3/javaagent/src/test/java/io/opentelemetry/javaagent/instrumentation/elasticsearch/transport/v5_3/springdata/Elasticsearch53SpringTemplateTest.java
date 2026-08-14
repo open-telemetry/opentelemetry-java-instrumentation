@@ -144,7 +144,6 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
                               "cluster.routing.allocation.disk.threshold_enabled", false)));
         });
     testing.waitForTraces(1);
-    testing.clearData();
 
     autoCleanup.deferAfterAll(testNode);
     template = new ElasticsearchTemplate(client);

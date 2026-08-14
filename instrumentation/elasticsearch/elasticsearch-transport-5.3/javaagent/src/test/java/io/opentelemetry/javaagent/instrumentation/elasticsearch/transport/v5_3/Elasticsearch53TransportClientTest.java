@@ -91,7 +91,6 @@ class Elasticsearch53TransportClientTest extends AbstractElasticsearchTransportC
                               "cluster.routing.allocation.disk.threshold_enabled", false)));
         });
     testing.waitForTraces(1);
-    testing.clearData();
   }
 
   @AfterAll
