@@ -42,6 +42,8 @@ public class JmsSubscriptionNames {
   private static final VirtualField<MessageListener, JmsListenerRegistrations>
       LISTENER_REGISTRATIONS =
           VirtualField.find(MessageListener.class, JmsListenerRegistrations.class);
+  private static final ThreadLocal<RegistrationContext> listenerRegistrationContext =
+      new ThreadLocal<>();
 
   public static void set(MessageConsumer consumer, String subscriptionName) {
     CONSUMER_SUBSCRIPTION_NAME.set(consumer, subscriptionName);
@@ -75,7 +77,27 @@ public class JmsSubscriptionNames {
 
   public static Object startListenerRegistration(
       MessageConsumer consumer, @Nullable MessageListener messageListener) {
-    return consumerState(consumer).start(messageListener, CONSUMER_SUBSCRIPTION_NAME.get(consumer));
+    RegistrationContext context = listenerRegistrationContext.get();
+    if (context == null) {
+      context = new RegistrationContext();
+      listenerRegistrationContext.set(context);
+    }
+
+    ListenerRegistrationChange change = null;
+    try {
+      ConsumerState state = consumerState(consumer);
+      change =
+          state.start(
+              messageListener, CONSUMER_SUBSCRIPTION_NAME.get(consumer), context.get(state));
+      if (change != null) {
+        context.push(change);
+      }
+      return change;
+    } finally {
+      if (change == null && context.isEmpty()) {
+        listenerRegistrationContext.remove();
+      }
+    }
   }
 
   public static void endListenerRegistration(
@@ -84,7 +106,17 @@ public class JmsSubscriptionNames {
       return;
     }
     ListenerRegistrationChange change = (ListenerRegistrationChange) registrationChange;
-    change.consumerState.end(change, throwable);
+    try {
+      change.consumerState.end(change, throwable);
+    } finally {
+      RegistrationContext context = listenerRegistrationContext.get();
+      if (context != null) {
+        context.pop(change);
+        if (context.isEmpty()) {
+          listenerRegistrationContext.remove();
+        }
+      }
+    }
   }
 
   public static void clearListenerRegistration(MessageConsumer consumer) {
@@ -201,15 +233,11 @@ public class JmsSubscriptionNames {
 
     @Nullable
     private synchronized ListenerRegistrationChange start(
-        @Nullable MessageListener messageListener, @Nullable String subscriptionName) {
+        @Nullable MessageListener messageListener,
+        @Nullable String subscriptionName,
+        @Nullable ListenerRegistrationChange parent) {
       if (closed) {
         return null;
-      }
-      Thread thread = Thread.currentThread();
-      for (ListenerRegistrationChange change : pendingChanges) {
-        if (change.thread == thread) {
-          return null;
-        }
       }
 
       ConsumerListenerRegistration newRegistration = null;
@@ -227,7 +255,7 @@ public class JmsSubscriptionNames {
       }
 
       ListenerRegistrationChange change =
-          new ListenerRegistrationChange(this, currentRegistration, newRegistration, thread);
+          new ListenerRegistrationChange(this, currentRegistration, newRegistration, parent);
       pendingChanges.add(change);
       return change;
     }
@@ -246,8 +274,13 @@ public class JmsSubscriptionNames {
         return;
       }
 
-      currentRegistration = change.newRegistration;
-      deactivate(change.previousRegistration);
+      if (change.nestedRegistrationSucceeded) {
+        deactivate(change.newRegistration);
+      } else {
+        currentRegistration = change.newRegistration;
+        deactivate(change.previousRegistration);
+      }
+      change.markParentRegistrationSucceeded();
       if (currentRegistration == null) {
         stopSessionTracking();
       }
@@ -376,17 +409,55 @@ public class JmsSubscriptionNames {
     private final ConsumerState consumerState;
     @Nullable private final ConsumerListenerRegistration previousRegistration;
     @Nullable private final ConsumerListenerRegistration newRegistration;
-    private final Thread thread;
+    @Nullable private final ListenerRegistrationChange parent;
+    private boolean nestedRegistrationSucceeded;
 
     private ListenerRegistrationChange(
         ConsumerState consumerState,
         @Nullable ConsumerListenerRegistration previousRegistration,
         @Nullable ConsumerListenerRegistration newRegistration,
-        Thread thread) {
+        @Nullable ListenerRegistrationChange parent) {
       this.consumerState = consumerState;
       this.previousRegistration = previousRegistration;
       this.newRegistration = newRegistration;
-      this.thread = thread;
+      this.parent = parent;
+    }
+
+    private void markParentRegistrationSucceeded() {
+      ListenerRegistrationChange change = parent;
+      while (change != null) {
+        change.nestedRegistrationSucceeded = true;
+        change = change.parent;
+      }
+    }
+  }
+
+  private static final class RegistrationContext {
+    private final IdentityHashMap<ConsumerState, ListenerRegistrationChange> currentChanges =
+        new IdentityHashMap<>();
+
+    @Nullable
+    private ListenerRegistrationChange get(ConsumerState state) {
+      return currentChanges.get(state);
+    }
+
+    private void push(ListenerRegistrationChange change) {
+      currentChanges.put(change.consumerState, change);
+    }
+
+    private void pop(ListenerRegistrationChange change) {
+      if (currentChanges.get(change.consumerState) != change) {
+        return;
+      }
+      if (change.parent == null) {
+        currentChanges.remove(change.consumerState);
+      } else {
+        currentChanges.put(change.consumerState, change.parent);
+      }
+    }
+
+    private boolean isEmpty() {
+      return currentChanges.isEmpty();
     }
   }
 

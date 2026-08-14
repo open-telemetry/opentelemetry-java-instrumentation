@@ -213,16 +213,20 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
   }
 
   @Test
-  void suppressesReentrantListenerRegistration() {
+  void tracksListenerRegisteredByReentrantSuperCall() {
     MessageListener listener = ignored -> {};
     ReentrantMessageConsumer consumer = new ReentrantMessageConsumer();
     JmsSubscriptionNames.set(consumer, "reentrant-listener-subscription");
 
     consumer.setMessageListener(listener);
-    assertThat(JmsSubscriptionNames.get(listener)).isEqualTo("reentrant-listener-subscription");
+    MessageListener registeredListener = consumer.getMessageListener();
+    assertThat(registeredListener).isNotSameAs(listener);
+    assertThat(JmsSubscriptionNames.get(listener)).isNull();
+    assertThat(JmsSubscriptionNames.get(registeredListener))
+        .isEqualTo("reentrant-listener-subscription");
 
     consumer.close();
-    assertThat(JmsSubscriptionNames.get(listener)).isNull();
+    assertThat(JmsSubscriptionNames.get(registeredListener)).isNull();
   }
 
   @Test
@@ -497,9 +501,9 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
   private static final class ReentrantMessageConsumer extends TestMessageConsumer {
 
     @Override
-    @SuppressWarnings("RedundantOverride")
+    @SuppressWarnings("UnnecessaryMethodReference")
     public void setMessageListener(MessageListener listener) {
-      super.setMessageListener(listener);
+      super.setMessageListener(listener::onMessage);
     }
   }
 
