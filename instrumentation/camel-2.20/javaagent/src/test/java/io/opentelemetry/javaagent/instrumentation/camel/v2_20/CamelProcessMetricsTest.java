@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -36,6 +37,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 class CamelProcessMetricsTest {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.camel-2.20";
+  private static final String INSTRUMENTATION_PACKAGE =
+      "io.opentelemetry.javaagent.instrumentation.camel.v2_20.";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -79,15 +82,12 @@ class CamelProcessMetricsTest {
         .getMethod("suppressInstrumentation", Runnable.class)
         .invoke(null, captureContext);
 
-    Class<?> singletonsClass =
-        Class.forName("io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelSingletons");
+    Class<?> singletonsClass = camelHelperClass("CamelSingletons");
     Object decorator =
         invokeStatic(
             singletonsClass, "getSpanDecorator", new Class<?>[] {Endpoint.class}, endpoint);
-    Class<?> decoratorClass =
-        Class.forName("io.opentelemetry.javaagent.instrumentation.camel.v2_20.SpanDecorator");
-    Class<?> routePolicyClass =
-        Class.forName("io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelRoutePolicy");
+    Class<?> decoratorClass = camelHelperClass("SpanDecorator");
+    Class<?> routePolicyClass = camelHelperClass("CamelRoutePolicy");
     Object context =
         invokeStatic(
             routePolicyClass,
@@ -99,8 +99,7 @@ class CamelProcessMetricsTest {
             parentContext.get());
     assertThat(context).isNull();
 
-    Class<?> processMetricsClass =
-        Class.forName("io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelProcessMetrics");
+    Class<?> processMetricsClass = camelHelperClass("CamelProcessMetrics");
     invokeStatic(
         processMetricsClass, "end", new Class<?>[] {Route.class, Exchange.class}, route, exchange);
     assertThat(testing.metrics())
@@ -126,19 +125,15 @@ class CamelProcessMetricsTest {
     parentContext =
         metricsStateClass.getMethod(markerMethod, contextClass).invoke(null, parentContext);
 
-    Class<?> singletonsClass =
-        Class.forName("io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelSingletons");
+    Class<?> singletonsClass = camelHelperClass("CamelSingletons");
     Object decorator =
         invokeStatic(
             singletonsClass, "getSpanDecorator", new Class<?>[] {Endpoint.class}, endpoint);
-    Class<?> decoratorClass =
-        Class.forName("io.opentelemetry.javaagent.instrumentation.camel.v2_20.SpanDecorator");
-    Class<?> directionClass =
-        Class.forName("io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelDirection");
+    Class<?> decoratorClass = camelHelperClass("SpanDecorator");
+    Class<?> directionClass = camelHelperClass("CamelDirection");
     Class<?> spanKindClass =
         Class.forName("io.opentelemetry.javaagent.shaded.io.opentelemetry.api.trace.SpanKind");
-    Class<?> requestClass =
-        Class.forName("io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelRequest");
+    Class<?> requestClass = camelHelperClass("CamelRequest");
     Object request =
         invokeStatic(
             requestClass,
@@ -153,8 +148,7 @@ class CamelProcessMetricsTest {
             enumConstant(spanKindClass, "CONSUMER"));
     Route route = mock(Route.class);
 
-    Class<?> processMetricsClass =
-        Class.forName("io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelProcessMetrics");
+    Class<?> processMetricsClass = camelHelperClass("CamelProcessMetrics");
     invokeStatic(
         processMetricsClass,
         "start",
@@ -184,6 +178,26 @@ class CamelProcessMetricsTest {
             "process duration already owned",
             "markProcessDuration",
             "messaging.client.consumed.messages"));
+  }
+
+  private static Class<?> camelHelperClass(String simpleName) throws ReflectiveOperationException {
+    String className = INSTRUMENTATION_PACKAGE + simpleName;
+    if (!Boolean.getBoolean("otel.javaagent.experimental.indy")) {
+      return Class.forName(className);
+    }
+
+    Class<?> registryClass =
+        AgentClassLoaderAccess.loadClass(
+            "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
+    ClassLoader moduleClassLoader =
+        (ClassLoader)
+            registryClass
+                .getMethod("getInstrumentationClassLoader", String.class, ClassLoader.class)
+                .invoke(
+                    null,
+                    INSTRUMENTATION_PACKAGE + "ApacheCamelInstrumentationModule",
+                    DefaultCamelContext.class.getClassLoader());
+    return moduleClassLoader.loadClass(className);
   }
 
   private static Object invokeStatic(
