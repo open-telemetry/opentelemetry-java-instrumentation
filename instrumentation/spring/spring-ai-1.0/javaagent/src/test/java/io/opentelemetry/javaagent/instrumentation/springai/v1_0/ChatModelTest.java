@@ -46,10 +46,12 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.springai.v1_0.app.TestChatModel;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.net.URI;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.ToolResponseMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.metadata.ChatGenerationMetadata;
 import org.springframework.ai.chat.metadata.ChatResponseMetadata;
@@ -58,6 +60,7 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.DefaultChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.content.Media;
 import org.springframework.ai.openai.OpenAiChatModel;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -69,6 +72,11 @@ class ChatModelTest {
   private static final String MODEL = "test-model";
   private static final String PROMPT = "Tell me about traces";
   private static final String RESPONSE = "A trace represents an end-to-end request.";
+  private static final String TOOL_CALL_ID = "call_weather";
+  private static final String TOOL_NAME = "get_weather";
+  private static final String TOOL_ARGUMENTS = "{\"location\":\"Paris\"}";
+  private static final String TOOL_RESPONSE = "rainy, 57F";
+  private static final String MEDIA_URL = "https://example.com/weather.png";
   private static final boolean CAPTURE_MESSAGE_CONTENT =
       Boolean.getBoolean("otel.instrumentation.genai.capture-message-content");
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
@@ -278,7 +286,7 @@ class ChatModelTest {
   void nullMessageContentDoesNotAbortEvents() {
     chatModel.setCallResponse(
         response(
-            asList(generation(null, "tool_calls"), generation(RESPONSE, "stop")),
+            asList(generation((String) null, "tool_calls"), generation(RESPONSE, "stop")),
             ChatResponseMetadata.builder()
                 .id("response-id")
                 .model(MODEL)
@@ -314,6 +322,96 @@ class ChatModelTest {
                     equalTo(stringKey("event.name"), "gen_ai.choice"))
                 .hasSpanContext(spanContext)
                 .hasBody(choiceBody("stop", 1, RESPONSE)));
+  }
+
+  @Test
+  void structuredMessageSpanAttributePreservesToolCallsToolResponsesAndMedia() {
+    chatModel.setCallResponse(
+        response(
+            singletonList(generation(outputMessageWithToolCall(), "tool_calls")),
+            ChatResponseMetadata.builder().id("response-id").model(MODEL).build()));
+
+    testing.runWithSpan("parent", () -> chatModel.call(toolCallingPrompt()));
+
+    assertThat(
+            testing
+                .waitForTraces(1)
+                .get(0)
+                .get(1)
+                .getAttributes()
+                .get(stringKey("gen_ai.input.messages")))
+        .isEqualTo(
+            messageSpanAttribute(
+                "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
+                    + PROMPT
+                    + "\"},{\"type\":\"uri\",\"mime_type\":\"image/png\",\"modality\":\"image\",\"uri\":\""
+                    + MEDIA_URL
+                    + "\"}]},"
+                    + "{\"role\":\"assistant\",\"parts\":[{\"type\":\"tool_call\",\"id\":\""
+                    + TOOL_CALL_ID
+                    + "\",\"name\":\""
+                    + TOOL_NAME
+                    + "\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"}]},"
+                    + "{\"role\":\"tool\",\"parts\":[{\"type\":\"tool_call_response\",\"id\":\""
+                    + TOOL_CALL_ID
+                    + "\",\"name\":\""
+                    + TOOL_NAME
+                    + "\",\"response\":\""
+                    + TOOL_RESPONSE
+                    + "\"}]}]"));
+    assertThat(
+            testing
+                .waitForTraces(1)
+                .get(0)
+                .get(1)
+                .getAttributes()
+                .get(stringKey("gen_ai.output.messages")))
+        .isEqualTo(
+            messageSpanAttribute(
+                "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
+                    + RESPONSE
+                    + "\"},{\"type\":\"tool_call\",\"id\":\""
+                    + TOOL_CALL_ID
+                    + "\",\"name\":\""
+                    + TOOL_NAME
+                    + "\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"}],\"finish_reason\":\"tool_calls\"}]"));
+  }
+
+  @Test
+  void messageEventsPreserveToolCallsAndToolResponses() {
+    chatModel.setCallResponse(
+        response(
+            singletonList(generation(outputMessageWithToolCall(), "tool_calls")),
+            ChatResponseMetadata.builder().id("response-id").model(MODEL).build()));
+
+    testing.runWithSpan("parent", () -> chatModel.call(toolCallingPrompt()));
+
+    SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
+    testing.waitAndAssertLogRecords(
+        log ->
+            log.hasAttributesSatisfyingExactly(
+                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                    equalTo(stringKey("event.name"), "gen_ai.user.message"))
+                .hasSpanContext(spanContext)
+                .hasBody(messageBody(PROMPT)),
+        log ->
+            log.hasAttributesSatisfyingExactly(
+                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                    equalTo(stringKey("event.name"), "gen_ai.assistant.message"))
+                .hasSpanContext(spanContext)
+                .hasBody(assistantToolCallBody()),
+        log ->
+            log.hasAttributesSatisfyingExactly(
+                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                    equalTo(stringKey("event.name"), "gen_ai.tool.message"))
+                .hasSpanContext(spanContext)
+                .hasBody(toolResponseBody()),
+        log ->
+            log.hasAttributesSatisfyingExactly(
+                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                    equalTo(stringKey("event.name"), "gen_ai.choice"))
+                .hasSpanContext(spanContext)
+                .hasBody(choiceBodyWithToolCall()));
   }
 
   @Test
@@ -643,8 +741,68 @@ class ChatModelTest {
         KeyValue.of("message", message));
   }
 
+  private static Value<?> assistantToolCallBody() {
+    return Value.of(KeyValue.of("tool_calls", toolCallsValue()));
+  }
+
+  private static Value<?> toolResponseBody() {
+    if (CAPTURE_MESSAGE_CONTENT) {
+      return Value.of(
+          KeyValue.of("id", Value.of(TOOL_CALL_ID)),
+          KeyValue.of("name", Value.of(TOOL_NAME)),
+          KeyValue.of("content", Value.of(TOOL_RESPONSE)));
+    }
+    return Value.of(
+        KeyValue.of("id", Value.of(TOOL_CALL_ID)), KeyValue.of("name", Value.of(TOOL_NAME)));
+  }
+
+  private static Value<?> choiceBodyWithToolCall() {
+    Value<?> message =
+        CAPTURE_MESSAGE_CONTENT
+            ? Value.of(
+                KeyValue.of("content", Value.of(RESPONSE)),
+                KeyValue.of("tool_calls", toolCallsValue()))
+            : Value.of(KeyValue.of("tool_calls", toolCallsValue()));
+    return Value.of(
+        KeyValue.of("finish_reason", Value.of("tool_calls")),
+        KeyValue.of("index", Value.of(0)),
+        KeyValue.of("message", message));
+  }
+
+  private static Value<?> toolCallsValue() {
+    return Value.of(singletonList(toolCallValue()));
+  }
+
+  private static Value<?> toolCallValue() {
+    Value<?> function =
+        CAPTURE_MESSAGE_CONTENT
+            ? Value.of(
+                KeyValue.of("name", Value.of(TOOL_NAME)),
+                KeyValue.of("arguments", Value.of(TOOL_ARGUMENTS)))
+            : Value.of(KeyValue.of("name", Value.of(TOOL_NAME)));
+    return Value.of(
+        KeyValue.of("function", function),
+        KeyValue.of("id", Value.of(TOOL_CALL_ID)),
+        KeyValue.of("type", Value.of("function")));
+  }
+
   private static Prompt prompt() {
     return new Prompt(PROMPT);
+  }
+
+  private static Prompt toolCallingPrompt() {
+    return new Prompt(
+        asList(
+            UserMessage.builder()
+                .text(PROMPT)
+                .media(
+                    Media.builder()
+                        .mimeType(Media.Format.IMAGE_PNG)
+                        .data(URI.create(MEDIA_URL))
+                        .build())
+                .build(),
+            new AssistantMessage(null, emptyMap(), singletonList(toolCall())),
+            new ToolResponseMessage(singletonList(toolResponse()))));
   }
 
   private static DefaultChatOptions defaultOptions() {
@@ -666,11 +824,27 @@ class ChatModelTest {
   }
 
   private static Generation generation(String content, String finishReason) {
+    return generation(new AssistantMessage(content), finishReason);
+  }
+
+  private static Generation generation(AssistantMessage message, String finishReason) {
     ChatGenerationMetadata metadata =
         finishReason == null
             ? ChatGenerationMetadata.builder().build()
             : ChatGenerationMetadata.builder().finishReason(finishReason).build();
-    return new Generation(new AssistantMessage(content), metadata);
+    return new Generation(message, metadata);
+  }
+
+  private static AssistantMessage outputMessageWithToolCall() {
+    return new AssistantMessage(RESPONSE, emptyMap(), singletonList(toolCall()));
+  }
+
+  private static AssistantMessage.ToolCall toolCall() {
+    return new AssistantMessage.ToolCall(TOOL_CALL_ID, "function", TOOL_NAME, TOOL_ARGUMENTS);
+  }
+
+  private static ToolResponseMessage.ToolResponse toolResponse() {
+    return new ToolResponseMessage.ToolResponse(TOOL_CALL_ID, TOOL_NAME, TOOL_RESPONSE);
   }
 
   private static String repeatedContent(int length) {
