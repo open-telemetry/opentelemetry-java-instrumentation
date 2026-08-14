@@ -11,6 +11,8 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -147,7 +149,7 @@ class SelectorConfigTest {
   }
 
   @Test
-  void selectorTakesPrecedenceAndWarnsOnce() {
+  void selectorTakesPrecedenceWithoutWarning() {
     DeclarativeConfigProperties config = mockConfig();
     when(config.get("mdc_attributes/development").getScalarList("included", String.class))
         .thenReturn(singletonList("new"));
@@ -158,21 +160,18 @@ class SelectorConfigTest {
       Predicate<String> first = SelectorConfig.resolveLegacyLiteral(config, "precedence", SELECTOR);
       Predicate<String> second =
           SelectorConfig.resolveLegacyLiteral(config, "precedence", SELECTOR);
+      IncludeExclude resolved = SelectorConfig.resolve(config, "precedence", SELECTOR);
 
       assertThat(first).isNotNull();
       assertThat(first.test("new")).isTrue();
       assertThat(first.test("legacy")).isFalse();
       assertThat(second).isNotNull();
       assertThat(second.test("new")).isTrue();
-      assertThat(handler.records).hasSize(1);
-      assertThat(handler.records.get(0).getMessage())
-          .isEqualTo(
-              "The otel.instrumentation.precedence.experimental.capture-mdc-attributes"
-                  + " setting and the equivalent declarative configuration property are deprecated"
-                  + " and ignored because"
-                  + " otel.instrumentation.precedence.experimental.mdc-attributes.included"
-                  + " or otel.instrumentation.precedence.experimental.mdc-attributes.excluded"
-                  + " is configured. They may be removed in the next minor release.");
+      assertThat(resolved).isNotNull();
+      assertThat(resolved.matches("new")).isTrue();
+      assertThat(resolved.matches("legacy")).isFalse();
+      assertThat(handler.records).isEmpty();
+      verify(config, never()).getScalarList("capture_mdc_attributes/development", String.class);
     } finally {
       detachWarningHandler(handler);
     }
