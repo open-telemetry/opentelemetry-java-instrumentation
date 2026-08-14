@@ -14,7 +14,10 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -95,7 +98,9 @@ public final class SpringIntegrationTelemetryBuilder {
                     consumerGetter,
                     MessagingOperationType.PROCESS,
                     PROCESS_OPERATION_NAME,
-                    capturedHeaders));
+                    capturedHeaders))
+            .addOperationMetrics(MessagingProcessMetrics.get())
+            .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     setMessagingProcessExceptionEventExtractor(consumerBuilder);
     Instrumenter<MessageWithChannel, Void> consumerInstrumenter =
         MessagingProcessInstrumenterFactory.create(
@@ -118,7 +123,8 @@ public final class SpringIntegrationTelemetryBuilder {
                     producerGetter,
                     MessagingOperationType.SEND,
                     SEND_OPERATION_NAME,
-                    capturedHeaders));
+                    capturedHeaders))
+            .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
     setMessagingSendExceptionEventExtractor(producerBuilder);
     Instrumenter<MessageWithChannel, Void> producerInstrumenter =
         producerBuilder.buildInstrumenter(SpanKindExtractor.alwaysProducer());
