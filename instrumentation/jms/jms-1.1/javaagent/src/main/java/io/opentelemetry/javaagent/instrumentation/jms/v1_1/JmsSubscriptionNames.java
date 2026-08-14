@@ -26,9 +26,8 @@ public class JmsSubscriptionNames {
 
   private static final int COMMITTED_NAME = 0;
   private static final int PENDING_REGISTRATIONS = 1;
-  private static final int REGISTRATION_LISTENER = 0;
-  private static final int REGISTRATION_STATE = 1;
-  private static final int REGISTRATION_NAME = 2;
+  private static final int REGISTRATION_STATE = 0;
+  private static final int REGISTRATION_NAME = 1;
 
   private static final VirtualField<MessageConsumer, String> CONSUMER_SUBSCRIPTION_NAME =
       VirtualField.find(MessageConsumer.class, String.class);
@@ -36,6 +35,7 @@ public class JmsSubscriptionNames {
       VirtualField.find(Message.class, String.class);
   private static final VirtualField<MessageListener, Object[]> LISTENER_STATE =
       VirtualField.find(MessageListener.class, Object[].class);
+  private static final Object initializationLock = new Object();
 
   public static void set(MessageConsumer consumer, String subscriptionName) {
     CONSUMER_SUBSCRIPTION_NAME.set(consumer, subscriptionName);
@@ -51,15 +51,9 @@ public class JmsSubscriptionNames {
     if (messageListener == null) {
       return null;
     }
-    synchronized (messageListener) {
-      Object[] state = LISTENER_STATE.get(messageListener);
-      if (state == null) {
-        // Bootstrap types keep the state usable when a listener comes from a child class loader.
-        state = new Object[] {null, new ArrayList<Object[]>()};
-        LISTENER_STATE.set(messageListener, state);
-      }
-      Object[] registration =
-          new Object[] {messageListener, state, CONSUMER_SUBSCRIPTION_NAME.get(consumer)};
+    Object[] state = state(messageListener);
+    synchronized (state) {
+      Object[] registration = new Object[] {state, CONSUMER_SUBSCRIPTION_NAME.get(consumer)};
       pendingRegistrations(state).add(registration);
       return registration;
     }
@@ -71,17 +65,12 @@ public class JmsSubscriptionNames {
       return;
     }
     Object[] listenerRegistration = (Object[]) registration;
-    if (listenerRegistration.length != 3
-        || !(listenerRegistration[REGISTRATION_LISTENER] instanceof MessageListener)
+    if (listenerRegistration.length != 2
         || !(listenerRegistration[REGISTRATION_STATE] instanceof Object[])) {
       return;
     }
-    MessageListener listener = (MessageListener) listenerRegistration[REGISTRATION_LISTENER];
-    synchronized (listener) {
-      Object[] state = LISTENER_STATE.get(listener);
-      if (state != listenerRegistration[REGISTRATION_STATE]) {
-        return;
-      }
+    Object[] state = (Object[]) listenerRegistration[REGISTRATION_STATE];
+    synchronized (state) {
       List<Object[]> pending = pendingRegistrations(state);
       int index = pending.indexOf(listenerRegistration);
       if (index < 0) {
@@ -108,11 +97,11 @@ public class JmsSubscriptionNames {
 
   @Nullable
   public static String get(MessageListener messageListener) {
-    synchronized (messageListener) {
-      Object[] state = LISTENER_STATE.get(messageListener);
-      if (state == null) {
-        return null;
-      }
+    Object[] state = LISTENER_STATE.get(messageListener);
+    if (state == null) {
+      return null;
+    }
+    synchronized (state) {
       List<Object[]> pending = pendingRegistrations(state);
       return (String)
           (pending.isEmpty()
@@ -121,7 +110,23 @@ public class JmsSubscriptionNames {
     }
   }
 
-  @SuppressWarnings("unchecked") // initialized with a List<Object[]> in copyToListener
+  private static Object[] state(MessageListener messageListener) {
+    Object[] state = LISTENER_STATE.get(messageListener);
+    if (state != null) {
+      return state;
+    }
+    synchronized (initializationLock) {
+      state = LISTENER_STATE.get(messageListener);
+      if (state == null) {
+        // Bootstrap types keep the state usable when a listener comes from a child class loader.
+        state = new Object[] {null, new ArrayList<Object[]>()};
+        LISTENER_STATE.set(messageListener, state);
+      }
+      return state;
+    }
+  }
+
+  @SuppressWarnings("unchecked") // initialized with a List<Object[]> in state
   private static List<Object[]> pendingRegistrations(Object[] state) {
     return (List<Object[]>) state[PENDING_REGISTRATIONS];
   }
