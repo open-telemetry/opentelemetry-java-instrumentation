@@ -158,7 +158,7 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
                         span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
-                            .hasLinks(LinkData.create(producer.get().getSpanContext()))
+                            .hasLinks(batchRecordLink(producer.get()))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
                             .hasAttributesSatisfyingExactly(
