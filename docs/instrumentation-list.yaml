@@ -1059,18 +1059,6 @@ definitions:
       description: Enables the capture of experimental JMX-based JVM runtime metrics.
       type: boolean
       default: false
-    otel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled:
-      name: otel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled
-      declarative_name: java.runtime_telemetry.package_emitter/development.enabled
-      description: Enables creating events for JAR libraries used by the application.
-      type: boolean
-      default: false
-    otel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second:
-      name: otel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second
-      declarative_name: java.runtime_telemetry.package_emitter/development.jars_per_second
-      description: The number of JAR files processed per second by the package emitter.
-      type: int
-      default: 10
     otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded:
       name: otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded
       declarative_name: java.runtime_telemetry.jfr_metrics/development.excluded
@@ -1089,6 +1077,18 @@ definitions:
       default: ''
       examples:
       - jvm.memory.*,jvm.cpu.longlock
+    otel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled:
+      name: otel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled
+      declarative_name: java.runtime_telemetry.package_emitter/development.enabled
+      description: Enables creating events for JAR libraries used by the application.
+      type: boolean
+      default: false
+    otel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second:
+      name: otel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second
+      declarative_name: java.runtime_telemetry.package_emitter/development.jars_per_second
+      description: The number of JAR files processed per second by the package emitter.
+      type: int
+      default: 10
     otel.instrumentation.runtime-telemetry.experimental.prefer-jfr:
       name: otel.instrumentation.runtime-telemetry.experimental.prefer-jfr
       declarative_name: java.runtime_telemetry.prefer_jfr/development
@@ -1266,7 +1266,7 @@ definitions:
       description: List of predefined JMX target systems to collect metrics for.
       type: list
       default: ''
-    otel.semconv-stability.opt-in:
+    otel.semconv-stability.opt-in-a415433b:
       name: otel.semconv-stability.opt-in
       declarative_name: general.stability_opt_in_list
       description: |
@@ -1274,6 +1274,13 @@ definitions:
       type: list
       default: ''
       declarative_type: string
+    otel.semconv-stability.opt-in-b3deb0c6:
+      name: otel.semconv-stability.opt-in
+      declarative_name: general.stability_opt_in_list
+      description: |
+        Opt-in to emit stable semantic conventions instead of the old experimental semantic conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`, `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously. Stable semantic conventions will become the default in version 3.0 of the agent.
+      type: list
+      default: ''
     sanitization.url.sensitive-query-parameters:
       name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
       declarative_name: general.sanitization.url.sensitive_query_parameters
@@ -2064,6 +2071,15 @@ definitions:
         type: STRING
       - name: jvm.gc.name
         type: STRING
+    jvm.memory.allocation-5c3a1661:
+      name: jvm.memory.allocation
+      description: Measure of memory allocations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: By
+      attributes:
+      - name: arena
+        type: STRING
     jvm.memory.committed-75750f2f:
       name: jvm.memory.committed
       description: Measure of memory committed.
@@ -2136,6 +2152,15 @@ definitions:
       data_type: DOUBLE_GAUGE
       unit: '1'
       attributes: []
+    jvm.thread.count-8bf9a8cb:
+      name: jvm.thread.count
+      description: Number of executing platform threads.
+      instrument: updowncounter
+      data_type: LONG_SUM
+      unit: '{thread}'
+      attributes:
+      - name: jvm.thread.daemon
+        type: BOOLEAN
     jvm.thread.count-dd0efc0c:
       name: jvm.thread.count
       description: Number of executing platform threads.
@@ -2875,7 +2900,7 @@ libraries:
   javaagent_target_versions:
   - com.alibaba:druid:(,)
   configuration_refs:
-  - otel.semconv-stability.opt-in
+  - otel.semconv-stability.opt-in-a415433b
   telemetry:
   - when: default
     metric_refs:
@@ -2907,7 +2932,7 @@ libraries:
   javaagent_target_versions:
   - org.apache.commons:commons-dbcp2:[2,)
   configuration_refs:
-  - otel.semconv-stability.opt-in
+  - otel.semconv-stability.opt-in-a415433b
   telemetry:
   - when: default
     metric_refs:
@@ -2978,6 +3003,8 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: error.type
+        type: STRING
       - name: rpc.method
         type: STRING
       - name: rpc.system.name
@@ -2990,11 +3017,17 @@ libraries:
         type: STRING
     - span_kind: SERVER
       attributes:
+      - name: error.type
+        type: STRING
       - name: network.peer.address
         type: STRING
       - name: network.peer.port
         type: LONG
+      - name: network.type
+        type: STRING
       - name: rpc.method
+        type: STRING
+      - name: rpc.method_original
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -12940,6 +12973,33 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+- name: redisson-metrics-3.26
+  display_name: Redisson
+  description: This instrumentation enables database connection pool metrics for Redisson.
+  semantic_conventions:
+  - DATABASE_POOL_METRICS
+  library_link: https://github.com/redisson/redisson
+  source_path: instrumentation/redisson/redisson-metrics-3.26
+  scope:
+    name: io.opentelemetry.redisson-metrics-3.26
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.redisson:redisson:[3.26.0,)
+  configuration_refs:
+  - otel.semconv-stability.opt-in-b3deb0c6
+  telemetry:
+  - when: default
+    metric_refs:
+    - db.client.connections.idle.min-f04d4083
+    - db.client.connections.max-ddde65fe
+    - db.client.connections.pending_requests-a0698f55
+    - db.client.connections.usage-5ef1d5ef
+  - when: otel.semconv-stability.opt-in=database
+    metric_refs:
+    - db.client.connection.count-2e6ba9b7
+    - db.client.connection.idle.min-73bdafbc
+    - db.client.connection.max-c7917942
+    - db.client.connection.pending_requests-a0f41111
 - name: resources
   display_name: Resource Detectors
   description: |
@@ -13385,31 +13445,19 @@ libraries:
     - jvm.class.count-fbd5266d
     - jvm.class.loaded-c66b1b5e
     - jvm.class.unloaded-242a2605
-    - jvm.cpu.count-ae176c2b
     - jvm.cpu.longlock-601fafbc
     - jvm.cpu.recent_utilization-6056df51
-    - jvm.cpu.time-e00d5c75
     - jvm.gc.duration-e20d0032
+    - jvm.memory.allocation-5c3a1661
     - jvm.memory.committed-75750f2f
     - jvm.memory.init-45bc6025
     - jvm.memory.limit-13513f5f
     - jvm.memory.used-0d769189
     - jvm.memory.used_after_last_gc-f583d266
     - jvm.system.cpu.utilization-323f730d
-    - jvm.thread.count-dd0efc0c
+    - jvm.thread.count-8bf9a8cb
   - when: Java21
     metric_refs:
-    - jvm.class.count-fbd5266d
-    - jvm.class.loaded-c66b1b5e
-    - jvm.class.unloaded-242a2605
-    - jvm.cpu.count-ae176c2b
-    - jvm.cpu.recent_utilization-6056df51
-    - jvm.cpu.time-e00d5c75
-    - jvm.memory.committed-75750f2f
-    - jvm.memory.limit-13513f5f
-    - jvm.memory.used-0d769189
-    - jvm.memory.used_after_last_gc-f583d266
-    - jvm.thread.count-dd0efc0c
     - jvm.thread.virtual.pinned-3a1656ff
   - when: default
     metric_refs:
@@ -15080,6 +15128,35 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
+- name: tomcat-dbcp-8.0
+  display_name: Tomcat DBCP
+  description: |
+    This instrumentation enables database connection pool metrics for Tomcat DBCP.
+    The auto-instrumentation registers metrics when the connection pool is initialized (`BasicDataSource.startPoolMaintenance()`) or when `BasicDataSource.preRegister(...)` is invoked during MBean registration, whichever comes first, and unregisters them when the `BasicDataSource` is closed. JMX registration is not required. When a JMX `ObjectName` is available, its `name` property is used as the pool name; if the property is absent, the full `ObjectName` is used. Otherwise, the JDBC URL and connection properties are used to derive `server.address[:server.port][/db.namespace]`. If neither server address nor database namespace is available, `tomcat-dbcp` is used. A pool registered as an MBean after it has already started switches from the derived name to the `ObjectName`-based name.
+  semantic_conventions:
+  - DATABASE_POOL_METRICS
+  library_link: https://tomcat.apache.org/tomcat-8.5-doc/api/org/apache/tomcat/dbcp/dbcp2/BasicDataSource.html
+  source_path: instrumentation/tomcat/tomcat-dbcp-8.0
+  scope:
+    name: io.opentelemetry.tomcat-dbcp-8.0
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.apache.tomcat:tomcat-dbcp:[8.0.3,)
+  configuration_refs:
+  - otel.semconv-stability.opt-in-a415433b
+  telemetry:
+  - when: default
+    metric_refs:
+    - db.client.connections.idle.max-f9946dd5
+    - db.client.connections.idle.min-f04d4083
+    - db.client.connections.max-ddde65fe
+    - db.client.connections.usage-5ef1d5ef
+  - when: otel.semconv-stability.opt-in=database
+    metric_refs:
+    - db.client.connection.count-2e6ba9b7
+    - db.client.connection.idle.max-b95e4f5c
+    - db.client.connection.idle.min-73bdafbc
+    - db.client.connection.max-c7917942
 - name: tomcat-jdbc-8.5
   display_name: Tomcat JDBC
   description: |
@@ -15094,7 +15171,7 @@ libraries:
   javaagent_target_versions:
   - org.apache.tomcat:tomcat-jdbc:[8.5.0,)
   configuration_refs:
-  - otel.semconv-stability.opt-in
+  - otel.semconv-stability.opt-in-a415433b
   telemetry:
   - when: default
     metric_refs:
