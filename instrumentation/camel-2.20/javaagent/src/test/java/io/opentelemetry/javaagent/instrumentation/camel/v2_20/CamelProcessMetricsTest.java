@@ -41,9 +41,15 @@ class CamelProcessMetricsTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @BeforeEach
-  void clearData() {
+  void clearData() throws Exception {
     assumeTrue(emitStableMessagingSemconv());
     assumeFalse(v3Preview());
+    DefaultCamelContext context = new DefaultCamelContext();
+    try {
+      context.start();
+    } finally {
+      context.stop();
+    }
     testing.clearData();
   }
 
