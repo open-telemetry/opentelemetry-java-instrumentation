@@ -15,7 +15,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static java.util.Objects.requireNonNull;
@@ -26,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -49,6 +49,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 class RocketMqMetricsTest {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rocketmq-client-4.8";
+  private static final IncludeExclude NO_HEADERS = IncludeExclude.builder().build();
 
   @RegisterExtension
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -67,7 +68,7 @@ class RocketMqMetricsTest {
     when(request.getMessage()).thenReturn(message);
     Instrumenter<SendMessageContext, Void> instrumenter =
         RocketMqInstrumenterFactory.createProducerInstrumenter(
-            testing.getOpenTelemetry(), emptyList(), false);
+            testing.getOpenTelemetry(), NO_HEADERS, false);
 
     Context context = instrumenter.start(Context.root(), request);
     instrumenter.end(context, request, null, error);
@@ -121,7 +122,7 @@ class RocketMqMetricsTest {
             consumeErrorType == null ? ConsumeReturnType.SUCCESS.name() : consumeErrorType));
     RocketMqConsumerInstrumenter instrumenter =
         RocketMqInstrumenterFactory.createConsumerInstrumenter(
-            testing.getOpenTelemetry(), emptyList(), false);
+            testing.getOpenTelemetry(), NO_HEADERS, false);
 
     RocketMqConsumerInstrumenter.ConsumerContext consumerContext =
         requireNonNull(instrumenter.start(Context.root(), messages, "consumer-group", null));
@@ -172,7 +173,7 @@ class RocketMqMetricsTest {
     when(sendRequest.getMessage()).thenReturn(message("default-send"));
     Instrumenter<SendMessageContext, Void> producerInstrumenter =
         RocketMqInstrumenterFactory.createProducerInstrumenter(
-            testing.getOpenTelemetry(), emptyList(), false);
+            testing.getOpenTelemetry(), NO_HEADERS, false);
     Context sendContext = producerInstrumenter.start(Context.root(), sendRequest);
     producerInstrumenter.end(sendContext, sendRequest, null, null);
 
@@ -180,7 +181,7 @@ class RocketMqMetricsTest {
         asList(messageExt("default-process"), messageExt("default-process"));
     RocketMqConsumerInstrumenter consumerInstrumenter =
         RocketMqInstrumenterFactory.createConsumerInstrumenter(
-            testing.getOpenTelemetry(), emptyList(), false);
+            testing.getOpenTelemetry(), NO_HEADERS, false);
     RocketMqConsumerInstrumenter.ConsumerContext consumerContext =
         requireNonNull(
             consumerInstrumenter.start(Context.root(), messages, "consumer-group", null));

@@ -5,10 +5,13 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import java.util.Collection;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
@@ -103,6 +106,11 @@ final class SqsAccess {
   @NoMuzzle
   static String getMessageAttribute(SdkRequest request, String name) {
     return enabled ? SqsImpl.getMessageAttribute(request, name) : null;
+  }
+
+  @NoMuzzle
+  static Collection<String> getMessageAttributeNames(SdkRequest request) {
+    return enabled ? SqsImpl.getMessageAttributeNames(request) : emptyList();
   }
 
   @NoMuzzle

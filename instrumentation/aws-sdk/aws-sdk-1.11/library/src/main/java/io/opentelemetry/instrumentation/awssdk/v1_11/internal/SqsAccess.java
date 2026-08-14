@@ -14,6 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -62,6 +63,11 @@ final class SqsAccess {
   @Nullable
   static String getMessageAttribute(Request<?> request, String name) {
     return enabled ? SqsImpl.getMessageAttribute(request, name) : null;
+  }
+
+  @NoMuzzle
+  static Collection<String> getMessageAttributeNames(Request<?> request) {
+    return enabled ? SqsImpl.getMessageAttributeNames(request) : emptyList();
   }
 
   @NoMuzzle

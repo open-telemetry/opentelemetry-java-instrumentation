@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
@@ -30,6 +31,7 @@ import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -252,6 +254,15 @@ public final class SqsImpl {
       }
     }
     return null;
+  }
+
+  static Collection<String> getMessageAttributeNames(Request<?> request) {
+    if (request.getOriginalRequest() instanceof SendMessageRequest) {
+      // the request is owned by the caller, so its attribute names are snapshotted
+      return new ArrayList<>(
+          ((SendMessageRequest) request.getOriginalRequest()).getMessageAttributes().keySet());
+    }
+    return emptyList();
   }
 
   @Nullable
