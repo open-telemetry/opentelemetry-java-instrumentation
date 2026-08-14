@@ -36,7 +36,14 @@ class JmsConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        namedOneOf("createSession", "createQueueSession", "createTopicSession").and(isPublic()),
+        namedOneOf(
+                "createSession",
+                "createQueueSession",
+                "createTopicSession",
+                "createXASession",
+                "createXAQueueSession",
+                "createXATopicSession")
+            .and(isPublic()),
         getClass().getName() + "$CreateSessionAdvice");
     transformer.applyAdviceToMethod(
         named("close").and(takesArguments(0)).and(isPublic()),
