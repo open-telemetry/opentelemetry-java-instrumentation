@@ -27,8 +27,9 @@ import org.apache.dubbo.rpc.Result;
  */
 final class RegistryCapturingInvoker<T> implements Invoker<T> {
 
-  // ClusterInvoker was added after the 2.7.0 compile-time baseline of this module. Load it
-  // reflectively so that this class remains compatible with older Dubbo versions.
+  // ClusterInvoker was introduced in Dubbo 2.7.8. It does not exist in Dubbo 2.7.0 through
+  // 2.7.7, which this module supports using a 2.7.0 compile-time dependency. Load the interface
+  // reflectively to avoid linking against it when instrumenting Dubbo 2.7.0 through 2.7.7.
   private static final String CLUSTER_INVOKER_CLASS_NAME =
       "org.apache.dubbo.rpc.cluster.ClusterInvoker";
 
