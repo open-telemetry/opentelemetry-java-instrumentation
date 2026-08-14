@@ -32,6 +32,7 @@ public final class AwsSdkTelemetry {
   private final Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
+  private final Instrumenter<Request<?>, Response<?>> settleInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter;
 
   /** Returns a new {@link AwsSdkTelemetry} configured with the given {@link OpenTelemetry}. */
@@ -61,6 +62,7 @@ public final class AwsSdkTelemetry {
     consumerReceiveInstrumenter = instrumenterFactory.consumerReceiveInstrumenter();
     consumerProcessInstrumenter = instrumenterFactory.consumerProcessInstrumenter();
     producerInstrumenter = instrumenterFactory.producerInstrumenter();
+    settleInstrumenter = instrumenterFactory.settleInstrumenter();
     dynamoDbInstrumenter = instrumenterFactory.dynamoDbInstrumenter();
   }
 
@@ -74,6 +76,7 @@ public final class AwsSdkTelemetry {
         consumerReceiveInstrumenter,
         consumerProcessInstrumenter,
         producerInstrumenter,
+        settleInstrumenter,
         dynamoDbInstrumenter);
   }
 

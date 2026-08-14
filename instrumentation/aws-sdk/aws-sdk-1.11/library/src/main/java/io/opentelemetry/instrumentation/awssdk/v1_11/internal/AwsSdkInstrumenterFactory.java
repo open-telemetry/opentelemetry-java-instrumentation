@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Arrays.asList;
@@ -54,6 +55,7 @@ public final class AwsSdkInstrumenterFactory {
   private static final String SEND_OPERATION_NAME = "send";
   private static final String RECEIVE_OPERATION_NAME = "receive";
   private static final String PROCESS_OPERATION_NAME = "process";
+  private static final String DELETE_OPERATION_NAME = "delete";
 
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<String> MESSAGING_MESSAGE_ID =
@@ -237,6 +239,22 @@ public final class AwsSdkInstrumenterFactory {
         attributesExtractors(),
         singletonList(messagingAttributeExtractor),
         builder -> setMessagingSendExceptionEventExtractor(builder),
+        true);
+  }
+
+  public Instrumenter<Request<?>, Response<?>> settleInstrumenter() {
+    MessagingOperationType operationType = MessagingOperationType.SETTLE;
+    SqsAttributesGetter getter = new SqsAttributesGetter();
+    AttributesExtractor<Request<?>, Response<?>> messagingAttributeExtractor =
+        messagingAttributesExtractor(getter, operationType, DELETE_OPERATION_NAME);
+
+    return createInstrumenter(
+        openTelemetry,
+        MessagingSpanNameExtractor.create(getter, operationType, DELETE_OPERATION_NAME),
+        MessagingSpanKindExtractor.create(operationType),
+        attributesExtractors(),
+        singletonList(messagingAttributeExtractor),
+        builder -> setMessagingSettleExceptionEventExtractor(builder),
         true);
   }
 
