@@ -13,7 +13,9 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -42,7 +44,9 @@ public final class AwsLambdaSqsInstrumenterFactory {
                 new SpanKeyOmittingAttributesExtractor<>(
                     MessagingAttributesExtractor.create(
                         getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME)))
-            .addSpanLinksExtractor(new SqsEventSpanLinksExtractor());
+            .addSpanLinksExtractor(new SqsEventSpanLinksExtractor())
+            .addOperationMetrics(MessagingProcessMetrics.get())
+            .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     setMessagingProcessExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
@@ -64,7 +68,8 @@ public final class AwsLambdaSqsInstrumenterFactory {
                         getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME)
                     : new SpanKeyOmittingAttributesExtractor<>(
                         MessagingAttributesExtractor.create(
-                            getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME)));
+                            getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME)))
+            .addOperationMetrics(MessagingProcessMetrics.get());
     setMessagingProcessExceptionEventExtractor(builder);
     return MessagingProcessInstrumenterFactory.create(
         builder, AwsXrayPropagator.getInstance(), SqsMessageTextMapGetter.INSTANCE, true);

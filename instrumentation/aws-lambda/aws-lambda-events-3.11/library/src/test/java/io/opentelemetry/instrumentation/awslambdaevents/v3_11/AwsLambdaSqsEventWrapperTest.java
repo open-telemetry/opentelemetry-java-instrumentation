@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaSqsMetricsAssertions.assertMetrics;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
@@ -112,6 +113,7 @@ class AwsLambdaSqsEventWrapperTest {
                             equalTo(
                                 MESSAGING_BATCH_MESSAGE_COUNT,
                                 emitStableMessagingSemconv() ? Long.valueOf(1) : null))));
+    assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "otel", 1, 1, null);
   }
 
   public static class TestRequestHandler implements RequestHandler<SQSEvent, SQSBatchResponse> {

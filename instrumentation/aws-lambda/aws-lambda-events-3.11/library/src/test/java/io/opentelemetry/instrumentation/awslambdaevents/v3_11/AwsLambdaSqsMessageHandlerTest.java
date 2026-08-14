@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaSqsMetricsAssertions.assertMetrics;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
@@ -19,7 +20,9 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -196,6 +199,31 @@ class AwsLambdaSqsMessageHandlerTest {
                                     "53995c3f42cd8ad9",
                                     TraceFlags.getSampled(),
                                     TraceState.getDefault())))));
+    assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "queue1", 3, 2, null);
+  }
+
+  @Test
+  void processFailureMetrics() {
+    SQSEvent.SQSMessage message = newMessage();
+    message.setAttributes(emptyMap());
+    message.setMessageId("message1");
+    message.setEventSource("aws:sqs");
+    message.setEventSourceArn("arn:aws:sqs:us-east-2:123456789012:queue1");
+
+    SQSEvent event = new SQSEvent();
+    event.setRecords(asList(message));
+
+    assertThatThrownBy(
+            () -> new FailingHandler(testing.getOpenTelemetrySdk()).handleRequest(event, context))
+        .isInstanceOf(IllegalStateException.class);
+
+    assertMetrics(
+        testing,
+        TracingSqsEventHandler.INSTRUMENTATION_NAME,
+        "queue1",
+        2,
+        1,
+        IllegalStateException.class.getName());
   }
 
   @Test
@@ -279,6 +307,18 @@ class AwsLambdaSqsMessageHandlerTest {
     @Override
     protected boolean handleMessage(SQSEvent.SQSMessage message, Context context) {
       return "message1".equals(message.getMessageId());
+    }
+  }
+
+  private static class FailingHandler extends TracingSqsMessageHandler {
+
+    FailingHandler(OpenTelemetrySdk openTelemetrySdk) {
+      super(openTelemetrySdk);
+    }
+
+    @Override
+    protected boolean handleMessage(SQSEvent.SQSMessage message, Context context) {
+      throw new IllegalStateException("test");
     }
   }
 
