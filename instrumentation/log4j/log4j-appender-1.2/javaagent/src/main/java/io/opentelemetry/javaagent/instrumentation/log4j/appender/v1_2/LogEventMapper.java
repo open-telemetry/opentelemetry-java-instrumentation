@@ -11,6 +11,10 @@ import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FILEPATH;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_LINENO;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 
@@ -37,12 +41,6 @@ public class LogEventMapper {
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
   public static final LogEventMapper INSTANCE = new LogEventMapper();
-
-  private static final AttributeKey<String> CODE_FILEPATH = AttributeKey.stringKey("code.filepath");
-  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
-  private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
-  private static final AttributeKey<String> CODE_NAMESPACE =
-      AttributeKey.stringKey("code.namespace");
   // copied from org.apache.log4j.Level because it was only introduced in 1.2.12
   private static final int TRACE_INT = 5000;
 
@@ -65,6 +63,7 @@ public class LogEventMapper {
             "mdc-attributes");
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   public void capture(
       String fqcn,
       Category logger,

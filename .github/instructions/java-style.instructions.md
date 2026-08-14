@@ -37,10 +37,14 @@ Follow `docs/contributing/style-guide.md`.
   argument, or SDK field into both an SDK call and span attributes; pass the
   original value directly unless real derivation justifies a local.
 - **`Optional`**: do not use in public API signatures or on the hot path.
-- **Semconv constants**: in `library/src/main/`, copy incubating semconv
-  constants locally as `private static final` with a `// copied from <Class>`
-  comment; do not depend on the semconv incubating artifact. In
-  `javaagent/src/main/` and tests, use semconv constants directly.
+- **Semconv constants**: before constructing an `AttributeKey` for a
+  semantic-convention attribute, search the stable and incubating semconv
+  artifacts and reuse an existing constant only when its name and type match
+  exactly. In `library/src/main/`, import stable constants, but copy incubating
+  constants locally as `private static final` with a
+  `// copied from <Class>` comment; do not depend on the semconv incubating
+  artifact. In `javaagent/src/main/` and tests, import stable and incubating
+  constants directly.
 - **`@Nullable` in tests**: do not add it to test code.
 - **Deprecation suppressions**: use `@SuppressWarnings("deprecation")`, not
   `@SuppressWarnings("OtelDeprecatedApiUsage")`. Add one only for intentional

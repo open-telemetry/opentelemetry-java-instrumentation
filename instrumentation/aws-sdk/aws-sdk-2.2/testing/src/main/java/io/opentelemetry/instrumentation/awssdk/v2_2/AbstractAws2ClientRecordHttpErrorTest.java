@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -185,9 +186,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                                   equalTo(SERVER_PORT, server.httpPort()),
                                   equalTo(HTTP_REQUEST_METHOD, method),
                                   equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                  equalTo(
-                                      stringKey("url.full"),
-                                      "http://127.0.0.1:" + server.httpPort() + "/"),
+                                  equalTo(URL_FULL, "http://127.0.0.1:" + server.httpPort() + "/"),
                                   equalTo(RPC_SYSTEM, "aws-api"),
                                   equalTo(RPC_SERVICE, service),
                                   equalTo(RPC_METHOD, operation),

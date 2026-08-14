@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_NAME;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
@@ -94,7 +95,7 @@ class LoggingEventMapperTest {
     mapper.captureMdcAttributes(builder, contextData);
 
     verify(builder).setAttribute(stringKey("request-id"), "123");
-    verify(builder).setAttribute(stringKey("user.name"), "alice");
+    verify(builder).setAttribute(USER_NAME, "alice");
     verifyNoMoreInteractions(builder);
   }
 

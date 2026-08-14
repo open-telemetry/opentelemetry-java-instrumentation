@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.azurecore.v1_53;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.AzIncubatingAttributes.AZ_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.azure.core.annotation.ExpectedResponses;
@@ -64,6 +64,7 @@ class AzureSdkTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void testSpan() {
     Tracer azTracer = createAzTracer();
     Context context = azTracer.start("hello", Context.NONE);
@@ -76,8 +77,7 @@ class AzureSdkTest {
                     span.hasName("hello")
                         .hasKind(SpanKind.INTERNAL)
                         .hasStatus(StatusData.unset())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("az.namespace"), "otel.tests"))));
+                        .hasAttributesSatisfyingExactly(equalTo(AZ_NAMESPACE, "otel.tests"))));
   }
 
   @Test

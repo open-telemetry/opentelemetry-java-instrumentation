@@ -6,10 +6,10 @@
 package io.opentelemetry.smoketest.appserver;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_VERSION;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
@@ -164,7 +164,7 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
                 .hasEventsSatisfyingExactly(
                     event ->
                         event.hasAttributesSatisfying(
-                            equalTo(stringKey("exception.message"), "This is expected"))));
+                            equalTo(EXCEPTION_MESSAGE, "This is expected"))));
   }
 
   @Test

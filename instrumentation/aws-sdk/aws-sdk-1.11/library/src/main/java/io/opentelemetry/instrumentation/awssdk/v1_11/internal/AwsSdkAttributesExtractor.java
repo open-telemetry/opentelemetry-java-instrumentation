@@ -21,9 +21,8 @@ import javax.annotation.Nullable;
 
 class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Response<?>> {
   private static final boolean CAN_GET_RESPONSE_METADATA = canGetResponseMetadata();
+  // copied from AwsIncubatingAttributes
   private static final AttributeKey<String> AWS_REQUEST_ID = stringKey("aws.request_id");
-
-  // Copied from AwsIncubatingAttributes
   private static final AttributeKey<String> AWS_SECRETSMANAGER_SECRET_ARN =
       stringKey("aws.secretsmanager.secret.arn");
   private static final AttributeKey<String> AWS_LAMBDA_RESOURCE_MAPPING_ID =

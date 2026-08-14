@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CLIENT_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_ANONYMOUS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPLATE;
@@ -116,7 +117,7 @@ class MessagingAttributesExtractorTest {
       expectedEntries.add(entry(MESSAGING_OPERATION, operationType.legacyOperationName()));
     }
     if (emitStableMessagingSemconv()) {
-      expectedEntries.add(entry(stringKey("messaging.client.id"), "43"));
+      expectedEntries.add(entry(MESSAGING_CLIENT_ID, "43"));
       expectedEntries.add(entry(MESSAGING_OPERATION_NAME, operationName));
       expectedEntries.add(entry(MESSAGING_OPERATION_TYPE, operationType.value()));
     }

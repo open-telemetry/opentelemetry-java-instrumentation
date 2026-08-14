@@ -57,23 +57,23 @@ enum AwsSdkRequestType {
   }
 
   private static class AttributeKeys {
-    // Copied from AwsIncubatingAttributes
+    // copied from AwsIncubatingAttributes
     private static final AttributeKey<String> AWS_LAMBDA_RESOURCE_MAPPING_ID =
         stringKey("aws.lambda.resource_mapping.id");
-    static final AttributeKey<String> AWS_SECRETSMANAGER_SECRET_ARN =
+    private static final AttributeKey<String> AWS_SECRETSMANAGER_SECRET_ARN =
         stringKey("aws.secretsmanager.secret.arn");
-    static final AttributeKey<String> AWS_SNS_TOPIC_ARN = stringKey("aws.sns.topic.arn");
-    static final AttributeKey<String> AWS_STEP_FUNCTIONS_ACTIVITY_ARN =
+    private static final AttributeKey<String> AWS_SNS_TOPIC_ARN = stringKey("aws.sns.topic.arn");
+    private static final AttributeKey<String> AWS_STEP_FUNCTIONS_ACTIVITY_ARN =
         stringKey("aws.step_functions.activity.arn");
-    static final AttributeKey<String> AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN =
+    private static final AttributeKey<String> AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN =
         stringKey("aws.step_functions.state_machine.arn");
-    static final AttributeKey<String> AWS_S3_BUCKET = stringKey("aws.s3.bucket");
-    static final AttributeKey<String> AWS_SQS_QUEUE_URL = stringKey("aws.sqs.queue.url");
-    static final AttributeKey<String> AWS_KINESIS_STREAM_NAME =
+    private static final AttributeKey<String> AWS_S3_BUCKET = stringKey("aws.s3.bucket");
+    private static final AttributeKey<String> AWS_SQS_QUEUE_URL = stringKey("aws.sqs.queue.url");
+    private static final AttributeKey<String> AWS_KINESIS_STREAM_NAME =
         stringKey("aws.kinesis.stream_name");
 
     // copied from MessagingIncubatingAttributes
-    static final AttributeKey<String> MESSAGING_DESTINATION_NAME =
+    private static final AttributeKey<String> MESSAGING_DESTINATION_NAME =
         stringKey("messaging.destination.name");
   }
 }

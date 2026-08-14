@@ -5,6 +5,12 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
+import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_ACTION;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_NAME;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_POOL_NAME;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_TYPE;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_THREAD_DAEMON;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 
@@ -57,17 +63,13 @@ public final class Constants {
   public static final String METRIC_DESCRIPTION_GC_DURATION =
       "Duration of JVM garbage collection actions.";
 
-  public static final AttributeKey<String> ATTR_THREAD_NAME = AttributeKey.stringKey("thread.name");
   public static final AttributeKey<String> ATTR_ARENA_NAME = AttributeKey.stringKey("arena");
   public static final AttributeKey<String> ATTR_NETWORK_MODE = AttributeKey.stringKey("mode");
-  public static final AttributeKey<String> ATTR_MEMORY_TYPE =
-      AttributeKey.stringKey("jvm.memory.type");
-  public static final AttributeKey<String> ATTR_MEMORY_POOL =
-      AttributeKey.stringKey("jvm.memory.pool.name");
-  public static final AttributeKey<String> ATTR_GC_NAME = AttributeKey.stringKey("jvm.gc.name");
-  public static final AttributeKey<String> ATTR_GC_ACTION = AttributeKey.stringKey("jvm.gc.action");
-  public static final AttributeKey<Boolean> ATTR_DAEMON =
-      AttributeKey.booleanKey("jvm.thread.daemon");
+  public static final AttributeKey<String> ATTR_MEMORY_TYPE = JVM_MEMORY_TYPE;
+  public static final AttributeKey<String> ATTR_MEMORY_POOL = JVM_MEMORY_POOL_NAME;
+  public static final AttributeKey<String> ATTR_GC_NAME = JVM_GC_NAME;
+  public static final AttributeKey<String> ATTR_GC_ACTION = JVM_GC_ACTION;
+  public static final AttributeKey<Boolean> ATTR_DAEMON = JVM_THREAD_DAEMON;
   public static final Attributes ATTR_PS_EDEN_SPACE =
       Attributes.of(ATTR_MEMORY_TYPE, HEAP, ATTR_MEMORY_POOL, "PS Eden Space");
   public static final Attributes ATTR_PS_SURVIVOR_SPACE =
