@@ -10,6 +10,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import java.util.Locale;
 
 public class Resilience4jCircuitBreakerSpanAttributes {
 
@@ -22,7 +23,7 @@ public class Resilience4jCircuitBreakerSpanAttributes {
       AttributeKey.stringKey("resilience.policy.name");
 
   private static final AttributeKey<String> CIRCUIT_BREAKER_STATE =
-      AttributeKey.stringKey("resilience.circuitbreaker.state");
+      AttributeKey.stringKey("resilience.circuit_breaker.state");
 
   public static void set(CircuitBreaker circuitBreaker) {
     if (!CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
@@ -31,7 +32,8 @@ public class Resilience4jCircuitBreakerSpanAttributes {
 
     Span current = Span.current();
     current.setAttribute(CIRCUIT_BREAKER_NAME, circuitBreaker.getName());
-    current.setAttribute(CIRCUIT_BREAKER_STATE, circuitBreaker.getState().name());
+    current.setAttribute(
+        CIRCUIT_BREAKER_STATE, circuitBreaker.getState().name().toLowerCase(Locale.ROOT));
   }
 
   @SuppressWarnings({"ReturnValueIgnored", "unused"})

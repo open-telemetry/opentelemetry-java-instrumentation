@@ -30,7 +30,7 @@ class Resilience4jCircuitBreakerTest {
 
     testing.runWithSpan("parent", circuitBreaker::acquirePermission);
 
-    assertCircuitBreakerSpan("CLOSED");
+    assertCircuitBreakerSpan("closed");
   }
 
   @Test
@@ -40,7 +40,7 @@ class Resilience4jCircuitBreakerTest {
     boolean permitted = testing.runWithSpan("parent", circuitBreaker::tryAcquirePermission);
 
     assertThat(permitted).isTrue();
-    assertCircuitBreakerSpan("CLOSED");
+    assertCircuitBreakerSpan("closed");
   }
 
   @Test
@@ -52,7 +52,7 @@ class Resilience4jCircuitBreakerTest {
         catchThrowable(() -> testing.runWithSpan("parent", circuitBreaker::acquirePermission));
 
     assertThat(thrown).isInstanceOf(CallNotPermittedException.class);
-    assertCircuitBreakerSpan("OPEN");
+    assertCircuitBreakerSpan("open");
   }
 
   @Test
@@ -63,7 +63,7 @@ class Resilience4jCircuitBreakerTest {
     boolean permitted = testing.runWithSpan("parent", circuitBreaker::tryAcquirePermission);
 
     assertThat(permitted).isFalse();
-    assertCircuitBreakerSpan("OPEN");
+    assertCircuitBreakerSpan("open");
   }
 
   @Test
@@ -88,7 +88,7 @@ class Resilience4jCircuitBreakerTest {
                                 stringKey("resilience.policy.name"),
                                 experimental("test-circuit-breaker")),
                             equalTo(
-                                stringKey("resilience.circuitbreaker.state"),
+                                stringKey("resilience.circuit_breaker.state"),
                                 experimental(state)))));
   }
 }
