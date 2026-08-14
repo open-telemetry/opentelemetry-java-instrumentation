@@ -14,7 +14,6 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.or
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.mockito.Mockito.mock;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
@@ -24,14 +23,12 @@ import io.opentelemetry.instrumentation.spring.jms.v2_0.AbstractJmsTest;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.jms.ConnectionFactory;
 import javax.jms.Message;
-import javax.jms.MessageListener;
 import javax.jms.TextMessage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
@@ -64,47 +61,9 @@ class SpringListenerTest extends AbstractJmsTest {
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
-  void capturesDefaultSubscriptionName() throws ReflectiveOperationException {
-    DefaultMessageListenerContainer container = new DefaultMessageListenerContainer();
-    container.setPubSubDomain(true);
-    container.setSubscriptionDurable(true);
-    container.setMessageListener((MessageListener) message -> {});
-    String subscriptionName = container.getSubscriptionName();
-
-    Message message = mock(Message.class);
-    loadInstrumentationHelper(
-            "io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0.SpringJmsSubscriptionNames")
-        .getMethod("set", Message.class, AbstractMessageListenerContainer.class)
-        .invoke(null, message, container);
-    String capturedSubscriptionName =
-        (String)
-            loadInstrumentationHelper(
-                    "io.opentelemetry.javaagent.instrumentation.jms.v1_1.JmsSubscriptionNames")
-                .getMethod("get", Message.class)
-                .invoke(null, message);
-
-    assertThat(subscriptionName).isNotBlank();
-    assertThat(capturedSubscriptionName).isEqualTo(subscriptionName);
-  }
-
-  private static Class<?> loadInstrumentationHelper(String helperName)
-      throws ReflectiveOperationException {
-    try {
-      return Class.forName(helperName);
-    } catch (ClassNotFoundException ignored) {
-      Class<?> registry =
-          AgentClassLoaderAccess.loadClass(
-              "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
-      ClassLoader moduleClassLoader =
-          (ClassLoader)
-              registry
-                  .getMethod("getInstrumentationClassLoader", String.class, ClassLoader.class)
-                  .invoke(
-                      null,
-                      "io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0.SpringJmsInstrumentationModule",
-                      SpringListenerTest.class.getClassLoader());
-      return moduleClassLoader.loadClass(helperName);
-    }
+  void capturesDefaultSubscriptionName() {
+    runListenerTest(
+        DefaultSubscriptionNameConfig.class, DefaultSubscriptionNameListener.class.getName());
   }
 
   @Test
@@ -174,6 +133,10 @@ class SpringListenerTest extends AbstractJmsTest {
   @ParameterizedTest
   @ValueSource(classes = {AnnotatedListenerConfig.class, ManualListenerConfig.class})
   void receivingMessageInSpringListenerGeneratesSpans(Class<? extends AbstractConfig> config) {
+    runListenerTest(config, "durable-subscription");
+  }
+
+  private void runListenerTest(Class<? extends AbstractConfig> config, String subscriptionName) {
     AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(config);
     cleanup.deferCleanup(context);
     JmsListenerEndpointRegistry registry = context.getBean(JmsListenerEndpointRegistry.class);
@@ -205,7 +168,7 @@ class SpringListenerTest extends AbstractJmsTest {
                         "process",
                         false,
                         null,
-                        "durable-subscription"));
+                        subscriptionName));
             producerSpan.set(trace.getSpan(0));
           },
           trace ->
@@ -219,7 +182,7 @@ class SpringListenerTest extends AbstractJmsTest {
                           "receive",
                           false,
                           null,
-                          "durable-subscription")));
+                          subscriptionName)));
       return;
     }
 
@@ -241,7 +204,7 @@ class SpringListenerTest extends AbstractJmsTest {
                         "receive",
                         false,
                         null,
-                        "durable-subscription"),
+                        subscriptionName),
                 span ->
                     assertConsumerSpan(
                         span,
@@ -251,7 +214,7 @@ class SpringListenerTest extends AbstractJmsTest {
                         "process",
                         false,
                         null,
-                        "durable-subscription")));
+                        subscriptionName)));
   }
 
   @ParameterizedTest
