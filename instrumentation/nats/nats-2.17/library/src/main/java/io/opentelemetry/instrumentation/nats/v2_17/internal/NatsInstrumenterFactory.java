@@ -11,7 +11,10 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -51,7 +54,8 @@ public final class NatsInstrumenterFactory {
                     MessagingOperationType.SEND,
                     operationName))
             .addAttributesExtractor(
-                messagingAttributesExtractor(MessagingOperationType.SEND, operationName, headers));
+                messagingAttributesExtractor(MessagingOperationType.SEND, operationName, headers))
+            .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
     setMessagingSendExceptionEventExtractor(builder);
     return builder.buildProducerInstrumenter(new NatsRequestTextMapSetter());
   }
@@ -68,7 +72,9 @@ public final class NatsInstrumenterFactory {
                     PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
                 messagingAttributesExtractor(
-                    MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME, headers));
+                    MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME, headers))
+            .addOperationMetrics(MessagingProcessMetrics.get())
+            .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     setMessagingProcessExceptionEventExtractor(builder);
 
     return MessagingProcessInstrumenterFactory.create(

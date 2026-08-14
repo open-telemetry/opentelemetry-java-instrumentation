@@ -37,10 +37,10 @@ public class PulsarRequest extends BasePulsarRequest {
 
   private PulsarRequest(
       Message<?> message,
-      String destination,
+      String topicName,
       @Nullable UrlData urlData,
       @Nullable String subscription) {
-    super(destination, urlData, subscription);
+    super(topicName, urlData, subscription);
     this.message = message;
   }
 
