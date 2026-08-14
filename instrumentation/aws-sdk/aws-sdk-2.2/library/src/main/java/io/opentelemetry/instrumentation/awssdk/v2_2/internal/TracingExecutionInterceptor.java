@@ -86,6 +86,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private final Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter;
   private final Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> settleInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter;
   private final Logger eventLogger;
@@ -138,6 +139,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter,
       Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter,
       Instrumenter<ExecutionAttributes, Response> producerInstrumenter,
+      Instrumenter<ExecutionAttributes, Response> settleInstrumenter,
       Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter,
       Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter,
       Logger eventLogger,
@@ -152,6 +154,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
     this.producerCreateInstrumenter = producerCreateInstrumenter;
     this.producerInstrumenter = producerInstrumenter;
+    this.settleInstrumenter = settleInstrumenter;
     this.dynamoDbInstrumenter = dynamoDbInstrumenter;
     this.bedrockRuntimeInstrumenter = bedrockRuntimeInstrumenter;
     this.eventLogger = eventLogger;
@@ -519,6 +522,9 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       SdkRequest request, AwsSdkRequest awsSdkRequest) {
     if (SqsAccess.isSqsProducerRequest(request)) {
       return producerInstrumenter;
+    }
+    if (emitStableMessagingSemconv() && SqsAccess.isSqsDeleteRequest(request)) {
+      return settleInstrumenter;
     }
     if (BedrockRuntimeAccess.isBedrockRuntimeRequest(request)) {
       return bedrockRuntimeInstrumenter;

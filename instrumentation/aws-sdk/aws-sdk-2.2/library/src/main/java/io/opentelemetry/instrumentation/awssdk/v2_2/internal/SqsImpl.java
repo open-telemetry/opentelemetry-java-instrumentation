@@ -38,6 +38,8 @@ import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.DeleteMessageBatchRequest;
+import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
@@ -379,6 +381,10 @@ public final class SqsImpl {
     return request instanceof SendMessageBatchRequest;
   }
 
+  static boolean isSqsDeleteRequest(SdkRequest request) {
+    return request instanceof DeleteMessageRequest || request instanceof DeleteMessageBatchRequest;
+  }
+
   private static Map<String, String> toStringMap(
       Map<String, MessageAttributeValue> messageAttributes) {
     Map<String, String> result = new HashMap<>();
@@ -393,6 +399,10 @@ public final class SqsImpl {
       return ((SendMessageBatchRequest) request).queueUrl();
     } else if (request instanceof ReceiveMessageRequest) {
       return ((ReceiveMessageRequest) request).queueUrl();
+    } else if (request instanceof DeleteMessageRequest) {
+      return ((DeleteMessageRequest) request).queueUrl();
+    } else if (request instanceof DeleteMessageBatchRequest) {
+      return ((DeleteMessageBatchRequest) request).queueUrl();
     }
     return null;
   }
@@ -401,6 +411,8 @@ public final class SqsImpl {
   static Long getBatchMessageCount(SdkRequest request) {
     if (request instanceof SendMessageBatchRequest) {
       return (long) ((SendMessageBatchRequest) request).entries().size();
+    } else if (request instanceof DeleteMessageBatchRequest) {
+      return (long) ((DeleteMessageBatchRequest) request).entries().size();
     }
     return null;
   }

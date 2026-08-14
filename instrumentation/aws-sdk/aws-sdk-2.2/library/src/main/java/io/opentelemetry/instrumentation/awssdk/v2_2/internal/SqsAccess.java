@@ -85,6 +85,11 @@ final class SqsAccess {
   }
 
   @NoMuzzle
+  static boolean isSqsDeleteRequest(SdkRequest request) {
+    return enabled && SqsImpl.isSqsDeleteRequest(request);
+  }
+
+  @NoMuzzle
   static String getQueueUrl(SdkRequest request) {
     return enabled ? SqsImpl.getQueueUrl(request) : null;
   }

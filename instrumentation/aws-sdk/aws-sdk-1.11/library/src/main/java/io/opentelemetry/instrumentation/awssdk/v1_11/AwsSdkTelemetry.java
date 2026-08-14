@@ -34,6 +34,7 @@ public final class AwsSdkTelemetry {
   private final Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter;
   private final Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
+  private final Instrumenter<Request<?>, Response<?>> settleInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter;
   private final boolean sqsMessageCreateSpansEnabled;
 
@@ -67,6 +68,7 @@ public final class AwsSdkTelemetry {
     consumerProcessInstrumenter = instrumenterFactory.consumerProcessInstrumenter();
     producerCreateInstrumenter = instrumenterFactory.producerCreateInstrumenter();
     producerInstrumenter = instrumenterFactory.producerInstrumenter();
+    settleInstrumenter = instrumenterFactory.settleInstrumenter();
     dynamoDbInstrumenter = instrumenterFactory.dynamoDbInstrumenter();
     this.sqsMessageCreateSpansEnabled = sqsMessageCreateSpansEnabled;
   }
@@ -82,6 +84,7 @@ public final class AwsSdkTelemetry {
         consumerProcessInstrumenter,
         producerCreateInstrumenter,
         producerInstrumenter,
+        settleInstrumenter,
         dynamoDbInstrumenter,
         sqsMessageCreateSpansEnabled);
   }
