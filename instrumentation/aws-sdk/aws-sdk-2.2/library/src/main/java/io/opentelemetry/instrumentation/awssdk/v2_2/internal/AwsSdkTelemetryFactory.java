@@ -69,7 +69,7 @@ public final class AwsSdkTelemetryFactory {
                     false)))
         .setSqsMessageCreateSpansEnabled(
             awsSdk
-                .get("experimental_sqs_message_create_spans/development")
+                .get("sqs_message_create_spans/development")
                 .getBoolean(
                     "enabled",
                     systemProperties.getBoolean(

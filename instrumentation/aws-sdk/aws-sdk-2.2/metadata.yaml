@@ -33,7 +33,7 @@ configurations:
     type: boolean
     default: false
   - name: otel.instrumentation.aws-sdk.experimental-sqs-message-create-spans.enabled
-    declarative_name: java.aws_sdk.experimental_sqs_message_create_spans/development.enabled
+    declarative_name: java.aws_sdk.sqs_message_create_spans/development.enabled
     description: Determines whether to create a producer span for each message in an SQS batch send when stable messaging semantic conventions are enabled.
     type: boolean
     default: true
