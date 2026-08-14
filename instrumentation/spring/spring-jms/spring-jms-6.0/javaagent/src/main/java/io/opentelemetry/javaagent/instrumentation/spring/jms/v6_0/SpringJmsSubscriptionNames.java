@@ -16,6 +16,8 @@ public class SpringJmsSubscriptionNames {
   private static final VirtualField<AbstractMessageListenerContainer, SubscriptionState>
       SUBSCRIPTION_STATE =
           VirtualField.find(AbstractMessageListenerContainer.class, SubscriptionState.class);
+  // an agent owned lock, so that the agent never blocks on a monitor that application code holds
+  private static final Object initializationLock = new Object();
 
   public static void set(
       AbstractMessageListenerContainer container, @Nullable String subscriptionName) {
@@ -48,7 +50,7 @@ public class SpringJmsSubscriptionNames {
     if (state != null) {
       return state;
     }
-    synchronized (container) {
+    synchronized (initializationLock) {
       state = SUBSCRIPTION_STATE.get(container);
       if (state == null) {
         state = new SubscriptionState();

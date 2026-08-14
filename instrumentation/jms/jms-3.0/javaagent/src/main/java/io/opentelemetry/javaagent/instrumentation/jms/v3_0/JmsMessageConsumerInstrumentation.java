@@ -59,9 +59,6 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("jakarta.jms.MessageListener")))
             .and(isPublic()),
         getClass().getName() + "$SetMessageListenerAdvice");
-    transformer.applyAdviceToMethod(
-        named("close").and(takesArguments(0)).and(isPublic()),
-        getClass().getName() + "$CloseAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -98,26 +95,10 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
     // the name has to be recorded before the listener is registered, because providers can dispatch
     // an already pending message to it before setMessageListener returns
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Object onEnter(
+    public static void onEnter(
         @Advice.This MessageConsumer consumer,
         @Advice.Argument(0) @Nullable MessageListener messageListener) {
-      return JmsSubscriptionNames.startListenerRegistration(consumer, messageListener);
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.Enter @Nullable Object registrationChange,
-        @Advice.Thrown @Nullable Throwable throwable) {
-      JmsSubscriptionNames.endListenerRegistration(registrationChange, throwable);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class CloseAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This MessageConsumer consumer) {
-      JmsSubscriptionNames.clearListenerRegistration(consumer);
+      JmsSubscriptionNames.copyToListener(consumer, messageListener);
     }
   }
 }

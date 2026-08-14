@@ -14,15 +14,12 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import jakarta.jms.Connection;
 import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
-import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageListener;
 import jakarta.jms.MessageProducer;
@@ -33,8 +30,6 @@ import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.apache.activemq.artemis.jms.client.ActiveMQDestination;
@@ -91,183 +86,22 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                             subscriptionName("durable-subscription"))));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
-  void restoresSubscriptionNameAfterFailedListenerRegistration() throws JMSException {
-    Topic topic = session.createTopic("failed-listener-registration-topic");
-    TextMessage message = session.createTextMessage("hello there");
-    message.setJMSDestination(topic);
-    MessageListener listener = ignored -> {};
-
-    MessageConsumer previousConsumer =
-        session.createDurableConsumer(topic, "previous-listener-subscription");
-    cleanup.deferCleanup(previousConsumer);
-    previousConsumer.setMessageListener(listener);
-
-    MessageConsumer failingConsumer =
-        session.createDurableConsumer(topic, "failed-listener-subscription");
-    failingConsumer.close();
-    assertThatThrownBy(() -> failingConsumer.setMessageListener(listener))
-        .isInstanceOf(JMSException.class);
-
-    previousConsumer.getMessageListener().onMessage(message);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CONSUMER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(
-                                "failed-listener-registration-topic",
-                                "failed-listener-registration-topic"),
-                            oldOperation("process"),
-                            operationName("process"),
-                            operationType("process"),
-                            messagingTempDestination(false),
-                            subscriptionName("previous-listener-subscription"))));
-  }
-
-  @SuppressWarnings("deprecation") // using deprecated semconv
-  @ParameterizedTest
-  @MethodSource("listenerRegistrationRemovalArguments")
-  void restoresPreviousSubscriptionNameWhenRegistrationRemoved(
-      String scenario, ConsumerRegistrationRemover registrationRemover) throws JMSException {
-    String topicName = "removed-listener-registration-" + scenario;
+  void overwritesSubscriptionNameWhenListenerIsReregistered() throws JMSException {
+    String topicName = "reregistered-listener-topic";
     Topic topic = session.createTopic(topicName);
     TextMessage message = session.createTextMessage("hello there");
     message.setJMSDestination(topic);
     MessageListener listener = ignored -> {};
 
-    String previousSubscription = "previous-listener-subscription-" + scenario;
-    MessageConsumer previousConsumer = session.createDurableConsumer(topic, previousSubscription);
-    cleanup.deferCleanup(previousConsumer);
-    previousConsumer.setMessageListener(listener);
+    MessageConsumer durableConsumer =
+        session.createDurableConsumer(topic, "reregistered-subscription");
+    cleanup.deferCleanup(durableConsumer);
+    durableConsumer.setMessageListener(listener);
 
-    MessageConsumer currentConsumer =
-        session.createDurableConsumer(topic, "current-listener-subscription-" + scenario);
-    cleanup.deferCleanup(currentConsumer);
-    currentConsumer.setMessageListener(listener);
-    registrationRemover.remove(currentConsumer);
-
-    previousConsumer.getMessageListener().onMessage(message);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CONSUMER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(topicName, topicName),
-                            oldOperation("process"),
-                            operationName("process"),
-                            operationType("process"),
-                            messagingTempDestination(false),
-                            subscriptionName(previousSubscription))));
-  }
-
-  @SuppressWarnings("deprecation") // using deprecated semconv
-  @ParameterizedTest
-  @MethodSource("parentResourceCloseArguments")
-  void restoresPreviousSubscriptionNameWhenParentResourceClosed(
-      String scenario, ParentResourceCloser resourceCloser) throws JMSException {
-    String topicName = "closed-parent-resource-" + scenario;
-    Topic topic = session.createTopic(topicName);
-    TextMessage message = session.createTextMessage("hello there");
-    message.setJMSDestination(topic);
-    MessageListener listener = ignored -> {};
-
-    String previousSubscription = "previous-parent-subscription-" + scenario;
-    MessageConsumer previousConsumer = session.createDurableConsumer(topic, previousSubscription);
-    cleanup.deferCleanup(previousConsumer);
-    previousConsumer.setMessageListener(listener);
-
-    Connection currentConnection = connectionFactory.createConnection();
-    cleanup.deferCleanup(currentConnection);
-    currentConnection.setClientID("jms-3-parent-close-" + scenario);
-    currentConnection.start();
-    Session currentSession = currentConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-    MessageConsumer currentConsumer =
-        currentSession.createDurableConsumer(
-            currentSession.createTopic(topicName), "current-parent-subscription-" + scenario);
-    currentConsumer.setMessageListener(listener);
-
-    resourceCloser.close(currentConnection, currentSession);
-    previousConsumer.getMessageListener().onMessage(message);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CONSUMER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            messagingDestinationName(topicName, topicName),
-                            oldOperation("process"),
-                            operationName("process"),
-                            operationType("process"),
-                            messagingTempDestination(false),
-                            subscriptionName(previousSubscription))));
-  }
-
-  @Test
-  void deactivatesRegistrationsFromReentrantSuperCall() {
-    MessageListener listener = ignored -> {};
-    ReentrantMessageConsumer consumer = new ReentrantMessageConsumer();
-    JmsSubscriptionNames.set(consumer, "reentrant-listener-subscription");
-
+    MessageConsumer consumer = session.createConsumer(topic);
+    cleanup.deferCleanup(consumer);
     consumer.setMessageListener(listener);
-    assertThat(JmsSubscriptionNames.get(listener)).isEqualTo("reentrant-listener-subscription");
-
-    consumer.close();
-    assertThat(JmsSubscriptionNames.get(listener)).isNull();
-  }
-
-  @Test
-  void tracksNestedListenerRegistrationForDifferentConsumer() {
-    MessageListener listener = ignored -> {};
-    TestMessageConsumer delegate = new TestMessageConsumer();
-    DelegatingMessageConsumer consumer = new DelegatingMessageConsumer(delegate);
-    JmsSubscriptionNames.set(consumer, "outer-listener-subscription");
-    JmsSubscriptionNames.set(delegate, "delegate-listener-subscription");
-
-    consumer.setMessageListener(listener);
-    assertThat(JmsSubscriptionNames.get(listener)).isEqualTo("delegate-listener-subscription");
-
-    delegate.close();
-    assertThat(JmsSubscriptionNames.get(listener)).isEqualTo("outer-listener-subscription");
-
-    consumer.close();
-    assertThat(JmsSubscriptionNames.get(listener)).isNull();
-  }
-
-  @Test
-  void doesNotCommitListenerRegistrationAfterConcurrentClose() throws Exception {
-    String topicName = "concurrently-closed-consumer-topic";
-    Topic topic = session.createTopic(topicName);
-    TextMessage message = session.createTextMessage("hello there");
-    message.setJMSDestination(topic);
-    MessageListener listener = ignored -> {};
-
-    String previousSubscription = "previous-concurrent-subscription";
-    MessageConsumer previousConsumer = session.createDurableConsumer(topic, previousSubscription);
-    cleanup.deferCleanup(previousConsumer);
-    previousConsumer.setMessageListener(listener);
-
-    BlockingMessageConsumer consumer = new BlockingMessageConsumer();
-    CompletableFuture<Void> registration;
-    synchronized (listener) {
-      registration = CompletableFuture.runAsync(() -> consumer.setMessageListener(listener));
-      assertThat(consumer.registrationStarted.await(10, SECONDS)).isTrue();
-      consumer.close();
-    }
-    consumer.continueRegistration.release();
-    registration.join();
 
     listener.onMessage(message);
 
@@ -283,8 +117,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                             oldOperation("process"),
                             operationName("process"),
                             operationType("process"),
-                            messagingTempDestination(false),
-                            subscriptionName(previousSubscription))));
+                            messagingTempDestination(false))));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -553,30 +386,6 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
     return sharedConsumerArguments("receive");
   }
 
-  private static Stream<Arguments> listenerRegistrationRemovalArguments() {
-    return Stream.of(
-        argumentSet(
-            "null listener",
-            "null",
-            (ConsumerRegistrationRemover) consumer -> consumer.setMessageListener(null)),
-        argumentSet(
-            "replacement listener",
-            "replacement",
-            (ConsumerRegistrationRemover) consumer -> consumer.setMessageListener(ignored -> {})),
-        argumentSet(
-            "closed consumer", "close", (ConsumerRegistrationRemover) MessageConsumer::close));
-  }
-
-  private static Stream<Arguments> parentResourceCloseArguments() {
-    return Stream.of(
-        argumentSet(
-            "session", "session", (ParentResourceCloser) (connection, session) -> session.close()),
-        argumentSet(
-            "connection",
-            "connection",
-            (ParentResourceCloser) (connection, session) -> connection.close()));
-  }
-
   private static Stream<Arguments> sharedListenerConsumerArguments() {
     return sharedConsumerArguments("listener");
   }
@@ -600,89 +409,5 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
 
     MessageConsumer create(Session session, Topic topic, String subscriptionName)
         throws JMSException;
-  }
-
-  @FunctionalInterface
-  interface ConsumerRegistrationRemover {
-
-    void remove(MessageConsumer consumer) throws JMSException;
-  }
-
-  @FunctionalInterface
-  interface ParentResourceCloser {
-
-    void close(Connection connection, Session session) throws JMSException;
-  }
-
-  private static class TestMessageConsumer implements MessageConsumer {
-    private MessageListener listener;
-
-    @Override
-    public String getMessageSelector() {
-      return null;
-    }
-
-    @Override
-    public MessageListener getMessageListener() {
-      return listener;
-    }
-
-    @Override
-    public void setMessageListener(MessageListener listener) {
-      this.listener = listener;
-    }
-
-    @Override
-    public Message receive() {
-      return null;
-    }
-
-    @Override
-    public Message receive(long timeout) {
-      return null;
-    }
-
-    @Override
-    public Message receiveNoWait() {
-      return null;
-    }
-
-    @Override
-    public void close() {}
-  }
-
-  private static final class ReentrantMessageConsumer extends TestMessageConsumer {
-
-    @Override
-    public void setMessageListener(MessageListener listener) {
-      if (listener == null) {
-        throw new IllegalArgumentException("listener must not be null");
-      }
-      super.setMessageListener(listener);
-    }
-  }
-
-  private static final class DelegatingMessageConsumer extends TestMessageConsumer {
-    private final TestMessageConsumer delegate;
-
-    private DelegatingMessageConsumer(TestMessageConsumer delegate) {
-      this.delegate = delegate;
-    }
-
-    @Override
-    public void setMessageListener(MessageListener listener) {
-      delegate.setMessageListener(listener);
-    }
-  }
-
-  private static final class BlockingMessageConsumer extends TestMessageConsumer {
-    private final CountDownLatch registrationStarted = new CountDownLatch(1);
-    private final Semaphore continueRegistration = new Semaphore(0);
-
-    @Override
-    public void setMessageListener(MessageListener listener) {
-      registrationStarted.countDown();
-      continueRegistration.acquireUninterruptibly();
-    }
   }
 }

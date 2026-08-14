@@ -11,12 +11,10 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import jakarta.jms.MessageConsumer;
-import jakarta.jms.Session;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -45,20 +43,6 @@ class JmsSessionInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, String.class))
             .and(isPublic()),
         getClass().getName() + "$CreateDurableConsumerAdvice");
-    transformer.applyAdviceToMethod(
-        namedOneOf(
-                "createConsumer",
-                "createReceiver",
-                "createSubscriber",
-                "createDurableSubscriber",
-                "createDurableConsumer",
-                "createSharedConsumer",
-                "createSharedDurableConsumer")
-            .and(isPublic()),
-        getClass().getName() + "$CreateConsumerAdvice");
-    transformer.applyAdviceToMethod(
-        named("close").and(takesArguments(0)).and(isPublic()),
-        getClass().getName() + "$CloseAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -71,27 +55,6 @@ class JmsSessionInstrumentation implements TypeInstrumentation {
       if (consumer != null) {
         JmsSubscriptionNames.set(consumer, subscriptionName);
       }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class CreateConsumerAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.This Session session, @Advice.Return @Nullable MessageConsumer consumer) {
-      if (consumer != null) {
-        JmsSubscriptionNames.setSession(consumer, session);
-      }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class CloseAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This Session session) {
-      JmsSubscriptionNames.clearSession(session);
     }
   }
 }
