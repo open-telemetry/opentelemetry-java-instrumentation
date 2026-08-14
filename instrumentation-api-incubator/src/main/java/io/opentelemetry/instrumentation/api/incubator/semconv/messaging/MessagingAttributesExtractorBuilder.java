@@ -39,11 +39,12 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * unless {@code otel.instrumentation.common.v3-preview} is enabled, in which case dashes are
    * preserved.
    *
-   * <p>Matching is case-sensitive, unless the underlying messaging library treats header names
-   * case-insensitively. {@code ?} matches one character and {@code *} matches any number of
-   * characters, including none. Excluded patterns take precedence over included patterns. A
-   * selector with no included patterns captures every header that is not excluded, and an
-   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
+   * <p>Selector patterns are matched case-sensitively. {@code ?} matches one character and {@code
+   * *} matches any number of characters, including none. Excluded patterns take precedence over
+   * included patterns. A selector with no included patterns captures every header that is not
+   * excluded, and an {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
+   * Exact included names are looked up directly, so those lookups follow the underlying messaging
+   * library's header-name case sensitivity.
    *
    * <p>Header names that are not listed as exact included names are resolved through {@link
    * MessagingAttributesGetter#getMessageHeaderNames(Object)}, so wildcard and exclude-only
