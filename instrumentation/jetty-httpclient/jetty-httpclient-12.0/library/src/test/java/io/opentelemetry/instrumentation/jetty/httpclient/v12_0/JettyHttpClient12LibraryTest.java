@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.transport.HttpClientTransportOverHTTP;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
@@ -19,6 +20,12 @@ class JettyHttpClient12LibraryTest extends AbstractJettyClient12Test {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forLibrary();
+
+  @Override
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    super.configure(optionsBuilder);
+    optionsBuilder.setExpectedServicePeerName(uri -> null);
+  }
 
   @Override
   protected HttpClient createStandardClient() {

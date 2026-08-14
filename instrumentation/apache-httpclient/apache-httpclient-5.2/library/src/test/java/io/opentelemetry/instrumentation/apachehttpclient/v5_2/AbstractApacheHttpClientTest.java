@@ -58,6 +58,7 @@ abstract class AbstractApacheHttpClientTest {
     @Override
     protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
       optionsBuilder.markAsLowLevelInstrumentation();
+      optionsBuilder.setExpectedServicePeerName(uri -> null);
     }
   }
 

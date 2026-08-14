@@ -29,6 +29,12 @@ class JavaHttpClientTest {
           .build()
           .wrap(httpClient);
     }
+
+    @Override
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      super.configure(optionsBuilder);
+      optionsBuilder.setExpectedServicePeerName(uri -> null);
+    }
   }
 
   @Nested

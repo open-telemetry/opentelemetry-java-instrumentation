@@ -40,5 +40,6 @@ class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest {
     // should do manually using Armeria patterns.
     optionsBuilder.disableTestCallbackWithParent();
     optionsBuilder.disableTestErrorWithCallback();
+    optionsBuilder.setExpectedServicePeerName(uri -> null);
   }
 }

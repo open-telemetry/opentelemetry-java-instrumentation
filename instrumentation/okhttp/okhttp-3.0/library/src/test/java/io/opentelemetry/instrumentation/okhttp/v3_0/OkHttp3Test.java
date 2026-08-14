@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
@@ -19,6 +20,12 @@ class OkHttp3Test extends AbstractOkHttp3Test {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forLibrary();
+
+  @Override
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    super.configure(optionsBuilder);
+    optionsBuilder.setExpectedServicePeerName(uri -> null);
+  }
 
   @Override
   public Call.Factory createCallFactory(OkHttpClient.Builder clientBuilder) {

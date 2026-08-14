@@ -99,6 +99,7 @@ class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEntity<Str
     optionsBuilder.disableTestCircularRedirects();
     optionsBuilder.disableTestReadTimeout();
     optionsBuilder.disableTestNonStandardHttpMethod();
+    optionsBuilder.setExpectedServicePeerName(uri -> null);
 
     optionsBuilder.setHttpAttributes(
         uri -> {

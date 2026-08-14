@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.spring.webflux.client.AbstractSpringWebf
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -21,6 +22,12 @@ class SpringWebfluxClientInstrumentationTest
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forLibrary();
 
   @Override
+  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    super.configure(optionsBuilder);
+    optionsBuilder.setExpectedServicePeerName(uri -> null);
+  }
+
+  @Override
   protected WebClient.Builder instrument(WebClient.Builder builder) {
     SpringWebfluxClientTelemetry instrumentation =
         SpringWebfluxClientTelemetry.builder(testing.getOpenTelemetry())
@@ -28,10 +35,5 @@ class SpringWebfluxClientInstrumentationTest
             .setCapturedResponseHeaders(singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
             .build();
     return builder.filters(instrumentation::addFilterAndRegisterReactorHook);
-  }
-
-  @Override
-  protected boolean hasServicePeerName() {
-    return false;
   }
 }
