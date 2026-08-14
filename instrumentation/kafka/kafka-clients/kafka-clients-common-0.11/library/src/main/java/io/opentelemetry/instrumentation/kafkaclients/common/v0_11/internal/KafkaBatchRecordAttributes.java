@@ -30,12 +30,8 @@ final class KafkaBatchRecordAttributes {
 
   private boolean initialized;
   @Nullable private String commonPartition;
-  @Nullable private Long commonOffset;
-  @Nullable private String commonKey;
   private boolean destinationVaries;
   private boolean partitionVaries;
-  private boolean offsetVaries;
-  private boolean keyVaries;
 
   static KafkaBatchRecordAttributes create(ConsumerRecords<?, ?> records) {
     KafkaBatchRecordAttributes attributes = new KafkaBatchRecordAttributes();
@@ -70,12 +66,6 @@ final class KafkaBatchRecordAttributes {
     if (!partitionBelongsOnLinks()) {
       attributes.put(MESSAGING_DESTINATION_PARTITION_ID, commonPartition);
     }
-    if (!offsetBelongsOnLinks()) {
-      attributes.put(MESSAGING_KAFKA_OFFSET, commonOffset);
-    }
-    if (!keyVaries) {
-      attributes.put(MESSAGING_KAFKA_MESSAGE_KEY, commonKey);
-    }
   }
 
   Attributes getLinkAttributes(ConsumerRecord<?, ?> record) {
@@ -86,12 +76,12 @@ final class KafkaBatchRecordAttributes {
     if (partitionBelongsOnLinks()) {
       attributes.put(MESSAGING_DESTINATION_PARTITION_ID, Integer.toString(record.partition()));
     }
-    if (offsetBelongsOnLinks()) {
-      attributes.put(MESSAGING_KAFKA_OFFSET, record.offset());
-    }
-    if (keyVaries) {
-      attributes.put(MESSAGING_KAFKA_MESSAGE_KEY, KafkaUtil.serializeKey(record.key()));
-    }
+    // the offset and the message key are only recommended on spans that describe an operation on a
+    // single message, and poll() is a batching operation whose span always reports
+    // messaging.batch.message_count, so they stay on the links even when the batch happens to
+    // carry a single record
+    attributes.put(MESSAGING_KAFKA_OFFSET, record.offset());
+    attributes.put(MESSAGING_KAFKA_MESSAGE_KEY, KafkaUtil.serializeKey(record.key()));
     return attributes.build();
   }
 
@@ -101,24 +91,13 @@ final class KafkaBatchRecordAttributes {
     return destinationVaries || partitionVaries;
   }
 
-  // an offset only identifies a record within a destination and partition
-  private boolean offsetBelongsOnLinks() {
-    return partitionBelongsOnLinks() || offsetVaries;
-  }
-
   private void accept(ConsumerRecord<?, ?> record) {
     String partition = Integer.toString(record.partition());
-    Long offset = record.offset();
-    String key = KafkaUtil.serializeKey(record.key());
     if (!initialized) {
       initialized = true;
       commonPartition = partition;
-      commonOffset = offset;
-      commonKey = key;
       return;
     }
     partitionVaries |= !Objects.equals(commonPartition, partition);
-    offsetVaries |= !Objects.equals(commonOffset, offset);
-    keyVaries |= !Objects.equals(commonKey, key);
   }
 }

@@ -78,9 +78,9 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                           span.hasName(spanName("testSingleTopic", "receive", "poll"))
                               .hasKind(SpanKind.CLIENT)
                               .hasNoParent()
-                              .hasLinks(LinkData.create(producer.get().getSpanContext()))
+                              .hasLinks(batchRecordLink(producer.get()))
                               .hasAttributesSatisfyingExactly(
-                                  receiveAttributes("testSingleTopic", record))));
+                                  receiveAttributes("testSingleTopic"))));
       return;
     }
 
@@ -104,8 +104,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                         span.hasName(spanName("testSingleTopic", "receive", "poll"))
                             .hasKind(receiveKind())
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                receiveAttributes("testSingleTopic", record)),
+                            .hasAttributesSatisfyingExactly(receiveAttributes("testSingleTopic")),
                     span ->
                         span.hasName(spanName("testSingleTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
@@ -158,9 +157,9 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                           span.hasName(spanName("testSingleTopic", "receive", "poll"))
                               .hasKind(SpanKind.CLIENT)
                               .hasNoParent()
-                              .hasLinks(LinkData.create(producer.get().getSpanContext()))
+                              .hasLinks(batchRecordLink(producer.get()))
                               .hasAttributesSatisfyingExactly(
-                                  receiveAttributes("testSingleTopic", record))));
+                                  receiveAttributes("testSingleTopic"))));
       return;
     }
 
@@ -184,8 +183,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
                         span.hasName(spanName("testSingleTopic", "receive", "poll"))
                             .hasKind(receiveKind())
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                receiveAttributes("testSingleTopic", record)),
+                            .hasAttributesSatisfyingExactly(receiveAttributes("testSingleTopic")),
                     span ->
                         span.hasName(spanName("testSingleTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)

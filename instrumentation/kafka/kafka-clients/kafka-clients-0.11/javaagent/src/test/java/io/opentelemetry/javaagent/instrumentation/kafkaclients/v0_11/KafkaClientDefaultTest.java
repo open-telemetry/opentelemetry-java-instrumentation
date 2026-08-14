@@ -112,8 +112,8 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                       span.hasName("poll " + SHARED_TOPIC)
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
-                          .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
-                          .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders, "10"))));
+                          .hasLinks(receiveRecordLink(producerSpan.get()))
+                          .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
       return;
     }
 
@@ -139,7 +139,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                     span.hasName(SHARED_TOPIC + " receive")
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders, "10")),
+                        .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders)),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
@@ -447,7 +447,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                       span.hasName("poll " + SHARED_TOPIC)
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
-                          .hasAttributesSatisfyingExactly(receiveAttributes(false, "10"))));
+                          .hasAttributesSatisfyingExactly(receiveAttributes(false))));
       return;
     }
 
@@ -473,7 +473,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                     span.hasName(SHARED_TOPIC + " receive")
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(receiveAttributes(false, "10")),
+                        .hasAttributesSatisfyingExactly(receiveAttributes(false)),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)

@@ -21,7 +21,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.restassured.http.ContentType;
 import java.io.IOException;
@@ -139,9 +138,8 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                                 : testTopicName + " process")
                         .hasKind(CONSUMER)
                         .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpanContext.get()))
-                        .hasAttributesSatisfyingExactly(
-                            processAttributes(testTopicName, 1, "test-key")),
+                        .hasLinks(recordLink(producerSpanContext.get(), "test-key"))
+                        .hasAttributesSatisfyingExactly(processAttributes(testTopicName, 1)),
                 span ->
                     span.hasName(
                             emitStableDatabaseSemconv()

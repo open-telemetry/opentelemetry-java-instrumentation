@@ -225,7 +225,6 @@ class WrapperTest extends AbstractWrapperTest {
     if (emitStableMessagingSemconv()) {
       assertions.add(
           satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
-      assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     }
     if (testHeaders) {
       assertions.add(

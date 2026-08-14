@@ -315,6 +315,20 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
         .build();
   }
 
+  // the offset and the message key stay on the link even when the batch carries a single record,
+  // because they are only recommended on spans that describe an operation on a single message
+  protected static LinkData recordLink(SpanContext producerSpanContext, String messageKey) {
+    if (!emitStableMessagingSemconv()) {
+      return LinkData.create(producerSpanContext);
+    }
+    return LinkData.create(
+        producerSpanContext,
+        Attributes.builder()
+            .put(MESSAGING_KAFKA_OFFSET, 0)
+            .put(MESSAGING_KAFKA_MESSAGE_KEY, messageKey)
+            .build());
+  }
+
   private static String spanId(SpanContext spanContext) {
     return spanContext.getTraceId() + spanContext.getSpanId();
   }
@@ -513,14 +527,11 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  protected static AttributeAssertion[] processAttributes(
-      String destination, long batchSize, String messageKey) {
+  protected static AttributeAssertion[] processAttributes(String destination, long batchSize) {
     return new AttributeAssertion[] {
       equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize),
       equalTo(MESSAGING_DESTINATION_NAME, destination),
       equalTo(MESSAGING_DESTINATION_PARTITION_ID, emitStableMessagingSemconv() ? "0" : null),
-      equalTo(MESSAGING_KAFKA_OFFSET, emitStableMessagingSemconv() ? Long.valueOf(0) : null),
-      equalTo(MESSAGING_KAFKA_MESSAGE_KEY, emitStableMessagingSemconv() ? messageKey : null),
       equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? PROCESS : null),
       equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? PROCESS : null),
       equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? PROCESS : null),

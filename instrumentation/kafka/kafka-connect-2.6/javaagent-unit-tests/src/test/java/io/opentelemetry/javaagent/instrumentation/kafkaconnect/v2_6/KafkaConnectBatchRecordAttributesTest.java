@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -23,7 +24,7 @@ import org.junit.jupiter.api.Test;
 class KafkaConnectBatchRecordAttributesTest {
 
   @Test
-  void keepsSameValuesOnBatchSpan() {
+  void keepsCommonPartitionOnBatchSpan() {
     List<SinkRecord> records = asList(record("topic", 1, 10, "key"), record("topic", 1, 10, "key"));
     KafkaConnectBatchRecordAttributes attributes =
         KafkaConnectBatchRecordAttributes.create(records);
@@ -31,14 +32,25 @@ class KafkaConnectBatchRecordAttributesTest {
     // the destination is emitted by MessagingAttributesExtractor, not by the class under test
     assertThat(new KafkaConnectTask(records).getDestinationName()).isEqualTo("topic");
     assertThat(commonAttributes(attributes))
-        .isEqualTo(
-            Attributes.builder()
-                .put(MESSAGING_DESTINATION_PARTITION_ID, "1")
-                .put(MESSAGING_KAFKA_OFFSET, 10)
-                .put(MESSAGING_KAFKA_MESSAGE_KEY, "key")
-                .build());
+        .isEqualTo(Attributes.builder().put(MESSAGING_DESTINATION_PARTITION_ID, "1").build());
+    // the offset and the message key stay on the links even though they are the same for every
+    // record, because they are only recommended on spans that describe a single message operation
     assertThat(linkAttributes(attributes, records))
-        .containsExactly(Attributes.empty(), Attributes.empty());
+        .containsExactly(
+            expectedLinkAttributes(null, null, 10L, "key"),
+            expectedLinkAttributes(null, null, 10L, "key"));
+  }
+
+  @Test
+  void keepsOffsetAndKeyOnLinkOfSingleRecordBatch() {
+    List<SinkRecord> records = singletonList(record("topic", 1, 10, "key"));
+    KafkaConnectBatchRecordAttributes attributes =
+        KafkaConnectBatchRecordAttributes.create(records);
+
+    assertThat(commonAttributes(attributes))
+        .isEqualTo(Attributes.builder().put(MESSAGING_DESTINATION_PARTITION_ID, "1").build());
+    assertThat(linkAttributes(attributes, records))
+        .containsExactly(expectedLinkAttributes(null, null, 10L, "key"));
   }
 
   @Test
@@ -52,12 +64,12 @@ class KafkaConnectBatchRecordAttributesTest {
     assertThat(commonAttributes(attributes)).isEqualTo(Attributes.empty());
     assertThat(linkAttributes(attributes, records))
         .containsExactly(
-            expectedLinkAttributes("topic-a", "1", 10, "key-a"),
-            expectedLinkAttributes("topic-b", "2", 20, "key-b"));
+            expectedLinkAttributes("topic-a", "1", 10L, "key-a"),
+            expectedLinkAttributes("topic-b", "2", 20L, "key-b"));
   }
 
   @Test
-  void movesPartitionAndOffsetToRecordLinksWhenDestinationVaries() {
+  void movesPartitionToRecordLinksWhenDestinationVaries() {
     List<SinkRecord> records =
         asList(record("topic-a", 0, 5, "key"), record("topic-b", 0, 6, "key"));
     KafkaConnectBatchRecordAttributes attributes =
@@ -66,28 +78,11 @@ class KafkaConnectBatchRecordAttributesTest {
     // the batch spans two topics, so no destination name is emitted on the batch span, which would
     // leave the partition id orphaned there
     assertThat(new KafkaConnectTask(records).getDestinationName()).isNull();
-    assertThat(commonAttributes(attributes))
-        .isEqualTo(Attributes.builder().put(MESSAGING_KAFKA_MESSAGE_KEY, "key").build());
+    assertThat(commonAttributes(attributes)).isEqualTo(Attributes.empty());
     assertThat(linkAttributes(attributes, records))
         .containsExactly(
-            expectedLinkAttributes("topic-a", "0", 5, null),
-            expectedLinkAttributes("topic-b", "0", 6, null));
-  }
-
-  @Test
-  void movesOffsetToRecordLinksWhenDestinationVariesAndOffsetDoesNot() {
-    List<SinkRecord> records =
-        asList(record("topic-a", 0, 5, "key"), record("topic-b", 0, 5, "key"));
-    KafkaConnectBatchRecordAttributes attributes =
-        KafkaConnectBatchRecordAttributes.create(records);
-
-    assertThat(new KafkaConnectTask(records).getDestinationName()).isNull();
-    assertThat(commonAttributes(attributes))
-        .isEqualTo(Attributes.builder().put(MESSAGING_KAFKA_MESSAGE_KEY, "key").build());
-    assertThat(linkAttributes(attributes, records))
-        .containsExactly(
-            expectedLinkAttributes("topic-a", "0", 5, null),
-            expectedLinkAttributes("topic-b", "0", 5, null));
+            expectedLinkAttributes("topic-a", "0", 5L, "key"),
+            expectedLinkAttributes("topic-b", "0", 6L, "key"));
   }
 
   @Test
@@ -97,25 +92,26 @@ class KafkaConnectBatchRecordAttributesTest {
         KafkaConnectBatchRecordAttributes.create(records);
 
     assertThat(new KafkaConnectTask(records).getDestinationName()).isEqualTo("topic");
-    assertThat(commonAttributes(attributes))
-        .isEqualTo(Attributes.builder().put(MESSAGING_KAFKA_MESSAGE_KEY, "key").build());
+    assertThat(commonAttributes(attributes)).isEqualTo(Attributes.empty());
     assertThat(linkAttributes(attributes, records))
         .containsExactly(
-            expectedLinkAttributes(null, "0", 5, null), expectedLinkAttributes(null, "1", 5, null));
+            expectedLinkAttributes(null, "0", 5L, "key"),
+            expectedLinkAttributes(null, "1", 5L, "key"));
   }
 
   @Test
-  void omitsCommonOffsetWhenPartitionIsMissing() {
+  void omitsLinkOffsetWhenNoPartitionIsKnown() {
     List<SinkRecord> records =
         asList(
             recordWithoutPartition("topic", 5, "key"), recordWithoutPartition("topic", 5, "key"));
     KafkaConnectBatchRecordAttributes attributes =
         KafkaConnectBatchRecordAttributes.create(records);
 
-    assertThat(commonAttributes(attributes))
-        .isEqualTo(Attributes.builder().put(MESSAGING_KAFKA_MESSAGE_KEY, "key").build());
+    assertThat(commonAttributes(attributes)).isEqualTo(Attributes.empty());
     assertThat(linkAttributes(attributes, records))
-        .containsExactly(Attributes.empty(), Attributes.empty());
+        .containsExactly(
+            expectedLinkAttributes(null, null, null, "key"),
+            expectedLinkAttributes(null, null, null, "key"));
   }
 
   @Test
@@ -125,10 +121,11 @@ class KafkaConnectBatchRecordAttributesTest {
     KafkaConnectBatchRecordAttributes attributes =
         KafkaConnectBatchRecordAttributes.create(records);
 
-    assertThat(commonAttributes(attributes))
-        .isEqualTo(Attributes.builder().put(MESSAGING_KAFKA_MESSAGE_KEY, "key").build());
+    assertThat(commonAttributes(attributes)).isEqualTo(Attributes.empty());
     assertThat(linkAttributes(attributes, records))
-        .containsExactly(Attributes.empty(), expectedLinkAttributes(null, "1", 6, null));
+        .containsExactly(
+            expectedLinkAttributes(null, null, null, "key"),
+            expectedLinkAttributes(null, "1", 6L, "key"));
   }
 
   private static Attributes commonAttributes(KafkaConnectBatchRecordAttributes attributes) {
@@ -143,7 +140,7 @@ class KafkaConnectBatchRecordAttributesTest {
   }
 
   private static Attributes expectedLinkAttributes(
-      String destination, String partition, long offset, String key) {
+      String destination, String partition, Long offset, String key) {
     return Attributes.builder()
         .put(MESSAGING_DESTINATION_NAME, destination)
         .put(MESSAGING_DESTINATION_PARTITION_ID, partition)

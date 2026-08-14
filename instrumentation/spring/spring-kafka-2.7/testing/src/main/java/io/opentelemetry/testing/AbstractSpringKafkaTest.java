@@ -176,7 +176,7 @@ public abstract class AbstractSpringKafkaTest {
                       .isEqualTo(producerSpan.getSpanContext().getTraceFlags());
                   assertThat(link.getSpanContext().getTraceState())
                       .isEqualTo(producerSpan.getSpanContext().getTraceState());
-                  if (emitStableMessagingSemconv() && producerSpans.length > 1) {
+                  if (emitStableMessagingSemconv()) {
                     assertThat(link.getAttributes().asMap())
                         .containsOnlyKeys(MESSAGING_KAFKA_MESSAGE_KEY, MESSAGING_KAFKA_OFFSET);
                     assertThat(link.getAttributes().get(MESSAGING_KAFKA_MESSAGE_KEY))
@@ -191,7 +191,12 @@ public abstract class AbstractSpringKafkaTest {
     };
   }
 
+  // the offset and the message key stay on the links even when the batch carries a single record,
+  // because they are only recommended on spans that describe a single message operation
   protected static LinkData recordLink(SpanData producerSpan) {
+    if (!emitStableMessagingSemconv()) {
+      return LinkData.create(producerSpan.getSpanContext());
+    }
     return LinkData.create(
         producerSpan.getSpanContext(),
         Attributes.builder()

@@ -29,6 +29,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -196,8 +197,8 @@ public abstract class AbstractReactorKafkaTest {
                       span.hasName(spanName("testTopic", "receive", "poll"))
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
-                          .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
-                          .hasAttributesSatisfyingExactly(receiveAttributes(record))));
+                          .hasLinks(receiveRecordLink(producerSpan.get()))
+                          .hasAttributesSatisfyingExactly(receiveAttributes("testTopic"))));
       return;
     }
 
@@ -220,7 +221,7 @@ public abstract class AbstractReactorKafkaTest {
                     span.hasName(spanName("testTopic", "receive", "poll"))
                         .hasKind(receiveKind())
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(receiveAttributes(record)),
+                        .hasAttributesSatisfyingExactly(receiveAttributes("testTopic")),
                 span ->
                     span.hasName(spanName("testTopic", "process", "process"))
                         .hasKind(SpanKind.CONSUMER)
@@ -268,9 +269,9 @@ public abstract class AbstractReactorKafkaTest {
     return assertions;
   }
 
-  private static List<AttributeAssertion> receiveAttributes(ProducerRecord<String, String> record) {
+  private static List<AttributeAssertion> receiveAttributes(String topic) {
     List<AttributeAssertion> assertions =
-        messagingAttributes(record.topic(), "receive", "poll", "receive", "consumer");
+        messagingAttributes(topic, "receive", "poll", "receive", "consumer");
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
     if (HAS_CONSUMER_GROUP) {
       addGroupAssertions(assertions);
@@ -278,10 +279,24 @@ public abstract class AbstractReactorKafkaTest {
     if (emitStableMessagingSemconv()) {
       assertions.add(
           satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
-      assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
-      assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, record.key()));
     }
     return assertions;
+  }
+
+  // the offset and the message key stay on the link even when the batch carries a single record,
+  // because they are only recommended on spans that describe an operation on a single message
+  private static LinkData receiveRecordLink(SpanData producerSpan) {
+    if (!emitStableMessagingSemconv()) {
+      return LinkData.create(producerSpan.getSpanContext());
+    }
+    return LinkData.create(
+        producerSpan.getSpanContext(),
+        Attributes.builder()
+            .put(MESSAGING_KAFKA_OFFSET, producerSpan.getAttributes().get(MESSAGING_KAFKA_OFFSET))
+            .put(
+                MESSAGING_KAFKA_MESSAGE_KEY,
+                producerSpan.getAttributes().get(MESSAGING_KAFKA_MESSAGE_KEY))
+            .build());
   }
 
   private static List<AttributeAssertion> processAttributes(ProducerRecord<String, String> record) {

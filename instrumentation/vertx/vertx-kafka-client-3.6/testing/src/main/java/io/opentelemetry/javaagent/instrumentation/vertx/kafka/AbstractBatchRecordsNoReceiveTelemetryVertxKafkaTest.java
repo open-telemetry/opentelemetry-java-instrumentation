@@ -110,7 +110,7 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
                             .hasLinks(
                                 batchRecordLink(producer1.get()), batchRecordLink(producer2.get()))
                             .hasAttributesSatisfyingExactly(
-                                batchProcessAttributes("testBatchTopic", record1, record2)),
+                                batchProcessAttributes("testBatchTopic")),
                     span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))));
   }
 
@@ -162,7 +162,7 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
                             .hasAttributesSatisfyingExactly(
-                                withErrorType(batchProcessAttributes("testBatchTopic", record))),
+                                withErrorType(batchProcessAttributes("testBatchTopic"))),
                     span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))));
   }
 }
