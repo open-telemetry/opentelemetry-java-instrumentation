@@ -57,7 +57,10 @@ abstract class CamelRequest {
   @Nullable
   private static String normalizeStableMessagingDestination(
       String messagingSystem, @Nullable String messagingDestination) {
-    if (!messagingSystem.equals("jms") || messagingDestination == null) {
+    // the amqp component is the jms component with an amqp connection factory, so both use the
+    // [queue:|topic:]destinationName endpoint syntax
+    if (messagingDestination == null
+        || (!messagingSystem.equals("jms") && !messagingSystem.equals("amqp"))) {
       return messagingDestination;
     }
     if (messagingDestination.startsWith("queue:")) {
