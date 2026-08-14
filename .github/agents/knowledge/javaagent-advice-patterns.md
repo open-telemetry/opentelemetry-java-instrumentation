@@ -192,9 +192,6 @@ contains a helper call.
 
 ## AdviceScope Patterns
 
-Apply the paired-call and scope-lifetime rules in
-[`instrumenter-context-patterns.md`](instrumenter-context-patterns.md) to every pattern below.
-
 `AdviceScope` usage in this repository falls into **two justified state patterns**.
 Review new code against these patterns instead of treating every existing variation as equally
 canonical.
