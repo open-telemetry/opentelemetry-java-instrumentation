@@ -69,7 +69,8 @@ final class CamelEventNotifier extends EventNotifierSupport {
     if (!emitStableMessagingSemconv()
         || !request.isMessaging()
         || request.isMessagingSpanContextPropagated()) {
-      CamelPropagationUtil.injectParent(context, ese.getExchange().getIn().getHeaders());
+      CamelPropagationUtil.injectParent(
+          context != null ? context : Context.current(), ese.getExchange().getIn().getHeaders());
     }
 
     logger.log(FINE, "[Exchange sending] Initiator span started: {0}", context);
