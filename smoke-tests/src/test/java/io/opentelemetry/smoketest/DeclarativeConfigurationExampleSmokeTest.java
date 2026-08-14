@@ -43,7 +43,6 @@ class DeclarativeConfigurationExampleSmokeTest extends AbstractSmokeTest<Integer
     // application responding above is not enough to tell that the configuration file was accepted
     assertThat(
             output.logLines().filter(line -> line.contains(AGENT_START_FAILURE)).collect(toList()))
-        .as("agent startup failures")
         .isEmpty();
   }
 }
