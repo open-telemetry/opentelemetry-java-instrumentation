@@ -19,7 +19,6 @@ import io.opentelemetry.sdk.metrics.data.MetricData;
 
 public class AwsLambdaSqsMetricsAssertions {
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   public static void assertMetrics(
       InstrumentationExtension testing,
       String instrumentationName,
