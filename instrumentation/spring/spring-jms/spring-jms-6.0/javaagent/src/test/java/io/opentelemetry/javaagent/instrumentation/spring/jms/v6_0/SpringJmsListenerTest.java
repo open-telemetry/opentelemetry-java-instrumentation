@@ -25,24 +25,45 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
+import io.opentelemetry.javaagent.instrumentation.jms.v3_0.JmsSubscriptionNames;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import jakarta.jms.ConnectionFactory;
+import jakarta.jms.Message;
+import jakarta.jms.MessageListener;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractStringAssert;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
+
+  @Test
+  void capturesDefaultSubscriptionName() {
+    DefaultMessageListenerContainer container = new DefaultMessageListenerContainer();
+    container.setPubSubDomain(true);
+    container.setSubscriptionDurable(true);
+    container.setMessageListener((MessageListener) message -> {});
+    String subscriptionName = container.getSubscriptionName();
+
+    Message message = mock(Message.class);
+    SpringJmsSubscriptionNames.set(message, container);
+
+    assertThat(subscriptionName).isNotBlank();
+    assertThat(JmsSubscriptionNames.get(message)).isEqualTo(subscriptionName);
+  }
 
   @Override
   void assertSpringJmsListener() {

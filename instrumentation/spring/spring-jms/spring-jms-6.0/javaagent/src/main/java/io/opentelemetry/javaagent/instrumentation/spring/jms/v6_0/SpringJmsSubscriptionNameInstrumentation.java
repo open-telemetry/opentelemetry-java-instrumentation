@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -34,6 +35,11 @@ class SpringJmsSubscriptionNameInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class)),
         getClass().getName() + "$SetSubscriptionNameAdvice");
     transformer.applyAdviceToMethod(
+        namedOneOf("getSubscriptionName", "getDurableSubscriptionName")
+            .and(takesArguments(0))
+            .and(returns(String.class)),
+        getClass().getName() + "$GetSubscriptionNameAdvice");
+    transformer.applyAdviceToMethod(
         named("setSubscriptionDurable").and(takesArguments(1)).and(takesArgument(0, boolean.class)),
         getClass().getName() + "$SetSubscriptionDurableAdvice");
     transformer.applyAdviceToMethod(
@@ -53,6 +59,17 @@ class SpringJmsSubscriptionNameInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This AbstractMessageListenerContainer container,
         @Advice.Argument(0) @Nullable String subscriptionName) {
+      SpringJmsSubscriptionNames.set(container, subscriptionName);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class GetSubscriptionNameAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This AbstractMessageListenerContainer container,
+        @Advice.Return @Nullable String subscriptionName) {
       SpringJmsSubscriptionNames.set(container, subscriptionName);
     }
   }

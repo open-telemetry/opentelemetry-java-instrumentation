@@ -10,15 +10,21 @@ import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.mockito.Mockito.mock;
 
 import io.opentelemetry.instrumentation.spring.jms.v2_0.AbstractJmsTest;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.instrumentation.jms.v1_1.JmsSubscriptionNames;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.jms.ConnectionFactory;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -35,6 +41,21 @@ class SpringListenerTest extends AbstractJmsTest {
 
   @RegisterExtension
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  @Test
+  void capturesDefaultSubscriptionName() {
+    DefaultMessageListenerContainer container = new DefaultMessageListenerContainer();
+    container.setPubSubDomain(true);
+    container.setSubscriptionDurable(true);
+    container.setMessageListener((MessageListener) message -> {});
+    String subscriptionName = container.getSubscriptionName();
+
+    Message message = mock(Message.class);
+    SpringJmsSubscriptionNames.set(message, container);
+
+    assertThat(subscriptionName).isNotBlank();
+    assertThat(JmsSubscriptionNames.get(message)).isEqualTo(subscriptionName);
+  }
 
   @ParameterizedTest
   @ValueSource(classes = {AnnotatedListenerConfig.class, ManualListenerConfig.class})
