@@ -9,49 +9,50 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.jms.MessageListener;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * Adds the IBM MQ queue manager identifier to the consumer span created by the generic JMS
- * instrumentation.
+ * Adds the queue manager identifier to the process span that the generic JMS instrumentation opens
+ * around {@code MessageListener.onMessage}. Unlike the synchronous {@code receive()} path, that span
+ * is created in entry advice and made current, so it is writable for the whole callback.
+ *
+ * <p>Listeners this module never saw registered simply carry no remembered QMID, so this is a no-op
+ * for non-IBM JMS providers.
  */
-public class IbmMqJmsConsumerInstrumentation implements TypeInstrumentation {
+public class IbmMqJmsListenerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("com.ibm.msg.client.jms.JmsMessageConsumer");
+    return hasClassesNamed("javax.jms.MessageListener");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("com.ibm.msg.client.jms.JmsMessageConsumer"));
+    return implementsInterface(named("javax.jms.MessageListener"));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("receive").or(named("receiveNoWait")).and(isPublic()),
-        this.getClass().getName() + "$ReceiveAdvice");
+        named("onMessage")
+            .and(takesArgument(0, named("javax.jms.Message")))
+            .and(isPublic()),
+        this.getClass().getName() + "$OnMessageAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class ReceiveAdvice {
+  public static class OnMessageAdvice {
 
-    // The receive span is opened by the generic JMS instrumentation once a message has arrived, so
-    // exit is the likely landing point; enter is kept as a harmless no-op fallback.
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.This Object consumer) {
-      IbmMqJmsQmid.stamp(consumer);
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.This Object consumer) {
-      IbmMqJmsQmid.stamp(consumer);
+    public static void onEnter(@Advice.This MessageListener listener) {
+      IbmMqJmsListenerQmid.stamp(listener);
     }
   }
 }

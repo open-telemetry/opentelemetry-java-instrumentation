@@ -33,6 +33,12 @@ public class IbmMqInstrumentationModule extends InstrumentationModule {
         new IbmMqProducerInstrumentation(),
         // IBM MQ JMS provider: additive enrichment of the generic JMS spans
         new IbmMqJmsProducerInstrumentation(),
-        new IbmMqJmsConsumerInstrumentation());
+        // async MessageListener consumers: capture at registration, stamp at delivery
+        new IbmMqJmsSetListenerInstrumentation(),
+        new IbmMqJmsListenerInstrumentation());
+    // NOTE: synchronous MessageConsumer.receive() is deliberately NOT instrumented. The generic
+    // JMS instrumentation creates that span in its own exit advice via startAndEnd (created and
+    // ended in one call, never made current), so no advice here can reach it. Writing to
+    // Span.current() there would silently stamp whatever unrelated span happened to be active.
   }
 }

@@ -14,6 +14,10 @@ muzzle {
 dependencies {
   library("com.ibm.mq:com.ibm.mq.allclient:9.3.5.0")
 
+  // The allclient artifact does not bundle the JMS API; needed for the
+  // javax.jms.MessageListener class literal used by the async listener path.
+  compileOnly("javax.jms:jms-api:1.1-rev-1")
+
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 }

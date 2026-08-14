@@ -9,6 +9,7 @@ import com.ibm.msg.client.jms.JmsReadablePropertyContext;
 import com.ibm.msg.client.wmq.common.CommonConstants;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
+import javax.annotation.Nullable;
 
 /**
  * Stamps the IBM MQ Queue Manager Identifier (QMID) onto the span that is already current.
@@ -37,27 +38,57 @@ public final class IbmMqJmsQmid {
    * an IBM MQ JMS object, no QMID is available, or no span is recording.
    */
   public static void stamp(Object jmsObject) {
-    if (!ENABLED || !(jmsObject instanceof JmsReadablePropertyContext)) {
+    if (!ENABLED) {
       return;
     }
+    String qmid = readQmid(jmsObject);
+    if (qmid != null) {
+      stampCurrentSpan(qmid);
+    }
+  }
+
+  /** True when the opt_in attribute has been explicitly enabled. */
+  static boolean enabled() {
+    return ENABLED;
+  }
+
+  /**
+   * Reads the QMID from an IBM MQ JMS object (connection, session, producer or consumer). Returns
+   * null for a non-IBM object, when no QMID is available, or on any failure.
+   *
+   * <p>Deliberately not cached: {@code WMQConnection}/{@code WMQSession} refresh the resolved
+   * properties after an automatic client reconnect, which may land on a different queue manager.
+   */
+  @Nullable
+  static String readQmid(Object jmsObject) {
+    if (!(jmsObject instanceof JmsReadablePropertyContext)) {
+      return null;
+    }
     try {
-      Span span = Span.current();
-      if (!span.isRecording()) {
-        return;
-      }
       String qmid =
           ((JmsReadablePropertyContext) jmsObject)
               .getStringProperty(CommonConstants.WMQ_RESOLVED_QUEUE_MANAGER_ID);
       if (qmid == null) {
-        return;
+        return null;
       }
       // MQCA_Q_MGR_IDENTIFIER is a fixed 48-byte, space-padded field.
       qmid = qmid.trim();
-      if (!qmid.isEmpty()) {
+      return qmid.isEmpty() ? null : qmid;
+    } catch (Throwable t) {
+      // Enrichment is best-effort and must never affect the instrumented application.
+      return null;
+    }
+  }
+
+  /** Adds the QMID to the current span, if one is recording. */
+  static void stampCurrentSpan(String qmid) {
+    try {
+      Span span = Span.current();
+      if (span.isRecording()) {
         span.setAttribute(MESSAGING_IBMMQ_QUEUE_MANAGER_ID, qmid);
       }
     } catch (Throwable t) {
-      // Enrichment is best-effort and must never affect the instrumented application.
+      // best-effort
     }
   }
 
