@@ -214,7 +214,6 @@ public abstract class KafkaClientBaseTest {
     return assertions;
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> receiveAttributes(boolean testHeaders) {
     return receiveAttributes(testHeaders, null);
   }
