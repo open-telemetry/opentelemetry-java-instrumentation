@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.MessagingSpanDecorator;
@@ -29,10 +31,13 @@ abstract class CamelRequest {
     if (spanDecorator instanceof MessagingSpanDecorator) {
       MessagingSpanDecorator messagingSpanDecorator = (MessagingSpanDecorator) spanDecorator;
       messagingSystem = messagingSpanDecorator.getSystem();
-      messagingDestination =
-          normalizeStableMessagingDestination(
-              messagingSystem, messagingSpanDecorator.getDestination(exchange, endpoint));
-      messagingDestinationPartitionId = messagingSpanDecorator.getDestinationPartitionId(exchange);
+      if (emitStableMessagingSemconv()) {
+        messagingDestination =
+            normalizeStableMessagingDestination(
+                messagingSystem, messagingSpanDecorator.getDestination(exchange, endpoint));
+        messagingDestinationPartitionId =
+            messagingSpanDecorator.getDestinationPartitionId(exchange);
+      }
       messagingSendOperationName = messagingSpanDecorator.getSendOperationName();
       messagingSpanContextPropagated = messagingSpanDecorator.isSpanContextPropagated();
     }
