@@ -48,6 +48,7 @@ import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -801,8 +802,8 @@ class ChatModelTest {
                         .data(URI.create(MEDIA_URL))
                         .build())
                 .build(),
-            new AssistantMessage(null, emptyMap(), singletonList(toolCall())),
-            new ToolResponseMessage(singletonList(toolResponse()))));
+            assistantMessage(null, singletonList(toolCall())),
+            toolResponseMessage(singletonList(toolResponse()))));
   }
 
   private static DefaultChatOptions defaultOptions() {
@@ -836,7 +837,71 @@ class ChatModelTest {
   }
 
   private static AssistantMessage outputMessageWithToolCall() {
-    return new AssistantMessage(RESPONSE, emptyMap(), singletonList(toolCall()));
+    return assistantMessage(RESPONSE, singletonList(toolCall()));
+  }
+
+  private static AssistantMessage assistantMessage(
+      String content, List<AssistantMessage.ToolCall> toolCalls) {
+    try {
+      Object builder = AssistantMessage.class.getMethod("builder").invoke(null);
+      invokeBuilder(builder, "content", String.class, content);
+      invokeBuilder(builder, "properties", Map.class, emptyMetadata());
+      invokeBuilder(builder, "toolCalls", List.class, toolCalls);
+      invokeBuilder(builder, "media", List.class, emptyList());
+      return (AssistantMessage) builder.getClass().getMethod("build").invoke(builder);
+    } catch (NoSuchMethodException noBuilder) {
+      return assistantMessageWithConstructor(content, toolCalls, noBuilder);
+    } catch (ReflectiveOperationException exception) {
+      throw new IllegalStateException("Could not create AssistantMessage", exception);
+    }
+  }
+
+  private static AssistantMessage assistantMessageWithConstructor(
+      String content, List<AssistantMessage.ToolCall> toolCalls, NoSuchMethodException noBuilder) {
+    try {
+      return AssistantMessage.class
+          .getConstructor(String.class, Map.class, List.class)
+          .newInstance(content, emptyMetadata(), toolCalls);
+    } catch (ReflectiveOperationException exception) {
+      noBuilder.addSuppressed(exception);
+      throw new IllegalStateException("Could not create AssistantMessage", noBuilder);
+    }
+  }
+
+  private static ToolResponseMessage toolResponseMessage(
+      List<ToolResponseMessage.ToolResponse> responses) {
+    try {
+      Object builder = ToolResponseMessage.class.getMethod("builder").invoke(null);
+      invokeBuilder(builder, "responses", List.class, responses);
+      invokeBuilder(builder, "metadata", Map.class, emptyMetadata());
+      return (ToolResponseMessage) builder.getClass().getMethod("build").invoke(builder);
+    } catch (NoSuchMethodException noBuilder) {
+      return toolResponseMessageWithConstructor(responses, noBuilder);
+    } catch (ReflectiveOperationException exception) {
+      throw new IllegalStateException("Could not create ToolResponseMessage", exception);
+    }
+  }
+
+  private static ToolResponseMessage toolResponseMessageWithConstructor(
+      List<ToolResponseMessage.ToolResponse> responses, NoSuchMethodException noBuilder) {
+    try {
+      return ToolResponseMessage.class
+          .getConstructor(List.class, Map.class)
+          .newInstance(responses, emptyMetadata());
+    } catch (ReflectiveOperationException exception) {
+      noBuilder.addSuppressed(exception);
+      throw new IllegalStateException("Could not create ToolResponseMessage", noBuilder);
+    }
+  }
+
+  private static void invokeBuilder(
+      Object builder, String methodName, Class<?> parameterType, Object value)
+      throws ReflectiveOperationException {
+    builder.getClass().getMethod(methodName, parameterType).invoke(builder, value);
+  }
+
+  private static Map<String, Object> emptyMetadata() {
+    return emptyMap();
   }
 
   private static AssistantMessage.ToolCall toolCall() {
