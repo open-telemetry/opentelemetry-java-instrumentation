@@ -11,6 +11,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -144,6 +145,30 @@ class KafkaBatchProcessSpanLinksExtractorTest {
     assertThat(links.attributes)
         .containsExactly(linkAttributes(null, "0", 5), linkAttributes(null, "1", 5));
     assertThat(links.linksWithAttributes).isEqualTo(2);
+  }
+
+  @Test
+  void movesPartitionAndOffsetToRecordLinksWhenBatchHasEmptyPartitionOfAnotherTopic() {
+    assumeTrue(emitStableMessagingSemconv());
+    Map<TopicPartition, List<ConsumerRecord<String, String>>> recordsByPartition =
+        new LinkedHashMap<>();
+    recordsByPartition.put(
+        new TopicPartition("topic-a", 0), singletonList(record("topic-a", 0, 5, "key")));
+    recordsByPartition.put(new TopicPartition("topic-b", 0), emptyList());
+    KafkaReceiveRequest request =
+        KafkaReceiveRequest.create(new ConsumerRecords<>(recordsByPartition), null, null);
+
+    AttributesBuilder spanAttributes = Attributes.builder();
+    new KafkaReceiveAttributesExtractor().onStart(spanAttributes, Context.root(), request);
+    RecordingSpanLinksBuilder links = extractLinks(request);
+
+    // the empty partition of the second topic still leaves the batch span without a destination
+    // name, so the partition id and the offset must not stay on it either
+    assertThat(new KafkaReceiveAttributesGetter().getDestination(request)).isNull();
+    assertThat(spanAttributes.build())
+        .isEqualTo(Attributes.builder().put(MESSAGING_KAFKA_MESSAGE_KEY, "key").build());
+    assertThat(links.attributes).containsExactly(linkAttributes("topic-a", "0", 5));
+    assertThat(links.linksWithAttributes).isEqualTo(1);
   }
 
   @Test

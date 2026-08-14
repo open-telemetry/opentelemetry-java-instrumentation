@@ -8,9 +8,13 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.common.TopicPartition;
 
 final class KafkaBatchRecordAttributes {
 
@@ -25,7 +29,6 @@ final class KafkaBatchRecordAttributes {
       AttributeKey.longKey("messaging.kafka.offset");
 
   private boolean initialized;
-  @Nullable private String commonDestination;
   @Nullable private String commonPartition;
   @Nullable private Long commonOffset;
   @Nullable private String commonKey;
@@ -34,18 +37,32 @@ final class KafkaBatchRecordAttributes {
   private boolean offsetVaries;
   private boolean keyVaries;
 
-  static KafkaBatchRecordAttributes create(Iterable<? extends ConsumerRecord<?, ?>> records) {
+  static KafkaBatchRecordAttributes create(ConsumerRecords<?, ?> records) {
     KafkaBatchRecordAttributes attributes = new KafkaBatchRecordAttributes();
+    attributes.destinationVaries = destinationVaries(records);
     for (ConsumerRecord<?, ?> record : records) {
       attributes.accept(record);
     }
     return attributes;
   }
 
+  // this has to be derived from the same partition set that
+  // KafkaReceiveAttributesGetter#getDestination uses, and not from the records themselves,
+  // otherwise
+  // a batch that carries an empty partition of a second topic would leave the batch span without a
+  // destination name while still keeping the partition id and the offset on it
+  private static boolean destinationVaries(ConsumerRecords<?, ?> records) {
+    Set<String> destinations = new HashSet<>();
+    for (TopicPartition partition : records.partitions()) {
+      destinations.add(partition.topic());
+    }
+    return destinations.size() != 1;
+  }
+
   private KafkaBatchRecordAttributes() {}
 
   // the common destination is not emitted here, MessagingAttributesExtractor already emits it via
-  // KafkaReceiveAttributesGetter#getDestination, which returns the topic under the same condition
+  // KafkaReceiveAttributesGetter#getDestination, which derives it from the same partition set
   //
   // these attributes reach the messaging metrics as well as the span, because the receive operation
   // is recorded even when no receive span is created. only the partition id survives the metric
@@ -96,19 +113,16 @@ final class KafkaBatchRecordAttributes {
   }
 
   private void accept(ConsumerRecord<?, ?> record) {
-    String destination = record.topic();
     String partition = Integer.toString(record.partition());
     Long offset = record.offset();
     String key = KafkaUtil.serializeKey(record.key());
     if (!initialized) {
       initialized = true;
-      commonDestination = destination;
       commonPartition = partition;
       commonOffset = offset;
       commonKey = key;
       return;
     }
-    destinationVaries |= !Objects.equals(commonDestination, destination);
     partitionVaries |= !Objects.equals(commonPartition, partition);
     offsetVaries |= !Objects.equals(commonOffset, offset);
     keyVaries |= !Objects.equals(commonKey, key);
