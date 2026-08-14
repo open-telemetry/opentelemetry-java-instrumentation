@@ -65,6 +65,7 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
                             .hasAttributesSatisfyingExactly(
                                 messagingAttributes("request", "sub", clientId))));
     assertTraceparentHeader(subscription);
+    assertProducerMetrics("request", "sub", null);
   }
 
   @Test
@@ -242,6 +243,7 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
     assertCancellationPublishSpan();
     assertTraceparentHeader(subscription);
     assertThat(message).isCompletedExceptionally();
+    assertProducerMetrics("request", "sub", CancellationException.class.getName());
   }
 
   @Test

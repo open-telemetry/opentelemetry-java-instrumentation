@@ -11,6 +11,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.GraphqlConfig;
 import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.InstrumentationUtil;
 import io.opentelemetry.instrumentation.graphql.v12_0.GraphQLTelemetry;
 import java.util.logging.Logger;
@@ -58,25 +59,7 @@ public class GraphqlSingletons {
 
       this.captureQuery = config.getBoolean("capture_query", true);
       this.querySanitizationEnabled = getQuerySanitizationEnabled(config);
-      Boolean deprecatedAddOperationNameToSpanName =
-          SemconvStability.v3Preview()
-              ? null
-              : config.get("add_operation_name_to_span_name").getBoolean("enabled");
-      if (deprecatedAddOperationNameToSpanName != null) {
-        // Support the deprecated config key until 3.0.
-        logger.warning(
-            "The otel.instrumentation.graphql.add-operation-name-to-span-name.enabled setting is"
-                + " deprecated and will be removed in 3.0. Use "
-                + "otel.instrumentation.graphql.operation-name-in-span-name.enabled instead.");
-      }
-      this.operationNameInSpanNameEnabled =
-          config
-              .get("operation_name_in_span_name")
-              .getBoolean(
-                  "enabled",
-                  deprecatedAddOperationNameToSpanName != null
-                      ? deprecatedAddOperationNameToSpanName
-                      : false);
+      this.operationNameInSpanNameEnabled = GraphqlConfig.getOperationNameInSpanNameEnabled(config);
     }
 
     private static boolean getQuerySanitizationEnabled(DeclarativeConfigProperties config) {

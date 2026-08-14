@@ -120,3 +120,9 @@ rules:
         type: *errortype
         unit: *errorunit
         desc: *errordesc
+
+  # Compaction byte progress - uses a code-based handler because the Compactions attribute
+  # returns a list of maps requiring iteration, grouping by composite key, and string-encoded
+  # BigInteger parsing, none of which can be expressed in declarative YAML.
+  - bean: org.apache.cassandra.db:type=CompactionManager
+    handler: cassandra-compaction-progress

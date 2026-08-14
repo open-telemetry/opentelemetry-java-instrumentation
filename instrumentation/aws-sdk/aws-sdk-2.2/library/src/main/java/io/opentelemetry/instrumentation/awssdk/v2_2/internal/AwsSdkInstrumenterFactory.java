@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.internal.GenAiExceptionEventExtractors.setGenAiClientExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
@@ -17,6 +18,8 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Span;
@@ -63,6 +66,10 @@ public final class AwsSdkInstrumenterFactory {
   private static final String RECEIVE_OPERATION_NAME = "receive";
   private static final String PROCESS_OPERATION_NAME = "process";
   private static final String DELETE_OPERATION_NAME = "delete";
+
+  // copied from MessagingIncubatingAttributes
+  private static final AttributeKey<String> MESSAGING_MESSAGE_ID =
+      stringKey("messaging.message.id");
 
   private static final AttributesExtractor<ExecutionAttributes, Response> rpcAttributesExtractor =
       RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter());
@@ -199,7 +206,7 @@ public final class AwsSdkInstrumenterFactory {
                     SpanContext spanContext =
                         Span.fromContext(message.getCreationContext()).getSpanContext();
                     if (spanContext.isValid()) {
-                      spanLinks.addLink(spanContext);
+                      spanLinks.addLink(spanContext, messageLinkAttributes(message));
                     }
                   }
                 });
@@ -234,6 +241,9 @@ public final class AwsSdkInstrumenterFactory {
             // span. the creation context is linked even when it ends up being this span's parent,
             // which happens when there is no ambient span, because semconv asks for a link to the
             // creation context for every message the span accounts for
+            //
+            // the link carries no messaging.message.id: a process span accounts for a single
+            // message, so that attribute belongs on the span itself, where it already is
             SpanContext creationSpanContext =
                 Span.fromContext(request.getMessage().getCreationContext()).getSpanContext();
             if (creationSpanContext.isValid()) {
@@ -252,6 +262,10 @@ public final class AwsSdkInstrumenterFactory {
                       useXrayPropagator)));
     }
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+  }
+
+  private static Attributes messageLinkAttributes(SqsMessage message) {
+    return Attributes.of(MESSAGING_MESSAGE_ID, message.getMessageId());
   }
 
   private static List<AttributesExtractor<AbstractSqsRequest, Response>> toSqsRequestExtractors(

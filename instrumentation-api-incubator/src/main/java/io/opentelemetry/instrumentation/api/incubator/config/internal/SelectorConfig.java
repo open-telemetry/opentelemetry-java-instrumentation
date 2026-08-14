@@ -64,12 +64,11 @@ public final class SelectorConfig {
       boolean systemPropertyFallback) {
     IncludeExclude selector =
         getSelector(config, instrumentationName, selectorName, systemPropertyFallback);
-    List<String> deprecated =
-        getDeprecated(
-            config, instrumentationName, selectorName, systemPropertyFallback, selector != null);
     if (selector != null) {
       return selector;
     }
+    List<String> deprecated =
+        getDeprecated(config, instrumentationName, selectorName, systemPropertyFallback);
     return deprecated == null || deprecated.isEmpty()
         ? null
         : IncludeExclude.builder().setIncluded(deprecated).build();
@@ -88,11 +87,10 @@ public final class SelectorConfig {
   public static Predicate<String> resolveLegacyLiteral(
       DeclarativeConfigProperties config, String instrumentationName, String selectorName) {
     IncludeExclude selector = getSelector(config, instrumentationName, selectorName, false);
-    List<String> deprecated =
-        getDeprecated(config, instrumentationName, selectorName, false, selector != null);
     if (selector != null) {
       return selector::matches;
     }
+    List<String> deprecated = getDeprecated(config, instrumentationName, selectorName, false);
     return deprecated == null ? null : resolveLegacyLiteral(deprecated);
   }
 
@@ -158,8 +156,7 @@ public final class SelectorConfig {
       DeclarativeConfigProperties config,
       String instrumentationName,
       String selectorName,
-      boolean systemPropertyFallback,
-      boolean selectorConfigured) {
+      boolean systemPropertyFallback) {
     String flatProperty = deprecatedFlatProperty(instrumentationName, selectorName);
     List<String> deprecated =
         getList(
@@ -170,27 +167,14 @@ public final class SelectorConfig {
     if (deprecated == null) {
       return null;
     }
-    if (selectorConfigured) {
-      warnOnce(
-          flatProperty + ":ignored",
-          "The "
-              + flatProperty
-              + " setting and the equivalent declarative configuration property are deprecated and"
-              + " ignored because "
-              + flatProperty(instrumentationName, selectorName, ".included")
-              + " or "
-              + flatProperty(instrumentationName, selectorName, ".excluded")
-              + " is configured. They may be removed in the next minor release.");
-    } else {
-      warnOnce(
-          flatProperty + ":deprecated",
-          "The "
-              + flatProperty
-              + " setting and the equivalent declarative configuration property are deprecated and"
-              + " may be removed in the next minor release. Use "
-              + flatProperty(instrumentationName, selectorName, ".included")
-              + " or equivalent declarative configuration instead.");
-    }
+    warnOnce(
+        flatProperty + ":deprecated",
+        "The "
+            + flatProperty
+            + " setting and the equivalent declarative configuration property are deprecated and"
+            + " may be removed in the next minor release. Use "
+            + flatProperty(instrumentationName, selectorName, ".included")
+            + " or equivalent declarative configuration instead.");
     return deprecated;
   }
 
