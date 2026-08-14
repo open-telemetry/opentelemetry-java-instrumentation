@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -118,6 +119,42 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                             operationName("process"),
                             operationType("process"),
                             messagingTempDestination(false))));
+  }
+
+  @Test
+  void restoresSubscriptionNameWhenListenerRegistrationFails() throws JMSException {
+    String topicName = "failed-listener-registration-topic";
+    Topic topic = session.createTopic(topicName);
+    TextMessage message = session.createTextMessage("hello there");
+    message.setJMSDestination(topic);
+    MessageListener listener = ignored -> {};
+
+    MessageConsumer registeredConsumer =
+        session.createDurableConsumer(topic, "registered-subscription");
+    cleanup.deferCleanup(registeredConsumer);
+    registeredConsumer.setMessageListener(listener);
+
+    MessageConsumer closedConsumer = session.createDurableConsumer(topic, "closed-subscription");
+    closedConsumer.close();
+    assertThatThrownBy(() -> closedConsumer.setMessageListener(listener))
+        .isInstanceOf(JMSException.class);
+
+    listener.onMessage(message);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName(topicName, topicName),
+                            oldOperation("process"),
+                            operationName("process"),
+                            operationType("process"),
+                            messagingTempDestination(false),
+                            subscriptionName("registered-subscription"))));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv

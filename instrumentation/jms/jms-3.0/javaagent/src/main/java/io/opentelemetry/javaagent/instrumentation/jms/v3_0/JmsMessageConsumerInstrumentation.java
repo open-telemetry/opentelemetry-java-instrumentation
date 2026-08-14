@@ -95,10 +95,16 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
     // the name has to be recorded before the listener is registered, because providers can dispatch
     // an already pending message to it before setMessageListener returns
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(
+    public static Object onEnter(
         @Advice.This MessageConsumer consumer,
         @Advice.Argument(0) @Nullable MessageListener messageListener) {
-      JmsSubscriptionNames.copyToListener(consumer, messageListener);
+      return JmsSubscriptionNames.copyToListener(consumer, messageListener);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Enter @Nullable Object registration, @Advice.Thrown @Nullable Throwable throwable) {
+      JmsSubscriptionNames.completeListenerRegistration(registration, throwable == null);
     }
   }
 }
