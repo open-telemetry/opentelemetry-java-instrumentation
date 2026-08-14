@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
@@ -24,7 +25,9 @@ class RocketMqConsumerReceiveAttributeGetter
   @Override
   @Nullable
   public String getDestination(RocketMqReceiveRequest request) {
-    return request.getDestination();
+    return emitStableMessagingSemconv()
+        ? request.getDestination()
+        : request.getRequestDestination();
   }
 
   @Nullable
@@ -64,6 +67,8 @@ class RocketMqConsumerReceiveAttributeGetter
   @Nullable
   @Override
   public String getMessageId(RocketMqReceiveRequest request, @Nullable List<MessageView> unused) {
+    // receiving is a batching operation, so the message id always goes on the links describing the
+    // individual messages
     return null;
   }
 

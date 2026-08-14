@@ -115,7 +115,8 @@ class RocketMqInstrumenterFactory {
     return new RocketMqConsumerInstrumenter(
         createProcessInstrumenter(openTelemetry, headers, captureExperimentalSpanAttributes, false),
         emitStableMessagingSemconv()
-            ? createBatchProcessInstrumenter(openTelemetry, headers)
+            ? createBatchProcessInstrumenter(
+                openTelemetry, headers, captureExperimentalSpanAttributes)
             : createProcessInstrumenter(
                 openTelemetry, headers, captureExperimentalSpanAttributes, true),
         batchReceiveInstrumenter);
@@ -123,7 +124,10 @@ class RocketMqInstrumenterFactory {
 
   // only used under the v1.43 conventions, where a single process span accounts for the whole batch
   private static Instrumenter<RocketMqConsumerRequest, ConsumeMessageContext>
-      createBatchProcessInstrumenter(OpenTelemetry openTelemetry, IncludeExclude headers) {
+      createBatchProcessInstrumenter(
+          OpenTelemetry openTelemetry,
+          IncludeExclude headers,
+          boolean captureExperimentalSpanAttributes) {
 
     RocketMqConsumerAttributeGetter getter = new RocketMqConsumerAttributeGetter();
     MessagingOperationType operationType = MessagingOperationType.PROCESS;
@@ -139,10 +143,14 @@ class RocketMqInstrumenterFactory {
             .addAttributesExtractor(consumerAttributesExtractor())
             .addSpanLinksExtractor(
                 new RocketMqBatchProcessSpanLinksExtractor(
-                    openTelemetry.getPropagators().getTextMapPropagator()))
+                    openTelemetry.getPropagators().getTextMapPropagator(),
+                    captureExperimentalSpanAttributes))
             .addOperationMetrics(MessagingProcessMetrics.get())
             .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages())
             .setSpanStatusExtractor(consumeStatusExtractor());
+    if (captureExperimentalSpanAttributes) {
+      builder.addAttributesExtractor(new RocketMqBatchProcessAttributeExtractor());
+    }
     setMessagingProcessExceptionEventExtractor(builder);
 
     // a batch has no single message creation context that could be adopted as the span's parent,

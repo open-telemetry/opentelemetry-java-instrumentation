@@ -28,9 +28,10 @@ final class RocketMqConsumerAttributeGetter
     return "rocketmq";
   }
 
+  @Nullable
   @Override
   public String getDestination(RocketMqConsumerRequest request) {
-    return request.getMessage().getTopic();
+    return request.getDestination();
   }
 
   @Nullable
@@ -76,7 +77,7 @@ final class RocketMqConsumerAttributeGetter
   @Override
   public String getMessageId(
       RocketMqConsumerRequest request, @Nullable ConsumeMessageContext unused) {
-    return request.isBatch() ? null : request.getMessage().getMsgId();
+    return request.getMessageId();
   }
 
   @Nullable
