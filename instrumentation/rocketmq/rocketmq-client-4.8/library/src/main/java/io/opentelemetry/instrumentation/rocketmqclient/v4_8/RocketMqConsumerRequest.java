@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static java.util.Collections.singletonList;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -105,9 +106,10 @@ final class RocketMqConsumerRequest {
   @Nullable
   private static String commonValue(
       List<MessageExt> messages, Function<MessageExt, String> valueExtractor) {
-    String value = valueExtractor.apply(messages.get(0));
-    for (int i = 1; i < messages.size(); i++) {
-      if (!Objects.equals(value, valueExtractor.apply(messages.get(i)))) {
+    Iterator<MessageExt> iterator = messages.iterator();
+    String value = valueExtractor.apply(iterator.next());
+    while (iterator.hasNext()) {
+      if (!Objects.equals(value, valueExtractor.apply(iterator.next()))) {
         return null;
       }
     }
