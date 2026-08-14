@@ -6,12 +6,6 @@
 
 - `jetty.thread.queue.size` Jetty JMX metric unit has been changed from `{thread}` to `{job}`.
 - Normalize the value of `activemq.destination.temp.utilization` JMX Metric for ActiveMQ to be between 0 and 1 (inclusive) instead of between 0 and 100 (inclusive).
-- RabbitMQ `basicGet` now creates receive spans for non-empty and failed pulls regardless of
-  `otel.instrumentation.messaging.experimental.receive-telemetry.enabled`. Users who relied on
-  setting this property to `false` to suppress these spans must instead filter or sample them, or
-  disable RabbitMQ instrumentation entirely with `otel.instrumentation.rabbitmq.enabled=false`.
-  The receive-telemetry property continues to control other messaging instrumentations.
-  ([#19500](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19500))
 
 ### 🚫 Deprecations
 
