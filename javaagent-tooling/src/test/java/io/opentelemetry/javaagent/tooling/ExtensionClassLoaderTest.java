@@ -5,21 +5,32 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.WARNING;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.logging.Level;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class ExtensionClassLoaderTest {
   private static final File AGENT_FILE = new File("/agent.jar");
+
+  @AfterEach
+  void resetLogs() {
+    ExtensionClassLoader.getLogsForTest().clear();
+  }
 
   @Test
   void testParseLocation(@TempDir Path outputDir) throws Exception {
@@ -62,6 +73,55 @@ class ExtensionClassLoaderTest {
       List<URL> result = ExtensionClassLoader.parseLocation(jarPath1 + ",/anyfile.jar", AGENT_FILE);
       assertThat(result.size()).isEqualTo(1);
     }
+  }
+
+  @Test
+  void testParseLocationWarnings(@TempDir Path outputDir) throws Exception {
+    String jarPath1 = createJar("test-1.jar", outputDir);
+    Path emptyDir = Files.createDirectory(outputDir.resolve("empty"));
+
+    ExtensionClassLoader.parseLocation(jarPath1, AGENT_FILE);
+    assertThat(logsAtLevel(WARNING)).isEmpty();
+    assertThat(logsAtLevel(FINE)).hasSize(1);
+    ExtensionClassLoader.getLogsForTest().clear();
+
+    ExtensionClassLoader.parseLocation(outputDir.toString(), AGENT_FILE);
+    assertThat(logsAtLevel(WARNING)).isEmpty();
+    assertThat(logsAtLevel(FINE)).hasSize(1);
+    ExtensionClassLoader.getLogsForTest().clear();
+
+    ExtensionClassLoader.parseLocation("/does/not/exist", AGENT_FILE);
+    assertThat(logsAtLevel(WARNING)).hasSize(1);
+    assertThat(logsAtLevel(FINE)).isEmpty();
+    ExtensionClassLoader.getLogsForTest().clear();
+
+    ExtensionClassLoader.parseLocation(emptyDir.toString(), AGENT_FILE);
+    assertThat(logsAtLevel(WARNING)).hasSize(1);
+    assertThat(logsAtLevel(FINE)).isEmpty();
+    ExtensionClassLoader.getLogsForTest().clear();
+
+    ExtensionClassLoader.parseLocation(jarPath1 + ",/does/not/exist", AGENT_FILE);
+    assertThat(logsAtLevel(WARNING)).hasSize(1);
+    assertThat(logsAtLevel(FINE)).hasSize(1);
+    ExtensionClassLoader.getLogsForTest().clear();
+
+    ExtensionClassLoader.parseLocation(null, AGENT_FILE);
+    assertThat(logsAtLevel(WARNING)).isEmpty();
+    assertThat(logsAtLevel(FINE)).isEmpty();
+
+    ExtensionClassLoader.parseLocation("", AGENT_FILE);
+    assertThat(logsAtLevel(WARNING)).isEmpty();
+    assertThat(logsAtLevel(FINE)).isEmpty();
+  }
+
+  private static List<String> logsAtLevel(Level level) {
+    List<String> result = new ArrayList<>();
+    for (Map.Entry<Level, String> entry : ExtensionClassLoader.getLogsForTest()) {
+      if (entry.getKey().equals(level)) {
+        result.add(entry.getValue());
+      }
+    }
+    return result;
   }
 
   private static String createJar(String name, Path directory) throws Exception {

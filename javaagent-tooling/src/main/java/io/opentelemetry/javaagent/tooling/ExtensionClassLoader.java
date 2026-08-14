@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.tooling;
 
 import static java.util.Collections.emptyList;
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
@@ -23,12 +25,16 @@ import java.security.AllPermission;
 import java.security.CodeSource;
 import java.security.PermissionCollection;
 import java.security.Permissions;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 
@@ -48,6 +54,7 @@ public class ExtensionClassLoader extends URLClassLoader {
 
   // NOTE it's important not to use logging in this class, because this class is used before logging
   // is initialized
+  private static final List<Map.Entry<Level, String>> deferredLogs = new ArrayList<>();
 
   static {
     ClassLoader.registerAsParallelCapable();
@@ -72,6 +79,21 @@ public class ExtensionClassLoader extends URLClassLoader {
       delegates.add(getDelegate(parent, url, isSecurityManagerSupportEnabled));
     }
     return new MultipleParentClassLoader(parent, delegates);
+  }
+
+  static void logExtensionLoadingMessages() {
+    if (deferredLogs.isEmpty()) {
+      return;
+    }
+    Logger logger = Logger.getLogger(ExtensionClassLoader.class.getName());
+    for (Map.Entry<Level, String> entry : deferredLogs) {
+      logger.log(entry.getKey(), entry.getValue());
+    }
+    deferredLogs.clear();
+  }
+
+  private static void addLog(Level level, String message) {
+    deferredLogs.add(new SimpleImmutableEntry<>(level, message));
   }
 
   private static void includeEmbeddedExtensionsIfFound(List<URL> extensions, File javaagentFile) {
@@ -142,25 +164,40 @@ public class ExtensionClassLoader extends URLClassLoader {
     }
 
     File location = new File(locationName);
+    boolean loaded = false;
     if (isJar(location)) {
-      addFileUrl(locations, location);
+      loaded = addFileUrl(locations, location);
     } else if (location.isDirectory()) {
       File[] files = location.listFiles(ExtensionClassLoader::isJar);
       if (files != null) {
         for (File file : files) {
-          if (isJar(file) && !file.getAbsolutePath().equals(javaagentFile.getAbsolutePath())) {
-            addFileUrl(locations, file);
+          if (!file.getAbsolutePath().equals(javaagentFile.getAbsolutePath())
+              && addFileUrl(locations, file)) {
+            loaded = true;
           }
         }
       }
     }
+    if (!loaded) {
+      addLog(
+          WARNING,
+          "Configured extensions location \""
+              + locationName
+              + "\" does not exist, is not a jar file or directory, or contains no extension jar"
+              + " files; ignoring it");
+    }
+  }
+
+  // visible for testing
+  static List<Map.Entry<Level, String>> getLogsForTest() {
+    return deferredLogs;
   }
 
   private static boolean isJar(File f) {
     return f.isFile() && f.getName().endsWith(".jar");
   }
 
-  private static void addFileUrl(List<URL> result, File file) {
+  private static boolean addFileUrl(List<URL> result, File file) {
     try {
       // skip shading extension classes if opentelemetry-api is not shaded (happens when using
       // disableShadowRelocate=true)
@@ -170,8 +207,11 @@ public class ExtensionClassLoader extends URLClassLoader {
       } else {
         result.add(file.toURI().toURL());
       }
-    } catch (MalformedURLException ignored) {
-      System.err.println("Ignoring " + file);
+      addLog(FINE, "Loaded extension jar file \"" + file + "\"");
+      return true;
+    } catch (MalformedURLException e) {
+      addLog(WARNING, "Failed to load extension jar file \"" + file + "\": " + e.getMessage());
+      return false;
     }
   }
 
