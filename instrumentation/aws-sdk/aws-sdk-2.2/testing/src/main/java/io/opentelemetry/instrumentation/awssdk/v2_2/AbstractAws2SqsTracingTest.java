@@ -154,7 +154,9 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                             publishSpan.get(),
                             captureHeaders),
                     span -> {
-                      span.hasName("process child").hasParent(processSpan);
+                      span.hasName("process child")
+                          .hasParent(processSpan)
+                          .hasTotalAttributeCount(0);
                     });
                 return;
               }
