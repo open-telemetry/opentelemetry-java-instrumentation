@@ -5,19 +5,29 @@
 
 package io.opentelemetry.javaagent.instrumentation.springai.v1_0;
 
+import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.captureMessageContent;
+import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.captureMessageContentAsSpanAttributes;
+import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.messageContentSpanAttributeMaxLength;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.metadata.ChatGenerationMetadata;
 import org.springframework.ai.chat.metadata.ChatResponseMetadata;
 import org.springframework.ai.chat.metadata.EmptyUsage;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
+import org.springframework.ai.content.Media;
 import reactor.core.publisher.Flux;
 import reactor.util.context.ContextView;
 
@@ -28,17 +38,17 @@ public class SpringAiStreamTracing {
 
   private static Flux<ChatResponse> start(
       Flux<ChatResponse> source, SpringAiRequest request, ContextView reactorContext) {
-    Instrumenter<SpringAiRequest, ChatResponse> instrumenter;
+    Instrumenter<SpringAiRequest, ChatResponse> chatInstrumenter;
     Context context;
     try {
-      instrumenter = SpringAiSingletons.instrumenter();
+      chatInstrumenter = instrumenter();
       Context parentContext =
           ContextPropagationOperator.getOpenTelemetryContextFromContextView(
               reactorContext, Context.current());
-      if (!instrumenter.shouldStart(parentContext, request)) {
+      if (!chatInstrumenter.shouldStart(parentContext, request)) {
         return source;
       }
-      context = instrumenter.start(parentContext, request);
+      context = chatInstrumenter.start(parentContext, request);
     } catch (Throwable ignored) {
       // This method runs outside of Byte Buddy advice when the publisher is subscribed.
       return source;
@@ -50,19 +60,19 @@ public class SpringAiStreamTracing {
       AtomicBoolean ended = new AtomicBoolean();
       StreamState state =
           new StreamState(
-              SpringAiSingletons.captureMessageContent(),
-              SpringAiSingletons.captureMessageContentAsSpanAttributes(),
-              SpringAiSingletons.messageContentSpanAttributeMaxLength());
+              captureMessageContent(),
+              captureMessageContentAsSpanAttributes(),
+              messageContentSpanAttributeMaxLength());
       Flux<ChatResponse> traced =
           source
               .doOnNext(state::add)
-              .doOnError(error -> end(instrumenter, context, request, state, error, ended))
-              .doOnComplete(() -> end(instrumenter, context, request, state, null, ended))
-              .doOnCancel(() -> end(instrumenter, context, request, state, null, ended));
+              .doOnError(error -> end(chatInstrumenter, context, request, state, error, ended))
+              .doOnComplete(() -> end(chatInstrumenter, context, request, state, null, ended))
+              .doOnCancel(() -> end(chatInstrumenter, context, request, state, null, ended));
       return ContextPropagationOperator.runWithContext(traced, context);
     } catch (Throwable ignored) {
       // Do not leak an already-started span if Reactor rejects operator assembly.
-      endStartedSpan(instrumenter, context, request);
+      endStartedSpan(chatInstrumenter, context, request);
       return source;
     }
   }
@@ -208,9 +218,14 @@ public class SpringAiStreamTracing {
   private static final class GenerationState {
     @Nullable private Generation generation;
     @Nullable private String finishReason;
+    private final List<ToolCallState> toolCalls = new ArrayList<>();
+    private final List<Media> media = new ArrayList<>();
 
     private void add(Generation generation) {
       this.generation = generation;
+      AssistantMessage output = generation.getOutput();
+      addToolCalls(output);
+      addMedia(output);
       ChatGenerationMetadata metadata = generation.getMetadata();
       if (metadata != null && metadata.getFinishReason() != null) {
         finishReason = metadata.getFinishReason();
@@ -219,17 +234,172 @@ public class SpringAiStreamTracing {
 
     @Nullable
     private Generation value() {
-      if (generation == null || finishReason == null) {
-        return generation;
+      if (generation == null) {
+        return null;
+      }
+
+      AssistantMessage output = generation.getOutput();
+      if (!toolCalls.isEmpty() || !media.isEmpty()) {
+        output = withAccumulatedStructuredParts(output);
+      }
+
+      if (finishReason == null) {
+        if (output == generation.getOutput()) {
+          return generation;
+        }
+        return new Generation(output, generation.getMetadata());
       }
       ChatGenerationMetadata metadata = generation.getMetadata();
       if (metadata != null && finishReason.equals(metadata.getFinishReason())) {
-        return generation;
+        if (output == generation.getOutput()) {
+          return generation;
+        }
+        return new Generation(output, metadata);
       }
       return new Generation(
-          generation.getOutput(),
-          ChatGenerationMetadata.builder().finishReason(finishReason).build());
+          output, ChatGenerationMetadata.builder().finishReason(finishReason).build());
     }
+
+    private void addToolCalls(AssistantMessage message) {
+      List<AssistantMessage.ToolCall> newToolCalls = message.getToolCalls();
+      if (newToolCalls == null || newToolCalls.isEmpty()) {
+        return;
+      }
+      for (int index = 0; index < newToolCalls.size(); index++) {
+        AssistantMessage.ToolCall toolCall = newToolCalls.get(index);
+        toolCallState(toolCall, index).add(toolCall);
+      }
+    }
+
+    private ToolCallState toolCallState(AssistantMessage.ToolCall toolCall, int index) {
+      String id = toolCall.id();
+      if (id != null && !id.isEmpty()) {
+        for (ToolCallState state : toolCalls) {
+          if (id.equals(state.id)) {
+            return state;
+          }
+        }
+        if (index < toolCalls.size() && toolCalls.get(index).canMerge(toolCall)) {
+          return toolCalls.get(index);
+        }
+      } else if (toolCalls.size() == 1 && toolCalls.get(0).canMerge(toolCall)) {
+        return toolCalls.get(0);
+      }
+
+      ToolCallState state = new ToolCallState();
+      toolCalls.add(state);
+      return state;
+    }
+
+    private void addMedia(AssistantMessage message) {
+      List<Media> newMedia = message.getMedia();
+      if (newMedia == null || newMedia.isEmpty()) {
+        return;
+      }
+      for (Media item : newMedia) {
+        if (!media.contains(item)) {
+          media.add(item);
+        }
+      }
+    }
+
+    private AssistantMessage withAccumulatedStructuredParts(AssistantMessage message) {
+      List<AssistantMessage.ToolCall> aggregatedToolCalls = new ArrayList<>(toolCalls.size());
+      for (ToolCallState toolCall : toolCalls) {
+        aggregatedToolCalls.add(toolCall.value());
+      }
+      return assistantMessage(
+          message, aggregatedToolCalls, media.isEmpty() ? media(message) : media);
+    }
+  }
+
+  private static final class ToolCallState {
+    @Nullable private String id;
+    @Nullable private String type;
+    @Nullable private String name;
+    private final StringBuilder arguments = new StringBuilder();
+    private boolean hasArguments;
+
+    private void add(AssistantMessage.ToolCall toolCall) {
+      id = latestNonEmpty(id, toolCall.id());
+      type = latestNonEmpty(type, toolCall.type());
+      name = latestNonEmpty(name, toolCall.name());
+      String newArguments = toolCall.arguments();
+      if (newArguments != null && !newArguments.isEmpty()) {
+        arguments.append(newArguments);
+        hasArguments = true;
+      }
+    }
+
+    private boolean canMerge(AssistantMessage.ToolCall toolCall) {
+      return hasSameOrNoValue(id, toolCall.id())
+          && hasSameOrNoValue(type, toolCall.type())
+          && hasSameOrNoValue(name, toolCall.name());
+    }
+
+    private AssistantMessage.ToolCall value() {
+      return new AssistantMessage.ToolCall(
+          id, type, name, hasArguments ? arguments.toString() : null);
+    }
+
+    @Nullable
+    private static String latestNonEmpty(@Nullable String current, @Nullable String next) {
+      return next == null || next.isEmpty() ? current : next;
+    }
+
+    private static boolean hasSameOrNoValue(@Nullable String current, @Nullable String next) {
+      if (next == null || next.isEmpty()) {
+        return true;
+      }
+      return current == null || current.isEmpty() || current.equals(next);
+    }
+  }
+
+  private static AssistantMessage assistantMessage(
+      AssistantMessage message, List<AssistantMessage.ToolCall> toolCalls, List<Media> media) {
+    try {
+      Object builder = AssistantMessage.class.getMethod("builder").invoke(null);
+      invokeBuilder(builder, "content", String.class, message.getText());
+      invokeBuilder(builder, "properties", Map.class, metadata(message));
+      invokeBuilder(builder, "toolCalls", List.class, toolCalls);
+      invokeBuilder(builder, "media", List.class, media);
+      return (AssistantMessage) builder.getClass().getMethod("build").invoke(builder);
+    } catch (NoSuchMethodException e) {
+      return assistantMessageWithConstructor(message, toolCalls, media, e);
+    } catch (ReflectiveOperationException e) {
+      return message;
+    }
+  }
+
+  private static AssistantMessage assistantMessageWithConstructor(
+      AssistantMessage message,
+      List<AssistantMessage.ToolCall> toolCalls,
+      List<Media> media,
+      NoSuchMethodException e) {
+    try {
+      return AssistantMessage.class
+          .getConstructor(String.class, Map.class, List.class, List.class)
+          .newInstance(message.getText(), metadata(message), toolCalls, media);
+    } catch (ReflectiveOperationException f) {
+      e.addSuppressed(f);
+      return message;
+    }
+  }
+
+  private static void invokeBuilder(
+      Object builder, String methodName, Class<?> parameterType, Object value)
+      throws ReflectiveOperationException {
+    builder.getClass().getMethod(methodName, parameterType).invoke(builder, value);
+  }
+
+  private static Map<String, Object> metadata(AssistantMessage message) {
+    Map<String, Object> metadata = message.getMetadata();
+    return metadata == null ? emptyMap() : metadata;
+  }
+
+  private static List<Media> media(AssistantMessage message) {
+    List<Media> media = message.getMedia();
+    return media == null ? emptyList() : media;
   }
 
   private static final class ContentBuffer {

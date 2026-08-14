@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.springai.v1_0;
 
+import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.captureMessageContent;
+import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.eventLogger;
 import static io.opentelemetry.semconv.incubating.EventIncubatingAttributes.EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 
@@ -33,7 +35,7 @@ public class SpringAiMessageEvents {
           continue;
         }
         Map<String, Value<?>> body = new LinkedHashMap<>();
-        if (SpringAiSingletons.captureMessageContent()) {
+        if (captureMessageContent()) {
           String content = message.getText();
           if (content != null && (!content.isEmpty() || !hasToolContent(message))) {
             body.put("content", Value.of(content));
@@ -68,7 +70,7 @@ public class SpringAiMessageEvents {
         }
         body.put("index", Value.of(index));
         Map<String, Value<?>> message = new LinkedHashMap<>();
-        if (SpringAiSingletons.captureMessageContent()) {
+        if (captureMessageContent()) {
           String content =
               streamedContents != null && index < streamedContents.size()
                   ? streamedContents.get(index)
@@ -88,7 +90,7 @@ public class SpringAiMessageEvents {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static LogRecordBuilder newEvent(SpringAiRequest request, String eventName) {
-    return SpringAiSingletons.eventLogger()
+    return eventLogger()
         .logRecordBuilder()
         .setAttribute(EVENT_NAME, eventName)
         .setAttribute(GEN_AI_PROVIDER_NAME, request.provider());
@@ -148,7 +150,7 @@ public class SpringAiMessageEvents {
     Map<String, Value<?>> result = new LinkedHashMap<>();
     Map<String, Value<?>> function = new LinkedHashMap<>();
     putString(function, "name", toolCall.name());
-    if (SpringAiSingletons.captureMessageContent()) {
+    if (captureMessageContent()) {
       putString(function, "arguments", toolCall.arguments());
     }
     result.put("function", Value.of(function));
@@ -169,7 +171,7 @@ public class SpringAiMessageEvents {
       ToolResponseMessage.ToolResponse response = responses.get(0);
       putString(body, "id", response.id());
       putString(body, "name", response.name());
-      if (SpringAiSingletons.captureMessageContent()) {
+      if (captureMessageContent()) {
         putString(body, "content", response.responseData());
       }
       return;
@@ -185,7 +187,7 @@ public class SpringAiMessageEvents {
     Map<String, Value<?>> result = new LinkedHashMap<>();
     putString(result, "id", response.id());
     putString(result, "name", response.name());
-    if (SpringAiSingletons.captureMessageContent()) {
+    if (captureMessageContent()) {
       putString(result, "content", response.responseData());
     }
     return Value.of(result);

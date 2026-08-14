@@ -82,6 +82,10 @@ class ChatModelTest {
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean(
           "otel.instrumentation.spring-ai.experimental.capture-message-content-as-span-attributes.enabled");
+  private static final int MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH =
+      Integer.getInteger(
+          "otel.instrumentation.spring-ai.experimental.message-content-span-attribute.max-length",
+          8192);
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -224,6 +228,58 @@ class ChatModelTest {
                                         + "{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"B two\"}],\"finish_reason\":\"length\"}]")))));
     assertMetrics();
     assertMultiChoiceEvents(spanContext);
+  }
+
+  @Test
+  void streamAggregatesToolCallsAcrossChunks() {
+    ChatResponse firstChunk =
+        response(
+            singletonList(
+                generation(
+                    assistantMessage(
+                        "", singletonList(toolCall(TOOL_CALL_ID, "function", TOOL_NAME, "{\"loc"))),
+                    null)),
+            ChatResponseMetadata.builder().id("response-id").model(MODEL).build());
+    ChatResponse secondChunk =
+        response(
+            singletonList(
+                generation(
+                    assistantMessage(
+                        "", singletonList(toolCall(null, null, null, "ation\":\"Paris\"}"))),
+                    "tool_calls")),
+            ChatResponseMetadata.builder().usage(new DefaultUsage(3, 2)).build());
+    chatModel.setStreamPublisher(Flux.just(firstChunk, secondChunk));
+
+    testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
+
+    SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
+    assertThat(
+            testing
+                .waitForTraces(1)
+                .get(0)
+                .get(1)
+                .getAttributes()
+                .get(stringKey("gen_ai.output.messages")))
+        .isEqualTo(
+            messageSpanAttribute(
+                "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"tool_call\",\"id\":\""
+                    + TOOL_CALL_ID
+                    + "\",\"name\":\""
+                    + TOOL_NAME
+                    + "\",\"arguments\":\"{\\\"location\\\":\\\"Paris\\\"}\"}],\"finish_reason\":\"tool_calls\"}]"));
+    testing.waitAndAssertLogRecords(
+        log ->
+            log.hasAttributesSatisfyingExactly(
+                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                    equalTo(stringKey("event.name"), "gen_ai.user.message"))
+                .hasSpanContext(spanContext)
+                .hasBody(messageBody(PROMPT)),
+        log ->
+            log.hasAttributesSatisfyingExactly(
+                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                    equalTo(stringKey("event.name"), "gen_ai.choice"))
+                .hasSpanContext(spanContext)
+                .hasBody(choiceBodyWithToolCall("")));
   }
 
   @Test
@@ -492,6 +548,25 @@ class ChatModelTest {
   }
 
   @Test
+  void messageSpanAttributeUsesConfiguredMaxLength() {
+    String content = repeatedContent(MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH + 1);
+    testing.runWithSpan("parent", () -> chatModel.call(new Prompt(content)));
+
+    assertThat(
+            testing
+                .waitForTraces(1)
+                .get(0)
+                .get(1)
+                .getAttributes()
+                .get(stringKey("gen_ai.input.messages")))
+        .isEqualTo(
+            messageSpanAttribute(
+                "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\""
+                    + repeatedContent(MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH)
+                    + "\"}]}]"));
+  }
+
+  @Test
   void streamedMessageSpanAttributeIsBoundedAtASurrogateBoundary() {
     ChatResponse firstChunk =
         response(
@@ -517,6 +592,35 @@ class ChatModelTest {
             messageSpanAttribute(
                 "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
                     + repeatedContent(8191)
+                    + "\"}],\"finish_reason\":\"stop\"}]"));
+  }
+
+  @Test
+  void streamedMessageSpanAttributeUsesConfiguredMaxLength() {
+    String content = repeatedContent(MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH + 1);
+    chatModel.setStreamPublisher(
+        Flux.just(
+            response(
+                singletonList(generation(content, "stop")),
+                ChatResponseMetadata.builder()
+                    .id("response-id")
+                    .model(MODEL)
+                    .usage(new DefaultUsage(3, 2))
+                    .build())));
+
+    testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
+
+    assertThat(
+            testing
+                .waitForTraces(1)
+                .get(0)
+                .get(1)
+                .getAttributes()
+                .get(stringKey("gen_ai.output.messages")))
+        .isEqualTo(
+            messageSpanAttribute(
+                "[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\""
+                    + repeatedContent(MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH)
                     + "\"}],\"finish_reason\":\"stop\"}]"));
   }
 
@@ -746,10 +850,14 @@ class ChatModelTest {
   }
 
   private static Value<?> choiceBodyWithToolCall() {
+    return choiceBodyWithToolCall(RESPONSE);
+  }
+
+  private static Value<?> choiceBodyWithToolCall(String content) {
     Value<?> message =
         CAPTURE_MESSAGE_CONTENT
             ? Value.of(
-                KeyValue.of("content", Value.of(RESPONSE)),
+                KeyValue.of("content", Value.of(content)),
                 KeyValue.of("tool_calls", toolCallsValue()))
             : Value.of(KeyValue.of("tool_calls", toolCallsValue()));
     return Value.of(
@@ -837,22 +945,22 @@ class ChatModelTest {
       invokeBuilder(builder, "toolCalls", List.class, toolCalls);
       invokeBuilder(builder, "media", List.class, emptyList());
       return (AssistantMessage) builder.getClass().getMethod("build").invoke(builder);
-    } catch (NoSuchMethodException noBuilder) {
-      return assistantMessageWithConstructor(content, toolCalls, noBuilder);
-    } catch (ReflectiveOperationException exception) {
-      throw new IllegalStateException("Could not create AssistantMessage", exception);
+    } catch (NoSuchMethodException e) {
+      return assistantMessageWithConstructor(content, toolCalls, e);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException("Could not create AssistantMessage", e);
     }
   }
 
   private static AssistantMessage assistantMessageWithConstructor(
-      String content, List<AssistantMessage.ToolCall> toolCalls, NoSuchMethodException noBuilder) {
+      String content, List<AssistantMessage.ToolCall> toolCalls, NoSuchMethodException e) {
     try {
       return AssistantMessage.class
           .getConstructor(String.class, Map.class, List.class)
           .newInstance(content, emptyMetadata(), toolCalls);
-    } catch (ReflectiveOperationException exception) {
-      noBuilder.addSuppressed(exception);
-      throw new IllegalStateException("Could not create AssistantMessage", noBuilder);
+    } catch (ReflectiveOperationException f) {
+      e.addSuppressed(f);
+      throw new IllegalStateException("Could not create AssistantMessage", e);
     }
   }
 
@@ -863,22 +971,22 @@ class ChatModelTest {
       invokeBuilder(builder, "responses", List.class, responses);
       invokeBuilder(builder, "metadata", Map.class, emptyMetadata());
       return (ToolResponseMessage) builder.getClass().getMethod("build").invoke(builder);
-    } catch (NoSuchMethodException noBuilder) {
-      return toolResponseMessageWithConstructor(responses, noBuilder);
-    } catch (ReflectiveOperationException exception) {
-      throw new IllegalStateException("Could not create ToolResponseMessage", exception);
+    } catch (NoSuchMethodException e) {
+      return toolResponseMessageWithConstructor(responses, e);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException("Could not create ToolResponseMessage", e);
     }
   }
 
   private static ToolResponseMessage toolResponseMessageWithConstructor(
-      List<ToolResponseMessage.ToolResponse> responses, NoSuchMethodException noBuilder) {
+      List<ToolResponseMessage.ToolResponse> responses, NoSuchMethodException e) {
     try {
       return ToolResponseMessage.class
           .getConstructor(List.class, Map.class)
           .newInstance(responses, emptyMetadata());
-    } catch (ReflectiveOperationException exception) {
-      noBuilder.addSuppressed(exception);
-      throw new IllegalStateException("Could not create ToolResponseMessage", noBuilder);
+    } catch (ReflectiveOperationException f) {
+      e.addSuppressed(f);
+      throw new IllegalStateException("Could not create ToolResponseMessage", e);
     }
   }
 
@@ -894,6 +1002,11 @@ class ChatModelTest {
 
   private static AssistantMessage.ToolCall toolCall() {
     return new AssistantMessage.ToolCall(TOOL_CALL_ID, "function", TOOL_NAME, TOOL_ARGUMENTS);
+  }
+
+  private static AssistantMessage.ToolCall toolCall(
+      String id, String type, String name, String arguments) {
+    return new AssistantMessage.ToolCall(id, type, name, arguments);
   }
 
   private static ToolResponseMessage.ToolResponse toolResponse() {

@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.springai.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.captureMessageContentAsSpanAttributes;
+import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.messageContentSpanAttributeMaxLength;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
@@ -31,7 +33,7 @@ public class SpringAiMessageAttributes {
       stringKey("gen_ai.output.messages");
 
   public static void setInputMessages(Context context, SpringAiRequest request) {
-    if (!SpringAiSingletons.captureMessageContentAsSpanAttributes()) {
+    if (!captureMessageContentAsSpanAttributes()) {
       return;
     }
     try {
@@ -39,8 +41,7 @@ public class SpringAiMessageAttributes {
           .setAttribute(
               GEN_AI_INPUT_MESSAGES,
               serializeMessages(
-                  request.prompt().getInstructions(),
-                  SpringAiSingletons.messageContentSpanAttributeMaxLength()));
+                  request.prompt().getInstructions(), messageContentSpanAttributeMaxLength()));
     } catch (Throwable ignored) {
       // This helper can run outside of Byte Buddy advice for streaming calls.
     }
@@ -48,7 +49,7 @@ public class SpringAiMessageAttributes {
 
   public static void setOutputMessages(
       Context context, @Nullable ChatResponse response, @Nullable List<String> streamedContents) {
-    if (!SpringAiSingletons.captureMessageContentAsSpanAttributes() || response == null) {
+    if (!captureMessageContentAsSpanAttributes() || response == null) {
       return;
     }
     try {
@@ -56,9 +57,7 @@ public class SpringAiMessageAttributes {
           .setAttribute(
               GEN_AI_OUTPUT_MESSAGES,
               serializeResponses(
-                  response,
-                  streamedContents,
-                  SpringAiSingletons.messageContentSpanAttributeMaxLength()));
+                  response, streamedContents, messageContentSpanAttributeMaxLength()));
     } catch (Throwable ignored) {
       // This helper can run outside of Byte Buddy advice for streaming calls.
     }

@@ -46,6 +46,26 @@ tasks {
     )
   }
 
+  val testExperimentalWithSmallMessageContentLimit =
+    register<Test>("testExperimentalWithSmallMessageContentLimit") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+
+      filter {
+        includeTestsMatching("*ChatModelTest.messageSpanAttributeUsesConfiguredMaxLength")
+        includeTestsMatching("*ChatModelTest.streamedMessageSpanAttributeUsesConfiguredMaxLength")
+      }
+      jvmArgs(
+        "-Dotel.instrumentation.spring-ai.experimental.capture-message-content-as-span-attributes.enabled=true",
+        "-Dotel.instrumentation.spring-ai.experimental.message-content-span-attribute.max-length=10",
+      )
+      systemProperty("otel.instrumentation.genai.capture-message-content", false)
+      systemProperty(
+        "metadataConfig",
+        "otel.instrumentation.spring-ai.experimental.capture-message-content-as-span-attributes.enabled=true,otel.instrumentation.spring-ai.experimental.message-content-span-attribute.max-length=10",
+      )
+    }
+
   val testContentDisabled = register<Test>("testContentDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -58,6 +78,6 @@ tasks {
   }
 
   check {
-    dependsOn(testExperimental, testContentDisabled)
+    dependsOn(testExperimental, testExperimentalWithSmallMessageContentLimit, testContentDisabled)
   }
 }
