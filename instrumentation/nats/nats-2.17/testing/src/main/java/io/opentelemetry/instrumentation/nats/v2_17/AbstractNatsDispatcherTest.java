@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 
@@ -22,6 +23,7 @@ import io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,6 +46,38 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
     // finally, to make sure we're unwrapping properly the
     // OpenTelemetryDispatcher in the library
     assertThatNoException().isThrownBy(() -> connection.closeDispatcher(d1));
+  }
+
+  @Test
+  void testProcessMetrics() throws InterruptedException {
+    CountDownLatch handled = new CountDownLatch(1);
+    Dispatcher dispatcher =
+        connection.createDispatcher(msg -> handled.countDown()).subscribe("metrics");
+    cleanup.deferCleanup(() -> connection.closeDispatcher(dispatcher));
+
+    connection.publish("metrics", new byte[] {0});
+
+    assertThat(handled.await(10, SECONDS)).isTrue();
+    assertProcessMetrics("metrics", null);
+  }
+
+  @Test
+  void testProcessErrorMetrics() throws InterruptedException {
+    CountDownLatch handled = new CountDownLatch(1);
+    Dispatcher dispatcher =
+        connection
+            .createDispatcher(
+                msg -> {
+                  handled.countDown();
+                  throw new IllegalStateException("test");
+                })
+            .subscribe("error");
+    cleanup.deferCleanup(() -> connection.closeDispatcher(dispatcher));
+
+    connection.publish("error", new byte[] {0});
+
+    assertThat(handled.await(10, SECONDS)).isTrue();
+    assertProcessMetrics("error", IllegalStateException.class.getName());
   }
 
   @Test

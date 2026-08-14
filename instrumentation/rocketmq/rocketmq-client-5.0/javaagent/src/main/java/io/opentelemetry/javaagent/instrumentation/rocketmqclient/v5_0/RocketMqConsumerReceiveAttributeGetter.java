@@ -20,12 +20,12 @@ class RocketMqConsumerReceiveAttributeGetter
     return "rocketmq";
   }
 
-  @Nullable
   @Override
+  @Nullable
   public String getDestination(RocketMqReceiveRequest request) {
     return emitStableMessagingSemconv()
         ? request.getDestination()
-        : request.getRequest().getMessageQueue().getTopic().getName();
+        : request.getRequestDestination();
   }
 
   @Nullable

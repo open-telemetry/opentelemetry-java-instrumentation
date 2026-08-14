@@ -11,6 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -40,7 +41,8 @@ public class SpringRabbitSingletons {
                 MessagingAttributesExtractor.builder(getter, operationType, PROCESS_OPERATION_NAME)
                     .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build())
-            .addAttributesExtractor(new SpringRabbitExtraAttributesExtractor());
+            .addAttributesExtractor(new SpringRabbitExtraAttributesExtractor())
+            .addOperationMetrics(MessagingProcessMetrics.get());
     setMessagingProcessExceptionEventExtractor(builder);
 
     instrumenter =

@@ -9,7 +9,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.LockSupport;
 import org.junit.jupiter.api.Test;
@@ -19,13 +18,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JfrVirtualThreadPinnedTest {
 
-  @RegisterExtension
-  JfrExtension jfrExtension =
-      new JfrExtension(
-          jfrConfig -> {
-            jfrConfig.disableAllFeatures();
-            jfrConfig.enableFeature(JfrFeature.VIRTUAL_THREAD_METRICS);
-          });
+  @RegisterExtension JfrExtension jfrExtension = new JfrExtension("jvm.thread.virtual.pinned");
 
   // synchronized pinning was removed in Java 24 (JEP 491)
   @Test

@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
+
 import apache.rocketmq.v2.ReceiveMessageRequest;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -13,15 +16,34 @@ import java.util.Objects;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.message.MessageView;
+import org.apache.rocketmq.client.java.message.MessageViewImpl;
 
 class RocketMqReceiveRequest {
 
-  private final ReceiveMessageRequest request;
+  @Nullable private final ReceiveMessageRequest request;
+  @Nullable private final String destination;
+  @Nullable private final String namespace;
+  @Nullable private final String consumerGroup;
   private final List<MessageView> messages;
   @Nullable private BatchMessageAttributes batchMessageAttributes;
 
   private RocketMqReceiveRequest(ReceiveMessageRequest request, List<MessageView> messages) {
     this.request = request;
+    this.destination = null;
+    this.namespace = null;
+    this.consumerGroup = null;
+    this.messages = messages;
+  }
+
+  private RocketMqReceiveRequest(
+      @Nullable String destination,
+      @Nullable String namespace,
+      String consumerGroup,
+      List<MessageView> messages) {
+    this.request = null;
+    this.destination = destination;
+    this.namespace = namespace;
+    this.consumerGroup = consumerGroup;
     this.messages = messages;
   }
 
@@ -29,8 +51,34 @@ class RocketMqReceiveRequest {
     return new RocketMqReceiveRequest(request, messages);
   }
 
-  ReceiveMessageRequest getRequest() {
-    return request;
+  static RocketMqReceiveRequest create(String consumerGroup) {
+    return new RocketMqReceiveRequest(null, null, consumerGroup, emptyList());
+  }
+
+  static RocketMqReceiveRequest create(String consumerGroup, List<MessageView> messages) {
+    MessageView message = messages.get(0);
+    String namespace =
+        ((MessageViewImpl) message).getMessageQueue().getTopicResource().getNamespace();
+    return new RocketMqReceiveRequest(message.getTopic(), namespace, consumerGroup, messages);
+  }
+
+  @Nullable
+  String getRequestDestination() {
+    ReceiveMessageRequest request = this.request;
+    return request == null ? destination : request.getMessageQueue().getTopic().getName();
+  }
+
+  @Nullable
+  String getNamespace() {
+    ReceiveMessageRequest request = this.request;
+    return request == null
+        ? namespace
+        : request.getMessageQueue().getTopic().getResourceNamespace();
+  }
+
+  String getConsumerGroup() {
+    ReceiveMessageRequest request = this.request;
+    return request == null ? requireNonNull(consumerGroup) : request.getGroup().getName();
   }
 
   List<MessageView> getMessages() {
@@ -65,7 +113,8 @@ class RocketMqReceiveRequest {
   private BatchMessageAttributes getBatchMessageAttributes() {
     BatchMessageAttributes attributes = batchMessageAttributes;
     if (attributes == null) {
-      attributes = new BatchMessageAttributes(request, messages);
+      attributes =
+          new BatchMessageAttributes(messages.isEmpty() ? getRequestDestination() : null, messages);
       batchMessageAttributes = attributes;
     }
     return attributes;
@@ -108,11 +157,10 @@ class RocketMqReceiveRequest {
     @Nullable private final Long messageDeliveryTimestamp;
     @Nullable private final List<String> messageKeys;
 
-    private BatchMessageAttributes(ReceiveMessageRequest request, List<MessageView> messages) {
+    private BatchMessageAttributes(
+        @Nullable String requestDestination, List<MessageView> messages) {
       destination =
-          messages.isEmpty()
-              ? request.getMessageQueue().getTopic().getName()
-              : commonValue(messages, MessageView::getTopic);
+          messages.isEmpty() ? requestDestination : commonValue(messages, MessageView::getTopic);
       messageTag = commonValue(messages, message -> message.getTag().orElse(null));
       messageGroup = commonValue(messages, message -> message.getMessageGroup().orElse(null));
       messageDeliveryTimestamp =

@@ -59,6 +59,11 @@ tasks {
   }
 
   shadowJar {
+    // avoid warning about duplicate kotlin module files being silently dropped
+    filesMatching("META-INF/*.kotlin_module") {
+      duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
+
     manifest {
       attributes("Main-Class" to "io.opentelemetry.smoketest.fakebackend.FakeBackendMain")
     }

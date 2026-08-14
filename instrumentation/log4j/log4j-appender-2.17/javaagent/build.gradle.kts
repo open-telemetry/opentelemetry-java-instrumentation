@@ -44,20 +44,73 @@ tasks.withType<Test>().configureEach {
 }
 
 tasks {
+  test {
+    jvmArgs(
+      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
+      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
+    )
+  }
+
   val testAsync = register<Test>("testAsync") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector")
+    jvmArgs(
+      "-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector",
+      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
+      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
+    )
   }
 
   val testV3Preview = register<Test>("testV3Preview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    jvmArgs(
+      "-Dotel.instrumentation.common.v3-preview=true",
+      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
+      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
+    )
+  }
+
+  val testLegacyMdcAttributes = register<Test>("testLegacyMdcAttributes") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*Log4jMdcSelectorTest")
+
+    // the deprecated setting matches keys literally, so "*" alongside another entry does not
+    // capture every key
+    jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*,legacy")
+    systemProperty("testMdcConfiguration", "legacy")
+  }
+
+  val testMdcAttributeExclusionsOnly = register<Test>("testMdcAttributeExclusionsOnly") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*Log4jMdcSelectorTest")
+
+    jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret")
+    systemProperty("testMdcConfiguration", "exclude-only")
+  }
+
+  val testMdcAttributePrecedence = register<Test>("testMdcAttributePrecedence") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*Log4jMdcSelectorTest")
+
+    jvmArgs(
+      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=new",
+      "-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=legacy",
+    )
+    systemProperty("testMdcConfiguration", "precedence")
   }
 
   check {
-    dependsOn(testAsync, testV3Preview)
+    dependsOn(
+      testAsync,
+      testV3Preview,
+      testLegacyMdcAttributes,
+      testMdcAttributeExclusionsOnly,
+      testMdcAttributePrecedence,
+    )
   }
 
   if (otelProps.denyUnsafe) {
@@ -72,7 +125,6 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-map-message-attributes=true")
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-marker-attribute=true")
 }
 
