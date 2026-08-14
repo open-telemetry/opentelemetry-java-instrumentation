@@ -13,17 +13,56 @@ import org.springframework.jms.listener.AbstractMessageListenerContainer;
 
 public class SpringJmsSubscriptionNames {
 
-  private static final VirtualField<AbstractMessageListenerContainer, String> SUBSCRIPTION_NAME =
-      VirtualField.find(AbstractMessageListenerContainer.class, String.class);
+  private static final VirtualField<AbstractMessageListenerContainer, SubscriptionState>
+      SUBSCRIPTION_STATE =
+          VirtualField.find(AbstractMessageListenerContainer.class, SubscriptionState.class);
 
   public static void set(
       AbstractMessageListenerContainer container, @Nullable String subscriptionName) {
-    SUBSCRIPTION_NAME.set(container, subscriptionName);
+    state(container).subscriptionName = subscriptionName;
   }
 
   public static void set(Message message, AbstractMessageListenerContainer container) {
-    JmsSubscriptionNames.set(message, SUBSCRIPTION_NAME.get(container));
+    SubscriptionState state = SUBSCRIPTION_STATE.get(container);
+    String subscriptionName = null;
+    if (state != null
+        && container.isPubSubDomain()
+        && (state.subscriptionDurable || state.subscriptionShared)) {
+      subscriptionName = state.subscriptionName;
+    }
+    JmsSubscriptionNames.set(message, subscriptionName);
+  }
+
+  public static void setDurable(
+      AbstractMessageListenerContainer container, boolean subscriptionDurable) {
+    state(container).subscriptionDurable = subscriptionDurable;
+  }
+
+  public static void setShared(
+      AbstractMessageListenerContainer container, boolean subscriptionShared) {
+    state(container).subscriptionShared = subscriptionShared;
+  }
+
+  private static SubscriptionState state(AbstractMessageListenerContainer container) {
+    SubscriptionState state = SUBSCRIPTION_STATE.get(container);
+    if (state != null) {
+      return state;
+    }
+    synchronized (container) {
+      state = SUBSCRIPTION_STATE.get(container);
+      if (state == null) {
+        state = new SubscriptionState();
+        SUBSCRIPTION_STATE.set(container, state);
+      }
+      return state;
+    }
   }
 
   private SpringJmsSubscriptionNames() {}
+
+  private static class SubscriptionState {
+    private volatile boolean subscriptionDurable;
+    private volatile boolean subscriptionShared;
+    @Nullable private volatile String subscriptionName;
+  }
 }

@@ -34,6 +34,12 @@ class SpringJmsSubscriptionNameInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class)),
         getClass().getName() + "$SetSubscriptionNameAdvice");
     transformer.applyAdviceToMethod(
+        named("setSubscriptionDurable").and(takesArguments(1)).and(takesArgument(0, boolean.class)),
+        getClass().getName() + "$SetSubscriptionDurableAdvice");
+    transformer.applyAdviceToMethod(
+        named("setSubscriptionShared").and(takesArguments(1)).and(takesArgument(0, boolean.class)),
+        getClass().getName() + "$SetSubscriptionSharedAdvice");
+    transformer.applyAdviceToMethod(
         named("invokeListener")
             .and(takesArguments(2))
             .and(takesArgument(1, named("javax.jms.Message"))),
@@ -48,6 +54,28 @@ class SpringJmsSubscriptionNameInstrumentation implements TypeInstrumentation {
         @Advice.This AbstractMessageListenerContainer container,
         @Advice.Argument(0) @Nullable String subscriptionName) {
       SpringJmsSubscriptionNames.set(container, subscriptionName);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SetSubscriptionDurableAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This AbstractMessageListenerContainer container,
+        @Advice.Argument(0) boolean subscriptionDurable) {
+      SpringJmsSubscriptionNames.setDurable(container, subscriptionDurable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SetSubscriptionSharedAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This AbstractMessageListenerContainer container,
+        @Advice.Argument(0) boolean subscriptionShared) {
+      SpringJmsSubscriptionNames.setShared(container, subscriptionShared);
     }
   }
 
