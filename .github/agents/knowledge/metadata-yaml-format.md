@@ -14,8 +14,8 @@ Each configuration entry includes:
   MUST have a `declarative_name`.
 - `declarative_name`: YAML key path (e.g., `java.grpc.emit_message_events`)
 - `type`: `boolean`, `string`, `list`, `int`, `map`. Describes the **flat** form.
-- `description`: Human-readable explanation. For `experimental-span-attributes`, follow the
-  attribute-key requirements below.
+- `description`: Human-readable explanation. For experimental telemetry enablement properties,
+  follow the requirements below.
 - `default`: Default value
 - `examples` (optional): Only for module-specific configs with non-obvious format
 - `declarative_type` (optional): Overrides the declarative-form shape when it differs from the flat
@@ -24,7 +24,7 @@ Each configuration entry includes:
 - `declarative_schema` (optional): Per-item object schema, required when
   `declarative_type: structured_list` (see Structured Lists).
 
-## Experimental Span Attribute Descriptions
+## Experimental Telemetry Descriptions
 
 Descriptions for `otel.instrumentation.*.experimental-span-attributes` MUST name the exact
 attribute keys that enabling the property can emit. When the implementation creates a genuinely
@@ -32,9 +32,17 @@ dynamic key family, name the narrowest precise prefix or wildcard instead (for e
 `http.request.header.*`). Do not replace known keys with a generic phrase such as "experimental span
 attributes."
 
-Verify the keys against the implementation or tests before changing the description. Do not
-speculate. When supported keys differ across instrumentation versions, each module's description
-must list only the keys emitted by that version.
+Descriptions for broader experimental telemetry enablement properties, such as
+`otel.instrumentation.*.emit-experimental-telemetry` and
+`otel.instrumentation.*.experimental.*-telemetry.enabled`, MUST identify what enabling the property
+emits. Name fixed telemetry identifiers such as span attribute keys, metric names, and event names,
+and describe behavioral changes such as creating spans, changing span names, or changing trace
+links. Do not require an attribute list when a property enables only broader span behavior, and use
+precise prefixes or wildcards for genuinely dynamic telemetry families.
+
+Verify the telemetry against the implementation or tests before changing the description. Do not
+speculate. When supported telemetry differs across instrumentation versions, each module's
+description must identify only the telemetry emitted by that version.
 
 ## Structured Lists
 
