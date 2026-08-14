@@ -49,10 +49,10 @@ public class DecoratorRegistry {
     result.put("kafka", new KafkaSpanDecorator());
     result.put("log", new LogSpanDecorator());
     result.put("mongodb", new DbSpanDecorator("mongodb", DbSystemNameIncubatingValues.MONGODB));
-    registerMessaging(result, "mqtt");
+    registerMessaging(result, "mqtt", "mqtt", false);
     result.put("netty-http4", new HttpSpanDecorator());
     result.put("netty-http", new HttpSpanDecorator());
-    registerMessaging(result, "paho", "mqtt");
+    registerMessaging(result, "paho", "mqtt", false);
     registerMessagingWithSendOperation(result, "rabbitmq", "publish");
     result.put("restlet", new HttpSpanDecorator());
     result.put("rest", new RestSpanDecorator());
