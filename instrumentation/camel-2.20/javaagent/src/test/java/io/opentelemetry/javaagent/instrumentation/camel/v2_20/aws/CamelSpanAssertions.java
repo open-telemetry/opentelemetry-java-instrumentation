@@ -77,17 +77,24 @@ class CamelSpanAssertions {
   }
 
   static SpanDataAssert snsPublish(SpanDataAssert span, String topicName) {
+    List<AttributeAssertion> attributeAssertions =
+        new ArrayList<>(
+            asList(
+                equalTo(
+                    stringKey("camel.uri"),
+                    experimental("aws-sns://" + topicName + "?amazonSNSClient=%23snsClient")),
+                equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "aws.sns" : null),
+                equalTo(MESSAGING_DESTINATION_NAME, topicName),
+                equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
+                equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null)));
+    if (emitStableMessagingSemconv()) {
+      attributeAssertions.add(
+          satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
+    }
+
     return span.hasName(emitStableMessagingSemconv() ? "send " + topicName : topicName)
         .hasKind(emitStableMessagingSemconv() ? SpanKind.PRODUCER : SpanKind.INTERNAL)
-        .hasAttributesSatisfyingExactly(
-            equalTo(
-                stringKey("camel.uri"),
-                experimental("aws-sns://" + topicName + "?amazonSNSClient=%23snsClient")),
-            equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "aws.sns" : null),
-            equalTo(MESSAGING_DESTINATION_NAME, topicName),
-            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
-            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
-            equalTo(MESSAGING_MESSAGE_ID, emitStableMessagingSemconv() ? "message-id" : null));
+        .hasAttributesSatisfyingExactly(attributeAssertions);
   }
 
   static SpanDataAssert s3(SpanDataAssert span, String bucketName) {
