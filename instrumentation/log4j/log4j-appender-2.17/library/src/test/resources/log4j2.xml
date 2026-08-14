@@ -9,6 +9,7 @@
     <!-- captureContextDataAttributes is retained for deprecated XML compatibility. -->
     <OpenTelemetry name="OpenTelemetryAppender" numLogsCapturedBeforeOtelInstall="1" captureMapMessageAttributes="true" captureMarkerAttribute="true" captureContextDataAttributes="key1,key2" captureExperimentalAttributes="true" captureCodeAttributes="true"/>
     <OpenTelemetry name="OpenTelemetryContextDataSelectorAppender" numLogsCapturedBeforeOtelInstall="1" contextDataAttributesIncluded="selector-*" contextDataAttributesExcluded="*-secret"/>
+    <OpenTelemetry name="OpenTelemetryMapMessageSelectorAppender" numLogsCapturedBeforeOtelInstall="1" mapMessageAttributesIncluded="selector-*" mapMessageAttributesExcluded="*-secret"/>
   </Appenders>
   <Loggers>
     <Logger name="TestLogger" level="All">
@@ -21,6 +22,9 @@
     </Logger>
     <Logger name="ContextDataSelectorTestLogger" level="All">
       <AppenderRef ref="OpenTelemetryContextDataSelectorAppender"/>
+    </Logger>
+    <Logger name="MapMessageSelectorTestLogger" level="All">
+      <AppenderRef ref="OpenTelemetryMapMessageSelectorAppender"/>
     </Logger>
     <Root level="All">
       <AppenderRef ref="Console"/>
