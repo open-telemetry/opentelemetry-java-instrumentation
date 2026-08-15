@@ -71,7 +71,7 @@ public final class ApacheHttpClientTelemetryBuilder {
    * Configures HTTP request headers to capture as span attributes.
    *
    * <p>The header names are matched literally. Unlike {@link #setRequestHeaders(IncludeExclude)},
-   * {@code *} and {@code ?} are not treated as glob patterns, since this setting never documented
+   * {@code *} and {@code ?} are not treated as glob patterns, since this setting never supported
    * them as wildcards.
    *
    * @param requestHeaders HTTP header names to capture.
@@ -109,7 +109,7 @@ public final class ApacheHttpClientTelemetryBuilder {
    * Configures HTTP response headers to capture as span attributes.
    *
    * <p>The header names are matched literally. Unlike {@link #setResponseHeaders(IncludeExclude)},
-   * {@code *} and {@code ?} are not treated as glob patterns, since this setting never documented
+   * {@code *} and {@code ?} are not treated as glob patterns, since this setting never supported
    * them as wildcards.
    *
    * @param responseHeaders HTTP header names to capture.
