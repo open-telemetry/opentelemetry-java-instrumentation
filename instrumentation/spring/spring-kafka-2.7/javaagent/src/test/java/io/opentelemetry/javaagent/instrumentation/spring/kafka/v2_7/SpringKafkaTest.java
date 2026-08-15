@@ -9,6 +9,8 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveDurationMetrics;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -116,6 +118,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           .hasLinks(recordLink(producer.get()))
                           .hasAttributesSatisfyingExactly(
                               receiveAttributes("testSingleTopic", "testSingleListener", 1))));
+      assertSingleMetrics();
       return;
     }
 
@@ -148,6 +151,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                         .hasAttributesSatisfyingExactly(
                             singleProcessAttributes("testSingleTopic", "testSingleListener", "10")),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
+    assertSingleMetrics();
   }
 
   @Test
@@ -207,6 +211,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
       }
       testing.waitAndAssertSortedTraces(
           orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT), assertions);
+      assertSingleFailureMetrics();
       return;
     }
 
@@ -308,6 +313,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           .hasAttributesSatisfyingExactly(withErrorType(processAttributes, false)),
                   span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
     }
+    assertSingleFailureMetrics();
   }
 
   @Test
@@ -359,6 +365,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           .hasLinks(recordLink(producer1.get()), recordLink(producer2.get()))
                           .hasAttributesSatisfyingExactly(
                               receiveAttributes("testBatchTopic", "testBatchListener", 2))));
+      assertBatchMetrics();
       return;
     }
 
@@ -399,6 +406,45 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                         .hasAttributesSatisfyingExactly(
                             batchProcessAttributes("testBatchTopic", "testBatchListener", 2)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
+    assertBatchMetrics();
+  }
+
+  private static void assertSingleMetrics() {
+    assertReceiveDurationMetrics(
+        testing,
+        "io.opentelemetry.kafka-clients-0.11",
+        "testSingleTopic",
+        "testSingleListener",
+        null,
+        1,
+        null);
+    assertProcessDurationMetrics(
+        testing,
+        "io.opentelemetry.spring-kafka-2.7",
+        "testSingleTopic",
+        "testSingleListener",
+        "0",
+        1,
+        null);
+  }
+
+  private static void assertBatchMetrics() {
+    assertReceiveDurationMetrics(
+        testing,
+        "io.opentelemetry.kafka-clients-0.11",
+        "testBatchTopic",
+        "testBatchListener",
+        null,
+        1,
+        null);
+    assertProcessDurationMetrics(
+        testing,
+        "io.opentelemetry.spring-kafka-2.7",
+        "testBatchTopic",
+        "testBatchListener",
+        null,
+        1,
+        null);
   }
 
   @Test
@@ -444,6 +490,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
       }
       testing.waitAndAssertSortedTraces(
           orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER, SpanKind.CLIENT), assertions);
+      assertBatchFailureMetrics();
       return;
     }
 
@@ -495,6 +542,63 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.INTERNAL, receiveKind()), assertions);
+    assertBatchFailureMetrics();
+  }
+
+  private static void assertSingleFailureMetrics() {
+    int receiveCount = testLatestDeps() ? 1 : 3;
+    assertReceiveDurationMetrics(
+        testing,
+        "io.opentelemetry.kafka-clients-0.11",
+        "testSingleTopic",
+        "testSingleListener",
+        null,
+        receiveCount,
+        null);
+    assertProcessDurationMetrics(
+        testing,
+        "io.opentelemetry.spring-kafka-2.7",
+        "testSingleTopic",
+        "testSingleListener",
+        "0",
+        2,
+        IllegalArgumentException.class.getName());
+    assertProcessDurationMetrics(
+        testing,
+        "io.opentelemetry.spring-kafka-2.7",
+        "testSingleTopic",
+        "testSingleListener",
+        "0",
+        1,
+        null);
+  }
+
+  private static void assertBatchFailureMetrics() {
+    int receiveCount = testLatestDeps() ? 1 : 3;
+    assertReceiveDurationMetrics(
+        testing,
+        "io.opentelemetry.kafka-clients-0.11",
+        "testBatchTopic",
+        "testBatchListener",
+        null,
+        receiveCount,
+        null);
+    assertProcessDurationMetrics(
+        testing,
+        "io.opentelemetry.spring-kafka-2.7",
+        "testBatchTopic",
+        "testBatchListener",
+        null,
+        2,
+        IllegalArgumentException.class.getName());
+    assertProcessDurationMetrics(
+        testing,
+        "io.opentelemetry.spring-kafka-2.7",
+        "testBatchTopic",
+        "testBatchListener",
+        null,
+        1,
+        null);
   }
 
   private static void assertReceiveSpan(SpanDataAssert span) {
