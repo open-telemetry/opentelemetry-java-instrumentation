@@ -354,6 +354,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
           1,
           null);
     }
+    assertTotalConsumedMessages(testing(), "io.opentelemetry.spring-kafka-2.7", 1);
   }
 
   private static List<AttributeAssertion> sendAttributes(String topic, String messageKey) {

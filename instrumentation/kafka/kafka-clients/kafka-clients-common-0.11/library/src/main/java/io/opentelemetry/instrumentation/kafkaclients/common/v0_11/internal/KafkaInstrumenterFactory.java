@@ -276,24 +276,41 @@ public final class KafkaInstrumenterFactory {
     if (emitStableMessagingSemconv()) {
       builder
           .addContextCustomizer(
-              (context, request, startAttributes) -> {
-                Object delivery = request.getRecord();
-                List<String> deliveryKeys = deliveryKeys(request);
-                Cache<String, Boolean> deliveryPendingFailedDeliveries =
-                    pendingFailedDeliveries(request.getDeliveryIdentity(), delivery);
-                long consumedMessagesCount =
-                    KafkaConsumerContextUtil.hasReceiveOperation(context)
-                        ? 0
-                        : countConsumedMessages(
-                            delivery, deliveryKeys, deliveryPendingFailedDeliveries);
-                return context
-                    .with(
-                        CONSUMED_MESSAGES_DELIVERY_STATE,
-                        new DeliveryState(deliveryKeys, deliveryPendingFailedDeliveries))
-                    .with(CONSUMED_MESSAGES_COUNT_KEY, consumedMessagesCount);
-              })
+              (context, request, startAttributes) ->
+                  startDeliveryTracking(
+                      context, request, request.getRecord(), deliveryKeys(request)))
           .addOperationMetrics(consumedMessagesMetrics);
     }
+  }
+
+  private void addBatchConsumedMessagesIfNoReceiveOperation(
+      InstrumenterBuilder<KafkaReceiveRequest, Void> builder) {
+    if (emitStableMessagingSemconv()) {
+      builder
+          .addContextCustomizer(
+              (context, request, startAttributes) ->
+                  startDeliveryTracking(
+                      context, request, request.getRecords(), deliveryKeys(request)))
+          .addOperationMetrics(consumedMessagesMetrics);
+    }
+  }
+
+  private Context startDeliveryTracking(
+      Context context,
+      AbstractKafkaConsumerRequest request,
+      Object delivery,
+      List<String> deliveryKeys) {
+    Cache<String, Boolean> deliveryPendingFailedDeliveries =
+        pendingFailedDeliveries(request.getDeliveryIdentity(), delivery);
+    long consumedMessagesCount =
+        KafkaConsumerContextUtil.hasReceiveOperation(context)
+            ? 0
+            : countConsumedMessages(delivery, deliveryKeys, deliveryPendingFailedDeliveries);
+    return context
+        .with(
+            CONSUMED_MESSAGES_DELIVERY_STATE,
+            new DeliveryState(deliveryKeys, deliveryPendingFailedDeliveries))
+        .with(CONSUMED_MESSAGES_COUNT_KEY, consumedMessagesCount);
   }
 
   private void addReceiveConsumedMessages(InstrumenterBuilder<KafkaReceiveRequest, Void> builder) {
@@ -399,6 +416,7 @@ public final class KafkaInstrumenterFactory {
                     openTelemetry.getPropagators().getTextMapPropagator()))
             .addOperationMetrics(MessagingProcessMetrics.get())
             .setErrorCauseExtractor(errorCauseExtractor);
+    addBatchConsumedMessagesIfNoReceiveOperation(builder);
     setMessagingProcessExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
