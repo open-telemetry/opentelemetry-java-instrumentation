@@ -205,6 +205,14 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
   }
 
   @Nullable
+  public String getStableMessageId(Exchange exchange) {
+    if (system.equals("jms") || system.equals("amqp")) {
+      return (String) exchange.getIn().getHeader("JMSMessageID");
+    }
+    return getMessageId(exchange);
+  }
+
+  @Nullable
   public String getDestinationPartitionId(Exchange exchange) {
     return null;
   }
