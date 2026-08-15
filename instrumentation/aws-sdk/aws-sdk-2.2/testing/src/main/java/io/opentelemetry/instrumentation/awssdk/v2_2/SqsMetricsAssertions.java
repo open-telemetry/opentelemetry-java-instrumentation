@@ -57,6 +57,19 @@ final class SqsMetricsAssertions {
     assertNoDeprecatedMessagingMetrics(testing);
   }
 
+  static void assertProcessMetrics(
+      InstrumentationExtension testing, int serverPort, long messageCount) {
+    if (!emitStableMessagingSemconv()) {
+      assertNoMessagingMetrics(testing);
+      return;
+    }
+
+    assertMessageCounter(
+        testing, "messaging.client.consumed.messages", "process", messageCount, serverPort);
+    assertProcessDuration(testing, serverPort, messageCount);
+    assertNoDeprecatedMessagingMetrics(testing);
+  }
+
   static void assertSettleMetrics(
       InstrumentationExtension testing, int serverPort, long operationCount) {
     if (!emitStableMessagingSemconv()) {

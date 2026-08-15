@@ -166,6 +166,8 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("send testSdkSqs").hasNoParent(),
                     span -> span.hasName("process testSdkSqs").hasParent(trace.getSpan(0))));
+
+    SqsMetricsAssertions.assertProcessMetrics(getTesting(), sqsPort, 2);
   }
 
   @Test
