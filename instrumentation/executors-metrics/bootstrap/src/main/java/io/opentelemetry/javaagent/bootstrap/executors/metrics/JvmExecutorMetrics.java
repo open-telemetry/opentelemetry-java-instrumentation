@@ -64,7 +64,7 @@ final class JvmExecutorMetrics {
     idleThreadAttributes = attributes.toBuilder().put(THREAD_STATE, IDLE_STATE).build();
   }
 
-  public ObservableLongMeasurement threadCount() {
+  ObservableLongMeasurement threadCount() {
     return meter
         .upDownCounterBuilder("jvm.executor.thread.count")
         .setUnit("{thread}")
@@ -73,7 +73,7 @@ final class JvmExecutorMetrics {
         .buildObserver();
   }
 
-  public ObservableLongMeasurement coreThreads() {
+  ObservableLongMeasurement coreThreads() {
     return meter
         .upDownCounterBuilder("jvm.executor.thread.core")
         .setUnit("{thread}")
@@ -81,7 +81,7 @@ final class JvmExecutorMetrics {
         .buildObserver();
   }
 
-  public ObservableLongMeasurement maxThreads() {
+  ObservableLongMeasurement maxThreads() {
     return meter
         .upDownCounterBuilder("jvm.executor.thread.max")
         .setUnit("{thread}")
@@ -89,7 +89,7 @@ final class JvmExecutorMetrics {
         .buildObserver();
   }
 
-  public ObservableLongMeasurement queueSize() {
+  ObservableLongMeasurement queueSize() {
     return meter
         .upDownCounterBuilder("jvm.executor.queue.size")
         .setUnit("{task}")
@@ -97,7 +97,7 @@ final class JvmExecutorMetrics {
         .buildObserver();
   }
 
-  public ObservableLongMeasurement queueCapacity() {
+  ObservableLongMeasurement queueCapacity() {
     return meter
         .upDownCounterBuilder("jvm.executor.queue.capacity")
         .setUnit("{task}")
@@ -105,7 +105,7 @@ final class JvmExecutorMetrics {
         .buildObserver();
   }
 
-  public ObservableLongMeasurement completedTasks() {
+  ObservableLongMeasurement completedTasks() {
     return meter
         .counterBuilder("jvm.executor.task.completed")
         .setUnit("{task}")
@@ -113,7 +113,7 @@ final class JvmExecutorMetrics {
         .buildObserver();
   }
 
-  public ObservableLongMeasurement rejectedTasks() {
+  ObservableLongMeasurement rejectedTasks() {
     return meter
         .counterBuilder("jvm.executor.task.rejected")
         .setUnit("{task}")
@@ -121,22 +121,22 @@ final class JvmExecutorMetrics {
         .buildObserver();
   }
 
-  public BatchCallback batchCallback(
+  BatchCallback batchCallback(
       Runnable callback,
       ObservableMeasurement observableMeasurement,
       ObservableMeasurement... additionalMeasurements) {
     return meter.batchCallback(callback, observableMeasurement, additionalMeasurements);
   }
 
-  public Attributes getAttributes() {
+  Attributes getAttributes() {
     return attributes;
   }
 
-  public Attributes getActiveThreadAttributes() {
+  Attributes getActiveThreadAttributes() {
     return activeThreadAttributes;
   }
 
-  public Attributes getIdleThreadAttributes() {
+  Attributes getIdleThreadAttributes() {
     return idleThreadAttributes;
   }
 }
