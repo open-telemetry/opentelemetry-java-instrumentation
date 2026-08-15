@@ -52,6 +52,11 @@ final class RegistryCapturingInvoker<T> implements Invoker<T> {
     }
   }
 
+  RegistryCapturingInvoker(Invoker<T> delegate, String registryAddress) {
+    this.delegate = delegate;
+    this.registryAddress = registryAddress;
+  }
+
   @Nullable
   private static Class<?> getClusterInvokerClass(Invoker<?> delegate) {
     try {
@@ -70,11 +75,6 @@ final class RegistryCapturingInvoker<T> implements Invoker<T> {
             clusterInvokerClass.getClassLoader(),
             new Class<?>[] {clusterInvokerClass},
             new ClusterInvokerInvocationHandler(delegate, registryAddress));
-  }
-
-  RegistryCapturingInvoker(Invoker<T> delegate, String registryAddress) {
-    this.delegate = delegate;
-    this.registryAddress = registryAddress;
   }
 
   @Override
