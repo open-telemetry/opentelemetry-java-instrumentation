@@ -26,7 +26,7 @@ import java.util.function.Consumer;
  * a Camel http producer is therefore not suppressed and emits its own span, while under the {@code
  * span-kind} strategy the Camel client span suppresses it.
  */
-public class SuppressionTest {
+class SuppressionTest {
 
   private static final boolean NESTED_HTTP_CLIENT_SPAN =
       "semconv"
