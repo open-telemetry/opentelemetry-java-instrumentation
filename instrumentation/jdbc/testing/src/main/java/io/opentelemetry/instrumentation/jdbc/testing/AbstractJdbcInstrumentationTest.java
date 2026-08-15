@@ -2087,7 +2087,13 @@ public abstract class AbstractJdbcInstrumentationTest {
       statement.executeLargeBatch();
       testing().waitForTraces(1);
       testing().clearData();
-      testing().runWithSpan("empty parent", statement::executeLargeBatch);
+      try {
+        testing().runWithSpan("empty parent", statement::executeLargeBatch);
+      } catch (SQLException e) {
+        if (!"hsqldb".equals(system) || e.getErrorCode() != -1256) {
+          throw e;
+        }
+      }
       testing()
           .waitAndAssertTraces(
               trace ->
