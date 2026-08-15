@@ -34,14 +34,12 @@ abstract class CamelRequest {
       if (emitStableMessagingSemconv()) {
         messagingDestination =
             normalizeStableMessagingDestination(
-                messagingSystem,
-                messagingSpanDecorator.getStableDestination(exchange, endpoint));
+                messagingSystem, messagingSpanDecorator.getStableDestination(exchange, endpoint));
         messagingDestinationPartitionId =
             messagingSpanDecorator.getDestinationPartitionId(exchange);
       }
       messagingSendOperationName = messagingSpanDecorator.getSendOperationName();
-      messagingSpanContextPropagated =
-          messagingSpanDecorator.isSpanContextPropagated(endpoint);
+      messagingSpanContextPropagated = messagingSpanDecorator.isSpanContextPropagated(endpoint);
     }
     return new AutoValue_CamelRequest(
         spanDecorator,

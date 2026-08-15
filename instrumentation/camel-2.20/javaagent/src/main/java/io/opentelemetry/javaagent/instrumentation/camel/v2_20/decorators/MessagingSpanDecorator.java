@@ -132,20 +132,15 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
     }
 
     Map<String, String> queryParameters = toQueryParameters(endpoint.getEndpointUri());
-    boolean bridgeEndpoint =
-        Boolean.parseBoolean(queryParameters.get("bridgeEndpoint"));
-    String exchangeName =
-        exchange.getIn().getHeader("rabbitmq.EXCHANGE_NAME", String.class);
+    boolean bridgeEndpoint = Boolean.parseBoolean(queryParameters.get("bridgeEndpoint"));
+    String exchangeName = exchange.getIn().getHeader("rabbitmq.EXCHANGE_NAME", String.class);
     if (exchangeName == null || bridgeEndpoint) {
       String endpointDestination = stripSchemeAndOptions(endpoint);
       int separator = endpointDestination.lastIndexOf('/');
       exchangeName =
-          separator == -1
-              ? endpointDestination
-              : endpointDestination.substring(separator + 1);
+          separator == -1 ? endpointDestination : endpointDestination.substring(separator + 1);
     }
-    String routingKey =
-        exchange.getIn().getHeader("rabbitmq.ROUTING_KEY", String.class);
+    String routingKey = exchange.getIn().getHeader("rabbitmq.ROUTING_KEY", String.class);
     if (routingKey == null || bridgeEndpoint) {
       routingKey = queryParameters.get("routingKey");
     }
@@ -156,8 +151,7 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
     return destination.length() == 0 ? "amq.default" : destination.toString();
   }
 
-  private static void appendDestinationPart(
-      StringBuilder destination, @Nullable String part) {
+  private static void appendDestinationPart(StringBuilder destination, @Nullable String part) {
     if (part == null || part.isEmpty()) {
       return;
     }
