@@ -50,9 +50,10 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
   }
 
   private void start(ConsumerRecord<K, V> record, @Nullable Consumer<K, V> consumer) {
-    Context parentContext = getParentContext(record);
+    KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(record, consumer);
+    Context parentContext = getParentContext(consumerContext);
 
-    KafkaProcessRequest request = KafkaProcessRequest.create(record, consumer);
+    KafkaProcessRequest request = KafkaProcessRequest.create(consumerContext, record);
     if (processInstrumenter.shouldStart(parentContext, request)) {
       Context context = processInstrumenter.start(parentContext, request);
       Scope scope = context.makeCurrent();
@@ -60,8 +61,7 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
     }
   }
 
-  private static Context getParentContext(ConsumerRecord<?, ?> record) {
-    KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(record);
+  private static Context getParentContext(KafkaConsumerContext consumerContext) {
     Context receiveContext = consumerContext.getContext();
 
     // use the receive CONSUMER span as parent if it's available

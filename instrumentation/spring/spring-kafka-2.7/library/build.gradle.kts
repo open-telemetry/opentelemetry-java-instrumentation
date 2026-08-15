@@ -28,9 +28,25 @@ dependencies {
   }
 }
 
-tasks.test {
-  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  systemProperty("testLatestDeps", otelProps.testLatestDeps)
+tasks {
+  test {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+  }
+
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("SpringKafkaInterceptorDeliveryTest")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
+  check {
+    dependsOn(testMessagingPreview)
+  }
 }
 
 // spring 6 (which spring-kafka 3.+ uses) requires java 17
