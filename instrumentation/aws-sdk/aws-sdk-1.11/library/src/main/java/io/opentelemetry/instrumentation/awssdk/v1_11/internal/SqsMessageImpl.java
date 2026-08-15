@@ -9,6 +9,7 @@ import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import io.opentelemetry.context.Context;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -48,6 +49,12 @@ final class SqsMessageImpl implements SqsMessage {
   public String getMessageAttribute(String name) {
     MessageAttributeValue value = message.getMessageAttributes().get(name);
     return value != null ? value.getStringValue() : null;
+  }
+
+  @Override
+  public Collection<String> getMessageAttributeNames() {
+    // the message is owned by the caller, so its attribute names are snapshotted
+    return new ArrayList<>(message.getMessageAttributes().keySet());
   }
 
   @Override

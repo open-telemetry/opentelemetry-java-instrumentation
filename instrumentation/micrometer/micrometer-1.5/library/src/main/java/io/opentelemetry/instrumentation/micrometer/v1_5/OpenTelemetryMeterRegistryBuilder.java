@@ -19,6 +19,7 @@ import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental;
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Internal;
 import java.util.concurrent.TimeUnit;
 
 /** A builder of {@link OpenTelemetryMeterRegistry}. */
@@ -30,6 +31,8 @@ public final class OpenTelemetryMeterRegistryBuilder {
   static {
     Experimental.internalSetMicrometerHistogramGaugesEnabled(
         (builder, enabled) -> builder.histogramGaugesEnabled = enabled);
+    Internal.internalSetMetersHiddenFromSearch(
+        (builder, hidden) -> builder.metersHiddenFromSearch = hidden);
   }
 
   private final OpenTelemetry openTelemetry;
@@ -37,6 +40,7 @@ public final class OpenTelemetryMeterRegistryBuilder {
   private TimeUnit baseTimeUnit = SECONDS;
   private boolean prometheusMode = false;
   private boolean histogramGaugesEnabled = false;
+  private boolean metersHiddenFromSearch = false;
 
   OpenTelemetryMeterRegistryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -85,9 +89,9 @@ public final class OpenTelemetryMeterRegistryBuilder {
    *
    * @deprecated Use {@link
    *     io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder,
-   *     boolean)} instead. This method will be removed in the next release.
+   *     boolean)} instead. This method may be removed in the next minor release.
    */
-  @Deprecated // will be removed in the next release
+  @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public OpenTelemetryMeterRegistryBuilder setMicrometerHistogramGaugesEnabled(
       boolean histogramGaugesEnabled) {
@@ -119,7 +123,8 @@ public final class OpenTelemetryMeterRegistryBuilder {
         baseTimeUnit,
         namingConvention,
         modifier,
-        !SemconvStability.v3Preview(openTelemetry),
+        SemconvStability.v3Preview(openTelemetry),
+        metersHiddenFromSearch,
         meterBuilder.build());
   }
 }

@@ -50,8 +50,12 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
         "general.http.server.response_captured_headers",
         "otel.instrumentation.http.server.capture-response-headers");
     SPECIAL_MAPPINGS.put(
-        "general.sanitization.url.sensitive_query_parameters/development",
+        "general.sanitization.url.sensitive_query_parameters",
         "otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters");
+    // general.stability_opt_in_list is the name in the declarative configuration schema; the
+    // general.semconv_stability.opt_in spelling is only reachable through this bridge and is kept
+    // for backwards compatibility (see SemconvSelectionResolver, which reads both)
+    SPECIAL_MAPPINGS.put("general.stability_opt_in_list", "otel.semconv-stability.opt-in");
     SPECIAL_MAPPINGS.put("general.semconv_stability.opt_in", "otel.semconv-stability.opt-in");
     SPECIAL_MAPPINGS.put(
         "general.semconv_exception.signal.preview", "otel.semconv.exception.signal.preview");
@@ -67,6 +71,12 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "java.common.messaging.receive_telemetry/development.enabled",
         "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
+    SPECIAL_MAPPINGS.put(
+        "java.common.messaging.headers/development.included",
+        "otel.instrumentation.messaging.experimental.headers.included");
+    SPECIAL_MAPPINGS.put(
+        "java.common.messaging.headers/development.excluded",
+        "otel.instrumentation.messaging.experimental.headers.excluded");
     SPECIAL_MAPPINGS.put(
         "java.common.messaging.capture_headers/development",
         "otel.instrumentation.messaging.experimental.capture-headers");

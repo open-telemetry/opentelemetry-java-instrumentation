@@ -9,8 +9,10 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -55,13 +57,48 @@ class ActuatorTest {
                                             equalTo(stringKey("tag"), "value")))));
 
     MeterRegistry meterRegistry = context.getBean(MeterRegistry.class);
+    // the composite registry bean must be the one spring created, not a wrapper; beans that were
+    // injected with the original composite would not see the wrapper, and its registry list would
+    // be frozen at the time it was created
     assertThat(meterRegistry).isInstanceOf(CompositeMeterRegistry.class);
+    assertThat(meterRegistry.getClass().getName()).doesNotStartWith("io.opentelemetry.");
 
-    Set<MeterRegistry> registries = ((CompositeMeterRegistry) meterRegistry).getRegistries();
+    CompositeMeterRegistry composite = (CompositeMeterRegistry) meterRegistry;
+    Set<MeterRegistry> registries = composite.getRegistries();
+    assertOtelMeterRegistryIsLast(registries);
+
+    // the actuator metrics endpoint reads from the first registry that has a matching meter, so
+    // that registry has to be able to report the value
+    Counter counter = findFirstMatchingCounter(composite);
+    assertThat(counter).isNotNull();
+    assertThat(counter.count()).isEqualTo(1);
+
+    // the returned set is a live view of the composite, same as micrometer's
+    int registryCount = registries.size();
+    SimpleMeterRegistry added = new SimpleMeterRegistry();
+    composite.add(added);
+    assertThat(registries).hasSize(registryCount + 1);
+    assertOtelMeterRegistryIsLast(registries);
+
+    composite.remove(added);
+    assertThat(registries).hasSize(registryCount);
+  }
+
+  private static void assertOtelMeterRegistryIsLast(Set<MeterRegistry> registries) {
     ArrayList<MeterRegistry> list = new ArrayList<>(registries);
 
     assertThat(list)
         .extracting(registry -> registry.getClass().getSimpleName())
         .endsWith("OpenTelemetryMeterRegistry");
+  }
+
+  private static Counter findFirstMatchingCounter(CompositeMeterRegistry composite) {
+    for (MeterRegistry registry : composite.getRegistries()) {
+      Counter counter = registry.find("test-counter").counter();
+      if (counter != null) {
+        return counter;
+      }
+    }
+    return null;
   }
 }

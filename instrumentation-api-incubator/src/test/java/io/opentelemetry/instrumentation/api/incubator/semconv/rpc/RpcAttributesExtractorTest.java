@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.entry;
@@ -63,6 +64,11 @@ class RpcAttributesExtractorTest {
       return service + "/" + method;
     }
 
+    @Override
+    public String getRpcMethodOriginal(Map<String, String> request) {
+      return request.get("originalMethod");
+    }
+
     @Nullable
     @Override
     public String getErrorType(
@@ -89,6 +95,7 @@ class RpcAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("service", "my.Service");
     request.put("method", "Method");
+    request.put("originalMethod", "my.Service/OriginalMethod");
 
     Context context = Context.root();
 
@@ -101,6 +108,7 @@ class RpcAttributesExtractorTest {
     if (emitStableRpcSemconv()) {
       expectedEntries.add(entry(RPC_SYSTEM_NAME, "test"));
       expectedEntries.add(entry(RPC_METHOD, "my.Service/Method"));
+      expectedEntries.add(entry(RPC_METHOD_ORIGINAL, "my.Service/OriginalMethod"));
     }
 
     if (emitOldRpcSemconv()) {

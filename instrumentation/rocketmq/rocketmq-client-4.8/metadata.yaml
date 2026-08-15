@@ -6,6 +6,8 @@ semantic_conventions:
   - MESSAGING_SPANS
 library_link: https://rocketmq.apache.org/
 configurations:
+  - ref: messaging.headers.included
+  - ref: messaging.headers.excluded
   - ref: messaging.capture-headers
   - name: otel.instrumentation.rocketmq-client.experimental-span-attributes
     declarative_name: java.rocketmq_client.experimental_span_attributes/development

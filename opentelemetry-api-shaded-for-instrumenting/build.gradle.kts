@@ -115,6 +115,13 @@ val v1_63Deps = configurations.create("v1_63Deps") {
   exclude("io.opentelemetry", "opentelemetry-bom")
   exclude("io.opentelemetry", "opentelemetry-bom-alpha")
 }
+val v1_65Deps = configurations.create("v1_65Deps") {
+  isCanBeResolved = true
+  isCanBeConsumed = false
+  // exclude the bom added by dependencyManagement
+  exclude("io.opentelemetry", "opentelemetry-bom")
+  exclude("io.opentelemetry", "opentelemetry-bom-alpha")
+}
 // configuration for publishing the shadowed artifact
 val v1_10 = configurations.create("v1_10") {
   isCanBeConsumed = true
@@ -173,6 +180,10 @@ val v1_59 = configurations.create("v1_59") {
   isCanBeResolved = false
 }
 val v1_63 = configurations.create("v1_63") {
+  isCanBeConsumed = true
+  isCanBeResolved = false
+}
+val v1_65 = configurations.create("v1_65") {
   isCanBeConsumed = true
   isCanBeResolved = false
 }
@@ -272,6 +283,11 @@ dependencies {
         strictly("1.63.0-alpha")
       }
     }
+    v1_65Deps("io.opentelemetry:$it") {
+      version {
+        strictly("1.65.0-alpha")
+      }
+    }
   }
 }
 
@@ -347,6 +363,10 @@ tasks {
     configurations = listOf(v1_63Deps)
     archiveClassifier.set("v1_63")
   }
+  val v1_65Shadow = register<ShadowJar>("v1_65Shadow") {
+    configurations = listOf(v1_65Deps)
+    archiveClassifier.set("v1_65")
+  }
 
   artifacts {
     add(v1_10.name, v1_10Shadow)
@@ -364,5 +384,6 @@ tasks {
     add(v1_57.name, v1_57Shadow)
     add(v1_59.name, v1_59Shadow)
     add(v1_63.name, v1_63Shadow)
+    add(v1_65.name, v1_65Shadow)
   }
 }

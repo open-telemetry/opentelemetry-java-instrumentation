@@ -28,7 +28,8 @@ final class OpenTelemetryCounter extends AbstractMeter
 
   private volatile boolean removed = false;
 
-  OpenTelemetryCounter(Id id, NamingConvention namingConvention, Meter otelMeter) {
+  OpenTelemetryCounter(
+      Id id, NamingConvention namingConvention, Meter otelMeter, Bridging bridging) {
     super(id);
 
     this.attributes = tagsAsAttributes(id, namingConvention);
@@ -36,7 +37,7 @@ final class OpenTelemetryCounter extends AbstractMeter
     this.otelCounter =
         otelMeter
             .counterBuilder(conventionName)
-            .setDescription(Bridging.description(id))
+            .setDescription(bridging.description(conventionName, id))
             .setUnit(baseUnit(id))
             .ofDoubles()
             .build();

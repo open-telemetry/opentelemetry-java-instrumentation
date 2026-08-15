@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.servlet.common.internal;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
@@ -15,8 +16,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -34,7 +35,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
   private boolean propagateOperationListenersToOnEnd;
   private boolean captureExperimentalAttributes;
   private boolean captureEnduserId;
-  private List<String> captureRequestParameters = new ArrayList<>();
+  @Nullable private IncludeExclude requestParameters;
 
   public static <REQUEST, RESPONSE> ServletInstrumenterBuilder<REQUEST, RESPONSE> create(
       String instrumentationName,
@@ -95,9 +96,9 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   @CanIgnoreReturnValue
-  public ServletInstrumenterBuilder<REQUEST, RESPONSE> setCaptureRequestParameters(
-      Collection<String> captureRequestParameters) {
-    this.captureRequestParameters = new ArrayList<>(captureRequestParameters);
+  public ServletInstrumenterBuilder<REQUEST, RESPONSE> setRequestParameters(
+      @Nullable IncludeExclude requestParameters) {
+    this.requestParameters = requestParameters;
     return this;
   }
 
@@ -108,10 +109,10 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
     builder.setBuilderCustomizer(
         builder -> {
-          if (!captureRequestParameters.isEmpty()) {
+          if (requestParameters != null && !requestParameters.isEmpty()) {
             AttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
                 requestParametersExtractor =
-                    new ServletRequestParametersExtractor<>(accessor, captureRequestParameters);
+                    new ServletRequestParametersExtractor<>(accessor, requestParameters);
             builder.addAttributesExtractor(requestParametersExtractor);
           }
           for (ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer :

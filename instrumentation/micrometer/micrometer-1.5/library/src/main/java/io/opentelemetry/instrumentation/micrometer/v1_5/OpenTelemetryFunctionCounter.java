@@ -29,7 +29,8 @@ final class OpenTelemetryFunctionCounter<T> extends AbstractMeter
       NamingConvention namingConvention,
       T obj,
       ToDoubleFunction<T> countFunction,
-      Meter otelMeter) {
+      Meter otelMeter,
+      Bridging bridging) {
     super(id);
 
     String name = name(id, namingConvention);
@@ -37,7 +38,7 @@ final class OpenTelemetryFunctionCounter<T> extends AbstractMeter
         otelMeter
             .counterBuilder(name)
             .ofDoubles()
-            .setDescription(Bridging.description(id))
+            .setDescription(bridging.description(name, id))
             .setUnit(baseUnit(id))
             .buildWithCallback(
                 new DoubleMeasurementRecorder<>(

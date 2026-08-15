@@ -9,10 +9,12 @@ import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Message;
-import org.apache.pulsar.common.naming.TopicName;
 
 final class PulsarBatchMessagingAttributesGetter
     implements MessagingAttributesGetter<PulsarBatchRequest, Void> {
@@ -25,7 +27,10 @@ final class PulsarBatchMessagingAttributesGetter
   @Nullable
   @Override
   public String getDestination(PulsarBatchRequest request) {
-    return request.getDestination();
+    PulsarBatchRecordAttributes batchRecordAttributes = request.getBatchRecordAttributes();
+    return batchRecordAttributes != null
+        ? batchRecordAttributes.getCommonDestination()
+        : request.getDestination();
   }
 
   @Nullable
@@ -88,11 +93,10 @@ final class PulsarBatchMessagingAttributesGetter
   @Nullable
   @Override
   public String getDestinationPartitionId(PulsarBatchRequest request) {
-    int partitionIndex = TopicName.getPartitionIndex(request.getDestination());
-    if (partitionIndex == -1) {
-      return null;
-    }
-    return String.valueOf(partitionIndex);
+    PulsarBatchRecordAttributes batchRecordAttributes = request.getBatchRecordAttributes();
+    return batchRecordAttributes != null
+        ? batchRecordAttributes.getCommonPartitionId()
+        : request.getDestinationPartitionId();
   }
 
   @Nullable
@@ -114,5 +118,14 @@ final class PulsarBatchMessagingAttributesGetter
       }
     }
     return values == null ? emptyList() : values;
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(PulsarBatchRequest request) {
+    Set<String> names = new LinkedHashSet<>();
+    for (Message<?> message : request.getMessages()) {
+      names.addAll(message.getProperties().keySet());
+    }
+    return names;
   }
 }

@@ -14,15 +14,58 @@
   `Experimental.setSpanSuppressionStrategy(...)` or declarative instrumentation configuration.
   The Java agent continues to support the system property through its declarative config bridge.
   ([#19180](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19180))
+- Deprecate the gRPC `capture-metadata.client.request` and `capture-metadata.server.request`
+  configuration properties and `GrpcTelemetryBuilder` captured request metadata methods in favor of
+  include/exclude request metadata selectors.
+- Deprecate `otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes` in favor of
+  the `otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.{included,excluded}`
+  selector. The deprecated property keeps its exact-key matching and may be removed in the next
+  minor release.
+  ([#19519](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19519))
+- Deprecate `otel.instrumentation.messaging.experimental.capture-headers` and the
+  `setCapturedHeaders(Collection<String>)` methods on `MessagingAttributesExtractorBuilder`,
+  `AwsSdkTelemetryBuilder` (AWS SDK 1.11 and 2.2), `KafkaTelemetryBuilder`, `NatsTelemetryBuilder`,
+  `RocketMqTelemetryBuilder`, `SpringIntegrationTelemetryBuilder` and `SpringKafkaTelemetryBuilder`
+  in favor of `otel.instrumentation.messaging.experimental.headers.included` /
+  `otel.instrumentation.messaging.experimental.headers.excluded` and `setHeaders(IncludeExclude)`,
+  which select message headers by glob pattern instead of by exact name only. The deprecated
+  property and methods remain include-only aliases and use the selector's glob matching.
+- Deprecate the Logback appender `experimental.capture-mdc-attributes` configuration property and
+  `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of the new
+  `experimental.mdc-attributes.included` and `experimental.mdc-attributes.excluded` selectors, which
+  are also available in `logback.xml` as `mdcAttributesIncluded` and `mdcAttributesExcluded` and
+  programmatically as `OpenTelemetryAppender#setMdcAttributes(IncludeExclude)`. The deprecated
+  setting continues to select MDC keys literally, except that the single value `*` selects every MDC
+  key, and it may be removed in the next minor release.
+  ([#19520](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19520))
+- Deprecate the Log4j appender `experimental.capture-mdc-attributes` configuration property and
+  `OpenTelemetryAppender.Builder#setCaptureContextDataAttributes(String)` in favor of
+  include/exclude context data selectors and
+  `OpenTelemetryAppender.Builder#setContextDataAttributes(IncludeExclude)`. The deprecated property
+  and method keep their existing behavior, which matches keys literally unless the list contains
+  only `*`, and may be removed in the next minor release.
+  ([#19521](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19521))
+- Deprecate `otel.instrumentation.servlet.experimental.capture-request-parameters` and
+  `Experimental#setCaptureRequestParameters(...)` in favor of the
+  `otel.instrumentation.servlet.experimental.request-parameters.{included,excluded}` properties and
+  `Experimental#setRequestParameters(ServletTelemetryBuilder, IncludeExclude)`. The deprecated
+  property and method remain as include-only aliases.
+  ([#19522](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19522))
+- Deprecate `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` and
+  `io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental#setPreferJfrMetrics(RuntimeTelemetryBuilder, boolean)`
+  in favor of `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included` and
+  `Experimental#setJfrMetrics(RuntimeTelemetryBuilder, IncludeExclude)`, which select JFR metrics by
+  metric name instead of by an all-or-nothing toggle. The deprecated property and method still
+  select the same metrics.
+  ([#19495](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19495))
 - Deprecate the `opentelemetry-zipkin-spring-boot-starter` artifact. Use
-  `opentelemetry-spring-boot-starter` with the OTLP exporter instead. It will be removed in 3.0.
+  `opentelemetry-spring-boot-starter` with the OTLP exporter instead.
 - Deprecate `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)` in the
   Micrometer 1.5 library in favor of
   `io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`.
   Histogram/percentile gauges are experimental compatibility behavior, and this moves the API to the
   standard experimental surface ahead of stabilization. Behavior and the
-  `otel.instrumentation.micrometer.histogram-gauges.enabled` config property are unchanged. The
-  deprecated builder method will be removed in the next release.
+  `otel.instrumentation.micrometer.histogram-gauges.enabled` config property are unchanged.
   ([#19404](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19404))
 - The decaying `<name>.max` gauge that the Micrometer bridge emits alongside the histogram for
   `Timer` and `DistributionSummary` is deprecated and will be removed in 3.0. The `<name>` /

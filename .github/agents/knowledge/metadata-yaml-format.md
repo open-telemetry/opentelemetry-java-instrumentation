@@ -18,7 +18,8 @@ Each configuration entry includes:
 - `default`: Default value
 - `examples` (optional): Only for module-specific configs with non-obvious format
 - `declarative_type` (optional): Overrides the declarative-form shape when it differs from the flat
-  `type`. Currently only `structured_list` (see Structured Lists).
+  `type`. Either `structured_list` (see Structured Lists) or a scalar type — `string`, `boolean`,
+  `int` (see Scalar Overrides).
 - `declarative_schema` (optional): Per-item object schema, required when
   `declarative_type: structured_list` (see Structured Lists).
 
@@ -66,6 +67,35 @@ list, and named `properties` (each with `type`, optional `description`, optional
       override: { type: boolean, default: false }
 ```
 
+## Scalar Overrides
+
+A flat property that parses as a `list` or `map` is sometimes a plain scalar in the declarative
+configuration schema. Set `declarative_type` to the scalar type so the declarative form is described
+correctly; `type` keeps describing the flat system property. No `declarative_schema` is involved.
+
+`otel.semconv-stability.opt-in` is the current case: the flat property is a comma-separated list,
+but `general.stability_opt_in_list` is a single string that the agent splits itself (see
+`SemconvSelectionResolver`), so it is `type: list` + `declarative_type: string`:
+
+```yaml
+- name: otel.semconv-stability.opt-in
+  declarative_name: general.stability_opt_in_list
+  description: Opt-in to emit stable semantic conventions instead of the old experimental ones.
+  type: list
+  declarative_type: string
+  default: ""
+```
+
+## Deprecated Declarative Names
+
+Some declarative names were published under an earlier spelling. The bridge keeps the old spelling
+in `SPECIAL_MAPPINGS` so existing configuration files keep working, but `metadata.yaml` MUST use the
+current name — `DeclarativeConfigValidationTest` fails on the deprecated one.
+
+| Deprecated                         | Use instead                     |
+| ---------------------------------- | ------------------------------- |
+| `general.semconv_stability.opt_in` | `general.stability_opt_in_list` |
+
 ## Special Mappings
 
 Non-standard mappings (see `ConfigPropertiesBackedDeclarativeConfigProperties.java` for latest):
@@ -76,12 +106,14 @@ Non-standard mappings (see `ConfigPropertiesBackedDeclarativeConfigProperties.ja
 | `otel.instrumentation.http.client.capture-response-headers`                     | `general.http.client.response_captured_headers`                   |
 | `otel.instrumentation.http.server.capture-request-headers`                      | `general.http.server.request_captured_headers`                    |
 | `otel.instrumentation.http.server.capture-response-headers`                     | `general.http.server.response_captured_headers`                   |
-| `otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters` | `general.sanitization.url.sensitive_query_parameters/development` |
-| `otel.semconv-stability.opt-in`                                                 | `general.semconv_stability.opt_in`                                |
+| `otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters` | `general.sanitization.url.sensitive_query_parameters`             |
+| `otel.semconv-stability.opt-in`                                                 | `general.stability_opt_in_list`                                   |
 | `otel.instrumentation.http.known-methods`                                       | `java.common.http.known_methods`                                  |
 | `otel.instrumentation.http.client.emit-experimental-telemetry`                  | `java.common.http.client.emit_experimental_telemetry/development` |
 | `otel.instrumentation.http.server.emit-experimental-telemetry`                  | `java.common.http.server.emit_experimental_telemetry/development` |
 | `otel.instrumentation.messaging.experimental.receive-telemetry.enabled`         | `java.common.messaging.receive_telemetry/development.enabled`     |
+| `otel.instrumentation.messaging.experimental.headers.included`                  | `java.common.messaging.headers/development.included`              |
+| `otel.instrumentation.messaging.experimental.headers.excluded`                  | `java.common.messaging.headers/development.excluded`              |
 | `otel.instrumentation.messaging.experimental.capture-headers`                   | `java.common.messaging.capture_headers/development`               |
 | `otel.instrumentation.genai.capture-message-content`                            | `java.common.gen_ai.capture_message_content`                      |
 | `otel.instrumentation.experimental.span-suppression-strategy`                   | `java.common.span_suppression_strategy/development`               |
@@ -172,7 +204,7 @@ This validates round-trip conversion (flat property → bridge → declarative p
 
 Example failure when flat name is wrong:
 
-```
+```text
 FAIL in ../instrumentation/liberty/liberty-20.0/metadata.yaml:
   flat property: otel.instrumentation.servlet.capture-request-parameters
   expected: [item1, item2, item3]
