@@ -33,31 +33,11 @@ import javax.annotation.Nullable;
 @SuppressWarnings("deprecation") // using deprecated semconv
 class CassandraAttributesExtractor implements AttributesExtractor<CassandraRequest, ExecutionInfo> {
 
-  private static final ClassValue<Method> speculativeExecutionsMethod =
-      new ClassValue<Method>() {
-        @Nullable
-        @Override
-        protected Method computeValue(Class<?> type) {
-          try {
-            return type.getMethod("getSpeculativeExecutions");
-          } catch (NoSuchMethodException ignored) {
-            return null;
-          }
-        }
-      };
+  @Nullable
+  private static final Method GET_SPECULATIVE_EXECUTIONS =
+      findMethod(ExecutionInfo.class, "getSpeculativeExecutions");
 
-  private static final ClassValue<Method> hostIdMethod =
-      new ClassValue<Method>() {
-        @Nullable
-        @Override
-        protected Method computeValue(Class<?> type) {
-          try {
-            return type.getMethod("getHostId");
-          } catch (NoSuchMethodException ignored) {
-            return null;
-          }
-        }
-      };
+  @Nullable private static final Method GET_HOST_ID = findMethod(Host.class, "getHostId");
 
   @Override
   public void onStart(AttributesBuilder attributes, Context context, CassandraRequest request) {
@@ -117,8 +97,9 @@ class CassandraAttributesExtractor implements AttributesExtractor<CassandraReque
   @Nullable
   private static Integer getSpeculativeExecutionCount(ExecutionInfo executionInfo) {
     try {
-      Method method = speculativeExecutionsMethod.get(executionInfo.getClass());
-      return method == null ? null : (Integer) method.invoke(executionInfo);
+      return GET_SPECULATIVE_EXECUTIONS == null
+          ? null
+          : (Integer) GET_SPECULATIVE_EXECUTIONS.invoke(executionInfo);
     } catch (ReflectiveOperationException ignored) {
       return null;
     }
@@ -127,10 +108,18 @@ class CassandraAttributesExtractor implements AttributesExtractor<CassandraReque
   @Nullable
   private static String getCoordinatorId(Host coordinator) {
     try {
-      Method method = hostIdMethod.get(coordinator.getClass());
-      Object hostId = method == null ? null : method.invoke(coordinator);
+      Object hostId = GET_HOST_ID == null ? null : GET_HOST_ID.invoke(coordinator);
       return hostId == null ? null : hostId.toString();
     } catch (ReflectiveOperationException ignored) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static Method findMethod(Class<?> type, String name) {
+    try {
+      return type.getMethod(name);
+    } catch (NoSuchMethodException ignored) {
       return null;
     }
   }
