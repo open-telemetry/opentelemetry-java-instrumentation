@@ -90,12 +90,12 @@ class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(ConsumerRecords<?, ?> records, Consumer<?, ?> consumer) {
-        KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
+        KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records, consumer);
         Context receiveContext = consumerContext.getContext();
 
         // use the receive CONSUMER span as parent if it's available
         Context parentContext = receiveContext != null ? receiveContext : Context.current();
-        KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
+        KafkaReceiveRequest request = KafkaReceiveRequest.create(consumerContext, records);
 
         if (!batchProcessInstrumenter().shouldStart(parentContext, request)) {
           return null;

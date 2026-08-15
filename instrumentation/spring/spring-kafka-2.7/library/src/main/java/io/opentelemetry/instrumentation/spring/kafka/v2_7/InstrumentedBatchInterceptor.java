@@ -38,9 +38,10 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
 
   @Override
   public ConsumerRecords<K, V> intercept(ConsumerRecords<K, V> records, Consumer<K, V> consumer) {
-    Context parentContext = getParentContext(records);
+    KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records, consumer);
+    Context parentContext = getParentContext(consumerContext);
 
-    KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
+    KafkaReceiveRequest request = KafkaReceiveRequest.create(consumerContext, records);
     if (batchProcessInstrumenter.shouldStart(parentContext, request) && !skipProcessing(records)) {
       Context context = batchProcessInstrumenter.start(parentContext, request);
       Scope scope = context.makeCurrent();
@@ -61,8 +62,7 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
     return reference != null && reference.get() == records;
   }
 
-  private static Context getParentContext(ConsumerRecords<?, ?> records) {
-    KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
+  private static Context getParentContext(KafkaConsumerContext consumerContext) {
     Context receiveContext = consumerContext.getContext();
 
     // use the receive CONSUMER span as parent if it's available

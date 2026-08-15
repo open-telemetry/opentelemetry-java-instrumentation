@@ -86,30 +86,48 @@ public final class KafkaConsumerContextUtil {
     return true;
   }
 
-  public static KafkaConsumerContext get(ConsumerRecord<?, ?> records) {
-    Context receiveContext = recordContextField.get(records);
+  public static KafkaConsumerContext get(ConsumerRecord<?, ?> record) {
+    return get(record, null);
+  }
+
+  public static KafkaConsumerContext get(
+      ConsumerRecord<?, ?> record, @Nullable Consumer<?, ?> consumer) {
+    Context receiveContext = recordContextField.get(record);
+    Object[] consumerInfo = recordConsumerInfoField.get(record);
+    return createWithFallback(receiveContext, consumerInfo, consumer);
+  }
+
+  public static KafkaConsumerContext get(ConsumerRecords<?, ?> records) {
+    return get(records, null);
+  }
+
+  public static KafkaConsumerContext get(
+      ConsumerRecords<?, ?> records, @Nullable Consumer<?, ?> consumer) {
+    Context receiveContext = recordsContextField.get(records);
+    Object[] consumerInfo = recordsConsumerInfoField.get(records);
+    return createWithFallback(receiveContext, consumerInfo, consumer);
+  }
+
+  private static KafkaConsumerContext createWithFallback(
+      @Nullable Context receiveContext,
+      @Nullable Object[] consumerInfo,
+      @Nullable Consumer<?, ?> consumer) {
     String consumerGroup = null;
     String clientId = null;
     Object deliveryIdentity = null;
-    Object[] consumerInfo = recordConsumerInfoField.get(records);
     if (consumerInfo != null) {
       consumerGroup = (String) consumerInfo[0];
       clientId = (String) consumerInfo[1];
       deliveryIdentity = consumerInfo[2];
     }
-    return create(receiveContext, consumerGroup, clientId, deliveryIdentity);
-  }
-
-  public static KafkaConsumerContext get(ConsumerRecords<?, ?> records) {
-    Context receiveContext = recordsContextField.get(records);
-    String consumerGroup = null;
-    String clientId = null;
-    Object deliveryIdentity = null;
-    Object[] consumerInfo = recordsConsumerInfoField.get(records);
-    if (consumerInfo != null) {
-      consumerGroup = (String) consumerInfo[0];
-      clientId = (String) consumerInfo[1];
-      deliveryIdentity = consumerInfo[2];
+    if (consumerGroup == null) {
+      consumerGroup = KafkaUtil.getConsumerGroup(consumer);
+    }
+    if (clientId == null) {
+      clientId = KafkaUtil.getClientId(consumer);
+    }
+    if (deliveryIdentity == null) {
+      deliveryIdentity = KafkaUtil.getDeliveryIdentity(consumer);
     }
     return create(receiveContext, consumerGroup, clientId, deliveryIdentity);
   }

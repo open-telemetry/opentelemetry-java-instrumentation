@@ -54,11 +54,16 @@ public class KafkaConsumerTelemetry {
     for (TopicPartition partition : consumerRecords.partitions()) {
       List<ConsumerRecord<K, V>> list = consumerRecords.records(partition);
       if (list != null && !list.isEmpty()) {
+        for (ConsumerRecord<K, V> record : list) {
+          KafkaConsumerContextUtil.set(record, consumerContext);
+        }
         list = TracingList.wrap(list, consumerProcessInstrumenter, () -> true, consumerContext);
       }
       records.put(partition, list);
     }
-    return new ConsumerRecords<>(records);
+    ConsumerRecords<K, V> tracedRecords = new ConsumerRecords<>(records);
+    KafkaConsumerContextUtil.set(tracedRecords, consumerContext);
+    return tracedRecords;
   }
 
   @Nullable
