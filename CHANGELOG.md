@@ -9,6 +9,9 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `otel.instrumentation.micrometer.histogram-gauges.enabled` in favor of
+  `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled`. The deprecated property
+  keeps its existing behavior except when `otel.instrumentation.common.v3-preview` is enabled.
 - For library instrumentation users, deprecate configuring span suppression using the
   `otel.instrumentation.experimental.span-suppression-strategy` system property in favor of
   `Experimental.setSpanSuppressionStrategy(...)` or declarative instrumentation configuration.
