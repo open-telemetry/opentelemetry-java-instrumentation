@@ -178,16 +178,26 @@ class SelectorConfigTest {
   }
 
   @Test
-  void resolveTreatsDeprecatedValuesAsSelector() {
+  void resolveMatchesDeprecatedValuesExactlyAndIgnoresWildcards() {
     DeclarativeConfigProperties config = mockConfig();
     when(config.getScalarList("capture_mdc_attributes/development", String.class))
-        .thenReturn(singletonList("prefix.*"));
+        .thenReturn(asList("exact.name", "prefix.*"));
 
     IncludeExclude selector = SelectorConfig.resolve(config, "resolve-deprecated", SELECTOR);
 
     assertThat(selector).isNotNull();
-    assertThat(selector.matches("prefix.value")).isTrue();
+    assertThat(selector.matches("exact.name")).isTrue();
+    assertThat(selector.matches("prefix.value")).isFalse();
     assertThat(selector.matches("other")).isFalse();
+  }
+
+  @Test
+  void resolveIgnoresDeprecatedValuesThatAreAllWildcards() {
+    DeclarativeConfigProperties config = mockConfig();
+    when(config.getScalarList("capture_mdc_attributes/development", String.class))
+        .thenReturn(singletonList("*"));
+
+    assertThat(SelectorConfig.resolve(config, "resolve-all-wildcards", SELECTOR)).isNull();
   }
 
   @Test
