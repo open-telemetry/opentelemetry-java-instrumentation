@@ -108,11 +108,7 @@ tasks {
 
     jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.v3-preview=true,otel.semconv-stability.preview=messaging/dup",
-    )
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
   check {
