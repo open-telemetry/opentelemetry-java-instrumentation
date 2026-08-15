@@ -100,7 +100,11 @@ class RatpackServerHeaderCaptureTest {
 
     Attributes attributes = handleRequest(telemetry);
 
+    // implementing header name enumeration must not turn the deprecated exact-name setters into
+    // wildcard matching, since "*" is a legal header name character and capturing every header
+    // would expose credentials
     assertThat(attributes.get(stringArrayKey("http.request.header.x-test-request"))).isNull();
+    assertThat(attributes.get(stringArrayKey("http.request.header.authorization"))).isNull();
     assertThat(attributes.get(stringArrayKey("http.request.header.host"))).isNull();
     assertThat(attributes.get(stringArrayKey("http.response.header.x-test-response"))).isNull();
   }
@@ -123,7 +127,11 @@ class RatpackServerHeaderCaptureTest {
 
     assertThat(
             app.getHttpClient()
-                .requestSpec(spec -> spec.getHeaders().set("X-Test-Request", "test"))
+                .requestSpec(
+                    spec ->
+                        spec.getHeaders()
+                            .set("X-Test-Request", "test")
+                            .set("Authorization", "Bearer secret"))
                 .get("test")
                 .getBody()
                 .getText())
