@@ -242,6 +242,14 @@ tasks {
     jvmArgs("-Dotel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included=key?")
   }
 
+  val testLogstashStructuredArgumentAttributeExclusionsOnly = register<Test>("testLogstashStructuredArgumentAttributeExclusionsOnly") {
+    testClassesDirs = sourceSets["logstashStructuredArgsTest"].output.classesDirs
+    classpath = sourceSets["logstashStructuredArgsTest"].runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded=other")
+    systemProperty("testLogstashStructuredArgsConfiguration", "exclude-only")
+  }
+
   val testLegacyLogstashStructuredArguments = register<Test>("testLegacyLogstashStructuredArguments") {
     testClassesDirs = sourceSets["logstashStructuredArgsTest"].output.classesDirs
     classpath = sourceSets["logstashStructuredArgsTest"].runtimeClasspath
@@ -277,6 +285,7 @@ tasks {
       testLegacyLogstashMarkerAttributes,
       testLogstashMarkerAttributePrecedence,
       logstashStructuredArgsTest,
+      testLogstashStructuredArgumentAttributeExclusionsOnly,
       testLegacyLogstashStructuredArguments,
       testLogstashStructuredArgumentPrecedence,
     )

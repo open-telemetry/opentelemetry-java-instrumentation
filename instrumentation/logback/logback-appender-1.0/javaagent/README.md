@@ -24,8 +24,8 @@
 | `otel.instrumentation.logback-appender.experimental.capture-mdc-attributes`                           | String  |         | **Deprecated.** Comma-separated list of MDC keys to capture as log attributes. Keys are matched literally, including `*` and `?`, except that the single value `*` captures all MDC attributes. It may be removed in the next minor release; use `otel.instrumentation.logback-appender.experimental.mdc-attributes.included` instead. It is ignored when `otel.instrumentation.logback-appender.experimental.mdc-attributes.included` or `otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded` is configured.                                                                                                                                                                       |
 
 Captured MDC, key value pair, logger context, Logstash marker, and Logstash structured argument
-attributes may contain sensitive information. Configure included and excluded patterns to limit the data exported as log
-attributes.
+attributes may contain sensitive information. Configure included and excluded patterns to limit
+the data exported as log attributes.
 
 The `otel.event.name` key is supported in key-value pairs (SLF4J 2.x fluent API), MDC entries, Logstash markers (e.g., `Markers.append("otel.event.name", ...)`), and Logstash structured arguments (e.g., `StructuredArguments.keyValue("otel.event.name", ...)`). When present, its value is used as the log event name and is not emitted as an attribute.
 

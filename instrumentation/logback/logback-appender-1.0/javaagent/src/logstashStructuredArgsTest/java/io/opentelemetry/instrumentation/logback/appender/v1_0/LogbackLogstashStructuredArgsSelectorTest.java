@@ -76,6 +76,10 @@ class LogbackLogstashStructuredArgsSelectorTest {
       case "precedence":
         expectedKeys = singletonList("key1");
         break;
+      case "exclude-only":
+        // an empty included list captures everything not excluded
+        expectedKeys = asList("key1", "key2");
+        break;
       default:
         // the default test task configures
         // logstash-structured-argument-attributes.included=key?

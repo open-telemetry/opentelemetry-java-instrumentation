@@ -63,7 +63,6 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   @Nullable private String logstashStructuredArgumentAttributesIncluded;
   @Nullable private String logstashStructuredArgumentAttributesExcluded;
   @Nullable private Boolean captureLogstashStructuredArguments;
-
   private final AtomicBoolean deprecatedLogstashStructuredArgumentsWarningLogged =
       new AtomicBoolean();
 
