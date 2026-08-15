@@ -143,14 +143,6 @@ public final class TracingRequestHandler extends RequestHandler2 {
 
   @Override
   public void afterError(Request<?> request, Response<?> response, Exception e) {
-    Context context = request.getHandlerContext(CONTEXT);
-    if (context != null) {
-      Timer timer = context.get(REQUEST_TIMER_KEY);
-      Context parentContext = context.get(PARENT_CONTEXT_KEY);
-      if (timer != null && parentContext != null) {
-        SqsAccess.afterError(request, response, timer, parentContext, this, e);
-      }
-    }
     finish(request, response, e);
   }
 

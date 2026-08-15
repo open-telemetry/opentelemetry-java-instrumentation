@@ -34,7 +34,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -979,24 +978,6 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
             .build());
 
     SqsMetricsAssertions.assertSettleMetrics(getTesting(), sqsPort, 2);
-  }
-
-  @Test
-  void testReceiveErrorMetrics() {
-    SqsClientBuilder builder = SqsClient.builder();
-    configureSdkClient(builder);
-    SqsClient client = configureSqsClient(builder.build());
-    getTesting().clearData();
-
-    AtomicReference<String> errorType = new AtomicReference<>();
-    ReceiveMessageRequest missingQueueRequest =
-        receiveMessageRequest.toBuilder().queueUrl(queueUrl + "Missing").build();
-    assertThatThrownBy(() -> client.receiveMessage(missingQueueRequest))
-        .isInstanceOf(RuntimeException.class)
-        .satisfies(error -> errorType.set(error.getClass().getName()));
-
-    SqsMetricsAssertions.assertReceiveErrorMetrics(
-        getTesting(), sqsPort, "testSdkSqsMissing", errorType.get());
   }
 
   private static void assertMessageLink(LinkData link, SpanData creationContext, String messageId) {

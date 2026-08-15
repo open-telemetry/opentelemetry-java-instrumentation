@@ -35,7 +35,6 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -1056,22 +1055,6 @@ public abstract class AbstractSqsTracingTest {
             .withEntries(new DeleteMessageBatchRequestEntry("i1", receiptHandles.get(1))));
 
     SqsMetricsAssertions.assertSettleMetrics(testing(), sqsPort, 2);
-  }
-
-  @Test
-  void testReceiveErrorMetrics() {
-    testing().clearData();
-
-    AtomicReference<String> errorType = new AtomicReference<>();
-    assertThatThrownBy(
-            () ->
-                sqsClient.receiveMessage(
-                    "http://localhost:" + sqsPort + "/000000000000/testSdkSqsMissing"))
-        .isInstanceOf(RuntimeException.class)
-        .satisfies(error -> errorType.set(error.getClass().getName()));
-
-    SqsMetricsAssertions.assertReceiveErrorMetrics(
-        testing(), sqsPort, "testSdkSqsMissing", errorType.get());
   }
 
   static void assertAwsRequestId(AbstractStringAssert<?> val) {

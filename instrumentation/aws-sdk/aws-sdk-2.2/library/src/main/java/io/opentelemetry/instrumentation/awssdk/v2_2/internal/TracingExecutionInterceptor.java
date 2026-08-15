@@ -445,11 +445,6 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       Context.FailedExecution context, ExecutionAttributes executionAttributes) {
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
     if (otelContext != null) {
-      Timer timer = executionAttributes.getAttribute(REQUEST_TIMER_ATTRIBUTE);
-      if (timer != null) {
-        SqsAccess.afterReceiveMessageExecutionFailure(
-            executionAttributes, this, timer, context.exception());
-      }
       RequestSpanFinisher finisher = executionAttributes.getAttribute(REQUEST_FINISHER_ATTRIBUTE);
       finisher.finish(otelContext, executionAttributes, null, context.exception());
     }

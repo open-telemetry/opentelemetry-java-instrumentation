@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE;
-import static java.util.Collections.emptyList;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -120,28 +119,6 @@ public final class SqsImpl {
     // store tracing list in context so that our proxied SqsClient/SqsAsyncClient could pick it up
     SqsTracingContext.set(parentContext, tracingList);
 
-    return true;
-  }
-
-  static boolean afterReceiveMessageExecutionFailure(
-      ExecutionAttributes executionAttributes,
-      TracingExecutionInterceptor config,
-      Timer timer,
-      Throwable error) {
-    SdkRequest request = executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE);
-    if (!(request instanceof ReceiveMessageRequest)) {
-      return false;
-    }
-
-    io.opentelemetry.context.Context parentContext =
-        TracingExecutionInterceptor.getParentContext(executionAttributes);
-    Instrumenter<SqsReceiveRequest, Response> instrumenter =
-        config.getConsumerReceiveInstrumenter();
-    SqsReceiveRequest receiveRequest = SqsReceiveRequest.create(executionAttributes, emptyList());
-    if (instrumenter.shouldStart(parentContext, receiveRequest)) {
-      InstrumenterUtil.startAndEnd(
-          instrumenter, parentContext, receiveRequest, null, error, timer.startTime(), timer.now());
-    }
     return true;
   }
 

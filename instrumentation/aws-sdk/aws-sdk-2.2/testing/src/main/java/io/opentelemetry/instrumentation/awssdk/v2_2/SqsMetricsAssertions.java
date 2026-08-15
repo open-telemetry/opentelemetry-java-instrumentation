@@ -34,8 +34,7 @@ final class SqsMetricsAssertions {
       return;
     }
 
-    assertClientOperationDuration(
-        testing, serverPort, operationCount, "send", "send", "testSdkSqs", null);
+    assertClientOperationDuration(testing, serverPort, operationCount, "send", "send");
     assertMessageCounter(
         testing, "messaging.client.sent.messages", "send", messageCount, serverPort);
     assertNoDeprecatedMessagingMetrics(testing);
@@ -51,23 +50,10 @@ final class SqsMetricsAssertions {
       return;
     }
 
-    assertClientOperationDuration(
-        testing, serverPort, receiveOperationCount, "receive", "receive", "testSdkSqs", null);
+    assertClientOperationDuration(testing, serverPort, receiveOperationCount, "receive", "receive");
     assertMessageCounter(
         testing, "messaging.client.consumed.messages", "receive", messageCount, serverPort);
     assertProcessDuration(testing, serverPort, messageCount);
-    assertNoDeprecatedMessagingMetrics(testing);
-  }
-
-  static void assertReceiveErrorMetrics(
-      InstrumentationExtension testing, int serverPort, String destination, String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
-
-    assertClientOperationDuration(
-        testing, serverPort, 1, "receive", "receive", destination, errorType);
     assertNoDeprecatedMessagingMetrics(testing);
   }
 
@@ -78,8 +64,7 @@ final class SqsMetricsAssertions {
       return;
     }
 
-    assertClientOperationDuration(
-        testing, serverPort, operationCount, "delete", "settle", "testSdkSqs", null);
+    assertClientOperationDuration(testing, serverPort, operationCount, "delete", "settle");
     // settling messages does not deliver anything to the application
     assertThat(testing.metrics())
         .filteredOn(
@@ -94,9 +79,7 @@ final class SqsMetricsAssertions {
       int serverPort,
       long operationCount,
       String operationName,
-      String operationType,
-      String destination,
-      String errorType) {
+      String operationType) {
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.client.operation.duration",
@@ -121,8 +104,8 @@ final class SqsMetricsAssertions {
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, operationName),
                                                 equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                                equalTo(ERROR_TYPE, errorType),
-                                                equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                                equalTo(ERROR_TYPE, null),
+                                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                                                 equalTo(MESSAGING_OPERATION_TYPE, operationType),
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 equalTo(SERVER_PORT, serverPort))))));
