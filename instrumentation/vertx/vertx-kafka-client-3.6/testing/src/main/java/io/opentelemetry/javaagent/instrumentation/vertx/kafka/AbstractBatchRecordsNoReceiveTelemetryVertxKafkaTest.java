@@ -130,9 +130,8 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
         "0",
         2,
         null);
+    // batch and per-record process operations produce separate duration points
     assertProcessMetricPointCounts(testing(), "io.opentelemetry.vertx-kafka-client-3.6", 2);
-    // the batch process operation must not also count the two deliveries the per-record process
-    // operations already counted
   }
 
   @Order(2)

@@ -195,8 +195,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
 
   private void assertBatchMetrics(long messageCount, String errorType) {
     String group = hasConsumerGroup() ? "test" : null;
-    // receive telemetry is enabled here, so the receive operation exists and owns the consumed
-    // messages count
+    // receive telemetry is enabled here, so the receive operation records poll duration
     assertReceiveDurationMetrics(
         testing(), "io.opentelemetry.kafka-clients-0.11", "testBatchTopic", group, null, 1, null);
     assertProcessDurationMetrics(
