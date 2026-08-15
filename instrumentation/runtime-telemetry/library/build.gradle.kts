@@ -6,10 +6,17 @@ val mrJarVersions = listOf(17)
 
 dependencies {
   implementation(project(":instrumentation-api"))
-  implementation(project(":instrumentation-api-incubator"))
+  implementation("io.opentelemetry:opentelemetry-api-incubator")
+  implementation("io.opentelemetry.semconv:opentelemetry-semconv")
 
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("io.github.netmikey.logunit:logunit-jul")
+}
+
+// the otel.library-instrumentation convention adds instrumentation-api-incubator to every library
+// module; this module does not use it and must not depend on it in order to be published as stable
+configurations.implementation {
+  dependencies.removeIf { it.name == "opentelemetry-instrumentation-api-incubator" }
 }
 
 sourceSets {

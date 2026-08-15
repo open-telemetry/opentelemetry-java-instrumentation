@@ -9,9 +9,9 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetryBuilder;
@@ -182,9 +182,9 @@ public final class Internal {
   @Nullable
   public static RuntimeTelemetry configure(OpenTelemetry openTelemetry, boolean defaultEnabled) {
     DeclarativeConfigProperties config =
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry");
+        getInstrumentationConfig(openTelemetry, "runtime_telemetry");
     DeclarativeConfigProperties java17Config =
-        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "runtime_telemetry_java17");
+        getInstrumentationConfig(openTelemetry, "runtime_telemetry_java17");
 
     // Determine which configuration is being used
     boolean baseEnabled = config.getBoolean("enabled", defaultEnabled);
@@ -313,6 +313,15 @@ public final class Internal {
     boolean captureGcCause =
         SemconvStability.v3Preview() || Boolean.TRUE.equals(captureGcCauseConfig);
     Internal.setCaptureGcCause(builder, captureGcCause);
+  }
+
+  // DeclarativeConfigUtil is not used here because it lives in instrumentation-api-incubator, which
+  // this module does not depend on
+  private static DeclarativeConfigProperties getInstrumentationConfig(
+      OpenTelemetry openTelemetry, String instrumentationName) {
+    return openTelemetry instanceof ExtendedOpenTelemetry
+        ? ((ExtendedOpenTelemetry) openTelemetry).getInstrumentationConfig(instrumentationName)
+        : DeclarativeConfigProperties.empty();
   }
 
   private static final class JfrMetricSelection {
