@@ -7,6 +7,9 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
@@ -18,14 +21,22 @@ final class DefaultErrorCauseExtractor implements ErrorCauseExtractor {
 
   @Override
   public Throwable extract(Throwable error) {
-    if (error.getCause() != null
-        && (error instanceof ExecutionException
-            || isInstanceOfCompletionException(error)
-            || error instanceof InvocationTargetException
-            || error instanceof UndeclaredThrowableException)) {
-      return extract(error.getCause());
+    Set<Throwable> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+    Throwable current = error;
+    while (current.getCause() != null && isUnwrappableWrapper(current)) {
+      if (!visited.add(current)) {
+        break;
+      }
+      current = current.getCause();
     }
-    return error;
+    return current;
+  }
+
+  private static boolean isUnwrappableWrapper(Throwable error) {
+    return error instanceof ExecutionException
+        || isInstanceOfCompletionException(error)
+        || error instanceof InvocationTargetException
+        || error instanceof UndeclaredThrowableException;
   }
 
   private static boolean isInstanceOfCompletionException(Throwable error) {
