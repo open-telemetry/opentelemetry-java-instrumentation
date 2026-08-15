@@ -1,0 +1,106 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.jetty.httpclient.v12_0;
+
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.sun.net.httpserver.HttpServer;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.net.InetSocketAddress;
+import org.eclipse.jetty.client.ContentResponse;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.http.HttpField;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+class JettyHttpClient12HeaderSelectorTest {
+
+  @RegisterExtension
+  static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  private HttpServer server;
+  private HttpClient client;
+
+  @BeforeEach
+  void startServer() throws Exception {
+    server = HttpServer.create(new InetSocketAddress(0), 0);
+    server.createContext(
+        "/",
+        exchange -> {
+          exchange.getResponseHeaders().add("x-test-response", "response-value");
+          exchange.sendResponseHeaders(200, -1);
+          exchange.close();
+        });
+    server.start();
+  }
+
+  @AfterEach
+  void stopServer() throws Exception {
+    if (client != null) {
+      client.stop();
+    }
+    server.stop(0);
+  }
+
+  @Test
+  void capturesHeadersMatchingSelectors() throws Exception {
+    client =
+        JettyClientTelemetry.builder(testing.getOpenTelemetry())
+            .setRequestHeaders(IncludeExclude.builder().setIncluded("x-test-*").build())
+            .setResponseHeaders(IncludeExclude.builder().setExcluded("content-*").build())
+            .build()
+            .createHttpClient();
+
+    sendRequest();
+
+    assertCapturedHeaders();
+  }
+
+  @SuppressWarnings("deprecation") // testing deprecated API
+  @Test
+  void capturesHeadersFromDeprecatedSetters() throws Exception {
+    client =
+        JettyClientTelemetry.builder(testing.getOpenTelemetry())
+            .setCapturedRequestHeaders(singletonList("x-test-request"))
+            .setCapturedResponseHeaders(singletonList("x-test-response"))
+            .build()
+            .createHttpClient();
+
+    sendRequest();
+
+    assertCapturedHeaders();
+  }
+
+  private void sendRequest() throws Exception {
+    client.start();
+
+    ContentResponse response =
+        client
+            .newRequest("http://localhost:" + server.getAddress().getPort() + "/")
+            .headers(headers -> headers.put(new HttpField("x-test-request", "request-value")))
+            .send();
+
+    assertThat(response.getStatus()).isEqualTo(200);
+  }
+
+  private static void assertCapturedHeaders() {
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasAttribute(
+                            stringArrayKey("http.request.header.x-test-request"),
+                            singletonList("request-value"))
+                        .hasAttribute(
+                            stringArrayKey("http.response.header.x-test-response"),
+                            singletonList("response-value"))));
+  }
+}

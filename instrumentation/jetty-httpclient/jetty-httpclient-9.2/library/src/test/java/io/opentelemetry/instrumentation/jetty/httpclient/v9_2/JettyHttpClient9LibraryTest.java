@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v9_2;
 
 import static java.util.Collections.singletonList;
 
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -22,8 +23,14 @@ class JettyHttpClient9LibraryTest extends AbstractJettyClient9Test {
   @Override
   protected HttpClient createStandardClient() {
     return JettyClientTelemetry.builder(testing.getOpenTelemetry())
-        .setCapturedRequestHeaders(singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
-        .setCapturedResponseHeaders(singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+        .setRequestHeaders(
+            IncludeExclude.builder()
+                .setIncluded(singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
+                .build())
+        .setResponseHeaders(
+            IncludeExclude.builder()
+                .setIncluded(singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+                .build())
         .build()
         .createHttpClient();
   }
