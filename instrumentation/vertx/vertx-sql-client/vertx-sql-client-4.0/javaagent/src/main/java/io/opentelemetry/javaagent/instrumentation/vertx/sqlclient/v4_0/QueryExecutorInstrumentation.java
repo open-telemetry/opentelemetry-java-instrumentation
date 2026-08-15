@@ -117,8 +117,9 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         if (connectOptions == null) {
           return new AdviceScope(callDepth);
         }
-        // Try db system stored from pool class first (handles generic SqlConnectOptions),
-        // fall back to class name detection on the connect options itself
+        // Prefer the db system captured when the prepared statement was created, then the value
+        // stored from the pool class (handles generic SqlConnectOptions), and finally fall back to
+        // class name detection on the connect options itself
         String dbSystem = QueryExecutorUtil.getDbSystem(queryExecutor);
         if (dbSystem == null) {
           dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
