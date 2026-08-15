@@ -101,7 +101,7 @@ class ServletHeaderCaptureTest {
     when(request.getMethod()).thenReturn("GET");
     when(request.getHeaderNames())
         .thenAnswer(invocation -> enumeration(asList("X-Test-Request", "Authorization")));
-    // only real header names resolve, so a literal lookup of "*" finds nothing
+    // Authorization is present so that treating "*" as a glob would capture it
     when(request.getHeaders("x-test-request"))
         .thenAnswer(invocation -> enumeration(singletonList("request-value")));
     when(request.getHeaders("authorization"))
