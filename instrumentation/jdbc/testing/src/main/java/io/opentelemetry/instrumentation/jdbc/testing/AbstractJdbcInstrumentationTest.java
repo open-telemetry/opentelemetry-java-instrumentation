@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_STORED_PROCEDURE_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -34,6 +35,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.google.common.collect.ImmutableMap;
@@ -2252,6 +2254,68 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     DB_CONNECTION_STRING,
                                     emitStableDatabaseSemconv() ? null : url))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("failedTransactionOperations")
+  void testFailedTransaction(String operation, ThrowingConsumer<Connection> transactionOperation)
+      throws SQLException {
+    Connection connection = wrap(new org.h2.Driver().connect(JDBC_URLS.get("h2"), null));
+    cleanup.deferCleanup(connection);
+    Statement statement = connection.createStatement();
+    cleanup.deferCleanup(statement);
+    statement.execute("SELECT 1");
+
+    testing().waitForTraces(1);
+    testing().clearData();
+    connection.close();
+
+    SQLException error =
+        catchThrowableOfType(
+            () -> transactionOperation.acceptThrows(connection), SQLException.class);
+
+    assertThat((Throwable) error).isNotNull();
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(operation)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasStatus(StatusData.error())
+                            .hasException(emitExceptionAsSpanEvents() ? error : null)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
+                                equalTo(maybeStable(DB_OPERATION), operation),
+                                equalTo(DB_USER, null),
+                                equalTo(
+                                    DB_CONNECTION_STRING,
+                                    emitStableDatabaseSemconv() ? null : "h2:mem:"),
+                                equalTo(
+                                    ERROR_TYPE,
+                                    emitStableDatabaseSemconv()
+                                        ? Integer.toString(error.getErrorCode())
+                                        : null))));
+
+    if (emitExceptionAsLogs()) {
+      testing()
+          .waitAndAssertLogRecords(
+              logRecord ->
+                  logRecord
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("db.client.operation.exception")
+                      .hasException(error)
+                      .hasTotalAttributeCount(3));
+    }
+  }
+
+  static Stream<Arguments> failedTransactionOperations() {
+    return Stream.of(
+        argumentSet("commit", "COMMIT", (ThrowingConsumer<Connection>) Connection::commit),
+        argumentSet("rollback", "ROLLBACK", (ThrowingConsumer<Connection>) Connection::rollback));
   }
 
   static Stream<Arguments> transactionOperationsStream() throws SQLException {
