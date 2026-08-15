@@ -200,6 +200,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
         "0",
         1,
         null);
+    assertTotalConsumedMessages(testing(), "io.opentelemetry.spring-kafka-2.7", 1);
   }
 
   @Test

@@ -65,7 +65,11 @@ public class KafkaConsumerTelemetry {
   public <K, V> Context buildAndFinishSpan(
       ConsumerRecords<K, V> records, Consumer<K, V> consumer, Timer timer) {
     return buildAndFinishSpan(
-        records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer), timer);
+        records,
+        KafkaUtil.getConsumerGroup(consumer),
+        KafkaUtil.getClientId(consumer),
+        KafkaUtil.getDeliveryIdentity(consumer),
+        timer);
   }
 
   @Nullable
@@ -74,11 +78,22 @@ public class KafkaConsumerTelemetry {
       @Nullable String consumerGroup,
       @Nullable String clientId,
       Timer timer) {
+    return buildAndFinishSpan(records, consumerGroup, clientId, null, timer);
+  }
+
+  @Nullable
+  public <K, V> Context buildAndFinishSpan(
+      ConsumerRecords<K, V> records,
+      @Nullable String consumerGroup,
+      @Nullable String clientId,
+      @Nullable Object deliveryIdentity,
+      Timer timer) {
     if (records.isEmpty()) {
       return null;
     }
     Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(Context.current());
-    KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumerGroup, clientId);
+    KafkaReceiveRequest request =
+        KafkaReceiveRequest.create(records, consumerGroup, clientId, deliveryIdentity);
     Context receiveContext = null;
     boolean receiveOperationStarted = false;
     if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {

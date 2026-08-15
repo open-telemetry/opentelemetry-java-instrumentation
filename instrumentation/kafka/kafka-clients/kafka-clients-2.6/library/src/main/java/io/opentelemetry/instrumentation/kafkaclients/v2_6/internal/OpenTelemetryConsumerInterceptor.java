@@ -33,6 +33,9 @@ public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerIntercept
   @Nullable private KafkaConsumerTelemetry consumerTelemetry;
   @Nullable private String consumerGroup;
   @Nullable private String clientId;
+  // this interceptor instance is bound to a single consumer, so it can identify deliveries from
+  // that consumer across polls
+  private final Object deliveryIdentity = new Object();
 
   @Override
   @CanIgnoreReturnValue
@@ -43,12 +46,13 @@ public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerIntercept
     // timer should be started before fetching ConsumerRecords, but there is no callback for that
     Timer timer = Timer.start();
     Context receiveContext =
-        consumerTelemetry.buildAndFinishSpan(records, consumerGroup, clientId, timer);
+        consumerTelemetry.buildAndFinishSpan(
+            records, consumerGroup, clientId, deliveryIdentity, timer);
     if (receiveContext == null) {
       receiveContext = Context.current();
     }
     KafkaConsumerContext consumerContext =
-        KafkaConsumerContextUtil.create(receiveContext, consumerGroup, clientId);
+        KafkaConsumerContextUtil.create(receiveContext, consumerGroup, clientId, deliveryIdentity);
     return consumerTelemetry.addTracing(records, consumerContext);
   }
 

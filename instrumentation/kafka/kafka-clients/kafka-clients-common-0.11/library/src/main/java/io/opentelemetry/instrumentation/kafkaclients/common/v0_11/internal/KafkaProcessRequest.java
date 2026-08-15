@@ -19,22 +19,46 @@ public class KafkaProcessRequest extends AbstractKafkaConsumerRequest {
 
   public static KafkaProcessRequest create(
       ConsumerRecord<?, ?> record, @Nullable Consumer<?, ?> consumer) {
-    return create(record, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
+    return create(
+        record,
+        KafkaUtil.getConsumerGroup(consumer),
+        KafkaUtil.getClientId(consumer),
+        KafkaUtil.getDeliveryIdentity(consumer));
   }
 
   public static KafkaProcessRequest create(
       KafkaConsumerContext consumerContext, ConsumerRecord<?, ?> record) {
-    return create(record, consumerContext.getConsumerGroup(), consumerContext.getClientId());
+    return create(
+        record,
+        consumerContext.getConsumerGroup(),
+        consumerContext.getClientId(),
+        consumerContext.getDeliveryIdentity());
   }
 
   public static KafkaProcessRequest create(
       ConsumerRecord<?, ?> record, @Nullable String consumerGroup, @Nullable String clientId) {
-    return new KafkaProcessRequest(record, consumerGroup, clientId);
+    return create(record, consumerGroup, clientId, null);
+  }
+
+  static KafkaProcessRequest create(
+      ConsumerRecord<?, ?> record,
+      @Nullable String consumerGroup,
+      @Nullable String clientId,
+      @Nullable Object deliveryIdentity) {
+    return new KafkaProcessRequest(record, consumerGroup, clientId, deliveryIdentity);
   }
 
   public KafkaProcessRequest(
       ConsumerRecord<?, ?> record, @Nullable String consumerGroup, @Nullable String clientId) {
-    super(consumerGroup, clientId);
+    this(record, consumerGroup, clientId, null);
+  }
+
+  private KafkaProcessRequest(
+      ConsumerRecord<?, ?> record,
+      @Nullable String consumerGroup,
+      @Nullable String clientId,
+      @Nullable Object deliveryIdentity) {
+    super(consumerGroup, clientId, deliveryIdentity);
     this.record = record;
   }
 

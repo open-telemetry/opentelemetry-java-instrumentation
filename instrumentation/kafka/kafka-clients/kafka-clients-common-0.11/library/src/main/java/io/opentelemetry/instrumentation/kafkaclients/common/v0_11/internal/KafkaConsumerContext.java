@@ -17,8 +17,11 @@ import javax.annotation.Nullable;
 public abstract class KafkaConsumerContext {
 
   static KafkaConsumerContext create(
-      @Nullable Context context, @Nullable String consumerGroup, @Nullable String clientId) {
-    return new AutoValue_KafkaConsumerContext(context, consumerGroup, clientId);
+      @Nullable Context context,
+      @Nullable String consumerGroup,
+      @Nullable String clientId,
+      @Nullable Object deliveryIdentity) {
+    return new AutoValue_KafkaConsumerContext(context, consumerGroup, clientId, deliveryIdentity);
   }
 
   @Nullable
@@ -29,4 +32,7 @@ public abstract class KafkaConsumerContext {
 
   @Nullable
   abstract String getClientId();
+
+  @Nullable
+  abstract Object getDeliveryIdentity();
 }
