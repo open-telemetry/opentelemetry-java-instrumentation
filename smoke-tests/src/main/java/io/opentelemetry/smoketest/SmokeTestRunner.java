@@ -83,4 +83,9 @@ public class SmokeTestRunner extends InstrumentationTestRunner {
   public boolean forceFlushCalled() {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+  public boolean isJavaagent() {
+    return true;
+  }
 }
