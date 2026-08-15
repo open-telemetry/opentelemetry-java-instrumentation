@@ -335,10 +335,10 @@ class CassandraClientTest {
         argumentSet(
             "named values",
             new SimpleStatement(
-                "INSERT INTO simple_values_test.users (name, age) values (:name, :age)",
-                ImmutableMap.<String, Object>of("name", "bob", "age", 2)),
-            "INSERT INTO simple_values_test.users (name, age) values (:name, :age)",
-            "INSERT INTO simple_values_test.users (name, age) values (:name, :age)"));
+                "INSERT INTO simple_values_test.users (name, age) values ('bob', :age)",
+                ImmutableMap.<String, Object>of("age", 2)),
+            "INSERT INTO simple_values_test.users (name, age) values ('bob', :age)",
+            "INSERT INTO simple_values_test.users (name, age) values (?, :age)"));
   }
 
   @Test
