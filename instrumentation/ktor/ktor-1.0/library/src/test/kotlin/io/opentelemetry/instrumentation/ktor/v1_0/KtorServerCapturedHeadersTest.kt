@@ -38,6 +38,7 @@ class KtorServerCapturedHeadersTest : AbstractHttpServerUsingTest<ApplicationEng
 
     private val REQUEST_HEADER = AttributeKey.stringArrayKey("http.request.header.x-test-request")
     private val RESPONSE_HEADER = AttributeKey.stringArrayKey("http.response.header.x-test-response")
+    private val SECRET_REQUEST_HEADER = AttributeKey.stringArrayKey("http.request.header.x-test-secret")
   }
 
   @BeforeAll
@@ -55,8 +56,10 @@ class KtorServerCapturedHeadersTest : AbstractHttpServerUsingTest<ApplicationEng
   override fun setupServer(): ApplicationEngine = embeddedServer(Netty, port = port) {
     install(KtorServerTelemetry) {
       setOpenTelemetry(testing.openTelemetry)
+      // "*" is included to verify that it is matched as a literal header name instead of as a
+      // glob pattern
       @Suppress("DEPRECATION") // testing the deprecated API
-      setCapturedRequestHeaders(listOf("X-Test-Request"))
+      setCapturedRequestHeaders(listOf("X-Test-Request", "*"))
       @Suppress("DEPRECATION") // testing the deprecated API
       setCapturedResponseHeaders(listOf("X-Test-Response"))
     }
@@ -78,6 +81,7 @@ class KtorServerCapturedHeadersTest : AbstractHttpServerUsingTest<ApplicationEng
     val request = AggregatedHttpRequest.of(
       RequestHeaders.builder(HttpMethod.GET, resolveAddress(endpoint))
         .add("X-Test-Request", "test")
+        .add("X-Test-Secret", "secret-value")
         .build()
     )
     val response = client.execute(request).aggregate().join()
@@ -93,5 +97,9 @@ class KtorServerCapturedHeadersTest : AbstractHttpServerUsingTest<ApplicationEng
         )
       }
     )
+
+    // the deprecated functions take exact header names, so "*" looks for a header literally named
+    // "*" instead of capturing every header
+    assertThat(testing.spans().single().attributes.get(SECRET_REQUEST_HEADER)).isNull()
   }
 }
