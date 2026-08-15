@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.javahttpclient;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -47,14 +48,52 @@ public final class JavaHttpClientTelemetryBuilder {
   }
 
   /**
+   * Configures which HTTP request headers are captured as span attributes.
+   *
+   * <p>Header values are captured under the {@code http.request.header.<key>} attribute key, where
+   * {@code <key>} is the lowercase header name.
+   *
+   * <p>Selector patterns are matched case-insensitively, since HTTP header names are
+   * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
+   * characters, including none. Excluded patterns take precedence over included patterns. A
+   * selector with no included patterns captures every header that is not excluded, while an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector, like an absent one, captures no headers.
+   */
+  @CanIgnoreReturnValue
+  public JavaHttpClientTelemetryBuilder setRequestHeaders(IncludeExclude requestHeaders) {
+    builder.setRequestHeaders(requestHeaders);
+    return this;
+  }
+
+  /**
    * Configures HTTP request headers to capture as span attributes.
    *
    * @param requestHeaders HTTP header names to capture.
+   * @deprecated Use {@link #setRequestHeaders(IncludeExclude)} instead. May be removed in the next
+   *     minor release.
    */
+  @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setCapturedRequestHeaders(
       Collection<String> requestHeaders) {
-    builder.setCapturedRequestHeaders(requestHeaders);
+    return setRequestHeaders(IncludeExclude.builder().setIncluded(requestHeaders).build());
+  }
+
+  /**
+   * Configures which HTTP response headers are captured as span attributes.
+   *
+   * <p>Header values are captured under the {@code http.response.header.<key>} attribute key, where
+   * {@code <key>} is the lowercase header name.
+   *
+   * <p>Selector patterns are matched case-insensitively, since HTTP header names are
+   * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
+   * characters, including none. Excluded patterns take precedence over included patterns. A
+   * selector with no included patterns captures every header that is not excluded, while an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector, like an absent one, captures no headers.
+   */
+  @CanIgnoreReturnValue
+  public JavaHttpClientTelemetryBuilder setResponseHeaders(IncludeExclude responseHeaders) {
+    builder.setResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -62,12 +101,14 @@ public final class JavaHttpClientTelemetryBuilder {
    * Configures HTTP response headers to capture as span attributes.
    *
    * @param responseHeaders HTTP header names to capture.
+   * @deprecated Use {@link #setResponseHeaders(IncludeExclude)} instead. May be removed in the next
+   *     minor release.
    */
+  @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setCapturedResponseHeaders(
       Collection<String> responseHeaders) {
-    builder.setCapturedResponseHeaders(responseHeaders);
-    return this;
+    return setResponseHeaders(IncludeExclude.builder().setIncluded(responseHeaders).build());
   }
 
   /**
