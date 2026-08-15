@@ -59,8 +59,13 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
     return system;
   }
 
-  public boolean isSpanContextPropagated() {
-    return spanContextPropagated;
+  public boolean isSpanContextPropagated(Endpoint endpoint) {
+    if (!spanContextPropagated) {
+      return false;
+    }
+    return !"ironmq".equals(component)
+        || Boolean.parseBoolean(
+            toQueryParameters(endpoint.getEndpointUri()).get("preserveHeaders"));
   }
 
   public String getSendOperationName() {

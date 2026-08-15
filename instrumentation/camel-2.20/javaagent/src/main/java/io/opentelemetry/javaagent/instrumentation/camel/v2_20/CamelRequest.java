@@ -39,7 +39,8 @@ abstract class CamelRequest {
             messagingSpanDecorator.getDestinationPartitionId(exchange);
       }
       messagingSendOperationName = messagingSpanDecorator.getSendOperationName();
-      messagingSpanContextPropagated = messagingSpanDecorator.isSpanContextPropagated();
+      messagingSpanContextPropagated =
+          messagingSpanDecorator.isSpanContextPropagated(endpoint);
     }
     return new AutoValue_CamelRequest(
         spanDecorator,
