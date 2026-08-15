@@ -35,8 +35,6 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<String> injectedClassNames() {
-    // must be injected into the application class loader so that it can access the package-private
-    // QueryExecutor class
     return singletonList("io.vertx.sqlclient.impl.QueryExecutorUtil");
   }
 
