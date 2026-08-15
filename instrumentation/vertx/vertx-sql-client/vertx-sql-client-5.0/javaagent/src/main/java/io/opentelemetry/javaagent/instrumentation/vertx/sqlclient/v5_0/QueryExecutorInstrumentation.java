@@ -17,7 +17,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientData;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil;
 import io.vertx.core.internal.PromiseInternal;
@@ -51,8 +50,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Object queryExecutor) {
       // copy client data from ThreadLocal to VirtualField
-      QueryExecutorUtil.setData(
-          queryExecutor, new VertxSqlClientData(getSqlConnectOptions(), getDbSystem()));
+      QueryExecutorUtil.setData(queryExecutor, getSqlConnectOptions(), getDbSystem());
     }
   }
 
@@ -110,18 +108,14 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           return new AdviceScope(callDepth);
         }
 
-        VertxSqlClientData data = QueryExecutorUtil.getData(queryExecutor);
-        if (data == null) {
-          return new AdviceScope(callDepth);
-        }
-        SqlConnectOptions connectOptions = data.getConnectOptions();
+        SqlConnectOptions connectOptions = QueryExecutorUtil.getConnectOptions(queryExecutor);
         // connectOptions is null when the pool was created via JDBCPool which bypasses the
         // Pool.pool() factory, in that case we skip vertx-sql-client span creation and let JDBC
         // instrumentation handle it
         if (connectOptions == null) {
           return new AdviceScope(callDepth);
         }
-        String dbSystem = data.getDbSystem();
+        String dbSystem = QueryExecutorUtil.getDbSystem(queryExecutor);
         if (dbSystem == null) {
           dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
         }
