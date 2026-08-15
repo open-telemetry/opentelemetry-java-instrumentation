@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -32,6 +33,8 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -44,11 +47,13 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.SimpleStatement;
+import com.datastax.driver.core.exceptions.InvalidQueryException;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -115,6 +120,45 @@ class CassandraClientTest {
             .build();
     cleanup.deferAfterAll(cluster);
     cleanup.deferAfterAll(() -> executor.shutdownNow());
+  }
+
+  @Test
+  void shouldEmitRequestAttributesWhenExecutionFails() {
+    Session session = cluster.connect();
+    cleanup.deferCleanup(session);
+    SimpleStatement statement = new SimpleStatement("SELECT * FROM missing_table");
+    statement.setConsistencyLevel(ConsistencyLevel.ONE);
+    statement.setFetchSize(123);
+    statement.setIdempotent(true);
+
+    Throwable thrown = catchThrowable(() -> session.execute(statement));
+
+    assertThat(thrown).isInstanceOf(InvalidQueryException.class);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT missing_table")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(thrown)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                            equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM missing_table"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT missing_table" : null),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_CASSANDRA_TABLE), "missing_table"),
+                            equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "ONE"),
+                            equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), true),
+                            equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 123),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv()
+                                    ? InvalidQueryException.class.getName()
+                                    : null))));
   }
 
   @ParameterizedTest(name = "{index}: {0}")

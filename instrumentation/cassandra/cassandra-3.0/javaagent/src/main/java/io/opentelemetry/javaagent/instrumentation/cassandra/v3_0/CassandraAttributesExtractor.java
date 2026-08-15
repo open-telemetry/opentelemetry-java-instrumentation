@@ -30,6 +30,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class CassandraAttributesExtractor implements AttributesExtractor<CassandraRequest, ExecutionInfo> {
 
   private static final ClassValue<Method> speculativeExecutionsMethod =
@@ -59,9 +60,19 @@ class CassandraAttributesExtractor implements AttributesExtractor<CassandraReque
       };
 
   @Override
-  public void onStart(AttributesBuilder attributes, Context context, CassandraRequest request) {}
+  public void onStart(AttributesBuilder attributes, Context context, CassandraRequest request) {
+    if (emitStableDatabaseSemconv()) {
+      attributes.put(CASSANDRA_CONSISTENCY_LEVEL, request.getConsistencyLevel());
+      attributes.put(CASSANDRA_PAGE_SIZE, request.getPageSize());
+      attributes.put(CASSANDRA_QUERY_IDEMPOTENT, request.isIdempotent());
+    }
+    if (emitOldDatabaseSemconv()) {
+      attributes.put(DB_CASSANDRA_CONSISTENCY_LEVEL, request.getConsistencyLevel());
+      attributes.put(DB_CASSANDRA_PAGE_SIZE, request.getPageSize());
+      attributes.put(DB_CASSANDRA_IDEMPOTENCE, request.isIdempotent());
+    }
+  }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public void onEnd(
       AttributesBuilder attributes,
@@ -90,17 +101,6 @@ class CassandraAttributesExtractor implements AttributesExtractor<CassandraReque
       if (emitOldDatabaseSemconv()) {
         attributes.put(DB_CASSANDRA_COORDINATOR_ID, coordinatorId);
       }
-    }
-
-    if (emitStableDatabaseSemconv()) {
-      attributes.put(CASSANDRA_CONSISTENCY_LEVEL, request.getConsistencyLevel());
-      attributes.put(CASSANDRA_PAGE_SIZE, request.getPageSize());
-      attributes.put(CASSANDRA_QUERY_IDEMPOTENT, request.isIdempotent());
-    }
-    if (emitOldDatabaseSemconv()) {
-      attributes.put(DB_CASSANDRA_CONSISTENCY_LEVEL, request.getConsistencyLevel());
-      attributes.put(DB_CASSANDRA_PAGE_SIZE, request.getPageSize());
-      attributes.put(DB_CASSANDRA_IDEMPOTENCE, request.isIdempotent());
     }
 
     Integer speculativeExecutionCount = getSpeculativeExecutionCount(executionInfo);
