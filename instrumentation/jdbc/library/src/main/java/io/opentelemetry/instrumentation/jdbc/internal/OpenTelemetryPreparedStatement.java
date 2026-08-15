@@ -425,6 +425,11 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   // JDBC 4.2
 
   @Override
+  public long[] executeLargeBatch() throws SQLException {
+    return wrapBatchCall(delegate::executeLargeBatch);
+  }
+
+  @Override
   public void setObject(int parameterIndex, Object x, SQLType targetSqlType, int scaleOrLength)
       throws SQLException {
     delegate.setObject(parameterIndex, x, targetSqlType, scaleOrLength);

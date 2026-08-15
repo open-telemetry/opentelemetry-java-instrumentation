@@ -2199,11 +2199,70 @@ public abstract class AbstractJdbcInstrumentationTest {
 
     testing()
         .waitAndAssertTraces(
-            trace -> assertEmptyPreparedBatchTrace(trace, "h2", null, "h2:mem:", tableName));
+            trace -> assertPreparedBatchTrace(trace, "h2", null, "h2:mem:", tableName, 0));
   }
 
-  private static void assertEmptyPreparedBatchTrace(
-      TraceAssert trace, String system, String username, String url, String tableName) {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testPreparedBatchStateRetainedAfterFailure(boolean largeBatch) throws SQLException {
+    String system = largeBatch ? "sqlite" : "h2";
+    Connection rawConnection =
+        largeBatch
+            ? new JDBC().connect(JDBC_URLS.get(system), new Properties())
+            : new org.h2.Driver().connect(JDBC_URLS.get(system), null);
+    Connection connection = wrap(rawConnection);
+    cleanup.deferCleanup(connection);
+    String tableName =
+        largeBatch ? "prepared_large_batch_failure_test" : "prepared_batch_failure_test";
+    Statement setupStatement = connection.createStatement();
+    cleanup.deferCleanup(setupStatement);
+    setupStatement.execute(
+        "CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
+    setupStatement.execute("INSERT INTO " + tableName + " VALUES(1), (2)");
+    testing().waitForTraces(2);
+    testing().clearData();
+
+    PreparedStatement statement =
+        connection.prepareStatement("INSERT INTO " + tableName + " VALUES(?)");
+    cleanup.deferCleanup(statement);
+    statement.setInt(1, 1);
+    statement.addBatch();
+    statement.setInt(1, 2);
+    statement.addBatch();
+
+    assertThatThrownBy(() -> executeBatch(statement, largeBatch)).isInstanceOf(SQLException.class);
+    testing().waitForTraces(1);
+    testing().clearData();
+
+    setupStatement.execute("DELETE FROM " + tableName);
+    testing().waitForTraces(1);
+    testing().clearData();
+
+    testing().runWithSpan("parent", () -> executeBatch(statement, largeBatch));
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                assertPreparedBatchTrace(
+                    trace, system, null, largeBatch ? "sqlite:memory:" : "h2:mem:", tableName, 2));
+  }
+
+  private static void executeBatch(PreparedStatement statement, boolean largeBatch)
+      throws SQLException {
+    if (largeBatch) {
+      statement.executeLargeBatch();
+    } else {
+      statement.executeBatch();
+    }
+  }
+
+  private static void assertPreparedBatchTrace(
+      TraceAssert trace,
+      String system,
+      String username,
+      String url,
+      String tableName,
+      long batchSize) {
     trace.hasSpansSatisfyingExactly(
         span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
         span ->
@@ -2226,7 +2285,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                         maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : "INSERT"),
                     equalTo(
                         maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : tableName),
-                    equalTo(DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? 0L : null)));
+                    equalTo(
+                        DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? batchSize : null)));
   }
 
   // test that sqlcommenter is not enabled by default
