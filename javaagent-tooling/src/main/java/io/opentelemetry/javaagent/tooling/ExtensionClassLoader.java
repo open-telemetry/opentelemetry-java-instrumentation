@@ -50,8 +50,6 @@ import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 @SuppressWarnings("SystemOut")
 public class ExtensionClassLoader extends URLClassLoader {
 
-  private final boolean isSecurityManagerSupportEnabled;
-
   // NOTE it's important not to use logging in this class, because this class is used before logging
   // is initialized
   private static final List<Map.Entry<Level, String>> deferredLogs = new ArrayList<>();
@@ -59,6 +57,8 @@ public class ExtensionClassLoader extends URLClassLoader {
   static {
     ClassLoader.registerAsParallelCapable();
   }
+
+  private final boolean isSecurityManagerSupportEnabled;
 
   public static ClassLoader getInstance(
       ClassLoader parent, File javaagentFile, boolean isSecurityManagerSupportEnabled) {
