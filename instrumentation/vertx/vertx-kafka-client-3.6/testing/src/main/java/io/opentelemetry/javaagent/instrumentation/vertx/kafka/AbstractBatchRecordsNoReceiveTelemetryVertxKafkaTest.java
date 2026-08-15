@@ -116,20 +116,27 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
                             .hasAttributesSatisfyingExactly(
                                 batchProcessAttributes("testBatchTopic")),
                     span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))));
-    // all of the records come from the same partition, so the batch process operation and the
-    // per-record process operations share a single duration point
     assertProcessMetricsWithConsumedMessages(
         testing(),
         "io.opentelemetry.vertx-kafka-client-3.6",
         "testBatchTopic",
         hasConsumerGroup() ? "test" : null,
-        "0",
-        3,
+        null,
+        1,
         2,
         null);
-    assertProcessMetricPointCounts(testing(), "io.opentelemetry.vertx-kafka-client-3.6", 1);
-    // the batch process operation must not also count the two deliveries the per-record process
-    // operations already counted
+    assertProcessDurationMetrics(
+        testing(),
+        "io.opentelemetry.vertx-kafka-client-3.6",
+        "testBatchTopic",
+        hasConsumerGroup() ? "test" : null,
+        "0",
+        2,
+        null);
+    // batch and per-record process operations produce separate duration points
+    assertProcessMetricPointCounts(testing(), "io.opentelemetry.vertx-kafka-client-3.6", 2);
+    // the per-record process operations must not also count the two deliveries the batch process
+    // operation already counted
     assertTotalConsumedMessages(testing(), "io.opentelemetry.vertx-kafka-client-3.6", 2);
   }
 
@@ -183,22 +190,21 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
                             .hasAttributesSatisfyingExactly(
                                 withErrorType(batchProcessAttributes("testBatchTopic"))),
                     span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))));
-    // the failed batch process operation gets a duration point of its own through error.type
+    assertProcessMetricsWithConsumedMessages(
+        testing(),
+        "io.opentelemetry.vertx-kafka-client-3.6",
+        "testBatchTopic",
+        hasConsumerGroup() ? "test" : null,
+        null,
+        1,
+        1,
+        IllegalArgumentException.class.getName());
     assertProcessDurationMetrics(
         testing(),
         "io.opentelemetry.vertx-kafka-client-3.6",
         "testBatchTopic",
         hasConsumerGroup() ? "test" : null,
         "0",
-        1,
-        IllegalArgumentException.class.getName());
-    assertProcessMetricsWithConsumedMessages(
-        testing(),
-        "io.opentelemetry.vertx-kafka-client-3.6",
-        "testBatchTopic",
-        hasConsumerGroup() ? "test" : null,
-        "0",
-        1,
         1,
         null);
     assertProcessMetricPointCounts(testing(), "io.opentelemetry.vertx-kafka-client-3.6", 2);

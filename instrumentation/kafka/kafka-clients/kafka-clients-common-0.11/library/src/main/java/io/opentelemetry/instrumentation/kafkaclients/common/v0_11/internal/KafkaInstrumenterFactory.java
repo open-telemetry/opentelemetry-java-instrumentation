@@ -36,6 +36,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.ToLongFunction;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
@@ -240,7 +242,8 @@ public final class KafkaInstrumenterFactory {
     if (captureExperimentalSpanAttributes) {
       builder.addAttributesExtractor(new KafkaConsumerExperimentalAttributesExtractor());
     }
-    addConsumedMessagesIfNoReceiveOperation(builder);
+    addConsumedMessagesIfNoReceiveOperation(
+        builder, request -> countConsumedMessages(request.getRecord(), 1));
     setMessagingProcessExceptionEventExtractor(builder);
 
     return MessagingProcessInstrumenterFactory.create(
@@ -259,9 +262,13 @@ public final class KafkaInstrumenterFactory {
    * not counted by a receive operation. Semantic conventions require the counter to be reported
    * once per message delivery, including push-based dispatch such as listener callbacks, which have
    * no receive operation.
+   *
+   * <p>The count is deduplicated per individual {@link ConsumerRecord}, so that a batch process
+   * operation and the per-record process operations of the same delivery, which both run in some
+   * frameworks, together count each record exactly once.
    */
-  private void addConsumedMessagesIfNoReceiveOperation(
-      InstrumenterBuilder<KafkaProcessRequest, Void> builder) {
+  private <REQUEST> void addConsumedMessagesIfNoReceiveOperation(
+      InstrumenterBuilder<REQUEST, Void> builder, ToLongFunction<REQUEST> messageCounter) {
     if (emitStableMessagingSemconv()) {
       builder
           .addContextCustomizer(
@@ -269,7 +276,7 @@ public final class KafkaInstrumenterFactory {
                 long consumedMessagesCount =
                     KafkaConsumerContextUtil.hasReceiveOperation(context)
                         ? 0
-                        : countConsumedMessages(request.getRecord(), 1);
+                        : messageCounter.applyAsLong(request);
                 return context.with(CONSUMED_MESSAGES_COUNT_KEY, consumedMessagesCount);
               })
           .addOperationMetrics(consumedMessagesMetrics);
@@ -299,6 +306,15 @@ public final class KafkaInstrumenterFactory {
     return firstDeliveryObject ? messageCount : 0;
   }
 
+  /** Counts the records of a batch individually, so that they can be deduplicated one by one. */
+  private long countConsumedMessages(ConsumerRecords<?, ?> records) {
+    long consumedMessagesCount = 0;
+    for (ConsumerRecord<?, ?> record : records) {
+      consumedMessagesCount += countConsumedMessages(record, 1);
+    }
+    return consumedMessagesCount;
+  }
+
   public Instrumenter<KafkaReceiveRequest, Void> createBatchProcessInstrumenter() {
     KafkaReceiveAttributesGetter getter = new KafkaReceiveAttributesGetter();
     MessagingOperationType operationType = MessagingOperationType.PROCESS;
@@ -317,6 +333,8 @@ public final class KafkaInstrumenterFactory {
                     openTelemetry.getPropagators().getTextMapPropagator()))
             .addOperationMetrics(MessagingProcessMetrics.get())
             .setErrorCauseExtractor(errorCauseExtractor);
+    addConsumedMessagesIfNoReceiveOperation(
+        builder, request -> countConsumedMessages(request.getRecords()));
     setMessagingProcessExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }

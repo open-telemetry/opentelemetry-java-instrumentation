@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
@@ -242,14 +243,16 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasAttributesSatisfyingExactly(
                                 batchProcessAttributes("testBatchTopic", "testBatchListener", 2)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))));
-    assertProcessDurationMetrics(
+    assertProcessMetricsWithConsumedMessages(
         testing(),
         "io.opentelemetry.spring-kafka-2.7",
         "testBatchTopic",
         "testBatchListener",
         "0",
         1,
+        2,
         null);
+    assertTotalConsumedMessages(testing(), "io.opentelemetry.spring-kafka-2.7", 2);
   }
 
   @Test
