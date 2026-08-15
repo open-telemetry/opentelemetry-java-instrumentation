@@ -18,7 +18,8 @@ import javax.jms.MessageListener;
  * <p>The name is copied from the consumer to the message listener once the listener has been
  * registered, because providers dispatch messages to the listener without exposing the consumer
  * they came from. Registering the same listener instance on several consumers reports the name of
- * the most recently registered consumer.
+ * the most recently registered consumer, and closing a consumer doesn't restore the name of an
+ * earlier one, because the listener is shared and there is no owner to hand it back to.
  */
 public class JmsSubscriptionNames {
 
