@@ -6,10 +6,13 @@
 package io.opentelemetry.instrumentation.helidon.v4_3;
 
 import io.helidon.http.HeaderNames;
+import io.helidon.http.Headers;
 import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.ServerResponse;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -42,6 +45,11 @@ class HelidonAttributesGetter implements HttpServerAttributesGetter<ServerReques
   }
 
   @Override
+  public Collection<String> getHttpRequestHeaderNames(ServerRequest req) {
+    return headerNames(req.headers());
+  }
+
+  @Override
   public Integer getHttpResponseStatusCode(
       ServerRequest req, ServerResponse res, @Nullable Throwable error) {
     return res.status().code();
@@ -50,6 +58,20 @@ class HelidonAttributesGetter implements HttpServerAttributesGetter<ServerReques
   @Override
   public List<String> getHttpResponseHeader(ServerRequest req, ServerResponse res, String name) {
     return res.headers().values(HeaderNames.create(name));
+  }
+
+  @Override
+  public Collection<String> getHttpResponseHeaderNames(ServerRequest req, ServerResponse res) {
+    return headerNames(res.headers());
+  }
+
+  // minimize memory overhead by not using streams
+  private static Collection<String> headerNames(Headers headers) {
+    List<String> names = new ArrayList<>(headers.size());
+    for (var header : headers) {
+      names.add(header.name());
+    }
+    return names;
   }
 
   @Override
