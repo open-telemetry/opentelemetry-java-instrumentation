@@ -29,6 +29,8 @@ class SelectorConfigTest {
 
   private static final String SELECTOR = "mdc-attributes";
   private static final String BOOLEAN_SELECTOR = "key-value-pair-attributes";
+  private static final String RENAMED_SELECTOR = "logstash-structured-argument-attributes";
+  private static final String DEPRECATED_RENAMED_SELECTOR = "logstash-structured-arguments";
 
   @Test
   void readsSelector() {
@@ -306,6 +308,71 @@ class SelectorConfigTest {
     } finally {
       detachWarningHandler(handler);
     }
+  }
+
+  @Test
+  void renamedLegacyBooleanIsReadFromTheDeprecatedName() {
+    DeclarativeConfigProperties config = mockRenamedBooleanConfig();
+    when(config.getBoolean("capture_logstash_structured_arguments/development")).thenReturn(true);
+    // deriving the deprecated name from the selector name would read this instead
+    when(config.getBoolean("capture_logstash_structured_argument_attributes/development"))
+        .thenReturn(false);
+    TestHandler handler = attachWarningHandler();
+    try {
+      Predicate<String> selector =
+          SelectorConfig.resolveLegacyBoolean(
+              config, "boolean-renamed", RENAMED_SELECTOR, DEPRECATED_RENAMED_SELECTOR);
+
+      assertThat(selector).isNotNull();
+      assertThat(selector.test("anything")).isTrue();
+      verify(config, never())
+          .getBoolean("capture_logstash_structured_argument_attributes/development");
+      assertThat(handler.records).hasSize(1);
+      assertThat(handler.records.get(0).getMessage())
+          .isEqualTo(
+              "The otel.instrumentation.boolean-renamed.experimental"
+                  + ".capture-logstash-structured-arguments setting and the equivalent declarative"
+                  + " configuration property are deprecated and may be removed in the next minor"
+                  + " release. Use otel.instrumentation.boolean-renamed.experimental"
+                  + ".logstash-structured-argument-attributes.included or equivalent declarative"
+                  + " configuration instead.");
+    } finally {
+      detachWarningHandler(handler);
+    }
+  }
+
+  @Test
+  void renamedSelectorIsReadFromTheReplacementName() {
+    DeclarativeConfigProperties config = mockRenamedBooleanConfig();
+    when(config
+            .get("logstash_structured_argument_attributes/development")
+            .getScalarList("included", String.class))
+        .thenReturn(singletonList("new"));
+    // deriving the selector name from the deprecated name would read this instead
+    when(config
+            .get("logstash_structured_arguments/development")
+            .getScalarList("included", String.class))
+        .thenReturn(singletonList("wrong"));
+    when(config.getBoolean("capture_logstash_structured_arguments/development")).thenReturn(true);
+
+    Predicate<String> selector =
+        SelectorConfig.resolveLegacyBoolean(
+            config, "boolean-renamed-selector", RENAMED_SELECTOR, DEPRECATED_RENAMED_SELECTOR);
+
+    assertThat(selector).isNotNull();
+    assertThat(selector.test("new")).isTrue();
+    assertThat(selector.test("wrong")).isFalse();
+  }
+
+  private static DeclarativeConfigProperties mockRenamedBooleanConfig() {
+    DeclarativeConfigProperties config =
+        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
+    DeclarativeConfigProperties selectorNode =
+        config.get("logstash_structured_argument_attributes/development");
+    when(selectorNode.getScalarList("included", String.class)).thenReturn(null);
+    when(selectorNode.getScalarList("excluded", String.class)).thenReturn(null);
+    when(config.getBoolean("capture_logstash_structured_arguments/development")).thenReturn(null);
+    return config;
   }
 
   private static DeclarativeConfigProperties mockBooleanConfig() {
