@@ -3,14 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.v1_0
+package io.opentelemetry.instrumentation.ktor.v2_0
 
-import io.ktor.application.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest
@@ -38,6 +37,7 @@ class KtorServerCapturedHeadersTest : AbstractHttpServerUsingTest<ApplicationEng
 
     private val REQUEST_HEADER = AttributeKey.stringArrayKey("http.request.header.x-test-request")
     private val RESPONSE_HEADER = AttributeKey.stringArrayKey("http.response.header.x-test-response")
+    private val SECRET_REQUEST_HEADER = AttributeKey.stringArrayKey("http.request.header.x-test-secret")
   }
 
   @BeforeAll
@@ -55,15 +55,17 @@ class KtorServerCapturedHeadersTest : AbstractHttpServerUsingTest<ApplicationEng
   override fun setupServer(): ApplicationEngine = embeddedServer(Netty, port = port) {
     install(KtorServerTelemetry) {
       setOpenTelemetry(testing.openTelemetry)
+      // "*" is included to verify that it is matched as a literal header name instead of as a
+      // glob pattern
       @Suppress("DEPRECATION") // testing the deprecated API
-      setCapturedRequestHeaders(listOf("X-Test-Request"))
+      capturedRequestHeaders("X-Test-Request", "*")
       @Suppress("DEPRECATION") // testing the deprecated API
-      setCapturedResponseHeaders(listOf("X-Test-Response"))
+      capturedResponseHeaders(listOf("X-Test-Response"))
     }
 
     routing {
       get(endpoint.path) {
-        call.response.header("X-Test-Response", call.request.header("X-Test-Request") ?: "")
+        call.response.header("X-Test-Response", "response-value")
         call.respondText(endpoint.body)
       }
     }
@@ -74,10 +76,11 @@ class KtorServerCapturedHeadersTest : AbstractHttpServerUsingTest<ApplicationEng
   }
 
   @Test
-  fun testCapturedHeaders() {
+  fun testDeprecatedCapturedHeaders() {
     val request = AggregatedHttpRequest.of(
       RequestHeaders.builder(HttpMethod.GET, resolveAddress(endpoint))
-        .add("X-Test-Request", "test")
+        .add("X-Test-Request", "request-value")
+        .add("X-Test-Secret", "secret-value")
         .build()
     )
     val response = client.execute(request).aggregate().join()
@@ -87,11 +90,15 @@ class KtorServerCapturedHeadersTest : AbstractHttpServerUsingTest<ApplicationEng
       Consumer { trace ->
         trace.hasSpansSatisfyingExactly(
           Consumer { span ->
-            span.hasAttribute(REQUEST_HEADER, listOf("test"))
-            span.hasAttribute(RESPONSE_HEADER, listOf("test"))
+            span.hasAttribute(REQUEST_HEADER, listOf("request-value"))
+            span.hasAttribute(RESPONSE_HEADER, listOf("response-value"))
           }
         )
       }
     )
+
+    // the deprecated functions take exact header names, so "*" looks for a header literally named
+    // "*" instead of capturing every header
+    assertThat(testing.spans().single().attributes.get(SECRET_REQUEST_HEADER)).isNull()
   }
 }

@@ -62,6 +62,22 @@ class KtorClientHeadersTest {
     assertThat(span.attributes.get(RESPONSE_HEADER)).containsExactly("response-value")
   }
 
+  @Test
+  fun `deprecated captured headers match names literally`() {
+    val span = record { telemetryBuilder ->
+      @Suppress("DEPRECATION") // testing the deprecated API
+      telemetryBuilder.capturedRequestHeaders("*")
+      @Suppress("DEPRECATION") // testing the deprecated API
+      telemetryBuilder.capturedResponseHeaders("*")
+    }
+
+    // the deprecated setters take exact header names, so "*" looks for a header literally named
+    // "*" instead of capturing every header
+    assertThat(span.attributes.get(REQUEST_HEADER)).isNull()
+    assertThat(span.attributes.get(SECRET_REQUEST_HEADER)).isNull()
+    assertThat(span.attributes.get(RESPONSE_HEADER)).isNull()
+  }
+
   private fun record(configure: (TestKtorClientTelemetryBuilder) -> Unit): SpanData {
     val telemetryBuilder = TestKtorClientTelemetryBuilder()
     telemetryBuilder.setOpenTelemetry(testing.openTelemetry)
@@ -69,23 +85,23 @@ class KtorClientHeadersTest {
     val instrumenter = telemetryBuilder.buildInstrumenter()
 
     lateinit var request: HttpRequestData
-    val client = HttpClient(MockEngine) {
+    HttpClient(MockEngine) {
       engine {
         addHandler { requestData ->
           request = requestData
           respond("", HttpStatusCode.OK, headersOf("X-Test-Response", "response-value"))
         }
       }
-    }
-    val response = runBlocking {
-      client.get("http://localhost/test") {
-        header("X-Test-Request", "request-value")
-        header("X-Test-Secret", "secret-value")
+    }.use { client ->
+      val response = runBlocking {
+        client.get("http://localhost/test") {
+          header("X-Test-Request", "request-value")
+          header("X-Test-Secret", "secret-value")
+        }
       }
+      val context = instrumenter.start(Context.root(), request)
+      instrumenter.end(context, request, response, null)
     }
-
-    val context = instrumenter.start(Context.root(), request)
-    instrumenter.end(context, request, response, null)
 
     return testing.spans().single()
   }

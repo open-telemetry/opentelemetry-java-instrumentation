@@ -90,16 +90,19 @@ class KtorServerTelemetry private constructor(
       builder.setRequestHeaders(requestHeaders)
     }
 
+    /**
+     * Configures which HTTP request headers are captured as span attributes, by exact header name.
+     *
+     * The header names are matched literally. Unlike [setRequestHeaders], `*` and `?` are not
+     * treated as glob patterns, since this setting never documented them as wildcards.
+     */
     // may be removed in the next minor release
     @Deprecated(
-      "Use setRequestHeaders(IncludeExclude) instead.",
-      ReplaceWith(
-        "setRequestHeaders(IncludeExclude.builder().setIncluded(requestHeaders).build())",
-        "io.opentelemetry.instrumentation.api.config.IncludeExclude"
-      )
+      "Use setRequestHeaders(IncludeExclude) instead, which matches glob patterns rather than " +
+        "literal header names. May be removed in the next minor release."
     )
     fun setCapturedRequestHeaders(requestHeaders: List<String>) {
-      setRequestHeaders(IncludeExclude.builder().setIncluded(requestHeaders).build())
+      builder.setCapturedRequestHeaders(requestHeaders)
     }
 
     /**
@@ -118,16 +121,19 @@ class KtorServerTelemetry private constructor(
       builder.setResponseHeaders(responseHeaders)
     }
 
+    /**
+     * Configures which HTTP response headers are captured as span attributes, by exact header name.
+     *
+     * The header names are matched literally. Unlike [setResponseHeaders], `*` and `?` are not
+     * treated as glob patterns, since this setting never documented them as wildcards.
+     */
     // may be removed in the next minor release
     @Deprecated(
-      "Use setResponseHeaders(IncludeExclude) instead.",
-      ReplaceWith(
-        "setResponseHeaders(IncludeExclude.builder().setIncluded(responseHeaders).build())",
-        "io.opentelemetry.instrumentation.api.config.IncludeExclude"
-      )
+      "Use setResponseHeaders(IncludeExclude) instead, which matches glob patterns rather than " +
+        "literal header names. May be removed in the next minor release."
     )
     fun setCapturedResponseHeaders(responseHeaders: List<String>) {
-      setResponseHeaders(IncludeExclude.builder().setIncluded(responseHeaders).build())
+      builder.setCapturedResponseHeaders(responseHeaders)
     }
 
     fun setKnownMethods(knownMethods: Collection<String>) {

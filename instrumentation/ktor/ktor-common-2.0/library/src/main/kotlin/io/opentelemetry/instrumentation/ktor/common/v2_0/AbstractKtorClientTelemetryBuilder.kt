@@ -59,28 +59,34 @@ abstract class AbstractKtorClientTelemetryBuilder(
     builder.setRequestHeaders(requestHeaders)
   }
 
+  /**
+   * Configures which HTTP request headers are captured as span attributes, by exact header name.
+   *
+   * The header names are matched literally. Unlike [requestHeaders], `*` and `?` are not
+   * treated as glob patterns, since this setting never documented them as wildcards.
+   */
   // may be removed in the next minor release
   @Deprecated(
-    "Use requestHeaders(IncludeExclude) instead.",
-    ReplaceWith(
-      "requestHeaders(IncludeExclude.builder().setIncluded(*headers).build())",
-      "io.opentelemetry.instrumentation.api.config.IncludeExclude"
-    )
+    "Use requestHeaders(IncludeExclude) instead, which matches glob patterns rather than " +
+      "literal header names. May be removed in the next minor release."
   )
   fun capturedRequestHeaders(vararg headers: String) {
-    requestHeaders(IncludeExclude.builder().setIncluded(*headers).build())
+    builder.setCapturedRequestHeaders(headers.toList())
   }
 
+  /**
+   * Configures which HTTP request headers are captured as span attributes, by exact header name.
+   *
+   * The header names are matched literally. Unlike [requestHeaders], `*` and `?` are not
+   * treated as glob patterns, since this setting never documented them as wildcards.
+   */
   // may be removed in the next minor release
   @Deprecated(
-    "Use requestHeaders(IncludeExclude) instead.",
-    ReplaceWith(
-      "requestHeaders(IncludeExclude.builder().setIncluded(headers.toList()).build())",
-      "io.opentelemetry.instrumentation.api.config.IncludeExclude"
-    )
+    "Use requestHeaders(IncludeExclude) instead, which matches glob patterns rather than " +
+      "literal header names. May be removed in the next minor release."
   )
   fun capturedRequestHeaders(headers: Iterable<String>) {
-    requestHeaders(IncludeExclude.builder().setIncluded(headers.toList()).build())
+    builder.setCapturedRequestHeaders(headers.toList())
   }
 
   /**
@@ -99,28 +105,34 @@ abstract class AbstractKtorClientTelemetryBuilder(
     builder.setResponseHeaders(responseHeaders)
   }
 
+  /**
+   * Configures which HTTP response headers are captured as span attributes, by exact header name.
+   *
+   * The header names are matched literally. Unlike [responseHeaders], `*` and `?` are not
+   * treated as glob patterns, since this setting never documented them as wildcards.
+   */
   // may be removed in the next minor release
   @Deprecated(
-    "Use responseHeaders(IncludeExclude) instead.",
-    ReplaceWith(
-      "responseHeaders(IncludeExclude.builder().setIncluded(*headers).build())",
-      "io.opentelemetry.instrumentation.api.config.IncludeExclude"
-    )
+    "Use responseHeaders(IncludeExclude) instead, which matches glob patterns rather than " +
+      "literal header names. May be removed in the next minor release."
   )
   fun capturedResponseHeaders(vararg headers: String) {
-    responseHeaders(IncludeExclude.builder().setIncluded(*headers).build())
+    builder.setCapturedResponseHeaders(headers.toList())
   }
 
+  /**
+   * Configures which HTTP response headers are captured as span attributes, by exact header name.
+   *
+   * The header names are matched literally. Unlike [responseHeaders], `*` and `?` are not
+   * treated as glob patterns, since this setting never documented them as wildcards.
+   */
   // may be removed in the next minor release
   @Deprecated(
-    "Use responseHeaders(IncludeExclude) instead.",
-    ReplaceWith(
-      "responseHeaders(IncludeExclude.builder().setIncluded(headers.toList()).build())",
-      "io.opentelemetry.instrumentation.api.config.IncludeExclude"
-    )
+    "Use responseHeaders(IncludeExclude) instead, which matches glob patterns rather than " +
+      "literal header names. May be removed in the next minor release."
   )
   fun capturedResponseHeaders(headers: Iterable<String>) {
-    responseHeaders(IncludeExclude.builder().setIncluded(headers.toList()).build())
+    builder.setCapturedResponseHeaders(headers.toList())
   }
 
   fun knownMethods(vararg methods: String) = knownMethods(methods.asIterable())
