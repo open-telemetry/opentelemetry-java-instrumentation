@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientData;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnectOptions;
@@ -72,7 +73,8 @@ class SqlConnectionBaseInstrumentation implements TypeInstrumentation {
         }
       }
       return wrapContext(
-          QueryExecutorUtil.attachPreparedStatementData(future, connectOptions, dbSystem));
+          QueryExecutorUtil.attachPreparedStatementData(
+              future, new VertxSqlClientData(connectOptions, dbSystem)));
     }
   }
 }
