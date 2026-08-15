@@ -126,6 +126,47 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
     }
   }
 
+  public String getStableDestination(Exchange exchange, Endpoint endpoint) {
+    if (!"rabbitmq".equals(component)) {
+      return getDestination(exchange, endpoint);
+    }
+
+    Map<String, String> queryParameters = toQueryParameters(endpoint.getEndpointUri());
+    boolean bridgeEndpoint =
+        Boolean.parseBoolean(queryParameters.get("bridgeEndpoint"));
+    String exchangeName =
+        exchange.getIn().getHeader("rabbitmq.EXCHANGE_NAME", String.class);
+    if (exchangeName == null || bridgeEndpoint) {
+      String endpointDestination = stripSchemeAndOptions(endpoint);
+      int separator = endpointDestination.lastIndexOf('/');
+      exchangeName =
+          separator == -1
+              ? endpointDestination
+              : endpointDestination.substring(separator + 1);
+    }
+    String routingKey =
+        exchange.getIn().getHeader("rabbitmq.ROUTING_KEY", String.class);
+    if (routingKey == null || bridgeEndpoint) {
+      routingKey = queryParameters.get("routingKey");
+    }
+
+    StringBuilder destination = new StringBuilder();
+    appendDestinationPart(destination, exchangeName);
+    appendDestinationPart(destination, routingKey);
+    return destination.length() == 0 ? "amq.default" : destination.toString();
+  }
+
+  private static void appendDestinationPart(
+      StringBuilder destination, @Nullable String part) {
+    if (part == null || part.isEmpty()) {
+      return;
+    }
+    if (destination.length() != 0) {
+      destination.append(':');
+    }
+    destination.append(part);
+  }
+
   @Override
   public SpanKind getInitiatorSpanKind() {
     switch (component) {
