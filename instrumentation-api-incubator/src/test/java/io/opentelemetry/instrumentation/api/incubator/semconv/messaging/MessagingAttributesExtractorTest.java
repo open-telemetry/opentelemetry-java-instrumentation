@@ -34,6 +34,8 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames.CaseSensitivity;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -176,7 +178,11 @@ class MessagingAttributesExtractorTest {
   void shouldReturnSpanKey(MessagingOperationType operationType, SpanKey spanKey) {
     MessagingAttributesExtractor<Map<String, String>, String> underTest =
         new MessagingAttributesExtractor<>(
-            TestGetter.INSTANCE, operationType, operationType.legacyOperationName(), true, null);
+            TestGetter.INSTANCE,
+            operationType,
+            operationType.legacyOperationName(),
+            true,
+            CapturedNames.create(null, CaseSensitivity.CASE_SENSITIVE));
 
     assertThat(underTest.internalGetSpanKey()).isSameAs(spanKey);
   }

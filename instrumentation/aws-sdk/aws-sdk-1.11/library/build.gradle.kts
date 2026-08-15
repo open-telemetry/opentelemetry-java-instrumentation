@@ -10,6 +10,7 @@ dependencies {
   compileOnly(project(":muzzle"))
 
   testImplementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
+  testImplementation("org.elasticmq:elasticmq-rest-sqs_2.13")
 
   testLibrary("com.amazonaws:aws-java-sdk-dynamodb:1.11.106")
   testLibrary("com.amazonaws:aws-java-sdk-ec2:1.11.106")

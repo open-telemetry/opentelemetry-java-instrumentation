@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
@@ -25,7 +26,8 @@ class MessagingConfigTest {
             .getScalarList("included", String.class))
         .thenReturn(singletonList("Test-*"));
 
-    assertThat(MessagingConfig.getHeaders(openTelemetry).getIncluded()).containsExactly("Test-*");
+    assertThat(MessagingConfig.getHeaders(openTelemetry).matchingNames(asList("Test-1", "other")))
+        .containsExactly("Test-1");
   }
 
   @Test
@@ -34,8 +36,31 @@ class MessagingConfigTest {
     when(messagingConfig(openTelemetry).getScalarList("capture_headers/development", String.class))
         .thenReturn(singletonList("deprecated"));
 
-    assertThat(MessagingConfig.getHeaders(openTelemetry).getIncluded())
+    assertThat(MessagingConfig.getHeaders(openTelemetry).exactNames())
         .containsExactly("deprecated");
+  }
+
+  @Test
+  void deprecatedSelectorMatchesLiterally() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    when(messagingConfig(openTelemetry).getScalarList("capture_headers/development", String.class))
+        .thenReturn(singletonList("*"));
+
+    // the deprecated setting never supported "*" as capturing every header
+    assertThat(MessagingConfig.getHeaders(openTelemetry).enumerateNames()).isFalse();
+    assertThat(MessagingConfig.getHeaders(openTelemetry).exactNames()).containsExactly("*");
+  }
+
+  @Test
+  void selectorMatchesGlobs() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    when(messagingConfig(openTelemetry)
+            .get("headers/development")
+            .getScalarList("included", String.class))
+        .thenReturn(singletonList("*"));
+
+    assertThat(MessagingConfig.getHeaders(openTelemetry).matchingNames(asList("Test-1", "other")))
+        .containsExactly("Test-1", "other");
   }
 
   @Test
@@ -49,7 +74,7 @@ class MessagingConfigTest {
     System.setProperty("otel.instrumentation.messaging.experimental.headers.included", "from-prop");
     try {
       assertThat(MessagingConfig.getHeaders(openTelemetry, false).isEmpty()).isTrue();
-      assertThat(MessagingConfig.getHeaders(openTelemetry, true).getIncluded())
+      assertThat(MessagingConfig.getHeaders(openTelemetry, true).exactNames())
           .containsExactly("from-prop");
     } finally {
       System.clearProperty("otel.instrumentation.messaging.experimental.headers.included");

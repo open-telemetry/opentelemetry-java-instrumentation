@@ -16,7 +16,7 @@ public class RocketMqSingletons {
 
   private static final RocketMqTelemetry telemetry =
       RocketMqTelemetry.builder(GlobalOpenTelemetry.get())
-          .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
+          .internalSetHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .setCaptureExperimentalSpanAttributes(
               DeclarativeConfigUtil.getInstrumentationConfig(
                       GlobalOpenTelemetry.get(), "rocketmq_client")

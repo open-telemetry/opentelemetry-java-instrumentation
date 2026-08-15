@@ -13,7 +13,6 @@ import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
@@ -25,6 +24,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames.CaseSensitivity;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 /**
@@ -40,7 +41,7 @@ public final class KafkaInstrumenterFactory {
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
   private ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
-  private IncludeExclude headers = IncludeExclude.builder().build();
+  private CapturedNames headers = CapturedNames.create(null, CaseSensitivity.CASE_SENSITIVE);
   private boolean captureExperimentalSpanAttributes = false;
   private boolean messagingReceiveInstrumentationEnabled = false;
   private boolean messagingReceiveInstrumentationConfigured = false;
@@ -57,7 +58,7 @@ public final class KafkaInstrumenterFactory {
   }
 
   @CanIgnoreReturnValue
-  public KafkaInstrumenterFactory setHeaders(IncludeExclude headers) {
+  public KafkaInstrumenterFactory setHeaders(CapturedNames headers) {
     this.headers = headers;
     return this;
   }
@@ -202,9 +203,9 @@ public final class KafkaInstrumenterFactory {
           MessagingAttributesGetter<REQUEST, RESPONSE> getter,
           MessagingOperationType operationType,
           String operationName,
-          IncludeExclude headers) {
+          CapturedNames headers) {
     return MessagingAttributesExtractor.builder(getter, operationType, operationName)
-        .setHeaders(headers)
+        .internalSetHeaders(headers)
         .build();
   }
 }

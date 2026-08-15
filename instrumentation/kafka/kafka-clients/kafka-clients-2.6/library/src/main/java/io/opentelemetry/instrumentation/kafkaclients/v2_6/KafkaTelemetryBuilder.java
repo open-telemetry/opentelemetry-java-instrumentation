@@ -11,6 +11,8 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames.CaseSensitivity;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
@@ -30,7 +32,7 @@ public final class KafkaTelemetryBuilder {
       consumerProcessAttributesExtractors = new ArrayList<>();
   private final List<AttributesExtractor<KafkaReceiveRequest, Void>>
       consumerReceiveAttributesExtractors = new ArrayList<>();
-  private IncludeExclude headers = IncludeExclude.builder().build();
+  private CapturedNames headers = CapturedNames.create(null, CaseSensitivity.CASE_SENSITIVE);
   private boolean captureExperimentalSpanAttributes = false;
   private boolean propagationEnabled = true;
   private boolean messagingReceiveInstrumentationEnabled = false;
@@ -76,12 +78,14 @@ public final class KafkaTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public KafkaTelemetryBuilder setHeaders(IncludeExclude headers) {
-    this.headers = headers;
+    this.headers = CapturedNames.create(headers, CaseSensitivity.CASE_SENSITIVE);
     return this;
   }
 
   /**
    * Configures the messaging headers that will be captured as span attributes.
+   *
+   * <p>Header names are matched literally and case-sensitively; wildcards are not supported.
    *
    * @param capturedHeaders A list of messaging header names.
    * @deprecated Use {@link #setHeaders(IncludeExclude)} instead. May be removed in the next minor
@@ -90,7 +94,8 @@ public final class KafkaTelemetryBuilder {
   @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public KafkaTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
-    return setHeaders(IncludeExclude.builder().setIncluded(capturedHeaders).build());
+    this.headers = CapturedNames.createExact(capturedHeaders, CaseSensitivity.CASE_SENSITIVE);
+    return this;
   }
 
   /**

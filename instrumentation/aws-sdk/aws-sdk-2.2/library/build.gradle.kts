@@ -20,6 +20,7 @@ dependencies {
   compileOnly("software.amazon.awssdk:bedrockruntime:2.25.63")
 
   testImplementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+  testImplementation("org.elasticmq:elasticmq-rest-sqs_2.13")
 
   testLibrary("software.amazon.awssdk:dynamodb:2.2.0")
   testLibrary("software.amazon.awssdk:ec2:2.2.0")

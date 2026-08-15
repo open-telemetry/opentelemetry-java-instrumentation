@@ -25,8 +25,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames.CaseSensitivity;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.List;
@@ -49,7 +50,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 class RocketMqMetricsTest {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rocketmq-client-4.8";
-  private static final IncludeExclude NO_HEADERS = IncludeExclude.builder().build();
+  private static final CapturedNames NO_HEADERS =
+      CapturedNames.create(null, CaseSensitivity.CASE_SENSITIVE);
 
   @RegisterExtension
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();

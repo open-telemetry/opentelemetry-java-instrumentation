@@ -40,7 +40,7 @@ public final class AwsSdkTelemetryFactory {
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "aws_sdk");
 
     return AwsSdkTelemetry.builder(openTelemetry)
-        .setHeaders(
+        .internalSetHeaders(
             MessagingConfig.getHeaders(openTelemetry, systemProperties == SystemProperties.ENABLED))
         .setCaptureExperimentalSpanAttributes(
             awsSdk.getBoolean(

@@ -29,7 +29,7 @@
   in favor of `otel.instrumentation.messaging.experimental.headers.included` /
   `otel.instrumentation.messaging.experimental.headers.excluded` and `setHeaders(IncludeExclude)`,
   which select message headers by glob pattern instead of by exact name only. The deprecated
-  property and methods remain include-only aliases and use the selector's glob matching.
+  property and methods remain include-only aliases and keep their exact-name matching.
 - Deprecate the Logback appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of the new
   `experimental.mdc-attributes.included` and `experimental.mdc-attributes.excluded` selectors, which

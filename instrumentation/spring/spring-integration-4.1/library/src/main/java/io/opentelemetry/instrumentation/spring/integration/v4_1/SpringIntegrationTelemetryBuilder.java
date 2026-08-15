@@ -24,6 +24,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames.CaseSensitivity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -40,7 +42,7 @@ public final class SpringIntegrationTelemetryBuilder {
   private final List<AttributesExtractor<MessageWithChannel, Void>> additionalAttributeExtractors =
       new ArrayList<>();
 
-  private IncludeExclude headers = IncludeExclude.builder().build();
+  private CapturedNames headers = CapturedNames.create(null, CaseSensitivity.CASE_SENSITIVE);
   private boolean producerSpanEnabled = false;
 
   SpringIntegrationTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -73,12 +75,26 @@ public final class SpringIntegrationTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringIntegrationTelemetryBuilder setHeaders(IncludeExclude headers) {
+    this.headers = CapturedNames.create(headers, CaseSensitivity.CASE_SENSITIVE);
+    return this;
+  }
+
+  /**
+   * Configures which message headers are captured as span attributes.
+   *
+   * <p>This method is internal and is hence not for public use. Its API is unstable and can change
+   * at any time.
+   */
+  @CanIgnoreReturnValue
+  public SpringIntegrationTelemetryBuilder internalSetHeaders(CapturedNames headers) {
     this.headers = headers;
     return this;
   }
 
   /**
    * Configures the messaging headers that will be captured as span attributes.
+   *
+   * <p>Header names are matched literally and case-sensitively; wildcards are not supported.
    *
    * @param capturedHeaders A list of messaging header names.
    * @deprecated Use {@link #setHeaders(IncludeExclude)} instead. May be removed in the next minor
@@ -87,7 +103,8 @@ public final class SpringIntegrationTelemetryBuilder {
   @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public SpringIntegrationTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
-    return setHeaders(IncludeExclude.builder().setIncluded(capturedHeaders).build());
+    this.headers = CapturedNames.createExact(capturedHeaders, CaseSensitivity.CASE_SENSITIVE);
+    return this;
   }
 
   /**
@@ -157,9 +174,9 @@ public final class SpringIntegrationTelemetryBuilder {
       MessagingAttributesGetter<MessageWithChannel, Void> getter,
       MessagingOperationType operationType,
       String operationName,
-      IncludeExclude headers) {
+      CapturedNames headers) {
     return MessagingAttributesExtractor.builder(getter, operationType, operationName)
-        .setHeaders(headers)
+        .internalSetHeaders(headers)
         .build();
   }
 }

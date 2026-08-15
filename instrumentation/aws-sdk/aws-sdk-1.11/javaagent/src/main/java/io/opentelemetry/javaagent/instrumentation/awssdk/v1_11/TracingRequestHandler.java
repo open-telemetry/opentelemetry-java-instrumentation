@@ -41,7 +41,7 @@ public class TracingRequestHandler extends RequestHandler2 {
                   .getBoolean("experimental_span_attributes/development", false))
           .setMessagingReceiveTelemetryEnabled(
               ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
-          .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
+          .internalSetHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .build()
           .createRequestHandler();
 

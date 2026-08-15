@@ -7,9 +7,10 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging.interna
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames.CaseSensitivity;
 
 /**
  * Resolves the common messaging header selector, shared by every messaging instrumentation so that
@@ -20,25 +21,23 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorCo
  */
 public final class MessagingConfig {
 
-  private static final IncludeExclude NONE = IncludeExclude.builder().build();
-
   /**
-   * Returns the configured messaging header selector, or an {@linkplain IncludeExclude#isEmpty()
-   * empty} selector when no headers are configured to be captured.
+   * Returns the messaging headers to capture, which is {@linkplain CapturedNames#isEmpty() empty}
+   * when no headers are configured to be captured.
    */
-  public static IncludeExclude getHeaders(OpenTelemetry openTelemetry) {
+  public static CapturedNames getHeaders(OpenTelemetry openTelemetry) {
     return getHeaders(openTelemetry, false);
   }
 
   /**
-   * Returns the configured messaging header selector, or an {@linkplain IncludeExclude#isEmpty()
-   * empty} selector when no headers are configured to be captured.
+   * Returns the messaging headers to capture, which is {@linkplain CapturedNames#isEmpty() empty}
+   * when no headers are configured to be captured.
    *
    * @param systemPropertyFallback whether to fall back to the flat system properties when the
    *     declarative configuration does not contain a value. This is needed by library
    *     instrumentation entry points that have no programmatic configuration surface.
    */
-  public static IncludeExclude getHeaders(
+  public static CapturedNames getHeaders(
       OpenTelemetry openTelemetry, boolean systemPropertyFallback) {
     return getHeaders(
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging"),
@@ -46,11 +45,14 @@ public final class MessagingConfig {
   }
 
   // visible for testing
-  static IncludeExclude getHeaders(
+  static CapturedNames getHeaders(
       DeclarativeConfigProperties messagingConfig, boolean systemPropertyFallback) {
-    IncludeExclude selector =
-        SelectorConfig.resolve(messagingConfig, "messaging", "headers", systemPropertyFallback);
-    return selector == null ? NONE : selector;
+    return SelectorConfig.resolveCapturedNames(
+        messagingConfig,
+        "messaging",
+        "headers",
+        systemPropertyFallback,
+        CaseSensitivity.CASE_SENSITIVE);
   }
 
   private MessagingConfig() {}

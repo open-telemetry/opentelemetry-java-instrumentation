@@ -14,7 +14,7 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
 import org.junit.jupiter.api.Test;
 
 class ExperimentalConfigTest {
@@ -29,10 +29,10 @@ class ExperimentalConfigTest {
     when(messaging.get("headers/development").getScalarList("excluded", String.class))
         .thenReturn(singletonList("*-secret"));
 
-    IncludeExclude headers = new ExperimentalConfig(openTelemetry).getMessagingHeaders();
+    CapturedNames headers = new ExperimentalConfig(openTelemetry).getMessagingHeaders();
 
-    assertThat(headers.getIncluded()).containsExactly("Test-*", "other");
-    assertThat(headers.getExcluded()).containsExactly("*-secret");
+    assertThat(headers.matchingNames(asList("Test-1", "Test-secret", "other", "unrelated")))
+        .containsExactly("other", "Test-1");
   }
 
   @Test
@@ -44,15 +44,31 @@ class ExperimentalConfigTest {
             .getScalarList("capture_headers/development", String.class))
         .thenReturn(singletonList("deprecated"));
 
-    IncludeExclude headers = new ExperimentalConfig(openTelemetry).getMessagingHeaders();
+    CapturedNames headers = new ExperimentalConfig(openTelemetry).getMessagingHeaders();
 
-    assertThat(headers.getIncluded()).containsExactly("deprecated");
-    assertThat(headers.getExcluded()).isEmpty();
+    assertThat(headers.exactNames()).containsExactly("deprecated");
+    assertThat(headers.enumerateNames()).isFalse();
+  }
+
+  @Test
+  void deprecatedCaptureHeadersDoesNotTreatStarAsWildcard() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    when(openTelemetry
+            .getInstrumentationConfig("common")
+            .get("messaging")
+            .getScalarList("capture_headers/development", String.class))
+        .thenReturn(singletonList("*"));
+
+    CapturedNames headers = new ExperimentalConfig(openTelemetry).getMessagingHeaders();
+
+    // only a header literally named "*" is looked up, so nothing is captured in practice
+    assertThat(headers.enumerateNames()).isFalse();
+    assertThat(headers.exactNames()).containsExactly("*");
   }
 
   @Test
   void absentConfigCapturesNothing() {
-    IncludeExclude headers = new ExperimentalConfig(mockOpenTelemetry()).getMessagingHeaders();
+    CapturedNames headers = new ExperimentalConfig(mockOpenTelemetry()).getMessagingHeaders();
 
     assertThat(headers.isEmpty()).isTrue();
   }

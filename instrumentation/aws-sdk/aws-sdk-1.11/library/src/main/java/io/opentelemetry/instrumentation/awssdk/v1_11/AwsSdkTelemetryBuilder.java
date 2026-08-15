@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames.CaseSensitivity;
 import java.util.Collection;
 
 /** A builder of {@link AwsSdkTelemetry}. */
@@ -15,7 +17,7 @@ public final class AwsSdkTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
 
-  private IncludeExclude headers = IncludeExclude.builder().build();
+  private CapturedNames headers = CapturedNames.create(null, CaseSensitivity.CASE_SENSITIVE);
   private boolean captureExperimentalSpanAttributes;
   private boolean messagingReceiveTelemetryEnabled;
 
@@ -38,12 +40,26 @@ public final class AwsSdkTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public AwsSdkTelemetryBuilder setHeaders(IncludeExclude headers) {
+    this.headers = CapturedNames.create(headers, CaseSensitivity.CASE_SENSITIVE);
+    return this;
+  }
+
+  /**
+   * Configures which message headers are captured as span attributes.
+   *
+   * <p>This method is internal and is hence not for public use. Its API is unstable and can change
+   * at any time.
+   */
+  @CanIgnoreReturnValue
+  public AwsSdkTelemetryBuilder internalSetHeaders(CapturedNames headers) {
     this.headers = headers;
     return this;
   }
 
   /**
    * Configures the messaging headers that will be captured as span attributes.
+   *
+   * <p>Header names are matched literally and case-sensitively; wildcards are not supported.
    *
    * @param capturedHeaders A list of messaging header names.
    * @deprecated Use {@link #setHeaders(IncludeExclude)} instead. May be removed in the next minor
@@ -52,7 +68,8 @@ public final class AwsSdkTelemetryBuilder {
   @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public AwsSdkTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
-    return setHeaders(IncludeExclude.builder().setIncluded(capturedHeaders).build());
+    this.headers = CapturedNames.createExact(capturedHeaders, CaseSensitivity.CASE_SENSITIVE);
+    return this;
   }
 
   /**

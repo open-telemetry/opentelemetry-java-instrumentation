@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames.CaseSensitivity;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -18,7 +20,7 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
   @Nullable private final MessagingOperationType operationType;
   @Nullable private final String operationName;
   private final boolean supportsStableSemconv;
-  @Nullable IncludeExclude headers;
+  CapturedNames headers = CapturedNames.create(null, CaseSensitivity.CASE_SENSITIVE);
 
   MessagingAttributesExtractorBuilder(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter,
@@ -52,7 +54,20 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    */
   @CanIgnoreReturnValue
   public MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> setHeaders(IncludeExclude headers) {
-    this.headers = headers.isEmpty() ? null : headers;
+    this.headers = CapturedNames.create(headers, CaseSensitivity.CASE_SENSITIVE);
+    return this;
+  }
+
+  /**
+   * Configures which message headers are captured as span attributes.
+   *
+   * <p>This method is internal and is hence not for public use. Its API is unstable and can change
+   * at any time.
+   */
+  @CanIgnoreReturnValue
+  public MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> internalSetHeaders(
+      CapturedNames headers) {
+    this.headers = headers;
     return this;
   }
 
@@ -64,6 +79,8 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * replaced by underscores unless {@code otel.instrumentation.common.v3-preview} is enabled, in
    * which case dashes are preserved.
    *
+   * <p>Header names are matched literally and case-sensitively; wildcards are not supported.
+   *
    * @param capturedHeaders A list of messaging header names.
    * @deprecated Use {@link #setHeaders(IncludeExclude)} instead. May be removed in the next minor
    *     release.
@@ -72,7 +89,8 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedHeaders(
       Collection<String> capturedHeaders) {
-    return setHeaders(IncludeExclude.builder().setIncluded(capturedHeaders).build());
+    this.headers = CapturedNames.createExact(capturedHeaders, CaseSensitivity.CASE_SENSITIVE);
+    return this;
   }
 
   /**

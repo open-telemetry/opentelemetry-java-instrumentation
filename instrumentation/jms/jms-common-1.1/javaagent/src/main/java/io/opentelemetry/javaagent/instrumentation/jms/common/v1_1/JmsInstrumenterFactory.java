@@ -12,7 +12,6 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
@@ -21,6 +20,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames.CaseSensitivity;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 
 public class JmsInstrumenterFactory {
@@ -32,7 +33,7 @@ public class JmsInstrumenterFactory {
 
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
-  private IncludeExclude headers = IncludeExclude.builder().build();
+  private CapturedNames headers = CapturedNames.create(null, CaseSensitivity.CASE_SENSITIVE);
   private boolean messagingReceiveInstrumentationEnabled = false;
 
   public JmsInstrumenterFactory(OpenTelemetry openTelemetry, String instrumentationName) {
@@ -41,7 +42,7 @@ public class JmsInstrumenterFactory {
   }
 
   @CanIgnoreReturnValue
-  public JmsInstrumenterFactory setHeaders(IncludeExclude headers) {
+  public JmsInstrumenterFactory setHeaders(CapturedNames headers) {
     this.headers = headers;
     return this;
   }
@@ -115,7 +116,7 @@ public class JmsInstrumenterFactory {
       MessagingOperationType operationType, String operationName) {
     return MessagingAttributesExtractor.builder(
             new JmsMessageAttributesGetter(), operationType, operationName)
-        .setHeaders(headers)
+        .internalSetHeaders(headers)
         .build();
   }
 }

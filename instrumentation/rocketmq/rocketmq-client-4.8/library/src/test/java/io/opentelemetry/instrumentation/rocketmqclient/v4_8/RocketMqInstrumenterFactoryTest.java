@@ -26,8 +26,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames.CaseSensitivity;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -52,7 +53,9 @@ class RocketMqInstrumenterFactoryTest {
     when(request.getMessage()).thenReturn(new Message("topic", new byte[0]));
     Instrumenter<SendMessageContext, Void> instrumenter =
         RocketMqInstrumenterFactory.createProducerInstrumenter(
-            testing.getOpenTelemetry(), IncludeExclude.builder().build(), false);
+            testing.getOpenTelemetry(),
+            CapturedNames.create(null, CaseSensitivity.CASE_SENSITIVE),
+            false);
     Context parentContext = Context.root();
 
     assertThat(instrumenter.shouldStart(parentContext, request)).isTrue();
@@ -95,7 +98,9 @@ class RocketMqInstrumenterFactoryTest {
     response.setProps(singletonMap(MixAll.CONSUME_CONTEXT_TYPE, ConsumeReturnType.TIME_OUT.name()));
     RocketMqConsumerInstrumenter instrumenter =
         RocketMqInstrumenterFactory.createConsumerInstrumenter(
-            testing.getOpenTelemetry(), IncludeExclude.builder().build(), false);
+            testing.getOpenTelemetry(),
+            CapturedNames.create(null, CaseSensitivity.CASE_SENSITIVE),
+            false);
 
     RocketMqConsumerInstrumenter.ConsumerContext consumerContext =
         requireNonNull(

@@ -233,7 +233,7 @@ public class RabbitSingletons {
       MessagingOperationType operationType,
       String operationName) {
     return MessagingAttributesExtractor.builder(getter, operationType, operationName)
-        .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
+        .internalSetHeaders(ExperimentalConfig.get().getMessagingHeaders())
         .build();
   }
 

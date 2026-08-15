@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingConfig;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -22,7 +22,7 @@ public final class ExperimentalConfig {
       new ExperimentalConfig(GlobalOpenTelemetry.get());
 
   private final DeclarativeConfigProperties commonConfig;
-  private final IncludeExclude messagingHeaders;
+  private final CapturedNames messagingHeaders;
 
   /** Returns the global agent configuration. */
   public static ExperimentalConfig get() {
@@ -50,10 +50,10 @@ public final class ExperimentalConfig {
   }
 
   /**
-   * Returns the messaging header selector, or an {@linkplain IncludeExclude#isEmpty() empty}
-   * selector when no headers should be captured.
+   * Returns the messaging headers to capture, which is {@linkplain CapturedNames#isEmpty() empty}
+   * when no headers should be captured.
    */
-  public IncludeExclude getMessagingHeaders() {
+  public CapturedNames getMessagingHeaders() {
     return messagingHeaders;
   }
 }

@@ -44,6 +44,11 @@ public final class SelectorConfig {
    *
    * <p>Note that {@code null} is returned rather than an {@linkplain IncludeExclude#isEmpty()
    * empty} selector because an empty selector matches every value.
+   *
+   * <p>Use {@link #resolveCapturedNames} instead when the selector has a deprecated predecessor
+   * that took a list of literal names. This method folds those values into the returned selector,
+   * where they are matched as globs, which silently widens what a deprecated value of {@code "*"}
+   * captures.
    */
   @Nullable
   public static IncludeExclude resolve(
@@ -53,6 +58,11 @@ public final class SelectorConfig {
 
   /**
    * Returns the configured selector, or {@code null} when nothing is configured to be captured.
+   *
+   * <p>Use {@link #resolveCapturedNames} instead when the selector has a deprecated predecessor
+   * that took a list of literal names. This method folds those values into the returned selector,
+   * where they are matched as globs, which silently widens what a deprecated value of {@code "*"}
+   * captures.
    *
    * @param systemPropertyFallback whether to fall back to the flat system properties when the
    *     declarative configuration does not contain a value. This is needed by library

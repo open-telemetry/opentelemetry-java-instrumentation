@@ -55,7 +55,7 @@ public class SpringPulsarSingletons {
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builder(getter, operationType, PROCESS_OPERATION_NAME)
-                    .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
+                    .internalSetHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build())
             .addOperationMetrics(MessagingProcessMetrics.get());
     if (recordConsumedMessages) {
