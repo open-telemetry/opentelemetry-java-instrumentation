@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.helidon.v4_3;
 
+import static java.util.Collections.emptyList;
+
+import io.helidon.http.Header;
 import io.helidon.http.HeaderNames;
 import io.helidon.http.Headers;
 import io.helidon.webserver.http.ServerRequest;
@@ -67,8 +70,11 @@ class HelidonAttributesGetter implements HttpServerAttributesGetter<ServerReques
 
   // minimize memory overhead by not using streams
   private static Collection<String> headerNames(Headers headers) {
+    if (headers.size() == 0) {
+      return emptyList();
+    }
     List<String> names = new ArrayList<>(headers.size());
-    for (var header : headers) {
+    for (Header header : headers) {
       names.add(header.name());
     }
     return names;

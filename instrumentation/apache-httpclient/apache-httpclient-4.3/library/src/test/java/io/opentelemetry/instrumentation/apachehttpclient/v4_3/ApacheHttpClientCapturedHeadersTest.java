@@ -68,6 +68,7 @@ class ApacheHttpClientCapturedHeadersTest {
     HttpGet httpRequest = new HttpGet("/test");
     httpRequest.setHeader("X-Test-Request", "request-value");
     httpRequest.setHeader("X-Test-Excluded", "excluded-value");
+    httpRequest.setHeader("Other-Request", "other-value");
     ApacheHttpClientRequest request =
         new ApacheHttpClientRequest(new HttpHost("localhost", 8080), httpRequest);
 
@@ -82,6 +83,8 @@ class ApacheHttpClientCapturedHeadersTest {
     Attributes result = attributes.build();
     assertThat(result.get(stringArrayKey("http.request.header.x-test-request")))
         .isEqualTo(singletonList("request-value"));
+    assertThat(result.get(stringArrayKey("http.request.header.other-request")))
+        .isEqualTo(singletonList("other-value"));
     assertThat(result.get(stringArrayKey("http.request.header.x-test-excluded"))).isNull();
   }
 }

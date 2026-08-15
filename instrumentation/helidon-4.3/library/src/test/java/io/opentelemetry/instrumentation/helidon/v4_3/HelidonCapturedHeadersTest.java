@@ -72,6 +72,7 @@ class HelidonCapturedHeadersTest {
     WritableHeaders<?> requestHeaders = WritableHeaders.create();
     requestHeaders.add(HeaderNames.create("X-Test-Request"), "request-value");
     requestHeaders.add(HeaderNames.create("X-Test-Excluded"), "excluded-value");
+    requestHeaders.add(HeaderNames.create("Other-Request"), "other-value");
     ServerRequest request = mock(ServerRequest.class, RETURNS_DEEP_STUBS);
     when(request.headers()).thenReturn(ServerRequestHeaders.create(requestHeaders));
 
@@ -86,6 +87,8 @@ class HelidonCapturedHeadersTest {
     Attributes result = attributes.build();
     assertThat(result.get(stringArrayKey("http.request.header.x-test-request")))
         .isEqualTo(singletonList("request-value"));
+    assertThat(result.get(stringArrayKey("http.request.header.other-request")))
+        .isEqualTo(singletonList("other-value"));
     assertThat(result.get(stringArrayKey("http.request.header.x-test-excluded"))).isNull();
   }
 }
