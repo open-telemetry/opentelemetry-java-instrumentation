@@ -201,8 +201,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
 
   private void assertSingleMetrics(String errorType) {
     String group = hasConsumerGroup() ? "test" : null;
-    // the receive operation always records the consumed messages count under stable semconv,
-    // whether or not it produced a receive span
+    // the receive operation records poll duration whether or not it produced a receive span
     assertReceiveDurationMetrics(
         testing(), "io.opentelemetry.kafka-clients-0.11", "testSingleTopic", group, null, 1, null);
     assertProcessDurationMetrics(
