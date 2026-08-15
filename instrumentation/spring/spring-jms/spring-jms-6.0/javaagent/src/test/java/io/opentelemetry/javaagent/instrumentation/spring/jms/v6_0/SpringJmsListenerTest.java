@@ -510,6 +510,22 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> assertProcessSpanWithSubscription(span),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(0))));
+
+    // the jms instrumentation that would create the receive operation is disabled, so the process
+    // operation counts the consumed message
+    Attributes processAttributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, "process")
+            .put(MESSAGING_SYSTEM, "jms")
+            .put(MESSAGING_DESTINATION_NAME, "spring-jms-listener")
+            .put(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription")
+            .build();
+    assertCounter(
+        testing,
+        "io.opentelemetry.spring-jms-6.0",
+        "messaging.client.consumed.messages",
+        1,
+        processAttributes);
   }
 
   private static void assertProcessSpanWithSubscription(SpanDataAssert span) {

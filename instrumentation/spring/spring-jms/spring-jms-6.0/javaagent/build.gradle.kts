@@ -71,6 +71,9 @@ tasks {
       includeTestsMatching("*.testSpringJmsListenerWithJmsDisabled")
     }
     jvmArgs("-Dotel.instrumentation.jms.enabled=false")
+    // receive telemetry is enabled here because the jms instrumentation that would create the
+    // receive operation is disabled, so the process operation has to count the consumed message
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("testJmsDisabled", "true")
   }

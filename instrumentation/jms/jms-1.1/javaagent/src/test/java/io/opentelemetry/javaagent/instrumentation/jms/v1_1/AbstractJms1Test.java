@@ -43,6 +43,7 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
@@ -425,6 +426,50 @@ abstract class AbstractJms1Test {
     assertCounter(
         testing, INSTRUMENTATION_NAME, "messaging.client.consumed.messages", 1, receiveAttributes);
     assertNoMetric(testing, INSTRUMENTATION_NAME, "messaging.process.duration");
+  }
+
+  @Test
+  void shouldRecordConsumedMessagesOnceWhenReceivedMessageIsDispatchedToListener()
+      throws Exception {
+
+    // given
+    Destination destination = session.createQueue("metricsReceiveAndDispatchQueue");
+    TextMessage sentMessage = session.createTextMessage("a message");
+
+    MessageProducer producer = session.createProducer(destination);
+    cleanup.deferCleanup(producer::close);
+    MessageConsumer consumer = session.createConsumer(destination);
+    cleanup.deferCleanup(consumer::close);
+
+    // when
+    producer.send(sentMessage);
+    // frameworks that poll for messages themselves dispatch them to a message listener afterwards
+    Message receivedMessage = consumer.receive();
+    MessageListener listener = message -> {};
+    listener.onMessage(receivedMessage);
+
+    // then
+    assertThat(((TextMessage) receivedMessage).getText()).isEqualTo("a message");
+
+    if (!emitStableMessagingSemconv()) {
+      await().untilAsserted(() -> assertThat(testing.spans()).hasSize(3));
+      assertNoStableMetrics(testing, INSTRUMENTATION_NAME);
+      return;
+    }
+
+    assertHistogram(
+        testing,
+        INSTRUMENTATION_NAME,
+        "messaging.process.duration",
+        messagingMetricAttributes("process", "metricsReceiveAndDispatchQueue"));
+    // the receive operation already counted this delivery, so the process operation must not count
+    // it again
+    assertCounter(
+        testing,
+        INSTRUMENTATION_NAME,
+        "messaging.client.consumed.messages",
+        1,
+        messagingMetricAttributes("receive", "metricsReceiveAndDispatchQueue"));
   }
 
   private static Attributes messagingMetricAttributes(String operationName, String destination) {

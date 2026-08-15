@@ -28,4 +28,13 @@ public interface MessageAdapter {
 
   @Nullable
   String getJmsMessageId() throws Exception;
+
+  /**
+   * Tells whether the consumed messages metric was already recorded for this message by a receive
+   * operation.
+   */
+  boolean isConsumedMessageRecorded();
+
+  /** Remembers that the consumed messages metric was recorded for this message. */
+  void setConsumedMessageRecorded();
 }

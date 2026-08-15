@@ -269,27 +269,21 @@ class SpringListenerTest extends AbstractJmsTest {
                         null,
                         "durable-subscription")));
 
-    if (!emitStableMessagingSemconv()) {
-      assertNoStableMetrics(testing, "io.opentelemetry.jms-1.1");
-      assertNoStableMetrics(testing, "io.opentelemetry.spring-jms-2.0");
-      return;
-    }
-
-    Attributes receiveAttributes =
+    // the jms instrumentation that would create the receive operation is disabled, so the process
+    // operation counts the consumed message
+    Attributes processAttributes =
         Attributes.builder()
-            .put(MESSAGING_OPERATION_NAME, "receive")
+            .put(MESSAGING_OPERATION_NAME, "process")
             .put(MESSAGING_SYSTEM, "jms")
             .put(MESSAGING_DESTINATION_NAME, "SpringListenerJms2")
             .put(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription")
             .build();
     assertCounter(
         testing,
-        "io.opentelemetry.jms-1.1",
+        "io.opentelemetry.spring-jms-2.0",
         "messaging.client.consumed.messages",
         1,
-        receiveAttributes);
-    assertNoMetric(
-        testing, "io.opentelemetry.spring-jms-2.0", "messaging.client.consumed.messages");
+        processAttributes);
   }
 
   @TestConfiguration

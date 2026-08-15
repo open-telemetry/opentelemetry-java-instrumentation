@@ -12,6 +12,9 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
@@ -24,6 +27,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 
 public class JmsInstrumenterFactory {
@@ -32,6 +37,9 @@ public class JmsInstrumenterFactory {
   private static final String SEND_OPERATION_NAME = "send";
   private static final String RECEIVE_OPERATION_NAME = "receive";
   private static final String PROCESS_OPERATION_NAME = "process";
+
+  private static final ContextKey<Boolean> CONSUMED_MESSAGE_ALREADY_RECORDED =
+      ContextKey.named("jms-consumed-message-already-recorded");
 
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
@@ -111,8 +119,17 @@ public class JmsInstrumenterFactory {
             .addOperationMetrics(MessagingProcessMetrics.get());
     boolean receiveOperationExists =
         canHaveReceiveInstrumentation && messagingReceiveInstrumentationEnabled;
-    if (!receiveOperationExists && emitStableMessagingSemconv()) {
-      builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
+    if (emitStableMessagingSemconv()) {
+      // whether a receive operation counted a delivery can only be known per message: an
+      // application can receive a message and dispatch it to a message listener itself, and a
+      // framework that receives messages can be used while the JMS instrumentation that would
+      // create the receive operation is disabled
+      builder.addContextCustomizer(
+          (context, request, startAttributes) ->
+              request.message().isConsumedMessageRecorded()
+                  ? context.with(CONSUMED_MESSAGE_ALREADY_RECORDED, Boolean.TRUE)
+                  : context);
+      builder.addOperationMetrics(consumedMessagesForUncountedDeliveries());
     }
     setMessagingProcessExceptionEventExtractor(builder);
     return MessagingProcessInstrumenterFactory.create(
@@ -128,5 +145,25 @@ public class JmsInstrumenterFactory {
             new JmsMessageAttributesGetter(), operationType, operationName)
         .setHeaders(headers)
         .build();
+  }
+
+  private static OperationMetrics consumedMessagesForUncountedDeliveries() {
+    OperationMetrics consumedMessages = MessagingConsumerMetrics.getConsumedMessages();
+    return meter -> {
+      OperationListener listener = consumedMessages.create(meter);
+      return new OperationListener() {
+        @Override
+        public Context onStart(Context context, Attributes startAttributes, long startNanos) {
+          return listener.onStart(context, startAttributes, startNanos);
+        }
+
+        @Override
+        public void onEnd(Context context, Attributes endAttributes, long endNanos) {
+          if (context.get(CONSUMED_MESSAGE_ALREADY_RECORDED) == null) {
+            listener.onEnd(context, endAttributes, endNanos);
+          }
+        }
+      };
+    };
   }
 }

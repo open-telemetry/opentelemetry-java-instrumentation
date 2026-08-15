@@ -48,6 +48,11 @@ public class JmsReceiveSpanUtil {
               timer.startTime(),
               timer.now());
       JmsReceiveContextHolder.set(receiveContext);
+      if (emitStableMessagingSemconv()) {
+        // this receive operation counted the delivered message, so a process operation for the same
+        // message must not count it again
+        request.message().setConsumedMessageRecorded();
+      }
     }
   }
 

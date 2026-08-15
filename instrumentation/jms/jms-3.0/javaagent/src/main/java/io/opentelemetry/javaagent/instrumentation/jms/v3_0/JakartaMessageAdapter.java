@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.DestinationAdapter;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageAdapter;
 import jakarta.jms.Destination;
@@ -15,6 +16,9 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 public class JakartaMessageAdapter implements MessageAdapter {
+
+  private static final VirtualField<Message, Boolean> CONSUMED_MESSAGE_RECORDED =
+      VirtualField.find(Message.class, Boolean.class);
 
   public static MessageAdapter create(Message message) {
     return new JakartaMessageAdapter(message);
@@ -69,5 +73,15 @@ public class JakartaMessageAdapter implements MessageAdapter {
   @Override
   public String getJmsMessageId() throws JMSException {
     return message.getJMSMessageID();
+  }
+
+  @Override
+  public boolean isConsumedMessageRecorded() {
+    return Boolean.TRUE.equals(CONSUMED_MESSAGE_RECORDED.get(message));
+  }
+
+  @Override
+  public void setConsumedMessageRecorded() {
+    CONSUMED_MESSAGE_RECORDED.set(message, Boolean.TRUE);
   }
 }
