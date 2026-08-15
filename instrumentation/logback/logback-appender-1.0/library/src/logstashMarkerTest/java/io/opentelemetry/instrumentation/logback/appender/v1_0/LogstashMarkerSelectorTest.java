@@ -22,6 +22,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.LoggerFactory;
 
 class LogstashMarkerSelectorTest {
 
@@ -43,17 +44,23 @@ class LogstashMarkerSelectorTest {
 
   @BeforeEach
   void setUp() {
-    // an isolated logger context keeps logback-test.xml out of these assertions
-    loggerContext = new LoggerContext();
-    logger = loggerContext.getLogger("logstash-marker-selector-test");
+    // logback 1.5 populates the logger context's MDCAdapter only through
+    // LogbackServiceProvider.initialize(), so a context built with new LoggerContext() makes
+    // ILoggingEvent.getMDCPropertyMap() throw inside every appender that reads the MDC. The
+    // context has to come from LoggerFactory.
+    logger = (Logger) LoggerFactory.getLogger("logstash-marker-selector-test");
+    // the appender under test is the only one that should see these log events
+    logger.setAdditive(false);
+    loggerContext = logger.getLoggerContext();
+    loggerContext.getStatusManager().clear();
     appender = new OpenTelemetryAppender();
     appender.setContext(loggerContext);
   }
 
   @AfterEach
   void tearDown() {
+    logger.detachAppender(appender);
     appender.stop();
-    loggerContext.stop();
   }
 
   @Test
