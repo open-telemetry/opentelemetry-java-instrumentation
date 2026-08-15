@@ -16,7 +16,10 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
@@ -95,6 +98,7 @@ public final class KafkaInstrumenterFactory {
                     getter, operationType, SEND_OPERATION_NAME, headers))
             .addAttributesExtractors(extractors)
             .addAttributesExtractor(new KafkaProducerAttributesExtractor())
+            .addOperationMetrics(MessagingProducerMetrics.getForOperationType())
             .setErrorCauseExtractor(errorCauseExtractor);
     if (captureExperimentalSpanAttributes) {
       builder.addAttributesExtractor(new KafkaProducerExperimentalAttributesExtractor());
@@ -125,6 +129,7 @@ public final class KafkaInstrumenterFactory {
                     getter, operationType, POLL_OPERATION_NAME, headers))
             .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
             .addAttributesExtractors(extractors)
+            .addOperationMetrics(MessagingConsumerMetrics.getForOperationType())
             .setErrorCauseExtractor(errorCauseExtractor)
             .setEnabled(receiveInstrumentationEnabled);
     if (emitStableMessagingSemconv()) {
@@ -155,6 +160,7 @@ public final class KafkaInstrumenterFactory {
                     getter, operationType, PROCESS_OPERATION_NAME, headers))
             .addAttributesExtractor(new KafkaConsumerAttributesExtractor())
             .addAttributesExtractors(extractors)
+            .addOperationMetrics(MessagingProcessMetrics.get())
             .setErrorCauseExtractor(errorCauseExtractor);
     if (captureExperimentalSpanAttributes) {
       builder.addAttributesExtractor(new KafkaConsumerExperimentalAttributesExtractor());
@@ -188,6 +194,7 @@ public final class KafkaInstrumenterFactory {
             .addSpanLinksExtractor(
                 new KafkaBatchProcessSpanLinksExtractor(
                     openTelemetry.getPropagators().getTextMapPropagator()))
+            .addOperationMetrics(MessagingProcessMetrics.get())
             .setErrorCauseExtractor(errorCauseExtractor);
     setMessagingProcessExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());

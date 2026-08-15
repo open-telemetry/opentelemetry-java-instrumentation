@@ -6,6 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertSendMetrics;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -86,6 +89,10 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
                     span.hasName("producer callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+    String instrumentationName = "io.opentelemetry.kafka-clients-0.11";
+    assertSendMetrics(testing, instrumentationName, SHARED_TOPIC, "0", 1, null);
+    assertProcessDurationMetrics(
+        testing, instrumentationName, SHARED_TOPIC, testLatestDeps() ? "test" : null, "0", 1, null);
   }
 
   @Test
