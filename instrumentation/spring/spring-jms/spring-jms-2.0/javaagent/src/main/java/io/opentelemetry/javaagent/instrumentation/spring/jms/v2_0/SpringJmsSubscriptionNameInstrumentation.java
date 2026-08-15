@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jms.v1_1.JmsSubscriptionNames;
 import javax.annotation.Nullable;
 import javax.jms.Message;
 import net.bytebuddy.asm.Advice;
@@ -114,11 +115,24 @@ class SpringJmsSubscriptionNameInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InvokeListenerAdvice {
 
+    // the container's subscription name applies to this dispatch only; the previous name is
+    // restored when the dispatch returns, so that a later dispatch of the same message doesn't
+    // report this container's subscription
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(
+    public static String onEnter(
         @Advice.This AbstractMessageListenerContainer container,
         @Advice.Argument(1) Message message) {
+      String previousSubscriptionName = JmsSubscriptionNames.get(message);
       SpringJmsSubscriptionNames.set(message, container);
+      return previousSubscriptionName;
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Argument(1) Message message,
+        @Advice.Enter @Nullable String previousSubscriptionName) {
+      JmsSubscriptionNames.set(message, previousSubscriptionName);
     }
   }
 }
