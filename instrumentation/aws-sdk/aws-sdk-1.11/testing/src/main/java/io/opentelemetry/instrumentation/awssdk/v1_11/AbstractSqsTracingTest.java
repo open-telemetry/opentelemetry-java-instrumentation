@@ -446,18 +446,39 @@ public abstract class AbstractSqsTracingTest {
       messageIds.add(response.getMessages().get(i).getMessageId());
     }
 
-    AtomicReference<SpanData> publishSpan = new AtomicReference<>();
+    List<SpanData> createSpans = new ArrayList<>();
     testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("SQS.CreateQueue").hasKind(SpanKind.CLIENT)),
+            trace -> {
+              createSpans.add(trace.getSpan(0));
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("create testSdkSqs").hasKind(SpanKind.PRODUCER));
+            },
+            trace -> {
+              createSpans.add(trace.getSpan(0));
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("create testSdkSqs").hasKind(SpanKind.PRODUCER));
+            },
+            trace -> {
+              createSpans.add(trace.getSpan(0));
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("create testSdkSqs").hasKind(SpanKind.PRODUCER));
+            },
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      publishSpan.set(trace.getSpan(0));
-                      span.hasName("send testSdkSqs").hasKind(SpanKind.PRODUCER);
-                    }),
+                    span ->
+                        span.hasName("send testSdkSqs")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasLinksSatisfying(
+                                links -> {
+                                  assertThat(links).hasSize(3);
+                                  for (int i = 0; i < links.size(); i++) {
+                                    assertBareLink(links.get(i), createSpans.get(i));
+                                  }
+                                })),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -465,11 +486,18 @@ public abstract class AbstractSqsTracingTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasLinksSatisfying(
                                 links -> {
-                                  assertThat(links).hasSize(3);
-                                  for (int i = 0; i < links.size(); i++) {
-                                    assertMessageLink(
-                                        links.get(i), publishSpan.get(), messageIds.get(i));
-                                  }
+                                  assertThat(links)
+                                      .extracting(link -> link.getSpanContext().getSpanId())
+                                      .containsExactlyInAnyOrder(
+                                          createSpans.get(0).getSpanId(),
+                                          createSpans.get(1).getSpanId(),
+                                          createSpans.get(2).getSpanId());
+                                  assertThat(links)
+                                      .extracting(LinkData::getAttributes)
+                                      .containsExactlyInAnyOrder(
+                                          Attributes.of(MESSAGING_MESSAGE_ID, messageIds.get(0)),
+                                          Attributes.of(MESSAGING_MESSAGE_ID, messageIds.get(1)),
+                                          Attributes.of(MESSAGING_MESSAGE_ID, messageIds.get(2)));
                                 })));
   }
 

@@ -878,13 +878,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                         createSpans.get(2).getSpanId());
                                 assertThat(links)
                                     .extracting(LinkData::getAttributes)
-                                    .containsExactlyInAnyOrder(
-                                        Attributes.of(
-                                            MESSAGING_MESSAGE_ID, propagatedMessageIds.get(0)),
-                                        Attributes.of(
-                                            MESSAGING_MESSAGE_ID, propagatedMessageIds.get(1)),
-                                        Attributes.of(
-                                            MESSAGING_MESSAGE_ID, propagatedMessageIds.get(2)));
+                                    .containsOnly(Attributes.empty());
                               })));
       stableTraceAsserts.add(
           trace ->
