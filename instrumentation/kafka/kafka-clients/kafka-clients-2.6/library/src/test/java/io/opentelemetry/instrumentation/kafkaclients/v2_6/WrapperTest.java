@@ -11,7 +11,9 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSign
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertSendMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
@@ -37,6 +39,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -44,6 +47,12 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -53,12 +62,45 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class WrapperTest extends AbstractWrapperTest {
+
+  @Test
+  void processCountsRetriedDeliveryOnceWhenConfiguredReceiveOperationDidNotRun() {
+    assumeTrue(emitStableMessagingSemconv());
+    String instrumentationName = "test-kafka-unwrapped-consumer";
+    Instrumenter<KafkaProcessRequest, Void> instrumenter =
+        new KafkaInstrumenterFactory(testing.getOpenTelemetry(), instrumentationName)
+            .setMessagingReceiveTelemetryEnabled(true)
+            .createConsumerProcessInstrumenter();
+    Context parentContext = Context.root();
+    KafkaConsumerContext consumerContext =
+        KafkaConsumerContextUtil.create(parentContext, "group", "client", new Object());
+    KafkaProcessRequest failedRequest =
+        KafkaProcessRequest.create(
+            consumerContext, new ConsumerRecord<>("unwrapped", 0, 1, "key", "value"));
+    RuntimeException error = new RuntimeException("test");
+
+    Context failedContext = instrumenter.start(parentContext, failedRequest);
+    instrumenter.end(failedContext, failedRequest, null, error);
+
+    KafkaProcessRequest retryRequest =
+        KafkaProcessRequest.create(
+            consumerContext, new ConsumerRecord<>("unwrapped", 0, 1, "key", "value"));
+    Context retryContext = instrumenter.start(parentContext, retryRequest);
+    instrumenter.end(retryContext, retryRequest, null, null);
+
+    String errorType = RuntimeException.class.getName();
+    assertProcessMetricsWithConsumedMessages(
+        testing, instrumentationName, "unwrapped", "group", "0", 1, 1, errorType);
+    assertProcessDurationMetrics(testing, instrumentationName, "unwrapped", "group", "0", 1, null);
+    assertTotalConsumedMessages(testing, instrumentationName, 1);
+  }
 
   @Override
   void configure(KafkaTelemetryBuilder builder) {

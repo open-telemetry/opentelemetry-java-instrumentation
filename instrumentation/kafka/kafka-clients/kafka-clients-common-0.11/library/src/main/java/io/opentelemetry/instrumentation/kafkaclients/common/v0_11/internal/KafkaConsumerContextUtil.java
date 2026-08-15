@@ -31,12 +31,12 @@ public final class KafkaConsumerContextUtil {
   // class as field type
   private static final VirtualField<ConsumerRecord<?, ?>, Context> recordContextField =
       VirtualField.find(ConsumerRecord.class, Context.class);
-  private static final VirtualField<ConsumerRecord<?, ?>, String[]> recordConsumerInfoField =
-      VirtualField.find(ConsumerRecord.class, String[].class);
+  private static final VirtualField<ConsumerRecord<?, ?>, Object[]> recordConsumerInfoField =
+      VirtualField.find(ConsumerRecord.class, Object[].class);
   private static final VirtualField<ConsumerRecords<?, ?>, Context> recordsContextField =
       VirtualField.find(ConsumerRecords.class, Context.class);
-  private static final VirtualField<ConsumerRecords<?, ?>, String[]> recordsConsumerInfoField =
-      VirtualField.find(ConsumerRecords.class, String[].class);
+  private static final VirtualField<ConsumerRecords<?, ?>, Object[]> recordsConsumerInfoField =
+      VirtualField.find(ConsumerRecords.class, Object[].class);
   private static final VirtualField<ConsumerRecord<?, ?>, Boolean> recordCountedField =
       VirtualField.find(ConsumerRecord.class, Boolean.class);
 
@@ -90,33 +90,44 @@ public final class KafkaConsumerContextUtil {
     Context receiveContext = recordContextField.get(records);
     String consumerGroup = null;
     String clientId = null;
-    String[] consumerInfo = recordConsumerInfoField.get(records);
+    Object deliveryIdentity = null;
+    Object[] consumerInfo = recordConsumerInfoField.get(records);
     if (consumerInfo != null) {
-      consumerGroup = consumerInfo[0];
-      clientId = consumerInfo[1];
+      consumerGroup = (String) consumerInfo[0];
+      clientId = (String) consumerInfo[1];
+      deliveryIdentity = consumerInfo[2];
     }
-    return create(receiveContext, consumerGroup, clientId);
+    return create(receiveContext, consumerGroup, clientId, deliveryIdentity);
   }
 
   public static KafkaConsumerContext get(ConsumerRecords<?, ?> records) {
     Context receiveContext = recordsContextField.get(records);
     String consumerGroup = null;
     String clientId = null;
-    String[] consumerInfo = recordsConsumerInfoField.get(records);
+    Object deliveryIdentity = null;
+    Object[] consumerInfo = recordsConsumerInfoField.get(records);
     if (consumerInfo != null) {
-      consumerGroup = consumerInfo[0];
-      clientId = consumerInfo[1];
+      consumerGroup = (String) consumerInfo[0];
+      clientId = (String) consumerInfo[1];
+      deliveryIdentity = consumerInfo[2];
     }
-    return create(receiveContext, consumerGroup, clientId);
+    return create(receiveContext, consumerGroup, clientId, deliveryIdentity);
   }
 
   public static KafkaConsumerContext create(@Nullable Context context, Consumer<?, ?> consumer) {
-    return create(context, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
+    return create(
+        context,
+        KafkaUtil.getConsumerGroup(consumer),
+        KafkaUtil.getClientId(consumer),
+        KafkaUtil.getDeliveryIdentity(consumer));
   }
 
   public static KafkaConsumerContext create(
-      @Nullable Context context, @Nullable String consumerGroup, @Nullable String clientId) {
-    return KafkaConsumerContext.create(context, consumerGroup, clientId);
+      @Nullable Context context,
+      @Nullable String consumerGroup,
+      @Nullable String clientId,
+      @Nullable Object deliveryIdentity) {
+    return KafkaConsumerContext.create(context, consumerGroup, clientId, deliveryIdentity);
   }
 
   public static void set(ConsumerRecord<?, ?> record, KafkaConsumerContext consumerContext) {
@@ -124,16 +135,18 @@ public final class KafkaConsumerContextUtil {
         record,
         consumerContext.getContext(),
         consumerContext.getConsumerGroup(),
-        consumerContext.getClientId());
+        consumerContext.getClientId(),
+        consumerContext.getDeliveryIdentity());
   }
 
   private static void set(
       ConsumerRecord<?, ?> record,
       @Nullable Context context,
       @Nullable String consumerGroup,
-      @Nullable String clientId) {
+      @Nullable String clientId,
+      @Nullable Object deliveryIdentity) {
     recordContextField.set(record, context);
-    recordConsumerInfoField.set(record, new String[] {consumerGroup, clientId});
+    recordConsumerInfoField.set(record, new Object[] {consumerGroup, clientId, deliveryIdentity});
   }
 
   public static void set(ConsumerRecords<?, ?> records, KafkaConsumerContext consumerContext) {
@@ -141,16 +154,18 @@ public final class KafkaConsumerContextUtil {
         records,
         consumerContext.getContext(),
         consumerContext.getConsumerGroup(),
-        consumerContext.getClientId());
+        consumerContext.getClientId(),
+        consumerContext.getDeliveryIdentity());
   }
 
   private static void set(
       ConsumerRecords<?, ?> records,
       @Nullable Context context,
       @Nullable String consumerGroup,
-      @Nullable String clientId) {
+      @Nullable String clientId,
+      @Nullable Object deliveryIdentity) {
     recordsContextField.set(records, context);
-    recordsConsumerInfoField.set(records, new String[] {consumerGroup, clientId});
+    recordsConsumerInfoField.set(records, new Object[] {consumerGroup, clientId, deliveryIdentity});
   }
 
   public static void copy(ConsumerRecord<?, ?> from, ConsumerRecord<?, ?> to) {

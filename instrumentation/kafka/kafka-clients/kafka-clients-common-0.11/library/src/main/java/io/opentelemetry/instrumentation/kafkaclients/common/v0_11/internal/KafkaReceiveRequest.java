@@ -20,22 +20,41 @@ public class KafkaReceiveRequest extends AbstractKafkaConsumerRequest {
 
   public static KafkaReceiveRequest create(
       ConsumerRecords<?, ?> records, @Nullable Consumer<?, ?> consumer) {
-    return create(records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
+    return create(
+        records,
+        KafkaUtil.getConsumerGroup(consumer),
+        KafkaUtil.getClientId(consumer),
+        KafkaUtil.getDeliveryIdentity(consumer));
   }
 
   public static KafkaReceiveRequest create(
       KafkaConsumerContext consumerContext, ConsumerRecords<?, ?> records) {
-    return create(records, consumerContext.getConsumerGroup(), consumerContext.getClientId());
+    return create(
+        records,
+        consumerContext.getConsumerGroup(),
+        consumerContext.getClientId(),
+        consumerContext.getDeliveryIdentity());
   }
 
   public static KafkaReceiveRequest create(
       ConsumerRecords<?, ?> records, @Nullable String consumerGroup, @Nullable String clientId) {
-    return new KafkaReceiveRequest(records, consumerGroup, clientId);
+    return create(records, consumerGroup, clientId, null);
+  }
+
+  public static KafkaReceiveRequest create(
+      ConsumerRecords<?, ?> records,
+      @Nullable String consumerGroup,
+      @Nullable String clientId,
+      @Nullable Object deliveryIdentity) {
+    return new KafkaReceiveRequest(records, consumerGroup, clientId, deliveryIdentity);
   }
 
   private KafkaReceiveRequest(
-      ConsumerRecords<?, ?> records, @Nullable String consumerGroup, @Nullable String clientId) {
-    super(consumerGroup, clientId);
+      ConsumerRecords<?, ?> records,
+      @Nullable String consumerGroup,
+      @Nullable String clientId,
+      @Nullable Object deliveryIdentity) {
+    super(consumerGroup, clientId, deliveryIdentity);
     this.records = records;
   }
 
