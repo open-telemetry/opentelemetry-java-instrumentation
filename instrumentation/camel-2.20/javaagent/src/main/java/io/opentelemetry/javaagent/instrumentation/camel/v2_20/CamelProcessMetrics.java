@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
 import org.apache.camel.Exchange;
 import org.apache.camel.Route;
 
-final class CamelProcessMetrics {
+class CamelProcessMetrics {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.camel-2.20";
   private static final String STATE_PROPERTY = CamelProcessMetrics.class.getName() + ".state";
