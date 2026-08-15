@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Library instrumentation artifacts no longer expose `opentelemetry-instrumentation-api-incubator`
+  on consumers' compile classpaths. Consumers that use its APIs, or APIs from its
+  `opentelemetry-api-incubator` and `opentelemetry-semconv` dependencies, must declare the
+  corresponding artifacts directly.
 - `jetty.thread.queue.size` Jetty JMX metric unit has been changed from `{thread}` to `{job}`.
 - Normalize the value of `activemq.destination.temp.utilization` JMX Metric for ActiveMQ to be between 0 and 1 (inclusive) instead of between 0 and 100 (inclusive).
 
