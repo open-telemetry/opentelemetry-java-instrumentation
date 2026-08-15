@@ -478,14 +478,17 @@ sufficient for optimization.
   `extendsClass(...)` and `implementsInterface(...)` are appropriate when the instrumentation
   targets subclasses or implementors of a type.
 - `transform()` wires method matchers to advice classes via `applyAdviceToMethod()`.
-- Direct argument and return-type matchers inside `transform()` use `Type.class` when the type is
-  unconditionally available on the module compile classpath at its minimum supported Java version:
-  `takesArgument(0, String.class)` and `returns(CompletableFuture.class)`, not
-  `takesArgument(0, named("java.lang.String"))` or
+- Direct argument and return-type matchers inside `transform()` use `Type.class` only when the type
+  is loadable from the agent class loader and unconditionally available at the module's minimum
+  supported Java version: `takesArgument(0, String.class)` and `returns(CompletableFuture.class)`,
+  not `takesArgument(0, named("java.lang.String"))` or
   `returns(named("java.util.concurrent.CompletableFuture"))`.
+  Compiling against a type is not enough — `transform()` runs in the agent class loader, which sees
+  only JDK and agent classes, so a class literal for any other type fails to resolve and the whole
+  instrumentation module is dropped.
   Keep `named(...)` for `typeMatcher()`, class-loader optimization, hierarchy matchers
-  (`extendsClass`, `implementsInterface`), optional instrumented-library APIs, JDK types unavailable
-  at the module's minimum Java version, inaccessible JDK-internal classes, and advice-class name
+  (`extendsClass`, `implementsInterface`), all instrumented-library types, JDK types unavailable at
+  the module's minimum Java version, inaccessible JDK-internal classes, and advice-class name
   strings. This method-signature convention does not change the type-level and advice-class
   classloading guidance above and below.
 - `isMethod()` in method matchers inside `transform()` is redundant when the matcher
