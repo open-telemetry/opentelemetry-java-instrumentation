@@ -17,7 +17,7 @@ import javax.jms.Message;
 
 public class JavaxMessageAdapter implements MessageAdapter {
 
-  private static final VirtualField<Message, Boolean> CONSUMED_MESSAGE_RECORDED =
+  private static final VirtualField<Message, Boolean> RECEIVE_TELEMETRY_RECORDED =
       VirtualField.find(Message.class, Boolean.class);
 
   public static MessageAdapter create(Message message) {
@@ -76,12 +76,12 @@ public class JavaxMessageAdapter implements MessageAdapter {
   }
 
   @Override
-  public boolean isConsumedMessageRecorded() {
-    return Boolean.TRUE.equals(CONSUMED_MESSAGE_RECORDED.get(message));
+  public boolean wasReceiveTelemetryRecorded() {
+    return Boolean.TRUE.equals(RECEIVE_TELEMETRY_RECORDED.get(message));
   }
 
   @Override
-  public void setConsumedMessageRecorded() {
-    CONSUMED_MESSAGE_RECORDED.set(message, Boolean.TRUE);
+  public void markReceiveTelemetryRecorded() {
+    RECEIVE_TELEMETRY_RECORDED.set(message, Boolean.TRUE);
   }
 }
