@@ -17,6 +17,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientData;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientRequest;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil;
 import io.vertx.core.impl.future.PromiseInternal;
@@ -50,7 +51,8 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Object queryExecutor) {
       // copy client data from ThreadLocal to VirtualField
-      QueryExecutorUtil.setData(queryExecutor, getSqlConnectOptions(), getDbSystem());
+      QueryExecutorUtil.setData(
+          queryExecutor, new VertxSqlClientData(getSqlConnectOptions(), getDbSystem()));
     }
   }
 
@@ -109,7 +111,11 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           return new AdviceScope(callDepth);
         }
 
-        SqlConnectOptions connectOptions = QueryExecutorUtil.getConnectOptions(queryExecutor);
+        VertxSqlClientData data = QueryExecutorUtil.getData(queryExecutor);
+        if (data == null) {
+          return new AdviceScope(callDepth);
+        }
+        SqlConnectOptions connectOptions = data.getConnectOptions();
         // connectOptions is null when the pool was created via JDBCPool which bypasses the
         // Pool.pool() factory, in that case we skip vertx-sql-client span creation and let JDBC
         // instrumentation handle it
@@ -119,7 +125,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         // Prefer the db system captured when the prepared statement was created, then the value
         // stored from the pool class (handles generic SqlConnectOptions), and finally fall back to
         // class name detection on the connect options itself
-        String dbSystem = QueryExecutorUtil.getDbSystem(queryExecutor);
+        String dbSystem = data.getDbSystem();
         if (dbSystem == null) {
           dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
         }
