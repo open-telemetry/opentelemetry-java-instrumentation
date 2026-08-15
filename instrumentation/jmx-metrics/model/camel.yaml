@@ -114,7 +114,7 @@ groups:
     metric_name: camel.context.exchange.redelivered.count
     type: metric
     stability: development
-    brief: Number of exchanges redelivered (internal only)  since context start-up or the last reset operation.
+    brief: Number of exchanges redelivered (internal only) since context start-up or the last reset operation.
     unit: "{exchange}"
     instrument: counter
     attributes:
@@ -251,7 +251,7 @@ groups:
     metric_name: camel.route.exchange.redelivered.count
     type: metric
     stability: development
-    brief: Number of exchanges redelivered (internal only)  since route start-up or the last reset operation.
+    brief: Number of exchanges redelivered (internal only) since route start-up or the last reset operation.
     unit: "{exchange}"
     instrument: counter
     attributes:
@@ -406,7 +406,7 @@ groups:
     metric_name: camel.processor.exchange.redelivered.count
     type: metric
     stability: development
-    brief: Number of exchanges redelivered (internal only)  since selected processor start-up or the last reset operation.
+    brief: Number of exchanges redelivered (internal only) since selected processor start-up or the last reset operation.
     unit: "{exchange}"
     instrument: counter
     attributes:

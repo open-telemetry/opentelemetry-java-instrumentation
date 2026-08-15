@@ -55,7 +55,7 @@ rules:
         metric: exchange.redelivered.count
         type: counter
         unit: "{exchange}"
-        desc: Number of exchanges redelivered (internal only)  since context start-up or the last reset operation.
+        desc: Number of exchanges redelivered (internal only) since context start-up or the last reset operation.
       # camel.context.exchange.redelivered.external
       ExternalRedeliveries:
         metric: exchange.redelivered.external
@@ -148,7 +148,7 @@ rules:
         metric: exchange.redelivered.count
         type: counter
         unit: "{exchange}"
-        desc: Number of exchanges redelivered (internal only)  since route start-up or the last reset operation.
+        desc: Number of exchanges redelivered (internal only) since route start-up or the last reset operation.
       # camel.route.exchange.redelivered.external
       ExternalRedeliveries:
         metric: exchange.redelivered.external
@@ -243,7 +243,7 @@ rules:
         metric: exchange.redelivered.count
         type: counter
         unit: "{exchange}"
-        desc: Number of exchanges redelivered (internal only)  since selected processor start-up or the last reset operation.
+        desc: Number of exchanges redelivered (internal only) since selected processor start-up or the last reset operation.
       # camel.processor.exchange.redelivered.external
       ExternalRedeliveries:
         metric: exchange.redelivered.external
