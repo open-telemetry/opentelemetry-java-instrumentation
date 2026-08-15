@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
@@ -81,12 +79,9 @@ public class VertxSqlClientSingletons {
     poolDbSystem.set(pool, dbSystem);
   }
 
+  @Nullable
   public static String getConnectOptionsDbSystem(SqlConnectOptions sqlConnectOptions) {
-    String dbSystem = connectOptionsDbSystem.get(sqlConnectOptions);
-    if (dbSystem != null) {
-      return dbSystem;
-    }
-    return OTHER_SQL;
+    return connectOptionsDbSystem.get(sqlConnectOptions);
   }
 
   public static void resolveAndStoreDbSystem(Pool pool, SqlConnectOptions sqlConnectOptions) {

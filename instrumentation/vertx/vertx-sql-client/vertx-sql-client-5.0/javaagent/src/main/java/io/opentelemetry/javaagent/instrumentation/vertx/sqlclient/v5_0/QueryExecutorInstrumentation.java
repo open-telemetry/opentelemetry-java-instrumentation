@@ -115,6 +115,9 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           return new AdviceScope(callDepth);
         }
         String dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
+        if (dbSystem == null) {
+          dbSystem = VertxSqlClientUtil.getDbSystemNameFromClassName(connectOptions);
+        }
         VertxSqlClientRequest otelRequest =
             new VertxSqlClientRequest(sql, connectOptions, preparedStatement, dbSystem, batchSize);
         Context parentContext = Context.current();

@@ -40,6 +40,10 @@ public final class DbExecution {
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String ORACLE_DB = "oracle.db";
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
+  private static final String IBM_DB2 = "ibm.db2";
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
+  private static final String CLICKHOUSE = "clickhouse";
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String H2DATABASE = "h2database";
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String OTHER_SQL = "other_sql";
@@ -54,6 +58,8 @@ public final class DbExecution {
     map.put("mariadb", MARIADB);
     map.put("mssql", MICROSOFT_SQL_SERVER);
     map.put("oracle", ORACLE_DB);
+    map.put("db2", IBM_DB2);
+    map.put("clickhouse", CLICKHOUSE);
     map.put("h2", H2DATABASE);
     return map;
   }
