@@ -155,7 +155,7 @@ class JavaHttpServerHeadersTest {
     assertThat(connection.getResponseCode()).isEqualTo(200);
     try (InputStream inputStream = connection.getInputStream()) {
       while (inputStream.read() != -1) {
-        // drain the response so that the connection can be reused
+        // drain the response body
       }
     }
     connection.disconnect();

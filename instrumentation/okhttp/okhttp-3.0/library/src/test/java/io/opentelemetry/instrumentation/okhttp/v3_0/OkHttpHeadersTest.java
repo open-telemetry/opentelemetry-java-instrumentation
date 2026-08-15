@@ -21,6 +21,7 @@ import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -153,8 +154,9 @@ class OkHttpHeadersTest {
             .build();
 
     Response response = callFactory.newCall(request).execute();
-    assertThat(response.code()).isEqualTo(200);
-    response.body().close();
+    try (ResponseBody ignored = response.body()) {
+      assertThat(response.code()).isEqualTo(200);
+    }
   }
 
   private static List<String> headerValues(Attributes attributes, String key) {
