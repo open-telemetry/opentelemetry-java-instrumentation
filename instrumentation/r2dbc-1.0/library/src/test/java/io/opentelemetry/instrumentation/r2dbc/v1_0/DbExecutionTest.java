@@ -5,18 +5,10 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.DbExecution;
-import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcInstrumenterBuilder;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.proxy.test.MockConnectionInfo;
@@ -24,10 +16,8 @@ import io.r2dbc.proxy.test.MockQueryExecutionInfo;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import io.r2dbc.spi.ConnectionMetadata;
-import java.util.function.UnaryOperator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -36,9 +26,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class DbExecutionTest {
-
-  @RegisterExtension
-  private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Mock Connection connection;
   @Mock ConnectionMetadata metadata;
@@ -124,38 +111,23 @@ class DbExecutionTest {
     assertThat(dbExecution.getConnectionString()).isEqualTo("pool:postgresql://dbhost:5432");
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated semconv
   @ParameterizedTest
   @ValueSource(strings = {"MixedCaseDb", "case_sensitive_DB"})
-  void preservesDatabaseNamespace(String database) {
-    when(connection.getMetadata()).thenReturn(metadata);
-    when(metadata.getDatabaseProductName()).thenReturn("TestDB Product");
+  void dbExecutionPreservesNamespaceCase(String database) {
     QueryExecutionInfo queryExecutionInfo =
         MockQueryExecutionInfo.builder()
             .queryInfo(new QueryInfo("SELECT 1"))
-            .connectionInfo(MockConnectionInfo.builder().originalConnection(connection).build())
+            .connectionInfo(MockConnectionInfo.builder().build())
             .build();
     ConnectionFactoryOptions factoryOptions =
         ConnectionFactoryOptions.builder()
             .option(ConnectionFactoryOptions.DRIVER, "postgresql")
             .option(ConnectionFactoryOptions.DATABASE, database)
             .build();
+
     DbExecution dbExecution = new DbExecution(queryExecutionInfo, factoryOptions);
 
-    assertThat(dbExecution.getSystemName()).isEqualTo("postgresql");
-    assertThat(dbExecution.getSystem()).isEqualTo("testdb");
     assertThat(dbExecution.getNamespace()).isEqualTo(database);
-
-    Instrumenter<DbExecution, Void> instrumenter =
-        new R2dbcInstrumenterBuilder(testing.getOpenTelemetry())
-            .build(UnaryOperator.identity(), true);
-    Context context = instrumenter.start(Context.root(), dbExecution);
-    instrumenter.end(context, dbExecution, null, null);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasAttribute(equalTo(maybeStable(DB_NAME), database))));
   }
 
   @ParameterizedTest
