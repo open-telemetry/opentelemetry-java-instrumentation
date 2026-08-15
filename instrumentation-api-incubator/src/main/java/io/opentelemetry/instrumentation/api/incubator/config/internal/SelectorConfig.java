@@ -75,30 +75,6 @@ public final class SelectorConfig {
   }
 
   /**
-   * Returns the configured selector, or {@code null} when nothing is configured to be captured.
-   *
-   * <p>Unlike {@link #resolve}, the deprecated predecessor is a boolean rather than an include-only
-   * list, so {@code true} is resolved to a selector matching everything and {@code false} to no
-   * selector at all. For {@code ("log4j-appender", "map-message-attributes")} the deprecated
-   * boolean is read from the {@code capture_map_message_attributes/development} node, equivalently
-   * from {@code otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes}.
-   */
-  @Nullable
-  public static IncludeExclude resolveLegacyBoolean(
-      DeclarativeConfigProperties config, String instrumentationName, String selectorName) {
-    IncludeExclude selector = getSelector(config, instrumentationName, selectorName, false);
-    if (selector != null) {
-      return selector;
-    }
-    Boolean deprecated = config.getBoolean("capture_" + nodeName(selectorName) + "/development");
-    if (deprecated == null) {
-      return null;
-    }
-    warnDeprecated(instrumentationName, selectorName);
-    return deprecated ? IncludeExclude.builder().setIncluded("*").build() : null;
-  }
-
-  /**
    * Returns a predicate matching the configured selector, or {@code null} when nothing is
    * configured to be captured.
    *
@@ -137,6 +113,28 @@ public final class SelectorConfig {
     }
     Set<String> exactValues = new HashSet<>(deprecatedValues);
     return exactValues::contains;
+  }
+
+  /**
+   * Returns a predicate matching the configured selector, or {@code null} when nothing is
+   * configured to be captured.
+   *
+   * <p>Unlike {@link #resolve}, the deprecated setting is a boolean, where {@code true} selects
+   * every value and {@code false} selects none.
+   */
+  @Nullable
+  public static Predicate<String> resolveLegacyBoolean(
+      DeclarativeConfigProperties config, String instrumentationName, String selectorName) {
+    IncludeExclude selector = getSelector(config, instrumentationName, selectorName, false);
+    if (selector != null) {
+      return selector::matches;
+    }
+    Boolean deprecated = config.getBoolean("capture_" + nodeName(selectorName) + "/development");
+    if (deprecated == null) {
+      return null;
+    }
+    warnDeprecated(instrumentationName, selectorName, selectorName);
+    return deprecated ? value -> true : null;
   }
 
   /**
@@ -191,12 +189,13 @@ public final class SelectorConfig {
     if (deprecated == null) {
       return null;
     }
-    warnDeprecated(instrumentationName, selectorName);
+    warnDeprecated(instrumentationName, selectorName, selectorName);
     return deprecated;
   }
 
-  private static void warnDeprecated(String instrumentationName, String selectorName) {
-    String flatProperty = deprecatedFlatProperty(instrumentationName, selectorName);
+  private static void warnDeprecated(
+      String instrumentationName, String selectorName, String deprecatedSelectorName) {
+    String flatProperty = deprecatedFlatProperty(instrumentationName, deprecatedSelectorName);
     warnOnce(
         flatProperty + ":deprecated",
         "The "

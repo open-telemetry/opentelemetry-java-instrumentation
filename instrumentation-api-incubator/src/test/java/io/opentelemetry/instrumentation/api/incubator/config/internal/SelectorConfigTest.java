@@ -233,12 +233,12 @@ class SelectorConfigTest {
     when(config.getBoolean("capture_map_message_attributes/development")).thenReturn(true);
     TestHandler handler = attachWarningHandler();
     try {
-      IncludeExclude selector =
+      Predicate<String> selector =
           SelectorConfig.resolveLegacyBoolean(config, "boolean-precedence", BOOLEAN_SELECTOR);
 
       assertThat(selector).isNotNull();
-      assertThat(selector.matches("new")).isTrue();
-      assertThat(selector.matches("other")).isFalse();
+      assertThat(selector.test("new")).isTrue();
+      assertThat(selector.test("other")).isFalse();
       assertThat(handler.records).isEmpty();
       verify(config, never()).getBoolean("capture_map_message_attributes/development");
     } finally {
@@ -252,15 +252,15 @@ class SelectorConfigTest {
     when(config.getBoolean("capture_map_message_attributes/development")).thenReturn(true);
     TestHandler handler = attachWarningHandler();
     try {
-      IncludeExclude first =
+      Predicate<String> first =
           SelectorConfig.resolveLegacyBoolean(config, "boolean-enabled", BOOLEAN_SELECTOR);
-      IncludeExclude second =
+      Predicate<String> second =
           SelectorConfig.resolveLegacyBoolean(config, "boolean-enabled", BOOLEAN_SELECTOR);
 
       assertThat(first).isNotNull();
-      assertThat(first.matches("anything")).isTrue();
+      assertThat(first.test("anything")).isTrue();
       assertThat(second).isNotNull();
-      assertThat(second.matches("anything")).isTrue();
+      assertThat(second.test("anything")).isTrue();
       assertThat(handler.records).hasSize(1);
       assertThat(handler.records.get(0).getMessage())
           .isEqualTo(
