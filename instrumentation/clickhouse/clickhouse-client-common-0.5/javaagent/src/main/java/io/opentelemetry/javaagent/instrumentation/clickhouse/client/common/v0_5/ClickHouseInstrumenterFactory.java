@@ -21,7 +21,7 @@ public class ClickHouseInstrumenterFactory {
 
   @SuppressWarnings("deprecation") // to support old semconv
   public static Instrumenter<ClickHouseDbRequest, Void> createInstrumenter(
-      String instrumenterName, Function<Throwable, Integer> errorCodeExtractor) {
+      String instrumenterName, Function<Throwable, String> errorCodeExtractor) {
     ClickHouseAttributesGetter dbAttributesGetter =
         new ClickHouseAttributesGetter(errorCodeExtractor);
 

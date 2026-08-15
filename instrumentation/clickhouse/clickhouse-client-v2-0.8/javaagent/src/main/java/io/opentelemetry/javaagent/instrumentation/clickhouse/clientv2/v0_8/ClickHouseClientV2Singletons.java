@@ -25,7 +25,14 @@ public class ClickHouseClientV2Singletons {
   static {
     instrumenter =
         ClickHouseInstrumenterFactory.createInstrumenter(
-            INSTRUMENTER_NAME, ClickHouseClientV2Singletons::getErrorCode);
+            INSTRUMENTER_NAME,
+            error -> {
+              if (error instanceof ServerException) {
+                int errorCode = ((ServerException) error).getCode();
+                return errorCode == 0 ? null : Integer.toString(errorCode);
+              }
+              return null;
+            });
   }
 
   public static Instrumenter<ClickHouseDbRequest, Void> instrumenter() {
@@ -47,14 +54,6 @@ public class ClickHouseClientV2Singletons {
     ADDRESS_AND_PORT.set(client, addressAndPort);
 
     return addressAndPort;
-  }
-
-  @Nullable
-  private static Integer getErrorCode(@Nullable Throwable error) {
-    if (error instanceof ServerException) {
-      return ((ServerException) error).getCode();
-    }
-    return null;
   }
 
   private ClickHouseClientV2Singletons() {}
