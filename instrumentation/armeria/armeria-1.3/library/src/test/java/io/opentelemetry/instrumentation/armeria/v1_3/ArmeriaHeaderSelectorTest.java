@@ -130,6 +130,44 @@ class ArmeriaHeaderSelectorTest {
     assertCapturedHeaders();
   }
 
+  @SuppressWarnings("deprecation") // testing deprecated API
+  @Test
+  void clientDeprecatedSettersMatchHeaderNamesLiterally() {
+    int port = startServer(UnaryOperator.identity());
+
+    WebClient client =
+        WebClient.builder("http://localhost:" + port)
+            .decorator(
+                ArmeriaClientTelemetry.builder(testing.getOpenTelemetry())
+                    .setCapturedRequestHeaders(singletonList("*"))
+                    .setCapturedResponseHeaders(singletonList("*"))
+                    .build()
+                    .createDecorator())
+            .build();
+
+    sendRequest(client);
+
+    assertNoCapturedHeaders();
+  }
+
+  @SuppressWarnings("deprecation") // testing deprecated API
+  @Test
+  void serverDeprecatedSettersMatchHeaderNamesLiterally() {
+    int port =
+        startServer(
+            sb ->
+                sb.decorator(
+                    ArmeriaServerTelemetry.builder(testing.getOpenTelemetry())
+                        .setCapturedRequestHeaders(singletonList("*"))
+                        .setCapturedResponseHeaders(singletonList("*"))
+                        .build()
+                        .createDecorator()));
+
+    sendRequest(WebClient.of("http://localhost:" + port));
+
+    assertNoCapturedHeaders();
+  }
+
   private int startServer(UnaryOperator<ServerBuilder> customizer) {
     ServerBuilder sb = Server.builder();
     sb.http(0);
@@ -171,5 +209,19 @@ class ArmeriaHeaderSelectorTest {
                         .hasAttribute(
                             stringArrayKey("http.response.header.x-test-response"),
                             singletonList("response-value"))));
+  }
+
+  private static void assertNoCapturedHeaders() {
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasAttributesSatisfying(
+                        attributes ->
+                            attributes.forEach(
+                                (key, value) ->
+                                    assertThat(key.getKey())
+                                        .doesNotStartWith("http.request.header.")
+                                        .doesNotStartWith("http.response.header.")))));
   }
 }

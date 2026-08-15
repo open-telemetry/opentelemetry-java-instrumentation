@@ -79,6 +79,21 @@ class JettyHttpClient12HeaderSelectorTest {
     assertCapturedHeaders();
   }
 
+  @SuppressWarnings("deprecation") // testing deprecated API
+  @Test
+  void deprecatedSettersMatchHeaderNamesLiterally() throws Exception {
+    client =
+        JettyClientTelemetry.builder(testing.getOpenTelemetry())
+            .setCapturedRequestHeaders(singletonList("*"))
+            .setCapturedResponseHeaders(singletonList("*"))
+            .build()
+            .createHttpClient();
+
+    sendRequest();
+
+    assertNoCapturedHeaders();
+  }
+
   private void sendRequest() throws Exception {
     client.start();
 
@@ -102,5 +117,19 @@ class JettyHttpClient12HeaderSelectorTest {
                         .hasAttribute(
                             stringArrayKey("http.response.header.x-test-response"),
                             singletonList("response-value"))));
+  }
+
+  private static void assertNoCapturedHeaders() {
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasAttributesSatisfying(
+                        attributes ->
+                            attributes.forEach(
+                                (key, value) ->
+                                    assertThat(key.getKey())
+                                        .doesNotStartWith("http.request.header.")
+                                        .doesNotStartWith("http.response.header.")))));
   }
 }
