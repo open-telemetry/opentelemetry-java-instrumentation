@@ -415,8 +415,10 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
 
   private <T, E extends Exception> T wrapBatchCall(ThrowingSupplier<T, E> callable) throws E {
     DbRequest request = DbRequest.create(dbInfo, batchCommands, batchSize, emptyMap(), false);
-    T result = wrapCall(request, callable);
-    clearBatchState();
-    return result;
+    try {
+      return wrapCall(request, callable);
+    } finally {
+      clearBatchState();
+    }
   }
 }

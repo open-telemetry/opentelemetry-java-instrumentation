@@ -2204,12 +2204,13 @@ public abstract class AbstractJdbcInstrumentationTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  void testPreparedBatchStateRetainedAfterFailure(boolean largeBatch) throws SQLException {
-    // this test needs a driver that keeps the batch when the execution fails, sqlite for example
-    // calls the public clearBatch() from its own batch execution, which also clears the batch
-    // tracked by the javaagent; h2 implements executeLargeBatch() only in newer versions
-    Assumptions.assumeTrue(!largeBatch || testLatestDeps());
-    Connection connection = wrap(new org.h2.Driver().connect(JDBC_URLS.get("h2"), null));
+  void testPreparedBatchStateClearedAfterFailure(boolean largeBatch) throws SQLException {
+    String system = largeBatch ? "sqlite" : "h2";
+    Connection rawConnection =
+        largeBatch
+            ? new JDBC().connect(JDBC_URLS.get(system), new Properties())
+            : new org.h2.Driver().connect(JDBC_URLS.get(system), null);
+    Connection connection = wrap(rawConnection);
     cleanup.deferCleanup(connection);
     String tableName =
         largeBatch ? "prepared_large_batch_failure_test" : "prepared_batch_failure_test";
@@ -2237,20 +2238,22 @@ public abstract class AbstractJdbcInstrumentationTest {
     testing().waitForTraces(1);
     testing().clearData();
 
-    testing().runWithSpan("parent", () -> executeBatch(statement, largeBatch));
+    int executedCount = testing().runWithSpan("parent", () -> executeBatch(statement, largeBatch));
+    assertThat(executedCount).isZero();
 
     testing()
         .waitAndAssertTraces(
-            trace -> assertPreparedBatchTrace(trace, "h2", null, "h2:mem:", tableName, 2));
+            trace ->
+                assertPreparedBatchTrace(
+                    trace, system, null, largeBatch ? "sqlite:memory:" : "h2:mem:", tableName, 0));
   }
 
-  private static void executeBatch(PreparedStatement statement, boolean largeBatch)
+  private static int executeBatch(PreparedStatement statement, boolean largeBatch)
       throws SQLException {
     if (largeBatch) {
-      statement.executeLargeBatch();
-    } else {
-      statement.executeBatch();
+      return statement.executeLargeBatch().length;
     }
+    return statement.executeBatch().length;
   }
 
   private static void assertPreparedBatchTrace(

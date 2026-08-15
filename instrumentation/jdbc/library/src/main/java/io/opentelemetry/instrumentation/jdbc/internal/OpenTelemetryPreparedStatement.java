@@ -417,9 +417,11 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
 
   private <T, E extends Exception> T wrapBatchCall(ThrowingSupplier<T, E> callable) throws E {
     DbRequest request = DbRequest.create(dbInfo, query, batchSize, parameters, true);
-    T result = wrapCall(request, callable);
-    clearBatchState();
-    return result;
+    try {
+      return wrapCall(request, callable);
+    } finally {
+      clearBatchState();
+    }
   }
 
   // JDBC 4.2

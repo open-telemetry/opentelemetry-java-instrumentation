@@ -153,7 +153,8 @@ class StatementInstrumentation implements TypeInstrumentation {
           adviceScope.end(throwable);
         }
       } finally {
-        if (throwable == null && object instanceof Statement) {
+        // Batch execution empties the statement's batch even when it fails.
+        if (object instanceof Statement) {
           JdbcData.clearBatch((Statement) object);
         }
       }
