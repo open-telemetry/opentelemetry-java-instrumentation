@@ -9,6 +9,7 @@ import com.clickhouse.client.ClickHouseException;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseInstrumenterFactory;
+import javax.annotation.Nullable;
 
 public class ClickHouseClientV1Singletons {
 
@@ -18,17 +19,19 @@ public class ClickHouseClientV1Singletons {
   static {
     instrumenter =
         ClickHouseInstrumenterFactory.createInstrumenter(
-            INSTRUMENTER_NAME,
-            error -> {
-              if (error instanceof ClickHouseException) {
-                return Integer.toString(((ClickHouseException) error).getErrorCode());
-              }
-              return null;
-            });
+            INSTRUMENTER_NAME, ClickHouseClientV1Singletons::getErrorCode);
   }
 
   public static Instrumenter<ClickHouseDbRequest, Void> instrumenter() {
     return instrumenter;
+  }
+
+  @Nullable
+  private static Integer getErrorCode(@Nullable Throwable error) {
+    if (error instanceof ClickHouseException) {
+      return ((ClickHouseException) error).getErrorCode();
+    }
+    return null;
   }
 
   private ClickHouseClientV1Singletons() {}

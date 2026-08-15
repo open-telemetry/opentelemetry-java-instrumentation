@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbErrorTypeUtil.fromErrorCode;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -17,9 +18,9 @@ import javax.annotation.Nullable;
 
 class ClickHouseAttributesGetter implements SqlClientAttributesGetter<ClickHouseDbRequest, Void> {
 
-  private final Function<Throwable, String> errorCodeExtractor;
+  private final Function<Throwable, Integer> errorCodeExtractor;
 
-  ClickHouseAttributesGetter(Function<Throwable, String> errorCodeExtractor) {
+  ClickHouseAttributesGetter(Function<Throwable, Integer> errorCodeExtractor) {
     this.errorCodeExtractor = errorCodeExtractor;
   }
 
@@ -55,7 +56,8 @@ class ClickHouseAttributesGetter implements SqlClientAttributesGetter<ClickHouse
   @Override
   public String getErrorType(
       ClickHouseDbRequest request, @Nullable Void response, @Nullable Throwable error) {
-    return errorCodeExtractor.apply(error);
+    Integer errorCode = errorCodeExtractor.apply(error);
+    return errorCode == null ? null : fromErrorCode(errorCode);
   }
 
   @Nullable

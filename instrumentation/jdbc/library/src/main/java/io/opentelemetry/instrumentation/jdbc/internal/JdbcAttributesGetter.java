@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbErrorTypeUtil.fromErrorCode;
 import static java.util.Arrays.asList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -123,7 +124,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   public String getErrorType(
       DbRequest request, @Nullable Void response, @Nullable Throwable error) {
     if (error instanceof SQLException) {
-      return Integer.toString(((SQLException) error).getErrorCode());
+      return fromErrorCode(((SQLException) error).getErrorCode());
     }
     return null;
   }
