@@ -71,13 +71,18 @@ class AwsSpanAssertions {
       throw new IllegalStateException("can't get rpc method from span name " + spanName);
     }
 
+    boolean deleteMessage = spanName.equals("SQS.DeleteMessage");
     String expectedSpanName = spanName;
-    if (emitStableMessagingSemconv() && !spanName.startsWith("SQS.")) {
-      int operationSeparator = spanName.lastIndexOf(' ');
-      String destinationName = spanName.substring(0, operationSeparator);
-      String operationName = spanName.substring(operationSeparator + 1);
-      expectedSpanName =
-          ("publish".equals(operationName) ? "send" : operationName) + " " + destinationName;
+    if (emitStableMessagingSemconv()) {
+      if (deleteMessage) {
+        expectedSpanName = "delete " + queueName;
+      } else if (!spanName.startsWith("SQS.")) {
+        int operationSeparator = spanName.lastIndexOf(' ');
+        String destinationName = spanName.substring(0, operationSeparator);
+        String operationName = spanName.substring(operationSeparator + 1);
+        expectedSpanName =
+            ("publish".equals(operationName) ? "send" : operationName) + " " + destinationName;
+      }
     }
 
     List<AttributeAssertion> attributeAssertions =
@@ -112,11 +117,17 @@ class AwsSpanAssertions {
 
     if (spanName.endsWith("receive")
         || spanName.endsWith("process")
-        || spanName.endsWith("publish")) {
+        || spanName.endsWith("publish")
+        || (deleteMessage && emitStableMessagingSemconv())) {
       attributeAssertions.addAll(
           asList(
               equalTo(MESSAGING_DESTINATION_NAME, queueName), equalTo(MESSAGING_SYSTEM, AWS_SQS)));
-      if (spanName.endsWith("receive")) {
+      if (deleteMessage) {
+        attributeAssertions.add(
+            equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "settle" : null));
+        attributeAssertions.add(equalTo(MESSAGING_OPERATION_NAME, "delete"));
+        attributeAssertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
+      } else if (spanName.endsWith("receive")) {
         attributeAssertions.add(
             equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "receive" : null));
         attributeAssertions.add(
