@@ -240,6 +240,32 @@ class MessagingProducerMetricsTest {
   }
 
   @Test
+  void sentMessagesOnlyDoesNotRecordDuration() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    OperationListener listener =
+        MessagingProducerMetrics.getSentMessages().create(meterProvider.get("test"));
+
+    Attributes attributes =
+        Attributes.builder()
+            .put(MESSAGING_SYSTEM, "kafka")
+            .put(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null)
+            .put(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null)
+            .build();
+    Context context = listener.onStart(Context.root(), attributes, nanos(100));
+    listener.onEnd(context, Attributes.empty(), nanos(250));
+
+    Collection<MetricData> metrics = metricReader.collectAllMetrics();
+    if (emitStableMessagingSemconv()) {
+      assertThat(metrics)
+          .satisfiesExactly(metric -> assertThat(metric).hasName("messaging.client.sent.messages"));
+    } else {
+      assertThat(metrics).isEmpty();
+    }
+  }
+
+  @Test
   void operationTypeEntryPointNeverCollectsLegacyMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =

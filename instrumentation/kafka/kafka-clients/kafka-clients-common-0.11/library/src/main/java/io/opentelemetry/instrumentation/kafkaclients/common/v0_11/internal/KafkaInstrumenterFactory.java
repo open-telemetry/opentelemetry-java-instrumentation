@@ -27,6 +27,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
@@ -84,7 +85,12 @@ public final class KafkaInstrumenterFactory {
 
   public Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInstrumenter(
       Iterable<AttributesExtractor<KafkaProducerRequest, RecordMetadata>> extractors) {
+    return createProducerInstrumenter(extractors, MessagingProducerMetrics.getForOperationType());
+  }
 
+  private Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInstrumenter(
+      Iterable<AttributesExtractor<KafkaProducerRequest, RecordMetadata>> extractors,
+      OperationMetrics operationMetrics) {
     KafkaProducerAttributesGetter getter = new KafkaProducerAttributesGetter();
     MessagingOperationType operationType = MessagingOperationType.SEND;
 
@@ -98,7 +104,7 @@ public final class KafkaInstrumenterFactory {
                     getter, operationType, SEND_OPERATION_NAME, headers))
             .addAttributesExtractors(extractors)
             .addAttributesExtractor(new KafkaProducerAttributesExtractor())
-            .addOperationMetrics(MessagingProducerMetrics.getForOperationType())
+            .addOperationMetrics(operationMetrics)
             .setErrorCauseExtractor(errorCauseExtractor);
     if (captureExperimentalSpanAttributes) {
       builder.addAttributesExtractor(new KafkaProducerExperimentalAttributesExtractor());
@@ -109,12 +115,23 @@ public final class KafkaInstrumenterFactory {
             operationType, KafkaProducerRequest::isSpanContextPropagated));
   }
 
+  public Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInterceptorInstrumenter(
+      Iterable<AttributesExtractor<KafkaProducerRequest, RecordMetadata>> extractors) {
+    return createProducerInstrumenter(extractors, MessagingProducerMetrics.getSentMessages());
+  }
+
   public Instrumenter<KafkaReceiveRequest, Void> createConsumerReceiveInstrumenter() {
     return createConsumerReceiveInstrumenter(emptyList());
   }
 
   public Instrumenter<KafkaReceiveRequest, Void> createConsumerReceiveInstrumenter(
       Iterable<AttributesExtractor<KafkaReceiveRequest, Void>> extractors) {
+    return createConsumerReceiveInstrumenter(extractors, true);
+  }
+
+  private Instrumenter<KafkaReceiveRequest, Void> createConsumerReceiveInstrumenter(
+      Iterable<AttributesExtractor<KafkaReceiveRequest, Void>> extractors,
+      boolean addClientOperationDuration) {
     KafkaReceiveAttributesGetter getter = new KafkaReceiveAttributesGetter();
     MessagingOperationType operationType = MessagingOperationType.RECEIVE;
     boolean receiveInstrumentationEnabled = receiveInstrumentationEnabled();
@@ -129,9 +146,11 @@ public final class KafkaInstrumenterFactory {
                     getter, operationType, POLL_OPERATION_NAME, headers))
             .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
             .addAttributesExtractors(extractors)
-            .addOperationMetrics(MessagingConsumerMetrics.getForOperationType())
             .setErrorCauseExtractor(errorCauseExtractor)
             .setEnabled(receiveInstrumentationEnabled);
+    if (addClientOperationDuration) {
+      builder.addOperationMetrics(MessagingConsumerMetrics.getClientOperationDuration());
+    }
     if (emitStableMessagingSemconv()) {
       builder.addSpanLinksExtractor(
           new KafkaBatchProcessSpanLinksExtractor(
@@ -139,6 +158,11 @@ public final class KafkaInstrumenterFactory {
     }
     setMessagingReceiveExceptionEventExtractor(builder);
     return builder.buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
+  }
+
+  public Instrumenter<KafkaReceiveRequest, Void> createConsumerReceiveInterceptorInstrumenter(
+      Iterable<AttributesExtractor<KafkaReceiveRequest, Void>> extractors) {
+    return createConsumerReceiveInstrumenter(extractors, false);
   }
 
   public Instrumenter<KafkaProcessRequest, Void> createConsumerProcessInstrumenter() {

@@ -17,6 +17,7 @@ public final class KafkaMessagingMetricsAssertions {
 
   private static final String CLIENT_OPERATION_DURATION = "messaging.client.operation.duration";
   private static final String SENT_MESSAGES = "messaging.client.sent.messages";
+  private static final String CONSUMED_MESSAGES = "messaging.client.consumed.messages";
   private static final String PROCESS_DURATION = "messaging.process.duration";
 
   public static void assertSendMetrics(
@@ -43,6 +44,22 @@ public final class KafkaMessagingMetricsAssertions {
         partition,
         count,
         errorType);
+    assertSentMessagesMetrics(
+        testing, instrumentationName, destination, partition, count, errorType);
+  }
+
+  public static void assertSentMessagesMetrics(
+      InstrumentationExtension testing,
+      String instrumentationName,
+      String destination,
+      String partition,
+      long count,
+      String errorType) {
+    if (!emitStableMessagingSemconv()) {
+      assertNoNewMetrics(testing, instrumentationName);
+      return;
+    }
+
     assertDeprecatedMetricsAbsent(testing);
     assertCounter(
         testing,
@@ -82,6 +99,7 @@ public final class KafkaMessagingMetricsAssertions {
         partition,
         operationCount,
         errorType);
+    assertMetricAbsent(testing, instrumentationName, CONSUMED_MESSAGES);
     assertDeprecatedMetricsAbsent(testing);
   }
 
@@ -116,8 +134,19 @@ public final class KafkaMessagingMetricsAssertions {
       InstrumentationExtension testing, String instrumentationName) {
     assertMetricAbsent(testing, instrumentationName, CLIENT_OPERATION_DURATION);
     assertMetricAbsent(testing, instrumentationName, SENT_MESSAGES);
+    assertMetricAbsent(testing, instrumentationName, CONSUMED_MESSAGES);
     assertMetricAbsent(testing, instrumentationName, PROCESS_DURATION);
     assertDeprecatedMetricsAbsent(testing);
+  }
+
+  public static void assertClientOperationDurationMetricAbsent(
+      InstrumentationExtension testing, String instrumentationName) {
+    assertMetricAbsent(testing, instrumentationName, CLIENT_OPERATION_DURATION);
+  }
+
+  public static void assertConsumedMessagesMetricAbsent(
+      InstrumentationExtension testing, String instrumentationName) {
+    assertMetricAbsent(testing, instrumentationName, CONSUMED_MESSAGES);
   }
 
   public static void assertProcessMetricPointCounts(
