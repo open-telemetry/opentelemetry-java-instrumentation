@@ -91,4 +91,37 @@ class HelidonCapturedHeadersTest {
         .isEqualTo(singletonList("other-value"));
     assertThat(result.get(stringArrayKey("http.request.header.x-test-excluded"))).isNull();
   }
+
+  @SuppressWarnings("deprecation") // testing deprecated API
+  @Test
+  void deprecatedExactNameSetterDoesNotTreatStarAsWildcard() {
+    WritableHeaders<?> requestHeaders = WritableHeaders.create();
+    requestHeaders.add(HeaderNames.create("X-Test-Request"), "request-value");
+    requestHeaders.add(HeaderNames.create("Authorization"), "secret");
+    ServerRequest request = mock(ServerRequest.class, RETURNS_DEEP_STUBS);
+    when(request.headers()).thenReturn(ServerRequestHeaders.create(requestHeaders));
+
+    ServerResponseHeaders responseHeaders = ServerResponseHeaders.create();
+    responseHeaders.add(HeaderNames.create("X-Test-Response"), "response-value");
+    ServerResponse response = mock(ServerResponse.class, RETURNS_DEEP_STUBS);
+    when(response.headers()).thenReturn(responseHeaders);
+
+    // implementing header name enumeration must not turn the deprecated exact-name setters into
+    // wildcard matching, since "*" is a legal header name character and capturing every header
+    // would expose credentials
+    AttributesExtractor<ServerRequest, ServerResponse> extractor =
+        HttpServerAttributesExtractor.builder(new HelidonAttributesGetter())
+            .setCapturedRequestHeaders(singletonList("*"))
+            .setCapturedResponseHeaders(singletonList("*"))
+            .build();
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, response, null);
+
+    Attributes result = attributes.build();
+    assertThat(result.get(stringArrayKey("http.request.header.x-test-request"))).isNull();
+    assertThat(result.get(stringArrayKey("http.request.header.authorization"))).isNull();
+    assertThat(result.get(stringArrayKey("http.response.header.x-test-response"))).isNull();
+  }
 }

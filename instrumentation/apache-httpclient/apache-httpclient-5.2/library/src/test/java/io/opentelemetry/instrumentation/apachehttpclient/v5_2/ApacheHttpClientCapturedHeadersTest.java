@@ -84,4 +84,35 @@ class ApacheHttpClientCapturedHeadersTest {
         .isEqualTo(singletonList("other-value"));
     assertThat(result.get(stringArrayKey("http.request.header.x-test-excluded"))).isNull();
   }
+
+  @SuppressWarnings("deprecation") // testing deprecated API
+  @Test
+  void deprecatedExactNameSetterDoesNotTreatStarAsWildcard() {
+    BasicHttpRequest httpRequest = new BasicHttpRequest("GET", "/test");
+    httpRequest.setHeader("X-Test-Request", "request-value");
+    httpRequest.setHeader("Authorization", "secret");
+    ApacheHttpClientRequest request =
+        new ApacheHttpClientRequest(new HttpHost("localhost", 8080), httpRequest);
+
+    HttpResponse response = new BasicHttpResponse(200);
+    response.setHeader("X-Test-Response", "response-value");
+
+    // implementing header name enumeration must not turn the deprecated exact-name setters into
+    // wildcard matching, since "*" is a legal header name character and capturing every header
+    // would expose credentials
+    AttributesExtractor<ApacheHttpClientRequest, HttpResponse> extractor =
+        HttpClientAttributesExtractor.builder(new ApacheHttpClientHttpAttributesGetter())
+            .setCapturedRequestHeaders(singletonList("*"))
+            .setCapturedResponseHeaders(singletonList("*"))
+            .build();
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onStart(attributes, Context.root(), request);
+    extractor.onEnd(attributes, Context.root(), request, response, null);
+
+    Attributes result = attributes.build();
+    assertThat(result.get(stringArrayKey("http.request.header.x-test-request"))).isNull();
+    assertThat(result.get(stringArrayKey("http.request.header.authorization"))).isNull();
+    assertThat(result.get(stringArrayKey("http.response.header.x-test-response"))).isNull();
+  }
 }
