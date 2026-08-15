@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.web.v3_1;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -56,7 +57,7 @@ class SpringWebHeaderCaptureTest {
   void capturesHeadersConfiguredByName() throws Exception {
     ClientHttpRequestInterceptor interceptor =
         SpringWebTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(singletonList("X-Test-Request"))
+            .setCapturedRequestHeaders(asList("X-Test-Request", "Authorization"))
             .setCapturedResponseHeaders(singletonList("X-Test-Response"))
             .build()
             .createInterceptor();
@@ -66,6 +67,10 @@ class SpringWebHeaderCaptureTest {
     Attributes attributes = testing.waitForTraces(1).get(0).get(0).getAttributes();
     assertThat(attributes.get(stringArrayKey("http.request.header.x-test-request")))
         .containsExactly("request-value");
+    // capturing Authorization here is what makes the assertion that it is absent in
+    // deprecatedSettersMatchHeaderNamesLiterally meaningful
+    assertThat(attributes.get(stringArrayKey("http.request.header.authorization")))
+        .containsExactly("secret-value");
     assertThat(attributes.get(stringArrayKey("http.request.header.x-secret-token"))).isNull();
     assertThat(attributes.get(stringArrayKey("http.response.header.x-test-response")))
         .containsExactly("response-value");
@@ -85,8 +90,9 @@ class SpringWebHeaderCaptureTest {
     sendRequest(interceptor);
 
     Attributes attributes = testing.waitForTraces(1).get(0).get(0).getAttributes();
-    // "*" is a legal header name character, so it names a header rather than matching all of
-    // them
+    // "*" is dropped while the selector is built, so it captures nothing; Authorization is in the
+    // request so that treating "*" as a glob would capture it
+    assertThat(attributes.get(stringArrayKey("http.request.header.authorization"))).isNull();
     assertThat(attributes.asMap().keySet())
         .noneMatch(key -> key.getKey().startsWith("http.request.header."))
         .noneMatch(key -> key.getKey().startsWith("http.response.header."));
@@ -100,6 +106,7 @@ class SpringWebHeaderCaptureTest {
             .createRequest(URI.create("http://localhost:8080/test"), HttpMethod.GET);
     request.getHeaders().add("X-Test-Request", "request-value");
     request.getHeaders().add("X-Secret-Token", "secret-value");
+    request.getHeaders().add("Authorization", "secret-value");
 
     TestClientHttpResponse response = new TestClientHttpResponse();
     response.getHeaders().add("X-Test-Response", "response-value");

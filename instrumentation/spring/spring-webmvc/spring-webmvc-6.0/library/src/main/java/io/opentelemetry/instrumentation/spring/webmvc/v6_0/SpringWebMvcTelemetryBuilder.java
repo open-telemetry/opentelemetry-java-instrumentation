@@ -72,9 +72,9 @@ public final class SpringWebMvcTelemetryBuilder {
   /**
    * Configures HTTP request headers to capture as span attributes.
    *
-   * <p>The header names are matched literally. Unlike {@link #setRequestHeaders(IncludeExclude)},
-   * {@code *} and {@code ?} are not treated as glob patterns, since this setting never supported
-   * them as wildcards.
+   * <p>The header names are matched literally. Names containing {@code *} or {@code ?} are ignored,
+   * since this setting never supported wildcards. Use {@link #setRequestHeaders(IncludeExclude)} to
+   * match names by pattern.
    *
    * @param requestHeaders HTTP header names to capture.
    * @deprecated Use {@link #setRequestHeaders(IncludeExclude)} instead, which matches glob patterns
@@ -106,9 +106,9 @@ public final class SpringWebMvcTelemetryBuilder {
   /**
    * Configures HTTP response headers to capture as span attributes.
    *
-   * <p>The header names are matched literally. Unlike {@link #setResponseHeaders(IncludeExclude)},
-   * {@code *} and {@code ?} are not treated as glob patterns, since this setting never supported
-   * them as wildcards.
+   * <p>The header names are matched literally. Names containing {@code *} or {@code ?} are ignored,
+   * since this setting never supported wildcards. Use {@link #setResponseHeaders(IncludeExclude)}
+   * to match names by pattern.
    *
    * @param responseHeaders HTTP header names to capture.
    * @deprecated Use {@link #setResponseHeaders(IncludeExclude)} instead, which matches glob
