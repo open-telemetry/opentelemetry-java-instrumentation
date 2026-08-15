@@ -92,6 +92,31 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
 
   @Test
   @SuppressWarnings("unchecked")
+  void capturesSharedSubscriptionName() throws Exception {
+    SpringApplication app = new SpringApplication(SharedSubscriptionConfig.class);
+    app.setDefaultProperties(defaultConfig());
+    ConfigurableApplicationContext applicationContext = app.run();
+    cleanup.deferCleanup(applicationContext);
+    awaitDurableSubscriptions(applicationContext);
+
+    JmsTemplate jmsTemplate = new JmsTemplate(applicationContext.getBean(ConnectionFactory.class));
+    jmsTemplate.setPubSubDomain(true);
+    String message = "hello there";
+
+    testing.runWithSpan(
+        "parent",
+        () -> jmsTemplate.convertAndSend(SharedSubscriptionConfig.DESTINATION_NAME, message));
+
+    CompletableFuture<String> receivedMessage =
+        applicationContext.getBean("receivedMessage", CompletableFuture.class);
+    assertThat(receivedMessage.get(10, SECONDS)).isEqualTo(message);
+
+    assertSpringJmsListener(
+        SharedSubscriptionConfig.DESTINATION_NAME, SharedSubscriptionConfig.SUBSCRIPTION_NAME);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
   void processSpanUsesSemconvParentWithReceiveSpan() throws Exception {
     Tracer tracer = testing.getOpenTelemetry().getTracer("test");
     Span ambient = tracer.spanBuilder("ambient").startSpan();
