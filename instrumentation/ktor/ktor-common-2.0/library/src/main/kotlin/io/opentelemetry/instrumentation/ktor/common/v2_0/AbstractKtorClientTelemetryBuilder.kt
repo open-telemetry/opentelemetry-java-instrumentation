@@ -63,7 +63,7 @@ abstract class AbstractKtorClientTelemetryBuilder(
    * Configures which HTTP request headers are captured as span attributes, by exact header name.
    *
    * The header names are matched literally. Unlike [requestHeaders], `*` and `?` are not
-   * treated as glob patterns, since this setting never documented them as wildcards.
+   * treated as glob patterns, since this setting never supported them as wildcards.
    */
   // may be removed in the next minor release
   @Deprecated(
@@ -78,7 +78,7 @@ abstract class AbstractKtorClientTelemetryBuilder(
    * Configures which HTTP request headers are captured as span attributes, by exact header name.
    *
    * The header names are matched literally. Unlike [requestHeaders], `*` and `?` are not
-   * treated as glob patterns, since this setting never documented them as wildcards.
+   * treated as glob patterns, since this setting never supported them as wildcards.
    */
   // may be removed in the next minor release
   @Deprecated(
@@ -109,7 +109,7 @@ abstract class AbstractKtorClientTelemetryBuilder(
    * Configures which HTTP response headers are captured as span attributes, by exact header name.
    *
    * The header names are matched literally. Unlike [responseHeaders], `*` and `?` are not
-   * treated as glob patterns, since this setting never documented them as wildcards.
+   * treated as glob patterns, since this setting never supported them as wildcards.
    */
   // may be removed in the next minor release
   @Deprecated(
@@ -124,7 +124,7 @@ abstract class AbstractKtorClientTelemetryBuilder(
    * Configures which HTTP response headers are captured as span attributes, by exact header name.
    *
    * The header names are matched literally. Unlike [responseHeaders], `*` and `?` are not
-   * treated as glob patterns, since this setting never documented them as wildcards.
+   * treated as glob patterns, since this setting never supported them as wildcards.
    */
   // may be removed in the next minor release
   @Deprecated(
