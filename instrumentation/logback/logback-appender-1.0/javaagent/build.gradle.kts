@@ -71,6 +71,28 @@ testing {
         }
       }
     }
+
+    register<JvmTestSuite>("logstashMarkerTest") {
+      dependencies {
+        implementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
+
+        implementation("ch.qos.logback:logback-classic") {
+          version {
+            strictly(baseVersion("1.3.0").orLatest())
+          }
+        }
+        implementation("org.slf4j:slf4j-api") {
+          version {
+            strictly(baseVersion("2.0.0").orLatest())
+          }
+        }
+        implementation("net.logstash.logback:logstash-logback-encoder") {
+          version {
+            strictly(baseVersion("3.0").orLatest())
+          }
+        }
+      }
+    }
   }
 }
 
@@ -163,6 +185,37 @@ tasks {
     systemProperty("testLoggerContextConfiguration", "precedence")
   }
 
+  val logstashMarkerTest = named<Test>("logstashMarkerTest") {
+    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included=key?")
+  }
+
+  val testLogstashMarkerAttributeExclusionsOnly = register<Test>("testLogstashMarkerAttributeExclusionsOnly") {
+    testClassesDirs = sourceSets["logstashMarkerTest"].output.classesDirs
+    classpath = sourceSets["logstashMarkerTest"].runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded=other")
+    systemProperty("testLogstashMarkerConfiguration", "exclude-only")
+  }
+
+  val testLegacyLogstashMarkerAttributes = register<Test>("testLegacyLogstashMarkerAttributes") {
+    testClassesDirs = sourceSets["logstashMarkerTest"].output.classesDirs
+    classpath = sourceSets["logstashMarkerTest"].runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes=true")
+    systemProperty("testLogstashMarkerConfiguration", "legacy")
+  }
+
+  val testLogstashMarkerAttributePrecedence = register<Test>("testLogstashMarkerAttributePrecedence") {
+    testClassesDirs = sourceSets["logstashMarkerTest"].output.classesDirs
+    classpath = sourceSets["logstashMarkerTest"].runtimeClasspath
+
+    jvmArgs(
+      "-Dotel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included=key1",
+      "-Dotel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes=true",
+    )
+    systemProperty("testLogstashMarkerConfiguration", "precedence")
+  }
+
   check {
     dependsOn(
       testing.suites,
@@ -174,6 +227,10 @@ tasks {
       testLoggerContextAttributeExclusionsOnly,
       testLegacyLoggerContextAttributes,
       testLoggerContextAttributePrecedence,
+      logstashMarkerTest,
+      testLogstashMarkerAttributeExclusionsOnly,
+      testLegacyLogstashMarkerAttributes,
+      testLogstashMarkerAttributePrecedence,
     )
   }
 }

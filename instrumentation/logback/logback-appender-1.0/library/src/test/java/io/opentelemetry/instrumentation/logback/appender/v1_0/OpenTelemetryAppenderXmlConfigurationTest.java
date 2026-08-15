@@ -52,6 +52,20 @@ class OpenTelemetryAppenderXmlConfigurationTest {
     assertThat(deprecationWarnings("", "capture-logger-context-attributes")).isEmpty();
   }
 
+  @Test
+  void deprecatedLogstashMarkerSettingIsAppliedFromXml() throws JoranException {
+    assertThat(
+            deprecationWarnings(
+                "<captureLogstashMarkerAttributes>true</captureLogstashMarkerAttributes>",
+                "capture-logstash-marker-attributes"))
+        .hasSize(1);
+  }
+
+  @Test
+  void deprecatedLogstashMarkerSettingIsAbsentByDefault() throws JoranException {
+    assertThat(deprecationWarnings("", "capture-logstash-marker-attributes")).isEmpty();
+  }
+
   /**
    * Configures an appender declaring {@code settings}, starts it, and returns the warnings it
    * reported that name {@code deprecatedProperty}.
