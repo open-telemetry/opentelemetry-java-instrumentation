@@ -582,16 +582,57 @@ class LogbackAppenderTest {
     assertThat(loggerContextDeprecationWarnings(properties)).hasSize(1);
   }
 
+  @Test
+  @SuppressWarnings("deprecation") // verifies the deprecated setting keeps its meaning
+  void emptyLoggerContextSelectorPropertyDoesNotReplaceAppenderSettings() {
+    Map<String, Object> properties = new HashMap<>();
+    // an empty property value cannot be distinguished from an unset one, so it leaves the settings
+    // declared in logback.xml alone
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.logger-context-attributes.included",
+        "");
+
+    assertThat(
+            loggerContextDeprecationWarnings(
+                properties, appender -> appender.setCaptureLoggerContext(true)))
+        .hasSize(1);
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // verifies the deprecated setting is replaced
+  void loggerContextSelectorPropertyTakesPrecedenceOverDeprecatedAppenderSetting() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.logger-context-attributes.included",
+        "key1");
+
+    assertThat(
+            loggerContextDeprecationWarnings(
+                properties, appender -> appender.setCaptureLoggerContext(true)))
+        .isEmpty();
+  }
+
   /**
    * Applies {@code properties} to a fresh appender and returns the deprecation warnings the
    * appender reported while resolving its logger context selector.
    */
   private static List<Status> loggerContextDeprecationWarnings(Map<String, Object> properties) {
+    return loggerContextDeprecationWarnings(properties, appender -> {});
+  }
+
+  /**
+   * Applies {@code properties} to an appender prepared by {@code declaredInXml}, simulating the
+   * settings of an appender declared in {@code logback.xml}, and returns the deprecation warnings
+   * the appender reported while resolving its logger context selector.
+   */
+  private static List<Status> loggerContextDeprecationWarnings(
+      Map<String, Object> properties, Consumer<OpenTelemetryAppender> declaredInXml) {
     StandardEnvironment environment = new StandardEnvironment();
     environment.getPropertySources().addFirst(new MapPropertySource("test", properties));
     OpenTelemetryAppender appender = new OpenTelemetryAppender();
     appender.setContext(new LoggerContext());
     appender.setOpenTelemetry(OpenTelemetry.noop());
+    declaredInXml.accept(appender);
 
     LogbackAppenderInstaller.initializeLoggerContextAttributesFromProperties(environment, appender);
     appender.start();

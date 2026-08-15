@@ -249,7 +249,6 @@ class LogbackAppenderInstaller {
     }
   }
 
-
   // the appender resolves the precedence between these settings, ignoring the deprecated one when
   // a non-empty selector is configured
   @SuppressWarnings("deprecation") // the deprecated setter preserves the deprecated semantics
