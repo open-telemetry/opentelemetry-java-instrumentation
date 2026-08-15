@@ -33,8 +33,7 @@ abstract class CassandraRequest {
     if (statement instanceof BatchStatement) {
       return create(session, (BatchStatement) statement);
     }
-    return create(
-        session, singleton(getQuery(statement)), statement instanceof BoundStatement, null, null);
+    return create(session, singleton(getQuery(statement)), hasQueryValues(statement), null, null);
   }
 
   private static CassandraRequest create(Session session, BatchStatement batchStatement) {
@@ -45,7 +44,7 @@ abstract class CassandraRequest {
     int queryIndex = 0;
     for (Statement batchEntry : batchStatement.getStatements()) {
       queryTexts.add(getQuery(batchEntry));
-      boolean parameterizedQuery = batchEntry instanceof BoundStatement;
+      boolean parameterizedQuery = hasQueryValues(batchEntry);
       if (!parameterizedQuery) {
         allQueriesParameterized = false;
       }
@@ -94,6 +93,16 @@ abstract class CassandraRequest {
     }
 
     return query == null ? "" : query;
+  }
+
+  private static boolean hasQueryValues(Statement statement) {
+    if (statement instanceof BoundStatement) {
+      return true;
+    }
+    if (statement instanceof RegularStatement) {
+      return ((RegularStatement) statement).hasValues();
+    }
+    return false;
   }
 
   abstract Session getSession();
