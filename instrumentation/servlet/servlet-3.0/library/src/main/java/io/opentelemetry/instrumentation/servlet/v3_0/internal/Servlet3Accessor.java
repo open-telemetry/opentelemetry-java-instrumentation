@@ -71,6 +71,12 @@ public final class Servlet3Accessor extends JavaxServletAccessor<HttpServletResp
   }
 
   @Override
+  public Collection<String> getResponseHeaderNames(HttpServletResponse response) {
+    Collection<String> names = response.getHeaderNames();
+    return names == null ? emptyList() : names;
+  }
+
+  @Override
   public boolean isResponseCommitted(HttpServletResponse response) {
     return response.isCommitted();
   }

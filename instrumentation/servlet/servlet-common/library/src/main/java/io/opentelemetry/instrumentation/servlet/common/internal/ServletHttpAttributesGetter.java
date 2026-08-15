@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.servlet.common.internal;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -53,6 +55,20 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
   }
 
   @Override
+  public Collection<String> getHttpRequestHeaderNames(
+      ServletRequestContext<REQUEST> requestContext) {
+    Iterable<String> names = accessor.getRequestHeaderNames(requestContext.request());
+    if (names instanceof Collection) {
+      return (Collection<String>) names;
+    }
+    List<String> result = new ArrayList<>();
+    for (String name : names) {
+      result.add(name);
+    }
+    return result;
+  }
+
+  @Override
   @Nullable
   public Integer getHttpResponseStatusCode(
       ServletRequestContext<REQUEST> requestContext,
@@ -87,6 +103,17 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
       return emptyList();
     }
     return accessor.getResponseHeaderValues(response, name);
+  }
+
+  @Override
+  public Collection<String> getHttpResponseHeaderNames(
+      ServletRequestContext<REQUEST> requestContext,
+      ServletResponseContext<RESPONSE> responseContext) {
+    RESPONSE response = responseContext.response();
+    if (response == null) {
+      return emptyList();
+    }
+    return accessor.getResponseHeaderNames(response);
   }
 
   @Nullable

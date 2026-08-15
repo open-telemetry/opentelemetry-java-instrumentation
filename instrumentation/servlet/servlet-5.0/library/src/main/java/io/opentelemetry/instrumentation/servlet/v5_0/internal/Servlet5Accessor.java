@@ -172,6 +172,12 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   }
 
   @Override
+  public Collection<String> getResponseHeaderNames(HttpServletResponse response) {
+    Collection<String> names = response.getHeaderNames();
+    return names == null ? emptyList() : names;
+  }
+
+  @Override
   public boolean isResponseCommitted(HttpServletResponse response) {
     return response.isCommitted();
   }

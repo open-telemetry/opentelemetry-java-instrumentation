@@ -5,7 +5,10 @@
 
 package io.opentelemetry.instrumentation.servlet.common.internal;
 
+import static java.util.Collections.emptyList;
+
 import java.security.Principal;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -77,6 +80,14 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
   int getResponseStatus(RESPONSE response);
 
   List<String> getResponseHeaderValues(RESPONSE response, String name);
+
+  /**
+   * Returns the names of the headers set on the response, or an empty collection when the Servlet
+   * API version does not allow enumerating them, which is the case before Servlet 3.0.
+   */
+  default Collection<String> getResponseHeaderNames(RESPONSE response) {
+    return emptyList();
+  }
 
   boolean isResponseCommitted(RESPONSE response);
 
