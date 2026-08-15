@@ -1101,9 +1101,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
             attrs -> {
-              String expectedServicePeerName = testing.isJavaagent() ? "test-peer-service" : null;
-              if (expectedServicePeerName != null) {
-                assertThat(attrs).containsEntry(maybeStablePeerService(), expectedServicePeerName);
+              if (testing.isJavaagent()) {
+                assertThat(attrs).containsEntry(maybeStablePeerService(), "test-peer-service");
               } else {
                 assertThat(attrs).doesNotContainKey(maybeStablePeerService());
               }
