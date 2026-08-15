@@ -12,8 +12,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientData;
+import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil;
 import io.vertx.sqlclient.PreparedStatement;
-import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -35,7 +35,7 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This PreparedStatement preparedStatement) {
-      VertxSqlClientData data = QueryExecutorUtil.getPreparedStatementData(preparedStatement);
+      VertxSqlClientData data = VertxSqlClientUtil.getPreparedStatementData(preparedStatement);
       setSqlConnectOptions(data != null ? data.getConnectOptions() : null);
       setDbSystem(data != null ? data.getDbSystem() : null);
     }

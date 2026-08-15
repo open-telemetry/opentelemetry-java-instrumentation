@@ -6,39 +6,22 @@
 package io.vertx.sqlclient.impl;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientData;
-import io.vertx.core.Future;
-import io.vertx.sqlclient.PreparedStatement;
 import javax.annotation.Nullable;
 
-// Helper class for accessing virtual field on package private QueryExecutor class.
+// Helper class for accessing virtual field on package private QueryExecutor class. This class is
+// injected into the application class loader, which can not see the instrumentation helper classes,
+// so the virtual field is typed as Object and callers are responsible for the cast.
 public class QueryExecutorUtil {
-  private static final VirtualField<QueryExecutor<?, ?, ?>, VertxSqlClientData> DATA =
-      VirtualField.find(QueryExecutor.class, VertxSqlClientData.class);
-  private static final VirtualField<PreparedStatement, VertxSqlClientData> PREPARED_STATEMENT_DATA =
-      VirtualField.find(PreparedStatement.class, VertxSqlClientData.class);
+  private static final VirtualField<QueryExecutor<?, ?, ?>, Object> DATA =
+      VirtualField.find(QueryExecutor.class, Object.class);
 
-  public static void setData(Object queryExecutor, @Nullable VertxSqlClientData data) {
+  public static void setData(Object queryExecutor, @Nullable Object data) {
     DATA.set((QueryExecutor<?, ?, ?>) queryExecutor, data);
   }
 
   @Nullable
-  public static VertxSqlClientData getData(Object queryExecutor) {
+  public static Object getData(Object queryExecutor) {
     return DATA.get((QueryExecutor<?, ?, ?>) queryExecutor);
-  }
-
-  public static Future<PreparedStatement> attachPreparedStatementData(
-      Future<PreparedStatement> future, @Nullable VertxSqlClientData data) {
-    return future.map(
-        preparedStatement -> {
-          PREPARED_STATEMENT_DATA.set(preparedStatement, data);
-          return preparedStatement;
-        });
-  }
-
-  @Nullable
-  public static VertxSqlClientData getPreparedStatementData(PreparedStatement preparedStatement) {
-    return PREPARED_STATEMENT_DATA.get(preparedStatement);
   }
 
   public static void copyQueryExecutorData(Object sourceQuery, Object copiedQuery) {

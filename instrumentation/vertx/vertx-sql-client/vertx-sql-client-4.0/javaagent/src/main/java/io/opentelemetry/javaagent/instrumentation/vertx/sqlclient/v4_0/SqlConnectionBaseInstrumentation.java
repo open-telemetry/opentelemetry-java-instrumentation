@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.attachPreparedStatementData;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystemNameFromClassName;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.wrapContext;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -17,7 +18,6 @@ import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.Ve
 import io.vertx.core.Future;
 import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnectOptions;
-import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import io.vertx.sqlclient.impl.SqlClientBase;
 import io.vertx.sqlclient.impl.SqlConnectionBase;
 import javax.annotation.Nullable;
@@ -73,8 +73,7 @@ class SqlConnectionBaseInstrumentation implements TypeInstrumentation {
         }
       }
       return wrapContext(
-          QueryExecutorUtil.attachPreparedStatementData(
-              future, new VertxSqlClientData(connectOptions, dbSystem)));
+          attachPreparedStatementData(future, new VertxSqlClientData(connectOptions, dbSystem)));
     }
   }
 }

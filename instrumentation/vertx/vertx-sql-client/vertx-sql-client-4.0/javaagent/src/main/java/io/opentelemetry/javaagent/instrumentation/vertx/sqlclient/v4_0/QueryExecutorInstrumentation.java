@@ -23,7 +23,6 @@ import io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.Ve
 import io.vertx.core.impl.future.PromiseInternal;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.impl.PreparedStatement;
-import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import java.util.Collection;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -51,7 +50,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Object queryExecutor) {
       // copy client data from ThreadLocal to VirtualField
-      QueryExecutorUtil.setData(
+      VertxSqlClientUtil.setQueryExecutorData(
           queryExecutor, new VertxSqlClientData(getSqlConnectOptions(), getDbSystem()));
     }
   }
@@ -111,7 +110,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           return new AdviceScope(callDepth);
         }
 
-        VertxSqlClientData data = QueryExecutorUtil.getData(queryExecutor);
+        VertxSqlClientData data = VertxSqlClientUtil.getQueryExecutorData(queryExecutor);
         if (data == null) {
           return new AdviceScope(callDepth);
         }

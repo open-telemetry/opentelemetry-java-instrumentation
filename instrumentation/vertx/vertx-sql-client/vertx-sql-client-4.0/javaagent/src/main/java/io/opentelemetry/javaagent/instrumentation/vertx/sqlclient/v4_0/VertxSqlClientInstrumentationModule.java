@@ -41,14 +41,6 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public List<String> exposedClassNames() {
-    // QueryExecutorUtil is injected into the application class loader, it needs to be able to
-    // resolve the type that it stores in virtual fields
-    return singletonList(
-        "io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientData");
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new PoolInstrumentation(),
