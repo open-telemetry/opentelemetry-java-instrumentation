@@ -516,6 +516,21 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
   }
 
   @Test
+  void configurationFileMapMessageSelectorTakesPrecedenceOverDeprecatedAlias() {
+    Logger selectorLogger = LogManager.getLogger("MapMessageSelectorPrecedenceTestLogger");
+    StringMapMessage message = new StringMapMessage();
+    message.put("selector-included", "captured");
+    message.put("selector-secret", "ignored");
+    message.put("other", "ignored");
+    selectorLogger.info(message);
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(AbstractLog4j2Test.mapMessageKey("selector-included"), "captured")));
+  }
+
+  @Test
   void logWithSpanContextFromContextData() {
     assumeFalse(Boolean.getBoolean("otel.instrumentation.common.v3-preview"));
 

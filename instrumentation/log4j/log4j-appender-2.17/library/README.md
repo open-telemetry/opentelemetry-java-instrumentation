@@ -139,7 +139,8 @@ are captured only when every one of these sources is absent or empty.
 and precedence. Only a non-empty selector set with `setMapMessageAttributes(IncludeExclude)` takes
 precedence over the `mapMessageAttributesIncluded` and `mapMessageAttributesExcluded` settings,
 which in turn take precedence over the deprecated `captureMapMessageAttributes` setting. No
-`MapMessage` attributes are captured only when every one of these sources is absent or empty.
+`MapMessage` attributes are captured when the selector and the pattern settings are absent or empty
+and `captureMapMessageAttributes` is `false`, which is also its default.
 
 Captured context data and `MapMessage` attributes may contain sensitive information. Configure included and excluded patterns to limit the data exported as log attributes.
 

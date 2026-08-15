@@ -171,7 +171,8 @@ public class OpenTelemetryAppender extends AbstractAppender {
      * turn take precedence over the deprecated {@code captureMapMessageAttributes} setting. A
      * {@code null} or empty selector carries no configuration, so it does not disable capture and
      * the next configured source is used instead. No {@code MapMessage} attributes are captured
-     * only when every one of these sources is absent or empty.
+     * when the selector and the pattern settings are absent or empty and {@code
+     * captureMapMessageAttributes} is {@code false}, which is also its default.
      *
      * <p>Captured {@code MapMessage} attributes may contain sensitive information. Configure
      * included and excluded patterns to limit the data exported as log attributes.
