@@ -775,6 +775,93 @@ class LogbackAppenderTest {
         .collect(toList());
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void logstashStructuredArgumentSelectorFromPropertiesTakesPrecedenceOverDeprecatedProperty(
+      boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_logstash_structured_arguments/development",
+          true);
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.logstash_structured_argument_attributes/development.included",
+          "key1");
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments",
+          true);
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included",
+          "key1");
+    }
+
+    assertThat(logstashStructuredArgumentDeprecationWarnings(properties)).isEmpty();
+  }
+
+  @Test
+  void
+      declarativeYamlSequenceLogstashStructuredArgumentSelectorTakesPrecedenceOverDeprecatedProperty() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("otel.file_format", "1.1");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.capture_logstash_structured_arguments/development",
+        true);
+    // a YAML sequence is flattened by the Spring environment into indexed properties
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.logstash_structured_argument_attributes/development.excluded[0]",
+        "secret");
+
+    assertThat(logstashStructuredArgumentDeprecationWarnings(properties)).isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void deprecatedLogstashStructuredArgumentPropertyWarns(boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_logstash_structured_arguments/development",
+          true);
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments",
+          true);
+    }
+
+    assertThat(logstashStructuredArgumentDeprecationWarnings(properties)).hasSize(1);
+  }
+
+  /**
+   * Applies {@code properties} to a fresh appender and returns the deprecation warnings the
+   * appender reported while resolving its Logstash structured argument selector.
+   */
+  private static List<Status> logstashStructuredArgumentDeprecationWarnings(
+      Map<String, Object> properties) {
+    StandardEnvironment environment = new StandardEnvironment();
+    environment.getPropertySources().addFirst(new MapPropertySource("test", properties));
+    OpenTelemetryAppender appender = new OpenTelemetryAppender();
+    appender.setContext(new LoggerContext());
+    appender.setOpenTelemetry(OpenTelemetry.noop());
+
+    LogbackAppenderInstaller.initializeLogstashStructuredArgumentAttributesFromProperties(
+        environment, appender);
+    appender.start();
+
+    return appender.getContext().getStatusManager().getCopyOfStatusList().stream()
+        .filter(
+            status ->
+                status.getMessage() != null
+                    && status
+                        .getMessage()
+                        .contains(
+                            "otel.instrumentation.logback-appender.experimental"
+                                + ".capture-logstash-structured-arguments"))
+        .collect(toList());
+  }
+
   @Test
   @SuppressWarnings("deprecation") // verifies the deprecated setting keeps its meaning
   void emptyMdcSelectorPropertyDoesNotReplaceAppenderSettings() {

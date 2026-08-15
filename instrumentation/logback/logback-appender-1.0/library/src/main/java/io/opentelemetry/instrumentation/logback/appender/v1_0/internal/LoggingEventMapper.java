@@ -83,7 +83,7 @@ public final class LoggingEventMapper {
   private final boolean captureTemplate;
   private final boolean captureArguments;
   @Nullable private final Predicate<String> logstashMarkerAttributes;
-  private final boolean captureLogstashStructuredArguments;
+  @Nullable private final Predicate<String> logstashStructuredArgumentAttributes;
 
   private LoggingEventMapper(Builder builder) {
     this.captureExperimentalAttributes = builder.captureExperimentalAttributes;
@@ -94,7 +94,7 @@ public final class LoggingEventMapper {
     this.captureTemplate = builder.captureTemplate;
     this.captureArguments = builder.captureArguments;
     this.logstashMarkerAttributes = builder.logstashMarkerAttributes;
-    this.captureLogstashStructuredArguments = builder.captureLogstashStructuredArguments;
+    this.logstashStructuredArgumentAttributes = builder.logstashStructuredArgumentAttributes;
     this.mdcAttributes = builder.mdcAttributes;
   }
 
@@ -212,6 +212,7 @@ public final class LoggingEventMapper {
     }
 
     if (supportsLogstashStructuredArguments
+        && logstashStructuredArgumentAttributes != null
         && loggingEvent.getArgumentArray() != null
         && loggingEvent.getArgumentArray().length > 0) {
       processLogstashStructuredArguments(builder, loggingEvent.getArgumentArray());
@@ -658,8 +659,7 @@ public final class LoggingEventMapper {
   private void processLogstashStructuredArguments(LogRecordBuilder builder, Object[] arguments) {
     for (Object argument : arguments) {
       if (isLogstashStructuredArgument(argument)) {
-        captureLogstashMarker(
-            builder, argument, captureLogstashStructuredArguments ? key -> true : null);
+        captureLogstashMarker(builder, argument, logstashStructuredArgumentAttributes);
       }
     }
   }
@@ -701,7 +701,7 @@ public final class LoggingEventMapper {
     private boolean captureTemplate;
     private boolean captureArguments;
     @Nullable private Predicate<String> logstashMarkerAttributes;
-    private boolean captureLogstashStructuredArguments;
+    @Nullable private Predicate<String> logstashStructuredArgumentAttributes;
 
     Builder() {}
 
@@ -773,9 +773,9 @@ public final class LoggingEventMapper {
     }
 
     @CanIgnoreReturnValue
-    public Builder setCaptureLogstashStructuredArguments(
-        boolean captureLogstashStructuredArguments) {
-      this.captureLogstashStructuredArguments = captureLogstashStructuredArguments;
+    public Builder setLogstashStructuredArgumentAttributes(
+        @Nullable Predicate<String> logstashStructuredArgumentAttributes) {
+      this.logstashStructuredArgumentAttributes = logstashStructuredArgumentAttributes;
       return this;
     }
 

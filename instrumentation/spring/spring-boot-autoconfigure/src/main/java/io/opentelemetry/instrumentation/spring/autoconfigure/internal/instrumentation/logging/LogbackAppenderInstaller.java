@@ -47,6 +47,12 @@ class LogbackAppenderInstaller {
       "otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included";
   private static final String LOGSTASH_MARKER_ATTRIBUTES_EXCLUDED =
       "otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded";
+  private static final String DEPRECATED_LOGSTASH_STRUCTURED_ARGUMENTS =
+      "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments";
+  private static final String LOGSTASH_STRUCTURED_ARGUMENT_ATTRIBUTES_INCLUDED =
+      "otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included";
+  private static final String LOGSTASH_STRUCTURED_ARGUMENT_ATTRIBUTES_EXCLUDED =
+      "otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded";
   private static final String DEPRECATED_KEY_VALUE_PAIR_ATTRIBUTES =
       "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes";
   private static final String KEY_VALUE_PAIR_ATTRIBUTES_INCLUDED =
@@ -168,15 +174,6 @@ class LogbackAppenderInstaller {
       openTelemetryAppender.setCaptureArguments(captureArguments);
     }
 
-    Boolean captureLogstashStructuredArguments =
-        evaluateBooleanProperty(
-            applicationEnvironmentPreparedEvent,
-            "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments");
-    if (captureLogstashStructuredArguments != null) {
-      openTelemetryAppender.setCaptureLogstashStructuredArguments(
-          captureLogstashStructuredArguments);
-    }
-
     initializeMdcAttributesFromProperties(
         applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
     initializeKeyValuePairAttributesFromProperties(
@@ -184,6 +181,8 @@ class LogbackAppenderInstaller {
     initializeLoggerContextAttributesFromProperties(
         applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
     initializeLogstashMarkerAttributesFromProperties(
+        applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
+    initializeLogstashStructuredArgumentAttributesFromProperties(
         applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
   }
 
@@ -313,6 +312,41 @@ class LogbackAppenderInstaller {
     // the settings declared in logback.xml never survive as a fallback
     if (deprecated != null) {
       openTelemetryAppender.setCaptureLogstashMarkerAttributes(deprecated);
+    }
+  }
+
+  // the appender resolves the precedence between these settings, ignoring the deprecated one when
+  // a non-empty selector is configured
+  @SuppressWarnings("deprecation") // the deprecated setter preserves the deprecated semantics
+  static void initializeLogstashStructuredArgumentAttributesFromProperties(
+      ConfigurableEnvironment environment, OpenTelemetryAppender openTelemetryAppender) {
+    List<String> included =
+        getLoggingListProperty(environment, LOGSTASH_STRUCTURED_ARGUMENT_ATTRIBUTES_INCLUDED);
+    List<String> excluded =
+        getLoggingListProperty(environment, LOGSTASH_STRUCTURED_ARGUMENT_ATTRIBUTES_EXCLUDED);
+    Boolean deprecated =
+        evaluateBooleanProperty(environment, DEPRECATED_LOGSTASH_STRUCTURED_ARGUMENTS);
+    // an empty selector property is equivalent to an unset one, matching how the same flat
+    // properties are read outside of Spring, where empty values cannot be distinguished from unset
+    // ones
+    if (isEmpty(included) && isEmpty(excluded) && deprecated == null) {
+      return;
+    }
+
+    // configuration properties replace the Logstash structured argument settings of an appender
+    // declared in logback.xml, so every source the appender resolves is set, including the ones
+    // that are not configured
+    openTelemetryAppender.setLogstashStructuredArgumentAttributes(
+        IncludeExclude.builder()
+            .setIncluded(included == null ? emptyList() : included)
+            .setExcluded(excluded == null ? emptyList() : excluded)
+            .build());
+    openTelemetryAppender.setLogstashStructuredArgumentAttributesIncluded(null);
+    openTelemetryAppender.setLogstashStructuredArgumentAttributesExcluded(null);
+    // reaching here with an empty selector implies that the deprecated property is configured, so
+    // the settings declared in logback.xml never survive as a fallback
+    if (deprecated != null) {
+      openTelemetryAppender.setCaptureLogstashStructuredArguments(deprecated);
     }
   }
 
