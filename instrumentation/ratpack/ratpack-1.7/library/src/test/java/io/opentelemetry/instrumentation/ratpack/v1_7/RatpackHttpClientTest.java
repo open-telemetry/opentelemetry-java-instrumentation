@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.ratpack.v1_7;
 
 import static java.util.Collections.singletonList;
 
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import ratpack.func.Action;
@@ -17,14 +17,17 @@ import ratpack.http.client.HttpClientSpec;
 
 class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
 
+  private static final IncludeExclude TEST_HEADERS =
+      IncludeExclude.builder().setIncluded(singletonList("x-test-*")).build();
+
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forLibrary();
 
   @Override
   protected HttpClient buildHttpClient() throws Exception {
     return RatpackClientTelemetry.builder(testing.getOpenTelemetry())
-        .setCapturedRequestHeaders(singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
-        .setCapturedResponseHeaders(singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+        .setRequestHeaders(TEST_HEADERS)
+        .setResponseHeaders(TEST_HEADERS)
         .build()
         .instrument(HttpClient.of(Action.noop()));
   }

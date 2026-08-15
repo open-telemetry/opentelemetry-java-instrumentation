@@ -9,13 +9,16 @@ import static java.util.Collections.singletonList;
 
 import io.netty.channel.Channel;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class Netty41ClientTest extends AbstractNetty41ClientTest {
+
+  private static final IncludeExclude TEST_HEADERS =
+      IncludeExclude.builder().setIncluded(singletonList("x-test-*")).build();
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forLibrary();
@@ -26,10 +29,8 @@ class Netty41ClientTest extends AbstractNetty41ClientTest {
           channelPipeline ->
               channelPipeline.addLast(
                   NettyClientTelemetry.builder(testing.getOpenTelemetry())
-                      .setCapturedRequestHeaders(
-                          singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
-                      .setCapturedResponseHeaders(
-                          singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+                      .setRequestHeaders(TEST_HEADERS)
+                      .setResponseHeaders(TEST_HEADERS)
                       .build()
                       .createCombinedHandler()));
 
