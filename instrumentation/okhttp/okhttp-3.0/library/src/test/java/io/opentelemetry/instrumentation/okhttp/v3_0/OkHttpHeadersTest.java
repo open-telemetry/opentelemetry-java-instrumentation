@@ -116,6 +116,34 @@ class OkHttpHeadersTest {
                         })));
   }
 
+  @Test
+  @SuppressWarnings("deprecation") // testing deprecated API
+  void deprecatedSettersMatchHeaderNamesLiterally() throws IOException {
+    Call.Factory callFactory =
+        OkHttpTelemetry.builder(testing.getOpenTelemetry())
+            .setCapturedRequestHeaders(singletonList("*"))
+            .setCapturedResponseHeaders(singletonList("*"))
+            .build()
+            .createCallFactory(new OkHttpClient.Builder().build());
+
+    send(callFactory);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasAttributesSatisfying(
+                        attributes -> {
+                          // "*" is a legal header name character, so the deprecated setters look
+                          // for a header literally named "*" instead of capturing every header
+                          assertThat(headerValues(attributes, "http.request.header.x-test-request"))
+                              .isNull();
+                          assertThat(
+                                  headerValues(attributes, "http.response.header.x-test-response"))
+                              .isNull();
+                        })));
+  }
+
   private static void send(Call.Factory callFactory) throws IOException {
     Request request =
         new Request.Builder()

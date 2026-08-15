@@ -102,6 +102,34 @@ class JavaHttpServerHeadersTest {
                         })));
   }
 
+  @Test
+  @SuppressWarnings("deprecation") // testing deprecated API
+  void deprecatedSettersMatchHeaderNamesLiterally() throws Exception {
+    start(
+        JavaHttpServerTelemetry.builder(testing.getOpenTelemetry())
+            .setCapturedRequestHeaders(singletonList("*"))
+            .setCapturedResponseHeaders(singletonList("*"))
+            .build()
+            .createFilter());
+
+    send();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasAttributesSatisfying(
+                        attributes -> {
+                          // "*" is a legal header name character, so the deprecated setters look
+                          // for a header literally named "*" instead of capturing every header
+                          assertThat(headerValues(attributes, "http.request.header.x-test-request"))
+                              .isNull();
+                          assertThat(
+                                  headerValues(attributes, "http.response.header.x-test-response"))
+                              .isNull();
+                        })));
+  }
+
   private void start(Filter filter) throws IOException {
     server = HttpServer.create(new InetSocketAddress(0), 0);
     HttpContext context =

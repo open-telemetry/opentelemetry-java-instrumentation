@@ -116,6 +116,34 @@ class JavaHttpClientHeadersTest {
                         })));
   }
 
+  @Test
+  @SuppressWarnings("deprecation") // testing deprecated API
+  void deprecatedSettersMatchHeaderNamesLiterally() throws Exception {
+    HttpClient client =
+        JavaHttpClientTelemetry.builder(testing.getOpenTelemetry())
+            .setCapturedRequestHeaders(singletonList("*"))
+            .setCapturedResponseHeaders(singletonList("*"))
+            .build()
+            .wrap(HttpClient.newHttpClient());
+
+    send(client);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasAttributesSatisfying(
+                        attributes -> {
+                          // "*" is a legal header name character, so the deprecated setters look
+                          // for a header literally named "*" instead of capturing every header
+                          assertThat(headerValues(attributes, "http.request.header.x-test-request"))
+                              .isNull();
+                          assertThat(
+                                  headerValues(attributes, "http.response.header.x-test-response"))
+                              .isNull();
+                        })));
+  }
+
   private static void send(HttpClient client) throws Exception {
     HttpRequest request =
         HttpRequest.newBuilder()
