@@ -107,6 +107,7 @@ class JettyHttpClient9HeaderSelectorTest {
             .newRequest("http://localhost:" + server.getAddress().getPort() + "/")
             .header("x-test-request", "request-value")
             .header("x-ignored-request", "ignored-value")
+            .header("authorization", "******")
             .send();
 
     assertThat(response.getStatus()).isEqualTo(200);
@@ -139,11 +140,18 @@ class JettyHttpClient9HeaderSelectorTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasAttributesSatisfying(
-                        attributes ->
-                            attributes.forEach(
-                                (key, value) ->
-                                    assertThat(key.getKey())
-                                        .doesNotStartWith("http.request.header.")
-                                        .doesNotStartWith("http.response.header.")))));
+                            attributes ->
+                                attributes.forEach(
+                                    (key, value) ->
+                                        assertThat(key.getKey())
+                                            .doesNotStartWith("http.request.header.")
+                                            .doesNotStartWith("http.response.header.")))
+                        // "*" is a legal header name character, so the deprecated exact-name
+                        // setters must not capture every header and expose credentials
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getAttributes().asMap())
+                                    .doesNotContainKey(
+                                        stringArrayKey("http.request.header.authorization")))));
   }
 }
