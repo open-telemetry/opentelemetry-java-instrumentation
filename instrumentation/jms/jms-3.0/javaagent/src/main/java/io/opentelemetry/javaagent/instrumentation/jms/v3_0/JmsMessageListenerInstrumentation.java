@@ -47,41 +47,76 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
   public static class MessageListenerAdvice {
 
     public static class AdviceScope {
+      private final Message message;
+      private final boolean clearSubscriptionName;
       private final MessageWithDestination messageWithDestination;
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
 
       private AdviceScope(
-          MessageWithDestination messageWithDestination, Context context, Scope scope) {
+          Message message,
+          boolean clearSubscriptionName,
+          MessageWithDestination messageWithDestination,
+          @Nullable Context context,
+          @Nullable Scope scope) {
+        this.message = message;
+        this.clearSubscriptionName = clearSubscriptionName;
         this.messageWithDestination = messageWithDestination;
         this.context = context;
         this.scope = scope;
       }
 
-      @Nullable
       public static AdviceScope start(MessageListener messageListener, Message message) {
         Context parentContext = Context.current();
         String subscriptionName = JmsSubscriptionNames.get(message);
+        boolean clearSubscriptionName = false;
         if (subscriptionName == null) {
           subscriptionName = JmsSubscriptionNames.get(messageListener);
-          JmsSubscriptionNames.set(message, subscriptionName);
+          if (subscriptionName != null) {
+            clearSubscriptionName = true;
+            JmsSubscriptionNames.set(message, subscriptionName);
+          }
         }
-        MessageWithDestination messageWithDestination =
-            MessageWithDestination.create(
-                JakartaMessageAdapter.create(message), null, subscriptionName);
+        try {
+          MessageWithDestination messageWithDestination =
+              MessageWithDestination.create(
+                  JakartaMessageAdapter.create(message), null, subscriptionName);
 
-        if (!consumerProcessInstrumenter().shouldStart(parentContext, messageWithDestination)) {
-          return null;
+          AdviceScope adviceScope;
+          if (!consumerProcessInstrumenter().shouldStart(parentContext, messageWithDestination)) {
+            adviceScope =
+                new AdviceScope(message, clearSubscriptionName, messageWithDestination, null, null);
+          } else {
+            Context context =
+                consumerProcessInstrumenter().start(parentContext, messageWithDestination);
+            adviceScope =
+                new AdviceScope(
+                    message,
+                    clearSubscriptionName,
+                    messageWithDestination,
+                    context,
+                    context.makeCurrent());
+          }
+          clearSubscriptionName = false;
+          return adviceScope;
+        } finally {
+          if (clearSubscriptionName) {
+            JmsSubscriptionNames.set(message, null);
+          }
         }
-
-        Context context =
-            consumerProcessInstrumenter().start(parentContext, messageWithDestination);
-        return new AdviceScope(messageWithDestination, context, context.makeCurrent());
       }
 
       public void end(@Nullable Throwable throwable) {
-        scope.close();
-        consumerProcessInstrumenter().end(context, messageWithDestination, null, throwable);
+        try {
+          if (context != null && scope != null) {
+            scope.close();
+            consumerProcessInstrumenter().end(context, messageWithDestination, null, throwable);
+          }
+        } finally {
+          if (clearSubscriptionName) {
+            JmsSubscriptionNames.set(message, null);
+          }
+        }
       }
     }
 

@@ -118,6 +118,56 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
 
   @SuppressWarnings("deprecation") // using deprecated JMS and semconv APIs
   @Test
+  void doesNotReuseListenerSubscriptionNameAcrossCallbacks() throws JMSException {
+    String topicName = "redelivered-message-topic";
+    Topic topic = session.createTopic(topicName);
+    TextMessage message = session.createTextMessage("a message");
+    message.setJMSDestination(topic);
+    MessageListener durableListener = ignored -> {};
+    MessageListener regularListener = ignored -> {};
+
+    MessageConsumer durableConsumer =
+        session.createDurableSubscriber(topic, "redelivered-message-subscription");
+    cleanup.deferCleanup(durableConsumer::close);
+    durableConsumer.setMessageListener(durableListener);
+
+    MessageConsumer regularConsumer = session.createConsumer(topic);
+    cleanup.deferCleanup(regularConsumer::close);
+    regularConsumer.setMessageListener(regularListener);
+
+    durableListener.onMessage(message);
+    regularListener.onMessage(message);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName(topicName, false),
+                            oldOperation("process"),
+                            operationName("process"),
+                            operationType("process"),
+                            messagingTempDestination(false),
+                            subscriptionName("redelivered-message-subscription"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            messagingDestinationName(topicName, false),
+                            oldOperation("process"),
+                            operationName("process"),
+                            operationType("process"),
+                            messagingTempDestination(false))));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated JMS and semconv APIs
+  @Test
   void keepsSubscriptionNameWhenListenerRegistrationFails() throws JMSException {
     String topicName = "failed-listener-registration-topic";
     Topic topic = session.createTopic(topicName);
