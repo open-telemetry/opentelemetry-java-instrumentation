@@ -62,7 +62,7 @@ final class CamelMessagingAttributesGetter
   @Override
   public String getMessageId(CamelRequest request, @Nullable Void unused) {
     MessagingSpanDecorator spanDecorator = (MessagingSpanDecorator) request.getSpanDecorator();
-    return spanDecorator.getMessageId(request.getExchange());
+    return spanDecorator.getStableMessageId(request.getExchange());
   }
 
   @Nullable
