@@ -649,6 +649,91 @@ class LogbackAppenderTest {
         .collect(toList());
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void logstashMarkerSelectorFromPropertiesTakesPrecedenceOverDeprecatedProperty(
+      boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_logstash_marker_attributes/development",
+          true);
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.logstash_marker_attributes/development.included",
+          "key1");
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes",
+          true);
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included",
+          "key1");
+    }
+
+    assertThat(logstashMarkerDeprecationWarnings(properties)).isEmpty();
+  }
+
+  @Test
+  void declarativeYamlSequenceLogstashMarkerSelectorTakesPrecedenceOverDeprecatedProperty() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("otel.file_format", "1.1");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.capture_logstash_marker_attributes/development",
+        true);
+    // a YAML sequence is flattened by the Spring environment into indexed properties
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.logstash_marker_attributes/development.excluded[0]",
+        "secret");
+
+    assertThat(logstashMarkerDeprecationWarnings(properties)).isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void deprecatedLogstashMarkerPropertyWarns(boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_logstash_marker_attributes/development",
+          true);
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes",
+          true);
+    }
+
+    assertThat(logstashMarkerDeprecationWarnings(properties)).hasSize(1);
+  }
+
+  /**
+   * Applies {@code properties} to a fresh appender and returns the deprecation warnings the
+   * appender reported while resolving its Logstash marker selector.
+   */
+  private static List<Status> logstashMarkerDeprecationWarnings(Map<String, Object> properties) {
+    StandardEnvironment environment = new StandardEnvironment();
+    environment.getPropertySources().addFirst(new MapPropertySource("test", properties));
+    OpenTelemetryAppender appender = new OpenTelemetryAppender();
+    appender.setContext(new LoggerContext());
+    appender.setOpenTelemetry(OpenTelemetry.noop());
+
+    LogbackAppenderInstaller.initializeLogstashMarkerAttributesFromProperties(
+        environment, appender);
+    appender.start();
+
+    return appender.getContext().getStatusManager().getCopyOfStatusList().stream()
+        .filter(
+            status ->
+                status.getMessage() != null
+                    && status
+                        .getMessage()
+                        .contains(
+                            "otel.instrumentation.logback-appender.experimental"
+                                + ".capture-logstash-marker-attributes"))
+        .collect(toList());
+  }
+
   @Test
   @SuppressWarnings("deprecation") // verifies the deprecated setting keeps its meaning
   void emptyMdcSelectorPropertyDoesNotReplaceAppenderSettings() {

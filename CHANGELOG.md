@@ -65,6 +65,14 @@
   programmatically as `OpenTelemetryAppender#setLoggerContextAttributes(IncludeExclude)`. The
   deprecated setting continues to capture every logger context property when enabled.
   ([#19605](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19605))
+- Deprecate the Logback appender `experimental.capture-logstash-marker-attributes` configuration
+  property and `OpenTelemetryAppender#setCaptureLogstashMarkerAttributes(boolean)` in favor of the
+  new `experimental.logstash-marker-attributes.included` and
+  `experimental.logstash-marker-attributes.excluded` selectors, which are also available in
+  `logback.xml` as `logstashMarkerAttributesIncluded` and `logstashMarkerAttributesExcluded` and
+  programmatically as `OpenTelemetryAppender#setLogstashMarkerAttributes(IncludeExclude)`. The
+  deprecated setting continues to capture every Logstash marker attribute when enabled.
+  ([#19609](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19609))
 - Deprecate the Log4j appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender.Builder#setCaptureContextDataAttributes(String)` in favor of
   include/exclude context data selectors and
