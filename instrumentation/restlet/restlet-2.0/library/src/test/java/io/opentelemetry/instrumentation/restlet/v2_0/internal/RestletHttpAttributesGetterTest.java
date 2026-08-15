@@ -33,7 +33,7 @@ class RestletHttpAttributesGetterTest {
     response.getAttributes().put("org.restlet.http.headers", headers("X-Test-Response"));
 
     AttributesExtractor<Request, Response> extractor =
-        HttpServerAttributesExtractor.<Request, Response>builder(new RestletHttpAttributesGetter())
+        HttpServerAttributesExtractor.builder(new RestletHttpAttributesGetter())
             .setRequestHeaders(
                 IncludeExclude.builder()
                     .setIncluded(singletonList("x-*"))
@@ -63,7 +63,7 @@ class RestletHttpAttributesGetterTest {
     request.getAttributes().put("org.restlet.http.headers", headers("X-One", "X-Two"));
 
     AttributesExtractor<Request, Response> extractor =
-        HttpServerAttributesExtractor.<Request, Response>builder(new RestletHttpAttributesGetter())
+        HttpServerAttributesExtractor.builder(new RestletHttpAttributesGetter())
             .setRequestHeaders(IncludeExclude.builder().setExcluded(singletonList("x-two")).build())
             .build();
 

@@ -10,6 +10,7 @@ import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletAccessor;
 import java.security.Principal;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -83,7 +84,7 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   }
 
   @Override
-  public Iterable<String> getRequestHeaderNames(HttpServletRequest httpServletRequest) {
+  public Collection<String> getRequestHeaderNames(HttpServletRequest httpServletRequest) {
     @SuppressWarnings("unchecked") // servlet api uses Enumeration without generic type
     Enumeration<String> names = httpServletRequest.getHeaderNames();
     return names == null ? emptyList() : Collections.list(names);

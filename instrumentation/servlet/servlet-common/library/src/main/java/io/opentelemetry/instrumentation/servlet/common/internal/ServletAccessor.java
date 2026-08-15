@@ -60,7 +60,7 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
 
   List<String> getRequestHeaderValues(REQUEST request, String name);
 
-  Iterable<String> getRequestHeaderNames(REQUEST request);
+  Collection<String> getRequestHeaderNames(REQUEST request);
 
   Iterable<String> getRequestParameterNames(REQUEST request);
 
