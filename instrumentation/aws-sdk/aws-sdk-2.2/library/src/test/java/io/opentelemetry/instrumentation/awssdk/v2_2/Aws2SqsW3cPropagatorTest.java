@@ -95,9 +95,11 @@ class Aws2SqsW3cPropagatorTest extends Aws2SqsTracingTest {
                                                     .isEqualTo(createSpan.get().getSpanId())))));
 
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageBatchRequest);
-    assertThat(response.messages())
-        .singleElement()
-        .satisfies(
+    assertThat(response.messages()).hasSize(1);
+    // iterate the whole list so that the process scope opened for each message is closed
+    response
+        .messages()
+        .forEach(
             message -> {
               assertThat(message.messageAttributes()).hasSize(10).containsKey("traceparent");
               assertThat(message.messageAttributes().get("baggage").stringValue())

@@ -189,7 +189,7 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
 
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageBatchRequest);
     assertThat(response.messages())
-        .filteredOn(message -> message.messageAttributes().containsKey("baggage"))
+        .filteredOn(message -> "baggage-only".equals(message.body()))
         .singleElement()
         .satisfies(
             message -> {
@@ -198,7 +198,7 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
               assertThat(message.messageAttributes()).containsKey("X-Amzn-Trace-Id");
             });
     assertThat(response.messages())
-        .filteredOn(message -> message.messageAttributes().containsKey("traceparent"))
+        .filteredOn(message -> "invalid-xray".equals(message.body()))
         .singleElement()
         .satisfies(
             message -> {
