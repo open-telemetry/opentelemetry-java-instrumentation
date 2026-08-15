@@ -16,6 +16,9 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -34,6 +37,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -48,6 +52,7 @@ import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.SimpleStatement;
 import com.datastax.driver.core.exceptions.InvalidQueryException;
+import com.datastax.driver.core.exceptions.SyntaxError;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -60,6 +65,7 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
@@ -144,6 +150,11 @@ class CassandraClientTest {
                         .hasStatus(StatusData.error())
                         .hasException(thrown)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
+                            equalTo(SERVER_ADDRESS, cassandraHost),
+                            equalTo(SERVER_PORT, cassandraPort),
+                            equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                            equalTo(NETWORK_PEER_PORT, cassandraPort),
                             equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
                             equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM missing_table"),
                             equalTo(
@@ -184,6 +195,11 @@ class CassandraClientTest {
                         .hasStatus(StatusData.error())
                         .hasException(thrown)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
+                            equalTo(SERVER_ADDRESS, cassandraHost),
+                            equalTo(SERVER_PORT, cassandraPort),
+                            equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                            equalTo(NETWORK_PEER_PORT, cassandraPort),
                             equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
                             equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM missing_table"),
                             equalTo(
@@ -641,6 +657,61 @@ class CassandraClientTest {
     } catch (NoSuchMethodException ignored) {
       return false;
     }
+  }
+
+  @ParameterizedTest
+  @MethodSource("failureScenarios")
+  void failureTelemetry(Consumer<Session> execute) {
+    Session session = cluster.connect();
+    cleanup.deferCleanup(session);
+    testing.clearData();
+
+    assertThatThrownBy(() -> execute.accept(session)).isInstanceOf(SyntaxError.class);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "cassandra" : "DB Query")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(EXCEPTION_TYPE, SyntaxError.class.getName()),
+                                        satisfies(
+                                            EXCEPTION_MESSAGE,
+                                            val -> val.contains("line 1:0 no viable alternative")),
+                                        satisfies(
+                                            EXCEPTION_STACKTRACE,
+                                            val -> val.isInstanceOf(String.class))))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
+                            equalTo(SERVER_ADDRESS, cassandraHost),
+                            equalTo(SERVER_PORT, cassandraPort),
+                            equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                            equalTo(NETWORK_PEER_PORT, cassandraPort),
+                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                            equalTo(maybeStable(DB_STATEMENT), "invalid"),
+                            equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
+                            equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), false),
+                            equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv()
+                                    ? SyntaxError.class.getName()
+                                    : null))));
+  }
+
+  private static Stream<Arguments> failureScenarios() {
+    return Stream.of(
+        argumentSet("sync", (Consumer<Session>) session -> session.execute("invalid")),
+        argumentSet(
+            "async",
+            (Consumer<Session>) session -> session.executeAsync("invalid").getUninterruptibly()));
   }
 
   private static Stream<Arguments> batchScenarios() {

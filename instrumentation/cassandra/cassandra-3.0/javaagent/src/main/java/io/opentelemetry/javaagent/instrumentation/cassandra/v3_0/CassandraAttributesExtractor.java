@@ -28,10 +28,12 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-class CassandraAttributesExtractor implements AttributesExtractor<CassandraRequest, ExecutionInfo> {
+class CassandraAttributesExtractor
+    implements AttributesExtractor<CassandraRequest, CassandraResponse> {
 
   @Nullable
   private static final Method GET_SPECULATIVE_EXECUTIONS =
@@ -58,16 +60,25 @@ class CassandraAttributesExtractor implements AttributesExtractor<CassandraReque
       AttributesBuilder attributes,
       Context context,
       CassandraRequest request,
-      @Nullable ExecutionInfo executionInfo,
+      @Nullable CassandraResponse response,
       @Nullable Throwable error) {
+    if (response == null) {
+      return;
+    }
+
+    InetSocketAddress coordinatorAddress = response.getCoordinatorAddress();
+    if (coordinatorAddress != null) {
+      attributes.put(SERVER_ADDRESS, coordinatorAddress.getHostString());
+      attributes.put(SERVER_PORT, coordinatorAddress.getPort());
+    }
+
+    ExecutionInfo executionInfo = response.getExecutionInfo();
     if (executionInfo == null) {
       return;
     }
 
     Host coordinator = executionInfo.getQueriedHost();
     if (coordinator != null) {
-      attributes.put(SERVER_ADDRESS, coordinator.getSocketAddress().getHostString());
-      attributes.put(SERVER_PORT, coordinator.getSocketAddress().getPort());
       if (emitStableDatabaseSemconv()) {
         attributes.put(CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
       }
