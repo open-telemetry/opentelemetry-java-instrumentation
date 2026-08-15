@@ -48,6 +48,16 @@ class DefaultErrorCauseExtractorTest {
   }
 
   @Test
+  void cyclicWrapperCauseChain() {
+    ExecutionException exception1 = new ExecutionException(null);
+    ExecutionException exception2 = new ExecutionException(null);
+    exception1.initCause(exception2);
+    exception2.initCause(exception1);
+
+    assertThat(ErrorCauseExtractor.getDefault().extract(exception1)).isSameAs(exception1);
+  }
+
+  @Test
   void notWrapped() {
     assertThat(ErrorCauseExtractor.getDefault().extract(new IllegalArgumentException("test")))
         .isInstanceOf(IllegalArgumentException.class)
