@@ -69,7 +69,6 @@ class KafkaCamelTest {
         });
     camelContext.start();
     cleanup.deferAfterAll(camelContext::stop);
-    testing.clearData();
   }
 
   @Test
