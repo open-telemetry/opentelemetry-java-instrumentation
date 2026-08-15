@@ -66,6 +66,14 @@ class ArmeriaHeaderSelectorTest {
                         .hasAttribute(
                             stringArrayKey("http.response.header.x-test-response"),
                             singletonList("response-value"))
+                        // an excluded header is not captured
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getAttributes().asMap())
+                                    .doesNotContainKey(
+                                        stringArrayKey("http.request.header.x-ignored-request"))
+                                    .doesNotContainKey(
+                                        stringArrayKey("http.response.header.x-ignored-response")))
                         // pseudo-headers are not HTTP headers
                         .satisfies(
                             spanData ->
@@ -103,7 +111,7 @@ class ArmeriaHeaderSelectorTest {
                     ArmeriaServerTelemetry.builder(testing.getOpenTelemetry())
                         .setRequestHeaders(IncludeExclude.builder().setIncluded("x-test-*").build())
                         .setResponseHeaders(
-                            IncludeExclude.builder().setExcluded("content-*").build())
+                            IncludeExclude.builder().setExcluded("x-ignored-*").build())
                         .build()
                         .createDecorator()));
 
@@ -177,6 +185,7 @@ class ArmeriaHeaderSelectorTest {
             HttpResponse.of(
                 ResponseHeaders.builder(HttpStatus.OK)
                     .add("x-test-response", "response-value")
+                    .add("x-ignored-response", "ignored-value")
                     .build(),
                 HttpData.ofUtf8("success")));
 
@@ -191,6 +200,7 @@ class ArmeriaHeaderSelectorTest {
             .execute(
                 RequestHeaders.builder(HttpMethod.GET, "/test")
                     .add("x-test-request", "request-value")
+                    .add("x-ignored-request", "ignored-value")
                     .build())
             .aggregate()
             .join();
@@ -208,7 +218,15 @@ class ArmeriaHeaderSelectorTest {
                             singletonList("request-value"))
                         .hasAttribute(
                             stringArrayKey("http.response.header.x-test-response"),
-                            singletonList("response-value"))));
+                            singletonList("response-value"))
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getAttributes().asMap())
+                                    .doesNotContainKey(
+                                        stringArrayKey("http.request.header.x-ignored-request"))
+                                    .doesNotContainKey(
+                                        stringArrayKey(
+                                            "http.response.header.x-ignored-response")))));
   }
 
   private static void assertNoCapturedHeaders() {

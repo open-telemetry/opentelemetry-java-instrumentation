@@ -36,6 +36,7 @@ class JettyHttpClient12HeaderSelectorTest {
         "/",
         exchange -> {
           exchange.getResponseHeaders().add("x-test-response", "response-value");
+          exchange.getResponseHeaders().add("x-ignored-response", "ignored-value");
           exchange.sendResponseHeaders(200, -1);
           exchange.close();
         });
@@ -44,10 +45,15 @@ class JettyHttpClient12HeaderSelectorTest {
 
   @AfterEach
   void stopServer() throws Exception {
-    if (client != null) {
-      client.stop();
+    try {
+      if (client != null) {
+        client.stop();
+      }
+    } finally {
+      if (server != null) {
+        server.stop(0);
+      }
     }
-    server.stop(0);
   }
 
   @Test
@@ -55,7 +61,7 @@ class JettyHttpClient12HeaderSelectorTest {
     client =
         JettyClientTelemetry.builder(testing.getOpenTelemetry())
             .setRequestHeaders(IncludeExclude.builder().setIncluded("x-test-*").build())
-            .setResponseHeaders(IncludeExclude.builder().setExcluded("content-*").build())
+            .setResponseHeaders(IncludeExclude.builder().setExcluded("x-ignored-*").build())
             .build()
             .createHttpClient();
 
@@ -100,7 +106,11 @@ class JettyHttpClient12HeaderSelectorTest {
     ContentResponse response =
         client
             .newRequest("http://localhost:" + server.getAddress().getPort() + "/")
-            .headers(headers -> headers.put(new HttpField("x-test-request", "request-value")))
+            .headers(
+                headers -> {
+                  headers.put(new HttpField("x-test-request", "request-value"));
+                  headers.put(new HttpField("x-ignored-request", "ignored-value"));
+                })
             .send();
 
     assertThat(response.getStatus()).isEqualTo(200);
@@ -116,7 +126,15 @@ class JettyHttpClient12HeaderSelectorTest {
                             singletonList("request-value"))
                         .hasAttribute(
                             stringArrayKey("http.response.header.x-test-response"),
-                            singletonList("response-value"))));
+                            singletonList("response-value"))
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getAttributes().asMap())
+                                    .doesNotContainKey(
+                                        stringArrayKey("http.request.header.x-ignored-request"))
+                                    .doesNotContainKey(
+                                        stringArrayKey(
+                                            "http.response.header.x-ignored-response")))));
   }
 
   private static void assertNoCapturedHeaders() {
