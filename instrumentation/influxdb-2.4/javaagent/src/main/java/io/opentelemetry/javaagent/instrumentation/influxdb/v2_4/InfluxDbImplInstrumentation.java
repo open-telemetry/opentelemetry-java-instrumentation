@@ -18,6 +18,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -58,7 +59,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
                             .and(takesArgument(0, String.class))
                             .and(takesArgument(1, String.class))
                             .and(takesArgument(2, isEnum()))
-                            .and(takesArgument(3, named("java.util.concurrent.TimeUnit"))))),
+                            .and(takesArgument(3, TimeUnit.class)))),
         getClass().getName() + "$InfluxDbModifyAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("createDatabase", "deleteDatabase"),

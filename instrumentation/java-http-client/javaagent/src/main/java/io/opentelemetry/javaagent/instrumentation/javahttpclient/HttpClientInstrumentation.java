@@ -54,13 +54,11 @@ class HttpClientInstrumentation implements TypeInstrumentation {
         named("send")
             .and(isPublic())
             .and(takesArguments(2))
-            .and(takesArgument(0, named("java.net.http.HttpRequest"))),
+            .and(takesArgument(0, HttpRequest.class)),
         getClass().getName() + "$SendAdvice");
 
     transformer.applyAdviceToMethod(
-        named("sendAsync")
-            .and(isPublic())
-            .and(takesArgument(0, named("java.net.http.HttpRequest"))),
+        named("sendAsync").and(isPublic()).and(takesArgument(0, HttpRequest.class)),
         getClass().getName() + "$SendAsyncAdvice");
   }
 

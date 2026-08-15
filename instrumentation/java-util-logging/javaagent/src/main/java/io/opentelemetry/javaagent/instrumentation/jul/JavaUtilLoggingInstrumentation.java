@@ -30,10 +30,7 @@ class JavaUtilLoggingInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("log"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("java.util.logging.LogRecord"))),
+        isPublic().and(named("log")).and(takesArguments(1)).and(takesArgument(0, LogRecord.class)),
         getClass().getName() + "$LogAdvice");
   }
 
