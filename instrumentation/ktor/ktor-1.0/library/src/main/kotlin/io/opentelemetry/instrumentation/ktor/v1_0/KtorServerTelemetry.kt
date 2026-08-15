@@ -14,6 +14,7 @@ import io.ktor.util.pipeline.*
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
+import io.opentelemetry.instrumentation.api.config.IncludeExclude
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
@@ -73,12 +74,60 @@ class KtorServerTelemetry private constructor(
       builder.addAttributesExtractor(extractor)
     }
 
-    fun setCapturedRequestHeaders(requestHeaders: List<String>) {
-      builder.setCapturedRequestHeaders(requestHeaders)
+    /**
+     * Configures which HTTP request headers are captured as span attributes.
+     *
+     * Header values are captured under the `http.request.header.<key>` attribute key, where the
+     * `<key>` part is the lowercase header name.
+     *
+     * Header names are matched case-insensitively, since HTTP header names are case-insensitive.
+     * `?` matches one character and `*` matches any number of characters, including none. Excluded
+     * patterns take precedence over included patterns. A selector with no included patterns
+     * captures every header that is not excluded, and an empty selector captures no headers. No
+     * request headers are captured when this is not configured.
+     */
+    fun setRequestHeaders(requestHeaders: IncludeExclude) {
+      builder.setRequestHeaders(requestHeaders)
     }
 
+    // may be removed in the next minor release
+    @Deprecated(
+      "Use setRequestHeaders(IncludeExclude) instead.",
+      ReplaceWith(
+        "setRequestHeaders(IncludeExclude.builder().setIncluded(requestHeaders).build())",
+        "io.opentelemetry.instrumentation.api.config.IncludeExclude"
+      )
+    )
+    fun setCapturedRequestHeaders(requestHeaders: List<String>) {
+      setRequestHeaders(IncludeExclude.builder().setIncluded(requestHeaders).build())
+    }
+
+    /**
+     * Configures which HTTP response headers are captured as span attributes.
+     *
+     * Header values are captured under the `http.response.header.<key>` attribute key, where the
+     * `<key>` part is the lowercase header name.
+     *
+     * Header names are matched case-insensitively, since HTTP header names are case-insensitive.
+     * `?` matches one character and `*` matches any number of characters, including none. Excluded
+     * patterns take precedence over included patterns. A selector with no included patterns
+     * captures every header that is not excluded, and an empty selector captures no headers. No
+     * response headers are captured when this is not configured.
+     */
+    fun setResponseHeaders(responseHeaders: IncludeExclude) {
+      builder.setResponseHeaders(responseHeaders)
+    }
+
+    // may be removed in the next minor release
+    @Deprecated(
+      "Use setResponseHeaders(IncludeExclude) instead.",
+      ReplaceWith(
+        "setResponseHeaders(IncludeExclude.builder().setIncluded(responseHeaders).build())",
+        "io.opentelemetry.instrumentation.api.config.IncludeExclude"
+      )
+    )
     fun setCapturedResponseHeaders(responseHeaders: List<String>) {
-      builder.setCapturedResponseHeaders(responseHeaders)
+      setResponseHeaders(IncludeExclude.builder().setIncluded(responseHeaders).build())
     }
 
     fun setKnownMethods(knownMethods: Collection<String>) {
