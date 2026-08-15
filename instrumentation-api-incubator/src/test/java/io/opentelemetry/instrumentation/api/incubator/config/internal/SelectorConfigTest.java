@@ -28,7 +28,6 @@ import org.junit.jupiter.api.Test;
 class SelectorConfigTest {
 
   private static final String SELECTOR = "mdc-attributes";
-  private static final String BOOLEAN_SELECTOR = "map-message-attributes";
 
   @Test
   void readsSelector() {
@@ -225,78 +224,6 @@ class SelectorConfigTest {
     assertThat(literal.test("other")).isFalse();
   }
 
-  @Test
-  void resolvesLegacyBooleanSelectorFirstWithoutWarning() {
-    DeclarativeConfigProperties config = mockBooleanConfig();
-    when(config.get("map_message_attributes/development").getScalarList("included", String.class))
-        .thenReturn(singletonList("new"));
-    when(config.getBoolean("capture_map_message_attributes/development")).thenReturn(true);
-    TestHandler handler = attachWarningHandler();
-    try {
-      Predicate<String> selector =
-          SelectorConfig.resolveLegacyBoolean(config, "boolean-precedence", BOOLEAN_SELECTOR);
-
-      assertThat(selector).isNotNull();
-      assertThat(selector.test("new")).isTrue();
-      assertThat(selector.test("other")).isFalse();
-      assertThat(handler.records).isEmpty();
-      verify(config, never()).getBoolean("capture_map_message_attributes/development");
-    } finally {
-      detachWarningHandler(handler);
-    }
-  }
-
-  @Test
-  void deprecatedBooleanTrueSelectsEverythingAndWarnsOnce() {
-    DeclarativeConfigProperties config = mockBooleanConfig();
-    when(config.getBoolean("capture_map_message_attributes/development")).thenReturn(true);
-    TestHandler handler = attachWarningHandler();
-    try {
-      Predicate<String> first =
-          SelectorConfig.resolveLegacyBoolean(config, "boolean-enabled", BOOLEAN_SELECTOR);
-      Predicate<String> second =
-          SelectorConfig.resolveLegacyBoolean(config, "boolean-enabled", BOOLEAN_SELECTOR);
-
-      assertThat(first).isNotNull();
-      assertThat(first.test("anything")).isTrue();
-      assertThat(second).isNotNull();
-      assertThat(second.test("anything")).isTrue();
-      assertThat(handler.records).hasSize(1);
-      assertThat(handler.records.get(0).getMessage())
-          .isEqualTo(
-              "The otel.instrumentation.boolean-enabled.experimental"
-                  + ".capture-map-message-attributes setting and the equivalent declarative"
-                  + " configuration property are deprecated and may be removed in the next minor"
-                  + " release. Use otel.instrumentation.boolean-enabled.experimental"
-                  + ".map-message-attributes.included or equivalent declarative configuration"
-                  + " instead.");
-    } finally {
-      detachWarningHandler(handler);
-    }
-  }
-
-  @Test
-  void deprecatedBooleanFalseSelectsNothing() {
-    DeclarativeConfigProperties config = mockBooleanConfig();
-    when(config.getBoolean("capture_map_message_attributes/development")).thenReturn(false);
-
-    assertThat(SelectorConfig.resolveLegacyBoolean(config, "boolean-disabled", BOOLEAN_SELECTOR))
-        .isNull();
-  }
-
-  @Test
-  void absentBooleanSelectorSelectsNothingWithoutWarning() {
-    DeclarativeConfigProperties config = mockBooleanConfig();
-    TestHandler handler = attachWarningHandler();
-    try {
-      assertThat(SelectorConfig.resolveLegacyBoolean(config, "boolean-absent", BOOLEAN_SELECTOR))
-          .isNull();
-      assertThat(handler.records).isEmpty();
-    } finally {
-      detachWarningHandler(handler);
-    }
-  }
-
   private static DeclarativeConfigProperties mockConfig() {
     DeclarativeConfigProperties config =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
@@ -304,16 +231,6 @@ class SelectorConfigTest {
     when(selectorNode.getScalarList("included", String.class)).thenReturn(null);
     when(selectorNode.getScalarList("excluded", String.class)).thenReturn(null);
     when(config.getScalarList("capture_mdc_attributes/development", String.class)).thenReturn(null);
-    return config;
-  }
-
-  private static DeclarativeConfigProperties mockBooleanConfig() {
-    DeclarativeConfigProperties config =
-        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    DeclarativeConfigProperties selectorNode = config.get("map_message_attributes/development");
-    when(selectorNode.getScalarList("included", String.class)).thenReturn(null);
-    when(selectorNode.getScalarList("excluded", String.class)).thenReturn(null);
-    when(config.getBoolean("capture_map_message_attributes/development")).thenReturn(null);
     return config;
   }
 
