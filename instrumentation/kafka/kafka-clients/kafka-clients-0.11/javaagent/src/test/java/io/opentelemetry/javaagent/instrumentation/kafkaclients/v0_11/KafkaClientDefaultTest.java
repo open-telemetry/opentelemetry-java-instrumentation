@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testL
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -33,6 +34,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.errors.WakeupException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -162,6 +164,23 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     assertSendMetrics(testing, instrumentationName, SHARED_TOPIC, "0", 1, null);
     assertReceiveDurationMetrics(testing, instrumentationName, SHARED_TOPIC, group, null, 1, null);
     assertProcessDurationMetrics(testing, instrumentationName, SHARED_TOPIC, group, "0", 1, null);
+  }
+
+  @Test
+  void testFailedPollRecordsDuration() {
+    assumeTrue(emitStableMessagingSemconv());
+
+    consumer.wakeup();
+    assertThatThrownBy(() -> poll(Duration.ofMillis(100))).isInstanceOf(WakeupException.class);
+
+    assertReceiveDurationMetrics(
+        testing,
+        "io.opentelemetry.kafka-clients-0.11",
+        null,
+        testLatestDeps() ? "test" : null,
+        null,
+        1,
+        WakeupException.class.getName());
   }
 
   @Test

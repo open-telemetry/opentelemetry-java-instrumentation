@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerReceiveInstrumenter;
+import static java.util.Collections.emptyMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -63,13 +64,15 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
         @Advice.Return @Nullable ConsumerRecords<?, ?> records,
         @Advice.Thrown @Nullable Throwable error) {
 
-      // don't create spans when no records were received
-      if (records == null || records.isEmpty()) {
+      // don't create spans for successful polls when no records were received
+      if ((records == null && error == null) || (records != null && records.isEmpty())) {
         return;
       }
 
       Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(currentContext());
-      KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
+      ConsumerRecords<?, ?> requestRecords =
+          records != null ? records : new ConsumerRecords<>(emptyMap());
+      KafkaReceiveRequest request = KafkaReceiveRequest.create(requestRecords, consumer);
 
       // disable process tracing and store the receive span for each individual record too
       boolean previousValue = KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
@@ -85,6 +88,10 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
                   error,
                   timer.startTime(),
                   timer.now());
+        }
+
+        if (records == null) {
+          return;
         }
 
         Context processParentContext =
