@@ -153,6 +153,20 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
     assertThat(warnings()).containsExactly(DEPRECATED_KEY_VALUE_PAIR_ATTRIBUTES_WARNING);
   }
 
+  @Test
+  void nullKeyIsIgnored() {
+    appender.setKeyValuePairAttributesIncluded("*");
+
+    Map<String, String> keyValuePairs = new LinkedHashMap<>();
+    keyValuePairs.put(null, "value1");
+    keyValuePairs.put("key1", "value2");
+    log(keyValuePairs);
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value2")));
+  }
+
   private void log(Map<String, String> keyValuePairs) {
     appender.setOpenTelemetry(testing.getOpenTelemetry());
     appender.start();

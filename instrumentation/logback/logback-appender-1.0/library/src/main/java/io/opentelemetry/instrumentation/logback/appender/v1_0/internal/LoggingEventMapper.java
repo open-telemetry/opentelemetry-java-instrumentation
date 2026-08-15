@@ -318,9 +318,12 @@ public final class LoggingEventMapper {
     List<KeyValuePair> keyValuePairs = loggingEvent.getKeyValuePairs();
     if (keyValuePairs != null) {
       for (KeyValuePair keyValuePair : keyValuePairs) {
-        if (!OTEL_EVENT_NAME.getKey().equals(keyValuePair.key)
-            && keyValuePairAttributes.test(keyValuePair.key)) {
-          captureAttribute(builder, keyValuePair.key, keyValuePair.value);
+        String key = keyValuePair.key;
+        // a null key is not selectable, and captureAttribute would skip it anyway
+        if (key != null
+            && !OTEL_EVENT_NAME.getKey().equals(key)
+            && keyValuePairAttributes.test(key)) {
+          captureAttribute(builder, key, keyValuePair.value);
         }
       }
     }

@@ -241,6 +241,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   /**
    * Sets whether the key value pair attributes should be set to logs.
    *
+   * <p>This setter backs the {@code captureKeyValuePairAttributes} element in {@code logback.xml}.
+   *
    * @param captureKeyValuePairAttributes To enable or disable capturing key value pairs
    * @deprecated Use {@link #setKeyValuePairAttributesIncluded(String)} and {@link
    *     #setKeyValuePairAttributesExcluded(String)}, or {@link

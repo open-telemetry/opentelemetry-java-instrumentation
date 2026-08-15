@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -433,16 +434,57 @@ class LogbackAppenderTest {
     assertThat(keyValuePairDeprecationWarnings(properties)).hasSize(1);
   }
 
+  @Test
+  @SuppressWarnings("deprecation") // verifies the deprecated setting keeps its meaning
+  void emptyKeyValuePairSelectorPropertyDoesNotReplaceAppenderSettings() {
+    Map<String, Object> properties = new HashMap<>();
+    // an empty property value cannot be distinguished from an unset one, so it leaves the settings
+    // declared in logback.xml alone
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included",
+        "");
+
+    assertThat(
+            keyValuePairDeprecationWarnings(
+                properties, appender -> appender.setCaptureKeyValuePairAttributes(true)))
+        .hasSize(1);
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // verifies the deprecated setting is replaced
+  void keyValuePairSelectorPropertyTakesPrecedenceOverDeprecatedAppenderSetting() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included",
+        "key1");
+
+    assertThat(
+            keyValuePairDeprecationWarnings(
+                properties, appender -> appender.setCaptureKeyValuePairAttributes(true)))
+        .isEmpty();
+  }
+
   /**
    * Applies {@code properties} to a fresh appender and returns the deprecation warnings the
    * appender reported while resolving its key value pair selector.
    */
   private static List<Status> keyValuePairDeprecationWarnings(Map<String, Object> properties) {
+    return keyValuePairDeprecationWarnings(properties, appender -> {});
+  }
+
+  /**
+   * Applies {@code properties} to an appender prepared by {@code declaredInXml}, simulating the
+   * settings of an appender declared in {@code logback.xml}, and returns the deprecation warnings
+   * the appender reported while resolving its key value pair selector.
+   */
+  private static List<Status> keyValuePairDeprecationWarnings(
+      Map<String, Object> properties, Consumer<OpenTelemetryAppender> declaredInXml) {
     StandardEnvironment environment = new StandardEnvironment();
     environment.getPropertySources().addFirst(new MapPropertySource("test", properties));
     OpenTelemetryAppender appender = new OpenTelemetryAppender();
     appender.setContext(new LoggerContext());
     appender.setOpenTelemetry(OpenTelemetry.noop());
+    declaredInXml.accept(appender);
 
     LogbackAppenderInstaller.initializeKeyValuePairAttributesFromProperties(environment, appender);
     appender.start();

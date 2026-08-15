@@ -222,7 +222,10 @@ class LogbackAppenderInstaller {
     List<String> included = getLoggingListProperty(environment, KEY_VALUE_PAIR_ATTRIBUTES_INCLUDED);
     List<String> excluded = getLoggingListProperty(environment, KEY_VALUE_PAIR_ATTRIBUTES_EXCLUDED);
     Boolean deprecated = evaluateBooleanProperty(environment, DEPRECATED_KEY_VALUE_PAIR_ATTRIBUTES);
-    if (included == null && excluded == null && deprecated == null) {
+    // an empty selector property is equivalent to an unset one, matching how the same flat
+    // properties are read outside of Spring, where empty values cannot be distinguished from unset
+    // ones
+    if (isEmpty(included) && isEmpty(excluded) && deprecated == null) {
       return;
     }
 
@@ -230,17 +233,21 @@ class LogbackAppenderInstaller {
     // logback.xml, so every source the appender resolves is set, including the ones that are not
     // configured
     openTelemetryAppender.setKeyValuePairAttributes(
-        included == null && excluded == null
-            ? null
-            : IncludeExclude.builder()
-                .setIncluded(included == null ? emptyList() : included)
-                .setExcluded(excluded == null ? emptyList() : excluded)
-                .build());
+        IncludeExclude.builder()
+            .setIncluded(included == null ? emptyList() : included)
+            .setExcluded(excluded == null ? emptyList() : excluded)
+            .build());
     openTelemetryAppender.setKeyValuePairAttributesIncluded(null);
     openTelemetryAppender.setKeyValuePairAttributesExcluded(null);
+    // reaching here with an empty selector implies that the deprecated property is configured, so
+    // the settings declared in logback.xml never survive as a fallback
     if (deprecated != null) {
       openTelemetryAppender.setCaptureKeyValuePairAttributes(deprecated);
     }
+  }
+
+  private static boolean isEmpty(@Nullable List<String> values) {
+    return values == null || values.isEmpty();
   }
 
   /**
