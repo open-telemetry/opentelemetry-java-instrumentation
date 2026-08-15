@@ -89,10 +89,14 @@ abstract class CassandraRequest {
         (statement == null || statement.getConsistencyLevel() == null)
             ? queryOptions.getConsistencyLevel().name()
             : statement.getConsistencyLevel().name();
-    int pageSize =
+    int fetchSize =
         (statement == null || statement.getFetchSize() <= 0)
             ? queryOptions.getFetchSize()
             : statement.getFetchSize();
+    // the driver treats Integer.MAX_VALUE as a request to disable paging and never sends a page
+    // size, so there is no page size to report
+    Long pageSize =
+        (fetchSize <= 0 || fetchSize == Integer.MAX_VALUE) ? null : Long.valueOf(fetchSize);
     Boolean idempotent = statement == null ? null : statement.isIdempotent();
     boolean queryIdempotent =
         idempotent == null ? queryOptions.getDefaultIdempotence() : idempotent;
@@ -149,7 +153,8 @@ abstract class CassandraRequest {
 
   abstract String getConsistencyLevel();
 
-  abstract int getPageSize();
+  @Nullable
+  abstract Long getPageSize();
 
   abstract boolean isIdempotent();
 }

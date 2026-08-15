@@ -161,6 +161,45 @@ class CassandraClientTest {
                                     : null))));
   }
 
+  @Test
+  void shouldOmitPageSizeWhenPagingIsDisabled() {
+    Session session = cluster.connect();
+    cleanup.deferCleanup(session);
+    SimpleStatement statement = new SimpleStatement("SELECT * FROM missing_table");
+    statement.setConsistencyLevel(ConsistencyLevel.ONE);
+    // the driver treats Integer.MAX_VALUE as a request to disable paging
+    statement.setFetchSize(Integer.MAX_VALUE);
+    statement.setIdempotent(true);
+
+    Throwable thrown = catchThrowable(() -> session.execute(statement));
+
+    assertThat(thrown).isInstanceOf(InvalidQueryException.class);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT missing_table")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(thrown)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                            equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM missing_table"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT missing_table" : null),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_CASSANDRA_TABLE), "missing_table"),
+                            equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "ONE"),
+                            equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), true),
+                            equalTo(
+                                ERROR_TYPE,
+                                emitStableDatabaseSemconv()
+                                    ? InvalidQueryException.class.getName()
+                                    : null))));
+  }
+
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideSyncParameters")
   void syncTest(Parameter parameter) {
