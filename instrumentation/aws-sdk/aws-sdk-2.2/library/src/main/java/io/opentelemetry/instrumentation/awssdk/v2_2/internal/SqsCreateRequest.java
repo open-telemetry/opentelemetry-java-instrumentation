@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import java.util.Collection;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -34,5 +35,9 @@ public final class SqsCreateRequest {
   @Nullable
   String getMessageAttribute(String name) {
     return messageAttributes.get(name);
+  }
+
+  Collection<String> getMessageAttributeNames() {
+    return messageAttributes.keySet();
   }
 }

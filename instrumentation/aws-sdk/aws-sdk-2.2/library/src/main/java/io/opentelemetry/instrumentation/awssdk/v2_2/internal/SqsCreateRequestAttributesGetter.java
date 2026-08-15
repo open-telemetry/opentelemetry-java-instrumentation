@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -84,5 +85,10 @@ final class SqsCreateRequestAttributesGetter
   public List<String> getMessageHeader(SqsCreateRequest request, String name) {
     String value = request.getMessageAttribute(name);
     return value != null ? singletonList(value) : emptyList();
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(SqsCreateRequest request) {
+    return request.getMessageAttributeNames();
   }
 }
