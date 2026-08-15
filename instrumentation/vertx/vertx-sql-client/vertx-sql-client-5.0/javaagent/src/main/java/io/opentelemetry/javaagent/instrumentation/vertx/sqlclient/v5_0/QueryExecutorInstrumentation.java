@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystem;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -48,8 +49,9 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Object queryExecutor) {
-      // copy connection options from ThreadLocal to VirtualField
+      // copy client data from ThreadLocal to VirtualField
       QueryExecutorUtil.setConnectOptions(queryExecutor, getSqlConnectOptions());
+      QueryExecutorUtil.setDbSystem(queryExecutor, getDbSystem());
     }
   }
 
@@ -114,7 +116,10 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
         if (connectOptions == null) {
           return new AdviceScope(callDepth);
         }
-        String dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
+        String dbSystem = QueryExecutorUtil.getDbSystem(queryExecutor);
+        if (dbSystem == null) {
+          dbSystem = VertxSqlClientSingletons.getConnectOptionsDbSystem(connectOptions);
+        }
         if (dbSystem == null) {
           dbSystem = VertxSqlClientUtil.getDbSystemNameFromClassName(connectOptions);
         }

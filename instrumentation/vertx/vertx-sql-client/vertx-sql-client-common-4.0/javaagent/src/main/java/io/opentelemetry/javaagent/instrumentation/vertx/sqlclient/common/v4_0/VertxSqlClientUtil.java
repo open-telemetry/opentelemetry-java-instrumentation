@@ -28,6 +28,7 @@ import javax.annotation.Nullable;
 public class VertxSqlClientUtil {
 
   private static final ThreadLocal<SqlConnectOptions> connectOptions = new ThreadLocal<>();
+  private static final ThreadLocal<String> dbSystem = new ThreadLocal<>();
   private static final VirtualField<Pool, SqlConnectOptions> POOL_CONNECT_OPTIONS =
       VirtualField.find(Pool.class, SqlConnectOptions.class);
   private static final Map<String, String> dbSystemNameByPackage = buildPackageDbSystemNameMap();
@@ -45,6 +46,19 @@ public class VertxSqlClientUtil {
   @Nullable
   public static SqlConnectOptions getSqlConnectOptions() {
     return connectOptions.get();
+  }
+
+  public static void setDbSystem(@Nullable String value) {
+    if (value == null) {
+      dbSystem.remove();
+    } else {
+      dbSystem.set(value);
+    }
+  }
+
+  @Nullable
+  public static String getDbSystem() {
+    return dbSystem.get();
   }
 
   public static void setPoolConnectOptions(Pool pool, SqlConnectOptions sqlConnectOptions) {

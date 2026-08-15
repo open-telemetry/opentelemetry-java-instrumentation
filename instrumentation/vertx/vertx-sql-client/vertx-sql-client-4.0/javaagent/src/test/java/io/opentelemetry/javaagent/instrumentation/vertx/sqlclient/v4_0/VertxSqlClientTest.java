@@ -41,6 +41,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgException;
@@ -238,15 +239,15 @@ class VertxSqlClientTest {
 
   @Test
   void testPreparedSelect() throws Exception {
+    String query = "select * from test where id = $1 and name = 'Hello'";
     testing
-        .runWithSpan(
-            "parent",
-            () -> pool.preparedQuery("select * from test where id = $1").execute(Tuple.of(1)))
+        .runWithSpan("parent", () -> pool.preparedQuery(query).execute(Tuple.of(1)))
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);
 
-    assertPreparedSelect();
+    // SqlClient.preparedQuery() does not guarantee that the query has no embedded literals.
+    assertPreparedSelect("select * from test where id = $1 and name = ?");
 
     assertDurationMetric(
         testing,
@@ -259,6 +260,10 @@ class VertxSqlClientTest {
   }
 
   private static void assertPreparedSelect() {
+    assertPreparedSelect("select * from test where id = $1");
+  }
+
+  private static void assertPreparedSelect(String expectedQueryText) {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -273,7 +278,7 @@ class VertxSqlClientTest {
                                 emitStableDatabaseSemconv() ? POSTGRESQL : null),
                             equalTo(maybeStable(DB_NAME), DB),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                            equalTo(maybeStable(DB_STATEMENT), "select * from test where id = $1"),
+                            equalTo(maybeStable(DB_STATEMENT), expectedQueryText),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "select test" : null),
@@ -286,6 +291,107 @@ class VertxSqlClientTest {
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
+  }
+
+  @Test
+  void testExplicitPreparedSelect() throws Exception {
+    String query = "select * from test where id = $1 and name = 'Hello'";
+    testing
+        .runWithSpan("parent", () -> executePreparedStatement(query, Tuple.of(1)))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+
+    // PreparedStatement.query() is parameterized, so its stable query text is not sanitized.
+    assertPreparedSelect(
+        emitStableDatabaseSemconv() ? query : "select * from test where id = $1 and name = ?");
+
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.vertx-sql-client-4.0",
+        DB_SYSTEM_NAME,
+        DB_NAMESPACE,
+        DB_QUERY_SUMMARY,
+        SERVER_ADDRESS,
+        SERVER_PORT);
+  }
+
+  @Test
+  void testExplicitPreparedSelectFailure() throws Exception {
+    String query = "select * from test where id = $1 or $1 / $1 = 0";
+    try {
+      testing
+          .runWithSpan("parent", () -> executePreparedStatement(query, Tuple.of(0)))
+          .toCompletionStage()
+          .toCompletableFuture()
+          .get(30, SECONDS);
+    } catch (ExecutionException ignored) {
+      // the failure is recorded on the client span
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "select test" : "SELECT tempdb.test")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(EXCEPTION_TYPE, PgException.class.getName()),
+                                        satisfies(
+                                            EXCEPTION_MESSAGE,
+                                            val -> val.contains("division by zero")),
+                                        satisfies(
+                                            EXCEPTION_STACKTRACE,
+                                            val -> val.isInstanceOf(String.class))))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                maybeStable(DB_SYSTEM),
+                                emitStableDatabaseSemconv() ? POSTGRESQL : null),
+                            equalTo(maybeStable(DB_NAME), DB),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                emitStableDatabaseSemconv()
+                                    ? query
+                                    : "select * from test where id = $1 or $1 / $1 = ?"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "select test" : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? null : "test"),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "22012" : null))));
+  }
+
+  private static Future<?> executePreparedStatement(String query, Tuple tuple) {
+    return pool.withConnection(
+        connection ->
+            connection
+                .prepare(query)
+                .compose(
+                    statement ->
+                        statement
+                            .query()
+                            .execute(tuple)
+                            .compose(
+                                rows -> statement.close().map(rows),
+                                error ->
+                                    statement
+                                        .close()
+                                        .compose(ignored -> Future.failedFuture(error)))));
   }
 
   @ParameterizedTest
