@@ -21,6 +21,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.LoggerFactory;
 
 class OpenTelemetryAppenderLoggerContextSelectorTest {
 
@@ -42,17 +43,26 @@ class OpenTelemetryAppenderLoggerContextSelectorTest {
 
   @BeforeEach
   void setUp() {
-    // an isolated logger context keeps logback-test.xml out of these assertions
-    loggerContext = new LoggerContext();
-    logger = loggerContext.getLogger("logger-context-selector-test");
+    // logback 1.5 populates the logger context's MDCAdapter only through
+    // LogbackServiceProvider.initialize(), so a context built with new LoggerContext() makes
+    // ILoggingEvent.getMDCPropertyMap() throw inside every appender that reads the MDC. The
+    // context has to come from LoggerFactory.
+    logger = (Logger) LoggerFactory.getLogger("logger-context-selector-test");
+    // the appender under test is the only one that should see these log events
+    logger.setAdditive(false);
+    loggerContext = logger.getLoggerContext();
+    loggerContext.getStatusManager().clear();
+    // start from an empty property map so the assertions only see the properties set by each test
+    Helper.resetLoggerContext();
     appender = new OpenTelemetryAppender();
     appender.setContext(loggerContext);
   }
 
   @AfterEach
   void tearDown() {
+    logger.detachAppender(appender);
     appender.stop();
-    loggerContext.stop();
+    Helper.resetLoggerContext();
   }
 
   @Test
