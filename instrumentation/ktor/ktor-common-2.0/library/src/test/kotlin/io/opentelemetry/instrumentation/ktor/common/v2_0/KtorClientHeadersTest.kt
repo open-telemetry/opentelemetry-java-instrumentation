@@ -31,6 +31,7 @@ class KtorClientHeadersTest {
     private val REQUEST_HEADER = AttributeKey.stringArrayKey("http.request.header.x-test-request")
     private val RESPONSE_HEADER = AttributeKey.stringArrayKey("http.response.header.x-test-response")
     private val SECRET_REQUEST_HEADER = AttributeKey.stringArrayKey("http.request.header.x-test-secret")
+    private val AUTHORIZATION_HEADER = AttributeKey.stringArrayKey("http.request.header.authorization")
   }
 
   @Test
@@ -53,17 +54,20 @@ class KtorClientHeadersTest {
   fun `deprecated captured headers capture headers listed by name`() {
     val span = record { telemetryBuilder ->
       @Suppress("DEPRECATION") // testing the deprecated API
-      telemetryBuilder.capturedRequestHeaders("X-Test-Request")
+      telemetryBuilder.capturedRequestHeaders("X-Test-Request", "Authorization")
       @Suppress("DEPRECATION") // testing the deprecated API
       telemetryBuilder.capturedResponseHeaders("X-Test-Response")
     }
 
     assertThat(span.attributes.get(REQUEST_HEADER)).containsExactly("request-value")
     assertThat(span.attributes.get(RESPONSE_HEADER)).containsExactly("response-value")
+    // capturing Authorization here is what makes asserting that it is absent in
+    // `deprecated captured headers ignore wildcard values` meaningful
+    assertThat(span.attributes.get(AUTHORIZATION_HEADER)).containsExactly("secret-value")
   }
 
   @Test
-  fun `deprecated captured headers match names literally`() {
+  fun `deprecated captured headers ignore wildcard values`() {
     val span = record { telemetryBuilder ->
       @Suppress("DEPRECATION") // testing the deprecated API
       telemetryBuilder.capturedRequestHeaders("*")
@@ -71,11 +75,12 @@ class KtorClientHeadersTest {
       telemetryBuilder.capturedResponseHeaders("*")
     }
 
-    // the deprecated setters take exact header names, so "*" looks for a header literally named
-    // "*" instead of capturing every header
-    assertThat(span.attributes.get(REQUEST_HEADER)).isNull()
-    assertThat(span.attributes.get(SECRET_REQUEST_HEADER)).isNull()
-    assertThat(span.attributes.get(RESPONSE_HEADER)).isNull()
+    // "*" is dropped while the selector is built, so it captures nothing; the request carries an
+    // Authorization header so that treating "*" as a glob pattern would capture it
+    assertThat(span.attributes.get(AUTHORIZATION_HEADER)).isNull()
+    assertThat(span.attributes.asMap().keys.map { it.key })
+      .noneMatch { it.startsWith("http.request.header.") }
+      .noneMatch { it.startsWith("http.response.header.") }
   }
 
   private fun record(configure: (TestKtorClientTelemetryBuilder) -> Unit): SpanData {
@@ -97,6 +102,7 @@ class KtorClientHeadersTest {
         client.get("http://localhost/test") {
           header("X-Test-Request", "request-value")
           header("X-Test-Secret", "secret-value")
+          header("Authorization", "secret-value")
         }
       }
       val context = instrumenter.start(Context.root(), request)
