@@ -5,7 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -96,7 +107,22 @@ class Netty41ClientPipelineTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasNoParent().hasName("parent1").hasKind(SpanKind.INTERNAL),
-                span -> span.hasParent(trace.getSpan(0)).hasKind(SpanKind.CLIENT),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(URL_FULL, "http://localhost:" + server.httpPort() + "/success"),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, server.httpPort()),
+                            satisfies(
+                                NETWORK_PEER_ADDRESS,
+                                val -> val.isIn("127.0.0.1", "0:0:0:0:0:0:0:1")),
+                            equalTo(NETWORK_PEER_PORT, server.httpPort()),
+                            equalTo(maybeStablePeerService(), "test-peer-service"))
+                        .hasParent(trace.getSpan(0)),
                 span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1))));
 
     testing.clearData();
@@ -111,7 +137,22 @@ class Netty41ClientPipelineTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasNoParent().hasName("parent2").hasKind(SpanKind.INTERNAL),
-                span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(URL_FULL, "http://localhost:" + server.httpPort() + "/success"),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, server.httpPort()),
+                            satisfies(
+                                NETWORK_PEER_ADDRESS,
+                                val -> val.isIn("127.0.0.1", "0:0:0:0:0:0:0:1")),
+                            equalTo(NETWORK_PEER_PORT, server.httpPort()),
+                            equalTo(maybeStablePeerService(), "test-peer-service"))
+                        .hasParent(trace.getSpan(0)),
                 span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1))));
   }
 
@@ -219,7 +260,22 @@ class Netty41ClientPipelineTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasNoParent().hasName("parent").hasKind(SpanKind.INTERNAL),
                 span -> span.hasParent(trace.getSpan(0)).hasName("tracedMethod"),
-                span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(1)),
+                span ->
+                    span.hasName(method)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(URL_FULL, "http://localhost:" + server.httpPort() + "/success"),
+                            equalTo(HTTP_REQUEST_METHOD, method),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, server.httpPort()),
+                            satisfies(
+                                NETWORK_PEER_ADDRESS,
+                                val -> val.isIn("127.0.0.1", "0:0:0:0:0:0:0:1")),
+                            equalTo(NETWORK_PEER_PORT, server.httpPort()),
+                            equalTo(maybeStablePeerService(), "test-peer-service"))
+                        .hasParent(trace.getSpan(1)),
                 span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(2))));
   }
 

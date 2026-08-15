@@ -8,12 +8,16 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -220,7 +224,21 @@ class Netty41ClientSslTest {
                             equalTo(NETWORK_TYPE, "ipv4"),
                             equalTo(NETWORK_PEER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1")),
-                span -> span.hasName("GET").hasKind(SpanKind.CLIENT),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(URL_FULL, uri.toString()),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(SERVER_ADDRESS, uri.getHost()),
+                            equalTo(SERVER_PORT, uri.getPort()),
+                            satisfies(
+                                NETWORK_PEER_ADDRESS,
+                                val -> val.isIn("127.0.0.1", "0:0:0:0:0:0:0:1")),
+                            equalTo(NETWORK_PEER_PORT, uri.getPort()),
+                            equalTo(maybeStablePeerService(), "test-peer-service")),
                 span -> span.hasName("test-http-server").hasKind(SpanKind.SERVER)));
   }
 }
