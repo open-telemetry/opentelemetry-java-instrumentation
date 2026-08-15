@@ -240,16 +240,6 @@ public final class SqsImpl {
     return batchRequest.toBuilder().entries(entries).build();
   }
 
-  private static boolean containsPropagationField(
-      Map<String, MessageAttributeValue> messageAttributes, TextMapPropagator propagator) {
-    for (String field : propagator.fields()) {
-      if (messageAttributes.containsKey(field)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   private static boolean injectCreationContextIfCapacity(
       Map<String, MessageAttributeValue> messageAttributes,
       io.opentelemetry.context.Context otelContext,
@@ -257,12 +247,11 @@ public final class SqsImpl {
       @Nullable TextMapPropagator messagingPropagator) {
     boolean injected = false;
     TextMapPropagator xrayPropagator = AwsXrayPropagator.getInstance();
-    if (useXrayPropagator && !containsPropagationField(messageAttributes, xrayPropagator)) {
+    if (useXrayPropagator) {
       injected |=
           injectIntoMessageAttributesIfCapacity(messageAttributes, otelContext, xrayPropagator);
     }
-    if (messagingPropagator != null
-        && !containsPropagationField(messageAttributes, messagingPropagator)) {
+    if (messagingPropagator != null) {
       injected |=
           injectIntoMessageAttributesIfCapacity(
               messageAttributes, otelContext, messagingPropagator);
@@ -275,8 +264,13 @@ public final class SqsImpl {
       io.opentelemetry.context.Context otelContext,
       TextMapPropagator messagingPropagator) {
     Map<String, MessageAttributeValue> candidate = new HashMap<>(messageAttributes);
-    if (injectIntoMessageAttributes(candidate, otelContext, messagingPropagator)
-        && candidate.size() > messageAttributes.size()) {
+    messagingPropagator.inject(
+        otelContext,
+        candidate,
+        (carrier, k, v) ->
+            carrier.putIfAbsent(
+                k, MessageAttributeValue.builder().stringValue(v).dataType("String").build()));
+    if (candidate.size() <= 10 && candidate.size() > messageAttributes.size()) {
       messageAttributes.clear();
       messageAttributes.putAll(candidate);
       return true;
