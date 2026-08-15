@@ -38,6 +38,7 @@ class LogbackLogstashMarkerSelectorTest {
         .setMessage("selector test")
         .addMarker(Markers.append("key1", "key1-value"))
         .addMarker(Markers.append("key2", "key2-value"))
+        .addMarker(Markers.append("keyLong", "key-long-value"))
         .addMarker(Markers.append("other", "other-value"))
         .log();
 
@@ -53,6 +54,7 @@ class LogbackLogstashMarkerSelectorTest {
     Map<String, String> attributes = new HashMap<>();
     attributes.put("key1", "key1-value");
     attributes.put("key2", "key2-value");
+    attributes.put("keyLong", "key-long-value");
     attributes.put("other", "other-value");
     return attributes;
   }
@@ -79,7 +81,8 @@ class LogbackLogstashMarkerSelectorTest {
         expectedKeys = singletonList("key1");
         break;
       case "exclude-only":
-        expectedKeys = asList("key1", "key2");
+        // an empty included list captures everything not excluded
+        expectedKeys = asList("key1", "key2", "keyLong");
         break;
       default:
         // the test task configures logstash-marker-attributes.included=key?
