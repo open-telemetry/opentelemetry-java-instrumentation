@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -24,11 +25,20 @@ import io.opentelemetry.instrumentation.servlet.common.internal.ServletHttpAttri
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
 import io.opentelemetry.instrumentation.servlet.v3_0.internal.Servlet3Accessor;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.SpanData;
+import java.util.List;
+import javax.servlet.Filter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ServletHeaderCaptureTest {
+
+  @RegisterExtension
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   private final AttributesExtractor<
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
@@ -75,5 +85,38 @@ class ServletHeaderCaptureTest {
         .doesNotContainKeys(
             stringArrayKey("http.request.header.x-secret"),
             stringArrayKey("http.response.header.x-secret"));
+  }
+
+  @SuppressWarnings("deprecation") // testing deprecated API
+  @Test
+  void deprecatedSettersMatchHeaderNamesLiterally() throws Exception {
+    Filter filter =
+        ServletTelemetry.builder(testing.getOpenTelemetry())
+            .setCapturedRequestHeaders(singletonList("*"))
+            .setCapturedResponseHeaders(singletonList("*"))
+            .build()
+            .createFilter();
+
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getMethod()).thenReturn("GET");
+    when(request.getHeaderNames())
+        .thenAnswer(invocation -> enumeration(asList("X-Test-Request", "Authorization")));
+    // only real header names resolve, so a literal lookup of "*" finds nothing
+    when(request.getHeaders("x-test-request"))
+        .thenAnswer(invocation -> enumeration(singletonList("request-value")));
+    when(request.getHeaders("authorization"))
+        .thenAnswer(invocation -> enumeration(singletonList("secret")));
+    HttpServletResponse response = mock(HttpServletResponse.class);
+    when(response.getHeaderNames()).thenAnswer(invocation -> singletonList("X-Test-Response"));
+    when(response.getHeaders("x-test-response"))
+        .thenAnswer(invocation -> singletonList("response-value"));
+
+    filter.doFilter(request, response, (req, res) -> {});
+
+    List<List<SpanData>> traces = testing.waitForTraces(1);
+    assertThat(traces.get(0).get(0).getAttributes().asMap().keySet())
+        .extracting(AttributeKey::getKey)
+        .noneMatch(key -> key.startsWith("http.request.header."))
+        .noneMatch(key -> key.startsWith("http.response.header."));
   }
 }
