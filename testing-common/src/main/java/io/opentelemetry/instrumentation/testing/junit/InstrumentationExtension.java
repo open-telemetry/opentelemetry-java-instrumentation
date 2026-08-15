@@ -22,6 +22,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.assertj.core.api.ListAssert;
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -147,6 +148,22 @@ public abstract class InstrumentationExtension
       Comparator<List<SpanData>> traceComparator,
       Iterable<? extends Consumer<TraceAssert>> assertions) {
     testRunner.waitAndAssertSortedTraces(traceComparator, assertions);
+  }
+
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  public final void waitAndAssertSortedTraces(
+      Predicate<List<SpanData>> traceFilter,
+      Comparator<List<SpanData>> traceComparator,
+      Consumer<TraceAssert>... assertions) {
+    testRunner.waitAndAssertSortedTraces(traceFilter, traceComparator, assertions);
+  }
+
+  public void waitAndAssertSortedTraces(
+      Predicate<List<SpanData>> traceFilter,
+      Comparator<List<SpanData>> traceComparator,
+      Iterable<? extends Consumer<TraceAssert>> assertions) {
+    testRunner.waitAndAssertSortedTraces(traceFilter, traceComparator, assertions);
   }
 
   @SafeVarargs
