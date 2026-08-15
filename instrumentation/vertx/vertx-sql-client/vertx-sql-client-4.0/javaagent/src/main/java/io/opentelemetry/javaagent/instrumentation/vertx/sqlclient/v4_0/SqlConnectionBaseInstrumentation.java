@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.core.Future;
@@ -17,6 +18,8 @@ import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import io.vertx.sqlclient.impl.SqlClientBase;
+import io.vertx.sqlclient.impl.SqlConnectionBase;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
@@ -39,11 +42,26 @@ class SqlConnectionBaseInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PrepareAdvice {
 
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static CallDepth onEnter() {
+      CallDepth callDepth = CallDepth.forClass(SqlConnectionBase.class);
+      callDepth.getAndIncrement();
+      return callDepth;
+    }
+
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Future<PreparedStatement> onExit(
         @Advice.This SqlClientBase<?> sqlClientBase,
-        @Advice.Return Future<PreparedStatement> future) {
+        @Advice.Return Future<PreparedStatement> future,
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter CallDepth callDepth) {
+      // prepare(String) delegates to prepare(String, PrepareOptions) in newer versions, only the
+      // outermost call should attach the prepared statement data
+      if (callDepth.decrementAndGet() > 0 || throwable != null) {
+        return future;
+      }
+
       SqlConnectOptions connectOptions =
           VertxSqlClientSingletons.getSqlConnectOptions(sqlClientBase);
       String dbSystem = null;
