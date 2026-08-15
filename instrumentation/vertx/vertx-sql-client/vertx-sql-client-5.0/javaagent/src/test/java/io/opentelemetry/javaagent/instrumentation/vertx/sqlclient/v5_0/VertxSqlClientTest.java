@@ -32,6 +32,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.counting;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -47,6 +48,8 @@ import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgException;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
+import io.vertx.sqlclient.PreparedQuery;
+import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.Tuple;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -58,6 +61,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -318,6 +322,40 @@ class VertxSqlClientTest {
   }
 
   @Test
+  void testMappedExplicitPreparedSelect() throws Exception {
+    String query = "select * from test where id = $1";
+    testing
+        .runWithSpan(
+            "parent",
+            () ->
+                executePreparedStatement(
+                    query,
+                    Tuple.of(1),
+                    statement -> statement.query().mapping(row -> row.getInteger("id"))))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+
+    assertPreparedSelect();
+  }
+
+  @Test
+  void testCollectedExplicitPreparedSelect() throws Exception {
+    String query = "select * from test where id = $1";
+    testing
+        .runWithSpan(
+            "parent",
+            () ->
+                executePreparedStatement(
+                    query, Tuple.of(1), statement -> statement.query().collecting(counting())))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+
+    assertPreparedSelect();
+  }
+
+  @Test
   void testExplicitPreparedSelectFailure() throws Exception {
     String query = "select * from test where id = $1 or $1 / $1 = 0";
     try {
@@ -378,14 +416,21 @@ class VertxSqlClientTest {
   }
 
   private static Future<?> executePreparedStatement(String query, Tuple tuple) {
+    return executePreparedStatement(query, tuple, PreparedStatement::query);
+  }
+
+  private static Future<?> executePreparedStatement(
+      String query,
+      Tuple tuple,
+      Function<PreparedStatement, PreparedQuery<?>> preparedQueryFactory) {
     return pool.withConnection(
         connection ->
             connection
                 .prepare(query)
                 .compose(
                     statement ->
-                        statement
-                            .query()
+                        preparedQueryFactory
+                            .apply(statement)
                             .execute(tuple)
                             .compose(
                                 rows -> statement.close().map(rows),

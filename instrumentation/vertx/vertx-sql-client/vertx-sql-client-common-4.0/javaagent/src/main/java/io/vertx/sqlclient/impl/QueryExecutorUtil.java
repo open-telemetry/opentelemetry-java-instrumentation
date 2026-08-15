@@ -65,5 +65,12 @@ public class QueryExecutorUtil {
     return PREPARED_STATEMENT_DB_SYSTEM.get(preparedStatement);
   }
 
+  public static void copyQueryExecutorData(Object sourceQuery, Object copiedQuery) {
+    QueryExecutor<?, ?, ?> sourceExecutor = ((QueryBase<?, ?>) sourceQuery).builder;
+    QueryExecutor<?, ?, ?> copiedExecutor = ((QueryBase<?, ?>) copiedQuery).builder;
+    CONNECT_OPTIONS.set(copiedExecutor, CONNECT_OPTIONS.get(sourceExecutor));
+    DB_SYSTEM.set(copiedExecutor, DB_SYSTEM.get(sourceExecutor));
+  }
+
   private QueryExecutorUtil() {}
 }
