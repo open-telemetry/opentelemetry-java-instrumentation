@@ -11,6 +11,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpServerExperimentalMetrics;
@@ -20,6 +21,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
@@ -118,10 +120,30 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
+   * Configures which HTTP request headers are captured as span attributes.
+   *
+   * <p>Selector patterns are matched case-insensitively, since HTTP header names are
+   * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
+   * characters, including none. Excluded patterns take precedence over included patterns. A
+   * selector with no included patterns captures every header that is not excluded, and an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
+   */
+  @CanIgnoreReturnValue
+  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setRequestHeaders(
+      IncludeExclude requestHeaders) {
+    httpAttributesExtractorBuilder.setRequestHeaders(requestHeaders);
+    return this;
+  }
+
+  /**
    * Configures the HTTP request headers that will be captured as span attributes.
+   *
+   * <p>Header names containing {@code *} or {@code ?} are ignored, since this setting never
+   * supported wildcards. Use {@link #setRequestHeaders(IncludeExclude)} to match names by pattern.
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @SuppressWarnings("deprecation") // the deprecated path is only reachable from deprecated settings
   @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
       Collection<String> requestHeaders) {
@@ -130,10 +152,30 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
+   * Configures which HTTP response headers are captured as span attributes.
+   *
+   * <p>Selector patterns are matched case-insensitively, since HTTP header names are
+   * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
+   * characters, including none. Excluded patterns take precedence over included patterns. A
+   * selector with no included patterns captures every header that is not excluded, and an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
+   */
+  @CanIgnoreReturnValue
+  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setResponseHeaders(
+      IncludeExclude responseHeaders) {
+    httpAttributesExtractorBuilder.setResponseHeaders(responseHeaders);
+    return this;
+  }
+
+  /**
    * Configures the HTTP response headers that will be captured as span attributes.
+   *
+   * <p>Header names containing {@code *} or {@code ?} are ignored, since this setting never
+   * supported wildcards. Use {@link #setResponseHeaders(IncludeExclude)} to match names by pattern.
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @SuppressWarnings("deprecation") // the deprecated path is only reachable from deprecated settings
   @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
       Collection<String> responseHeaders) {
@@ -250,8 +292,18 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> configure(CommonConfig config) {
     set(config::getKnownHttpRequestMethods, this::setKnownMethods);
-    set(config::getServerRequestHeaders, this::setCapturedRequestHeaders);
-    set(config::getServerResponseHeaders, this::setCapturedResponseHeaders);
+    set(
+        config::getServerRequestHeaders,
+        headers ->
+            setRequestHeaders(
+                DeprecatedCaptureNames.toSelectorOrEmpty(
+                    headers, "otel.instrumentation.http.server.capture-request-headers", null)));
+    set(
+        config::getServerResponseHeaders,
+        headers ->
+            setResponseHeaders(
+                DeprecatedCaptureNames.toSelectorOrEmpty(
+                    headers, "otel.instrumentation.http.server.capture-response-headers", null)));
     set(
         config::shouldEmitExperimentalHttpServerTelemetry,
         this::setEmitExperimentalHttpServerTelemetry);

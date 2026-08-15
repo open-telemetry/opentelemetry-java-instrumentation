@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.semconv.http;
 
-import static java.util.Collections.emptyList;
-
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.internal.HostAddressAndPortExtractor;
@@ -18,7 +18,6 @@ import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndP
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.ServerAddressAndPortExtractor;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -35,8 +34,8 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   final HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter;
 
   final AddressAndPortExtractor<REQUEST> serverAddressAndPortExtractor;
-  List<String> capturedRequestHeaders = emptyList();
-  List<String> capturedResponseHeaders = emptyList();
+  CapturedHttpHeaders capturedRequestHeaders = CapturedHttpHeaders.create("request", null);
+  CapturedHttpHeaders capturedResponseHeaders = CapturedHttpHeaders.create("response", null);
   Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
   ToIntFunction<Context> resendCountIncrementer = HttpClientRequestResendCount::getAndIncrement;
   Set<String> sensitiveQueryParameters = HttpConstants.SENSITIVE_QUERY_PARAMETERS;
@@ -55,6 +54,33 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
+   * Configures which HTTP request headers are captured as span attributes, as described in <a
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#http-client">HTTP
+   * semantic conventions</a>.
+   *
+   * <p>Header values are captured under the {@code http.request.header.<key>} attribute key. The
+   * {@code <key>} part in the attribute key is the lowercase header name.
+   *
+   * <p>Selector patterns are matched case-insensitively, since HTTP header names are
+   * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
+   * characters, including none. Excluded patterns take precedence over included patterns. A
+   * selector with no included patterns captures every header that is not excluded, and an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
+   *
+   * <p>Header names that are not listed as exact included names are resolved through {@link
+   * HttpCommonAttributesGetter#getHttpRequestHeaderNames(Object)}, so wildcard and exclude-only
+   * selectors only capture headers when the getter implements that method.
+   *
+   * @since 2.31.0
+   */
+  @CanIgnoreReturnValue
+  public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setRequestHeaders(
+      IncludeExclude requestHeaders) {
+    this.capturedRequestHeaders = CapturedHttpHeaders.create("request", requestHeaders);
+    return this;
+  }
+
+  /**
    * Configures the HTTP request headers that will be captured as span attributes as described in <a
    * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#http-client">HTTP
    * semantic conventions</a>.
@@ -62,12 +88,23 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * <p>The HTTP request header values will be captured under the {@code http.request.header.<key>}
    * attribute key. The {@code <key>} part in the attribute key is the lowercase header name.
    *
+   * <p>Header names containing {@code *} or {@code ?} are ignored, since this setting never
+   * supported wildcards. Use {@link #setRequestHeaders(IncludeExclude)} to match names by pattern.
+   *
    * @param requestHeaders A list of HTTP header names.
+   * @deprecated Use {@link #setRequestHeaders(IncludeExclude)} instead. To be removed in 3.0.
    */
+  @Deprecated // to be removed in 3.0
   @CanIgnoreReturnValue
   public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
       Collection<String> requestHeaders) {
-    this.capturedRequestHeaders = new ArrayList<>(requestHeaders);
+    this.capturedRequestHeaders =
+        CapturedHttpHeaders.create(
+            "request",
+            DeprecatedCaptureNames.toSelector(
+                requestHeaders,
+                "HttpClientAttributesExtractorBuilder.setCapturedRequestHeaders()",
+                "setRequestHeaders(IncludeExclude)"));
     return this;
   }
 
@@ -80,9 +117,9 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * attribute key. The {@code <key>} part in the attribute key is the lowercase header name.
    *
    * @param requestHeaders A list of HTTP header names.
+   * @deprecated Use {@link #setRequestHeaders(IncludeExclude)} instead. To be removed in 3.0.
    */
-  // don't deprecate this since users will get deprecation warning without a clean way to suppress
-  // it if they're using List
+  @Deprecated // to be removed in 3.0
   @CanIgnoreReturnValue
   public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
       List<String> requestHeaders) {
@@ -90,6 +127,33 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
+   * Configures which HTTP response headers are captured as span attributes, as described in <a
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#common-attributes">HTTP
+   * semantic conventions</a>.
+   *
+   * <p>Header values are captured under the {@code http.response.header.<key>} attribute key. The
+   * {@code <key>} part in the attribute key is the lowercase header name.
+   *
+   * <p>Selector patterns are matched case-insensitively, since HTTP header names are
+   * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
+   * characters, including none. Excluded patterns take precedence over included patterns. A
+   * selector with no included patterns captures every header that is not excluded, and an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
+   *
+   * <p>Header names that are not listed as exact included names are resolved through {@link
+   * HttpCommonAttributesGetter#getHttpResponseHeaderNames(Object, Object)}, so wildcard and
+   * exclude-only selectors only capture headers when the getter implements that method.
+   *
+   * @since 2.31.0
+   */
+  @CanIgnoreReturnValue
+  public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setResponseHeaders(
+      IncludeExclude responseHeaders) {
+    this.capturedResponseHeaders = CapturedHttpHeaders.create("response", responseHeaders);
+    return this;
+  }
+
+  /**
    * Configures the HTTP response headers that will be captured as span attributes as described in
    * <a
    * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#common-attributes">HTTP
@@ -99,12 +163,23 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * http.response.header.<key>} attribute key. The {@code <key>} part in the attribute key is the
    * lowercase header name.
    *
+   * <p>Header names containing {@code *} or {@code ?} are ignored, since this setting never
+   * supported wildcards. Use {@link #setResponseHeaders(IncludeExclude)} to match names by pattern.
+   *
    * @param responseHeaders A list of HTTP header names.
+   * @deprecated Use {@link #setResponseHeaders(IncludeExclude)} instead. To be removed in 3.0.
    */
+  @Deprecated // to be removed in 3.0
   @CanIgnoreReturnValue
   public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
       Collection<String> responseHeaders) {
-    this.capturedResponseHeaders = new ArrayList<>(responseHeaders);
+    this.capturedResponseHeaders =
+        CapturedHttpHeaders.create(
+            "response",
+            DeprecatedCaptureNames.toSelector(
+                responseHeaders,
+                "HttpClientAttributesExtractorBuilder.setCapturedResponseHeaders()",
+                "setResponseHeaders(IncludeExclude)"));
     return this;
   }
 
@@ -119,9 +194,9 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * lowercase header name.
    *
    * @param responseHeaders A list of HTTP header names.
+   * @deprecated Use {@link #setResponseHeaders(IncludeExclude)} instead. To be removed in 3.0.
    */
-  // don't deprecate this since users will get deprecation warning without a clean way to suppress
-  // it if they're using List
+  @Deprecated // to be removed in 3.0
   @CanIgnoreReturnValue
   public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
       List<String> responseHeaders) {
