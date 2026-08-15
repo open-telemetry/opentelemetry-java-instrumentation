@@ -145,10 +145,17 @@ class StatementInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
+        @Advice.This Object object,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable JdbcAdviceScope adviceScope) {
-      if (adviceScope != null) {
-        adviceScope.end(throwable);
+      try {
+        if (adviceScope != null) {
+          adviceScope.end(throwable);
+        }
+      } finally {
+        if (throwable == null && object instanceof Statement) {
+          JdbcData.clearBatch((Statement) object);
+        }
       }
     }
   }
