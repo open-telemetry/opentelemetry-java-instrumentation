@@ -72,14 +72,19 @@ public final class SpringWebMvcTelemetryBuilder {
   /**
    * Configures HTTP request headers to capture as span attributes.
    *
+   * <p>The header names are matched literally. Unlike {@link #setRequestHeaders(IncludeExclude)},
+   * {@code *} and {@code ?} are not treated as glob patterns, since this setting never documented
+   * them as wildcards.
+   *
    * @param requestHeaders HTTP header names to capture.
-   * @deprecated Use {@link #setRequestHeaders(IncludeExclude)} instead. May be removed in the next
-   *     minor release.
+   * @deprecated Use {@link #setRequestHeaders(IncludeExclude)} instead, which matches glob patterns
+   *     rather than literal header names. May be removed in the next minor release.
    */
   @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
-    return setRequestHeaders(IncludeExclude.builder().setIncluded(requestHeaders).build());
+    builder.setCapturedRequestHeaders(requestHeaders);
+    return this;
   }
 
   /**
@@ -101,15 +106,20 @@ public final class SpringWebMvcTelemetryBuilder {
   /**
    * Configures HTTP response headers to capture as span attributes.
    *
+   * <p>The header names are matched literally. Unlike {@link #setResponseHeaders(IncludeExclude)},
+   * {@code *} and {@code ?} are not treated as glob patterns, since this setting never documented
+   * them as wildcards.
+   *
    * @param responseHeaders HTTP header names to capture.
-   * @deprecated Use {@link #setResponseHeaders(IncludeExclude)} instead. May be removed in the next
-   *     minor release.
+   * @deprecated Use {@link #setResponseHeaders(IncludeExclude)} instead, which matches glob
+   *     patterns rather than literal header names. May be removed in the next minor release.
    */
   @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setCapturedResponseHeaders(
       Collection<String> responseHeaders) {
-    return setResponseHeaders(IncludeExclude.builder().setIncluded(responseHeaders).build());
+    builder.setCapturedResponseHeaders(responseHeaders);
+    return this;
   }
 
   /** Customizes the {@link SpanNameExtractor} by transforming the default instance. */

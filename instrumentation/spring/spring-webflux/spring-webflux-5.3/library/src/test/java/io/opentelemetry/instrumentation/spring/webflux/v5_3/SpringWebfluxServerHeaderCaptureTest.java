@@ -65,6 +65,26 @@ class SpringWebfluxServerHeaderCaptureTest {
     assertThat(attributes.get(stringArrayKey("http.response.header.x-secret-token"))).isNull();
   }
 
+  @Test
+  @SuppressWarnings("deprecation") // testing deprecated API
+  void deprecatedSettersMatchHeaderNamesLiterally() {
+    WebFilter filter =
+        SpringWebfluxServerTelemetry.builder(testing.getOpenTelemetry())
+            .setCapturedRequestHeaders(singletonList("*"))
+            .setCapturedResponseHeaders(singletonList("*"))
+            .build()
+            .createWebFilter();
+
+    handleRequest(filter);
+
+    Attributes attributes = testing.waitForTraces(1).get(0).get(0).getAttributes();
+    // "*" is a legal header name character, so it names a header rather than matching all of
+    // them
+    assertThat(attributes.asMap().keySet())
+        .noneMatch(key -> key.getKey().startsWith("http.request.header."))
+        .noneMatch(key -> key.getKey().startsWith("http.response.header."));
+  }
+
   private static void handleRequest(WebFilter filter) {
     MockServerWebExchange exchange =
         MockServerWebExchange.from(

@@ -72,6 +72,26 @@ class SpringWebHeaderCaptureTest {
     assertThat(attributes.get(stringArrayKey("http.response.header.x-secret-token"))).isNull();
   }
 
+  @Test
+  @SuppressWarnings("deprecation") // testing deprecated API
+  void deprecatedSettersMatchHeaderNamesLiterally() throws Exception {
+    ClientHttpRequestInterceptor interceptor =
+        SpringWebTelemetry.builder(testing.getOpenTelemetry())
+            .setCapturedRequestHeaders(singletonList("*"))
+            .setCapturedResponseHeaders(singletonList("*"))
+            .build()
+            .createInterceptor();
+
+    sendRequest(interceptor);
+
+    Attributes attributes = testing.waitForTraces(1).get(0).get(0).getAttributes();
+    // "*" is a legal header name character, so it names a header rather than matching all of
+    // them
+    assertThat(attributes.asMap().keySet())
+        .noneMatch(key -> key.getKey().startsWith("http.request.header."))
+        .noneMatch(key -> key.getKey().startsWith("http.response.header."));
+  }
+
   private static void sendRequest(ClientHttpRequestInterceptor interceptor) throws Exception {
     // a real request implementation, since the HttpRequest interface has gained methods over the
     // supported spring web version range

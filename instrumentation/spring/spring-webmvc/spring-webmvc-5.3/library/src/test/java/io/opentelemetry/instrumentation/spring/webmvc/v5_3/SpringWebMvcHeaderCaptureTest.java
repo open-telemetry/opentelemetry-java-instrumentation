@@ -66,6 +66,26 @@ class SpringWebMvcHeaderCaptureTest {
     assertThat(attributes.get(stringArrayKey("http.response.header.x-secret-token"))).isNull();
   }
 
+  @Test
+  @SuppressWarnings("deprecation") // testing deprecated API
+  void deprecatedSettersMatchHeaderNamesLiterally() throws Exception {
+    Filter filter =
+        SpringWebMvcTelemetry.builder(testing.getOpenTelemetry())
+            .setCapturedRequestHeaders(singletonList("*"))
+            .setCapturedResponseHeaders(singletonList("*"))
+            .build()
+            .createServletFilter();
+
+    handleRequest(filter);
+
+    Attributes attributes = testing.waitForTraces(1).get(0).get(0).getAttributes();
+    // "*" is a legal header name character, so it names a header rather than matching all of
+    // them
+    assertThat(attributes.asMap().keySet())
+        .noneMatch(key -> key.getKey().startsWith("http.request.header."))
+        .noneMatch(key -> key.getKey().startsWith("http.response.header."));
+  }
+
   private static void handleRequest(Filter filter) throws Exception {
     MockHttpServletRequest request = new MockHttpServletRequest("GET", "/test");
     request.addHeader("X-Test-Request", "request-value");
