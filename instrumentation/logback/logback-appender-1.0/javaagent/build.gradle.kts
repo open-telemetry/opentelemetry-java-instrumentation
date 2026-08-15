@@ -93,6 +93,28 @@ testing {
         }
       }
     }
+
+    register<JvmTestSuite>("logstashStructuredArgsTest") {
+      dependencies {
+        implementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
+
+        implementation("ch.qos.logback:logback-classic") {
+          version {
+            strictly(baseVersion("1.3.0").orLatest())
+          }
+        }
+        implementation("org.slf4j:slf4j-api") {
+          version {
+            strictly(baseVersion("2.0.0").orLatest())
+          }
+        }
+        implementation("net.logstash.logback:logstash-logback-encoder") {
+          version {
+            strictly(baseVersion("6.6").orLatest())
+          }
+        }
+      }
+    }
   }
 }
 
@@ -216,6 +238,29 @@ tasks {
     systemProperty("testLogstashMarkerConfiguration", "precedence")
   }
 
+  val logstashStructuredArgsTest = named<Test>("logstashStructuredArgsTest") {
+    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included=key?")
+  }
+
+  val testLegacyLogstashStructuredArguments = register<Test>("testLegacyLogstashStructuredArguments") {
+    testClassesDirs = sourceSets["logstashStructuredArgsTest"].output.classesDirs
+    classpath = sourceSets["logstashStructuredArgsTest"].runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments=true")
+    systemProperty("testLogstashStructuredArgsConfiguration", "legacy")
+  }
+
+  val testLogstashStructuredArgumentPrecedence = register<Test>("testLogstashStructuredArgumentPrecedence") {
+    testClassesDirs = sourceSets["logstashStructuredArgsTest"].output.classesDirs
+    classpath = sourceSets["logstashStructuredArgsTest"].runtimeClasspath
+
+    jvmArgs(
+      "-Dotel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included=key1",
+      "-Dotel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments=true",
+    )
+    systemProperty("testLogstashStructuredArgsConfiguration", "precedence")
+  }
+
   check {
     dependsOn(
       testing.suites,
@@ -231,6 +276,9 @@ tasks {
       testLogstashMarkerAttributeExclusionsOnly,
       testLegacyLogstashMarkerAttributes,
       testLogstashMarkerAttributePrecedence,
+      logstashStructuredArgsTest,
+      testLegacyLogstashStructuredArguments,
+      testLogstashStructuredArgumentPrecedence,
     )
   }
 }

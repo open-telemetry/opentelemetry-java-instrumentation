@@ -161,6 +161,21 @@ class LogstashStructuredArgsSelectorTest {
     assertThat(warnings()).containsExactly(DEPRECATED_LOGSTASH_STRUCTURED_ARGUMENTS_WARNING);
   }
 
+  @Test
+  void eventNameIsCapturedWithoutSelector() {
+    appender.setOpenTelemetry(testing.getOpenTelemetry());
+    appender.start();
+    logger.addAppender(appender);
+
+    logger.info(
+        "log message {} {}",
+        StructuredArguments.keyValue("otel.event.name", "test.event"),
+        StructuredArguments.keyValue("key1", "value1"));
+
+    testing.waitAndAssertLogRecords(
+        logRecord -> logRecord.hasEventName("test.event").hasAttributesSatisfyingExactly());
+  }
+
   private void log() {
     appender.setOpenTelemetry(testing.getOpenTelemetry());
     appender.start();

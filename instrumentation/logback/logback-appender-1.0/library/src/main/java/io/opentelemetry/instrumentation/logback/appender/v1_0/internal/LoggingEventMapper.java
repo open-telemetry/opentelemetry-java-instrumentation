@@ -211,8 +211,9 @@ public final class LoggingEventMapper {
       processLogstashMarkers(builder, loggingEvent);
     }
 
+    // structured arguments are processed even without a selector, because they can carry
+    // otel.event.name, which captureLogstashMarker extracts independently of attribute capture
     if (supportsLogstashStructuredArguments
-        && logstashStructuredArgumentAttributes != null
         && loggingEvent.getArgumentArray() != null
         && loggingEvent.getArgumentArray().length > 0) {
       processLogstashStructuredArguments(builder, loggingEvent.getArgumentArray());
