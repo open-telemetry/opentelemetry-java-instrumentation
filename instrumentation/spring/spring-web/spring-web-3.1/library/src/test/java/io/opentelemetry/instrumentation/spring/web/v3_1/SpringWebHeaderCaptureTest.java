@@ -20,10 +20,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 class SpringWebHeaderCaptureTest {
 
@@ -72,7 +73,11 @@ class SpringWebHeaderCaptureTest {
   }
 
   private static void sendRequest(ClientHttpRequestInterceptor interceptor) throws Exception {
-    TestHttpRequest request = new TestHttpRequest();
+    // a real request implementation, since the HttpRequest interface has gained methods over the
+    // supported spring web version range
+    ClientHttpRequest request =
+        new SimpleClientHttpRequestFactory()
+            .createRequest(URI.create("http://localhost:8080/test"), HttpMethod.GET);
     request.getHeaders().add("X-Test-Request", "request-value");
     request.getHeaders().add("X-Secret-Token", "secret-value");
 
@@ -81,26 +86,6 @@ class SpringWebHeaderCaptureTest {
     response.getHeaders().add("X-Secret-Token", "secret-value");
 
     interceptor.intercept(request, new byte[0], (req, body) -> response);
-  }
-
-  private static class TestHttpRequest implements HttpRequest {
-
-    private final HttpHeaders headers = new HttpHeaders();
-
-    @Override
-    public HttpMethod getMethod() {
-      return HttpMethod.GET;
-    }
-
-    @Override
-    public URI getURI() {
-      return URI.create("http://localhost:8080/test");
-    }
-
-    @Override
-    public HttpHeaders getHeaders() {
-      return headers;
-    }
   }
 
   private static class TestClientHttpResponse implements ClientHttpResponse {
