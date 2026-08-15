@@ -37,7 +37,6 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureExperimentalAttributes = false;
   private boolean captureCodeAttributes = false;
   private boolean captureMarkerAttribute = false;
-  private boolean captureLoggerContext = false;
   private boolean captureTemplate = false;
   private boolean captureArguments = false;
   private boolean captureLogstashMarkerAttributes = false;
@@ -52,6 +51,11 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   @Nullable private String keyValuePairAttributesExcluded;
   @Nullable private Boolean captureKeyValuePairAttributes;
   private final AtomicBoolean deprecatedKeyValuePairAttributesWarningLogged = new AtomicBoolean();
+  @Nullable private IncludeExclude loggerContextAttributes;
+  @Nullable private String loggerContextAttributesIncluded;
+  @Nullable private String loggerContextAttributesExcluded;
+  @Nullable private Boolean captureLoggerContext;
+  private final AtomicBoolean deprecatedLoggerContextAttributesWarningLogged = new AtomicBoolean();
 
   private volatile OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
@@ -110,7 +114,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             .setCaptureCodeAttributes(captureCodeAttributes)
             .setCaptureMarkerAttribute(captureMarkerAttribute)
             .setKeyValuePairAttributes(resolveKeyValuePairAttributes())
-            .setCaptureLoggerContext(captureLoggerContext)
+            .setLoggerContextAttributes(resolveLoggerContextAttributes())
             .setCaptureTemplate(captureTemplate)
             .setCaptureArguments(captureArguments)
             .setCaptureLogstashMarkerAttributes(captureLogstashMarkerAttributes)
@@ -174,6 +178,33 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
               + ".experimental.key-value-pair-attributes.included instead.");
     }
     return AttributeSelectors.createDeprecated(captureKeyValuePairAttributes);
+  }
+
+  @Nullable
+  private Predicate<String> resolveLoggerContextAttributes() {
+    Predicate<String> selector = AttributeSelectors.create(loggerContextAttributes);
+    if (selector == null) {
+      selector =
+          AttributeSelectors.create(
+              IncludeExclude.builder()
+                  .setIncluded(split(loggerContextAttributesIncluded))
+                  .setExcluded(split(loggerContextAttributesExcluded))
+                  .build());
+    }
+    if (selector != null) {
+      return selector;
+    }
+    if (captureLoggerContext != null
+        && deprecatedLoggerContextAttributesWarningLogged.compareAndSet(false, true)) {
+      addWarn(
+          "The captureLoggerContext setting of the OpenTelemetry appender and the"
+              + " otel.instrumentation.logback-appender.experimental"
+              + ".capture-logger-context-attributes property are deprecated and may be removed in"
+              + " the next minor release. Use loggerContextAttributesIncluded,"
+              + " loggerContextAttributesExcluded, or otel.instrumentation.logback-appender"
+              + ".experimental.logger-context-attributes.included instead.");
+    }
+    return AttributeSelectors.createDeprecated(captureLoggerContext);
   }
 
   @SuppressWarnings("SystemOut")
@@ -315,9 +346,73 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * Sets whether the logger context properties should be set to logs.
    *
    * @param captureLoggerContext To enable or disable capturing logger context properties
+   * @deprecated Use {@link #setLoggerContextAttributesIncluded(String)} and {@link
+   *     #setLoggerContextAttributesExcluded(String)}, or {@link
+   *     #setLoggerContextAttributes(IncludeExclude)}, which select logger context property keys by
+   *     glob pattern. May be removed in the next minor release.
    */
+  @Deprecated // may be removed in the next minor release
   public void setCaptureLoggerContext(boolean captureLoggerContext) {
     this.captureLoggerContext = captureLoggerContext;
+  }
+
+  /**
+   * Configures the logger context properties that will be copied to logs.
+   *
+   * <p>Logger context property keys and selector patterns are matched case-sensitively. {@code ?}
+   * matches any single character and {@code *} matches any number of characters, including none, so
+   * {@code *} captures all logger context properties. Excluded patterns take precedence over
+   * included patterns, so a selector with only excluded patterns captures every logger context
+   * property that it does not exclude.
+   *
+   * <p>A {@code null} or empty selector leaves this appender without a programmatic selector, in
+   * which case the logger context properties are selected by {@link
+   * #setLoggerContextAttributesIncluded(String)} and {@link
+   * #setLoggerContextAttributesExcluded(String)}, and then by the deprecated {@link
+   * #setCaptureLoggerContext(boolean)}. No logger context properties are captured when all of these
+   * are absent or empty.
+   *
+   * <p>Captured logger context properties may contain sensitive information. Configure included and
+   * excluded patterns to limit the data exported as log attributes.
+   */
+  public void setLoggerContextAttributes(@Nullable IncludeExclude loggerContextAttributes) {
+    this.loggerContextAttributes = loggerContextAttributes;
+  }
+
+  /**
+   * Configures the comma-separated logger context property key patterns that will be copied to
+   * logs.
+   *
+   * <p>This setter backs the {@code loggerContextAttributesIncluded} element in {@code
+   * logback.xml}. It is ignored when a non-empty selector is configured with {@link
+   * #setLoggerContextAttributes(IncludeExclude)}, and it takes precedence over the deprecated
+   * {@link #setCaptureLoggerContext(boolean)}.
+   *
+   * <p>Logger context property keys and patterns are matched case-sensitively. {@code ?} matches
+   * any single character and {@code *} matches any number of characters, including none, so {@code
+   * *} captures all logger context properties. Excluded patterns take precedence over included
+   * patterns.
+   */
+  public void setLoggerContextAttributesIncluded(@Nullable String loggerContextAttributesIncluded) {
+    this.loggerContextAttributesIncluded = loggerContextAttributesIncluded;
+  }
+
+  /**
+   * Configures the comma-separated logger context property key patterns that will not be copied to
+   * logs.
+   *
+   * <p>This setter backs the {@code loggerContextAttributesExcluded} element in {@code
+   * logback.xml}. It is ignored when a non-empty selector is configured with {@link
+   * #setLoggerContextAttributes(IncludeExclude)}, and it takes precedence over the deprecated
+   * {@link #setCaptureLoggerContext(boolean)}.
+   *
+   * <p>Logger context property keys and patterns are matched case-sensitively. {@code ?} matches
+   * any single character and {@code *} matches any number of characters, including none. Excluded
+   * patterns take precedence over included patterns, so configuring only excluded patterns captures
+   * every logger context property that they do not exclude.
+   */
+  public void setLoggerContextAttributesExcluded(@Nullable String loggerContextAttributesExcluded) {
+    this.loggerContextAttributesExcluded = loggerContextAttributesExcluded;
   }
 
   /**
