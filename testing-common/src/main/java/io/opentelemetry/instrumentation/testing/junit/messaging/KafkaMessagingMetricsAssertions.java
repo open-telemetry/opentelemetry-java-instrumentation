@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.metrics.data.LongPointData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 
 public final class KafkaMessagingMetricsAssertions {
@@ -74,6 +75,36 @@ public final class KafkaMessagingMetricsAssertions {
         errorType);
   }
 
+  public static void assertReceiveMetrics(
+      InstrumentationExtension testing,
+      String instrumentationName,
+      String destination,
+      String group,
+      String partition,
+      long operationCount,
+      long messageCount,
+      String errorType) {
+    if (!emitStableMessagingSemconv()) {
+      assertNoNewMetrics(testing, instrumentationName);
+      return;
+    }
+
+    assertReceiveDurationMetrics(
+        testing, instrumentationName, destination, group, partition, operationCount, errorType);
+    assertCounter(
+        testing,
+        instrumentationName,
+        CONSUMED_MESSAGES,
+        "Number of messages that were delivered to the application.",
+        "poll",
+        destination,
+        group,
+        partition,
+        messageCount,
+        errorType);
+    assertDeprecatedMetricsAbsent(testing);
+  }
+
   public static void assertReceiveDurationMetrics(
       InstrumentationExtension testing,
       String instrumentationName,
@@ -101,6 +132,62 @@ public final class KafkaMessagingMetricsAssertions {
         errorType);
     assertMetricAbsent(testing, instrumentationName, CONSUMED_MESSAGES);
     assertDeprecatedMetricsAbsent(testing);
+  }
+
+  /**
+   * Asserts the process operation's duration metric, and that the process operation never records
+   * the consumed messages count. That count is owned by the receive operation.
+   */
+  public static void assertProcessMetrics(
+      InstrumentationExtension testing,
+      String instrumentationName,
+      String destination,
+      String group,
+      String partition,
+      long operationCount,
+      String errorType) {
+    if (!emitStableMessagingSemconv()) {
+      assertNoNewMetrics(testing, instrumentationName);
+      return;
+    }
+
+    assertProcessDurationMetrics(
+        testing, instrumentationName, destination, group, partition, operationCount, errorType);
+    assertNoProcessConsumedMessages(testing, instrumentationName);
+  }
+
+  /**
+   * Asserts the process operation's duration metric, and that the process operation also records
+   * the consumed messages count. That happens when no receive operation runs for the consumer, so
+   * the process operation is the only operation that can report the delivery.
+   */
+  public static void assertProcessMetricsWithConsumedMessages(
+      InstrumentationExtension testing,
+      String instrumentationName,
+      String destination,
+      String group,
+      String partition,
+      long operationCount,
+      long messageCount,
+      String errorType) {
+    if (!emitStableMessagingSemconv()) {
+      assertNoNewMetrics(testing, instrumentationName);
+      return;
+    }
+
+    assertProcessDurationMetrics(
+        testing, instrumentationName, destination, group, partition, operationCount, errorType);
+    assertCounter(
+        testing,
+        instrumentationName,
+        CONSUMED_MESSAGES,
+        "Number of messages that were delivered to the application.",
+        "process",
+        destination,
+        group,
+        partition,
+        messageCount,
+        errorType);
   }
 
   public static void assertProcessDurationMetrics(
@@ -161,6 +248,30 @@ public final class KafkaMessagingMetricsAssertions {
             metrics.satisfiesExactly(
                 metric ->
                     assertThat(metric.getHistogramData().getPoints()).hasSize(durationPointCount)));
+  }
+
+  /**
+   * Asserts that the given number of messages was consumed in total, summed over every attribute
+   * combination. Since the consumed messages count must be reported exactly once per delivery, this
+   * catches a delivery being counted by more than one operation.
+   */
+  public static void assertTotalConsumedMessages(
+      InstrumentationExtension testing, String instrumentationName, long total) {
+    if (!emitStableMessagingSemconv()) {
+      assertNoNewMetrics(testing, instrumentationName);
+      return;
+    }
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        CONSUMED_MESSAGES,
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(
+                            metric.getLongSumData().getPoints().stream()
+                                .mapToLong(LongPointData::getValue)
+                                .sum())
+                        .isEqualTo(total)));
   }
 
   private static void assertDuration(
@@ -268,6 +379,20 @@ public final class KafkaMessagingMetricsAssertions {
             metric -> metric.getInstrumentationScopeInfo().getName().equals(instrumentationName))
         .extracting(MetricData::getName)
         .doesNotContain(metricName);
+  }
+
+  private static void assertNoProcessConsumedMessages(
+      InstrumentationExtension testing, String instrumentationName) {
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric ->
+                metric.getInstrumentationScopeInfo().getName().equals(instrumentationName)
+                    && metric.getName().equals(CONSUMED_MESSAGES))
+        .flatExtracting(metric -> metric.getLongSumData().getPoints())
+        .allSatisfy(
+            point ->
+                assertThat(point.getAttributes().get(stringKey("messaging.operation.name")))
+                    .isNotEqualTo("process"));
   }
 
   private static void assertDeprecatedMetricsAbsent(InstrumentationExtension testing) {

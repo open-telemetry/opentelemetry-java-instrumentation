@@ -6,8 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertSendMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -91,8 +92,16 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
                         .hasParent(trace.getSpan(0))));
     String instrumentationName = "io.opentelemetry.kafka-clients-0.11";
     assertSendMetrics(testing, instrumentationName, SHARED_TOPIC, "0", 1, null);
-    assertProcessDurationMetrics(
-        testing, instrumentationName, SHARED_TOPIC, testLatestDeps() ? "test" : null, "0", 1, null);
+    assertProcessMetricsWithConsumedMessages(
+        testing,
+        instrumentationName,
+        SHARED_TOPIC,
+        testLatestDeps() ? "test" : null,
+        "0",
+        1,
+        1,
+        null);
+    assertTotalConsumedMessages(testing, instrumentationName, 1);
   }
 
   @Test

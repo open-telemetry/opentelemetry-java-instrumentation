@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -67,12 +67,13 @@ public abstract class AbstractSingleRecordNoReceiveTelemetryVertxKafkaTest
                       }
                     },
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
-    assertProcessDurationMetrics(
+    assertProcessMetricsWithConsumedMessages(
         testing(),
         "io.opentelemetry.vertx-kafka-client-3.6",
         "testSingleTopic",
         hasConsumerGroup() ? "test" : null,
         "0",
+        1,
         1,
         null);
   }
@@ -109,12 +110,13 @@ public abstract class AbstractSingleRecordNoReceiveTelemetryVertxKafkaTest
                       }
                     },
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
-    assertProcessDurationMetrics(
+    assertProcessMetricsWithConsumedMessages(
         testing(),
         "io.opentelemetry.vertx-kafka-client-3.6",
         "testSingleTopic",
         hasConsumerGroup() ? "test" : null,
         "0",
+        1,
         1,
         IllegalArgumentException.class.getName());
   }
