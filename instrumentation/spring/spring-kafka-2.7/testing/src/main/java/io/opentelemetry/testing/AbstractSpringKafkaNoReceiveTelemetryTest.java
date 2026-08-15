@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
@@ -88,12 +89,13 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                       }
                     },
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
-    assertProcessDurationMetrics(
+    assertProcessMetricsWithConsumedMessages(
         testing(),
         "io.opentelemetry.spring-kafka-2.7",
         "testSingleTopic",
         "testSingleListener",
         "0",
+        1,
         1,
         null);
   }

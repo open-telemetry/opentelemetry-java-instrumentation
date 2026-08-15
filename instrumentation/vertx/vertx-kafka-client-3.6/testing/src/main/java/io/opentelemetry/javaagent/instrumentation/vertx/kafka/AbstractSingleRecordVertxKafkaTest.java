@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
-import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveDurationMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -206,10 +206,18 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
 
   private void assertSingleMetrics(String errorType) {
     String group = hasConsumerGroup() ? "test" : null;
-    // the receive operation records poll duration whether or not it produced a receive span
-    assertReceiveDurationMetrics(
-        testing(), "io.opentelemetry.kafka-clients-0.11", "testSingleTopic", group, "0", 1, null);
-    assertProcessDurationMetrics(
+    // the receive operation records poll duration and consumed messages under stable semconv,
+    // whether or not it produced a receive span
+    assertReceiveMetrics(
+        testing(),
+        "io.opentelemetry.kafka-clients-0.11",
+        "testSingleTopic",
+        group,
+        "0",
+        1,
+        1,
+        null);
+    assertProcessMetrics(
         testing(),
         "io.opentelemetry.vertx-kafka-client-3.6",
         "testSingleTopic",

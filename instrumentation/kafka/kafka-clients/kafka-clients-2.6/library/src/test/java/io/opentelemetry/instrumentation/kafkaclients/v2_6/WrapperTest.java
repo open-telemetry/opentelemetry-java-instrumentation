@@ -11,9 +11,10 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSign
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
-import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveDurationMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertSendMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -149,8 +150,9 @@ class WrapperTest extends AbstractWrapperTest {
   private static void assertMessagingMetrics() {
     String instrumentationName = "io.opentelemetry.kafka-clients-2.6";
     assertSendMetrics(testing, instrumentationName, SHARED_TOPIC, "0", 1, null);
-    assertReceiveDurationMetrics(testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, null);
-    assertProcessDurationMetrics(testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, null);
+    assertReceiveMetrics(testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, 1, null);
+    assertProcessMetrics(testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, null);
+    assertTotalConsumedMessages(testing, instrumentationName, 1);
   }
 
   private static SpanContext asRemote(SpanContext spanContext) {
