@@ -134,9 +134,12 @@ class JavaHttpClientHeadersTest {
                 span ->
                     span.hasAttributesSatisfying(
                         attributes -> {
-                          // "*" is a legal header name character, so the deprecated setters look
-                          // for a header literally named "*" instead of capturing every header
+                          // implementing header name enumeration must not turn the deprecated
+                          // exact-name setters into wildcard matching, since "*" is a legal header
+                          // name character and capturing every header would expose credentials
                           assertThat(headerValues(attributes, "http.request.header.x-test-request"))
+                              .isNull();
+                          assertThat(headerValues(attributes, "http.request.header.authorization"))
                               .isNull();
                           assertThat(
                                   headerValues(attributes, "http.response.header.x-test-response"))
@@ -150,6 +153,7 @@ class JavaHttpClientHeadersTest {
             .uri(URI.create("http://localhost:" + server.getAddress().getPort() + "/"))
             .header("X-Test-Request", "request-value")
             .header("X-Other-Request", "other-value")
+            .header("Authorization", "Bearer secret-token")
             .build();
 
     HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());

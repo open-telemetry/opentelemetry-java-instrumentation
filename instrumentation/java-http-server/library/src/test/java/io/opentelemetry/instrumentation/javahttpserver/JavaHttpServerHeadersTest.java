@@ -120,9 +120,12 @@ class JavaHttpServerHeadersTest {
                 span ->
                     span.hasAttributesSatisfying(
                         attributes -> {
-                          // "*" is a legal header name character, so the deprecated setters look
-                          // for a header literally named "*" instead of capturing every header
+                          // implementing header name enumeration must not turn the deprecated
+                          // exact-name setters into wildcard matching, since "*" is a legal header
+                          // name character and capturing every header would expose credentials
                           assertThat(headerValues(attributes, "http.request.header.x-test-request"))
+                              .isNull();
+                          assertThat(headerValues(attributes, "http.request.header.authorization"))
                               .isNull();
                           assertThat(
                                   headerValues(attributes, "http.response.header.x-test-response"))
@@ -152,6 +155,7 @@ class JavaHttpServerHeadersTest {
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
     connection.setRequestProperty("X-Test-Request", "request-value");
     connection.setRequestProperty("X-Other-Request", "other-value");
+    connection.setRequestProperty("Authorization", "Bearer secret-token");
     assertThat(connection.getResponseCode()).isEqualTo(200);
     try (InputStream inputStream = connection.getInputStream()) {
       while (inputStream.read() != -1) {
