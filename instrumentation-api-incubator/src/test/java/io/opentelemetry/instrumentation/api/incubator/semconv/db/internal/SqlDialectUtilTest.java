@@ -30,10 +30,15 @@ class SqlDialectUtilTest {
         argumentSet("PostgreSQL", "postgresql", DOUBLE_QUOTES_ARE_IDENTIFIERS),
         argumentSet("Oracle", "oracle.db", DOUBLE_QUOTES_ARE_IDENTIFIERS),
         argumentSet("DB2", "ibm.db2", DOUBLE_QUOTES_ARE_IDENTIFIERS),
+        argumentSet("Derby", "derby", DOUBLE_QUOTES_ARE_IDENTIFIERS),
+        argumentSet("HSQLDB", "hsqldb", DOUBLE_QUOTES_ARE_IDENTIFIERS),
+        argumentSet("SAP HANA", "sap.hana", DOUBLE_QUOTES_ARE_IDENTIFIERS),
         argumentSet("ClickHouse", "clickhouse", DOUBLE_QUOTES_ARE_IDENTIFIERS),
+        argumentSet("PolarDB", "polardb", DOUBLE_QUOTES_ARE_IDENTIFIERS),
         argumentSet("MySQL", "mysql", DOUBLE_QUOTES_ARE_STRING_LITERALS),
         argumentSet("SQL Server", "microsoft.sql_server", DOUBLE_QUOTES_ARE_STRING_LITERALS),
-        argumentSet("unknown", "other_sql", DOUBLE_QUOTES_ARE_STRING_LITERALS));
+        argumentSet("unknown", "other_sql", DOUBLE_QUOTES_ARE_STRING_LITERALS),
+        argumentSet("null", null, DOUBLE_QUOTES_ARE_STRING_LITERALS));
   }
 
   @ParameterizedTest
