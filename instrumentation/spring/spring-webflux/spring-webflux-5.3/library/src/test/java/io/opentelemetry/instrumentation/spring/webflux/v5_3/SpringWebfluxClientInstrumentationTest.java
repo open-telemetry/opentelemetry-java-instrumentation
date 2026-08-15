@@ -5,8 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
-import static java.util.Collections.singletonList;
-
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.spring.webflux.client.AbstractSpringWebfluxClientInstrumentationTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -24,8 +23,14 @@ class SpringWebfluxClientInstrumentationTest
   protected WebClient.Builder instrument(WebClient.Builder builder) {
     SpringWebfluxClientTelemetry instrumentation =
         SpringWebfluxClientTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+            .setRequestHeaders(
+                IncludeExclude.builder()
+                    .setIncluded(AbstractHttpClientTest.TEST_REQUEST_HEADER)
+                    .build())
+            .setResponseHeaders(
+                IncludeExclude.builder()
+                    .setIncluded(AbstractHttpClientTest.TEST_RESPONSE_HEADER)
+                    .build())
             .build();
     return builder.filters(instrumentation::addFilterAndRegisterReactorHook);
   }

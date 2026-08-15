@@ -14,9 +14,9 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
-import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import java.net.URI;
 import java.util.Properties;
@@ -54,8 +54,14 @@ class TestWebfluxSpringBootApp {
   @Bean
   WebFilter telemetryFilter() {
     return SpringWebfluxServerTelemetry.builder(GlobalOpenTelemetry.get())
-        .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-        .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+        .setRequestHeaders(
+            IncludeExclude.builder()
+                .setIncluded(AbstractHttpServerTest.TEST_REQUEST_HEADER)
+                .build())
+        .setResponseHeaders(
+            IncludeExclude.builder()
+                .setIncluded(AbstractHttpServerTest.TEST_RESPONSE_HEADER)
+                .build())
         .build()
         .createWebFilterAndRegisterReactorHook();
   }

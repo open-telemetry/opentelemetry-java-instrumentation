@@ -14,11 +14,11 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
-import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.util.Properties;
@@ -56,8 +56,14 @@ class TestWebSpringBootApp {
   @Bean
   Filter telemetryFilter() {
     return SpringWebMvcTelemetry.builder(GlobalOpenTelemetry.get())
-        .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-        .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+        .setRequestHeaders(
+            IncludeExclude.builder()
+                .setIncluded(AbstractHttpServerTest.TEST_REQUEST_HEADER)
+                .build())
+        .setResponseHeaders(
+            IncludeExclude.builder()
+                .setIncluded(AbstractHttpServerTest.TEST_RESPONSE_HEADER)
+                .build())
         .build()
         .createServletFilter();
   }
