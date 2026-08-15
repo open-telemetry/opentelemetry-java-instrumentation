@@ -9,6 +9,8 @@ import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames.CaseSensitivity;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import java.util.HashSet;
 import java.util.List;
@@ -72,6 +74,33 @@ public final class SelectorConfig {
     return deprecated == null || deprecated.isEmpty()
         ? null
         : IncludeExclude.builder().setIncluded(deprecated).build();
+  }
+
+  /**
+   * Returns the configured selector resolved into the names to capture.
+   *
+   * <p>Unlike {@link #resolve}, the values of the deprecated include-only setting are matched
+   * literally rather than as globs. Those settings never supported {@code *} as capturing
+   * everything, so interpreting their values as globs would silently widen what is captured.
+   *
+   * @param systemPropertyFallback whether to fall back to the flat system properties when the
+   *     declarative configuration does not contain a value. This is needed by library
+   *     instrumentation entry points that have no programmatic configuration surface.
+   */
+  public static CapturedNames resolveCapturedNames(
+      DeclarativeConfigProperties config,
+      String instrumentationName,
+      String selectorName,
+      boolean systemPropertyFallback,
+      CaseSensitivity caseSensitivity) {
+    IncludeExclude selector =
+        getSelector(config, instrumentationName, selectorName, systemPropertyFallback);
+    if (selector != null) {
+      return CapturedNames.create(selector, caseSensitivity);
+    }
+    return CapturedNames.createExact(
+        getDeprecated(config, instrumentationName, selectorName, systemPropertyFallback),
+        caseSensitivity);
   }
 
   /**

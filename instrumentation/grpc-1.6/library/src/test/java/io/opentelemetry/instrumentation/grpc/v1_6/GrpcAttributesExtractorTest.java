@@ -14,7 +14,9 @@ import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.grpc.Metadata;
@@ -24,6 +26,9 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames.CaseSensitivity;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -51,7 +56,7 @@ class GrpcAttributesExtractorTest {
             .build();
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector)
+    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), captured(selector))
         .onEnd(attributes, Context.root(), request, null, null);
 
     Attributes result = attributes.build();
@@ -71,7 +76,9 @@ class GrpcAttributesExtractorTest {
     GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), null)
+    new GrpcAttributesExtractor(
+            new GrpcRpcAttributesGetter(),
+            CapturedNames.create(null, CaseSensitivity.CASE_INSENSITIVE))
         .onEnd(attributes, Context.root(), request, null, null);
 
     assertExcludedMetadata(attributes.build(), "some-key");
@@ -84,10 +91,47 @@ class GrpcAttributesExtractorTest {
     GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), IncludeExclude.builder().build())
+    new GrpcAttributesExtractor(
+            new GrpcRpcAttributesGetter(), captured(IncludeExclude.builder().build()))
         .onEnd(attributes, Context.root(), request, null, null);
 
     assertExcludedMetadata(attributes.build(), "some-key");
+  }
+
+  @Test
+  void deprecatedMetadataKeysAreLookedUpDirectly() {
+    Metadata delegate = new Metadata();
+    delegate.put(Metadata.Key.of("some-key", Metadata.ASCII_STRING_MARSHALLER), "some-value");
+    Metadata metadata = spy(delegate);
+    GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
+    AttributesBuilder attributes = Attributes.builder();
+
+    new GrpcAttributesExtractor(
+            new GrpcRpcAttributesGetter(), capturedExact(asList("SOME-KEY", "missing-key")))
+        .onEnd(attributes, Context.root(), request, null, null);
+
+    Attributes result = attributes.build();
+    assertThat(result.get(oldMetadataAttributeKey("some-key")))
+        .isEqualTo(emitOldRpcSemconv() ? singletonList("some-value") : null);
+    assertThat(result.get(stableMetadataAttributeKey("some-key")))
+        .isEqualTo(emitStableRpcSemconv() ? singletonList("some-value") : null);
+    assertExcludedMetadata(result, "missing-key");
+    verify(metadata, never()).keys();
+  }
+
+  @Test
+  void deprecatedWildcardMetadataKeyCapturesNothing() {
+    Metadata metadata = new Metadata();
+    metadata.put(Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER), "secret");
+    GrpcRequest request = new GrpcRequest(mock(MethodDescriptor.class), metadata, null, null);
+    AttributesBuilder attributes = Attributes.builder();
+
+    // the deprecated setting never supported wildcards, so "*" only matches a metadata key that is
+    // literally named "*", which gRPC cannot even represent
+    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), capturedExact(singletonList("*")))
+        .onEnd(attributes, Context.root(), request, null, null);
+
+    assertThat(attributes.build()).isEqualTo(Attributes.empty());
   }
 
   @Test
@@ -108,7 +152,7 @@ class GrpcAttributesExtractorTest {
             .build();
     AttributesBuilder attributes = Attributes.builder();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector)
+    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), captured(selector))
         .onEnd(attributes, Context.root(), request, null, null);
 
     Attributes result = attributes.build();
@@ -130,10 +174,18 @@ class GrpcAttributesExtractorTest {
     AttributesBuilder attributes = Attributes.builder();
     IncludeExclude selector = IncludeExclude.builder().setIncluded(singleton("*")).build();
 
-    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), selector)
+    new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(), captured(selector))
         .onEnd(attributes, Context.root(), request, null, null);
 
     assertThat(attributes.build()).isEqualTo(Attributes.empty());
+  }
+
+  private static CapturedNames captured(IncludeExclude selector) {
+    return CapturedNames.create(selector, CaseSensitivity.CASE_INSENSITIVE);
+  }
+
+  private static CapturedNames capturedExact(Collection<String> names) {
+    return CapturedNames.createExact(names, CaseSensitivity.CASE_INSENSITIVE);
   }
 
   private static void assertExcludedMetadata(Attributes attributes, String key) {

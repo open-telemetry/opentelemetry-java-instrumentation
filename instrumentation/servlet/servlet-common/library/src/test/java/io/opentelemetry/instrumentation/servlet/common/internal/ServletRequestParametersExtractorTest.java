@@ -19,6 +19,9 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames.CaseSensitivity;
+import java.util.Collection;
 import org.junit.jupiter.api.Test;
 
 class ServletRequestParametersExtractorTest {
@@ -44,7 +47,7 @@ class ServletRequestParametersExtractorTest {
             .build();
     AttributesBuilder attributes = Attributes.builder();
 
-    new ServletRequestParametersExtractor<>(accessor, selector)
+    new ServletRequestParametersExtractor<>(accessor, captured(selector))
         .setAttributes(request, attributes::put);
 
     assertThat(attributes.build().asMap())
@@ -66,7 +69,7 @@ class ServletRequestParametersExtractorTest {
     IncludeExclude selector = IncludeExclude.builder().setExcluded(singletonList("secret")).build();
     AttributesBuilder attributes = Attributes.builder();
 
-    new ServletRequestParametersExtractor<>(accessor, selector)
+    new ServletRequestParametersExtractor<>(accessor, captured(selector))
         .setAttributes(request, attributes::put);
 
     assertThat(attributes.build().asMap())
@@ -80,10 +83,67 @@ class ServletRequestParametersExtractorTest {
     IncludeExclude selector =
         IncludeExclude.builder().setIncluded(emptyList()).setExcluded(emptyList()).build();
 
-    new ServletRequestParametersExtractor<>(accessor, selector)
+    new ServletRequestParametersExtractor<>(accessor, captured(selector))
         .setAttributes(request, (key, value) -> {});
 
     verify(accessor, never()).getRequestParameterNames(request);
     verify(accessor, never()).getRequestParameterValues(request, "anything");
+  }
+
+  @Test
+  void looksUpDeprecatedParameterNamesDirectly() {
+    when(accessor.getRequestParameterValues(request, "exact")).thenReturn(singletonList("one"));
+    AttributesBuilder attributes = Attributes.builder();
+
+    new ServletRequestParametersExtractor<>(accessor, capturedExact(asList("exact", "missing")))
+        .setAttributes(request, attributes::put);
+
+    assertThat(attributes.build().asMap())
+        .containsOnly(
+            entry(stringArrayKey("servlet.request.parameter.exact"), singletonList("one")));
+    verify(accessor, never()).getRequestParameterNames(request);
+  }
+
+  @Test
+  void deprecatedWildcardParameterNameCapturesNothing() {
+    when(accessor.getRequestParameterNames(request)).thenReturn(asList("password", "*"));
+    when(accessor.getRequestParameterValues(request, "password"))
+        .thenReturn(singletonList("hunter2"));
+    AttributesBuilder attributes = Attributes.builder();
+
+    // the deprecated setting never supported wildcards, so "*" only matches a parameter that is
+    // literally named "*"
+    new ServletRequestParametersExtractor<>(accessor, capturedExact(singletonList("*")))
+        .setAttributes(request, attributes::put);
+
+    assertThat(attributes.build().asMap()).isEmpty();
+    verify(accessor, never()).getRequestParameterNames(request);
+    verify(accessor, never()).getRequestParameterValues(request, "password");
+  }
+
+  @Test
+  void matchesParameterNamesCaseSensitively() {
+    when(accessor.getRequestParameterNames(request)).thenReturn(asList("Parameter", "parameter"));
+    when(accessor.getRequestParameterValues(request, "parameter"))
+        .thenReturn(singletonList("value"));
+    IncludeExclude selector =
+        IncludeExclude.builder().setIncluded(singletonList("parameter*")).build();
+    AttributesBuilder attributes = Attributes.builder();
+
+    new ServletRequestParametersExtractor<>(accessor, captured(selector))
+        .setAttributes(request, attributes::put);
+
+    assertThat(attributes.build().asMap())
+        .containsOnly(
+            entry(stringArrayKey("servlet.request.parameter.parameter"), singletonList("value")));
+    verify(accessor, never()).getRequestParameterValues(request, "Parameter");
+  }
+
+  private static CapturedNames captured(IncludeExclude selector) {
+    return CapturedNames.create(selector, CaseSensitivity.CASE_SENSITIVE);
+  }
+
+  private static CapturedNames capturedExact(Collection<String> names) {
+    return CapturedNames.createExact(names, CaseSensitivity.CASE_SENSITIVE);
   }
 }

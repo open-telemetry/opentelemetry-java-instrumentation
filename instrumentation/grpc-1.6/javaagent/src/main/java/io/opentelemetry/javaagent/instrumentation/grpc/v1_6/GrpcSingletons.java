@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetryBuilder;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcConfig;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
@@ -53,18 +54,33 @@ public class GrpcSingletons {
         GrpcTelemetry.builder(openTelemetry)
             .setEmitMessageEvents(emitMessageEvents)
             .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes);
-    IncludeExclude clientRequestMetadata = grpcConfig.getClientRequestMetadata();
-    if (clientRequestMetadata != null) {
-      telemetryBuilder.setClientRequestMetadata(clientRequestMetadata);
-    }
-    IncludeExclude serverRequestMetadata = grpcConfig.getServerRequestMetadata();
-    if (serverRequestMetadata != null) {
-      telemetryBuilder.setServerRequestMetadata(serverRequestMetadata);
-    }
+    setRequestMetadata(telemetryBuilder, grpcConfig);
     GrpcTelemetry telemetry = telemetryBuilder.build();
 
     clientInterceptor = telemetry.createClientInterceptor();
     serverInterceptor = telemetry.createServerInterceptor();
+  }
+
+  // the deprecated setters are used on purpose: unlike the selectors, the values of the deprecated
+  // settings are matched literally rather than as glob patterns
+  @SuppressWarnings("deprecation")
+  private static void setRequestMetadata(
+      GrpcTelemetryBuilder telemetryBuilder, GrpcConfig grpcConfig) {
+    IncludeExclude clientRequestMetadata = grpcConfig.getClientRequestMetadata();
+    List<String> deprecatedClientRequestMetadata = grpcConfig.getDeprecatedClientRequestMetadata();
+    if (clientRequestMetadata != null) {
+      telemetryBuilder.setClientRequestMetadata(clientRequestMetadata);
+    } else if (deprecatedClientRequestMetadata != null) {
+      telemetryBuilder.setCapturedClientRequestMetadata(deprecatedClientRequestMetadata);
+    }
+
+    IncludeExclude serverRequestMetadata = grpcConfig.getServerRequestMetadata();
+    List<String> deprecatedServerRequestMetadata = grpcConfig.getDeprecatedServerRequestMetadata();
+    if (serverRequestMetadata != null) {
+      telemetryBuilder.setServerRequestMetadata(serverRequestMetadata);
+    } else if (deprecatedServerRequestMetadata != null) {
+      telemetryBuilder.setCapturedServerRequestMetadata(deprecatedServerRequestMetadata);
+    }
   }
 
   public static ClientInterceptor clientInterceptor() {

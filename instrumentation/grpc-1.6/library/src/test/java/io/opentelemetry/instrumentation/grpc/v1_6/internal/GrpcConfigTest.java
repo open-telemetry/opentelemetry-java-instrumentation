@@ -68,6 +68,20 @@ class GrpcConfigTest {
     GrpcConfig grpcConfig = new GrpcConfig(config, false);
 
     assertThat(grpcConfig.getClientRequestMetadata().getIncluded()).containsExactly("new");
+    assertThat(grpcConfig.getDeprecatedClientRequestMetadata()).isNull();
+  }
+
+  @Test
+  void deprecatedConfigIsNotExposedAsSelector() {
+    DeclarativeConfigProperties config = mockConfig();
+    when(config.get("capture_metadata").get("client").getScalarList("request", String.class))
+        .thenReturn(singletonList("*"));
+
+    GrpcConfig grpcConfig = new GrpcConfig(config, false);
+
+    // the deprecated setting never supported wildcards, so "*" must not become a glob selector
+    assertThat(grpcConfig.getClientRequestMetadata()).isNull();
+    assertThat(grpcConfig.getDeprecatedClientRequestMetadata()).containsExactly("*");
   }
 
   @Test
@@ -82,9 +96,10 @@ class GrpcConfigTest {
       GrpcConfig first = new GrpcConfig(config, false);
       GrpcConfig second = new GrpcConfig(config, false);
 
-      assertThat(first.getClientRequestMetadata().getIncluded()).containsExactly("deprecated");
-      assertThat(first.getClientRequestMetadata().getExcluded()).isEmpty();
-      assertThat(second.getClientRequestMetadata()).isEqualTo(first.getClientRequestMetadata());
+      assertThat(first.getClientRequestMetadata()).isNull();
+      assertThat(first.getDeprecatedClientRequestMetadata()).containsExactly("deprecated");
+      assertThat(second.getDeprecatedClientRequestMetadata())
+          .isEqualTo(first.getDeprecatedClientRequestMetadata());
       assertThat(handler.records).hasSize(1);
       assertThat(handler.records.get(0).getMessage())
           .isEqualTo(
@@ -107,6 +122,7 @@ class GrpcConfigTest {
     GrpcConfig grpcConfig = new GrpcConfig(config, false);
 
     assertThat(grpcConfig.getClientRequestMetadata()).isNull();
+    assertThat(grpcConfig.getDeprecatedClientRequestMetadata()).isNull();
   }
 
   @Test
@@ -131,6 +147,7 @@ class GrpcConfigTest {
     GrpcConfig grpcConfig = new GrpcConfig(config, true);
 
     assertThat(grpcConfig.getClientRequestMetadata()).isNull();
+    assertThat(grpcConfig.getDeprecatedClientRequestMetadata()).isNull();
   }
 
   @Test
@@ -148,6 +165,7 @@ class GrpcConfigTest {
     GrpcConfig config = GrpcConfig.create(openTelemetry);
 
     assertThat(config.getClientRequestMetadata()).isNull();
+    assertThat(config.getDeprecatedClientRequestMetadata()).isNull();
   }
 
   private static DeclarativeConfigProperties mockConfig() {

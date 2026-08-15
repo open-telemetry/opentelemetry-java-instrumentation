@@ -8,9 +8,10 @@ package io.opentelemetry.instrumentation.servlet.common.internal;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -27,14 +28,14 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
         ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> {
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
-  private final IncludeExclude requestParameters;
-  private final Map<String, AttributeKey<List<String>>> literalParameterKeys;
+  private final CapturedNames requestParameters;
+  private final Map<String, AttributeKey<List<String>>> exactParameterKeys;
 
   public ServletRequestParametersExtractor(
-      ServletAccessor<REQUEST, RESPONSE> accessor, IncludeExclude requestParameters) {
+      ServletAccessor<REQUEST, RESPONSE> accessor, CapturedNames requestParameters) {
     this.accessor = accessor;
     this.requestParameters = requestParameters;
-    this.literalParameterKeys = createLiteralParameterKeys(requestParameters);
+    this.exactParameterKeys = createExactParameterKeys(requestParameters);
   }
 
   public void setAttributes(
@@ -42,10 +43,11 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
     if (requestParameters.isEmpty()) {
       return;
     }
-    for (String name : accessor.getRequestParameterNames(request)) {
-      if (!requestParameters.matches(name)) {
-        continue;
-      }
+    Collection<String> names =
+        requestParameters.enumerateNames()
+            ? requestParameters.matchingNames(accessor.getRequestParameterNames(request))
+            : requestParameters.exactNames();
+    for (String name : names) {
       List<String> values = accessor.getRequestParameterValues(request, name);
       if (!values.isEmpty()) {
         consumer.accept(parameterAttributeKey(name), values);
@@ -73,17 +75,15 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
   }
 
   private AttributeKey<List<String>> parameterAttributeKey(String parameterName) {
-    AttributeKey<List<String>> key = literalParameterKeys.get(parameterName);
+    AttributeKey<List<String>> key = exactParameterKeys.get(parameterName);
     return key != null ? key : createKey(parameterName);
   }
 
-  private static Map<String, AttributeKey<List<String>>> createLiteralParameterKeys(
-      IncludeExclude selector) {
+  private static Map<String, AttributeKey<List<String>>> createExactParameterKeys(
+      CapturedNames requestParameters) {
     Map<String, AttributeKey<List<String>>> result = new HashMap<>();
-    for (String pattern : selector.getIncluded()) {
-      if (pattern.indexOf('*') == -1 && pattern.indexOf('?') == -1) {
-        result.put(pattern, createKey(pattern));
-      }
+    for (String name : requestParameters.exactNames()) {
+      result.put(name, createKey(name));
     }
     return result;
   }

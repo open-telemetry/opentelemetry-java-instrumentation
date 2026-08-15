@@ -17,6 +17,8 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames.CaseSensitivity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -222,6 +224,51 @@ class SelectorConfigTest {
     assertThat(literal.test("embedded-value")).isFalse();
     assertThat(literal.test("*")).isTrue();
     assertThat(literal.test("other")).isFalse();
+  }
+
+  @Test
+  void resolveCapturedNamesMatchesDeprecatedValuesLiterally() {
+    DeclarativeConfigProperties config = mockConfig();
+    when(config.getScalarList("capture_mdc_attributes/development", String.class))
+        .thenReturn(singletonList("*"));
+
+    CapturedNames captured =
+        SelectorConfig.resolveCapturedNames(
+            config, "resolve-captured-names", SELECTOR, false, CaseSensitivity.CASE_SENSITIVE);
+
+    // the deprecated setting never supported wildcards, so "*" captures nothing unless a name is
+    // literally called "*"
+    assertThat(captured.isEmpty()).isFalse();
+    assertThat(captured.enumerateNames()).isFalse();
+    assertThat(captured.exactNames()).containsExactly("*");
+  }
+
+  @Test
+  void resolveCapturedNamesMatchesSelectorPatternsAsGlobs() {
+    DeclarativeConfigProperties config = mockConfig();
+    when(config.get("mdc_attributes/development").getScalarList("included", String.class))
+        .thenReturn(singletonList("prefix.*"));
+
+    CapturedNames captured =
+        SelectorConfig.resolveCapturedNames(
+            config, "resolve-captured-selector", SELECTOR, false, CaseSensitivity.CASE_SENSITIVE);
+
+    assertThat(captured.enumerateNames()).isTrue();
+    assertThat(captured.matchingNames(asList("prefix.value", "other")))
+        .containsExactly("prefix.value");
+  }
+
+  @Test
+  void resolveCapturedNamesCapturesNothingWhenUnconfigured() {
+    CapturedNames captured =
+        SelectorConfig.resolveCapturedNames(
+            mockConfig(),
+            "resolve-captured-absent",
+            SELECTOR,
+            false,
+            CaseSensitivity.CASE_SENSITIVE);
+
+    assertThat(captured.isEmpty()).isTrue();
   }
 
   private static DeclarativeConfigProperties mockConfig() {

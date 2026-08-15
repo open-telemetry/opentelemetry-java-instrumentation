@@ -26,6 +26,7 @@ import io.grpc.Status;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -186,6 +187,84 @@ class GrpcTest extends AbstractGrpcTest {
                                     emitStableRpcSemconv() && captureMetadata
                                         ? singletonList(serverMetadataValue)
                                         : null))));
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void deprecatedRequestMetadataSettersDoNotSupportWildcards() throws Exception {
+    BindableService greeter =
+        new GreeterGrpc.GreeterImplBase() {
+          @Override
+          public void sayHello(
+              Helloworld.Request req, StreamObserver<Helloworld.Response> responseObserver) {
+            responseObserver.onNext(
+                Helloworld.Response.newBuilder().setMessage("Hello " + req.getName()).build());
+            responseObserver.onCompleted();
+          }
+        };
+
+    Server server =
+        ServerBuilder.forPort(0)
+            .addService(greeter)
+            .intercept(
+                GrpcTelemetry.builder(testing.getOpenTelemetry())
+                    .setCapturedServerRequestMetadata(singletonList("*"))
+                    .build()
+                    .createServerInterceptor())
+            .build()
+            .start();
+    ManagedChannel channel =
+        createChannel(
+            ManagedChannelBuilder.forAddress("localhost", server.getPort())
+                .intercept(
+                    GrpcTelemetry.builder(testing.getOpenTelemetry())
+                        .setCapturedClientRequestMetadata(singletonList("*"))
+                        .build()
+                        .createClientInterceptor()));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
+
+    Metadata metadata = new Metadata();
+    metadata.put(
+        Metadata.Key.of(CLIENT_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
+        "client-value");
+    metadata.put(
+        Metadata.Key.of(SERVER_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
+        "server-value");
+
+    GreeterGrpc.GreeterBlockingStub client =
+        GreeterGrpc.newBlockingStub(channel)
+            .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata));
+    Helloworld.Response response =
+        testing()
+            .runWithSpan(
+                "parent",
+                () -> client.sayHello(Helloworld.Request.newBuilder().setName("test").build()));
+
+    assertThat(response.getMessage()).isEqualTo("Hello test");
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName("example.Greeter/SayHello")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(GrpcTest::assertNoMetadataCaptured),
+                    span ->
+                        span.hasName("example.Greeter/SayHello")
+                            .hasKind(SpanKind.SERVER)
+                            .hasAttributesSatisfying(GrpcTest::assertNoMetadataCaptured)));
+  }
+
+  private static void assertNoMetadataCaptured(Attributes attributes) {
+    assertThat(attributes.asMap().keySet())
+        .extracting(AttributeKey::getKey)
+        .noneMatch(
+            key ->
+                key.startsWith("rpc.grpc.request.metadata.")
+                    || key.startsWith("rpc.request.metadata."));
   }
 
   /**

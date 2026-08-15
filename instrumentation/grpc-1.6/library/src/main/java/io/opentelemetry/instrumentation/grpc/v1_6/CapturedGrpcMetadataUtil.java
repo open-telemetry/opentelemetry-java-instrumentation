@@ -5,15 +5,12 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
-import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
-import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 final class CapturedGrpcMetadataUtil {
@@ -22,55 +19,42 @@ final class CapturedGrpcMetadataUtil {
   private static final String RPC_STABLE_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX =
       "rpc.request.metadata.";
 
-  static List<String> lowercase(List<String> names) {
-    return unmodifiableList(names.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(toList()));
+  static Map<String, AttributeKey<List<String>>> createExactRequestAttributeKeys(
+      CapturedNames requestMetadata) {
+    return createExactAttributeKeys(requestMetadata, RPC_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX);
   }
 
-  static IncludeExclude lowercase(IncludeExclude selector) {
-    return IncludeExclude.builder()
-        .setIncluded(lowercase(selector.getIncluded()))
-        .setExcluded(lowercase(selector.getExcluded()))
-        .build();
-  }
-
-  static Map<String, AttributeKey<List<String>>> createLiteralRequestAttributeKeys(
-      IncludeExclude selector) {
-    return createLiteralAttributeKeys(selector, RPC_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX);
-  }
-
-  static Map<String, AttributeKey<List<String>>> createLiteralStableRequestAttributeKeys(
-      IncludeExclude selector) {
-    return createLiteralAttributeKeys(selector, RPC_STABLE_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX);
+  static Map<String, AttributeKey<List<String>>> createExactStableRequestAttributeKeys(
+      CapturedNames requestMetadata) {
+    return createExactAttributeKeys(
+        requestMetadata, RPC_STABLE_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX);
   }
 
   static AttributeKey<List<String>> requestAttributeKey(
-      String metadataKey, Map<String, AttributeKey<List<String>>> literalAttributeKeys) {
-    return attributeKey(
-        metadataKey, literalAttributeKeys, RPC_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX);
+      String metadataKey, Map<String, AttributeKey<List<String>>> exactAttributeKeys) {
+    return attributeKey(metadataKey, exactAttributeKeys, RPC_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX);
   }
 
   static AttributeKey<List<String>> stableRequestAttributeKey(
-      String metadataKey, Map<String, AttributeKey<List<String>>> literalAttributeKeys) {
+      String metadataKey, Map<String, AttributeKey<List<String>>> exactAttributeKeys) {
     return attributeKey(
-        metadataKey, literalAttributeKeys, RPC_STABLE_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX);
+        metadataKey, exactAttributeKeys, RPC_STABLE_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX);
   }
 
-  private static Map<String, AttributeKey<List<String>>> createLiteralAttributeKeys(
-      IncludeExclude selector, String prefix) {
+  private static Map<String, AttributeKey<List<String>>> createExactAttributeKeys(
+      CapturedNames requestMetadata, String prefix) {
     Map<String, AttributeKey<List<String>>> result = new HashMap<>();
-    for (String pattern : selector.getIncluded()) {
-      if (pattern.indexOf('*') == -1 && pattern.indexOf('?') == -1) {
-        result.put(pattern, AttributeKey.stringArrayKey(prefix + pattern));
-      }
+    for (String metadataKey : requestMetadata.exactNames()) {
+      result.put(metadataKey, AttributeKey.stringArrayKey(prefix + metadataKey));
     }
     return unmodifiableMap(result);
   }
 
   private static AttributeKey<List<String>> attributeKey(
       String metadataKey,
-      Map<String, AttributeKey<List<String>>> literalAttributeKeys,
+      Map<String, AttributeKey<List<String>>> exactAttributeKeys,
       String prefix) {
-    AttributeKey<List<String>> attributeKey = literalAttributeKeys.get(metadataKey);
+    AttributeKey<List<String>> attributeKey = exactAttributeKeys.get(metadataKey);
     return attributeKey != null ? attributeKey : AttributeKey.stringArrayKey(prefix + metadataKey);
   }
 

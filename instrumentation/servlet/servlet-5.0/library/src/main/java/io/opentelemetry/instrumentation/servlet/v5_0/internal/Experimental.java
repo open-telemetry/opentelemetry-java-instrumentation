@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.servlet.v5_0.internal;
 
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames.CaseSensitivity;
 import io.opentelemetry.instrumentation.servlet.v5_0.ServletTelemetryBuilder;
 import java.util.Collection;
 import java.util.function.BiConsumer;
@@ -29,7 +31,7 @@ public final class Experimental {
   private static volatile BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureEnduserId;
 
   @Nullable
-  private static volatile BiConsumer<ServletTelemetryBuilder, IncludeExclude> setRequestParameters;
+  private static volatile BiConsumer<ServletTelemetryBuilder, CapturedNames> setRequestParameters;
 
   /**
    * Sets whether experimental HTTP telemetry should be emitted.
@@ -91,6 +93,12 @@ public final class Experimental {
    */
   public static void setRequestParameters(
       ServletTelemetryBuilder builder, IncludeExclude requestParameters) {
+    setRequestParameters(
+        builder, CapturedNames.create(requestParameters, CaseSensitivity.CASE_SENSITIVE));
+  }
+
+  private static void setRequestParameters(
+      ServletTelemetryBuilder builder, CapturedNames requestParameters) {
     if (setRequestParameters != null) {
       setRequestParameters.accept(builder, requestParameters);
     }
@@ -98,6 +106,10 @@ public final class Experimental {
 
   /**
    * Sets the request parameters to be captured as span attributes.
+   *
+   * <p>The parameter names are matched literally. Unlike {@link
+   * #setRequestParameters(ServletTelemetryBuilder, IncludeExclude)}, {@code *} and {@code ?} are
+   * not treated as glob patterns, since this setting never supported them as wildcards.
    *
    * @param builder the telemetry builder
    * @param captureRequestParameters request parameter names to capture
@@ -109,7 +121,8 @@ public final class Experimental {
   public static void setCaptureRequestParameters(
       ServletTelemetryBuilder builder, Collection<String> captureRequestParameters) {
     setRequestParameters(
-        builder, IncludeExclude.builder().setIncluded(captureRequestParameters).build());
+        builder,
+        CapturedNames.createExact(captureRequestParameters, CaseSensitivity.CASE_SENSITIVE));
   }
 
   public static void internalSetEmitExperimentalTelemetry(
@@ -128,7 +141,7 @@ public final class Experimental {
   }
 
   public static void internalSetRequestParameters(
-      BiConsumer<ServletTelemetryBuilder, IncludeExclude> setRequestParameters) {
+      BiConsumer<ServletTelemetryBuilder, CapturedNames> setRequestParameters) {
     Experimental.setRequestParameters = setRequestParameters;
   }
 

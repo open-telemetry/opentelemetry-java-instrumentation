@@ -38,6 +38,8 @@ public class GrpcConfig {
 
   @Nullable private final IncludeExclude clientRequestMetadata;
   @Nullable private final IncludeExclude serverRequestMetadata;
+  @Nullable private final List<String> deprecatedClientRequestMetadata;
+  @Nullable private final List<String> deprecatedServerRequestMetadata;
 
   public static GrpcConfig create(OpenTelemetry openTelemetry) {
     return new GrpcConfig(
@@ -46,39 +48,67 @@ public class GrpcConfig {
   }
 
   GrpcConfig(DeclarativeConfigProperties config, boolean v3Preview) {
-    clientRequestMetadata =
-        getRequestMetadata(
-            config,
-            "client",
-            DEPRECATED_CLIENT_REQUEST_METADATA,
-            CLIENT_REQUEST_METADATA_INCLUDED,
-            v3Preview);
-    serverRequestMetadata =
-        getRequestMetadata(
-            config,
-            "server",
-            DEPRECATED_SERVER_REQUEST_METADATA,
-            SERVER_REQUEST_METADATA_INCLUDED,
-            v3Preview);
+    clientRequestMetadata = getRequestMetadata(config, "client");
+    serverRequestMetadata = getRequestMetadata(config, "server");
+    deprecatedClientRequestMetadata =
+        clientRequestMetadata == null
+            ? getDeprecatedRequestMetadata(
+                config,
+                "client",
+                DEPRECATED_CLIENT_REQUEST_METADATA,
+                CLIENT_REQUEST_METADATA_INCLUDED,
+                v3Preview)
+            : null;
+    deprecatedServerRequestMetadata =
+        serverRequestMetadata == null
+            ? getDeprecatedRequestMetadata(
+                config,
+                "server",
+                DEPRECATED_SERVER_REQUEST_METADATA,
+                SERVER_REQUEST_METADATA_INCLUDED,
+                v3Preview)
+            : null;
   }
 
+  /** Returns the client request metadata selector, or {@code null} if it is not configured. */
   @Nullable
   public IncludeExclude getClientRequestMetadata() {
     return clientRequestMetadata;
   }
 
+  /** Returns the server request metadata selector, or {@code null} if it is not configured. */
   @Nullable
   public IncludeExclude getServerRequestMetadata() {
     return serverRequestMetadata;
   }
 
+  /**
+   * Returns the metadata keys configured through the deprecated client setting, or {@code null} if
+   * the selector is configured or the deprecated setting is not.
+   *
+   * <p>These keys are kept separate from {@link #getClientRequestMetadata()} because the deprecated
+   * setting never supported wildcards, so its values are matched literally.
+   */
+  @Nullable
+  public List<String> getDeprecatedClientRequestMetadata() {
+    return deprecatedClientRequestMetadata;
+  }
+
+  /**
+   * Returns the metadata keys configured through the deprecated server setting, or {@code null} if
+   * the selector is configured or the deprecated setting is not.
+   *
+   * <p>These keys are kept separate from {@link #getServerRequestMetadata()} because the deprecated
+   * setting never supported wildcards, so its values are matched literally.
+   */
+  @Nullable
+  public List<String> getDeprecatedServerRequestMetadata() {
+    return deprecatedServerRequestMetadata;
+  }
+
   @Nullable
   private static IncludeExclude getRequestMetadata(
-      DeclarativeConfigProperties config,
-      String side,
-      String deprecatedProperty,
-      String replacementProperty,
-      boolean v3Preview) {
+      DeclarativeConfigProperties config, String side) {
     DeclarativeConfigProperties requestMetadata = config.get(side).get("request_metadata");
     List<String> included = requestMetadata.getScalarList("included", String.class);
     List<String> excluded = requestMetadata.getScalarList("excluded", String.class);
@@ -89,10 +119,16 @@ public class GrpcConfig {
             .build();
     // an empty selector is equivalent to no selector at all, matching flat configuration where
     // empty property values cannot be distinguished from unset ones
-    if (!selector.isEmpty()) {
-      return selector;
-    }
+    return selector.isEmpty() ? null : selector;
+  }
 
+  @Nullable
+  private static List<String> getDeprecatedRequestMetadata(
+      DeclarativeConfigProperties config,
+      String side,
+      String deprecatedProperty,
+      String replacementProperty,
+      boolean v3Preview) {
     if (v3Preview) {
       return null;
     }
@@ -112,8 +148,6 @@ public class GrpcConfig {
               + replacementProperty
               + " or equivalent declarative configuration instead.");
     }
-    return deprecatedIncluded.isEmpty()
-        ? null
-        : IncludeExclude.builder().setIncluded(deprecatedIncluded).build();
+    return deprecatedIncluded.isEmpty() ? null : deprecatedIncluded;
   }
 }

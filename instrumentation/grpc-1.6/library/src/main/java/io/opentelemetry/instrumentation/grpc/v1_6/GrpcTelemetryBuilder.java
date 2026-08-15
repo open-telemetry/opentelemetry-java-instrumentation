@@ -23,6 +23,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames.CaseSensitivity;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
@@ -30,7 +32,6 @@ import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcClientNetworkAttr
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.UnaryOperator;
-import javax.annotation.Nullable;
 
 /** A builder of {@link GrpcTelemetry}. */
 public final class GrpcTelemetryBuilder {
@@ -52,8 +53,10 @@ public final class GrpcTelemetryBuilder {
 
   private boolean captureExperimentalSpanAttributes;
   private boolean emitMessageEvents = true;
-  @Nullable private IncludeExclude clientRequestMetadata;
-  @Nullable private IncludeExclude serverRequestMetadata;
+  private CapturedNames clientRequestMetadata =
+      CapturedNames.create(null, CaseSensitivity.CASE_INSENSITIVE);
+  private CapturedNames serverRequestMetadata =
+      CapturedNames.create(null, CaseSensitivity.CASE_INSENSITIVE);
 
   GrpcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -149,12 +152,15 @@ public final class GrpcTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setClientRequestMetadata(IncludeExclude clientRequestMetadata) {
-    this.clientRequestMetadata = clientRequestMetadata;
+    this.clientRequestMetadata =
+        CapturedNames.create(clientRequestMetadata, CaseSensitivity.CASE_INSENSITIVE);
     return this;
   }
 
   /**
    * Sets which metadata request values should be captured as span attributes on client spans.
+   *
+   * <p>Metadata keys are matched literally and case-insensitively; wildcards are not supported.
    *
    * @deprecated Use {@link #setClientRequestMetadata(IncludeExclude)} instead. May be removed in
    *     the next minor release.
@@ -164,9 +170,7 @@ public final class GrpcTelemetryBuilder {
   public GrpcTelemetryBuilder setCapturedClientRequestMetadata(
       List<String> capturedClientRequestMetadata) {
     clientRequestMetadata =
-        capturedClientRequestMetadata.isEmpty()
-            ? null
-            : IncludeExclude.builder().setIncluded(capturedClientRequestMetadata).build();
+        CapturedNames.createExact(capturedClientRequestMetadata, CaseSensitivity.CASE_INSENSITIVE);
     return this;
   }
 
@@ -181,12 +185,15 @@ public final class GrpcTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setServerRequestMetadata(IncludeExclude serverRequestMetadata) {
-    this.serverRequestMetadata = serverRequestMetadata;
+    this.serverRequestMetadata =
+        CapturedNames.create(serverRequestMetadata, CaseSensitivity.CASE_INSENSITIVE);
     return this;
   }
 
   /**
    * Sets which metadata request values should be captured as span attributes on server spans.
+   *
+   * <p>Metadata keys are matched literally and case-insensitively; wildcards are not supported.
    *
    * @deprecated Use {@link #setServerRequestMetadata(IncludeExclude)} instead. May be removed in
    *     the next minor release.
@@ -196,9 +203,7 @@ public final class GrpcTelemetryBuilder {
   public GrpcTelemetryBuilder setCapturedServerRequestMetadata(
       List<String> capturedServerRequestMetadata) {
     serverRequestMetadata =
-        capturedServerRequestMetadata.isEmpty()
-            ? null
-            : IncludeExclude.builder().setIncluded(capturedServerRequestMetadata).build();
+        CapturedNames.createExact(capturedServerRequestMetadata, CaseSensitivity.CASE_INSENSITIVE);
     return this;
   }
 

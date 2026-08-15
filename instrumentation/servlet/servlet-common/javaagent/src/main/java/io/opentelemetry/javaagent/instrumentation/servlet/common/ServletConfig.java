@@ -7,15 +7,15 @@ package io.opentelemetry.javaagent.instrumentation.servlet.common;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames.CaseSensitivity;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import javax.annotation.Nullable;
 
 class ServletConfig {
 
-  @Nullable private final IncludeExclude requestParameters;
+  private final CapturedNames requestParameters;
   private final boolean captureExperimentalAttributes;
   private final boolean traceIdRequestAttributeEnabled;
 
@@ -24,15 +24,16 @@ class ServletConfig {
   }
 
   ServletConfig(DeclarativeConfigProperties config, boolean v3Preview) {
-    requestParameters = SelectorConfig.resolve(config, "servlet", "request-parameters");
+    requestParameters =
+        SelectorConfig.resolveCapturedNames(
+            config, "servlet", "request-parameters", false, CaseSensitivity.CASE_SENSITIVE);
     captureExperimentalAttributes =
         config.getBoolean("experimental_span_attributes/development", false);
     traceIdRequestAttributeEnabled =
         config.get("trace_id_request_attribute/development").getBoolean("enabled", !v3Preview);
   }
 
-  @Nullable
-  IncludeExclude getRequestParameters() {
+  CapturedNames getRequestParameters() {
     return requestParameters;
   }
 

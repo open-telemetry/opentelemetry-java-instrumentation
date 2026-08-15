@@ -14,9 +14,9 @@ import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
+import io.opentelemetry.instrumentation.api.internal.CapturedNames;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletAdditionalAttributesExtractor;
@@ -51,11 +51,11 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     this.accessor = accessor;
     this.spanNameProvider = new ServletSpanNameProvider<>(accessor);
     this.contextPathExtractor = accessor::getRequestContextPath;
-    IncludeExclude requestParameters = servletConfig.getRequestParameters();
+    CapturedNames requestParameters = servletConfig.getRequestParameters();
     this.parameterExtractor =
-        requestParameters != null
-            ? new ServletRequestParametersExtractor<>(accessor, requestParameters)
-            : null;
+        requestParameters.isEmpty()
+            ? null
+            : new ServletRequestParametersExtractor<>(accessor, requestParameters);
   }
 
   public boolean shouldStart(Context parentContext, ServletRequestContext<REQUEST> requestContext) {
