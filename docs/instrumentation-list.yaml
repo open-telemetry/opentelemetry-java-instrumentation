@@ -897,11 +897,11 @@ definitions:
         Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
       type: boolean
       default: false
-    otel.instrumentation.messaging.experimental.receive-telemetry.enabled-59c44ca8:
+    otel.instrumentation.messaging.experimental.receive-telemetry.enabled-be0c3627:
       name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
       declarative_name: java.common.messaging.receive_telemetry/development.enabled
       description: |
-        Enables the creation of consumer spans on messaging receive operations. These spans will measure the time between receiving a message and the consumer processing that message.
+        Enables consumer spans for RabbitMQ `basicGet` receive operations when legacy messaging semantic conventions are emitted. Stable messaging semantic conventions emit these spans regardless of this setting.
       type: boolean
       default: false
     otel.instrumentation.methods.include:
@@ -2198,6 +2198,21 @@ definitions:
       data_type: HISTOGRAM
       unit: s
       attributes: []
+    messaging.client.consumed.messages-2353494f:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.consumed.messages-5c21579f:
       name: messaging.client.consumed.messages
       description: Number of messages that were delivered to the application.
@@ -2217,7 +2232,70 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    messaging.client.operation.duration-df200871:
+    messaging.client.consumed.messages-73097de6:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.client.consumed.messages-bda2d99f:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    messaging.client.consumed.messages-e8268bc3:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.client.operation.duration-4afb25bc:
+      name: messaging.client.operation.duration
+      description: Duration of messaging operation initiated by a producer or consumer
+        client.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    messaging.client.operation.duration-68138657:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
         client.
@@ -2227,7 +2305,21 @@ definitions:
       attributes:
       - name: messaging.destination.name
         type: STRING
-      - name: messaging.destination.subscription.name
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.client.operation.duration-dab7c60a:
+      name: messaging.client.operation.duration
+      description: Duration of messaging operation initiated by a producer or consumer
+        client.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: messaging.destination.name
         type: STRING
       - name: messaging.operation.name
         type: STRING
@@ -2256,6 +2348,51 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    messaging.client.sent.messages-a16c8de0:
+      name: messaging.client.sent.messages
+      description: Number of messages producer attempted to send to the broker.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.process.duration-45bdc9e6:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    messaging.process.duration-800050f8:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.process.duration-9ee3dd0a:
       name: messaging.process.duration
       description: Duration of processing operation.
@@ -2278,6 +2415,23 @@ definitions:
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.process.duration-b45860c7:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.consumer.group.name
+        type: STRING
       - name: messaging.destination.name
         type: STRING
       - name: messaging.operation.name
@@ -3977,6 +4131,101 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
+  - when: otel.instrumentation.common.v3-preview=true
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.process.duration-ab13a22e
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: faas.invocation_id
+        type: STRING
+      - name: faas.trigger
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: url.full
+        type: STRING
+      - name: user_agent.original
+        type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.process.duration-ab13a22e
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: faas.invocation_id
+        type: STRING
+      - name: faas.trigger
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: url.full
+        type: STRING
+      - name: user_agent.original
+        type: STRING
+  - when: otel.semconv-stability.preview=messaging/dup
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.process.duration-ab13a22e
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: faas.invocation_id
+        type: STRING
+      - name: faas.trigger
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: url.full
+        type: STRING
+      - name: user_agent.original
+        type: STRING
 - name: aws-lambda-events-3.11
   display_name: AWS Lambda Events
   description: |
@@ -4001,6 +4250,119 @@ libraries:
       - name: messaging.message.id
         type: STRING
       - name: messaging.operation
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: cloud.account.id
+        type: STRING
+      - name: cloud.resource_id
+        type: STRING
+      - name: faas.invocation_id
+        type: STRING
+      - name: faas.trigger
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: url.full
+        type: STRING
+      - name: user_agent.original
+        type: STRING
+  - when: otel.instrumentation.common.v3-preview=true
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.process.duration-ab13a22e
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: cloud.account.id
+        type: STRING
+      - name: cloud.resource_id
+        type: STRING
+      - name: faas.invocation_id
+        type: STRING
+      - name: faas.trigger
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: url.full
+        type: STRING
+      - name: user_agent.original
+        type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.process.duration-ab13a22e
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: cloud.account.id
+        type: STRING
+      - name: cloud.resource_id
+        type: STRING
+      - name: faas.invocation_id
+        type: STRING
+      - name: faas.trigger
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: url.full
+        type: STRING
+      - name: user_agent.original
+        type: STRING
+  - when: otel.semconv-stability.preview=messaging/dup
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.process.duration-ab13a22e
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
         type: STRING
       - name: messaging.system
         type: STRING
@@ -4282,6 +4644,8 @@ libraries:
       - name: aws.request_id
         type: STRING
       - name: aws.sqs.queue.url
+        type: STRING
+      - name: error.type
         type: STRING
       - name: http.request.method
         type: STRING
@@ -4730,6 +5094,8 @@ libraries:
       - name: aws.request_id
         type: STRING
       - name: aws.sqs.queue.url
+        type: STRING
+      - name: error.type
         type: STRING
       - name: http.request.method
         type: STRING
@@ -10748,6 +11114,11 @@ libraries:
       - name: messaging.system
         type: STRING
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-2353494f
+    - messaging.client.operation.duration-68138657
+    - messaging.client.sent.messages-a16c8de0
+    - messaging.process.duration-800050f8
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -12100,7 +12471,7 @@ libraries:
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
     - messaging.client.consumed.messages-5c21579f
-    - messaging.client.operation.duration-df200871
+    - messaging.client.operation.duration-dab7c60a
     - messaging.client.sent.messages-38a90199
     - messaging.process.duration-9ee3dd0a
     spans:
@@ -12292,7 +12663,7 @@ libraries:
   - messaging.capture-headers
   - messaging.headers.excluded
   - messaging.headers.included
-  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-59c44ca8
+  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-be0c3627
   - otel.instrumentation.rabbitmq.experimental-span-attributes
   telemetry:
   - when: default
@@ -12404,6 +12775,11 @@ libraries:
       - name: rabbitmq.delivery_mode
         type: LONG
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-bda2d99f
+    - messaging.client.operation.duration-4afb25bc
+    - messaging.client.sent.messages-38a90199
+    - messaging.process.duration-45bdc9e6
     spans:
     - span_kind: CLIENT
       attributes:
@@ -13392,9 +13768,16 @@ libraries:
       - name: messaging.system
         type: STRING
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-73097de6
+    - messaging.client.operation.duration-68138657
+    - messaging.client.sent.messages-a16c8de0
+    - messaging.process.duration-b45860c7
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: error.type
+        type: STRING
       - name: messaging.batch.message_count
         type: LONG
       - name: messaging.consumer.group.name
@@ -13404,6 +13787,14 @@ libraries:
       - name: messaging.operation.name
         type: STRING
       - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rocketmq.message.delivery_timestamp
+        type: LONG
+      - name: messaging.rocketmq.message.group
+        type: STRING
+      - name: messaging.rocketmq.message.keys
+        type: STRING_ARRAY
+      - name: messaging.rocketmq.message.tag
         type: STRING
       - name: messaging.rocketmq.namespace
         type: STRING
@@ -14015,6 +14406,11 @@ libraries:
       - name: messaging.operation
         type: STRING
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.client.operation.duration-68138657
+    - messaging.client.sent.messages-a16c8de0
+    - messaging.process.duration-ab13a22e
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -14306,6 +14702,8 @@ libraries:
       - name: messaging.system
         type: STRING
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.process.duration-800050f8
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -15879,7 +16277,7 @@ libraries:
 - name: vibur-dbcp-11.0
   display_name: Vibur DBCP
   description: |
-    This instrumentation enables database connection pool metrics for Vibur DBCP data sources.
+    This instrumentation enables database connection pool metrics for Vibur DBCP data sources. When no pool name is explicitly configured, the JDBC URL and connection properties are used to derive `server.address[:server.port][/db.namespace]`. If no server address or database namespace is available, `vibur-dbcp` is used.
   semantic_conventions:
   - DATABASE_POOL_METRICS
   library_link: https://www.vibur.org/
