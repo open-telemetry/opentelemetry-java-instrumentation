@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerOperationMetrics;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerReceiveInstrumenter;
 import static java.util.Collections.emptyMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -24,6 +25,7 @@ import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTra
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.time.Duration;
+import java.time.Instant;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -64,48 +66,49 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
         @Advice.Return @Nullable ConsumerRecords<?, ?> records,
         @Advice.Thrown @Nullable Throwable error) {
 
-      // don't create spans for successful polls when no records were received
-      if ((records == null && error == null) || (records != null && records.isEmpty())) {
-        return;
-      }
-
       Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(currentContext());
       ConsumerRecords<?, ?> requestRecords =
           records != null ? records : new ConsumerRecords<>(emptyMap());
       KafkaReceiveRequest request = KafkaReceiveRequest.create(requestRecords, consumer);
+      Instant endTime = timer.now();
 
-      // disable process tracing and store the receive span for each individual record too
-      boolean previousValue = KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
-      try {
-        Context receiveContext = null;
-        if (consumerReceiveInstrumenter().shouldStart(parentContext, request)) {
-          receiveContext =
-              InstrumenterUtil.startAndEnd(
-                  consumerReceiveInstrumenter(),
-                  parentContext,
-                  request,
-                  null,
-                  error,
-                  timer.startTime(),
-                  timer.now());
+      Context metricsContext = parentContext;
+      // don't create spans for successful polls when no records were received
+      if (error != null || !requestRecords.isEmpty()) {
+        // disable process tracing and store the receive span for each individual record too
+        boolean previousValue = KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
+        try {
+          Context receiveContext = null;
+          if (consumerReceiveInstrumenter().shouldStart(parentContext, request)) {
+            receiveContext =
+                InstrumenterUtil.startAndEnd(
+                    consumerReceiveInstrumenter(),
+                    parentContext,
+                    request,
+                    null,
+                    error,
+                    timer.startTime(),
+                    endTime);
+            metricsContext = receiveContext;
+          }
+
+          if (records != null) {
+            Context processParentContext =
+                emitStableMessagingSemconv() ? parentContext : receiveContext;
+            // we're attaching the consumer to the records to be able to retrieve things like
+            // consumer group or clientId later
+            KafkaConsumerContextUtil.set(records, processParentContext, consumer);
+
+            for (ConsumerRecord<?, ?> record : records) {
+              KafkaConsumerContextUtil.set(record, processParentContext, consumer);
+            }
+          }
+        } finally {
+          KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
         }
-
-        if (records == null) {
-          return;
-        }
-
-        Context processParentContext =
-            emitStableMessagingSemconv() ? parentContext : receiveContext;
-        // we're attaching the consumer to the records to be able to retrieve things like consumer
-        // group or clientId later
-        KafkaConsumerContextUtil.set(records, processParentContext, consumer);
-
-        for (ConsumerRecord<?, ?> record : records) {
-          KafkaConsumerContextUtil.set(record, processParentContext, consumer);
-        }
-      } finally {
-        KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
       }
+      consumerOperationMetrics()
+          .recordDuration(metricsContext, request, error, timer.startTime(), endTime);
     }
   }
 }

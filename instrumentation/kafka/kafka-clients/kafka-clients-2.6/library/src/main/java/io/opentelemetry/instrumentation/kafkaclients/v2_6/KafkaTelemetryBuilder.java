@@ -149,6 +149,7 @@ public final class KafkaTelemetryBuilder {
         openTelemetry,
         instrumenterFactory.createProducerInstrumenter(producerAttributesExtractors),
         instrumenterFactory.createConsumerReceiveInstrumenter(consumerReceiveAttributesExtractors),
+        instrumenterFactory.createConsumerOperationMetrics(),
         instrumenterFactory.createConsumerProcessInstrumenter(consumerProcessAttributesExtractors),
         instrumenterFactory.createProducerInterceptorInstrumenter(producerAttributesExtractors),
         instrumenterFactory.createConsumerReceiveInterceptorInstrumenter(

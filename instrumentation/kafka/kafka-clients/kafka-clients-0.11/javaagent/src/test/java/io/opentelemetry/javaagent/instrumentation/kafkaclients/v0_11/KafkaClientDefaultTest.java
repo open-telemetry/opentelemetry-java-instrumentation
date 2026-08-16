@@ -184,6 +184,26 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
   }
 
   @Test
+  void testEmptyPollRecordsDurationWithoutSpan() throws InterruptedException {
+    assumeTrue(emitStableMessagingSemconv());
+
+    awaitUntilConsumerIsReady();
+    testing.clearData();
+    ConsumerRecords<?, ?> records = poll(Duration.ofMillis(1));
+
+    assertThat(records.count()).isZero();
+    assertThat(testing.spans()).isEmpty();
+    assertReceiveDurationMetrics(
+        testing,
+        "io.opentelemetry.kafka-clients-0.11",
+        null,
+        testLatestDeps() ? "test" : null,
+        null,
+        1,
+        null);
+  }
+
+  @Test
   void testReceiveDoesNotParentProcessSpan() throws Exception {
     assumeTrue(emitStableMessagingSemconv());
     producer.send(new ProducerRecord<>(SHARED_TOPIC, 10, "Hello Kafka!")).get(5, SECONDS);
