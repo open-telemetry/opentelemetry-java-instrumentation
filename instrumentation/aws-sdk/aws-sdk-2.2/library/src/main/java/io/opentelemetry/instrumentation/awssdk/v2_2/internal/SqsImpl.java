@@ -270,7 +270,15 @@ public final class SqsImpl {
         (carrier, k, v) ->
             carrier.putIfAbsent(
                 k, MessageAttributeValue.builder().stringValue(v).dataType("String").build()));
-    if (candidate.size() <= 10 && candidate.size() > messageAttributes.size()) {
+    SpanContext sourceSpanContext = Span.fromContext(otelContext).getSpanContext();
+    SpanContext extractedSpanContext =
+        Span.fromContext(SqsParentContext.ofMessageAttributes(candidate, messagingPropagator))
+            .getSpanContext();
+    if (candidate.size() <= 10
+        && candidate.size() > messageAttributes.size()
+        && sourceSpanContext.isValid()
+        && extractedSpanContext.getTraceId().equals(sourceSpanContext.getTraceId())
+        && extractedSpanContext.getSpanId().equals(sourceSpanContext.getSpanId())) {
       messageAttributes.clear();
       messageAttributes.putAll(candidate);
       return true;
