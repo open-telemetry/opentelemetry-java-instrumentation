@@ -41,7 +41,7 @@ class ArmeriaHeaderSelectorTest {
   }
 
   @Test
-  void clientCapturesHeadersMatchingSelectors() {
+  void clientCapturesHeadersMatchingSelectorPatterns() {
     int port = startServer(UnaryOperator.identity());
 
     WebClient client =
@@ -84,7 +84,7 @@ class ArmeriaHeaderSelectorTest {
 
   @SuppressWarnings("deprecation") // testing deprecated API
   @Test
-  void clientCapturesHeadersFromDeprecatedSetters() {
+  void clientCapturesHeadersConfiguredByName() {
     int port = startServer(UnaryOperator.identity());
 
     WebClient client =
@@ -103,7 +103,7 @@ class ArmeriaHeaderSelectorTest {
   }
 
   @Test
-  void serverCapturesHeadersMatchingSelectors() {
+  void serverCapturesHeadersMatchingSelectorPatterns() {
     int port =
         startServer(
             sb ->
@@ -122,7 +122,7 @@ class ArmeriaHeaderSelectorTest {
 
   @SuppressWarnings("deprecation") // testing deprecated API
   @Test
-  void serverCapturesHeadersFromDeprecatedSetters() {
+  void serverCapturesHeadersConfiguredByName() {
     int port =
         startServer(
             sb ->

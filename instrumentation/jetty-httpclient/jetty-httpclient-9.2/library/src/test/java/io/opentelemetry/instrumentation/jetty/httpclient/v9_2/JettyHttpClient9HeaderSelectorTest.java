@@ -56,7 +56,7 @@ class JettyHttpClient9HeaderSelectorTest {
   }
 
   @Test
-  void capturesHeadersMatchingSelectors() throws Exception {
+  void capturesHeadersMatchingSelectorPatterns() throws Exception {
     client =
         JettyClientTelemetry.builder(testing.getOpenTelemetry())
             .setRequestHeaders(IncludeExclude.builder().setIncluded("x-test-*").build())
@@ -71,7 +71,7 @@ class JettyHttpClient9HeaderSelectorTest {
 
   @SuppressWarnings("deprecation") // testing deprecated API
   @Test
-  void capturesHeadersFromDeprecatedSetters() throws Exception {
+  void capturesHeadersConfiguredByName() throws Exception {
     client =
         JettyClientTelemetry.builder(testing.getOpenTelemetry())
             .setCapturedRequestHeaders(singletonList("x-test-request"))
