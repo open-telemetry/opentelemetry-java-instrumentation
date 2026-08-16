@@ -3,53 +3,67 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.javahttpserver;
+package io.opentelemetry.instrumentation.javahttpclient;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.sun.net.httpserver.Filter;
-import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
-import java.net.URL;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.List;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JavaHttpServerHeadersTest {
+class JavaHttpClientHeaderSelectorTest {
 
   @RegisterExtension
   static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  private HttpServer server;
+  private static HttpServer server;
 
-  @AfterEach
-  void stopServer() {
-    if (server != null) {
-      server.stop(0);
-    }
+  @BeforeAll
+  static void startServer() throws IOException {
+    server = HttpServer.create(new InetSocketAddress(0), 0);
+    server.createContext(
+        "/",
+        exchange -> {
+          exchange.getResponseHeaders().add("X-Test-Response", "response-value");
+          exchange.getResponseHeaders().add("X-Secret-Response", "secret-value");
+          byte[] body = "hello".getBytes(UTF_8);
+          exchange.sendResponseHeaders(200, body.length);
+          exchange.getResponseBody().write(body);
+          exchange.close();
+        });
+    server.start();
+  }
+
+  @AfterAll
+  static void stopServer() {
+    server.stop(0);
   }
 
   @Test
-  void capturesHeadersMatchedThroughNameEnumeration() throws Exception {
-    start(
-        JavaHttpServerTelemetry.builder(testing.getOpenTelemetry())
+  void capturesHeadersMatchingSelectorPatterns() throws Exception {
+    HttpClient client =
+        JavaHttpClientTelemetry.builder(testing.getOpenTelemetry())
             .setRequestHeaders(IncludeExclude.builder().setIncluded("x-test-*").build())
             .setResponseHeaders(IncludeExclude.builder().setExcluded("x-secret-*").build())
             .build()
-            .createFilter());
+            .wrap(HttpClient.newHttpClient());
 
-    send();
+    send(client);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -78,15 +92,15 @@ class JavaHttpServerHeadersTest {
 
   @Test
   @SuppressWarnings("deprecation") // testing deprecated API
-  void capturesHeadersConfiguredWithDeprecatedSetters() throws Exception {
-    start(
-        JavaHttpServerTelemetry.builder(testing.getOpenTelemetry())
+  void capturesHeadersConfiguredByName() throws Exception {
+    HttpClient client =
+        JavaHttpClientTelemetry.builder(testing.getOpenTelemetry())
             .setCapturedRequestHeaders(singletonList("X-Test-Request"))
             .setCapturedResponseHeaders(singletonList("X-Test-Response"))
             .build()
-            .createFilter());
+            .wrap(HttpClient.newHttpClient());
 
-    send();
+    send(client);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -105,14 +119,14 @@ class JavaHttpServerHeadersTest {
   @Test
   @SuppressWarnings("deprecation") // testing deprecated API
   void deprecatedSettersMatchHeaderNamesLiterally() throws Exception {
-    start(
-        JavaHttpServerTelemetry.builder(testing.getOpenTelemetry())
+    HttpClient client =
+        JavaHttpClientTelemetry.builder(testing.getOpenTelemetry())
             .setCapturedRequestHeaders(singletonList("*"))
             .setCapturedResponseHeaders(singletonList("*"))
             .build()
-            .createFilter());
+            .wrap(HttpClient.newHttpClient());
 
-    send();
+    send(client);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -133,36 +147,17 @@ class JavaHttpServerHeadersTest {
                         })));
   }
 
-  private void start(Filter filter) throws IOException {
-    server = HttpServer.create(new InetSocketAddress(0), 0);
-    HttpContext context =
-        server.createContext(
-            "/",
-            exchange -> {
-              exchange.getResponseHeaders().add("X-Test-Response", "response-value");
-              exchange.getResponseHeaders().add("X-Secret-Response", "secret-value");
-              byte[] body = "hello".getBytes(UTF_8);
-              exchange.sendResponseHeaders(200, body.length);
-              exchange.getResponseBody().write(body);
-              exchange.close();
-            });
-    context.getFilters().add(filter);
-    server.start();
-  }
+  private static void send(HttpClient client) throws Exception {
+    HttpRequest request =
+        HttpRequest.newBuilder()
+            .uri(URI.create("http://localhost:" + server.getAddress().getPort() + "/"))
+            .header("X-Test-Request", "request-value")
+            .header("X-Other-Request", "other-value")
+            .header("Authorization", "Bearer secret-token")
+            .build();
 
-  private void send() throws IOException {
-    URL url = new URL("http://localhost:" + server.getAddress().getPort() + "/");
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.setRequestProperty("X-Test-Request", "request-value");
-    connection.setRequestProperty("X-Other-Request", "other-value");
-    connection.setRequestProperty("Authorization", "Bearer secret-token");
-    assertThat(connection.getResponseCode()).isEqualTo(200);
-    try (InputStream inputStream = connection.getInputStream()) {
-      while (inputStream.read() != -1) {
-        // drain the response body
-      }
-    }
-    connection.disconnect();
+    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+    assertThat(response.statusCode()).isEqualTo(200);
   }
 
   private static List<String> headerValues(Attributes attributes, String key) {
