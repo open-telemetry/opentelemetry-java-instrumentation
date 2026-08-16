@@ -90,8 +90,8 @@ class SpringWebHeaderSelectorTest {
     sendRequest(interceptor);
 
     Attributes attributes = testing.waitForTraces(1).get(0).get(0).getAttributes();
-    // "*" is dropped while the selector is built, so it captures nothing; Authorization is in the
-    // request so that treating "*" as a glob would capture it
+    // "*" is matched as a literal header name, so it captures nothing because neither the request
+    // nor the response contains it; Authorization ensures treating "*" as a glob would capture it
     assertThat(attributes.get(stringArrayKey("http.request.header.authorization"))).isNull();
     assertThat(attributes.asMap().keySet())
         .noneMatch(key -> key.getKey().startsWith("http.request.header."))
