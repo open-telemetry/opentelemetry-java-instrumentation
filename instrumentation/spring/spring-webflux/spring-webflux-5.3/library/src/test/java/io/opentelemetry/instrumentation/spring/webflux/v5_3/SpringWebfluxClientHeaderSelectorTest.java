@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webmvc.v5_3;
+package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static java.util.Arrays.asList;
@@ -14,28 +14,27 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import javax.servlet.Filter;
-import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
-class SpringWebMvcHeaderCaptureTest {
+class SpringWebfluxClientHeaderSelectorTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Test
-  void capturesHeadersMatchingSelectorPatterns() throws Exception {
-    Filter filter =
-        SpringWebMvcTelemetry.builder(testing.getOpenTelemetry())
+  void capturesHeadersMatchingSelectorPatterns() {
+    SpringWebfluxClientTelemetry telemetry =
+        SpringWebfluxClientTelemetry.builder(testing.getOpenTelemetry())
             .setRequestHeaders(IncludeExclude.builder().setIncluded("X-Test-*").build())
             .setResponseHeaders(IncludeExclude.builder().setExcluded("x-secret-*").build())
-            .build()
-            .createServletFilter();
+            .build();
 
-    handleRequest(filter);
+    sendRequest(telemetry);
 
     Attributes attributes = testing.waitForTraces(1).get(0).get(0).getAttributes();
     assertThat(attributes.get(stringArrayKey("http.request.header.x-test-request")))
@@ -48,15 +47,14 @@ class SpringWebMvcHeaderCaptureTest {
 
   @Test
   @SuppressWarnings("deprecation") // testing deprecated API
-  void capturesHeadersConfiguredByName() throws Exception {
-    Filter filter =
-        SpringWebMvcTelemetry.builder(testing.getOpenTelemetry())
+  void capturesHeadersConfiguredByName() {
+    SpringWebfluxClientTelemetry telemetry =
+        SpringWebfluxClientTelemetry.builder(testing.getOpenTelemetry())
             .setCapturedRequestHeaders(asList("X-Test-Request", "Authorization"))
             .setCapturedResponseHeaders(singletonList("X-Test-Response"))
-            .build()
-            .createServletFilter();
+            .build();
 
-    handleRequest(filter);
+    sendRequest(telemetry);
 
     Attributes attributes = testing.waitForTraces(1).get(0).get(0).getAttributes();
     assertThat(attributes.get(stringArrayKey("http.request.header.x-test-request")))
@@ -73,15 +71,14 @@ class SpringWebMvcHeaderCaptureTest {
 
   @Test
   @SuppressWarnings("deprecation") // testing deprecated API
-  void deprecatedSettersMatchHeaderNamesLiterally() throws Exception {
-    Filter filter =
-        SpringWebMvcTelemetry.builder(testing.getOpenTelemetry())
+  void deprecatedSettersMatchHeaderNamesLiterally() {
+    SpringWebfluxClientTelemetry telemetry =
+        SpringWebfluxClientTelemetry.builder(testing.getOpenTelemetry())
             .setCapturedRequestHeaders(singletonList("*"))
             .setCapturedResponseHeaders(singletonList("*"))
-            .build()
-            .createServletFilter();
+            .build();
 
-    handleRequest(filter);
+    sendRequest(telemetry);
 
     Attributes attributes = testing.waitForTraces(1).get(0).get(0).getAttributes();
     // "*" is dropped while the selector is built, so it captures nothing; Authorization is in the
@@ -92,21 +89,27 @@ class SpringWebMvcHeaderCaptureTest {
         .noneMatch(key -> key.getKey().startsWith("http.response.header."));
   }
 
-  private static void handleRequest(Filter filter) throws Exception {
-    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/test");
-    request.addHeader("X-Test-Request", "request-value");
-    request.addHeader("X-Secret-Token", "secret-value");
-    request.addHeader("Authorization", "secret-value");
+  private static void sendRequest(SpringWebfluxClientTelemetry telemetry) {
+    WebClient client =
+        WebClient.builder()
+            .filters(telemetry::addFilter)
+            .exchangeFunction(
+                request ->
+                    Mono.just(
+                        ClientResponse.create(HttpStatus.OK)
+                            .header("X-Test-Response", "response-value")
+                            .header("X-Secret-Token", "secret-value")
+                            .build()))
+            .build();
 
-    MockHttpServletResponse response = new MockHttpServletResponse();
-
-    filter.doFilter(
-        request,
-        response,
-        (req, resp) -> {
-          HttpServletResponse httpResponse = (HttpServletResponse) resp;
-          httpResponse.addHeader("X-Test-Response", "response-value");
-          httpResponse.addHeader("X-Secret-Token", "secret-value");
-        });
+    client
+        .get()
+        .uri("http://localhost:8080/test")
+        .header("X-Test-Request", "request-value")
+        .header("X-Secret-Token", "secret-value")
+        .header("Authorization", "secret-value")
+        .retrieve()
+        .toBodilessEntity()
+        .block();
   }
 }

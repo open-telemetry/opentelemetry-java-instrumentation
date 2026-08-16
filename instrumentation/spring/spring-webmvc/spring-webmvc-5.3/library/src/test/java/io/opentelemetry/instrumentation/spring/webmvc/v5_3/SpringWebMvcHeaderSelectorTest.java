@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.web.v3_1;
+package io.opentelemetry.instrumentation.spring.webmvc.v5_3;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static java.util.Arrays.asList;
@@ -14,34 +14,28 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.net.URI;
+import javax.servlet.Filter;
+import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.client.ClientHttpRequest;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
-class SpringWebHeaderCaptureTest {
+class SpringWebMvcHeaderSelectorTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Test
   void capturesHeadersMatchingSelectorPatterns() throws Exception {
-    ClientHttpRequestInterceptor interceptor =
-        SpringWebTelemetry.builder(testing.getOpenTelemetry())
+    Filter filter =
+        SpringWebMvcTelemetry.builder(testing.getOpenTelemetry())
             .setRequestHeaders(IncludeExclude.builder().setIncluded("X-Test-*").build())
             .setResponseHeaders(IncludeExclude.builder().setExcluded("x-secret-*").build())
             .build()
-            .createInterceptor();
+            .createServletFilter();
 
-    sendRequest(interceptor);
+    handleRequest(filter);
 
     Attributes attributes = testing.waitForTraces(1).get(0).get(0).getAttributes();
     assertThat(attributes.get(stringArrayKey("http.request.header.x-test-request")))
@@ -55,14 +49,14 @@ class SpringWebHeaderCaptureTest {
   @Test
   @SuppressWarnings("deprecation") // testing deprecated API
   void capturesHeadersConfiguredByName() throws Exception {
-    ClientHttpRequestInterceptor interceptor =
-        SpringWebTelemetry.builder(testing.getOpenTelemetry())
+    Filter filter =
+        SpringWebMvcTelemetry.builder(testing.getOpenTelemetry())
             .setCapturedRequestHeaders(asList("X-Test-Request", "Authorization"))
             .setCapturedResponseHeaders(singletonList("X-Test-Response"))
             .build()
-            .createInterceptor();
+            .createServletFilter();
 
-    sendRequest(interceptor);
+    handleRequest(filter);
 
     Attributes attributes = testing.waitForTraces(1).get(0).get(0).getAttributes();
     assertThat(attributes.get(stringArrayKey("http.request.header.x-test-request")))
@@ -80,14 +74,14 @@ class SpringWebHeaderCaptureTest {
   @Test
   @SuppressWarnings("deprecation") // testing deprecated API
   void deprecatedSettersMatchHeaderNamesLiterally() throws Exception {
-    ClientHttpRequestInterceptor interceptor =
-        SpringWebTelemetry.builder(testing.getOpenTelemetry())
+    Filter filter =
+        SpringWebMvcTelemetry.builder(testing.getOpenTelemetry())
             .setCapturedRequestHeaders(singletonList("*"))
             .setCapturedResponseHeaders(singletonList("*"))
             .build()
-            .createInterceptor();
+            .createServletFilter();
 
-    sendRequest(interceptor);
+    handleRequest(filter);
 
     Attributes attributes = testing.waitForTraces(1).get(0).get(0).getAttributes();
     // "*" is dropped while the selector is built, so it captures nothing; Authorization is in the
@@ -98,48 +92,21 @@ class SpringWebHeaderCaptureTest {
         .noneMatch(key -> key.getKey().startsWith("http.response.header."));
   }
 
-  private static void sendRequest(ClientHttpRequestInterceptor interceptor) throws Exception {
-    // a real request implementation, since the HttpRequest interface has gained methods over the
-    // supported spring web version range
-    ClientHttpRequest request =
-        new SimpleClientHttpRequestFactory()
-            .createRequest(URI.create("http://localhost:8080/test"), HttpMethod.GET);
-    request.getHeaders().add("X-Test-Request", "request-value");
-    request.getHeaders().add("X-Secret-Token", "secret-value");
-    request.getHeaders().add("Authorization", "secret-value");
+  private static void handleRequest(Filter filter) throws Exception {
+    MockHttpServletRequest request = new MockHttpServletRequest("GET", "/test");
+    request.addHeader("X-Test-Request", "request-value");
+    request.addHeader("X-Secret-Token", "secret-value");
+    request.addHeader("Authorization", "secret-value");
 
-    TestClientHttpResponse response = new TestClientHttpResponse();
-    response.getHeaders().add("X-Test-Response", "response-value");
-    response.getHeaders().add("X-Secret-Token", "secret-value");
+    MockHttpServletResponse response = new MockHttpServletResponse();
 
-    interceptor.intercept(request, new byte[0], (req, body) -> response);
-  }
-
-  private static class TestClientHttpResponse implements ClientHttpResponse {
-
-    private final HttpHeaders headers = new HttpHeaders();
-
-    @Override
-    public HttpStatus getStatusCode() {
-      return HttpStatus.OK;
-    }
-
-    @Override
-    public String getStatusText() {
-      return "OK";
-    }
-
-    @Override
-    public void close() {}
-
-    @Override
-    public InputStream getBody() {
-      return new ByteArrayInputStream(new byte[0]);
-    }
-
-    @Override
-    public HttpHeaders getHeaders() {
-      return headers;
-    }
+    filter.doFilter(
+        request,
+        response,
+        (req, resp) -> {
+          HttpServletResponse httpResponse = (HttpServletResponse) resp;
+          httpResponse.addHeader("X-Test-Response", "response-value");
+          httpResponse.addHeader("X-Secret-Token", "secret-value");
+        });
   }
 }

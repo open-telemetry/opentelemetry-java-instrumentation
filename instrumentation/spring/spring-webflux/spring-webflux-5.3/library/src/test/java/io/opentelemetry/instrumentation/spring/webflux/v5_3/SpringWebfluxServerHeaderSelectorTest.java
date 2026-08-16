@@ -16,25 +16,25 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.reactive.function.client.ClientResponse;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
+import org.springframework.mock.web.server.MockServerWebExchange;
+import org.springframework.web.server.WebFilter;
 
-class SpringWebfluxClientHeaderCaptureTest {
+class SpringWebfluxServerHeaderSelectorTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Test
   void capturesHeadersMatchingSelectorPatterns() {
-    SpringWebfluxClientTelemetry telemetry =
-        SpringWebfluxClientTelemetry.builder(testing.getOpenTelemetry())
+    WebFilter filter =
+        SpringWebfluxServerTelemetry.builder(testing.getOpenTelemetry())
             .setRequestHeaders(IncludeExclude.builder().setIncluded("X-Test-*").build())
             .setResponseHeaders(IncludeExclude.builder().setExcluded("x-secret-*").build())
-            .build();
+            .build()
+            .createWebFilter();
 
-    sendRequest(telemetry);
+    handleRequest(filter);
 
     Attributes attributes = testing.waitForTraces(1).get(0).get(0).getAttributes();
     assertThat(attributes.get(stringArrayKey("http.request.header.x-test-request")))
@@ -48,13 +48,14 @@ class SpringWebfluxClientHeaderCaptureTest {
   @Test
   @SuppressWarnings("deprecation") // testing deprecated API
   void capturesHeadersConfiguredByName() {
-    SpringWebfluxClientTelemetry telemetry =
-        SpringWebfluxClientTelemetry.builder(testing.getOpenTelemetry())
+    WebFilter filter =
+        SpringWebfluxServerTelemetry.builder(testing.getOpenTelemetry())
             .setCapturedRequestHeaders(asList("X-Test-Request", "Authorization"))
             .setCapturedResponseHeaders(singletonList("X-Test-Response"))
-            .build();
+            .build()
+            .createWebFilter();
 
-    sendRequest(telemetry);
+    handleRequest(filter);
 
     Attributes attributes = testing.waitForTraces(1).get(0).get(0).getAttributes();
     assertThat(attributes.get(stringArrayKey("http.request.header.x-test-request")))
@@ -72,13 +73,14 @@ class SpringWebfluxClientHeaderCaptureTest {
   @Test
   @SuppressWarnings("deprecation") // testing deprecated API
   void deprecatedSettersMatchHeaderNamesLiterally() {
-    SpringWebfluxClientTelemetry telemetry =
-        SpringWebfluxClientTelemetry.builder(testing.getOpenTelemetry())
+    WebFilter filter =
+        SpringWebfluxServerTelemetry.builder(testing.getOpenTelemetry())
             .setCapturedRequestHeaders(singletonList("*"))
             .setCapturedResponseHeaders(singletonList("*"))
-            .build();
+            .build()
+            .createWebFilter();
 
-    sendRequest(telemetry);
+    handleRequest(filter);
 
     Attributes attributes = testing.waitForTraces(1).get(0).get(0).getAttributes();
     // "*" is dropped while the selector is built, so it captures nothing; Authorization is in the
@@ -89,27 +91,22 @@ class SpringWebfluxClientHeaderCaptureTest {
         .noneMatch(key -> key.getKey().startsWith("http.response.header."));
   }
 
-  private static void sendRequest(SpringWebfluxClientTelemetry telemetry) {
-    WebClient client =
-        WebClient.builder()
-            .filters(telemetry::addFilter)
-            .exchangeFunction(
-                request ->
-                    Mono.just(
-                        ClientResponse.create(HttpStatus.OK)
-                            .header("X-Test-Response", "response-value")
-                            .header("X-Secret-Token", "secret-value")
-                            .build()))
-            .build();
+  private static void handleRequest(WebFilter filter) {
+    MockServerWebExchange exchange =
+        MockServerWebExchange.from(
+            MockServerHttpRequest.get("http://localhost:8080/test")
+                .header("X-Test-Request", "request-value")
+                .header("X-Secret-Token", "secret-value")
+                .header("Authorization", "secret-value"));
 
-    client
-        .get()
-        .uri("http://localhost:8080/test")
-        .header("X-Test-Request", "request-value")
-        .header("X-Secret-Token", "secret-value")
-        .header("Authorization", "secret-value")
-        .retrieve()
-        .toBodilessEntity()
+    filter
+        .filter(
+            exchange,
+            filteredExchange -> {
+              filteredExchange.getResponse().getHeaders().add("X-Test-Response", "response-value");
+              filteredExchange.getResponse().getHeaders().add("X-Secret-Token", "secret-value");
+              return filteredExchange.getResponse().setComplete();
+            })
         .block();
   }
 }

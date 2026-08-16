@@ -54,12 +54,14 @@ public final class SpringWebfluxClientTelemetryBuilder {
   /**
    * Configures which HTTP request headers are captured as span attributes.
    *
+   * <p>Header values are captured under the {@code http.request.header.<key>} attribute key. The
+   * {@code <key>} part in the attribute key is the lowercase header name.
+   *
    * <p>Selector patterns are matched case-insensitively, since HTTP header names are
    * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
    * characters, including none. Excluded patterns take precedence over included patterns. A
-   * selector with no included patterns captures every header that is not excluded, while an
-   * {@linkplain IncludeExclude#isEmpty() empty} selector, like no selector at all, captures no
-   * headers.
+   * selector with no included patterns captures every header that is not excluded, and an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
    */
   @CanIgnoreReturnValue
   public SpringWebfluxClientTelemetryBuilder setRequestHeaders(IncludeExclude requestHeaders) {
@@ -70,9 +72,8 @@ public final class SpringWebfluxClientTelemetryBuilder {
   /**
    * Configures HTTP request headers to capture as span attributes.
    *
-   * <p>The header names are matched literally. Names containing {@code *} or {@code ?} are ignored,
-   * since this setting never supported wildcards. Use {@link #setRequestHeaders(IncludeExclude)} to
-   * match names by pattern.
+   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
+   * patterns.
    *
    * @param requestHeaders HTTP header names to capture.
    * @deprecated Use {@link #setRequestHeaders(IncludeExclude)} instead, which matches glob patterns
@@ -89,12 +90,14 @@ public final class SpringWebfluxClientTelemetryBuilder {
   /**
    * Configures which HTTP response headers are captured as span attributes.
    *
+   * <p>Header values are captured under the {@code http.response.header.<key>} attribute key. The
+   * {@code <key>} part in the attribute key is the lowercase header name.
+   *
    * <p>Selector patterns are matched case-insensitively, since HTTP header names are
    * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
    * characters, including none. Excluded patterns take precedence over included patterns. A
-   * selector with no included patterns captures every header that is not excluded, while an
-   * {@linkplain IncludeExclude#isEmpty() empty} selector, like no selector at all, captures no
-   * headers.
+   * selector with no included patterns captures every header that is not excluded, and an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
    */
   @CanIgnoreReturnValue
   public SpringWebfluxClientTelemetryBuilder setResponseHeaders(IncludeExclude responseHeaders) {
@@ -105,9 +108,8 @@ public final class SpringWebfluxClientTelemetryBuilder {
   /**
    * Configures HTTP response headers to capture as span attributes.
    *
-   * <p>The header names are matched literally. Names containing {@code *} or {@code ?} are ignored,
-   * since this setting never supported wildcards. Use {@link #setResponseHeaders(IncludeExclude)}
-   * to match names by pattern.
+   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
+   * patterns.
    *
    * @param responseHeaders HTTP header names to capture.
    * @deprecated Use {@link #setResponseHeaders(IncludeExclude)} instead, which matches glob
