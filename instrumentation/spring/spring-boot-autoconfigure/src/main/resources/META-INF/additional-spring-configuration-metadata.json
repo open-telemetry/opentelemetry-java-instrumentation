@@ -503,7 +503,7 @@
     {
       "name": "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes",
       "type": "java.lang.Boolean",
-      "description": "Deprecated setting that enables the capture of all Logback logger context properties as attributes. It is ignored when `otel.instrumentation.logback-appender.experimental.logger-context-attributes.included` or `otel.instrumentation.logback-appender.experimental.logger-context-attributes.excluded` is configured, and it may be removed in the next minor release. Use `otel.instrumentation.logback-appender.experimental.logger-context-attributes.included` instead.",
+      "description": "Deprecated setting that enables the capture of all attributes from the Logback logger context. It is ignored when `otel.instrumentation.logback-appender.experimental.logger-context-attributes.included` or `otel.instrumentation.logback-appender.experimental.logger-context-attributes.excluded` is configured, and it may be removed in the next minor release. Use `otel.instrumentation.logback-appender.experimental.logger-context-attributes.included` instead.",
       "defaultValue": false,
       "deprecation": {
         "level": "warning",
