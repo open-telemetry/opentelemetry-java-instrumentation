@@ -69,7 +69,7 @@ public final class DeprecatedCaptureNames {
               + ignoredNames
               + " configured in "
               + source
-              + ", which matches names exactly and never supported wildcards."
+              + ", which matches names literally and never supported wildcards."
               + (replacement == null ? "" : " Use " + replacement + " to match names by pattern."));
     }
 
