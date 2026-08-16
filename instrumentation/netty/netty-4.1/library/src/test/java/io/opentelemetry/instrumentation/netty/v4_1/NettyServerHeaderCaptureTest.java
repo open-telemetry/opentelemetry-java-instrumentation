@@ -32,7 +32,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class NettyServerHeaderCaptureTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Test
   void capturesEnumeratedHeadersWhenOnlyExcludingHeaders() {
