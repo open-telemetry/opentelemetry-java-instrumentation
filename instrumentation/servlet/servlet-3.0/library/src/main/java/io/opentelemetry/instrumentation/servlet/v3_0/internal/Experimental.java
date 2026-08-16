@@ -116,8 +116,7 @@ public final class Experimental {
         builder,
         DeprecatedCaptureNames.toSelectorOrEmpty(
             captureRequestParameters,
-            "io.opentelemetry.instrumentation.servlet.v3_0.internal.Experimental"
-                + ".setCaptureRequestParameters()",
+            "Experimental.setCaptureRequestParameters()",
             "setRequestParameters(ServletTelemetryBuilder, IncludeExclude)"));
   }
 
