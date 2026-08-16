@@ -42,7 +42,7 @@ class DriverInstrumentation implements TypeInstrumentation {
         nameStartsWith("connect")
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, Properties.class))
-            .and(returns(Connection.class)),
+            .and(returns(named("java.sql.Connection"))),
         getClass().getName() + "$DriverAdvice");
   }
 

@@ -54,7 +54,7 @@ public class RmiClientContextInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(takesArgument(0, named("sun.rmi.transport.Connection")))
-            .and(takesArgument(1, ObjID.class)),
+            .and(takesArgument(1, named("java.rmi.server.ObjID"))),
         getClass().getName() + "$StreamRemoteCallConstructorAdvice");
   }
 

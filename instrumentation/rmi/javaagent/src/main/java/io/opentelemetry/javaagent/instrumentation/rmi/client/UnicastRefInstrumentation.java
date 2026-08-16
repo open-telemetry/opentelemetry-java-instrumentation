@@ -14,7 +14,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
-import java.rmi.Remote;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -30,7 +29,9 @@ class UnicastRefInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("invoke").and(takesArgument(0, Remote.class)).and(takesArgument(1, Method.class)),
+        named("invoke")
+            .and(takesArgument(0, named("java.rmi.Remote")))
+            .and(takesArgument(1, Method.class)),
         getClass().getName() + "$InvokeAdvice");
   }
 
