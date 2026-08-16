@@ -48,8 +48,6 @@ testing {
   suites {
     register<JvmTestSuite>("slf4j2ApiTest") {
       dependencies {
-        implementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
-
         implementation("ch.qos.logback:logback-classic") {
           version {
             strictly(baseVersion("1.3.0").orLatest())
