@@ -16,6 +16,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
@@ -125,6 +126,12 @@ public final class KafkaInstrumenterFactory {
 
   public Instrumenter<KafkaReceiveRequest, Void> createConsumerReceiveInstrumenter(
       Iterable<AttributesExtractor<KafkaReceiveRequest, Void>> extractors) {
+    return createConsumerReceiveInstrumenter(extractors, true);
+  }
+
+  private Instrumenter<KafkaReceiveRequest, Void> createConsumerReceiveInstrumenter(
+      Iterable<AttributesExtractor<KafkaReceiveRequest, Void>> extractors,
+      boolean addClientOperationDuration) {
     KafkaReceiveAttributesGetter getter = new KafkaReceiveAttributesGetter();
     MessagingOperationType operationType = MessagingOperationType.RECEIVE;
     boolean receiveInstrumentationEnabled = receiveInstrumentationEnabled();
@@ -141,6 +148,9 @@ public final class KafkaInstrumenterFactory {
             .addAttributesExtractors(extractors)
             .setErrorCauseExtractor(errorCauseExtractor)
             .setEnabled(receiveInstrumentationEnabled);
+    if (addClientOperationDuration) {
+      builder.addOperationMetrics(MessagingConsumerMetrics.getClientOperationDuration());
+    }
     if (emitStableMessagingSemconv()) {
       builder.addSpanLinksExtractor(
           new KafkaBatchProcessSpanLinksExtractor(
@@ -152,12 +162,7 @@ public final class KafkaInstrumenterFactory {
 
   public Instrumenter<KafkaReceiveRequest, Void> createConsumerReceiveInterceptorInstrumenter(
       Iterable<AttributesExtractor<KafkaReceiveRequest, Void>> extractors) {
-    return createConsumerReceiveInstrumenter(extractors);
-  }
-
-  public KafkaConsumerOperationMetrics createConsumerOperationMetrics() {
-    return new KafkaConsumerOperationMetrics(
-        openTelemetry, instrumentationName, errorCauseExtractor, receiveInstrumentationEnabled());
+    return createConsumerReceiveInstrumenter(extractors, false);
   }
 
   public Instrumenter<KafkaProcessRequest, Void> createConsumerProcessInstrumenter() {

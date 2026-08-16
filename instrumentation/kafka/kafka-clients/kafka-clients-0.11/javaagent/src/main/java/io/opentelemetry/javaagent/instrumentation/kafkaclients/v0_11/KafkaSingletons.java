@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerOperationMetrics;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
@@ -31,7 +30,6 @@ public class KafkaSingletons {
 
   private static final Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter;
   private static final Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter;
-  private static final KafkaConsumerOperationMetrics consumerOperationMetrics;
   private static final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
 
   static {
@@ -45,7 +43,6 @@ public class KafkaSingletons {
                 ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
     producerInstrumenter = instrumenterFactory.createProducerInstrumenter();
     consumerReceiveInstrumenter = instrumenterFactory.createConsumerReceiveInstrumenter();
-    consumerOperationMetrics = instrumenterFactory.createConsumerOperationMetrics();
     consumerProcessInstrumenter = instrumenterFactory.createConsumerProcessInstrumenter();
   }
 
@@ -55,10 +52,6 @@ public class KafkaSingletons {
 
   public static Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter() {
     return consumerReceiveInstrumenter;
-  }
-
-  public static KafkaConsumerOperationMetrics consumerOperationMetrics() {
-    return consumerOperationMetrics;
   }
 
   public static Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter() {
