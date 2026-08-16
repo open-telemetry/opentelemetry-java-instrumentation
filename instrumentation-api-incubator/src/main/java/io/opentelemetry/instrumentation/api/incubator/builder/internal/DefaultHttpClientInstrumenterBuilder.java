@@ -141,7 +141,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
    *
    * @param requestHeaders A list of HTTP header names.
    */
-  @SuppressWarnings("deprecation") // the deprecated path is only reachable from deprecated settings
+  @SuppressWarnings("deprecation") // this is the exact-name API, so it calls the deprecated setter
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
       Collection<String> requestHeaders) {
@@ -173,7 +173,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
    *
    * @param responseHeaders A list of HTTP header names.
    */
-  @SuppressWarnings("deprecation") // the deprecated path is only reachable from deprecated settings
+  @SuppressWarnings("deprecation") // this is the exact-name API, so it calls the deprecated setter
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
       Collection<String> responseHeaders) {
