@@ -127,14 +127,14 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
   /**
    * Configures which HTTP request headers are captured as span attributes.
    *
-   * Header values are captured under the `http.request.header.<key>` attribute key, where the
-   * `<key>` part is the lowercase header name.
+   * Header values are captured under the `http.request.header.<key>` attribute key. The `<key>`
+   * part in the attribute key is the lowercase header name.
    *
-   * Header names are matched case-insensitively, since HTTP header names are case-insensitive. `?`
-   * matches one character and `*` matches any number of characters, including none. Excluded
+   * Selector patterns are matched case-insensitively, since HTTP header names are case-insensitive.
+   * `?` matches one character and `*` matches any number of characters, including none. Excluded
    * patterns take precedence over included patterns. A selector with no included patterns captures
-   * every header that is not excluded, except that an [empty][IncludeExclude.isEmpty] selector
-   * captures no headers. No request headers are captured when this is not configured.
+   * every header that is not excluded, and an [empty][IncludeExclude.isEmpty] selector captures no
+   * headers.
    */
   fun requestHeaders(requestHeaders: IncludeExclude) {
     builder.setRequestHeaders(requestHeaders)
@@ -143,8 +143,7 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
   /**
    * Configures which HTTP request headers are captured as span attributes, by exact header name.
    *
-   * The header names are matched literally. Names containing `*` or `?` are ignored, since
-   * this setting never supported wildcards. Use [requestHeaders] to match names by pattern.
+   * The header names are matched literally, so `*` and `?` are not treated as glob patterns.
    */
   // may be removed in the next minor release
   @Deprecated(
@@ -158,8 +157,7 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
   /**
    * Configures which HTTP request headers are captured as span attributes, by exact header name.
    *
-   * The header names are matched literally. Names containing `*` or `?` are ignored, since
-   * this setting never supported wildcards. Use [requestHeaders] to match names by pattern.
+   * The header names are matched literally, so `*` and `?` are not treated as glob patterns.
    */
   // may be removed in the next minor release
   @Deprecated(
@@ -173,14 +171,14 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
   /**
    * Configures which HTTP response headers are captured as span attributes.
    *
-   * Header values are captured under the `http.response.header.<key>` attribute key, where the
-   * `<key>` part is the lowercase header name.
+   * Header values are captured under the `http.response.header.<key>` attribute key. The `<key>`
+   * part in the attribute key is the lowercase header name.
    *
-   * Header names are matched case-insensitively, since HTTP header names are case-insensitive. `?`
-   * matches one character and `*` matches any number of characters, including none. Excluded
+   * Selector patterns are matched case-insensitively, since HTTP header names are case-insensitive.
+   * `?` matches one character and `*` matches any number of characters, including none. Excluded
    * patterns take precedence over included patterns. A selector with no included patterns captures
-   * every header that is not excluded, except that an [empty][IncludeExclude.isEmpty] selector
-   * captures no headers. No response headers are captured when this is not configured.
+   * every header that is not excluded, and an [empty][IncludeExclude.isEmpty] selector captures no
+   * headers.
    */
   fun responseHeaders(responseHeaders: IncludeExclude) {
     builder.setResponseHeaders(responseHeaders)
@@ -189,8 +187,7 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
   /**
    * Configures which HTTP response headers are captured as span attributes, by exact header name.
    *
-   * The header names are matched literally. Names containing `*` or `?` are ignored, since
-   * this setting never supported wildcards. Use [responseHeaders] to match names by pattern.
+   * The header names are matched literally, so `*` and `?` are not treated as glob patterns.
    */
   // may be removed in the next minor release
   @Deprecated(
@@ -204,8 +201,7 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
   /**
    * Configures which HTTP response headers are captured as span attributes, by exact header name.
    *
-   * The header names are matched literally. Names containing `*` or `?` are ignored, since
-   * this setting never supported wildcards. Use [responseHeaders] to match names by pattern.
+   * The header names are matched literally, so `*` and `?` are not treated as glob patterns.
    */
   // may be removed in the next minor release
   @Deprecated(

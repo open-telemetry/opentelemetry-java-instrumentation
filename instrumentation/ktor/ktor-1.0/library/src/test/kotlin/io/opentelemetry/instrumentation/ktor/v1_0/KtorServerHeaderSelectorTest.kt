@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.util.concurrent.TimeUnit
 
-class KtorServerCapturedHeadersTest : AbstractHttpServerUsingTest<ApplicationEngine>() {
+class KtorServerHeaderSelectorTest : AbstractHttpServerUsingTest<ApplicationEngine>() {
 
   private val endpoint = ServerEndpoint.CAPTURE_HEADERS
 
@@ -61,7 +61,7 @@ class KtorServerCapturedHeadersTest : AbstractHttpServerUsingTest<ApplicationEng
   }
 
   @Test
-  fun testCapturedHeadersListedByName() {
+  fun capturesHeadersConfiguredByName() {
     val attributes = captureAttributes { telemetry ->
       @Suppress("DEPRECATION") // testing the deprecated API
       telemetry.setCapturedRequestHeaders(listOf("X-Test-Request", "Authorization"))
@@ -72,12 +72,12 @@ class KtorServerCapturedHeadersTest : AbstractHttpServerUsingTest<ApplicationEng
     assertThat(attributes.get(REQUEST_HEADER)).containsExactly("request-value")
     assertThat(attributes.get(RESPONSE_HEADER)).containsExactly("response-value")
     // capturing Authorization here is what makes asserting that it is absent in
-    // testDeprecatedFunctionsIgnoreWildcardValues meaningful
+    // deprecatedSettersMatchHeaderNamesLiterally meaningful
     assertThat(attributes.get(AUTHORIZATION_HEADER)).containsExactly("secret-value")
   }
 
   @Test
-  fun testDeprecatedFunctionsIgnoreWildcardValues() {
+  fun deprecatedSettersMatchHeaderNamesLiterally() {
     val attributes = captureAttributes { telemetry ->
       @Suppress("DEPRECATION") // testing the deprecated API
       telemetry.setCapturedRequestHeaders(listOf("X-Test-Request", "*"))

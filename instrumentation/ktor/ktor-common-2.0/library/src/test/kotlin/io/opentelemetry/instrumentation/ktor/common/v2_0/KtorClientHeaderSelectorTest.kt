@@ -21,7 +21,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
-class KtorClientHeadersTest {
+class KtorClientHeaderSelectorTest {
 
   companion object {
     @JvmStatic
@@ -35,7 +35,7 @@ class KtorClientHeadersTest {
   }
 
   @Test
-  fun `selector patterns capture headers that are not listed by name`() {
+  fun capturesHeadersMatchingSelectorPatterns() {
     val span = record { telemetryBuilder ->
       telemetryBuilder.requestHeaders(
         IncludeExclude.builder().setIncluded("X-Test-*").setExcluded("*-secret").build()
@@ -51,7 +51,7 @@ class KtorClientHeadersTest {
   }
 
   @Test
-  fun `deprecated captured headers capture headers listed by name`() {
+  fun capturesHeadersConfiguredByName() {
     val span = record { telemetryBuilder ->
       @Suppress("DEPRECATION") // testing the deprecated API
       telemetryBuilder.capturedRequestHeaders("X-Test-Request", "Authorization")
@@ -62,12 +62,12 @@ class KtorClientHeadersTest {
     assertThat(span.attributes.get(REQUEST_HEADER)).containsExactly("request-value")
     assertThat(span.attributes.get(RESPONSE_HEADER)).containsExactly("response-value")
     // capturing Authorization here is what makes asserting that it is absent in
-    // `deprecated captured headers ignore wildcard values` meaningful
+    // deprecatedSettersMatchHeaderNamesLiterally meaningful
     assertThat(span.attributes.get(AUTHORIZATION_HEADER)).containsExactly("secret-value")
   }
 
   @Test
-  fun `deprecated captured headers ignore wildcard values`() {
+  fun deprecatedSettersMatchHeaderNamesLiterally() {
     val span = record { telemetryBuilder ->
       @Suppress("DEPRECATION") // testing the deprecated API
       telemetryBuilder.capturedRequestHeaders("*")
