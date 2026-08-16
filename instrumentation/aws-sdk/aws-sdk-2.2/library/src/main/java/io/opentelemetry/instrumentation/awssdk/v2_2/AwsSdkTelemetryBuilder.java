@@ -63,7 +63,8 @@ public final class AwsSdkTelemetryBuilder {
     return setHeaders(
         DeprecatedCaptureNames.toSelectorOrEmpty(
             capturedHeaders,
-            "AwsSdkTelemetryBuilder.setCapturedHeaders()",
+            "io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetryBuilder"
+                + ".setCapturedHeaders()",
             "setHeaders(IncludeExclude)"));
   }
 
