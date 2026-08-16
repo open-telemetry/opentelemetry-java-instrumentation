@@ -162,9 +162,7 @@ public abstract class AbstractDubboTest {
                                     emitStableRpcSemconv()
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                                         : "$invoke"),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    testing().isJavaagent() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -195,9 +193,7 @@ public abstract class AbstractDubboTest {
                                         : "hello"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    testing().isJavaagent() && testLatestDeps()
-                                        ? "test-peer-service"
-                                        : null),
+                                    testLatestDeps() ? testing().expectedPeerService() : null),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
                                 satisfies(
@@ -346,9 +342,7 @@ public abstract class AbstractDubboTest {
                                     emitStableRpcSemconv()
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invokeAsync"
                                         : "$invokeAsync"),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    testing().isJavaagent() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -379,9 +373,7 @@ public abstract class AbstractDubboTest {
                                         : "hello"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    testing().isJavaagent() && testLatestDeps()
-                                        ? "test-peer-service"
-                                        : null),
+                                    testLatestDeps() ? testing().expectedPeerService() : null),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
                                 satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
@@ -540,9 +532,7 @@ public abstract class AbstractDubboTest {
                             ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                             : "$invoke"),
                     satisfies(ERROR_TYPE, AbstractDubboTest::assertErrorType),
-                    equalTo(
-                        maybeStablePeerService(),
-                        testing().isJavaagent() ? "test-peer-service" : null),
+                    equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                     equalTo(SERVER_ADDRESS, "localhost"),
                     satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                     satisfies(
@@ -693,9 +683,7 @@ public abstract class AbstractDubboTest {
                                     RPC_METHOD,
                                     "org.apache.dubbo.rpc.service.GenericService/$invoke"),
                                 satisfies(ERROR_TYPE, val -> val.isNotNull()),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    testing().isJavaagent() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(

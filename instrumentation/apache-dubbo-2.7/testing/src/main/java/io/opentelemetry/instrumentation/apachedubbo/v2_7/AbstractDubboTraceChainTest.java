@@ -195,9 +195,7 @@ public abstract class AbstractDubboTraceChainTest {
                                     emitStableRpcSemconv()
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                                         : "$invoke"),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    testing().isJavaagent() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -228,9 +226,7 @@ public abstract class AbstractDubboTraceChainTest {
                                         : "hello"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    testing().isJavaagent() && testLatestDeps()
-                                        ? "test-peer-service"
-                                        : null),
+                                    testLatestDeps() ? testing().expectedPeerService() : null),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
                                 satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))),
@@ -251,9 +247,7 @@ public abstract class AbstractDubboTraceChainTest {
                                     emitStableRpcSemconv()
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                                         : "$invoke"),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    testing().isJavaagent() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -284,9 +278,7 @@ public abstract class AbstractDubboTraceChainTest {
                                         : "hello"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    testing().isJavaagent() && testLatestDeps()
-                                        ? "test-peer-service"
-                                        : null),
+                                    testLatestDeps() ? testing().expectedPeerService() : null),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
                                 satisfies(
@@ -476,9 +468,7 @@ public abstract class AbstractDubboTraceChainTest {
                                     emitStableRpcSemconv()
                                         ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
                                         : "$invoke"),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    testing().isJavaagent() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -509,9 +499,7 @@ public abstract class AbstractDubboTraceChainTest {
                                         : "hello"),
                                 equalTo(
                                     maybeStablePeerService(),
-                                    testing().isJavaagent() && testLatestDeps()
-                                        ? "test-peer-service"
-                                        : null),
+                                    testLatestDeps() ? testing().expectedPeerService() : null),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
                                 satisfies(

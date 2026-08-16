@@ -1564,9 +1564,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     DB_CONNECTION_STRING,
                                     emitStableDatabaseSemconv() ? null : "testdb://localhost"),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    testing().isJavaagent() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1664,9 +1662,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     maybeStable(DB_SQL_TABLE),
                                     emitStableDatabaseSemconv() ? null : table),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    testing().isJavaagent() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1812,9 +1808,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     maybeStable(DB_SQL_TABLE),
                                     emitStableDatabaseSemconv() ? null : "table"),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    testing().isJavaagent() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
