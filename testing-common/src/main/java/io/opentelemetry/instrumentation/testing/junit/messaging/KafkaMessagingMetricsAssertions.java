@@ -89,7 +89,7 @@ public final class KafkaMessagingMetricsAssertions {
       return;
     }
 
-    assertReceiveDurationMetrics(
+    assertReceiveDuration(
         testing, instrumentationName, destination, group, partition, operationCount, errorType);
     assertConsumedMessagesMetrics(
         testing, instrumentationName, destination, group, partition, messageCount, errorType);
@@ -135,6 +135,19 @@ public final class KafkaMessagingMetricsAssertions {
       return;
     }
 
+    assertReceiveDuration(
+        testing, instrumentationName, destination, group, partition, operationCount, errorType);
+    assertDeprecatedMetricsAbsent(testing);
+  }
+
+  private static void assertReceiveDuration(
+      InstrumentationExtension testing,
+      String instrumentationName,
+      String destination,
+      String group,
+      String partition,
+      long operationCount,
+      String errorType) {
     assertDuration(
         testing,
         instrumentationName,
@@ -147,7 +160,6 @@ public final class KafkaMessagingMetricsAssertions {
         partition,
         operationCount,
         errorType);
-    assertDeprecatedMetricsAbsent(testing);
   }
 
   /**
