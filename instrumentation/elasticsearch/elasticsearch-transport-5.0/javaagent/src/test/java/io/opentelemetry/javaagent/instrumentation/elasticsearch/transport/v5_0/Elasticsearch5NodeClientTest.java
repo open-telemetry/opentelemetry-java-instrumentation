@@ -66,7 +66,6 @@ class Elasticsearch5NodeClientTest extends AbstractElasticsearchNodeClientTest {
                 .execute()
                 .actionGet(TIMEOUT));
     testing.waitForTraces(1);
-    testing.clearData();
   }
 
   @Override

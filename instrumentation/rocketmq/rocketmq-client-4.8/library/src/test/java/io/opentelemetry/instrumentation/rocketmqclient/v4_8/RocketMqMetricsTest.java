@@ -38,7 +38,6 @@ import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageBatch;
 import org.apache.rocketmq.common.message.MessageExt;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -53,11 +52,6 @@ class RocketMqMetricsTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
-
-  @BeforeEach
-  void clearData() {
-    testing.clearData();
-  }
 
   @ParameterizedTest
   @MethodSource("producerCases")

@@ -73,7 +73,6 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
     syncCommands.hmset("TESTHM", testHashMap);
 
     testing.waitForTraces(connectionTelemetryEnabled() ? 3 : 2);
-    testing.clearData();
   }
 
   @AfterAll

@@ -80,9 +80,8 @@ class ClickHouseClientV1Test {
             .executeAndWait();
     response.close();
 
-    // wait for CREATE operation and clear
+    // wait for CREATE operation
     testing.waitForTraces(1);
-    testing.clearData();
   }
 
   @Test

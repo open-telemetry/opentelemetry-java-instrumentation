@@ -62,7 +62,6 @@ class JmsCamelTest {
 
     camelContext.start();
     cleanup.deferAfterAll(camelContext::stop);
-    testing.clearData();
   }
 
   @Test
