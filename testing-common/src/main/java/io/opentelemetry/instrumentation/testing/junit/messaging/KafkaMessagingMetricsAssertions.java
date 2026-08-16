@@ -91,6 +91,23 @@ public final class KafkaMessagingMetricsAssertions {
 
     assertReceiveDurationMetrics(
         testing, instrumentationName, destination, group, partition, operationCount, errorType);
+    assertConsumedMessagesMetrics(
+        testing, instrumentationName, destination, group, partition, messageCount, errorType);
+  }
+
+  public static void assertConsumedMessagesMetrics(
+      InstrumentationExtension testing,
+      String instrumentationName,
+      String destination,
+      String group,
+      String partition,
+      long messageCount,
+      String errorType) {
+    if (!emitStableMessagingSemconv()) {
+      assertNoNewMetrics(testing, instrumentationName);
+      return;
+    }
+
     assertCounter(
         testing,
         instrumentationName,
@@ -130,7 +147,6 @@ public final class KafkaMessagingMetricsAssertions {
         partition,
         operationCount,
         errorType);
-    assertMetricAbsent(testing, instrumentationName, CONSUMED_MESSAGES);
     assertDeprecatedMetricsAbsent(testing);
   }
 
