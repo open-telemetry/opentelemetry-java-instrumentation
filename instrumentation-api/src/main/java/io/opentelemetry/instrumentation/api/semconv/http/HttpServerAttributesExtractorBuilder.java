@@ -84,8 +84,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Configures the HTTP response headers that will be captured as span attributes as described in
-   * <a
+   * Configures the HTTP request headers that will be captured as span attributes as described in <a
    * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#http-server-semantic-conventions">HTTP
    * semantic conventions</a>.
    *
@@ -107,8 +106,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Configures the HTTP response headers that will be captured as span attributes as described in
-   * <a
+   * Configures the HTTP request headers that will be captured as span attributes as described in <a
    * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#http-server-semantic-conventions">HTTP
    * semantic conventions</a>.
    *
