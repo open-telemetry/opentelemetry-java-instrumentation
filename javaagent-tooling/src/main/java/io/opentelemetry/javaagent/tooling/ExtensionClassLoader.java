@@ -50,8 +50,9 @@ import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 @SuppressWarnings("SystemOut")
 public class ExtensionClassLoader extends URLClassLoader {
 
-  // NOTE it's important not to use logging in this class, because this class is used before logging
-  // is initialized
+  // this class is used early, and must not use logging in most of its methods
+  // instead we save the messages here and log them later, when the logging subsystem is
+  // initialized
   private static final List<Map.Entry<Level, String>> deferredLogs = new ArrayList<>();
 
   static {
