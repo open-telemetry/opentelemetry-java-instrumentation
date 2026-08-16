@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerOperationMetrics;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
@@ -66,6 +67,7 @@ public final class KafkaTelemetry {
       OpenTelemetry openTelemetry,
       Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter,
       Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter,
+      KafkaConsumerOperationMetrics consumerOperationMetrics,
       Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter,
       Instrumenter<KafkaProducerRequest, RecordMetadata> producerInterceptorInstrumenter,
       Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInterceptorInstrumenter,
@@ -77,7 +79,8 @@ public final class KafkaTelemetry {
             producerInstrumenter,
             producerPropagationEnabled);
     this.consumerTelemetry =
-        new KafkaConsumerTelemetry(consumerReceiveInstrumenter, consumerProcessInstrumenter);
+        new KafkaConsumerTelemetry(
+            consumerReceiveInstrumenter, consumerOperationMetrics, consumerProcessInstrumenter);
     this.producerInterceptorTelemetry =
         new KafkaProducerTelemetry(
             openTelemetry.getPropagators().getTextMapPropagator(),
@@ -85,7 +88,7 @@ public final class KafkaTelemetry {
             producerPropagationEnabled);
     this.consumerInterceptorTelemetry =
         new KafkaConsumerTelemetry(
-            consumerReceiveInterceptorInstrumenter, consumerProcessInstrumenter);
+            consumerReceiveInterceptorInstrumenter, null, consumerProcessInstrumenter);
   }
 
   /** Returns a decorated {@link Producer} that emits spans for each sent message. */
