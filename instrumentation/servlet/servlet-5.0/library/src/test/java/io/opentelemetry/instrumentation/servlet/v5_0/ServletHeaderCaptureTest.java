@@ -61,9 +61,11 @@ class ServletHeaderCaptureTest {
     when(request.getHeaderNames()).thenReturn(enumeration(asList("X-Test-Request", "X-Secret")));
     when(request.getHeaders("x-test-request"))
         .thenReturn(enumeration(singletonList("request-value")));
+    when(request.getHeaders("x-secret")).thenReturn(enumeration(singletonList("request-secret")));
     HttpServletResponse response = mock(HttpServletResponse.class);
     when(response.getHeaderNames()).thenReturn(asList("X-Test-Response", "X-Secret"));
     when(response.getHeaders("x-test-response")).thenReturn(singletonList("response-value"));
+    when(response.getHeaders("x-secret")).thenReturn(singletonList("response-secret"));
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), new ServletRequestContext<>(request));
