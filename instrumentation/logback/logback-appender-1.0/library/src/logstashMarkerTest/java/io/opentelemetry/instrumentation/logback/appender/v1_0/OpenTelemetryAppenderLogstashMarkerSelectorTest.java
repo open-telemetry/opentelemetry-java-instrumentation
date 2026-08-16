@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.LoggerFactory;
 
-class LogstashMarkerSelectorTest {
+class OpenTelemetryAppenderLogstashMarkerSelectorTest {
 
   private static final String DEPRECATED_LOGSTASH_MARKER_ATTRIBUTES_WARNING =
       "The captureLogstashMarkerAttributes setting of the OpenTelemetry appender and the"

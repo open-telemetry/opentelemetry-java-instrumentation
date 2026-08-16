@@ -855,7 +855,7 @@ definitions:
       name: otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes
       declarative_name: java.logback_appender.capture_logstash_marker_attributes/development
       description: |
-        Deprecated setting that enables the capture of all attributes from Logstash markers. It is ignored when otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included or otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded is configured, and it may be removed in the next minor release. Use otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included instead.
+        Deprecated setting that enables the capture of all attributes from Logstash markers, supported are those added to logs via Markers.append(), Markers.appendEntries(), Markers.appendArray() and Markers.appendRaw() methods. It is ignored when otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included or otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded is configured, and it may be removed in the next minor release. Use otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included instead.
       type: boolean
       default: false
     otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments:
