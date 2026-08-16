@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -27,7 +28,16 @@ class KafkaTestUtil {
     if (consumerPollDurationMethod != null) {
       try {
         return (ConsumerRecords<K, V>) consumerPollDurationMethod.invoke(consumer, duration);
-      } catch (Exception e) {
+      } catch (InvocationTargetException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof RuntimeException) {
+          throw (RuntimeException) cause;
+        }
+        if (cause instanceof Error) {
+          throw (Error) cause;
+        }
+        throw new IllegalStateException(cause);
+      } catch (IllegalAccessException e) {
         throw new IllegalStateException(e);
       }
     }
