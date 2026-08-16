@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the HTTP header selectors applied by {@link HttpCommonAttributesExtractor}. */
@@ -271,25 +270,21 @@ class HttpHeadersTest {
       this.enumerateNames = enumerateNames;
     }
 
-    @Nullable
     @Override
     public String getHttpRequestMethod(Map<String, String> request) {
       return "GET";
     }
 
-    @Nullable
     @Override
     public String getUrlPath(Map<String, String> request) {
       return "/";
     }
 
-    @Nullable
     @Override
     public String getUrlQuery(Map<String, String> request) {
       return null;
     }
 
-    @Nullable
     @Override
     public String getUrlScheme(Map<String, String> request) {
       return "http";
@@ -305,10 +300,9 @@ class HttpHeadersTest {
       return headerNames(request);
     }
 
-    @Nullable
     @Override
     public Integer getHttpResponseStatusCode(
-        Map<String, String> request, Map<String, String> response, @Nullable Throwable error) {
+        Map<String, String> request, Map<String, String> response, Throwable error) {
       return 200;
     }
 
