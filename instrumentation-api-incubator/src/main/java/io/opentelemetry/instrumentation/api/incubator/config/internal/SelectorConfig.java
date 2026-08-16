@@ -78,8 +78,11 @@ public final class SelectorConfig {
         getDeprecated(config, instrumentationName, selectorName, systemPropertyFallback);
     return DeprecatedCaptureNames.toSelector(
         deprecated,
-        deprecatedFlatProperty(instrumentationName, selectorName),
-        flatProperty(instrumentationName, selectorName, ".included"));
+        "the "
+            + deprecatedFlatProperty(instrumentationName, selectorName)
+            + " setting or equivalent declarative configuration",
+        flatProperty(instrumentationName, selectorName, ".included")
+            + " or equivalent declarative configuration");
   }
 
   /**

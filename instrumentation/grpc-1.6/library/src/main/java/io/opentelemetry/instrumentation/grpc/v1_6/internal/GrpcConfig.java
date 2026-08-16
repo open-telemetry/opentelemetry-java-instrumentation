@@ -114,6 +114,8 @@ public class GrpcConfig {
               + " or equivalent declarative configuration instead.");
     }
     return DeprecatedCaptureNames.toSelector(
-        deprecatedIncluded, deprecatedProperty, replacementProperty);
+        deprecatedIncluded,
+        "the " + deprecatedProperty + " setting or equivalent declarative configuration",
+        replacementProperty + " or equivalent declarative configuration");
   }
 }
