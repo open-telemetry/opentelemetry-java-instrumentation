@@ -45,6 +45,7 @@
   `logback.xml` as `keyValuePairAttributesIncluded` and `keyValuePairAttributesExcluded` and
   programmatically as `OpenTelemetryAppender#setKeyValuePairAttributes(IncludeExclude)`. The
   deprecated setting continues to capture every key value pair when enabled.
+  ([#19600](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19600))
 - Deprecate the Log4j appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender.Builder#setCaptureContextDataAttributes(String)` in favor of
   include/exclude context data selectors and
