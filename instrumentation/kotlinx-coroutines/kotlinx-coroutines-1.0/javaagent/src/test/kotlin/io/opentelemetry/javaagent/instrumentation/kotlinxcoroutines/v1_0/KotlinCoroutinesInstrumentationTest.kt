@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityU
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
+import io.opentelemetry.sdk.trace.data.StatusData
 import io.vertx.core.Vertx
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.CompletableDeferred
@@ -493,6 +494,42 @@ class KotlinCoroutinesInstrumentationTest {
   @WithSpan("leaf")
   private suspend fun annotatedLeaf() {
     delay(10)
+  }
+
+  @Test
+  fun `WithSpan ends span on failed completion`() {
+    Assumptions.assumeFalse(v3Preview())
+
+    val exception = IllegalStateException("expected")
+    val result = runCatching {
+      runBlocking {
+        annotatedFailure(exception)
+      }
+    }
+
+    assertThat(result.exceptionOrNull()).isSameAs(exception)
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          {
+            it.hasName("failing")
+              .hasNoParent()
+              .hasStatus(StatusData.error())
+              .hasException(exception)
+          },
+        )
+      },
+    )
+  }
+
+  @WithSpan("failing")
+  private suspend fun annotatedFailure(exception: RuntimeException) {
+    unannotatedFailure(exception)
+  }
+
+  private suspend fun unannotatedFailure(exception: RuntimeException): Nothing {
+    delay(10)
+    throw exception
   }
 
   // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/9312
