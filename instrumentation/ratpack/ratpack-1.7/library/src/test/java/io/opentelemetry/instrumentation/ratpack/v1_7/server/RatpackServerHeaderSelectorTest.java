@@ -3,41 +3,36 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.netty.v4_1;
+package io.opentelemetry.instrumentation.ratpack.v1_7.server;
 
-import static io.netty.handler.codec.http.HttpResponseStatus.OK;
-import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.embedded.EmbeddedChannel;
-import io.netty.handler.codec.http.DefaultFullHttpRequest;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpMethod;
-import io.netty.util.ReferenceCountUtil;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetry;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import ratpack.registry.Registry;
+import ratpack.test.embed.EmbeddedApp;
 
-class NettyServerHeaderCaptureTest {
+class RatpackServerHeaderSelectorTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   @Test
-  void capturesEnumeratedHeadersWhenOnlyExcludingHeaders() {
-    NettyServerTelemetry telemetry =
-        NettyServerTelemetry.builder(testing.getOpenTelemetry())
+  void capturesEveryHeaderNotExcluded() throws Exception {
+    RatpackServerTelemetry telemetry =
+        RatpackServerTelemetry.builder(testing.getOpenTelemetry())
             .setRequestHeaders(IncludeExclude.builder().setExcluded(singletonList("host")).build())
             .setResponseHeaders(
                 IncludeExclude.builder().setExcluded(singletonList("content-*")).build())
@@ -54,9 +49,9 @@ class NettyServerHeaderCaptureTest {
   }
 
   @Test
-  void capturesHeadersMatchingWildcardPattern() {
-    NettyServerTelemetry telemetry =
-        NettyServerTelemetry.builder(testing.getOpenTelemetry())
+  void capturesHeadersMatchingWildcardPattern() throws Exception {
+    RatpackServerTelemetry telemetry =
+        RatpackServerTelemetry.builder(testing.getOpenTelemetry())
             .setRequestHeaders(
                 IncludeExclude.builder().setIncluded(singletonList("x-test-*")).build())
             .setResponseHeaders(
@@ -78,9 +73,9 @@ class NettyServerHeaderCaptureTest {
 
   @SuppressWarnings("deprecation") // testing deprecated API
   @Test
-  void capturesHeadersConfiguredByName() {
-    NettyServerTelemetry telemetry =
-        NettyServerTelemetry.builder(testing.getOpenTelemetry())
+  void capturesHeadersConfiguredByName() throws Exception {
+    RatpackServerTelemetry telemetry =
+        RatpackServerTelemetry.builder(testing.getOpenTelemetry())
             .setCapturedRequestHeaders(singletonList("X-Test-Request"))
             .setCapturedResponseHeaders(singletonList("X-Test-Response"))
             .build();
@@ -96,9 +91,9 @@ class NettyServerHeaderCaptureTest {
 
   @SuppressWarnings("deprecation") // testing deprecated API
   @Test
-  void doesNotTreatConfiguredNamesAsPatterns() {
-    NettyServerTelemetry telemetry =
-        NettyServerTelemetry.builder(testing.getOpenTelemetry())
+  void deprecatedSettersMatchHeaderNamesLiterally() throws Exception {
+    RatpackServerTelemetry telemetry =
+        RatpackServerTelemetry.builder(testing.getOpenTelemetry())
             .setCapturedRequestHeaders(singletonList("*"))
             .setCapturedResponseHeaders(singletonList("*"))
             .build();
@@ -114,33 +109,33 @@ class NettyServerHeaderCaptureTest {
     assertThat(attributes.get(stringArrayKey("http.response.header.x-test-response"))).isNull();
   }
 
-  private static Attributes handleRequest(NettyServerTelemetry telemetry) {
-    EmbeddedChannel channel =
-        new EmbeddedChannel(
-            telemetry.createCombinedHandler(),
-            new ChannelInboundHandlerAdapter() {
-              @Override
-              public void channelRead(ChannelHandlerContext ctx, Object msg) {
-                try {
-                  FullHttpResponse response =
-                      new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.EMPTY_BUFFER);
-                  response.headers().set("Content-Type", "text/plain");
-                  response.headers().set("X-Test-Response", "test");
-                  ctx.writeAndFlush(response);
-                } finally {
-                  ReferenceCountUtil.release(msg);
-                }
-              }
+  private static Attributes handleRequest(RatpackServerTelemetry telemetry) throws Exception {
+    EmbeddedApp app =
+        EmbeddedApp.of(
+            spec -> {
+              spec.registry(Registry.of(telemetry::configureRegistry));
+              spec.handlers(
+                  chain ->
+                      chain.get(
+                          "test",
+                          ctx -> {
+                            ctx.getResponse().getHeaders().set("X-Test-Response", "test");
+                            ctx.render("hi");
+                          }));
             });
+    cleanup.deferCleanup(app);
 
-    FullHttpRequest request =
-        new DefaultFullHttpRequest(HTTP_1_1, HttpMethod.GET, "/test", Unpooled.EMPTY_BUFFER);
-    request.headers().set("Host", "localhost");
-    request.headers().set("Authorization", "Bearer secret");
-    request.headers().set("X-Test-Request", "test");
-
-    channel.writeInbound(request);
-    channel.finishAndReleaseAll();
+    assertThat(
+            app.getHttpClient()
+                .requestSpec(
+                    spec ->
+                        spec.getHeaders()
+                            .set("X-Test-Request", "test")
+                            .set("Authorization", "Bearer secret"))
+                .get("test")
+                .getBody()
+                .getText())
+        .isEqualTo("hi");
 
     return testing.waitForTraces(1).get(0).get(0).getAttributes();
   }
