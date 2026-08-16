@@ -324,13 +324,15 @@ class LogbackAppenderInstaller {
         getLoggingListProperty(environment, LOGSTASH_STRUCTURED_ARGUMENT_ATTRIBUTES_INCLUDED);
     List<String> excluded =
         getLoggingListProperty(environment, LOGSTASH_STRUCTURED_ARGUMENT_ATTRIBUTES_EXCLUDED);
-    Boolean deprecated =
-        evaluateBooleanProperty(environment, DEPRECATED_LOGSTASH_STRUCTURED_ARGUMENTS);
     // an empty selector property is equivalent to an unset one, matching how the same flat
     // properties are read outside of Spring, where empty values cannot be distinguished from unset
     // ones
-    if (isEmpty(included) && isEmpty(excluded) && deprecated == null) {
-      return;
+    Boolean deprecated = null;
+    if (isEmpty(included) && isEmpty(excluded)) {
+      deprecated = evaluateBooleanProperty(environment, DEPRECATED_LOGSTASH_STRUCTURED_ARGUMENTS);
+      if (deprecated == null) {
+        return;
+      }
     }
 
     // configuration properties replace the Logstash structured argument settings of an appender

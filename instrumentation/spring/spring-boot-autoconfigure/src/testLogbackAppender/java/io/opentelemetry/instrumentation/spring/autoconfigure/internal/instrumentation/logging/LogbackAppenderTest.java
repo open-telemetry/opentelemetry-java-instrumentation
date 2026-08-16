@@ -784,14 +784,14 @@ class LogbackAppenderTest {
       properties.put("otel.file_format", "1.1");
       properties.put(
           "otel.instrumentation/development.java.logback_appender.capture_logstash_structured_arguments/development",
-          true);
+          "not-a-boolean");
       properties.put(
           "otel.instrumentation/development.java.logback_appender.logstash_structured_argument_attributes/development.included",
           "key1");
     } else {
       properties.put(
           "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments",
-          true);
+          "not-a-boolean");
       properties.put(
           "otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included",
           "key1");
@@ -807,7 +807,7 @@ class LogbackAppenderTest {
     properties.put("otel.file_format", "1.1");
     properties.put(
         "otel.instrumentation/development.java.logback_appender.capture_logstash_structured_arguments/development",
-        true);
+        "not-a-boolean");
     // a YAML sequence is flattened by the Spring environment into indexed properties
     properties.put(
         "otel.instrumentation/development.java.logback_appender.logstash_structured_argument_attributes/development.excluded[0]",
