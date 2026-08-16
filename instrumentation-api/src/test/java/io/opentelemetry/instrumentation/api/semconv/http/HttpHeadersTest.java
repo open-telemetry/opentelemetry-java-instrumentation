@@ -212,18 +212,16 @@ class HttpHeadersTest {
         .containsOnly(requestHeaderEntry("test-request-header", "one"));
   }
 
-  private static Map<AttributeKey<?>, Object> captureRequest(@Nullable IncludeExclude headers) {
+  private static Map<AttributeKey<?>, Object> captureRequest(IncludeExclude headers) {
     return capture(new MapGetter(true), headers, null);
   }
 
-  private static Map<AttributeKey<?>, Object> captureResponse(@Nullable IncludeExclude headers) {
+  private static Map<AttributeKey<?>, Object> captureResponse(IncludeExclude headers) {
     return capture(new MapGetter(true), null, headers);
   }
 
   private static Map<AttributeKey<?>, Object> capture(
-      MapGetter getter,
-      @Nullable IncludeExclude requestHeaders,
-      @Nullable IncludeExclude responseHeaders) {
+      MapGetter getter, IncludeExclude requestHeaders, IncludeExclude responseHeaders) {
     HttpServerAttributesExtractorBuilder<Map<String, String>, Map<String, String>> builder =
         HttpServerAttributesExtractor.builder(getter);
     if (requestHeaders != null) {
