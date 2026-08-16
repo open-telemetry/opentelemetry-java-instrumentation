@@ -226,8 +226,10 @@ class ArmeriaHeaderSelectorTest {
                                     .doesNotContainKey(
                                         stringArrayKey("http.request.header.x-ignored-request"))
                                     .doesNotContainKey(
-                                        stringArrayKey(
-                                            "http.response.header.x-ignored-response")))));
+                                        stringArrayKey("http.response.header.x-ignored-response"))
+                                    // pseudo-headers are not HTTP headers
+                                    .doesNotContainKey(
+                                        stringArrayKey("http.response.header.:status")))));
   }
 
   private static void assertNoCapturedHeaders() {
