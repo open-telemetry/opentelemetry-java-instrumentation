@@ -47,8 +47,8 @@
   headers by glob pattern instead of by exact name only. Wildcard and exclude-only selectors resolve
   header names through the new `HttpCommonAttributesGetter#getHttpRequestHeaderNames` and
   `#getHttpResponseHeaderNames` methods, so instrumentations that do not implement them keep
-  supporting exact names. The deprecated methods still match header names exactly; values containing
-  `*` or `?` are ignored and logged, since those methods never supported wildcards.
+  supporting exact names. The deprecated methods still match header names literally, so `*` and `?`
+  are not treated as glob patterns.
 - Deprecate the Logback appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of the new
   `experimental.mdc-attributes.included` and `experimental.mdc-attributes.excluded` selectors, which

@@ -24,7 +24,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
@@ -137,8 +136,8 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   /**
    * Configures the HTTP request headers that will be captured as span attributes.
    *
-   * <p>Header names containing {@code *} or {@code ?} are ignored, since this setting never
-   * supported wildcards. Use {@link #setRequestHeaders(IncludeExclude)} to match names by pattern.
+   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
+   * patterns.
    *
    * @param requestHeaders A list of HTTP header names.
    */
@@ -169,8 +168,8 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   /**
    * Configures the HTTP response headers that will be captured as span attributes.
    *
-   * <p>Header names containing {@code *} or {@code ?} are ignored, since this setting never
-   * supported wildcards. Use {@link #setResponseHeaders(IncludeExclude)} to match names by pattern.
+   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
+   * patterns.
    *
    * @param responseHeaders A list of HTTP header names.
    */
@@ -305,18 +304,8 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> configure(CommonConfig config) {
     set(config::getKnownHttpRequestMethods, this::setKnownMethods);
-    set(
-        config::getClientRequestHeaders,
-        headers ->
-            setRequestHeaders(
-                DeprecatedCaptureNames.toSelectorOrEmpty(
-                    headers, "otel.instrumentation.http.client.capture-request-headers", null)));
-    set(
-        config::getClientResponseHeaders,
-        headers ->
-            setResponseHeaders(
-                DeprecatedCaptureNames.toSelectorOrEmpty(
-                    headers, "otel.instrumentation.http.client.capture-response-headers", null)));
+    set(config::getClientRequestHeaders, this::setCapturedRequestHeaders);
+    set(config::getClientResponseHeaders, this::setCapturedResponseHeaders);
     set(
         config::shouldEmitExperimentalHttpClientTelemetry,
         this::setEmitExperimentalHttpClientTelemetry);

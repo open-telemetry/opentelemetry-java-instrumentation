@@ -166,24 +166,25 @@ class HttpHeadersTest {
 
   @SuppressWarnings("deprecation") // testing deprecated API
   @Test
-  void deprecatedCapturedHeadersSettersIgnoreWildcards() {
-    // these settings never supported "*" as capturing every header, so the value is dropped and
-    // captures nothing, rather than being reinterpreted as a glob that widens capture to every
-    // header
+  void deprecatedCapturedHeadersSettersMatchHeaderNamesLiterally() {
+    Map<String, String> request = new LinkedHashMap<>(REQUEST);
+    request.put("*", "literal");
+
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpServerAttributesExtractor.builder(new MapGetter(true))
             .setCapturedRequestHeaders(singletonList("*"))
             .build();
 
     AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), REQUEST);
+    extractor.onStart(attributes, Context.root(), request);
 
-    assertThat(headerAttributes(attributes.build())).isEmpty();
+    assertThat(headerAttributes(attributes.build()))
+        .containsOnly(requestHeaderEntry("*", "literal"));
   }
 
   @SuppressWarnings("deprecation") // testing deprecated API
   @Test
-  void deprecatedCapturedHeadersSettersIgnoreOnlyTheWildcardValues() {
+  void deprecatedCapturedHeadersSettersOnlyCapturePresentLiteralNames() {
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpServerAttributesExtractor.builder(new MapGetter(true))
             .setCapturedRequestHeaders(asList("Test-Request-Header", "Test-Request-*", "Test-?"))

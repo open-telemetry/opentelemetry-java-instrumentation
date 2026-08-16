@@ -21,8 +21,8 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * The HTTP headers captured by an attributes extractor, resolved from an {@link IncludeExclude}
- * selector.
+ * The HTTP headers captured by an attributes extractor, resolved either from an {@link
+ * IncludeExclude} selector or, for legacy callers, from a list of exact header names.
  *
  * <p>HTTP header names are case-insensitive, so the selector patterns are lowercased here and every
  * header name is lowercased before it is matched.
@@ -31,6 +31,8 @@ final class CapturedHttpHeaders {
 
   private final String type;
   @Nullable private final IncludeExclude selector;
+  // the exact header names configured by legacy callers, which are matched literally
+  @Nullable private final Set<String> exactOnlyNames;
   // the header names that the selector includes literally, which are looked up directly so that
   // getters which do not enumerate header names keep working
   private final List<String> exactNames;
@@ -40,16 +42,36 @@ final class CapturedHttpHeaders {
   private final boolean enumerateNames;
 
   static CapturedHttpHeaders create(String type, @Nullable IncludeExclude headers) {
-    return new CapturedHttpHeaders(type, headers == null || headers.isEmpty() ? null : headers);
+    return new CapturedHttpHeaders(
+        type, headers == null || headers.isEmpty() ? null : headers, null);
   }
 
-  private CapturedHttpHeaders(String type, @Nullable IncludeExclude headers) {
+  /**
+   * Creates the headers captured by legacy callers, whose values are exact header names rather than
+   * glob patterns.
+   */
+  static CapturedHttpHeaders createExact(String type, @Nullable Collection<String> headerNames) {
+    if (headerNames == null || headerNames.isEmpty()) {
+      return new CapturedHttpHeaders(type, null, null);
+    }
+    Set<String> exactOnlyNames = new LinkedHashSet<>();
+    for (String headerName : headerNames) {
+      exactOnlyNames.add(lowercase(headerName));
+    }
+    return new CapturedHttpHeaders(type, null, exactOnlyNames);
+  }
+
+  private CapturedHttpHeaders(
+      String type, @Nullable IncludeExclude headers, @Nullable Set<String> exactOnlyNames) {
     this.type = type;
     this.selector = headers == null ? null : lowercase(headers);
+    this.exactOnlyNames = exactOnlyNames;
 
     Set<String> names = new LinkedHashSet<>();
     boolean enumerate = false;
-    if (selector != null) {
+    if (exactOnlyNames != null) {
+      names.addAll(exactOnlyNames);
+    } else if (selector != null) {
       List<String> included = selector.getIncluded();
       // a selector without included patterns matches every header name that is not excluded
       enumerate = included.isEmpty();
@@ -67,7 +89,7 @@ final class CapturedHttpHeaders {
   }
 
   boolean isEmpty() {
-    return selector == null;
+    return selector == null && exactOnlyNames == null;
   }
 
   boolean enumerateNames() {
@@ -96,6 +118,9 @@ final class CapturedHttpHeaders {
   }
 
   private boolean matches(String lowercaseName) {
+    if (exactOnlyNames != null) {
+      return exactOnlyNames.contains(lowercaseName);
+    }
     return selector != null && selector.matches(lowercaseName);
   }
 

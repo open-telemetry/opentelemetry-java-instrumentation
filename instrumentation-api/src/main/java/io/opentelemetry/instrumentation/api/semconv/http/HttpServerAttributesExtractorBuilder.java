@@ -10,7 +10,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPortExtractor;
@@ -93,8 +92,8 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * <p>The HTTP request header values will be captured under the {@code http.request.header.<key>}
    * attribute key. The {@code <key>} part in the attribute key is the lowercase header name.
    *
-   * <p>Header names containing {@code *} or {@code ?} are ignored, since this setting never
-   * supported wildcards. Use {@link #setRequestHeaders(IncludeExclude)} to match names by pattern.
+   * <p>The header names are matched literally. Unlike {@link #setRequestHeaders(IncludeExclude)},
+   * {@code *} and {@code ?} are not treated as glob patterns.
    *
    * @param requestHeaders A list of HTTP header names.
    * @deprecated Use {@link #setRequestHeaders(IncludeExclude)} instead. To be removed in 3.0.
@@ -103,13 +102,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
       Collection<String> requestHeaders) {
-    this.capturedRequestHeaders =
-        CapturedHttpHeaders.create(
-            "request",
-            DeprecatedCaptureNames.toSelector(
-                requestHeaders,
-                "HttpServerAttributesExtractorBuilder.setCapturedRequestHeaders()",
-                "setRequestHeaders(IncludeExclude)"));
+    this.capturedRequestHeaders = CapturedHttpHeaders.createExact("request", requestHeaders);
     return this;
   }
 
@@ -169,8 +162,8 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * http.response.header.<key>} attribute key. The {@code <key>} part in the attribute key is the
    * lowercase header name.
    *
-   * <p>Header names containing {@code *} or {@code ?} are ignored, since this setting never
-   * supported wildcards. Use {@link #setResponseHeaders(IncludeExclude)} to match names by pattern.
+   * <p>The header names are matched literally. Unlike {@link #setResponseHeaders(IncludeExclude)},
+   * {@code *} and {@code ?} are not treated as glob patterns.
    *
    * @param responseHeaders A list of HTTP header names.
    * @deprecated Use {@link #setResponseHeaders(IncludeExclude)} instead. To be removed in 3.0.
@@ -179,13 +172,7 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
       Collection<String> responseHeaders) {
-    this.capturedResponseHeaders =
-        CapturedHttpHeaders.create(
-            "response",
-            DeprecatedCaptureNames.toSelector(
-                responseHeaders,
-                "HttpServerAttributesExtractorBuilder.setCapturedResponseHeaders()",
-                "setResponseHeaders(IncludeExclude)"));
+    this.capturedResponseHeaders = CapturedHttpHeaders.createExact("response", responseHeaders);
     return this;
   }
 
