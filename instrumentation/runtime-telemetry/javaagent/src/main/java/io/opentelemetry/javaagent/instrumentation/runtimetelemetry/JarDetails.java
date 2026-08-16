@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.runtimetelemetry;
 
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toMap;
 
 import java.io.IOException;
@@ -15,7 +14,6 @@ import java.net.URL;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Map;
@@ -39,10 +37,7 @@ class JarDetails {
   private static final char[] HEX_DIGITS = "0123456789abcdef".toCharArray();
   private static final Map<String, String> EMBEDDED_FORMAT_TO_EXTENSION =
       Stream.of(JAR_EXTENSION, WAR_EXTENSION, EAR_EXTENSION)
-          .collect(
-              collectingAndThen(
-                  toMap(ext -> ('.' + ext + "!/"), identity()),
-                  Collections::<String, String>unmodifiableMap));
+          .collect(toMap(ext -> ('.' + ext + "!/"), identity()));
   private static final ThreadLocal<MessageDigest> sha256 =
       ThreadLocal.withInitial(
           () -> {

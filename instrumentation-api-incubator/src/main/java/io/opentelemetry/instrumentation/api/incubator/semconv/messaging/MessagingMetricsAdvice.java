@@ -52,15 +52,16 @@ final class MessagingMetricsAdvice {
       AttributeKey.stringKey("messaging.destination.template");
 
   private static final List<AttributeKey<?>> OLD_ATTRIBUTES =
-      asList(
-          MESSAGING_SYSTEM,
-          MESSAGING_DESTINATION_NAME,
-          MESSAGING_OPERATION,
-          MESSAGING_DESTINATION_PARTITION_ID,
-          MESSAGING_DESTINATION_TEMPLATE,
-          ERROR_TYPE,
-          SERVER_PORT,
-          SERVER_ADDRESS);
+      unmodifiableList(
+          asList(
+              MESSAGING_SYSTEM,
+              MESSAGING_DESTINATION_NAME,
+              MESSAGING_OPERATION,
+              MESSAGING_DESTINATION_PARTITION_ID,
+              MESSAGING_DESTINATION_TEMPLATE,
+              ERROR_TYPE,
+              SERVER_PORT,
+              SERVER_ADDRESS));
 
   private static final List<AttributeKey<?>> CLIENT_OPERATION_DURATION_ATTRIBUTES =
       buildAttributes(true, true, true);
