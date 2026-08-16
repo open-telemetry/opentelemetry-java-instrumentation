@@ -36,7 +36,8 @@ public final class DeprecatedCaptureNames {
    * everything, including names holding credentials. Such values are ignored and reported instead.
    *
    * <p>Because no remaining name contains a metacharacter, {@link IncludeExclude} matches them
-   * exactly, so the returned selector captures exactly what this setting always captured.
+   * exactly, so the returned selector captures exactly what this setting captured for the names it
+   * keeps.
    *
    * <p>{@code null} is returned rather than an empty selector because an empty selector matches
    * every name.
