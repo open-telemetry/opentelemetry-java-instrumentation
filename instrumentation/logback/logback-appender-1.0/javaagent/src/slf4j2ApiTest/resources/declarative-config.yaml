@@ -1,0 +1,9 @@
+file_format: "1.1"
+instrumentation/development:
+  java:
+    logback_appender:
+      key_value_pair_attributes/development:
+        included:
+          - request-*
+        excluded:
+          - "*-secret"
