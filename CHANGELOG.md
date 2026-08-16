@@ -49,6 +49,7 @@
   `#getHttpResponseHeaderNames` methods, so instrumentations that do not implement them keep
   supporting exact names. The deprecated methods still match header names literally, so `*` and `?`
   are not treated as glob patterns.
+  ([#19598](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19598))
 - Deprecate the Logback appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of the new
   `experimental.mdc-attributes.included` and `experimental.mdc-attributes.excluded` selectors, which

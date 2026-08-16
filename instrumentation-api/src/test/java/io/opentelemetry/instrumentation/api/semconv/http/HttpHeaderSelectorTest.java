@@ -26,7 +26,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the HTTP header selectors applied by {@link HttpCommonAttributesExtractor}. */
-class HttpHeadersTest {
+class HttpHeaderSelectorTest {
 
   private static final Map<String, String> REQUEST = new LinkedHashMap<>();
   private static final Map<String, String> RESPONSE = new LinkedHashMap<>();

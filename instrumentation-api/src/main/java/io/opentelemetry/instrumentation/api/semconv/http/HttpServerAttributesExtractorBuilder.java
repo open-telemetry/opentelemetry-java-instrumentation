@@ -92,8 +92,8 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * <p>The HTTP request header values will be captured under the {@code http.request.header.<key>}
    * attribute key. The {@code <key>} part in the attribute key is the lowercase header name.
    *
-   * <p>The header names are matched literally. Unlike {@link #setRequestHeaders(IncludeExclude)},
-   * {@code *} and {@code ?} are not treated as glob patterns.
+   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
+   * patterns.
    *
    * @param requestHeaders A list of HTTP header names.
    * @deprecated Use {@link #setRequestHeaders(IncludeExclude)} instead. To be removed in 3.0.
@@ -114,6 +114,9 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
    *
    * <p>The HTTP request header values will be captured under the {@code http.request.header.<key>}
    * attribute key. The {@code <key>} part in the attribute key is the lowercase header name.
+   *
+   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
+   * patterns.
    *
    * @param requestHeaders A list of HTTP header names.
    * @deprecated Use {@link #setRequestHeaders(IncludeExclude)} instead. To be removed in 3.0.
@@ -162,8 +165,8 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * http.response.header.<key>} attribute key. The {@code <key>} part in the attribute key is the
    * lowercase header name.
    *
-   * <p>The header names are matched literally. Unlike {@link #setResponseHeaders(IncludeExclude)},
-   * {@code *} and {@code ?} are not treated as glob patterns.
+   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
+   * patterns.
    *
    * @param responseHeaders A list of HTTP header names.
    * @deprecated Use {@link #setResponseHeaders(IncludeExclude)} instead. To be removed in 3.0.
@@ -185,6 +188,9 @@ public final class HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * <p>The HTTP response header values will be captured under the {@code
    * http.response.header.<key>} attribute key. The {@code <key>} part in the attribute key is the
    * lowercase header name.
+   *
+   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
+   * patterns.
    *
    * @param responseHeaders A list of HTTP header names.
    * @deprecated Use {@link #setResponseHeaders(IncludeExclude)} instead. To be removed in 3.0.
