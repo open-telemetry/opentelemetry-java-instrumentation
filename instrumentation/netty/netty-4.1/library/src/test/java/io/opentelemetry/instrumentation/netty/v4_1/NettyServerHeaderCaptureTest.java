@@ -21,6 +21,7 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.util.ReferenceCountUtil;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -120,11 +121,15 @@ class NettyServerHeaderCaptureTest {
             new ChannelInboundHandlerAdapter() {
               @Override
               public void channelRead(ChannelHandlerContext ctx, Object msg) {
-                FullHttpResponse response =
-                    new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.EMPTY_BUFFER);
-                response.headers().set("Content-Type", "text/plain");
-                response.headers().set("X-Test-Response", "test");
-                ctx.writeAndFlush(response);
+                try {
+                  FullHttpResponse response =
+                      new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.EMPTY_BUFFER);
+                  response.headers().set("Content-Type", "text/plain");
+                  response.headers().set("X-Test-Response", "test");
+                  ctx.writeAndFlush(response);
+                } finally {
+                  ReferenceCountUtil.release(msg);
+                }
               }
             });
 
