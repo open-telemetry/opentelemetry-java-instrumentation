@@ -100,8 +100,8 @@ public final class Experimental {
   /**
    * Sets the request parameters to be captured as span attributes.
    *
-   * <p>The parameter names are matched exactly. Names containing {@code *} or {@code ?} are ignored
-   * and reported, since this setting never supported wildcards.
+   * <p>The parameter names are matched literally. Names containing {@code *} or {@code ?} are
+   * ignored and logged, since this setting never supported wildcards.
    *
    * @param builder the telemetry builder
    * @param captureRequestParameters request parameter names to capture

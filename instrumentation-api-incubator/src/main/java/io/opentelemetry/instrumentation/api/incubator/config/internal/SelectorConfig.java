@@ -45,7 +45,7 @@ public final class SelectorConfig {
    * empty} selector because an empty selector matches every value.
    *
    * <p>Values of the deprecated include-only setting that contain {@code *} or {@code ?} are
-   * ignored and reported, since that setting matches values exactly and never supported wildcards.
+   * ignored and logged, since that setting matches values literally and never supported wildcards.
    */
   @Nullable
   public static IncludeExclude resolve(
@@ -57,7 +57,7 @@ public final class SelectorConfig {
    * Returns the configured selector, or {@code null} when nothing is configured to be captured.
    *
    * <p>Values of the deprecated include-only setting that contain {@code *} or {@code ?} are
-   * ignored and reported, since that setting matches values exactly and never supported wildcards.
+   * ignored and logged, since that setting matches values literally and never supported wildcards.
    *
    * @param systemPropertyFallback whether to fall back to the flat system properties when the
    *     declarative configuration does not contain a value. This is needed by library

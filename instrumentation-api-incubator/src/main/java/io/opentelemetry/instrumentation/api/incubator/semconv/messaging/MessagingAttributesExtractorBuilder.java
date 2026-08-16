@@ -65,8 +65,8 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * replaced by underscores unless {@code otel.instrumentation.common.v3-preview} is enabled, in
    * which case dashes are preserved.
    *
-   * <p>The header names are matched exactly. Names containing {@code *} or {@code ?} are ignored
-   * and reported, since this setting never supported wildcards.
+   * <p>The header names are matched literally. Names containing {@code *} or {@code ?} are ignored
+   * and logged, since this setting never supported wildcards.
    *
    * @param capturedHeaders A list of messaging header names.
    * @deprecated Use {@link #setHeaders(IncludeExclude)} instead. May be removed in the next minor

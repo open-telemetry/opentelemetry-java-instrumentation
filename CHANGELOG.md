@@ -17,7 +17,7 @@
 - Deprecate the gRPC `capture-metadata.client.request` and `capture-metadata.server.request`
   configuration properties and `GrpcTelemetryBuilder` captured request metadata methods in favor of
   include/exclude request metadata selectors. The deprecated properties and methods still match
-  metadata keys exactly; values containing `*` or `?` are ignored and logged, since they never
+  metadata keys literally; values containing `*` or `?` are ignored and logged, since they never
   supported wildcards.
 - Deprecate `otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes` in favor of
   the `otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.{included,excluded}`
@@ -31,7 +31,7 @@
   in favor of `otel.instrumentation.messaging.experimental.headers.included` /
   `otel.instrumentation.messaging.experimental.headers.excluded` and `setHeaders(IncludeExclude)`,
   which select message headers by glob pattern instead of by exact name only. The deprecated
-  property and methods still match header names exactly; values containing `*` or `?` are ignored
+  property and methods still match header names literally; values containing `*` or `?` are ignored
   and logged, since they never supported wildcards.
 - Deprecate the Logback appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of the new
@@ -52,8 +52,8 @@
   `Experimental#setCaptureRequestParameters(...)` in favor of the
   `otel.instrumentation.servlet.experimental.request-parameters.{included,excluded}` properties and
   `Experimental#setRequestParameters(ServletTelemetryBuilder, IncludeExclude)`. The deprecated
-  property and method still match parameter names exactly; values containing `*` or `?` are ignored
-  and logged, since they never supported wildcards.
+  property and method still match parameter names literally; values containing `*` or `?` are
+  ignored and logged, since they never supported wildcards.
   ([#19522](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19522))
 - Deprecate `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` and
   `io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental#setPreferJfrMetrics(RuntimeTelemetryBuilder, boolean)`

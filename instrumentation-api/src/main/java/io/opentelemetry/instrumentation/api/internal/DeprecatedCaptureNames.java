@@ -29,15 +29,15 @@ public final class DeprecatedCaptureNames {
    * Returns a selector matching {@code names}, ignoring every name that contains {@code *} or
    * {@code ?}, or {@code null} when no name remains.
    *
-   * <p>The deprecated include-only settings match names exactly, so a value containing a glob
+   * <p>The deprecated include-only settings match names literally, so a value containing a glob
    * metacharacter only ever matched a name containing that character literally, which in practice
    * matched nothing. Interpreting such a value as a glob pattern would silently widen what is
    * captured, turning a value of {@code "*"} that captured nothing into one that captures
-   * everything, including names holding credentials. Such values are ignored and reported instead.
+   * everything, including names holding credentials. Such values are ignored and logged instead.
    *
    * <p>Because no remaining name contains a metacharacter, {@link IncludeExclude} matches them
-   * exactly, so the returned selector captures exactly what this setting captured for the names it
-   * keeps.
+   * literally, so the returned selector captures exactly what this setting captured for the names
+   * it keeps.
    *
    * <p>{@code null} is returned rather than an empty selector because an empty selector matches
    * every name.

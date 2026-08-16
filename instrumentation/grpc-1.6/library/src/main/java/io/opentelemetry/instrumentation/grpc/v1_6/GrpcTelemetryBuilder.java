@@ -157,8 +157,8 @@ public final class GrpcTelemetryBuilder {
   /**
    * Sets which metadata request values should be captured as span attributes on client spans.
    *
-   * <p>The metadata keys are matched exactly. Keys containing {@code *} or {@code ?} are ignored
-   * and reported, since this setting never supported wildcards.
+   * <p>The metadata keys are matched literally. Keys containing {@code *} or {@code ?} are ignored
+   * and logged, since this setting never supported wildcards.
    *
    * @deprecated Use {@link #setClientRequestMetadata(IncludeExclude)} instead. May be removed in
    *     the next minor release.
@@ -193,8 +193,8 @@ public final class GrpcTelemetryBuilder {
   /**
    * Sets which metadata request values should be captured as span attributes on server spans.
    *
-   * <p>The metadata keys are matched exactly. Keys containing {@code *} or {@code ?} are ignored
-   * and reported, since this setting never supported wildcards.
+   * <p>The metadata keys are matched literally. Keys containing {@code *} or {@code ?} are ignored
+   * and logged, since this setting never supported wildcards.
    *
    * @deprecated Use {@link #setServerRequestMetadata(IncludeExclude)} instead. May be removed in
    *     the next minor release.
