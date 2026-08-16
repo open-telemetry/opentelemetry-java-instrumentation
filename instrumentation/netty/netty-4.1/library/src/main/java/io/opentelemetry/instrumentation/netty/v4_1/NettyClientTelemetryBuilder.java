@@ -60,9 +60,8 @@ public final class NettyClientTelemetryBuilder {
   /**
    * Configures HTTP request headers to capture as span attributes.
    *
-   * <p>The header names are matched literally. Unlike {@link #setRequestHeaders(IncludeExclude)},
-   * {@code *} and {@code ?} are not treated as glob patterns, since this setting never supported
-   * them as wildcards.
+   * <p>The header names are matched exactly. Names containing {@code *} or {@code ?} are ignored
+   * and reported, since this setting never supported wildcards.
    *
    * @param capturedRequestHeaders HTTP header names to capture.
    * @deprecated Use {@link #setRequestHeaders(IncludeExclude)} instead, which matches glob patterns
@@ -95,9 +94,8 @@ public final class NettyClientTelemetryBuilder {
   /**
    * Configures HTTP response headers to capture as span attributes.
    *
-   * <p>The header names are matched literally. Unlike {@link #setResponseHeaders(IncludeExclude)},
-   * {@code *} and {@code ?} are not treated as glob patterns, since this setting never supported
-   * them as wildcards.
+   * <p>The header names are matched exactly. Names containing {@code *} or {@code ?} are ignored
+   * and reported, since this setting never supported wildcards.
    *
    * @param capturedResponseHeaders HTTP header names to capture.
    * @deprecated Use {@link #setResponseHeaders(IncludeExclude)} instead, which matches glob
