@@ -85,8 +85,8 @@ class KtorServerHeaderSelectorTest : AbstractHttpServerUsingTest<ApplicationEngi
       telemetry.setCapturedResponseHeaders(listOf("*"))
     }
 
-    // "*" is dropped while the selector is built, so it never widens what is captured; the request
-    // carries an Authorization header so that treating "*" as a glob pattern would capture it
+    // "*" is matched literally, so it never widens what is captured; the request carries an
+    // Authorization header so that treating "*" as a glob pattern would capture it
     assertThat(attributes.get(AUTHORIZATION_HEADER)).isNull()
     assertThat(headerAttributeKeys(attributes, "http.request.header."))
       .containsExactly("http.request.header.x-test-request")

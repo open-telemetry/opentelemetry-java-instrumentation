@@ -75,8 +75,8 @@ class KtorClientHeaderSelectorTest {
       telemetryBuilder.capturedResponseHeaders("*")
     }
 
-    // "*" is dropped while the selector is built, so it captures nothing; the request carries an
-    // Authorization header so that treating "*" as a glob pattern would capture it
+    // "*" is matched literally, so it captures nothing; the request carries an Authorization header
+    // so that treating "*" as a glob pattern would capture it
     assertThat(span.attributes.get(AUTHORIZATION_HEADER)).isNull()
     assertThat(span.attributes.asMap().keys.map { it.key })
       .noneMatch { it.startsWith("http.request.header.") }
