@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet.v5_0;
+package io.opentelemetry.instrumentation.servlet.v3_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static java.util.Arrays.asList;
@@ -24,18 +24,18 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExt
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletHttpAttributesGetter;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
-import io.opentelemetry.instrumentation.servlet.v5_0.internal.Servlet5Accessor;
+import io.opentelemetry.instrumentation.servlet.v3_0.internal.Servlet3Accessor;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import jakarta.servlet.Filter;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
+import javax.servlet.Filter;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class ServletHeaderCaptureTest {
+class ServletHeaderSelectorTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -44,7 +44,7 @@ class ServletHeaderCaptureTest {
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
       extractor =
           HttpServerAttributesExtractor.builder(
-                  new ServletHttpAttributesGetter<>(Servlet5Accessor.INSTANCE))
+                  new ServletHttpAttributesGetter<>(Servlet3Accessor.INSTANCE))
               .setRequestHeaders(
                   IncludeExclude.builder()
                       .setIncluded(singletonList("x-*"))
@@ -55,7 +55,7 @@ class ServletHeaderCaptureTest {
               .build();
 
   @Test
-  void capturesHeadersMatchingSelectors() {
+  void capturesHeadersMatchingSelectorPatterns() {
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getMethod()).thenReturn("GET");
     when(request.getHeaderNames()).thenReturn(enumeration(asList("X-Test-Request", "X-Secret")));

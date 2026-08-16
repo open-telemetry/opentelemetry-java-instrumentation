@@ -26,7 +26,7 @@ import org.restlet.data.Response;
 class RestletHttpAttributesGetterTest {
 
   @Test
-  void capturesHeadersMatchingWildcardSelector() {
+  void capturesHeadersMatchingWildcardPattern() {
     Request request = newRequest();
     request.getAttributes().put("org.restlet.http.headers", headers("X-Test-Request", "X-Secret"));
     Response response = new Response(request);
@@ -58,7 +58,7 @@ class RestletHttpAttributesGetterTest {
   }
 
   @Test
-  void capturesAllHeadersWithExcludeOnlySelector() {
+  void capturesEveryHeaderNotExcluded() {
     Request request = newRequest();
     request.getAttributes().put("org.restlet.http.headers", headers("X-One", "X-Two"));
 
