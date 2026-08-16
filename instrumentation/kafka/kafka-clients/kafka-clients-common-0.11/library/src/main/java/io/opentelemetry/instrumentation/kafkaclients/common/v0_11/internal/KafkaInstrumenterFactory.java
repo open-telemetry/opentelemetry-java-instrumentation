@@ -287,9 +287,8 @@ public final class KafkaInstrumenterFactory {
     builder
         .addContextCustomizer(
             (context, request, startAttributes) -> {
-              ConsumerRecords<?, ?> records = request.getRecords();
               return context.with(
-                  CONSUMED_MESSAGES_COUNT_KEY, countConsumedMessages(records, records.count()));
+                  CONSUMED_MESSAGES_COUNT_KEY, countConsumedMessages(request.getRecords()));
             })
         .addOperationMetrics(consumedMessagesMetrics);
   }

@@ -5,7 +5,12 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -14,7 +19,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -69,5 +77,33 @@ class OpenTelemetryConsumerInterceptorTest {
     SerializationTestUtil.testSerialize(
         consumerConfig(),
         OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_CONSUMER_TELEMETRY_SUPPLIER);
+  }
+
+  @Test
+  void deduplicatesRecordsAcrossReceiveInstrumentations() {
+    assumeTrue(emitStableMessagingSemconv());
+
+    KafkaTelemetry telemetry =
+        KafkaTelemetry.builder(testing.getOpenTelemetry())
+            .setMessagingReceiveTelemetryEnabled(true)
+            .build();
+    Map<String, ?> config = telemetry.consumerInterceptorConfigProperties();
+    OpenTelemetryConsumerInterceptor<String, String> firstInterceptor =
+        new OpenTelemetryConsumerInterceptor<>();
+    firstInterceptor.configure(config);
+    OpenTelemetryConsumerInterceptor<String, String> secondInterceptor =
+        new OpenTelemetryConsumerInterceptor<>();
+    secondInterceptor.configure(config);
+
+    String topic = "test";
+    TopicPartition partition = new TopicPartition(topic, 0);
+    ConsumerRecord<String, String> record = new ConsumerRecord<>(topic, 0, 0, "key", "value");
+    ConsumerRecords<String, String> records =
+        new ConsumerRecords<>(singletonMap(partition, singletonList(record)));
+
+    ConsumerRecords<String, String> tracedRecords = firstInterceptor.onConsume(records);
+    secondInterceptor.onConsume(tracedRecords);
+
+    assertTotalConsumedMessages(testing, "io.opentelemetry.kafka-clients-2.6", 1);
   }
 }
