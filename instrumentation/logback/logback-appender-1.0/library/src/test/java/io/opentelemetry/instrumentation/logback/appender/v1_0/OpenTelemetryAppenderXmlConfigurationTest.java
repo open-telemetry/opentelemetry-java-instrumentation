@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Verifies that the deprecated boolean settings of the appender are still configurable from {@code
  * logback.xml}. Joran converts the element text with {@code Boolean.valueOf}, so these settings
- * remain configurable even though they accept a nullable {@link Boolean} rather than a primitive.
+ * remain configurable through their primitive {@code boolean} setters.
  */
 class OpenTelemetryAppenderXmlConfigurationTest {
 

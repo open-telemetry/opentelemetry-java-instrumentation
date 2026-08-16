@@ -266,8 +266,9 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * <p>A {@code null} or empty selector leaves this appender without a programmatic selector, in
    * which case the key value pair attributes are selected by {@link
    * #setKeyValuePairAttributesIncluded(String)} and {@link
-   * #setKeyValuePairAttributesExcluded(String)}. No key value pair attributes are captured when all
-   * of these are absent or empty. Only a non-empty selector configured with this method takes
+   * #setKeyValuePairAttributesExcluded(String)}. When these are also absent or empty, the
+   * deprecated {@link #setCaptureKeyValuePairAttributes(boolean)} setting controls whether all key
+   * value pair attributes are captured. Only a non-empty selector configured with this method takes
    * precedence over the other settings.
    *
    * <p>Captured key value pair attributes may contain sensitive information. Configure included and
