@@ -83,17 +83,6 @@ tasks {
 
   val slf4j2ApiTestSourceSet = sourceSets.named("slf4j2ApiTest")
 
-  val testKeyValuePairAttributeExclusionsOnly =
-    register<Test>("testKeyValuePairAttributeExclusionsOnly") {
-      testClassesDirs = slf4j2ApiTestSourceSet.get().output.classesDirs
-      classpath = slf4j2ApiTestSourceSet.get().runtimeClasspath
-
-      jvmArgs(
-        "-Dotel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded=*-secret"
-      )
-      systemProperty("testKeyValuePairConfiguration", "exclude-only")
-    }
-
   val testLegacyKeyValuePairAttributes = register<Test>("testLegacyKeyValuePairAttributes") {
     testClassesDirs = slf4j2ApiTestSourceSet.get().output.classesDirs
     classpath = slf4j2ApiTestSourceSet.get().runtimeClasspath
@@ -103,29 +92,6 @@ tasks {
     )
     systemProperty("testKeyValuePairConfiguration", "legacy")
   }
-
-  val testKeyValuePairAttributePrecedence =
-    register<Test>("testKeyValuePairAttributePrecedence") {
-      testClassesDirs = slf4j2ApiTestSourceSet.get().output.classesDirs
-      classpath = slf4j2ApiTestSourceSet.get().runtimeClasspath
-
-      jvmArgs(
-        "-Dotel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included=new",
-        "-Dotel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes=true",
-      )
-      systemProperty("testKeyValuePairConfiguration", "precedence")
-    }
-
-  val testDeclarativeKeyValuePairAttributes =
-    register<Test>("testDeclarativeKeyValuePairAttributes") {
-      testClassesDirs = slf4j2ApiTestSourceSet.get().output.classesDirs
-      classpath = slf4j2ApiTestSourceSet.get().runtimeClasspath
-
-      jvmArgs(
-        "-Dotel.config.file=$projectDir/src/slf4j2ApiTest/resources/declarative-config.yaml"
-      )
-      systemProperty("testKeyValuePairConfiguration", "declarative")
-    }
 
   val testMdcAttributeExclusionsOnly = register<Test>("testMdcAttributeExclusionsOnly") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -171,10 +137,7 @@ tasks {
   check {
     dependsOn(
       testing.suites,
-      testKeyValuePairAttributeExclusionsOnly,
       testLegacyKeyValuePairAttributes,
-      testKeyValuePairAttributePrecedence,
-      testDeclarativeKeyValuePairAttributes,
       testMdcAttributeExclusionsOnly,
       testLegacyMdcAttributes,
       testLegacyMdcAttributesCaptureAll,

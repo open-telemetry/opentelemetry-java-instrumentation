@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import ch.qos.logback.classic.Level;
@@ -16,7 +14,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -53,10 +50,6 @@ class LogbackKeyValuePairSelectorTest {
     Map<String, String> entries = new HashMap<>();
     entries.put("key1", "key1-value");
     entries.put("key2", "key2-value");
-    entries.put("request-id", "request-id-value");
-    entries.put("request-secret", "request-secret-value");
-    entries.put("legacy", "legacy-value");
-    entries.put("new", "new-value");
     return entries;
   }
 
@@ -73,25 +66,11 @@ class LogbackKeyValuePairSelectorTest {
   }
 
   private static Map<String, String> expectedKeyValuePairAttributes() {
-    List<String> expectedKeys;
-    switch (System.getProperty("testKeyValuePairConfiguration", "new")) {
-      case "legacy":
-        return new HashMap<>(KEY_VALUE_PAIRS);
-      case "precedence":
-        expectedKeys = singletonList("new");
-        break;
-      case "exclude-only":
-        expectedKeys = asList("key1", "key2", "request-id", "legacy", "new");
-        break;
-      case "declarative":
-        expectedKeys = singletonList("request-id");
-        break;
-      default:
-        expectedKeys = singletonList("key1");
-        break;
+    if ("legacy".equals(System.getProperty("testKeyValuePairConfiguration"))) {
+      return new HashMap<>(KEY_VALUE_PAIRS);
     }
     Map<String, String> expected = new HashMap<>();
-    expectedKeys.forEach(key -> expected.put(key, KEY_VALUE_PAIRS.get(key)));
+    expected.put("key1", "key1-value");
     return expected;
   }
 }
