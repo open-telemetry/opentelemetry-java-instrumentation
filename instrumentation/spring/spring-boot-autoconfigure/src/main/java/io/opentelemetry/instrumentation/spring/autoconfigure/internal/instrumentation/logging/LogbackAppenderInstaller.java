@@ -195,7 +195,10 @@ class LogbackAppenderInstaller {
     List<String> included = getLoggingListProperty(environment, MDC_ATTRIBUTES_INCLUDED);
     List<String> excluded = getLoggingListProperty(environment, MDC_ATTRIBUTES_EXCLUDED);
     List<String> deprecated = getLoggingListProperty(environment, DEPRECATED_MDC_ATTRIBUTES);
-    if (included == null && excluded == null && deprecated == null) {
+    // an empty selector property is equivalent to an unset one, matching how the same flat
+    // properties are read outside of Spring, where empty values cannot be distinguished from unset
+    // ones
+    if (isEmpty(included) && isEmpty(excluded) && isEmpty(deprecated)) {
       return;
     }
 

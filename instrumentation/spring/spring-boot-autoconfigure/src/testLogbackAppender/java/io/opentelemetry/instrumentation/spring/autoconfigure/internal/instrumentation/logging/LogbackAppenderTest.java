@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
 
@@ -479,6 +481,32 @@ class LogbackAppenderTest {
    */
   private static List<Status> keyValuePairDeprecationWarnings(
       Map<String, Object> properties, Consumer<OpenTelemetryAppender> declaredInXml) {
+    return deprecationWarnings(
+        properties,
+        declaredInXml,
+        LogbackAppenderInstaller::initializeKeyValuePairAttributesFromProperties,
+        "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes");
+  }
+
+  /**
+   * Applies {@code properties} to an appender prepared by {@code declaredInXml}, simulating the
+   * settings of an appender declared in {@code logback.xml}, and returns the deprecation warnings
+   * the appender reported while resolving its MDC selector.
+   */
+  private static List<Status> mdcDeprecationWarnings(
+      Map<String, Object> properties, Consumer<OpenTelemetryAppender> declaredInXml) {
+    return deprecationWarnings(
+        properties,
+        declaredInXml,
+        LogbackAppenderInstaller::initializeMdcAttributesFromProperties,
+        "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes");
+  }
+
+  private static List<Status> deprecationWarnings(
+      Map<String, Object> properties,
+      Consumer<OpenTelemetryAppender> declaredInXml,
+      BiConsumer<ConfigurableEnvironment, OpenTelemetryAppender> initializeFromProperties,
+      String deprecatedProperty) {
     StandardEnvironment environment = new StandardEnvironment();
     environment.getPropertySources().addFirst(new MapPropertySource("test", properties));
     OpenTelemetryAppender appender = new OpenTelemetryAppender();
@@ -486,19 +514,29 @@ class LogbackAppenderTest {
     appender.setOpenTelemetry(OpenTelemetry.noop());
     declaredInXml.accept(appender);
 
-    LogbackAppenderInstaller.initializeKeyValuePairAttributesFromProperties(environment, appender);
+    initializeFromProperties.accept(environment, appender);
     appender.start();
 
     return appender.getContext().getStatusManager().getCopyOfStatusList().stream()
         .filter(
             status ->
-                status.getMessage() != null
-                    && status
-                        .getMessage()
-                        .contains(
-                            "otel.instrumentation.logback-appender.experimental"
-                                + ".capture-key-value-pair-attributes"))
+                status.getMessage() != null && status.getMessage().contains(deprecatedProperty))
         .collect(toList());
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // verifies the deprecated setting keeps its meaning
+  void emptyMdcSelectorPropertyDoesNotReplaceAppenderSettings() {
+    Map<String, Object> properties = new HashMap<>();
+    // an empty property value cannot be distinguished from an unset one, so it leaves the settings
+    // declared in logback.xml alone
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.mdc-attributes.included", "");
+
+    assertThat(
+            mdcDeprecationWarnings(
+                properties, appender -> appender.setCaptureMdcAttributes("key1")))
+        .hasSize(1);
   }
 
   @Test
