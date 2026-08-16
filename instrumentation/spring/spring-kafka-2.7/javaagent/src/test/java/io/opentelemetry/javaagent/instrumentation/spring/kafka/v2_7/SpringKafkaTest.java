@@ -588,7 +588,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         "testBatchListener",
         null,
         receiveCount,
-        receiveCount,
+        1,
         null);
     assertProcessMetrics(
         testing,
