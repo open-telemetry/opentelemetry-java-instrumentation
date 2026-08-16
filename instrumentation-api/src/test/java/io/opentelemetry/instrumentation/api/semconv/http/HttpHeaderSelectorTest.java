@@ -144,16 +144,6 @@ class HttpHeaderSelectorTest {
         .isEmpty();
   }
 
-  @Test
-  void enumeratedHeaderNamesReuseAttributeKeys() {
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.builder(new MapGetter(true))
-            .setRequestHeaders(selector(singletonList("Test-Request-*"), emptyList()))
-            .build();
-
-    assertThat(firstRequestHeaderKey(extractor)).isSameAs(firstRequestHeaderKey(extractor));
-  }
-
   @SuppressWarnings("deprecation") // testing deprecated API
   @Test
   void deprecatedCapturedHeadersSettersSelectExactNames() {
@@ -245,13 +235,6 @@ class HttpHeaderSelectorTest {
     extractor.onStart(attributes, Context.root(), REQUEST);
     extractor.onEnd(attributes, Context.root(), REQUEST, RESPONSE, null);
     return headerAttributes(attributes.build());
-  }
-
-  private static AttributeKey<?> firstRequestHeaderKey(
-      AttributesExtractor<Map<String, String>, Map<String, String>> extractor) {
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), REQUEST);
-    return headerAttributes(attributes.build()).keySet().iterator().next();
   }
 
   private static Map<AttributeKey<?>, Object> headerAttributes(Attributes attributes) {

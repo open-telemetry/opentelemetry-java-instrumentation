@@ -10,7 +10,6 @@ import static java.util.Collections.unmodifiableList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
-import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -19,7 +18,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
@@ -39,13 +37,9 @@ final class CapturedHttpHeaders {
   // getters which do not enumerate header names keep working
   private final List<String> exactNames;
   private final Map<String, AttributeKey<List<String>>> exactAttributeKeys;
-  private final Function<String, AttributeKey<List<String>>> attributeKeyFactory;
   // whether the selector can match header names that are not listed in exactNames, which requires
   // enumerating the header names of each request or response
   private final boolean enumerateNames;
-  // the attribute keys of the enumerated header names, which are not known in advance; this is
-  // bounded because a request or response can carry any header name
-  @Nullable private final Cache<String, AttributeKey<List<String>>> enumeratedAttributeKeys;
 
   static CapturedHttpHeaders create(String type, @Nullable IncludeExclude headers) {
     return new CapturedHttpHeaders(
@@ -91,9 +85,7 @@ final class CapturedHttpHeaders {
     }
     this.exactNames = unmodifiableList(new ArrayList<>(names));
     this.exactAttributeKeys = createAttributeKeys(type, exactNames);
-    this.attributeKeyFactory = name -> createAttributeKey(type, name);
     this.enumerateNames = enumerate;
-    this.enumeratedAttributeKeys = enumerate ? Cache.bounded(100) : null;
   }
 
   boolean isEmpty() {
@@ -122,14 +114,7 @@ final class CapturedHttpHeaders {
 
   AttributeKey<List<String>> attributeKey(String lowercaseName) {
     AttributeKey<List<String>> attributeKey = exactAttributeKeys.get(lowercaseName);
-    if (attributeKey != null) {
-      return attributeKey;
-    }
-    // only an enumerated header name gets this far, and enumeratedAttributeKeys is always present
-    // when header names are enumerated
-    return enumeratedAttributeKeys == null
-        ? createAttributeKey(type, lowercaseName)
-        : enumeratedAttributeKeys.computeIfAbsent(lowercaseName, attributeKeyFactory);
+    return attributeKey != null ? attributeKey : createAttributeKey(type, lowercaseName);
   }
 
   private boolean matches(String lowercaseName) {
