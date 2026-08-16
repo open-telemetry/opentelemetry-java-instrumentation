@@ -862,7 +862,7 @@ definitions:
       name: otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments
       declarative_name: java.logback_appender.capture_logstash_structured_arguments/development
       description: |
-        Deprecated setting that enables the capture of all attributes from Logstash structured arguments. It is ignored when otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included or otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded is configured, and it may be removed in the next minor release. Use otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included instead.
+        Deprecated setting that enables the capture of all attributes from Logstash structured arguments (e.g., StructuredArguments.v() and StructuredArguments.keyValue()). It is ignored when otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included or otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded is configured, and it may be removed in the next minor release. Use otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included instead.
       type: boolean
       default: false
     otel.instrumentation.logback-appender.experimental.capture-marker-attribute:

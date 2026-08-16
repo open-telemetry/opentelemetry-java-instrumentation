@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.LoggerFactory;
 
-class LogstashStructuredArgsSelectorTest {
+class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
 
   private static final String DEPRECATED_LOGSTASH_STRUCTURED_ARGUMENTS_WARNING =
       "The captureLogstashStructuredArguments setting of the OpenTelemetry appender and the"

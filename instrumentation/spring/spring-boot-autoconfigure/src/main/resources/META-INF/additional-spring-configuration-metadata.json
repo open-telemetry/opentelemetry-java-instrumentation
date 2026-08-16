@@ -545,7 +545,7 @@
     {
       "name": "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments",
       "type": "java.lang.Boolean",
-      "description": "Deprecated setting that enables the capture of all Logstash StructuredArguments as attributes (e.g., `StructuredArguments.v()` and `StructuredArguments.keyValue()`). It is ignored when `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included` or `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded` is configured, and it may be removed in the next minor release. Use `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included` instead.",
+      "description": "Deprecated setting that enables the capture of all attributes from Logstash structured arguments (e.g., `StructuredArguments.v()` and `StructuredArguments.keyValue()`). It is ignored when `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included` or `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded` is configured, and it may be removed in the next minor release. Use `otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included` instead.",
       "defaultValue": false,
       "deprecation": {
         "level": "warning",

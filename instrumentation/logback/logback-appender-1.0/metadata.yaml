@@ -206,7 +206,8 @@ configurations:
     declarative_name: java.logback_appender.capture_logstash_structured_arguments/development
     description: >
       Deprecated setting that enables the capture of all attributes from Logstash structured
-      arguments. It is ignored when
+      arguments (e.g., StructuredArguments.v() and StructuredArguments.keyValue()). It is ignored
+      when
       otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included
       or
       otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded
