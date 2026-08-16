@@ -45,7 +45,9 @@ configurations:
     declarative_name: java.servlet.capture_request_parameters/development
     description: >
       Deprecated include-only alias for
-      `otel.instrumentation.servlet.experimental.request-parameters.included`. It may be removed in the
-      next minor release.
+      `otel.instrumentation.servlet.experimental.request-parameters.included`. It does not support
+      glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other
+      entry is matched as a literal request parameter name. It may be removed in the next minor
+      release.
     type: list
     default: ""
