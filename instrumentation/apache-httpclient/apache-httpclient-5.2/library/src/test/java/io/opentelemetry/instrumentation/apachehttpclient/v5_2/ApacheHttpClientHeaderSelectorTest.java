@@ -21,10 +21,10 @@ import org.apache.hc.core5.http.message.BasicHttpRequest;
 import org.apache.hc.core5.http.message.BasicHttpResponse;
 import org.junit.jupiter.api.Test;
 
-class ApacheHttpClientCapturedHeadersTest {
+class ApacheHttpClientHeaderSelectorTest {
 
   @Test
-  void capturesHeadersMatchedByWildcardSelector() {
+  void capturesHeadersMatchingWildcardPattern() {
     BasicHttpRequest httpRequest = new BasicHttpRequest("GET", "/test");
     httpRequest.setHeader("X-Test-Request", "request-value");
     httpRequest.setHeader("X-Test-Excluded", "excluded-value");
@@ -61,7 +61,7 @@ class ApacheHttpClientCapturedHeadersTest {
   }
 
   @Test
-  void capturesHeadersMatchedByExcludeOnlySelector() {
+  void capturesEveryHeaderNotExcluded() {
     BasicHttpRequest httpRequest = new BasicHttpRequest("GET", "/test");
     httpRequest.setHeader("X-Test-Request", "request-value");
     httpRequest.setHeader("X-Test-Excluded", "excluded-value");
@@ -87,7 +87,7 @@ class ApacheHttpClientCapturedHeadersTest {
 
   @SuppressWarnings("deprecation") // testing deprecated API
   @Test
-  void deprecatedExactNameSetterDoesNotTreatStarAsWildcard() {
+  void deprecatedSettersMatchHeaderNamesLiterally() {
     BasicHttpRequest httpRequest = new BasicHttpRequest("GET", "/test");
     httpRequest.setHeader("X-Test-Request", "request-value");
     httpRequest.setHeader("Authorization", "secret");

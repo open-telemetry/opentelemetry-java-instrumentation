@@ -72,8 +72,7 @@ public final class HelidonTelemetryBuilder {
    * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
    * characters, including none. Excluded patterns take precedence over included patterns. A
    * selector with no included patterns captures every header that is not excluded, and an
-   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers. Headers are also not
-   * captured when no selector is configured.
+   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
    */
   @CanIgnoreReturnValue
   public HelidonTelemetryBuilder setRequestHeaders(IncludeExclude requestHeaders) {
@@ -84,9 +83,8 @@ public final class HelidonTelemetryBuilder {
   /**
    * Configures HTTP request headers to capture as span attributes.
    *
-   * <p>The header names are matched literally. Names containing {@code *} or {@code ?} are ignored
-   * and logged, since this setting never supported wildcards. Use {@link
-   * #setRequestHeaders(IncludeExclude)} to match glob patterns.
+   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
+   * patterns.
    *
    * @param requestHeaders HTTP header names to capture.
    * @deprecated Use {@link #setRequestHeaders(IncludeExclude)} instead, which matches glob patterns
@@ -109,8 +107,7 @@ public final class HelidonTelemetryBuilder {
    * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
    * characters, including none. Excluded patterns take precedence over included patterns. A
    * selector with no included patterns captures every header that is not excluded, and an
-   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers. Headers are also not
-   * captured when no selector is configured.
+   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
    */
   @CanIgnoreReturnValue
   public HelidonTelemetryBuilder setResponseHeaders(IncludeExclude responseHeaders) {
@@ -121,9 +118,8 @@ public final class HelidonTelemetryBuilder {
   /**
    * Configures HTTP response headers to capture as span attributes.
    *
-   * <p>The header names are matched literally. Names containing {@code *} or {@code ?} are ignored
-   * and logged, since this setting never supported wildcards. Use {@link
-   * #setResponseHeaders(IncludeExclude)} to match glob patterns.
+   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
+   * patterns.
    *
    * @param responseHeaders HTTP header names to capture.
    * @deprecated Use {@link #setResponseHeaders(IncludeExclude)} instead, which matches glob

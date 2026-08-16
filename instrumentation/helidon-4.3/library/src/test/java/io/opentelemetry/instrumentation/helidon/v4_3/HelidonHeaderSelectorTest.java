@@ -3,48 +3,52 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
+package io.opentelemetry.instrumentation.helidon.v4_3;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import io.helidon.http.HeaderNames;
+import io.helidon.http.ServerRequestHeaders;
+import io.helidon.http.ServerResponseHeaders;
+import io.helidon.http.WritableHeaders;
+import io.helidon.webserver.http.ServerRequest;
+import io.helidon.webserver.http.ServerResponse;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpVersion;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.message.BasicHttpResponse;
-import org.apache.http.message.BasicStatusLine;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import org.junit.jupiter.api.Test;
 
-class ApacheHttpClientCapturedHeadersTest {
+class HelidonHeaderSelectorTest {
 
   @Test
-  void capturesHeadersMatchedByWildcardSelector() {
-    HttpGet httpRequest = new HttpGet("/test");
-    httpRequest.setHeader("X-Test-Request", "request-value");
-    httpRequest.setHeader("X-Test-Excluded", "excluded-value");
-    httpRequest.setHeader("Other-Request", "other-value");
-    ApacheHttpClientRequest request =
-        new ApacheHttpClientRequest(new HttpHost("localhost", 8080), httpRequest);
+  void capturesHeadersMatchingWildcardPattern() {
+    WritableHeaders<?> requestHeaders = WritableHeaders.create();
+    requestHeaders.add(HeaderNames.create("X-Test-Request"), "request-value");
+    requestHeaders.add(HeaderNames.create("X-Test-Excluded"), "excluded-value");
+    requestHeaders.add(HeaderNames.create("Other-Request"), "other-value");
+    ServerRequest request = mock(ServerRequest.class, RETURNS_DEEP_STUBS);
+    when(request.headers()).thenReturn(ServerRequestHeaders.create(requestHeaders));
 
-    HttpResponse response =
-        new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
-    response.setHeader("X-Test-Response", "response-value");
-    response.setHeader("Other-Response", "other-value");
+    ServerResponseHeaders responseHeaders = ServerResponseHeaders.create();
+    responseHeaders.add(HeaderNames.create("X-Test-Response"), "response-value");
+    responseHeaders.add(HeaderNames.create("Other-Response"), "other-value");
+    ServerResponse response = mock(ServerResponse.class, RETURNS_DEEP_STUBS);
+    when(response.headers()).thenReturn(responseHeaders);
 
     // the selector patterns use different casing than the headers to verify that HTTP header
     // matching is case-insensitive
     IncludeExclude selector =
         IncludeExclude.builder().setIncluded("x-test-*").setExcluded("*-EXCLUDED").build();
-    AttributesExtractor<ApacheHttpClientRequest, HttpResponse> extractor =
-        HttpClientAttributesExtractor.builder(new ApacheHttpClientHttpAttributesGetter())
+    AttributesExtractor<ServerRequest, ServerResponse> extractor =
+        HttpServerAttributesExtractor.builder(new HelidonAttributesGetter())
             .setRequestHeaders(selector)
             .setResponseHeaders(selector)
             .build();
@@ -64,16 +68,16 @@ class ApacheHttpClientCapturedHeadersTest {
   }
 
   @Test
-  void capturesHeadersMatchedByExcludeOnlySelector() {
-    HttpGet httpRequest = new HttpGet("/test");
-    httpRequest.setHeader("X-Test-Request", "request-value");
-    httpRequest.setHeader("X-Test-Excluded", "excluded-value");
-    httpRequest.setHeader("Other-Request", "other-value");
-    ApacheHttpClientRequest request =
-        new ApacheHttpClientRequest(new HttpHost("localhost", 8080), httpRequest);
+  void capturesEveryHeaderNotExcluded() {
+    WritableHeaders<?> requestHeaders = WritableHeaders.create();
+    requestHeaders.add(HeaderNames.create("X-Test-Request"), "request-value");
+    requestHeaders.add(HeaderNames.create("X-Test-Excluded"), "excluded-value");
+    requestHeaders.add(HeaderNames.create("Other-Request"), "other-value");
+    ServerRequest request = mock(ServerRequest.class, RETURNS_DEEP_STUBS);
+    when(request.headers()).thenReturn(ServerRequestHeaders.create(requestHeaders));
 
-    AttributesExtractor<ApacheHttpClientRequest, HttpResponse> extractor =
-        HttpClientAttributesExtractor.builder(new ApacheHttpClientHttpAttributesGetter())
+    AttributesExtractor<ServerRequest, ServerResponse> extractor =
+        HttpServerAttributesExtractor.builder(new HelidonAttributesGetter())
             .setRequestHeaders(IncludeExclude.builder().setExcluded("*-excluded").build())
             .build();
 
@@ -90,22 +94,23 @@ class ApacheHttpClientCapturedHeadersTest {
 
   @SuppressWarnings("deprecation") // testing deprecated API
   @Test
-  void deprecatedExactNameSetterDoesNotTreatStarAsWildcard() {
-    HttpGet httpRequest = new HttpGet("/test");
-    httpRequest.setHeader("X-Test-Request", "request-value");
-    httpRequest.setHeader("Authorization", "secret");
-    ApacheHttpClientRequest request =
-        new ApacheHttpClientRequest(new HttpHost("localhost", 8080), httpRequest);
+  void deprecatedSettersMatchHeaderNamesLiterally() {
+    WritableHeaders<?> requestHeaders = WritableHeaders.create();
+    requestHeaders.add(HeaderNames.create("X-Test-Request"), "request-value");
+    requestHeaders.add(HeaderNames.create("Authorization"), "secret");
+    ServerRequest request = mock(ServerRequest.class, RETURNS_DEEP_STUBS);
+    when(request.headers()).thenReturn(ServerRequestHeaders.create(requestHeaders));
 
-    HttpResponse response =
-        new BasicHttpResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
-    response.setHeader("X-Test-Response", "response-value");
+    ServerResponseHeaders responseHeaders = ServerResponseHeaders.create();
+    responseHeaders.add(HeaderNames.create("X-Test-Response"), "response-value");
+    ServerResponse response = mock(ServerResponse.class, RETURNS_DEEP_STUBS);
+    when(response.headers()).thenReturn(responseHeaders);
 
     // implementing header name enumeration must not turn the deprecated exact-name setters into
     // wildcard matching, since "*" is a legal header name character and capturing every header
     // would expose credentials
-    AttributesExtractor<ApacheHttpClientRequest, HttpResponse> extractor =
-        HttpClientAttributesExtractor.builder(new ApacheHttpClientHttpAttributesGetter())
+    AttributesExtractor<ServerRequest, ServerResponse> extractor =
+        HttpServerAttributesExtractor.builder(new HelidonAttributesGetter())
             .setCapturedRequestHeaders(singletonList("*"))
             .setCapturedResponseHeaders(singletonList("*"))
             .build();
