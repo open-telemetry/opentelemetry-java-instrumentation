@@ -133,8 +133,8 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
    * Header names are matched case-insensitively, since HTTP header names are case-insensitive. `?`
    * matches one character and `*` matches any number of characters, including none. Excluded
    * patterns take precedence over included patterns. A selector with no included patterns captures
-   * every header that is not excluded, and an empty selector captures no headers. No request
-   * headers are captured when this is not configured.
+   * every header that is not excluded, except that an [empty][IncludeExclude.isEmpty] selector
+   * captures no headers. No request headers are captured when this is not configured.
    */
   fun requestHeaders(requestHeaders: IncludeExclude) {
     builder.setRequestHeaders(requestHeaders)
@@ -179,8 +179,8 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
    * Header names are matched case-insensitively, since HTTP header names are case-insensitive. `?`
    * matches one character and `*` matches any number of characters, including none. Excluded
    * patterns take precedence over included patterns. A selector with no included patterns captures
-   * every header that is not excluded, and an empty selector captures no headers. No response
-   * headers are captured when this is not configured.
+   * every header that is not excluded, except that an [empty][IncludeExclude.isEmpty] selector
+   * captures no headers. No response headers are captured when this is not configured.
    */
   fun responseHeaders(responseHeaders: IncludeExclude) {
     builder.setResponseHeaders(responseHeaders)
