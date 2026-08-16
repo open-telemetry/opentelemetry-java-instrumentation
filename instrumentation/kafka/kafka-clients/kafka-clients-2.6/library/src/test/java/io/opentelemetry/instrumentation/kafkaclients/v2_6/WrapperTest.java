@@ -36,7 +36,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -53,7 +52,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
@@ -153,25 +151,6 @@ class WrapperTest extends AbstractWrapperTest {
     assertSendMetrics(testing, instrumentationName, SHARED_TOPIC, "0", 1, null);
     assertReceiveDurationMetrics(testing, instrumentationName, SHARED_TOPIC, "test", null, 1, null);
     assertProcessDurationMetrics(testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, null);
-  }
-
-  @Test
-  void emptyPollRecordsDurationWithoutSpan() throws InterruptedException {
-    assumeTrue(emitStableMessagingSemconv());
-
-    awaitUntilConsumerIsReady();
-    KafkaTelemetry telemetry =
-        KafkaTelemetry.builder(testing.getOpenTelemetry())
-            .setMessagingReceiveTelemetryEnabled(true)
-            .build();
-    Consumer<?, ?> wrappedConsumer = telemetry.wrap(consumer);
-    testing.clearData();
-    ConsumerRecords<?, ?> records = wrappedConsumer.poll(Duration.ofMillis(1));
-
-    assertThat(records.count()).isZero();
-    assertThat(testing.spans()).isEmpty();
-    assertReceiveDurationMetrics(
-        testing, KafkaTelemetryBuilder.INSTRUMENTATION_NAME, null, "test", null, 1, null);
   }
 
   private static SpanContext asRemote(SpanContext spanContext) {

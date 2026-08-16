@@ -14,12 +14,10 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
-import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerOperationMetrics;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.TracingList;
-import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,15 +35,12 @@ import org.apache.kafka.common.TopicPartition;
  */
 public class KafkaConsumerTelemetry {
   private final Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter;
-  @Nullable private final KafkaConsumerOperationMetrics consumerOperationMetrics;
   private final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
 
   public KafkaConsumerTelemetry(
       Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter,
-      @Nullable KafkaConsumerOperationMetrics consumerOperationMetrics,
       Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter) {
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
-    this.consumerOperationMetrics = consumerOperationMetrics;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
 
@@ -79,13 +74,11 @@ public class KafkaConsumerTelemetry {
       @Nullable String consumerGroup,
       @Nullable String clientId,
       Timer timer) {
-    Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(Context.current());
-    KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumerGroup, clientId);
-    Instant endTime = timer.now();
     if (records.isEmpty()) {
-      recordDuration(parentContext, request, null, timer.startTime(), endTime);
       return null;
     }
+    Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(Context.current());
+    KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumerGroup, clientId);
     Context receiveContext = null;
     if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
       receiveContext =
@@ -96,14 +89,8 @@ public class KafkaConsumerTelemetry {
               null,
               null,
               timer.startTime(),
-              endTime);
+              timer.now());
     }
-    recordDuration(
-        receiveContext != null ? receiveContext : parentContext,
-        request,
-        null,
-        timer.startTime(),
-        endTime);
 
     return emitStableMessagingSemconv() ? parentContext : receiveContext;
   }
@@ -115,30 +102,15 @@ public class KafkaConsumerTelemetry {
     KafkaReceiveRequest request =
         KafkaReceiveRequest.create(
             records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
-    Instant endTime = timer.now();
-    Context receiveContext = parentContext;
     if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
-      receiveContext =
-          InstrumenterUtil.startAndEnd(
-              consumerReceiveInstrumenter,
-              parentContext,
-              request,
-              null,
-              error,
-              timer.startTime(),
-              endTime);
-    }
-    recordDuration(receiveContext, request, error, timer.startTime(), endTime);
-  }
-
-  private void recordDuration(
-      Context context,
-      KafkaReceiveRequest request,
-      @Nullable Throwable error,
-      Instant startTime,
-      Instant endTime) {
-    if (consumerOperationMetrics != null) {
-      consumerOperationMetrics.recordDuration(context, request, error, startTime, endTime);
+      InstrumenterUtil.startAndEnd(
+          consumerReceiveInstrumenter,
+          parentContext,
+          request,
+          null,
+          error,
+          timer.startTime(),
+          timer.now());
     }
   }
 }
