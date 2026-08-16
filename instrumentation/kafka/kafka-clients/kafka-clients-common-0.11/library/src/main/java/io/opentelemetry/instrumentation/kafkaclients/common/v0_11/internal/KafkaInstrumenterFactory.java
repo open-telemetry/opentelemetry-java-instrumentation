@@ -283,18 +283,6 @@ public final class KafkaInstrumenterFactory {
     }
   }
 
-  private void addBatchConsumedMessagesIfNoReceiveOperation(
-      InstrumenterBuilder<KafkaReceiveRequest, Void> builder) {
-    if (emitStableMessagingSemconv()) {
-      builder
-          .addContextCustomizer(
-              (context, request, startAttributes) ->
-                  startDeliveryTracking(
-                      context, request, request.getRecords(), deliveryKeys(request)))
-          .addOperationMetrics(consumedMessagesMetrics);
-    }
-  }
-
   private Context startDeliveryTracking(
       Context context,
       AbstractKafkaConsumerRequest request,
@@ -416,7 +404,6 @@ public final class KafkaInstrumenterFactory {
                     openTelemetry.getPropagators().getTextMapPropagator()))
             .addOperationMetrics(MessagingProcessMetrics.get())
             .setErrorCauseExtractor(errorCauseExtractor);
-    addBatchConsumedMessagesIfNoReceiveOperation(builder);
     setMessagingProcessExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
