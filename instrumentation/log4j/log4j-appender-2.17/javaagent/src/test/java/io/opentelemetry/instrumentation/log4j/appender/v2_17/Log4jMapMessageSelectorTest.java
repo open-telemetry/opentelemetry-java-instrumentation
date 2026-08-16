@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 import static io.opentelemetry.instrumentation.log4j.appender.v2_17.AbstractLog4j2Test.mapMessageKey;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.unmodifiableMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -29,7 +30,8 @@ class Log4jMapMessageSelectorTest {
 
   private static final Logger logger = LogManager.getLogger("selector");
 
-  private static final Map<String, String> MAP_MESSAGE_ENTRIES = mapMessageEntries();
+  private static final Map<String, String> MAP_MESSAGE_ENTRIES =
+      unmodifiableMap(mapMessageEntries());
 
   @Test
   void capturesConfiguredMapMessageAttributes() {
