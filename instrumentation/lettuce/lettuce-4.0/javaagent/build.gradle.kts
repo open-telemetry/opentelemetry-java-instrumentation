@@ -22,12 +22,11 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -35,14 +34,41 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.lettuce.experimental-span-attributes=true")
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testConnectionTelemetryEnabled = register<Test>("testConnectionTelemetryEnabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.lettuce.connection-telemetry.enabled=true")
+  }
+
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
   }
 
+  val testConnectionTelemetryEnabledStableSemconv =
+    register<Test>("testConnectionTelemetryEnabledStableSemconv") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      jvmArgs(
+        "-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true",
+        "-Dotel.semconv-stability.opt-in=database,service.peer"
+      )
+      systemProperty(
+        "metadataConfig",
+        "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.opt-in=database,service.peer"
+      )
+    }
+
   check {
-    dependsOn(testStableSemconv, testExperimental)
+    dependsOn(
+      testConnectionTelemetryEnabled,
+      testConnectionTelemetryEnabledStableSemconv,
+      testStableSemconv,
+      testExperimental
+    )
   }
 }

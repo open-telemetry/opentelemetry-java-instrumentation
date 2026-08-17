@@ -5,10 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitInstrumenterHelper.consumerDestinationName;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitInstrumenterHelper.isGeneratedQueueName;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -24,11 +29,13 @@ final class RabbitDeliveryAttributesGetter
   @Nullable
   @Override
   public String getDestination(DeliveryRequest request) {
-    if (request.getEnvelope() != null) {
-      return normalizeExchangeName(request.getEnvelope().getExchange());
-    } else {
-      return null;
+    if (emitStableMessagingSemconv()) {
+      return consumerDestinationName(
+          request.getEnvelope().getExchange(),
+          request.getEnvelope().getRoutingKey(),
+          request.getQueue());
     }
+    return normalizeExchangeName(request.getEnvelope().getExchange());
   }
 
   @Nullable
@@ -48,7 +55,7 @@ final class RabbitDeliveryAttributesGetter
 
   @Override
   public boolean isAnonymousDestination(DeliveryRequest request) {
-    return false;
+    return emitStableMessagingSemconv() && isGeneratedQueueName(request.getQueue());
   }
 
   @Nullable
@@ -101,5 +108,11 @@ final class RabbitDeliveryAttributesGetter
       return emptyList();
     }
     return singletonList(value.toString());
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(DeliveryRequest request) {
+    Map<String, Object> headers = request.getProperties().getHeaders();
+    return headers == null ? emptyList() : new ArrayList<>(headers.keySet());
   }
 }

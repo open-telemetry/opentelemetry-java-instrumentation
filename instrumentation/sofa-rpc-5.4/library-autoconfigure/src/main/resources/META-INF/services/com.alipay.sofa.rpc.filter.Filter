@@ -1,0 +1,3 @@
+io.opentelemetry.instrumentation.sofarpc.v5_4.OpenTelemetryClientFilter
+io.opentelemetry.instrumentation.sofarpc.v5_4.OpenTelemetryServerFilter
+

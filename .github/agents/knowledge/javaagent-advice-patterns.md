@@ -2,8 +2,10 @@
 
 ## Quick Reference
 
-- Use when: reviewing ByteBuddy advice classes/methods (`@Advice.OnMethodEnter` / `@Advice.OnMethodExit`)
-- Review focus: nested advice classes, static advice methods, `suppress = Throwable.class`, no-throw behavior
+- Use when: reviewing ByteBuddy advice classes/methods (`@Advice.OnMethodEnter` /
+  `@Advice.OnMethodExit`), helpers called by advice, or `Java8BytecodeBridge` usage
+- Review focus: nested advice classes, static advice methods, advice-called helpers,
+  `suppress = Throwable.class`, no-throw behavior
 
 ## Advice Classes as Nested Classes
 
@@ -60,6 +62,21 @@ public void onEnter(/* ... */) { /* ... */ }
 ```
 
 Advice classes should also have **no instance fields** — they are never instantiated.
+
+## `Java8BytecodeBridge`
+
+When building or reviewing advice, inspect both the annotated advice bodies and every helper they
+call for `Java8BytecodeBridge` usage.
+
+Use the bridge only for supported OpenTelemetry API calls written directly in
+`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` methods, which classic mode may copy into
+pre-Java-8 bytecode. Everywhere else, use the direct OpenTelemetry API, for example
+`Context.current()` instead of `Java8BytecodeBridge.currentContext()` and
+`Span.fromContext(context)` instead of `Java8BytecodeBridge.spanFromContext(context)`.
+
+Helpers called by advice are ordinary compiled methods and are not copied into the instrumented
+method, even when the helper is nested in an advice class. Source-level `inline = false` does not
+create an exception; the transformer controls inlining.
 
 ## Use `suppress = Throwable.class` by Default
 
@@ -288,6 +305,9 @@ the instrumentation automatically rather than letting it fail at runtime.
 - **Advice class missing `@SuppressWarnings("unused")`** — ByteBuddy invokes it reflectively; IDEs will flag it as dead code without the annotation. Always place the annotation **at the class level**, never moved down to individual methods.
 - **`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` method is not `static`** — advice methods must be static.
 - **Advice class has instance fields** — advice classes are never instantiated; state must not be stored on them.
+- **Incorrect `Java8BytecodeBridge` use** — use the bridge for supported calls directly in
+  annotated advice methods, but direct APIs in helpers called by advice. Ignore source-level
+  `inline = false`; the transformer controls inlining.
 - **`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` missing `suppress = Throwable.class`** when the method has a non-trivial body (library calls, collection iteration, reflection). Exceptions: helper-injection-only advice registered with `none()`, `instrumentation/internal/` infrastructure code, test sources, and methods whose bodies provably cannot throw (e.g., `return true;`, returning a literal or a single constant). Do not add or flag `suppress` on these exceptions.
 - **Exception thrown in advice code or a helper called from advice** — javaagent code must never throw; use `suppress = Throwable.class` as the safety net.
 - **`@Advice.OnMethodExit` method named `onEnter`** (or vice versa) — the method name should match the annotation. A mismatch is a copy-paste bug that compiles but confuses readers and may mask intent errors.

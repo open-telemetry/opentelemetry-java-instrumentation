@@ -28,7 +28,7 @@ dependencies {
 
 tasks {
   test {
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 }

@@ -35,11 +35,6 @@ public class OpenTelemetryApiInstrumentationModule
   }
 
   @Override
-  public String getModuleGroup() {
-    return "opentelemetry-api-bridge";
-  }
-
-  @Override
   public List<String> agentPackagesToHide() {
     // These are helper classes injected by api-version specific instrumentation modules
     // We don't want to fall back to accidentally trying to load those from the agent CL

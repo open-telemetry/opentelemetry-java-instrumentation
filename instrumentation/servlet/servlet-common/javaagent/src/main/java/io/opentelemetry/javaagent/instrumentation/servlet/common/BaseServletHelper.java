@@ -5,16 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.common;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER_FILTER;
 import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
-import static java.util.Collections.emptyList;
+import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_NAME;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
@@ -29,17 +29,13 @@ import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletAsyncContext;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.UserIncubatingAttributes;
 import java.security.Principal;
-import java.util.List;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
-  private static final List<String> CAPTURE_REQUEST_PARAMETERS =
-      DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
-          .getScalarList("capture_request_parameters/development", String.class, emptyList());
-  private static final boolean TRACE_ID_REQUEST_ATTRIBUTE_ENABLED =
-      readTraceIdRequestAttributeEnabled();
+  private static final ServletConfig servletConfig = ServletConfig.get();
 
   protected final Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
       instrumenter;
@@ -55,16 +51,11 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     this.accessor = accessor;
     this.spanNameProvider = new ServletSpanNameProvider<>(accessor);
     this.contextPathExtractor = accessor::getRequestContextPath;
+    IncludeExclude requestParameters = servletConfig.getRequestParameters();
     this.parameterExtractor =
-        !CAPTURE_REQUEST_PARAMETERS.isEmpty()
-            ? new ServletRequestParametersExtractor<>(accessor, CAPTURE_REQUEST_PARAMETERS)
+        requestParameters != null
+            ? new ServletRequestParametersExtractor<>(accessor, requestParameters)
             : null;
-  }
-
-  private static boolean readTraceIdRequestAttributeEnabled() {
-    return DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "servlet")
-        .get("trace_id_request_attribute/development")
-        .getBoolean("enabled", !AgentCommonConfig.get().isV3Preview());
   }
 
   public boolean shouldStart(Context parentContext, ServletRequestContext<REQUEST> requestContext) {
@@ -86,7 +77,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   private void addRequestAttributes(REQUEST request, Context context) {
-    if (!TRACE_ID_REQUEST_ATTRIBUTE_ENABLED) {
+    if (!servletConfig.getTraceIdRequestAttributeEnabled()) {
       return;
     }
 
@@ -166,21 +157,22 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   /**
-   * Capture {@link EnduserIncubatingAttributes#ENDUSER_ID} as span attributes when SERVER span is
-   * not created by servlet instrumentation.
+   * Capture {@link EnduserIncubatingAttributes#ENDUSER_ID}, or {@link
+   * UserIncubatingAttributes#USER_NAME} when v3 preview is enabled, as a span attribute when SERVER
+   * span is not created by servlet instrumentation.
    *
    * <p>When SERVER span is created by servlet instrumentation we register {@link
    * ServletAdditionalAttributesExtractor} as an attribute extractor. When SERVER span is not
    * created by servlet instrumentation we call this method on exit from the last servlet or filter.
    */
   private void captureEnduserId(Span serverSpan, REQUEST request) {
-    if (!AgentCommonConfig.get().getEnduserConfig().isIdEnabled()) {
+    if (!AgentCommonConfig.get().getUserConfig().isNameEnabled()) {
       return;
     }
 
     Principal principal = accessor.getRequestUserPrincipal(request);
     if (principal != null) {
-      serverSpan.setAttribute(ENDUSER_ID, principal.getName());
+      serverSpan.setAttribute(v3Preview() ? USER_NAME : ENDUSER_ID, principal.getName());
     }
   }
 

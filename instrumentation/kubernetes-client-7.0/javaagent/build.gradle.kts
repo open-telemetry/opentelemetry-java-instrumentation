@@ -26,7 +26,7 @@ testing {
     // version22Test reuses the same test source against `latest.release` in latest-deps mode
     // (currently 26.x), and against 22.0.0 otherwise, to exercise the upper end of the v20+
     // builder API line.
-    val version22Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("version22Test") {
       sources {
         java {
           setSrcDirs(listOf("src/version20Test/java"))
@@ -60,7 +60,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -68,7 +68,7 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.kubernetes-client.experimental-span-attributes=true")
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

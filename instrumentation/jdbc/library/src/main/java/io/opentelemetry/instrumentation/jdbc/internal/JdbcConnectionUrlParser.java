@@ -29,6 +29,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.parser.ParseContext;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.PolardbUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.PostgresqlUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.SapUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.SqliteUrlParser;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -98,6 +99,9 @@ public final class JdbcConnectionUrlParser {
 
     // PolarDB
     typeParsers.put("polardb", PolardbUrlParser.INSTANCE);
+
+    // SQLite
+    typeParsers.put("sqlite", SqliteUrlParser.INSTANCE);
   }
 
   private JdbcConnectionUrlParser() {}

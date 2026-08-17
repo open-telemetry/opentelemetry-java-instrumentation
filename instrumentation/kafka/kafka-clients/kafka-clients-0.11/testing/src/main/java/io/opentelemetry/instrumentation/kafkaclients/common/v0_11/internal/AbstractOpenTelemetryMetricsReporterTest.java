@@ -430,7 +430,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
           kafkaMetricsByGroup.get(group).stream()
               .sorted(
                   comparing(KafkaMetricId::getName)
-                      .thenComparing(kafkaMetricId -> kafkaMetricId.getAttributeKeys().size()))
+                      .thenComparingInt(kafkaMetricId -> kafkaMetricId.getAttributeKeys().size()))
               .collect(toList());
       // Iterate through metrics in alpha order by name
       for (KafkaMetricId kafkaMetricId : kafkaMetricIds) {

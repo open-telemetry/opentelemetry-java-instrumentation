@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.v3_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.redisson.v3_0.RedissonSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -57,7 +56,7 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
         if (promise == null) {
           return null;
         }
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
         }

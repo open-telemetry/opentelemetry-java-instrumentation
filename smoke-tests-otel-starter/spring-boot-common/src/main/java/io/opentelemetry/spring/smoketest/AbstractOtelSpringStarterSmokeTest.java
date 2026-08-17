@@ -34,6 +34,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import ch.qos.logback.classic.LoggerContext;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
@@ -84,14 +86,11 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
   @Autowired private OtelResourceProperties otelResourceProperties;
   @Autowired private OtlpExporterProperties otlpExporterProperties;
   @Autowired private JdbcTemplate jdbcTemplate;
+  @Autowired private ConfigProvider configProvider;
 
   abstract void makeClientCall();
 
   abstract void restTemplateCall(String path);
-
-  protected boolean preferJfr() {
-    return false;
-  }
 
   // can't use @LocalServerPort annotation since it moved packages between Spring Boot 2 and 3
   @Value("${local.server.port}")
@@ -155,6 +154,14 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
     }
     LoggerContext loggerContext = (LoggerContext) loggerFactorySpi;
     loggerContext.reset();
+  }
+
+  @Test
+  void configProviderReflectsConfiguredProperties() {
+    // otel.instrumentation.kafka.experimental-span-attributes=true in application.yaml
+    DeclarativeConfigProperties kafkaConfig =
+        configProvider.getInstrumentationConfig().getStructured("java").getStructured("kafka");
+    assertThat(kafkaConfig.getBoolean("experimental_span_attributes/development")).isTrue();
   }
 
   @Test
@@ -233,8 +240,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
     double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
     // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13503
     // Also not available on Windows (getSystemLoadAverage returns -1)
-    // Not available when prefer-jfr is enabled (JMX-only metric with no JFR equivalent)
-    if (javaVersion < 23 && !OS.WINDOWS.isCurrentOs() && !preferJfr()) {
+    if (javaVersion < 23 && !OS.WINDOWS.isCurrentOs()) {
       runtimeMetrics.add("jvm.system.cpu.load_1m");
     }
 

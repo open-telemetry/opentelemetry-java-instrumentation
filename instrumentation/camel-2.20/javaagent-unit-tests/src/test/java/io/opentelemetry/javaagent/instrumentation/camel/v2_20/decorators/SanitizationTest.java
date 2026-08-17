@@ -105,7 +105,7 @@ class SanitizationTest {
             "SELECT table"),
         Arguments.of("UPDATE table SET col=12", "UPDATE table SET col=?", "UPDATE table"),
         Arguments.of(
-            "insert into table where col=321", "insert into table where col=?", "INSERT table"));
+            "insert into table where col=321", "insert into table where col=?", "insert table"));
   }
 
   @SuppressWarnings("deprecation")

@@ -5,58 +5,49 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
-import java.util.Collection;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import javax.annotation.Nullable;
 
-final class InfluxDbAttributesGetter implements SqlClientAttributesGetter<InfluxDbRequest, Void> {
+final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxDbOperation, Void> {
 
+  @Nullable
   @Override
-  public Collection<String> getRawQueryTexts(InfluxDbRequest request) {
-    String sql = request.getSql();
-    if (sql == null) {
-      return emptyList();
-    }
-    return singletonList(sql);
-  }
-
-  @Override
-  public SqlDialect getSqlDialect(InfluxDbRequest request) {
-    // "String literals must be surrounded by single quotes."
-    // https://docs.influxdata.com/influxdb/v2/reference/syntax/influxql/spec/#strings
-    return DOUBLE_QUOTES_ARE_IDENTIFIERS;
+  public String getDbOperationName(InfluxDbOperation request) {
+    return request.getOperation();
   }
 
   @Nullable
   @Override
-  public String getDbOperationName(InfluxDbRequest request) {
-    return request.getOperationName();
+  @SuppressWarnings("deprecation") // old database semconv still use db.operation
+  public String getDbOperation(InfluxDbOperation request) {
+    String operation = request.getOperation();
+    return "write".equals(operation) ? "WRITE" : operation;
   }
 
   @Override
-  public String getDbSystemName(InfluxDbRequest request) {
+  public String getDbSystemName(InfluxDbOperation request) {
     return "influxdb";
   }
 
   @Nullable
   @Override
-  public String getDbNamespace(InfluxDbRequest request) {
-    String namespace = request.getNamespace();
-    return "".equals(namespace) ? null : namespace;
+  public String getDbNamespace(InfluxDbOperation request) {
+    return request.getNamespace();
+  }
+
+  @Nullable
+  @Override
+  public String getDbQueryText(InfluxDbOperation request) {
+    return null;
   }
 
   @Override
-  public String getServerAddress(InfluxDbRequest request) {
+  public String getServerAddress(InfluxDbOperation request) {
     return request.getHost();
   }
 
   @Override
-  public Integer getServerPort(InfluxDbRequest request) {
+  public Integer getServerPort(InfluxDbOperation request) {
     return request.getPort();
   }
 }

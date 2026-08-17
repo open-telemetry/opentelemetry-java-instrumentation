@@ -44,7 +44,7 @@ dependencies {
 
 testing {
   suites {
-    val javaRouteTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("javaRouteTest") {
       dependencies {
         val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.12"
         implementation("com.typesafe.akka:akka-http_$scalaVersion:${baseVersion("10.2.0").orLatest()}")
@@ -64,7 +64,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")

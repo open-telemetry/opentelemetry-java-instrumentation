@@ -23,9 +23,17 @@ configurations:
     examples:
       - ns
       - milliseconds
+  - name: otel.instrumentation.micrometer.experimental.histogram-gauges.enabled
+    declarative_name: java.micrometer.histogram_gauges/development.enabled
+    description: >
+      Enables gauge-based Micrometer histograms for DistributionSummary and Timer instruments.
+    type: boolean
+    default: false
   - name: otel.instrumentation.micrometer.histogram-gauges.enabled
     declarative_name: java.micrometer.histogram_gauges.enabled
     description: >
-      Enables gauge-based Micrometer histograms for DistributionSummary and Timer instruments.
+      Deprecated alias for
+      `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled`. It will be removed in
+      3.0.
     type: boolean
     default: false

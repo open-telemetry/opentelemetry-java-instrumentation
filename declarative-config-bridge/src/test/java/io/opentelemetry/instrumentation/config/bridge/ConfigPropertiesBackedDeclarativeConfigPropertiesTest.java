@@ -100,6 +100,68 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
+  void testComponentConfigDoesNotUseInstrumentationSpecialCases() {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("component.general.http.client.request-captured-headers", "component-header");
+    properties.put(
+        "otel.instrumentation.http.client.capture-request-headers", "instrumentation-header");
+    properties.put("component.java.jmx.discovery.delay", "42");
+    properties.put("otel.jmx.discovery.delay", "30s");
+    properties.put(
+        "otel.instrumentation.common.peer-service-mapping", "1.2.3.4=InstrumentationService");
+
+    DeclarativeConfigProperties config =
+        ConfigPropertiesBackedDeclarativeConfigProperties.createComponentProperties(
+            DefaultConfigProperties.createFromMap(properties), "component.");
+
+    assertThat(
+            config
+                .getStructured("general")
+                .getStructured("http")
+                .getStructured("client")
+                .getScalarList("request_captured_headers", String.class))
+        .containsExactly("component-header");
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("jmx")
+                .getStructured("discovery")
+                .getLong("delay"))
+        .isEqualTo(42L);
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructuredList("service_peer_mapping"))
+        .isNull();
+  }
+
+  @Test
+  void testMessagingHeadersSelectorMapping() {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("otel.instrumentation.messaging.experimental.headers.included", "a,b");
+    properties.put("otel.instrumentation.messaging.experimental.headers.excluded", "c");
+    properties.put("otel.instrumentation.messaging.experimental.capture-headers", "legacy");
+
+    DeclarativeConfigProperties messaging =
+        DeclarativeConfigBridge.createInstrumentationConfig(
+                DefaultConfigProperties.createFromMap(properties))
+            .getInstrumentationConfig()
+            .getStructured("java")
+            .getStructured("common")
+            .getStructured("messaging");
+
+    assertThat(
+            messaging.getStructured("headers/development").getScalarList("included", String.class))
+        .containsExactly("a", "b");
+    assertThat(
+            messaging.getStructured("headers/development").getScalarList("excluded", String.class))
+        .containsExactly("c");
+    assertThat(messaging.getScalarList("capture_headers/development", String.class))
+        .containsExactly("legacy");
+  }
+
+  @Test
   void testCommonDbQuerySanitizationMapping() {
     DeclarativeConfigProperties config =
         createConfig("otel.instrumentation.common.db.query-sanitization.enabled", "false");

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.assertTraceparentHeader;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
 
@@ -36,6 +37,7 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
     // then
     assertPublishSpan();
     assertTraceparentHeader(subscription);
+    assertProducerMetrics("publish", "sub", null);
   }
 
   @Test
@@ -102,7 +104,7 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
                     span ->
-                        span.hasName("sub publish")
+                        span.hasName(emitStableMessagingSemconv() ? "publish sub" : "sub publish")
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(

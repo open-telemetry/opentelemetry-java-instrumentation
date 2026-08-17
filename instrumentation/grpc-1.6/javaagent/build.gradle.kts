@@ -29,7 +29,7 @@ dependencies {
 }
 
 tasks {
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -37,7 +37,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.grpc.experimental-span-attributes=true")
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -45,7 +45,7 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
   }
 
-  val testBothSemconv by registering(Test::class) {
+  val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -53,13 +53,23 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")
   }
 
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+  }
+
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     // The agent context debug mechanism isn't compatible with the bridge approach which may add a
     // gRPC context to the root.
     jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
-    jvmArgs("-Dotel.instrumentation.grpc.capture-metadata.client.request=some-client-key")
-    jvmArgs("-Dotel.instrumentation.grpc.capture-metadata.server.request=some-server-key")
+    jvmArgs("-Dotel.instrumentation.grpc.client.request-metadata.included=some-*-key")
+    jvmArgs("-Dotel.instrumentation.grpc.client.request-metadata.excluded=*-excluded-key")
+    jvmArgs("-Dotel.instrumentation.grpc.server.request-metadata.included=some-*-key")
+    jvmArgs("-Dotel.instrumentation.grpc.server.request-metadata.excluded=*-excluded-key")
     // latest dep test occasionally fails because network type is ipv6 instead of the expected ipv4
     // and peer address is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
     jvmArgs("-Djava.net.preferIPv4Stack=true")
@@ -74,7 +84,7 @@ tasks {
   }
 
   check {
-    dependsOn(testExperimental, testStableSemconv, testBothSemconv)
+    dependsOn(testExperimental, testStableSemconv, testBothSemconv, testExceptionSignalLogs)
   }
 }
 

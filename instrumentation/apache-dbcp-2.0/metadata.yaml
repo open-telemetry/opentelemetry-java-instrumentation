@@ -2,16 +2,21 @@ display_name: Apache DBCP
 description: >
   This instrumentation enables database connection pools metrics for Apache DBCP.
 
-  The instrumentation uses `MBeanRegistration` methods for lifecycle detection, therefore it
-  only activates if the `BasicDataSource` is registered to an `MBeanServer`. If using Spring Boot,
-  this happens automatically as all Spring beans that support JMX registration are automatically
-  registered by default.
+  The auto-instrumentation registers metrics when the connection pool is initialized
+  (`BasicDataSource.startPoolMaintenance()`) or when `BasicDataSource.preRegister(...)` is invoked
+  during MBean registration, whichever comes first, and unregisters them when the `BasicDataSource`
+  is closed. JMX registration is not required. When a JMX `ObjectName` is available, its `name`
+  property is used as the pool name; if the property is absent, the full `ObjectName` is used.
+  Otherwise, the JDBC URL and connection properties are used to derive
+  `server.address[:server.port][/db.namespace]`. If neither server address nor database namespace is
+  available, `apache-dbcp2` is used. A pool registered as an MBean after it has already started
+  switches from the derived name to the `ObjectName`-based name.
 library_link: https://commons.apache.org/proper/commons-dbcp/
 semantic_conventions:
   - DATABASE_POOL_METRICS
 configurations:
   - name: otel.semconv-stability.opt-in
-    declarative_name: general.semconv_stability.opt_in
+    declarative_name: general.stability_opt_in_list
     description: >
       Opt-in to emit stable semantic conventions instead of the old
       experimental semantic conventions. Accepts a comma-separated list of semantic convention
@@ -19,4 +24,5 @@ configurations:
       conventions simultaneously. Stable semantic conventions will become the default in version
       3.0 of the agent.
     type: list
+    declarative_type: string
     default: ""

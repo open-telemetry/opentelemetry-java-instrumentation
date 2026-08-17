@@ -123,7 +123,8 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   public String getErrorType(
       DbRequest request, @Nullable Void response, @Nullable Throwable error) {
     if (error instanceof SQLException) {
-      return Integer.toString(((SQLException) error).getErrorCode());
+      int errorCode = ((SQLException) error).getErrorCode();
+      return errorCode == 0 ? null : Integer.toString(errorCode);
     }
     return null;
   }
@@ -134,7 +135,8 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   }
 
   @Override
-  public boolean isParameterizedQuery(DbRequest request) {
+  public boolean isParameterizedQuery(DbRequest request, int queryIndex) {
+    // JDBC does not support mixed parameterization within a single request.
     return request.isParameterizedQuery();
   }
 

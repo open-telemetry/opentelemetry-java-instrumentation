@@ -5,43 +5,49 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import com.mongodb.event.CommandStartedEvent;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
 class MongoSpanNameExtractor implements SpanNameExtractor<CommandStartedEvent> {
   private static final String DEFAULT_SPAN_NAME = "DB Query";
 
   private final MongoDbAttributesGetter dbAttributesGetter;
-  private final MongoAttributesExtractor attributesExtractor;
+  private final SpanNameExtractor<CommandStartedEvent> stableDelegate;
 
-  MongoSpanNameExtractor(
-      MongoDbAttributesGetter dbAttributesGetter, MongoAttributesExtractor attributesExtractor) {
+  MongoSpanNameExtractor(MongoDbAttributesGetter dbAttributesGetter) {
     this.dbAttributesGetter = dbAttributesGetter;
-    this.attributesExtractor = attributesExtractor;
+    stableDelegate = DbClientSpanNameExtractor.create(dbAttributesGetter);
   }
 
+  @SuppressWarnings("deprecation") // getDbName/getDbOperation are used for old semconv span names
   @Override
   public String extract(CommandStartedEvent event) {
-    String operation = dbAttributesGetter.getDbOperationName(event);
-    String dbName = dbAttributesGetter.getDbNamespace(event);
+    if (emitStableDatabaseSemconv()) {
+      return stableDelegate.extract(event);
+    }
+
+    String operation = dbAttributesGetter.getDbOperation(event);
+    String dbName = dbAttributesGetter.getDbName(event);
     if (operation == null) {
       return dbName == null ? DEFAULT_SPAN_NAME : dbName;
     }
 
-    String table = attributesExtractor.collectionName(event);
+    String collectionName = dbAttributesGetter.getDbCollectionName(event);
     StringBuilder name = new StringBuilder(operation);
-    if (dbName != null || table != null) {
+    if (dbName != null || collectionName != null) {
       name.append(' ');
     }
-    // skip db name if table already has a db name prefixed to it
-    if (dbName != null && (table == null || table.indexOf('.') == -1)) {
+    if (dbName != null && (collectionName == null || collectionName.indexOf('.') == -1)) {
       name.append(dbName);
-      if (table != null) {
+      if (collectionName != null) {
         name.append('.');
       }
     }
-    if (table != null) {
-      name.append(table);
+    if (collectionName != null) {
+      name.append(collectionName);
     }
     return name.toString();
   }

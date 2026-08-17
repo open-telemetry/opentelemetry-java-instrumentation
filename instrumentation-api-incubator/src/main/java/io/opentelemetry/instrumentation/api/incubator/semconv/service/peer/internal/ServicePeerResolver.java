@@ -122,7 +122,7 @@ public class ServicePeerResolver {
   }
 
   @Nullable
-  ServicePeer resolveServicePeer(
+  private ServicePeer resolveServicePeer(
       String host, @Nullable Integer port, Supplier<String> pathSupplier) {
     Map<ServiceMatcher, ServicePeer> matchers = servicePeerMapping.get(host);
     if (matchers == null) {

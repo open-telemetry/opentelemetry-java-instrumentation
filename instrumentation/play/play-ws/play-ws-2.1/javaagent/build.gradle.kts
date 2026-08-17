@@ -54,13 +54,13 @@ dependencies {
 
 testing {
   suites {
-    val latestDepTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("latestDepTest") {
       dependencies {
         implementation("com.typesafe.play:play-ahc-ws-standalone_2.13:latest.release")
       }
     }
 
-    val play3Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("play3Test") {
       dependencies {
         val version = baseVersion("3.0.0").orLatest()
         implementation("org.playframework:play-ahc-ws-standalone_3:$version")

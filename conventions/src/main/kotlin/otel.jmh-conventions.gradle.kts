@@ -18,9 +18,9 @@ jmh {
   // Could not expand ZIP 'byte-buddy-agent-1.9.7.jar'.
   includeTests.set(false)
   profilers.add("gc")
-  val jmhIncludeSingleClass: String? by project
+  val jmhIncludeSingleClass = project.findProperty("jmhIncludeSingleClass") as String?
   if (jmhIncludeSingleClass != null) {
-    includes.add(jmhIncludeSingleClass as String)
+    includes.add(jmhIncludeSingleClass)
   }
 }
 

@@ -1,6 +1,8 @@
 display_name: Spring Integration
 description: This instrumentation enables producer and consumer messaging spans for Spring Integration.
 library_link: https://spring.io/projects/spring-integration
+semantic_conventions:
+  - MESSAGING_SPANS
 configurations:
   - name: otel.instrumentation.spring-integration.producer.enabled
     declarative_name: java.spring_integration.producer.enabled
@@ -15,8 +17,6 @@ configurations:
     type: list
     description: A list of Spring channel name patterns that will be intercepted.
     default: "*"
-  - name: otel.instrumentation.messaging.experimental.capture-headers
-    declarative_name: java.common.messaging.capture_headers/development
-    type: list
-    description: A comma-separated list of header names to capture as span attributes.
-    default: ''
+  - ref: messaging.headers.included
+  - ref: messaging.headers.excluded
+  - ref: messaging.capture-headers

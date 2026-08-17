@@ -39,6 +39,7 @@ public class OperationNameUtil {
     return getOperationNameForQueryOldSemconv(query);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated old semconv operation
   private static String getOperationNameForQueryOldSemconv(@Nullable String query) {
     // set operation to default value that is used when sql sanitizer fails to extract
     // operation name

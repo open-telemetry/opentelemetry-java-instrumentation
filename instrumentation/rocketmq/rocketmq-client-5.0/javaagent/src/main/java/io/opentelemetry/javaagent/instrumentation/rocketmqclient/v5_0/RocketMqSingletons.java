@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
-import apache.rocketmq.v2.ReceiveMessageRequest;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import java.util.List;
@@ -19,13 +19,15 @@ import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 public class RocketMqSingletons {
 
   private static final Instrumenter<PublishingMessageImpl, SendReceiptImpl> producerInstrumenter;
-  private static final Instrumenter<ReceiveMessageRequest, List<MessageView>>
+  private static final Instrumenter<RocketMqReceiveRequest, List<MessageView>>
       consumerReceiveInstrumenter;
+  private static final Instrumenter<RocketMqReceiveRequest, List<MessageView>>
+      simpleConsumerReceiveInstrumenter;
   private static final Instrumenter<MessageView, ConsumeResult> consumerProcessInstrumenter;
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-    List<String> messagingHeaders = ExperimentalConfig.get().getMessagingHeaders();
+    IncludeExclude messagingHeaders = ExperimentalConfig.get().getMessagingHeaders();
     boolean receiveInstrumentationEnabled =
         ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
 
@@ -34,6 +36,9 @@ public class RocketMqSingletons {
     consumerReceiveInstrumenter =
         RocketMqInstrumenterFactory.createConsumerReceiveInstrumenter(
             openTelemetry, messagingHeaders, receiveInstrumentationEnabled);
+    simpleConsumerReceiveInstrumenter =
+        RocketMqInstrumenterFactory.createConsumerReceiveInstrumenter(
+            openTelemetry, messagingHeaders, true);
     consumerProcessInstrumenter =
         RocketMqInstrumenterFactory.createConsumerProcessInstrumenter(
             openTelemetry, messagingHeaders, receiveInstrumentationEnabled);
@@ -43,9 +48,14 @@ public class RocketMqSingletons {
     return producerInstrumenter;
   }
 
-  public static Instrumenter<ReceiveMessageRequest, List<MessageView>>
+  public static Instrumenter<RocketMqReceiveRequest, List<MessageView>>
       consumerReceiveInstrumenter() {
     return consumerReceiveInstrumenter;
+  }
+
+  public static Instrumenter<RocketMqReceiveRequest, List<MessageView>>
+      simpleConsumerReceiveInstrumenter() {
+    return simpleConsumerReceiveInstrumenter;
   }
 
   public static Instrumenter<MessageView, ConsumeResult> consumerProcessInstrumenter() {

@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizer;
-import io.opentelemetry.sdk.declarativeconfig.internal.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
@@ -41,13 +41,13 @@ class SpanLoggingCustomizerProviderTest {
     }
     String yaml =
         alreadyAdded
-            ? "file_format: \"1.0\"\n"
+            ? "file_format: \"1.1\"\n"
                 + "tracer_provider:\n"
                 + "  processors:\n"
                 + "    - simple:\n"
                 + "        exporter:\n"
                 + "          console: {}\n"
-            : "file_format: \"1.0\"\n";
+            : "file_format: \"1.1\"\n";
 
     OpenTelemetryConfigurationModel model =
         applyCustomizer(

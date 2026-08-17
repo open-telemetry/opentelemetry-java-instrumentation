@@ -5,7 +5,6 @@ plugins {
 }
 
 dependencies {
-  compileOnly(project(":javaagent-tooling"))
   compileOnly(project(":instrumentation:internal:internal-class-loader:compile-stub"))
 
   testImplementation(project(":javaagent-bootstrap"))
@@ -24,7 +23,7 @@ dependencies {
   testImplementation("org.apache.felix:org.apache.felix.framework:6.0.2")
 }
 
-val shadedJar by tasks.registering(ShadowJar::class) {
+val shadedJar = tasks.register<ShadowJar>("shadedJar") {
   from(zipTree(tasks.jar.get().archiveFile))
   archiveClassifier.set("shaded")
 }

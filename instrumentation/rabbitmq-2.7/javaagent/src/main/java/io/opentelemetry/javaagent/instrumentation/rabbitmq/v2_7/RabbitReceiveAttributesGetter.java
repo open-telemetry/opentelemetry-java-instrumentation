@@ -5,11 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitInstrumenterHelper.consumerDestinationName;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitInstrumenterHelper.isGeneratedQueueName;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -25,11 +30,17 @@ final class RabbitReceiveAttributesGetter
   @Nullable
   @Override
   public String getDestination(ReceiveRequest request) {
-    if (request.getResponse() != null) {
-      return normalizeExchangeName(request.getResponse().getEnvelope().getExchange());
-    } else {
+    GetResponse response = request.getResponse();
+    if (emitStableMessagingSemconv()) {
+      return consumerDestinationName(
+          response == null ? null : response.getEnvelope().getExchange(),
+          response == null ? null : response.getEnvelope().getRoutingKey(),
+          request.getQueue());
+    }
+    if (response == null) {
       return null;
     }
+    return normalizeExchangeName(response.getEnvelope().getExchange());
   }
 
   @Nullable
@@ -49,7 +60,7 @@ final class RabbitReceiveAttributesGetter
 
   @Override
   public boolean isAnonymousDestination(ReceiveRequest request) {
-    return false;
+    return emitStableMessagingSemconv() && isGeneratedQueueName(request.getQueue());
   }
 
   @Nullable
@@ -103,5 +114,15 @@ final class RabbitReceiveAttributesGetter
       return emptyList();
     }
     return singletonList(value.toString());
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(ReceiveRequest request) {
+    GetResponse response = request.getResponse();
+    if (response == null) {
+      return emptyList();
+    }
+    Map<String, Object> headers = response.getProps().getHeaders();
+    return headers == null ? emptyList() : new ArrayList<>(headers.keySet());
   }
 }

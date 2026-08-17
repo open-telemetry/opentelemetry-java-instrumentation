@@ -64,7 +64,31 @@ public final class R2dbcSqlAttributesGetter
 
   @Override
   public Collection<String> getRawQueryTexts(DbExecution request) {
-    return singleton(request.getRawQueryText());
+    return request.getRawQueryTexts();
+  }
+
+  @Deprecated // to be removed in 3.0
+  @Override
+  public Collection<String> getRawQueryTextsForOldSemconv(DbExecution request) {
+    Collection<String> rawQueryTexts = request.getRawQueryTexts();
+    return rawQueryTexts.size() == 1 ? rawQueryTexts : singleton(join(";\n", rawQueryTexts));
+  }
+
+  private static String join(String delimiter, Collection<String> collection) {
+    StringBuilder builder = new StringBuilder();
+    for (String string : collection) {
+      if (builder.length() != 0) {
+        builder.append(delimiter);
+      }
+      builder.append(string);
+    }
+    return builder.toString();
+  }
+
+  @Override
+  @Nullable
+  public Long getDbOperationBatchSize(DbExecution request) {
+    return request.getBatchSize();
   }
 
   @Nullable
@@ -90,7 +114,8 @@ public final class R2dbcSqlAttributesGetter
   }
 
   @Override
-  public boolean isParameterizedQuery(DbExecution request) {
+  public boolean isParameterizedQuery(DbExecution request, int queryIndex) {
+    // R2DBC does not support mixed parameterization within a single request.
     return request.isParameterizedQuery();
   }
 }

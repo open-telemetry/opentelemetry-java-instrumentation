@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -49,8 +50,45 @@ class DbExecutionTest {
     assertThat(dbExecution.getServerAddress()).isEqualTo("localhost");
     assertThat(dbExecution.getServerPort()).isEqualTo(3306);
     assertThat(dbExecution.getConnectionString()).isEqualTo("mariadb://localhost:3306");
-    assertThat(dbExecution.getRawQueryText())
-        .isEqualTo("SELECT * from person where last_name = 'tom'");
+    assertThat(dbExecution.getRawQueryTexts())
+        .containsExactly("SELECT * from person where last_name = 'tom'");
+    assertThat(dbExecution.getBatchSize()).isNull();
+  }
+
+  @Test
+  void dbExecutionWithBatch() {
+    QueryExecutionInfo queryExecutionInfo =
+        MockQueryExecutionInfo.builder()
+            .queryInfo(new QueryInfo("INSERT INTO person VALUES(1)"))
+            .queryInfo(new QueryInfo("INSERT INTO person VALUES(2)"))
+            .batchSize(2)
+            .connectionInfo(MockConnectionInfo.builder().build())
+            .build();
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.parse("r2dbc:postgresql://localhost/db");
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo, factoryOptions);
+
+    assertThat(dbExecution.getRawQueryTexts())
+        .containsExactly("INSERT INTO person VALUES(1)", "INSERT INTO person VALUES(2)");
+    assertThat(dbExecution.getBatchSize()).isEqualTo(2);
+  }
+
+  @Test
+  void dbExecutionWithBatchSizeOne() {
+    QueryExecutionInfo queryExecutionInfo =
+        MockQueryExecutionInfo.builder()
+            .queryInfo(new QueryInfo("INSERT INTO person VALUES(1)"))
+            .batchSize(1)
+            .connectionInfo(MockConnectionInfo.builder().build())
+            .build();
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.parse("r2dbc:postgresql://localhost/db");
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo, factoryOptions);
+
+    assertThat(dbExecution.getRawQueryTexts()).containsExactly("INSERT INTO person VALUES(1)");
+    assertThat(dbExecution.getBatchSize()).isNull();
   }
 
   @SuppressWarnings("deprecation") // testing deprecated semconv
@@ -71,6 +109,25 @@ class DbExecutionTest {
     assertThat(dbExecution.getServerAddress()).isEqualTo("dbhost");
     assertThat(dbExecution.getServerPort()).isEqualTo(5432);
     assertThat(dbExecution.getConnectionString()).isEqualTo("pool:postgresql://dbhost:5432");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"MixedCaseDb", "case_sensitive_DB"})
+  void dbExecutionPreservesNamespaceCase(String database) {
+    QueryExecutionInfo queryExecutionInfo =
+        MockQueryExecutionInfo.builder()
+            .queryInfo(new QueryInfo("SELECT 1"))
+            .connectionInfo(MockConnectionInfo.builder().build())
+            .build();
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+            .option(ConnectionFactoryOptions.DATABASE, database)
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo, factoryOptions);
+
+    assertThat(dbExecution.getNamespace()).isEqualTo(database);
   }
 
   @ParameterizedTest

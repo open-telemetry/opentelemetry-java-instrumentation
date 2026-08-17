@@ -87,7 +87,6 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
 
     // 1 set trace
     testing().waitForTraces(1);
-    testing().clearData();
   }
 
   boolean testCallback() {

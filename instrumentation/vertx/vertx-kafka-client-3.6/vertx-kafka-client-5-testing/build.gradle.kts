@@ -19,7 +19,7 @@ dependencies {
 
 testing {
   suites {
-    val testNoReceiveTelemetry by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testNoReceiveTelemetry") {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
 
@@ -49,7 +49,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -57,7 +57,29 @@ tasks {
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
   }
 
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+  }
+
+  val testMessagingPreviewNoReceiveTelemetry = register<Test>("testMessagingPreviewNoReceiveTelemetry") {
+    testClassesDirs = sourceSets["testNoReceiveTelemetry"].output.classesDirs
+    classpath = sourceSets["testNoReceiveTelemetry"].runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+  }
+
   check {
-    dependsOn(testing.suites, testExperimental)
+    dependsOn(testing.suites, testExperimental, testMessagingPreview, testBothSemconv, testMessagingPreviewNoReceiveTelemetry)
   }
 }

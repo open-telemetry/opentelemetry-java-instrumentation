@@ -9,7 +9,6 @@ muzzle {
 }
 
 dependencies {
-  compileOnly(project(":javaagent-tooling"))
   compileOnly(project(":instrumentation-annotations-support"))
 }
 
@@ -21,7 +20,7 @@ tasks.test {
 
 testing {
   suites {
-    val declarativeConfigTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("declarativeConfigTest") {
       targets {
         all {
           testTask.configure {

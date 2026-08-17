@@ -4,15 +4,15 @@
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/open-telemetry/opentelemetry-java-instrumentation/badge)](https://scorecard.dev/viewer/?uri=github.com/open-telemetry/opentelemetry-java-instrumentation)
 [![Slack](https://img.shields.io/badge/slack-@cncf/otel--java-blue.svg?logo=slack)](https://cloud-native.slack.com/archives/C014L2KCTE3)
 
-* [About](#about)
-* [Getting Started](#getting-started)
-* [Configuring the Agent](#configuring-the-agent)
-* [Supported libraries, frameworks, and application servers](#supported-libraries-frameworks-and-application-servers)
-* [Creating agent extensions](#creating-agent-extensions)
-* [Manually instrumenting](#manually-instrumenting)
-* [Logger MDC auto-instrumentation](#logger-mdc-mapped-diagnostic-context-auto-instrumentation)
-* [Troubleshooting](#troubleshooting)
-* [Contributing](#contributing)
+- [About](#about)
+- [Getting Started](#getting-started)
+- [Configuring the Agent](#configuring-the-agent)
+- [Supported libraries, frameworks, and application servers](#supported-libraries-frameworks-and-application-servers)
+- [Creating agent extensions](#creating-agent-extensions)
+- [Manually instrumenting](#manually-instrumenting)
+- [Logger MDC auto-instrumentation](#logger-mdc-mapped-diagnostic-context-auto-instrumentation)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
 
 ## About
 
@@ -59,7 +59,7 @@ for the full list of configuration items. For example:
 ```
 java -javaagent:path/to/opentelemetry-javaagent.jar \
      -Dotel.resource.attributes=service.name=your-service-name \
-     -Dotel.traces.exporter=zipkin \
+     -Dotel.traces.exporter=console \
      -jar myapp.jar
 ```
 
@@ -74,10 +74,10 @@ For a detailed list of agent configuration options, see the [agent configuration
 For a detailed list of additional SDK configuration environment variables and system properties,
 see the [SDK configuration docs][config-sdk].
 
-*Note: Config parameter names are very likely to change over time, so please check
+_Note: Config parameter names are very likely to change over time, so please check
 back here when trying out a new version!
 Please [report any bugs](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues)
-or unexpected behavior you find.*
+or unexpected behavior you find._
 
 ## Supported libraries, frameworks, and application servers
 
@@ -142,7 +142,6 @@ For more information about the maintainer role, see the [community repository](h
 - [Jack Berg](https://github.com/jack-berg), Grafana Labs
 - [Jason Plumb](https://github.com/breedx-splk), Splunk
 - [Jay DeLuca](https://github.com/jaydeluca), Grafana Labs
-- [Jean Bisutti](https://github.com/jeanbisutti), Microsoft
 - [John Watson](https://github.com/jkwatson), Sublime Security
 - [Jonas Kunz](https://github.com/JonasKunz), Elastic
 - [Steve Rao](https://github.com/steverao), Alibaba
@@ -152,6 +151,7 @@ For more information about the approver role, see the [community repository](htt
 
 ### Emeritus
 
+- [Jean Bisutti](https://github.com/jeanbisutti), Approver
 - [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek), Maintainer
 - [Nikita Salnikov-Tarnovski](https://github.com/iNikem), Maintainer
 - [Tyler Benson](https://github.com/tylerbenson), Maintainer
@@ -165,9 +165,6 @@ For more information about the emeritus role, see the [community repository](htt
 </a>
 
 [config-agent]: https://opentelemetry.io/docs/zero-code/java/agent/configuration/
-
 [config-sdk]: https://opentelemetry.io/docs/languages/java/configuration/
-
 [manual]: https://opentelemetry.io/docs/languages/java/instrumentation/#manual-instrumentation
-
 [suppress]: https://opentelemetry.io/docs/zero-code/java/agent/disable/

@@ -45,11 +45,11 @@ broken/incompatible versions.
 
 Verify `build.gradle.kts` applies the correct plugin for the module type:
 
-| Module type | Required plugin |
-| --- | --- |
+| Module type  | Required plugin                  |
+| ------------ | -------------------------------- |
 | `javaagent/` | `otel.javaagent-instrumentation` |
-| `library/` | `otel.library-instrumentation` |
-| `testing/` | `otel.java-conventions` |
+| `library/`   | `otel.library-instrumentation`   |
+| `testing/`   | `otel.java-conventions`          |
 
 ## Shared Gradle Project Properties
 
@@ -275,10 +275,10 @@ review**. Only verify correctness when they are already present.
 Do not add `collectMetadata` or `metadataConfig` to `javaagent-unit-tests` projects. These are
 unit tests, and metadata collection should not run there.
 
-| Property | Type | Value |
-| --- | --- | --- |
-| `collectMetadata` | System property | Pass-through of `otelProps.collectMetadata`; defaults to `false` |
-| `metadataConfig` | System property | A single `key=value` string describing the non-default configuration active during this test run |
+| Property          | Type            | Value                                                                                            |
+| ----------------- | --------------- | ------------------------------------------------------------------------------------------------ |
+| `collectMetadata` | System property | Pass-through of `otelProps.collectMetadata`; defaults to `false`                                 |
+| `metadataConfig`  | System property | A single `key=value` string describing the non-default configuration active during this test run |
 
 When already present, verify:
 

@@ -27,7 +27,7 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testReceiveSpansDisabled by registering(Test::class) {
+  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -35,6 +35,19 @@ tasks {
       includeTestsMatching("SqsSuppressReceiveSpansTest")
     }
     include("**/SqsSuppressReceiveSpansTest.*")
+  }
+
+  val testStableSemconv = register<Test>("testStableSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      excludeTestsMatching("SqsSuppressReceiveSpansTest")
+    }
+    jvmArgs(
+      "-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+      "-Dotel.semconv-stability.opt-in=database",
+    )
   }
 
   test {
@@ -45,7 +58,7 @@ tasks {
   }
 
   check {
-    dependsOn(testReceiveSpansDisabled)
+    dependsOn(testReceiveSpansDisabled, testStableSemconv)
   }
 }
 

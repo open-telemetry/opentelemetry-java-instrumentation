@@ -5,10 +5,12 @@
 
 package io.opentelemetry.instrumentation.spring.integration.v4_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -16,16 +18,24 @@ import javax.annotation.Nullable;
 final class SpringMessagingAttributesGetter
     implements MessagingAttributesGetter<MessageWithChannel, Void> {
 
-  @Override
-  @Nullable
-  public String getSystem(MessageWithChannel messageWithChannel) {
-    return null;
+  private final boolean spanNameGetter;
+
+  SpringMessagingAttributesGetter(boolean spanNameGetter) {
+    this.spanNameGetter = spanNameGetter;
   }
 
-  @Override
   @Nullable
+  @Override
+  public String getSystem(MessageWithChannel messageWithChannel) {
+    return emitStableMessagingSemconv() ? "spring_integration" : null;
+  }
+
+  @Nullable
+  @Override
   public String getDestination(MessageWithChannel messageWithChannel) {
-    return null;
+    return spanNameGetter || emitStableMessagingSemconv()
+        ? messageWithChannel.getChannelName()
+        : null;
   }
 
   @Nullable
@@ -87,5 +97,11 @@ final class SpringMessagingAttributesGetter
       return singletonList(value.toString());
     }
     return emptyList();
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(MessageWithChannel request) {
+    // MessageHeaders is immutable
+    return request.getMessage().getHeaders().keySet();
   }
 }

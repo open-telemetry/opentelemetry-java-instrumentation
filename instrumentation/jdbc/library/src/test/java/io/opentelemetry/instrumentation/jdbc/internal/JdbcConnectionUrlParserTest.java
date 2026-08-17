@@ -152,6 +152,21 @@ class JdbcConnectionUrlParserTest {
             .setPort(3306)
             .setName("mdbdb")
             .build(),
+        arg("jdbc:mysql:failover://localhost:1234?autoReconnect=true")
+            .setShortUrl("mysql:failover://localhost:1234")
+            .setSystem(MYSQL)
+            .setSubtype("failover")
+            .setHost("localhost")
+            .setPort(1234)
+            .build(),
+        arg("jdbc:mysql:failover://my.host?user=domain:user")
+            .setShortUrl("mysql:failover://my.host:3306")
+            .setSystem(MYSQL)
+            .setSubtype("failover")
+            .setUser("domain:user")
+            .setHost("my.host")
+            .setPort(3306)
+            .build(),
         arg("jdbc:mysql:loadbalance://127.0.0.1,127.0.0.1:3306/mdbdb?user=mdbuser&password=PW")
             .setShortUrl("mysql:loadbalance://127.0.0.1:3306")
             .setSystem(MYSQL)
@@ -179,6 +194,14 @@ class JdbcConnectionUrlParserTest {
             .setPort(3306)
             .setName("mdbdb")
             .build(),
+        arg("jdbc:mysql:replication://address=(host=::1)(port=33)/mydb")
+            .setShortUrl("mysql:replication://[::1]:33")
+            .setSystem(MYSQL)
+            .setSubtype("replication")
+            .setHost("::1")
+            .setPort(33)
+            .setName("mydb")
+            .build(),
         arg("jdbc:mysql:loadbalance://localhost")
             .setShortUrl("mysql:loadbalance://localhost:3306")
             .setSystem(MYSQL)
@@ -194,10 +217,50 @@ class JdbcConnectionUrlParserTest {
             .setPort(3306)
             .build(),
         arg("jdbc:mysql:failover://[::1]:3306") // IPv6 without slash
-            .setShortUrl("mysql:failover://::1:3306")
+            .setShortUrl("mysql:failover://[::1]:3306")
             .setSystem(MYSQL)
             .setSubtype("failover")
             .setHost("::1")
+            .setPort(3306)
+            .build(),
+        // literal IPv6 address: server.address holds the address without the URL brackets
+        arg("jdbc:mysql://[::1]:3306/mydb")
+            .setShortUrl("mysql://[::1]:3306")
+            .setSystem(MYSQL)
+            .setHost("::1")
+            .setPort(3306)
+            .setName("mydb")
+            .build(),
+        arg("jdbc:mysql:host:3306")
+            .setShortUrl("mysql://host:3306")
+            .setSystem(MYSQL)
+            .setHost("host")
+            .setPort(3306)
+            .build(),
+        arg("jdbc:mysql:host")
+            .setShortUrl("mysql://host:3306")
+            .setSystem(MYSQL)
+            .setHost("host")
+            .setPort(3306)
+            .build(),
+        arg("jdbc:mysql:my.host:1234?user=myuser&password=PW")
+            .setShortUrl("mysql://my.host:1234")
+            .setSystem(MYSQL)
+            .setUser("myuser")
+            .setHost("my.host")
+            .setPort(1234)
+            .build(),
+        arg("jdbc:mysql:my.host?user=myuser&password=PW")
+            .setShortUrl("mysql://my.host:3306")
+            .setSystem(MYSQL)
+            .setUser("myuser")
+            .setHost("my.host")
+            .setPort(3306)
+            .build(),
+        arg("jdbc:mysql:my.host?socket=/tmp/mysql.sock")
+            .setShortUrl("mysql://my.host:3306")
+            .setSystem(MYSQL)
+            .setHost("my.host")
             .setPort(3306)
             .build());
   }
@@ -326,6 +389,21 @@ class JdbcConnectionUrlParserTest {
             .setHost("pg.host")
             .setPort(5432)
             .setName("pgdb")
+            .build(),
+        // literal IPv6 address: server.address holds the address without the URL brackets
+        arg("jdbc:postgresql://[2001:db8::1]:5432/pgdb")
+            .setShortUrl("postgresql://[2001:db8::1]:5432")
+            .setSystem(POSTGRESQL)
+            .setHost("2001:db8::1")
+            .setPort(5432)
+            .setName("pgdb")
+            .build(),
+        arg("jdbc:postgresql://[2001:db8::1]/pgdb")
+            .setShortUrl("postgresql://[2001:db8::1]:5432")
+            .setSystem(POSTGRESQL)
+            .setHost("2001:db8::1")
+            .setPort(5432)
+            .setName("pgdb")
             .build());
   }
 
@@ -419,7 +497,7 @@ class JdbcConnectionUrlParserTest {
             .setName("mdbdb")
             .build(),
         arg("jdbc:mariadb:loadbalance://[2001:0660:7401:0200:0000:0000:0edf:bdd7]:33,mdb.host/mdbdb")
-            .setShortUrl("mariadb:loadbalance://2001:0660:7401:0200:0000:0000:0edf:bdd7:33")
+            .setShortUrl("mariadb:loadbalance://[2001:0660:7401:0200:0000:0000:0edf:bdd7]:33")
             .setSystem(MARIADB)
             .setSubtype("loadbalance")
             .setHost("2001:0660:7401:0200:0000:0000:0edf:bdd7")
@@ -449,7 +527,7 @@ class JdbcConnectionUrlParserTest {
             .setPort(3306)
             .build(),
         arg("jdbc:mariadb:failover://[::1]:3306") // IPv6 without slash
-            .setShortUrl("mariadb:failover://::1:3306")
+            .setShortUrl("mariadb:failover://[::1]:3306")
             .setSystem(MARIADB)
             .setSubtype("failover")
             .setHost("::1")
@@ -478,28 +556,28 @@ class JdbcConnectionUrlParserTest {
             .setShortUrl("sqlserver://[3ffe:8311:eeee:f70f:0:5eae:10.203.31.9]:1433")
             .setSystem("microsoft.sql_server")
             .setOldSystem("mssql")
-            .setHost("[3ffe:8311:eeee:f70f:0:5eae:10.203.31.9]")
+            .setHost("3ffe:8311:eeee:f70f:0:5eae:10.203.31.9")
             .setPort(1433)
             .build(),
         arg("jdbc:sqlserver://;serverName=2001:0db8:85a3:0000:0000:8a2e:0370:7334")
             .setShortUrl("sqlserver://[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:1433")
             .setSystem("microsoft.sql_server")
             .setOldSystem("mssql")
-            .setHost("[2001:0db8:85a3:0000:0000:8a2e:0370:7334]")
+            .setHost("2001:0db8:85a3:0000:0000:8a2e:0370:7334")
             .setPort(1433)
             .build(),
         arg("jdbc:sqlserver://;serverName=[3ffe:8311:eeee:f70f:0:5eae:10.203.31.9]:43")
             .setShortUrl("sqlserver://[3ffe:8311:eeee:f70f:0:5eae:10.203.31.9]:43")
             .setSystem("microsoft.sql_server")
             .setOldSystem("mssql")
-            .setHost("[3ffe:8311:eeee:f70f:0:5eae:10.203.31.9]")
+            .setHost("3ffe:8311:eeee:f70f:0:5eae:10.203.31.9")
             .setPort(43)
             .build(),
         arg("jdbc:sqlserver://;serverName=3ffe:8311:eeee:f70f:0:5eae:10.203.31.9\\ssinstance")
             .setShortUrl("sqlserver://[3ffe:8311:eeee:f70f:0:5eae:10.203.31.9]:1433")
             .setSystem("microsoft.sql_server")
             .setOldSystem("mssql")
-            .setHost("[3ffe:8311:eeee:f70f:0:5eae:10.203.31.9]")
+            .setHost("3ffe:8311:eeee:f70f:0:5eae:10.203.31.9")
             .setPort(1433)
             .setName("ssinstance")
             .build(),
@@ -507,7 +585,7 @@ class JdbcConnectionUrlParserTest {
             .setShortUrl("sqlserver://[3ffe:8311:eeee:f70f:0:5eae:10.203.31.9]:43")
             .setSystem("microsoft.sql_server")
             .setOldSystem("mssql")
-            .setHost("[3ffe:8311:eeee:f70f:0:5eae:10.203.31.9]")
+            .setHost("3ffe:8311:eeee:f70f:0:5eae:10.203.31.9")
             .setPort(43)
             .setName("ssinstance")
             .build(),
@@ -515,10 +593,18 @@ class JdbcConnectionUrlParserTest {
             .setShortUrl("sqlserver://[3ffe:8311:eeee:f70f:0:5eae:10.203.31.9]:1433")
             .setSystem("microsoft.sql_server")
             .setOldSystem("mssql")
-            .setHost("[3ffe:8311:eeee:f70f:0:5eae:10.203.31.9]")
+            .setHost("3ffe:8311:eeee:f70f:0:5eae:10.203.31.9")
             .setPort(1433)
             .setNamespace("ssinstance|ssdb")
             .setName("ssinstance")
+            .build(),
+        arg("jdbc:sqlserver://[::1]:1433;databaseName=ssdb")
+            .setShortUrl("sqlserver://[::1]:1433")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setHost("::1")
+            .setPort(1433)
+            .setName("ssdb")
             .build(),
         arg("jdbc:microsoft:sqlserver://;")
             .setProperties(stdProps())
@@ -556,6 +642,25 @@ class JdbcConnectionUrlParserTest {
             .setHost("ss.host")
             .setPort(1433)
             .setName("ssdb")
+            .build(),
+        // database= alias (shorthand for databaseName)
+        arg("jdbc:sqlserver://ss.host;database=ssdb;")
+            .setShortUrl("sqlserver://ss.host:1433")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setHost("ss.host")
+            .setPort(1433)
+            .setName("ssdb")
+            .build(),
+        arg("jdbc:sqlserver://ss.host\\ssinstance:44;database=ssdb;user=ssuser")
+            .setShortUrl("sqlserver://ss.host:44")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setUser("ssuser")
+            .setHost("ss.host")
+            .setPort(44)
+            .setNamespace("ssinstance|ssdb")
+            .setName("ssinstance")
             .build(),
         arg("jdbc:microsoft:sqlserver://ss.host:44;DatabaseName=ssdb;user=ssuser;password=pw;user=ssuser2;")
             .setShortUrl("microsoft:sqlserver://ss.host:44")
@@ -657,6 +762,28 @@ class JdbcConnectionUrlParserTest {
             .setHost("ss.host")
             .setPort(1433)
             .setNamespace("ssinstance")
+            .setName("ssinstance")
+            .build(),
+        // database= alias (shorthand for databaseName) in jTDS URLs
+        arg("jdbc:jtds:sqlserver://ss.host/ssdb;instance=ssinstance;database=otherdb")
+            .setShortUrl("jtds:sqlserver://ss.host:1433")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setSubtype("sqlserver")
+            .setHost("ss.host")
+            .setPort(1433)
+            .setNamespace("ssinstance|ssdb")
+            .setName("ssinstance")
+            .build(),
+        // database= param provides database name when there's no URL path
+        arg("jdbc:jtds:sqlserver://ss.host;instance=ssinstance;database=ssdb")
+            .setShortUrl("jtds:sqlserver://ss.host:1433")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setSubtype("sqlserver")
+            .setHost("ss.host")
+            .setPort(1433)
+            .setNamespace("ssinstance|ssdb")
             .setName("ssinstance")
             .build(),
         arg("jdbc:jtds:sqlserver://ss.host:1444/urldb")
@@ -892,6 +1019,15 @@ class JdbcConnectionUrlParserTest {
             .setHost("ashost")
             .setPort(66)
             .setName("asdb")
+            .build(),
+        // literal IPv6 address: server.address holds the address without the URL brackets
+        arg("jdbc:db2://[::1]:77/db2db")
+            .setShortUrl("db2://[::1]:77")
+            .setSystem("ibm.db2")
+            .setOldSystem("db2")
+            .setHost("::1")
+            .setPort(77)
+            .setName("db2db")
             .build());
   }
 
@@ -1678,6 +1814,43 @@ class JdbcConnectionUrlParserTest {
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("amazonAuroraArguments")
   void testAmazonAuroraParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  private static Stream<Arguments> sqliteArguments() {
+    return args(
+        arg("jdbc:sqlite:").setShortUrl("sqlite:memory:").setSystem("sqlite").build(),
+        arg("jdbc:sqlite:memory:").setShortUrl("sqlite:memory:").setSystem("sqlite").build(),
+        arg("jdbc:sqlite:file:mydb?mode=memory")
+            .setShortUrl("sqlite:memory:")
+            .setSystem("sqlite")
+            .setName("mydb")
+            .build(),
+        arg("jdbc:sqlite:/tmp/app.db")
+            .setShortUrl("sqlite:file:")
+            .setSystem("sqlite")
+            .setName("app.db")
+            .build(),
+        arg("jdbc:sqlite:file:app.db")
+            .setShortUrl("sqlite:file:")
+            .setSystem("sqlite")
+            .setName("app.db")
+            .build(),
+        arg("jdbc:sqlite:resource:db")
+            .setShortUrl("sqlite:resource:")
+            .setSystem("sqlite")
+            .setName("db")
+            .build(),
+        arg("jdbc:sqlite:resource:dir/db")
+            .setShortUrl("sqlite:resource:")
+            .setSystem("sqlite")
+            .setName("db")
+            .build());
+  }
+
+  @ParameterizedTest(name = "{index}: {0}")
+  @MethodSource("sqliteArguments")
+  void testSqliteParsing(ParseTestArgument argument) {
     testVerifySystemSubtypeParsingOfUrl(argument);
   }
 

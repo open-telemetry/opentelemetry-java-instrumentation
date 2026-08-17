@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jmx.internal.yaml;
 
+import static java.util.Collections.emptyMap;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.jmx.internal.engine.BeanAttributeExtractor;
 import io.opentelemetry.instrumentation.jmx.internal.engine.BeanGroup;
@@ -12,9 +14,12 @@ import io.opentelemetry.instrumentation.jmx.internal.engine.MetricAttribute;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricAttributeExtractor;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricExtractor;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricHandlerHolder;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricInfo;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,18 +50,20 @@ public class JmxRule extends MetricStructure {
   //       METRIC_FIELDS3
   // The parser never calls setters for these fields with null arguments
 
-  private List<String> beans;
+  private final Collection<String> beans = new LinkedHashSet<>();
   @Nullable private String prefix;
-  private Map<String, Metric> mapping;
+  private Map<String, Metric> mapping = emptyMap();
+  private final Collection<String> handlers = new LinkedHashSet<>();
 
-  public List<String> getBeans() {
+  boolean hasHandlers() {
+    return !handlers.isEmpty();
+  }
+
+  public Collection<String> getBeans() {
     return beans;
   }
 
   public void addBean(String bean) {
-    if (beans == null) {
-      beans = new ArrayList<>();
-    }
     beans.add(validateBean(bean));
   }
 
@@ -96,6 +103,10 @@ public class JmxRule extends MetricStructure {
     this.mapping = validateAttributeMapping(mapping);
   }
 
+  public void addHandler(String handler) {
+    handlers.add(handler);
+  }
+
   @CanIgnoreReturnValue
   private static Map<String, Metric> validateAttributeMapping(Map<String, Metric> mapping) {
     if (mapping.isEmpty()) {
@@ -121,12 +132,12 @@ public class JmxRule extends MetricStructure {
    */
   public MetricDef buildMetricDef() throws Exception {
     BeanGroup group;
-    if (beans == null || beans.isEmpty()) {
+    if (beans.isEmpty()) {
       throw new IllegalStateException("No ObjectName specified");
     }
     group = BeanGroup.forBeans(beans);
 
-    if (mapping == null || mapping.isEmpty()) {
+    if (mapping.isEmpty() && handlers.isEmpty()) {
       throw new IllegalStateException("No MBean attributes specified");
     }
 
@@ -177,7 +188,12 @@ public class JmxRule extends MetricStructure {
       }
     }
 
-    return new MetricDef(group, metricExtractors);
+    List<MetricHandlerHolder> metricHandlers = new ArrayList<>();
+    for (String handler : handlers) {
+      metricHandlers.add(new MetricHandlerHolder(handler));
+    }
+
+    return new MetricDef(group, metricExtractors, metricHandlers);
   }
 
   private static List<MetricExtractor> createStateMappingExtractors(

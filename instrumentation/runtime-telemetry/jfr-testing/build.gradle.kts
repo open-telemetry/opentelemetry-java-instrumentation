@@ -12,13 +12,13 @@ otelJava {
 
 tasks {
   test {
-    jvmArgs("-Dotel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics=true")
+    jvmArgs("-Dotel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included=*")
     filter {
       excludeTestsMatching("*JfrRuntimeMetricsBackcompatTest")
     }
   }
 
-  val testBackcompat by registering(Test::class) {
+  val testBackcompat = register<Test>("testBackcompat") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

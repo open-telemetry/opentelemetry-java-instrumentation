@@ -122,7 +122,7 @@ dependencies {
 
 testing {
   suites {
-    val s3PresignerTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("s3PresignerTest") {
       dependencies {
         val version = baseVersion("2.10.12").orLatest()
         implementation("software.amazon.awssdk:s3:$version")
@@ -130,7 +130,7 @@ testing {
       }
     }
 
-    val s3CrtTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("s3CrtTest") {
       dependencies {
         implementation("software.amazon.awssdk:s3:${baseVersion("2.27.21").orLatest()}")
         implementation("software.amazon.awssdk.crt:aws-crt:${baseVersion("0.30.11").orLatest()}")
@@ -147,7 +147,7 @@ testing {
       }
     }
 
-    val testBedrockRuntime by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testBedrockRuntime") {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
         // 2.25.63 is the first release with Converse API
@@ -168,7 +168,7 @@ testing {
 }
 
 tasks {
-  val testExperimentalSqs by registering(Test::class) {
+  val testExperimentalSqs = register<Test>("testExperimentalSqs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -179,7 +179,7 @@ tasks {
     systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
   }
 
-  val testReceiveSpansDisabled by registering(Test::class) {
+  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -189,7 +189,7 @@ tasks {
     include("**/Aws2SqsSuppressReceiveSpansTest.*")
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -202,6 +202,47 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("*Sqs*")
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+    }
+    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
+  val testMessagingPreviewReceiveSpansDisabled = register<Test>("testMessagingPreviewReceiveSpansDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+    }
+    include("**/Aws2SqsSuppressReceiveSpansTest.*")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("*Sqs*")
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+    }
+    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+  }
+
   test {
     filter {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
@@ -210,7 +251,15 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testExperimentalSqs, testStableSemconv, testReceiveSpansDisabled)
+    dependsOn(
+      testing.suites,
+      testExperimentalSqs,
+      testStableSemconv,
+      testReceiveSpansDisabled,
+      testMessagingPreview,
+      testMessagingPreviewReceiveSpansDisabled,
+      testBothSemconv
+    )
   }
 
   withType<Test>().configureEach {

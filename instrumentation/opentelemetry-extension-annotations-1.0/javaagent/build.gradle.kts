@@ -14,16 +14,12 @@ muzzle {
 dependencies {
   compileOnly(project(":instrumentation-annotations-support"))
 
-  compileOnly(project(":javaagent-tooling"))
-
   // this instrumentation needs to do similar shading dance as opentelemetry-api-1.0 because
   // the @WithSpan annotation references the OpenTelemetry API's SpanKind class
   //
   // see the comment in opentelemetry-api-1.0.gradle for more details
   compileOnly(project(":opentelemetry-ext-annotations-shaded-for-instrumenting", configuration = "shadow"))
 
-  // Used by byte-buddy but not brought in as a transitive dependency.
-  compileOnly("com.google.code.findbugs:annotations")
   testCompileOnly("com.google.code.findbugs:annotations")
 
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
@@ -39,7 +35,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.opentelemetry-annotations.exclude-methods=io.opentelemetry.test.annotation.TracedWithSpan[ignored]")
   }
 
-  val testDeclarativeConfig by registering(Test::class) {
+  val testDeclarativeConfig = register<Test>("testDeclarativeConfig") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs(

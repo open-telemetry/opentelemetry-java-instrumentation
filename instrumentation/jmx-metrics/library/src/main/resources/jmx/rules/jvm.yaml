@@ -45,20 +45,22 @@ rules:
 
   - bean: java.lang:type=ClassLoading
     prefix: jvm.class.
-    type: updowncounter
     unit: "{class}"
     mapping:
       # jvm.class.loaded
       TotalLoadedClassCount:
         metric: loaded
+        type: counter
         desc: Number of classes loaded since JVM start.
       # jvm.class.unloaded
       UnloadedClassCount:
         metric: unloaded
+        type: counter
         desc: Number of classes unloaded since JVM start.
       # jvm.class.count
       LoadedClassCount:
         metric: count
+        type: updowncounter
         desc: Number of classes currently loaded.
 
   - bean: java.lang:type=OperatingSystem

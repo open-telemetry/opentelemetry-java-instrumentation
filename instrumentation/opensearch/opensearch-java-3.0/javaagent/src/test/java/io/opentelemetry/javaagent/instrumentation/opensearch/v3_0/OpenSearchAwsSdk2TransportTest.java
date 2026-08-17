@@ -203,6 +203,6 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(1))));
+                            .hasParent(trace.getSpan(0))));
   }
 }

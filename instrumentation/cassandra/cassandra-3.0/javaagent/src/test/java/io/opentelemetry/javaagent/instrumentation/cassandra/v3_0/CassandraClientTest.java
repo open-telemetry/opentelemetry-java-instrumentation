@@ -9,6 +9,9 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -23,10 +26,15 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
 import static org.junit.jupiter.api.Named.named;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.SimpleStatement;
+import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -37,6 +45,7 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -74,6 +83,10 @@ class CassandraClientTest {
     cassandra =
         new GenericContainer<>("cassandra:3")
             .withEnv("JVM_OPTS", "-Xmx128m -Xms128m")
+            // speed up single-node startup
+            .withEnv(
+                "JVM_EXTRA_OPTS",
+                "-Dcassandra.skip_wait_for_gossip_to_settle=0 -Dcassandra.initial_token=0")
             .withExposedPorts(9042)
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .withStartupTimeout(Duration.ofMinutes(2));
@@ -119,6 +132,9 @@ class CassandraClientTest {
                               equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
                               equalTo(maybeStable(DB_STATEMENT), "USE " + parameter.keyspace),
                               equalTo(
+                                  maybeStable(DB_OPERATION),
+                                  emitStableDatabaseSemconv() ? "USE" : null),
+                              equalTo(
                                   DB_QUERY_SUMMARY,
                                   emitStableDatabaseSemconv()
                                       ? "USE " + parameter.keyspace
@@ -141,12 +157,8 @@ class CassandraClientTest {
                               equalTo(
                                   DB_QUERY_SUMMARY,
                                   emitStableDatabaseSemconv() ? parameter.spanName : null),
-                              equalTo(
-                                  maybeStable(DB_OPERATION),
-                                  emitStableDatabaseSemconv() ? null : parameter.operation),
-                              equalTo(
-                                  maybeStable(DB_CASSANDRA_TABLE),
-                                  emitStableDatabaseSemconv() ? null : parameter.table))));
+                              equalTo(maybeStable(DB_OPERATION), parameter.operation),
+                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table))));
     } else {
       testing.waitAndAssertTraces(
           trace ->
@@ -166,12 +178,8 @@ class CassandraClientTest {
                               equalTo(
                                   DB_QUERY_SUMMARY,
                                   emitStableDatabaseSemconv() ? parameter.spanName : null),
-                              equalTo(
-                                  maybeStable(DB_OPERATION),
-                                  emitStableDatabaseSemconv() ? null : parameter.operation),
-                              equalTo(
-                                  maybeStable(DB_CASSANDRA_TABLE),
-                                  emitStableDatabaseSemconv() ? null : parameter.table))));
+                              equalTo(maybeStable(DB_OPERATION), parameter.operation),
+                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table))));
     }
   }
 
@@ -208,6 +216,9 @@ class CassandraClientTest {
                               equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
                               equalTo(maybeStable(DB_STATEMENT), "USE " + parameter.keyspace),
                               equalTo(
+                                  maybeStable(DB_OPERATION),
+                                  emitStableDatabaseSemconv() ? "USE" : null),
+                              equalTo(
                                   DB_QUERY_SUMMARY,
                                   emitStableDatabaseSemconv()
                                       ? "USE " + parameter.keyspace
@@ -231,12 +242,8 @@ class CassandraClientTest {
                               equalTo(
                                   DB_QUERY_SUMMARY,
                                   emitStableDatabaseSemconv() ? parameter.spanName : null),
-                              equalTo(
-                                  maybeStable(DB_OPERATION),
-                                  emitStableDatabaseSemconv() ? null : parameter.operation),
-                              equalTo(
-                                  maybeStable(DB_CASSANDRA_TABLE),
-                                  emitStableDatabaseSemconv() ? null : parameter.table)),
+                              equalTo(maybeStable(DB_OPERATION), parameter.operation),
+                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)
@@ -261,12 +268,8 @@ class CassandraClientTest {
                               equalTo(
                                   DB_QUERY_SUMMARY,
                                   emitStableDatabaseSemconv() ? parameter.spanName : null),
-                              equalTo(
-                                  maybeStable(DB_OPERATION),
-                                  emitStableDatabaseSemconv() ? null : parameter.operation),
-                              equalTo(
-                                  maybeStable(DB_CASSANDRA_TABLE),
-                                  emitStableDatabaseSemconv() ? null : parameter.table)),
+                              equalTo(maybeStable(DB_OPERATION), parameter.operation),
+                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)
@@ -274,22 +277,215 @@ class CassandraClientTest {
     }
   }
 
+  @ParameterizedTest
+  @MethodSource("simpleStatementScenarios")
+  void simpleStatementSanitization(
+      SimpleStatement statement, String stableQueryText, String legacyQueryText) {
+    Session session = cluster.connect();
+    cleanup.deferCleanup(session);
+
+    session.execute("DROP KEYSPACE IF EXISTS simple_values_test");
+    session.execute(
+        "CREATE KEYSPACE simple_values_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
+    session.execute("CREATE TABLE simple_values_test.users ( name text PRIMARY KEY, age int )");
+    testing.clearData();
+
+    session.execute(statement);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("INSERT simple_values_test.users")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
+                            equalTo(SERVER_ADDRESS, cassandraHost),
+                            equalTo(SERVER_PORT, cassandraPort),
+                            equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                            equalTo(NETWORK_PEER_PORT, cassandraPort),
+                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                emitStableDatabaseSemconv() ? stableQueryText : legacyQueryText),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv()
+                                    ? "INSERT simple_values_test.users"
+                                    : null),
+                            equalTo(maybeStable(DB_OPERATION), "INSERT"),
+                            equalTo(maybeStable(DB_CASSANDRA_TABLE), "simple_values_test.users"))));
+  }
+
+  private static Stream<Arguments> simpleStatementScenarios() {
+    return Stream.of(
+        argumentSet(
+            "no values",
+            new SimpleStatement(
+                "INSERT INTO simple_values_test.users (name, age) values ('carol', 3)"),
+            "INSERT INTO simple_values_test.users (name, age) values (?, ?)",
+            "INSERT INTO simple_values_test.users (name, age) values (?, ?)"),
+        argumentSet(
+            "positional values",
+            new SimpleStatement(
+                "INSERT INTO simple_values_test.users (name, age) values ('alice', ?)", 1),
+            "INSERT INTO simple_values_test.users (name, age) values ('alice', ?)",
+            "INSERT INTO simple_values_test.users (name, age) values (?, ?)"),
+        argumentSet(
+            "named values",
+            new SimpleStatement(
+                "INSERT INTO simple_values_test.users (name, age) values ('bob', :age)",
+                ImmutableMap.<String, Object>of("age", 2)),
+            "INSERT INTO simple_values_test.users (name, age) values ('bob', :age)",
+            "INSERT INTO simple_values_test.users (name, age) values (?, :age)"));
+  }
+
   @Test
   void testMetrics() {
     Session session = cluster.connect();
     cleanup.deferCleanup(session);
 
-    session.execute("DROP KEYSPACE IF EXISTS non_existent");
+    session.execute("DROP KEYSPACE IF EXISTS metrics_test");
+    session.execute(
+        "CREATE KEYSPACE metrics_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
+    testing.clearData();
+
+    session.execute("CREATE TABLE metrics_test.users ( id UUID PRIMARY KEY, name text )");
 
     assertDurationMetric(
         testing,
         "io.opentelemetry.cassandra-3.0",
         DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        DB_COLLECTION_NAME,
         DB_QUERY_SUMMARY,
         NETWORK_PEER_ADDRESS,
         NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT);
+  }
+
+  @ParameterizedTest
+  @MethodSource("batchScenarios")
+  void batchStatement(BatchScenario scenario) {
+    Session session = cluster.connect();
+    cleanup.deferCleanup(session);
+
+    session.execute("DROP KEYSPACE IF EXISTS batch_test");
+    session.execute(
+        "CREATE KEYSPACE batch_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
+    session.execute("CREATE TABLE batch_test.records ( id int PRIMARY KEY, num int )");
+    testing.waitForTraces(3);
+    testing.clearData();
+
+    session.execute(scenario.buildBatch.apply(session));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? scenario.spanName : scenario.oldSpanName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
+                            equalTo(SERVER_ADDRESS, cassandraHost),
+                            equalTo(SERVER_PORT, cassandraPort),
+                            equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                            equalTo(NETWORK_PEER_PORT, cassandraPort),
+                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                emitStableDatabaseSemconv()
+                                    ? scenario.queryText
+                                    : scenario.oldStatement),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? scenario.batchSize : null),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? scenario.querySummary : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv()
+                                    ? scenario.operationName
+                                    : scenario.oldOperationName()),
+                            equalTo(
+                                maybeStable(DB_CASSANDRA_TABLE),
+                                emitStableDatabaseSemconv()
+                                    ? scenario.collectionName
+                                    : scenario.oldCollectionName()))));
+  }
+
+  private static Stream<Arguments> batchScenarios() {
+    return Stream.of(
+        argumentSet(
+            "empty",
+            BatchScenario.builder()
+                .buildBatch(session -> new BatchStatement())
+                .spanName("BATCH")
+                .oldSpanName("DB Query")
+                .querySummary("BATCH")
+                .batchSize(0)
+                .build()),
+        argumentSet(
+            "single",
+            BatchScenario.builder()
+                .buildBatch(
+                    session -> {
+                      PreparedStatement insert =
+                          session.prepare("INSERT INTO batch_test.records (id, num) values (?, ?)");
+                      return new BatchStatement().add(insert.bind(1, 1));
+                    })
+                .spanName("INSERT batch_test.records")
+                .oldSpanName("INSERT batch_test.records")
+                .queryText("INSERT INTO batch_test.records (id, num) values (?, ?)")
+                .oldStatement("INSERT INTO batch_test.records (id, num) values (?, ?)")
+                .querySummary("INSERT batch_test.records")
+                .operationName("INSERT")
+                .collectionName("batch_test.records")
+                .build()),
+        argumentSet(
+            "twoSameOperation",
+            BatchScenario.builder()
+                .buildBatch(
+                    session -> {
+                      PreparedStatement insert =
+                          session.prepare("INSERT INTO batch_test.records (id, num) values (?, ?)");
+                      return new BatchStatement().add(insert.bind(1, 1)).add(insert.bind(2, 2));
+                    })
+                .spanName("BATCH INSERT batch_test.records")
+                .oldSpanName("DB Query")
+                .queryText("INSERT INTO batch_test.records (id, num) values (?, ?)")
+                .querySummary("BATCH INSERT batch_test.records")
+                .batchSize(2)
+                .operationName("BATCH INSERT")
+                .collectionName("batch_test.records")
+                .build()),
+        argumentSet(
+            "twoDifferentOperations",
+            BatchScenario.builder()
+                .buildBatch(
+                    session -> {
+                      return new BatchStatement()
+                          .add(
+                              new SimpleStatement(
+                                  "INSERT INTO batch_test.records (id, num) values (4, ?)", 4))
+                          .add(
+                              new SimpleStatement(
+                                  "UPDATE batch_test.records SET num = 5 WHERE id = 4"));
+                    })
+                .spanName("BATCH")
+                .oldSpanName("DB Query")
+                .queryText(
+                    "INSERT INTO batch_test.records (id, num) values (4, ?); UPDATE batch_test.records SET num = ? WHERE id = ?")
+                .querySummary("BATCH")
+                .batchSize(2)
+                .operationName("BATCH")
+                .collectionName("batch_test.records")
+                .build()));
   }
 
   private static Stream<Arguments> provideSyncParameters() {
@@ -421,6 +617,103 @@ class CassandraClientTest {
       this.spanName = spanName;
       this.operation = operation;
       this.table = table;
+    }
+  }
+
+  private static class BatchScenario {
+    final Function<Session, BatchStatement> buildBatch;
+    final String spanName;
+    final String oldSpanName;
+    final String queryText;
+    final String oldStatement;
+    final String querySummary;
+    final Long batchSize;
+    final String operationName;
+    final String collectionName;
+
+    BatchScenario(Builder builder) {
+      this.buildBatch = builder.buildBatch;
+      this.spanName = builder.spanName;
+      this.oldSpanName = builder.oldSpanName;
+      this.queryText = builder.queryText;
+      this.oldStatement = builder.oldStatement;
+      this.querySummary = builder.querySummary;
+      this.batchSize = builder.batchSize;
+      this.operationName = builder.operationName;
+      this.collectionName = builder.collectionName;
+    }
+
+    static Builder builder() {
+      return new Builder();
+    }
+
+    String oldOperationName() {
+      return batchSize == null ? operationName : null;
+    }
+
+    String oldCollectionName() {
+      return batchSize == null ? collectionName : null;
+    }
+
+    static class Builder {
+      private Function<Session, BatchStatement> buildBatch;
+      private String spanName;
+      private String oldSpanName;
+      private String queryText;
+      private String oldStatement;
+      private String querySummary;
+      private Long batchSize;
+      private String operationName;
+      private String collectionName;
+
+      Builder buildBatch(Function<Session, BatchStatement> buildBatch) {
+        this.buildBatch = buildBatch;
+        return this;
+      }
+
+      Builder spanName(String spanName) {
+        this.spanName = spanName;
+        return this;
+      }
+
+      Builder oldSpanName(String oldSpanName) {
+        this.oldSpanName = oldSpanName;
+        return this;
+      }
+
+      Builder queryText(String queryText) {
+        this.queryText = queryText;
+        return this;
+      }
+
+      Builder oldStatement(String oldStatement) {
+        this.oldStatement = oldStatement;
+        return this;
+      }
+
+      Builder querySummary(String querySummary) {
+        this.querySummary = querySummary;
+        return this;
+      }
+
+      Builder batchSize(long batchSize) {
+        this.batchSize = batchSize;
+        return this;
+      }
+
+      Builder operationName(String operationName) {
+        this.operationName = operationName;
+        return this;
+      }
+
+      Builder collectionName(String collectionName) {
+        this.collectionName = collectionName;
+        return this;
+      }
+
+      BatchScenario build() {
+        return new BatchScenario(this);
+      }
     }
   }
 }

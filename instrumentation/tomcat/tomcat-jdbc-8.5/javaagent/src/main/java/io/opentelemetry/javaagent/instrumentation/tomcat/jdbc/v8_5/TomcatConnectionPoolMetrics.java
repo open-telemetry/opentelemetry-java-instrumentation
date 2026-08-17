@@ -14,10 +14,14 @@ import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoolMetrics;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.tomcat.jdbc.pool.DataSourceProxy;
+import org.apache.tomcat.jdbc.pool.PoolConfiguration;
 
 public class TomcatConnectionPoolMetrics {
 
@@ -31,6 +35,7 @@ public class TomcatConnectionPoolMetrics {
           // keep the pre-rename scope name so existing dashboards/filters on
           // otel.scope.name="io.opentelemetry.tomcat-jdbc" continue to work
           : "io.opentelemetry.tomcat-jdbc";
+  private static final String DEFAULT_POOL_NAME = "tomcat-jdbc";
   private static final Meter meter = buildMeter();
 
   // a weak map does not make sense here because each Meter holds a reference to the dataSource
@@ -43,13 +48,10 @@ public class TomcatConnectionPoolMetrics {
     dataSourceMetrics.computeIfAbsent(dataSource, TomcatConnectionPoolMetrics::createInstruments);
   }
 
-  // deprecated DbConnectionPoolMetrics.create(Meter, String) overload exists solely so we can keep
-  // emitting the legacy io.opentelemetry.tomcat-jdbc scope by default; goes away in 3.0 once
-  // v3-preview becomes default
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation") // deprecated overload keeps the legacy scope by default
   private static BatchCallback createInstruments(DataSourceProxy dataSource) {
     DbConnectionPoolMetrics metrics =
-        DbConnectionPoolMetrics.create(meter, dataSource.getPoolName());
+        DbConnectionPoolMetrics.create(meter, getPoolName(dataSource));
 
     ObservableLongMeasurement connections = metrics.connections();
     ObservableLongMeasurement minIdleConnections = metrics.minIdleConnections();
@@ -75,6 +77,18 @@ public class TomcatConnectionPoolMetrics {
         maxIdleConnections,
         maxConnections,
         pendingRequestsForConnection);
+  }
+
+  private static String getPoolName(DataSourceProxy dataSource) {
+    PoolConfiguration poolProperties = dataSource.getPoolProperties();
+    String configuredPoolName = dataSource.getPoolName();
+    if (configuredPoolName != null && TomcatJdbcSingletons.isPoolNameConfigured(poolProperties)) {
+      return configuredPoolName;
+    }
+
+    DbInfo dbInfo =
+        JdbcConnectionUrlParser.parse(poolProperties.getUrl(), poolProperties.getDbProperties());
+    return JdbcConnectionPoolNameUtil.poolName(dbInfo, DEFAULT_POOL_NAME);
   }
 
   public static void unregisterMetrics(DataSourceProxy dataSource) {

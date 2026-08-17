@@ -45,6 +45,7 @@ public abstract class CouchbaseRequestInfo {
     return new AutoValue_CouchbaseRequestInfo(bucket, null, null, operation, true);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated old semconv operation
   public static CouchbaseRequestInfo create(@Nullable String bucket, Object query) {
     SqlQuery sqlQuery = emitOldDatabaseSemconv() ? CouchbaseQuerySanitizer.analyze(query) : null;
     SqlQuery sqlQueryWithSummary =

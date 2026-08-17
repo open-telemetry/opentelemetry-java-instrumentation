@@ -152,7 +152,10 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("Bucket.upsert")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "Bucket.upsert " + bucketSettings.name()
+                                : "Bucket.upsert")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -167,7 +170,10 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             satisfies(
                                 stringKey("couchbase.operation_id"), experimentalAttribute())),
                 span ->
-                    span.hasName("Bucket.get")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "Bucket.get " + bucketSettings.name()
+                                : "Bucket.get")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
