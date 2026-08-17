@@ -14,15 +14,15 @@ abstract class JettyJpmsSmokeTest extends AppServerTest {
     JettySmokeTest.configureOptions(options).command("java", "-jar", "/server/start.jar", "--jpms");
   }
 
-  @AppServer(version = "11.0.26", jdk = "11")
+  @AppServer(version = "11.0.26", jdk = "11", reduced = true)
   static class Jetty11JpmsJdk11 extends JettyJpmsSmokeTest {}
 
-  @AppServer(version = "11.0.26", jdk = "17")
+  @AppServer(version = "11.0.26", jdk = "17", reduced = true)
   static class Jetty11JpmsJdk17 extends JettyJpmsSmokeTest {}
 
-  @AppServer(version = "11.0.26", jdk = "21")
+  @AppServer(version = "11.0.26", jdk = "21", reduced = true)
   static class Jetty11JpmsJdk21 extends JettyJpmsSmokeTest {}
 
-  @AppServer(version = "11.0.26", jdk = "25")
+  @AppServer(version = "11.0.26", jdk = "25", reduced = true)
   static class Jetty11JpmsJdk25 extends JettyJpmsSmokeTest {}
 }

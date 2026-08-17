@@ -458,6 +458,7 @@ jobs:
       - name: Test
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+        # Reduced mode owns the OpenJ9 policy; disabling it here would make the TomEE suite run no tests.
         run: >
           ./gradlew
           :smoke-tests:test
