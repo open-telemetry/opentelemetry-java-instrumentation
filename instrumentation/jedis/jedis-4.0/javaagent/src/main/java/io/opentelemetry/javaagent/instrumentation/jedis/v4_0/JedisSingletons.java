@@ -45,6 +45,7 @@ public class JedisSingletons {
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(spanNameAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(new JedisDbAttributesExtractor())
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
 

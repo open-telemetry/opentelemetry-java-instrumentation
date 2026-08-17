@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
@@ -104,6 +105,7 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(DB_REDIS_DATABASE_INDEX, emitOldDatabaseSemconv() ? 0L : null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -140,6 +142,7 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(DB_REDIS_DATABASE_INDEX, emitOldDatabaseSemconv() ? 0L : null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -155,6 +158,7 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "GET foo"),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(DB_REDIS_DATABASE_INDEX, emitOldDatabaseSemconv() ? 0L : null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -180,6 +184,7 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(DB_REDIS_DATABASE_INDEX, emitOldDatabaseSemconv() ? 0L : null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -198,6 +203,7 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(DB_REDIS_DATABASE_INDEX, emitOldDatabaseSemconv() ? 0L : null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -222,6 +228,7 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "SELECT 1"),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(DB_REDIS_DATABASE_INDEX, emitOldDatabaseSemconv() ? 0L : null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -237,6 +244,7 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(DB_REDIS_DATABASE_INDEX, emitOldDatabaseSemconv() ? 0L : null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -264,6 +272,7 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "1" : null),
+                            equalTo(DB_REDIS_DATABASE_INDEX, emitOldDatabaseSemconv() ? 1L : null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
@@ -297,6 +306,7 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
                             equalTo(maybeStable(DB_OPERATION), scenario.operationName),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(DB_REDIS_DATABASE_INDEX, emitOldDatabaseSemconv() ? 0L : null),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? scenario.batchSize : null),
@@ -373,6 +383,7 @@ class Jedis40ClientTest {
                             equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
                             equalTo(maybeStable(DB_OPERATION), scenario.operationName),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(DB_REDIS_DATABASE_INDEX, emitOldDatabaseSemconv() ? 0L : null),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? scenario.batchSize : null),
