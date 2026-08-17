@@ -161,9 +161,9 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     String instrumentationName = "io.opentelemetry.kafka-clients-0.11";
     String group = testLatestDeps() ? "test" : null;
     assertSendMetrics(testing, instrumentationName, SHARED_TOPIC, "0", 1, null);
-    // every test task in this module enables receive telemetry, so the receive operation always
-    // owns the consumed messages count here; KafkaClientSuppressReceiveSpansTest covers the case
-    // where it is disabled and the process operation owns the count instead
+    // every test task that runs this class enables receive telemetry, so the receive operation
+    // always owns the consumed messages count here; KafkaClientSuppressReceiveSpansTest covers the
+    // case where it is disabled and the process operation owns the count instead
     assertReceiveMetrics(testing, instrumentationName, SHARED_TOPIC, group, "0", 1, 1, null);
     assertProcessMetrics(testing, instrumentationName, SHARED_TOPIC, group, "0", 1, null);
     assertTotalConsumedMessages(testing, instrumentationName, 1);
