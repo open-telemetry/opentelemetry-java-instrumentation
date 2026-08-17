@@ -4,7 +4,8 @@ plugins {
 
 dependencies {
   api("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
-  api("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator")
+  // this is intentionally not api, so that it is not exposed on the compile classpath of consumers
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator")
 
   api("io.opentelemetry:opentelemetry-api")
 
