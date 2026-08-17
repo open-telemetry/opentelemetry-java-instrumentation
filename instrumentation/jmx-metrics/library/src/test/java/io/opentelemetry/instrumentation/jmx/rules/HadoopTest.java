@@ -69,8 +69,7 @@ class HadoopTest extends TargetSystemTest {
                         "hadoop.datanode.live",
                         "hadoop.datanode.dead"),
                     emptyList())
-                .checkRegisteredAttributes(
-                    "hadoop.", asList("hadoop.node.name"), emptyList()));
+                .checkRegisteredAttributes("hadoop.", asList("hadoop.node.name"), emptyList()));
 
     startTarget(target);
 
@@ -128,8 +127,7 @@ class HadoopTest extends TargetSystemTest {
                         "hadoop.datanode.live",
                         "hadoop.datanode.dead"),
                     emptyList())
-                .checkRegisteredAttributes(
-                    "hadoop.", asList("hadoop.node.name"), emptyList()));
+                .checkRegisteredAttributes("hadoop.", asList("hadoop.node.name"), emptyList()));
 
     startTarget(target);
 
