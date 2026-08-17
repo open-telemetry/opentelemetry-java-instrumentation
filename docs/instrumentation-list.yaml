@@ -924,11 +924,18 @@ definitions:
       examples:
       - ns
       - milliseconds
+    otel.instrumentation.micrometer.experimental.histogram-gauges.enabled:
+      name: otel.instrumentation.micrometer.experimental.histogram-gauges.enabled
+      declarative_name: java.micrometer.histogram_gauges/development.enabled
+      description: |
+        Enables gauge-based Micrometer histograms for DistributionSummary and Timer instruments.
+      type: boolean
+      default: false
     otel.instrumentation.micrometer.histogram-gauges.enabled:
       name: otel.instrumentation.micrometer.histogram-gauges.enabled
       declarative_name: java.micrometer.histogram_gauges.enabled
       description: |
-        Enables gauge-based Micrometer histograms for DistributionSummary and Timer instruments.
+        Deprecated alias for `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled`. It will be removed in 3.0.
       type: boolean
       default: false
     otel.instrumentation.micrometer.prometheus-mode.enabled:
@@ -10808,6 +10815,7 @@ libraries:
   - io.micrometer:micrometer-core:[1.5.0,)
   configuration_refs:
   - otel.instrumentation.micrometer.base-time-unit
+  - otel.instrumentation.micrometer.experimental.histogram-gauges.enabled
   - otel.instrumentation.micrometer.histogram-gauges.enabled
   - otel.instrumentation.micrometer.prometheus-mode.enabled
 - name: mongo-3.1
