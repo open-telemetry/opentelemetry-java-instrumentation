@@ -6,15 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.jsf.common.javax;
 
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
+import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
 import javax.faces.FacesException;
 
 public class JsfErrorCauseExtractor implements ErrorCauseExtractor {
 
   @Override
   public Throwable extract(Throwable error) {
-    while (error.getCause() != null && error instanceof FacesException) {
-      error = error.getCause();
-    }
-    return ErrorCauseExtractor.getDefault().extract(error);
+    Throwable unwrapped = CauseUnwrapper.unwrapCause(error, e -> e instanceof FacesException);
+    return ErrorCauseExtractor.getDefault().extract(unwrapped);
   }
 }
