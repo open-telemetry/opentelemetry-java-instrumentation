@@ -9,6 +9,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
+import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.vertx.core.Handler;
@@ -67,13 +68,14 @@ public class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
   }
 
   private static Throwable unwrapThrowable(Throwable throwable) {
-    if (throwable.getCause() != null
-        && (throwable instanceof ExecutionException
-            || throwable instanceof CompletionException
-            || throwable instanceof InvocationTargetException
-            || throwable instanceof UndeclaredThrowableException)) {
-      return unwrapThrowable(throwable.getCause());
-    }
-    return throwable;
+    return CauseUnwrapper.unwrapCause(
+        throwable, RoutingContextHandlerWrapper::isUnwrappableWrapper);
+  }
+
+  private static boolean isUnwrappableWrapper(Throwable throwable) {
+    return throwable instanceof ExecutionException
+        || throwable instanceof CompletionException
+        || throwable instanceof InvocationTargetException
+        || throwable instanceof UndeclaredThrowableException;
   }
 }

@@ -49,8 +49,11 @@ class DefaultErrorCauseExtractorTest {
 
   @Test
   void cyclicWrapperCauseChain() {
-    ExecutionException exception1 = new ExecutionException(null);
-    ExecutionException exception2 = new ExecutionException(null);
+    // the public ExecutionException constructors always set a (possibly null) cause, after which
+    // initCause() throws IllegalStateException; a no-arg subclass leaves the cause unset so it
+    // can be assigned below to form a cycle
+    ExecutionException exception1 = new ExecutionException() {};
+    ExecutionException exception2 = new ExecutionException() {};
     exception1.initCause(exception2);
     exception2.initCause(exception1);
 

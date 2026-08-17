@@ -5,11 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
@@ -21,15 +19,7 @@ final class DefaultErrorCauseExtractor implements ErrorCauseExtractor {
 
   @Override
   public Throwable extract(Throwable error) {
-    Set<Throwable> visited = Collections.newSetFromMap(new IdentityHashMap<>());
-    Throwable current = error;
-    while (current.getCause() != null && isUnwrappableWrapper(current)) {
-      if (!visited.add(current)) {
-        break;
-      }
-      current = current.getCause();
-    }
-    return current;
+    return CauseUnwrapper.unwrapCause(error, DefaultErrorCauseExtractor::isUnwrappableWrapper);
   }
 
   private static boolean isUnwrappableWrapper(Throwable error) {
