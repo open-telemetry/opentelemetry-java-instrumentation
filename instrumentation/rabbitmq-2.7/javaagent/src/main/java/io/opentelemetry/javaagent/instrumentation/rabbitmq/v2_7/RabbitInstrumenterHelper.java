@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.CHANNEL_AND_METHOD_CONTEXT_KEY;
 import static java.util.Arrays.asList;
-import static java.util.Collections.unmodifiableSet;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Command;
@@ -27,7 +26,7 @@ public class RabbitInstrumenterHelper {
   static final AttributeKey<String> RABBITMQ_COMMAND = AttributeKey.stringKey("rabbitmq.command");
 
   private static final Set<String> SETTLE_COMMANDS =
-      unmodifiableSet(new HashSet<>(asList("basic.ack", "basic.nack", "basic.reject")));
+      new HashSet<>(asList("basic.ack", "basic.nack", "basic.reject"));
 
   // spring-cloud-stream's rabbit binder names the queue of a consumer that doesn't declare a group
   // "<destination>.anonymous.<base64url uuid>", using the same generator that spring-amqp uses for

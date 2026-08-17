@@ -9,6 +9,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.Collections.unmodifiableList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
@@ -66,7 +67,7 @@ final class RpcMetricsAdvice {
     keys.add(SERVER_ADDRESS);
     keys.add(SERVER_PORT);
 
-    return keys;
+    return unmodifiableList(keys);
   }
 
   private static List<AttributeKey<?>> getAttributeKeys(boolean stable) {

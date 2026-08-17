@@ -83,7 +83,7 @@ public class AgentInstaller {
   private static final String STRICT_CONTEXT_STRESSOR_MILLIS =
       "otel.javaagent.testing.strict-context-stressor-millis";
 
-  private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
+  private static final Map<String, List<Runnable>> classLoadCallbacks = new HashMap<>();
 
   private static volatile boolean instrumentationInstalled;
 
@@ -499,9 +499,9 @@ public class AgentInstaller {
    * @param callback runnable to invoke when class name matches
    */
   public static void registerClassLoadCallback(String className, Runnable callback) {
-    synchronized (CLASS_LOAD_CALLBACKS) {
+    synchronized (classLoadCallbacks) {
       List<Runnable> callbacks =
-          CLASS_LOAD_CALLBACKS.computeIfAbsent(className, k -> new ArrayList<>());
+          classLoadCallbacks.computeIfAbsent(className, k -> new ArrayList<>());
       callbacks.add(callback);
     }
   }
@@ -546,8 +546,8 @@ public class AgentInstaller {
     @Override
     public void onComplete(
         String typeName, ClassLoader classLoader, JavaModule javaModule, boolean b) {
-      synchronized (CLASS_LOAD_CALLBACKS) {
-        List<Runnable> callbacks = CLASS_LOAD_CALLBACKS.get(typeName);
+      synchronized (classLoadCallbacks) {
+        List<Runnable> callbacks = classLoadCallbacks.get(typeName);
         if (callbacks != null) {
           for (Runnable callback : callbacks) {
             callback.run();
