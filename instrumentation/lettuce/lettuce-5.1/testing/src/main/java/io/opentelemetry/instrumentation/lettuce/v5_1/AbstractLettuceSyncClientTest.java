@@ -89,7 +89,6 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
     // 2 sets
     testing().waitForTraces(2);
-    testing().clearData();
   }
 
   @Test

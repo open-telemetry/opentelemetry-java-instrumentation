@@ -121,8 +121,8 @@ RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(openTelemetry);
 Experimental.setJfrMetrics(
     builder,
     IncludeExclude.builder()
-        .setIncluded(Arrays.asList("jvm.memory.*", "jvm.cpu.longloc?"))
-        .setExcluded(Collections.singletonList("jvm.memory.allocation"))
+        .setIncluded("jvm.memory.*", "jvm.cpu.longloc?")
+        .setExcluded("jvm.memory.allocation")
         .build());
 RuntimeTelemetry runtimeTelemetry = builder.build();
 ```

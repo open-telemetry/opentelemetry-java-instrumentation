@@ -141,7 +141,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   @Test
   void testMessagingClientMetrics() throws IOException {
     String queueName = channel.queueDeclare("metrics", false, true, true, null).getQueue();
-    testing.clearData();
 
     channel.basicPublish("", queueName, null, "Hello, world!".getBytes(Charset.defaultCharset()));
 
@@ -157,7 +156,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   @Test
   void testMessagingPublishErrorMetrics() throws IOException {
     channel.abort();
-    testing.clearData();
 
     Throwable error =
         catchThrowable(
@@ -237,7 +235,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   void testRabbitPublishPropagatesSuppressedProducerContext() throws IOException {
     String queueName = channel.queueDeclare().getQueue();
     AtomicReference<SpanContext> producerContext = new AtomicReference<>();
-    testing.clearData();
 
     testing.runWithSpan(
         "outer producer",
@@ -786,7 +783,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   @Test
   void testRabbitSettleErrorMetrics() throws IOException {
     channel.abort();
-    testing.clearData();
 
     Throwable error = catchThrowable(() -> channel.basicAck(1, false));
 

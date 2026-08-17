@@ -4,11 +4,19 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Library instrumentation artifacts no longer expose `opentelemetry-instrumentation-api-incubator`
+  on consumers' compile classpaths. Consumers that use its APIs, or APIs from its
+  `opentelemetry-api-incubator` and `opentelemetry-semconv` dependencies, must declare the
+  corresponding artifacts directly.
 - `jetty.thread.queue.size` Jetty JMX metric unit has been changed from `{thread}` to `{job}`.
 - Normalize the value of `activemq.destination.temp.utilization` JMX Metric for ActiveMQ to be between 0 and 1 (inclusive) instead of between 0 and 100 (inclusive).
 
 ### 🚫 Deprecations
 
+- Deprecate `otel.instrumentation.micrometer.histogram-gauges.enabled` in favor of
+  `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled`. The deprecated property
+  keeps its existing behavior except when `otel.instrumentation.common.v3-preview` is enabled.
+  ([#19613](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19613))
 - For library instrumentation users, deprecate configuring span suppression using the
   `otel.instrumentation.experimental.span-suppression-strategy` system property in favor of
   `Experimental.setSpanSuppressionStrategy(...)` or declarative instrumentation configuration.

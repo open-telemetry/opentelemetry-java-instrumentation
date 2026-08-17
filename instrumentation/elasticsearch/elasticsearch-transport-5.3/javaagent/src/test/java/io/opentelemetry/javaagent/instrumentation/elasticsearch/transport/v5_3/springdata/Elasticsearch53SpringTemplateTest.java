@@ -140,11 +140,10 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
               .updateSettings(
                   new ClusterUpdateSettingsRequest()
                       .transientSettings(
-                          singletonMap(
-                              "cluster.routing.allocation.disk.threshold_enabled", false)));
+                          singletonMap("cluster.routing.allocation.disk.threshold_enabled", false)))
+              .actionGet(TIMEOUT);
         });
     testing.waitForTraces(1);
-    testing.clearData();
 
     autoCleanup.deferAfterAll(testNode);
     template = new ElasticsearchTemplate(client);

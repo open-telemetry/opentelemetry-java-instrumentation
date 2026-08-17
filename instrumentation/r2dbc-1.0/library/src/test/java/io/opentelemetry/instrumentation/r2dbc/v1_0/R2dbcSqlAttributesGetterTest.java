@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -26,6 +25,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("deprecation") // testing old database semantic conventions
 class R2dbcSqlAttributesGetterTest {
 
   private final R2dbcSqlAttributesGetter getter = new R2dbcSqlAttributesGetter();
@@ -45,6 +45,7 @@ class R2dbcSqlAttributesGetterTest {
 
     assertThat(rawQueryTexts).isSameAs(dbExecution.getRawQueryTexts());
     assertThat(rawQueryTexts).containsExactly("INSERT INTO person VALUES(1)");
+    assertThat(getter.getRawQueryTextsForOldSemconv(dbExecution)).isSameAs(rawQueryTexts);
   }
 
   @Test
@@ -62,15 +63,12 @@ class R2dbcSqlAttributesGetterTest {
 
     Collection<String> rawQueryTexts = getter.getRawQueryTexts(dbExecution);
 
-    if (emitStableDatabaseSemconv()) {
-      assertThat(rawQueryTexts)
-          .containsExactly("INSERT INTO person VALUES(1)", "INSERT INTO person VALUES(2)");
-      assertThat(getter.getDbOperationBatchSize(dbExecution)).isEqualTo(2);
-    } else {
-      assertThat(rawQueryTexts)
-          .containsExactly("INSERT INTO person VALUES(1);\nINSERT INTO person VALUES(2)");
-      assertThat(getter.getDbOperationBatchSize(dbExecution)).isNull();
-    }
+    assertThat(rawQueryTexts).isSameAs(dbExecution.getRawQueryTexts());
+    assertThat(rawQueryTexts)
+        .containsExactly("INSERT INTO person VALUES(1)", "INSERT INTO person VALUES(2)");
+    assertThat(getter.getRawQueryTextsForOldSemconv(dbExecution))
+        .containsExactly("INSERT INTO person VALUES(1);\nINSERT INTO person VALUES(2)");
+    assertThat(getter.getDbOperationBatchSize(dbExecution)).isEqualTo(2);
   }
 
   @ParameterizedTest

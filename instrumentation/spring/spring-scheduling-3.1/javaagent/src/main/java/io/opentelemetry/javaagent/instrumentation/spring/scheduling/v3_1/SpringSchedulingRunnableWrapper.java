@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.SpringSchedulingSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
@@ -21,7 +20,7 @@ public class SpringSchedulingRunnableWrapper implements Runnable {
 
   @Override
   public void run() {
-    Context parentContext = currentContext();
+    Context parentContext = Context.current();
     if (!instrumenter().shouldStart(parentContext, runnable)) {
       runnable.run();
       return;

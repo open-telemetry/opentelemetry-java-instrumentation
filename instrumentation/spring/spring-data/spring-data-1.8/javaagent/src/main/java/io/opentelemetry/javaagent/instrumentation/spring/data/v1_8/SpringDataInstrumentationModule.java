@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.data.v1_8;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.data.v1_8.SpringDataSingletons.instrumenter;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -109,7 +108,7 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
     @Override
     @Nullable
     public Object invoke(MethodInvocation methodInvocation) throws Throwable {
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
       Method method = methodInvocation.getMethod();
       // Since this interceptor is the outermost interceptor, non-Repository methods
       // including Object methods will also flow through here. Don't create spans for those.
