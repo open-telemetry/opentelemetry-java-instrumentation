@@ -69,7 +69,7 @@
     "com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.13#+": "1.13.31",
     "com.softwaremill.sttp.tapir:tapir-pekko-http-server_3#+": "1.13.31",
     "com.sparkjava:spark-core#+": "2.9.4",
-    "com.squareup.okhttp3:okhttp#+": "5.4.0",
+    "com.squareup.okhttp3:okhttp#+": "5.5.0",
     "com.squareup.okhttp:okhttp#+": "2.7.5",
     "com.squareup.okhttp:okhttp#2.+": "2.7.5",
     "com.sun.faces:jsf-impl#+": "2.2.20",
