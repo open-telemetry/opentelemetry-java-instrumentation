@@ -34,6 +34,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.SimpleStatement;
+import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -276,6 +277,70 @@ class CassandraClientTest {
     }
   }
 
+  @ParameterizedTest
+  @MethodSource("simpleStatementScenarios")
+  void simpleStatementSanitization(
+      SimpleStatement statement, String stableQueryText, String legacyQueryText) {
+    Session session = cluster.connect();
+    cleanup.deferCleanup(session);
+
+    session.execute("DROP KEYSPACE IF EXISTS simple_values_test");
+    session.execute(
+        "CREATE KEYSPACE simple_values_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':1}");
+    session.execute("CREATE TABLE simple_values_test.users ( name text PRIMARY KEY, age int )");
+    testing.clearData();
+
+    session.execute(statement);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("INSERT simple_values_test.users")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
+                            equalTo(SERVER_ADDRESS, cassandraHost),
+                            equalTo(SERVER_PORT, cassandraPort),
+                            equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                            equalTo(NETWORK_PEER_PORT, cassandraPort),
+                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                emitStableDatabaseSemconv() ? stableQueryText : legacyQueryText),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv()
+                                    ? "INSERT simple_values_test.users"
+                                    : null),
+                            equalTo(maybeStable(DB_OPERATION), "INSERT"),
+                            equalTo(maybeStable(DB_CASSANDRA_TABLE), "simple_values_test.users"))));
+  }
+
+  private static Stream<Arguments> simpleStatementScenarios() {
+    return Stream.of(
+        argumentSet(
+            "no values",
+            new SimpleStatement(
+                "INSERT INTO simple_values_test.users (name, age) values ('carol', 3)"),
+            "INSERT INTO simple_values_test.users (name, age) values (?, ?)",
+            "INSERT INTO simple_values_test.users (name, age) values (?, ?)"),
+        argumentSet(
+            "positional values",
+            new SimpleStatement(
+                "INSERT INTO simple_values_test.users (name, age) values ('alice', ?)", 1),
+            "INSERT INTO simple_values_test.users (name, age) values ('alice', ?)",
+            "INSERT INTO simple_values_test.users (name, age) values (?, ?)"),
+        argumentSet(
+            "named values",
+            new SimpleStatement(
+                "INSERT INTO simple_values_test.users (name, age) values ('bob', :age)",
+                ImmutableMap.<String, Object>of("age", 2)),
+            "INSERT INTO simple_values_test.users (name, age) values ('bob', :age)",
+            "INSERT INTO simple_values_test.users (name, age) values (?, :age)"));
+  }
+
   @Test
   void testMetrics() {
     Session session = cluster.connect();
@@ -404,10 +469,10 @@ class CassandraClientTest {
             BatchScenario.builder()
                 .buildBatch(
                     session -> {
-                      PreparedStatement insert =
-                          session.prepare("INSERT INTO batch_test.records (id, num) values (4, ?)");
                       return new BatchStatement()
-                          .add(insert.bind(4))
+                          .add(
+                              new SimpleStatement(
+                                  "INSERT INTO batch_test.records (id, num) values (4, ?)", 4))
                           .add(
                               new SimpleStatement(
                                   "UPDATE batch_test.records SET num = 5 WHERE id = 4"));
