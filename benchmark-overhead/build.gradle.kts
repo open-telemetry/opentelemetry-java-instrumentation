@@ -1,5 +1,14 @@
 plugins {
   id("java")
+  id("com.diffplug.spotless") version "8.10.0"
+}
+
+spotless {
+  java {
+    googleJavaFormat()
+    licenseHeaderFile(rootProject.file("../buildscripts/spotless.license.java"), "(package|import|public)")
+    target("src/**/*.java")
+  }
 }
 
 repositories {

@@ -33,6 +33,16 @@ Follow `docs/contributing/style-guide.md`.
   `MethodHandle`, `Pattern`), and canonical singletons (`INSTANCE`, `EMPTY`,
   `NOOP`). Use lower camel case for runtime collaborators (loggers,
   instrumenters, helpers, caches), even when `static final`.
+- **Collection constants**: public, protected, and package-private collection
+  constants must be unmodifiable. Private collection constants must also be
+  unmodifiable when their collection reference escapes the declaring class.
+  Source sets target Java 8 by default, so use `Collections.unmodifiableList`,
+  `unmodifiableSet`, and `unmodifiableMap` there. In a source set that targets
+  Java 9 or later, prefer `List.of`, `Set.of`, and `Map.of` when the source
+  data meets their input restrictions, including for private constants. Do not
+  add an unmodifiable wrapper to a private, non-escaping collection constant;
+  it must remain unmodified after class initialization. `Arrays.asList(...)`
+  is fixed-size, not unmodifiable.
 - **Avoid throwaway forwarding locals** that mirror an existing constant,
   argument, or SDK field into both an SDK call and span attributes; pass the
   original value directly unless real derivation justifies a local.
