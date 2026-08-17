@@ -60,8 +60,8 @@ public final class KafkaConsumerContextUtil {
         .with(PROCESS_PARENT_SPAN_KEY, Span.fromContext(parentContext));
   }
 
-  public static Context withReceiveOperation(Context context) {
-    return context.with(RECEIVE_OPERATION_KEY, true);
+  public static Context withReceiveOperation(Context context, boolean receiveOperation) {
+    return context.with(RECEIVE_OPERATION_KEY, receiveOperation);
   }
 
   public static boolean hasReceiveOperation(Context context) {

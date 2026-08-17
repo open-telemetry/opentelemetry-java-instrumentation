@@ -97,9 +97,7 @@ public class KafkaConsumerTelemetry {
     if (!emitStableMessagingSemconv()) {
       return receiveContext;
     }
-    return receiveOperationStarted
-        ? KafkaConsumerContextUtil.withReceiveOperation(parentContext)
-        : parentContext;
+    return KafkaConsumerContextUtil.withReceiveOperation(parentContext, receiveOperationStarted);
   }
 
   public <K, V> void buildAndFinishErrorSpan(

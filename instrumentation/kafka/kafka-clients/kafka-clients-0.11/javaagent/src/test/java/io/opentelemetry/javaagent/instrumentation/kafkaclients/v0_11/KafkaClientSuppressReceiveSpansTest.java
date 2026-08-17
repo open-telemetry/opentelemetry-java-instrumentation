@@ -15,8 +15,11 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientPropagationBaseTest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
@@ -57,7 +60,12 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
 
     awaitUntilConsumerIsReady();
     // check that the message was received
-    ConsumerRecords<?, ?> records = poll(Duration.ofSeconds(5));
+    ConsumerRecords<?, ?> records;
+    Context inheritedContext =
+        KafkaConsumerContextUtil.withReceiveOperation(Context.current(), true);
+    try (Scope ignored = inheritedContext.makeCurrent()) {
+      records = poll(Duration.ofSeconds(5));
+    }
     for (ConsumerRecord<?, ?> record : records) {
       testing.runWithSpan(
           "processing",

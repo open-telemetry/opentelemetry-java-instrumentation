@@ -91,11 +91,10 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
         }
 
         Context processParentContext =
-            emitStableMessagingSemconv() ? parentContext : receiveContext;
-        if (receiveOperationStarted && emitStableMessagingSemconv()) {
-          processParentContext =
-              KafkaConsumerContextUtil.withReceiveOperation(processParentContext);
-        }
+            emitStableMessagingSemconv()
+                ? KafkaConsumerContextUtil.withReceiveOperation(
+                    parentContext, receiveOperationStarted)
+                : receiveContext;
         KafkaConsumerContext consumerContext =
             KafkaConsumerContextUtil.create(processParentContext, consumer);
         // we're attaching the consumer to the records to be able to retrieve things like consumer
