@@ -386,19 +386,17 @@ ambiguous and the cast would otherwise be required). Do not flag those cases.
 ## [Semconv] Constants by Module Type
 
 - Before constructing an `AttributeKey` for a semantic-convention attribute, search both the
-  stable and incubating semconv artifacts for an existing constant. Reuse it only when the
-  attribute name and `AttributeKey` type match exactly. Similar names or a different type are not
-  interchangeable.
-- `library/src/main/`: constants from `io.opentelemetry.semconv.incubating.*` must be
-  copied locally as `private static final` fields with a `// copied from <ClassName>`
-  comment. Constants from `io.opentelemetry.semconv.*` (stable) must be imported
-  directly via `import static` and must not be copied locally.
-- `javaagent/src/main/`: all semconv artifact constants (stable and incubating) may be used
-  directly.
-- tests: all semconv artifact constants are allowed.
-
-The trigger for copying is the import package, not the constant name. Only convert an
-import to a local copy when it comes from `io.opentelemetry.semconv.incubating.*`.
+  stable and incubating semconv artifacts. Reuse a constant only when its attribute name and
+  `AttributeKey` type match exactly; direct reuse prevents local copies from drifting from the
+  canonical name or type.
+- In `javaagent/src/main/`, import stable and incubating constants directly, including deprecated
+  constants intentionally used for legacy semconv emission. The Java agent vendors the semconv
+  artifacts into the agent artifact, so these imports do not expose an incubating or deprecated
+  dependency to applications.
+- In `library/src/main/`, import stable constants directly, but copy incubating constants locally
+  as `private static final` fields with a `// copied from <ClassName>` comment. Library artifacts
+  must not depend on or expose the incubating semconv artifact.
+- In tests, import stable and incubating constants directly.
 
 ## [NewModule] New Instrumentation Checklist
 

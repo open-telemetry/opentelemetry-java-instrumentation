@@ -39,12 +39,19 @@ Follow `docs/contributing/style-guide.md`.
 - **`Optional`**: do not use in public API signatures or on the hot path.
 - **Semconv constants**: before constructing an `AttributeKey` for a
   semantic-convention attribute, search the stable and incubating semconv
-  artifacts and reuse an existing constant only when its name and type match
-  exactly. In `library/src/main/`, import stable constants, but copy incubating
-  constants locally as `private static final` with a
-  `// copied from <Class>` comment; do not depend on the semconv incubating
-  artifact. In `javaagent/src/main/` and tests, import stable and incubating
-  constants directly.
+  artifacts. Reuse a constant only when its attribute name and `AttributeKey`
+  type match exactly; direct reuse prevents local copies from drifting from the
+  canonical name or type.
+  - In `javaagent/src/main/`, import stable and incubating constants directly,
+    including deprecated constants intentionally used for legacy semconv
+    emission. The Java agent vendors the semconv artifacts into the agent
+    artifact, so these imports do not expose an incubating or deprecated
+    dependency to applications.
+  - In `library/src/main/`, import stable constants directly, but copy
+    incubating constants locally as `private static final` fields with a
+    `// copied from <ClassName>` comment. Library artifacts must not depend on or
+    expose the incubating semconv artifact.
+  - In tests, import stable and incubating constants directly.
 - **`@Nullable` in tests**: do not add it to test code.
 - **Deprecation suppressions**: use `@SuppressWarnings("deprecation")`, not
   `@SuppressWarnings("OtelDeprecatedApiUsage")`. Add one only for intentional
