@@ -17,10 +17,10 @@ import com.alipay.sofa.rpc.filter.Filter;
 import com.alipay.sofa.rpc.filter.FilterInvoker;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.sofarpc.v5_4.AbstractSofaRpcTest;
+import io.opentelemetry.instrumentation.sofarpc.v5_4.SofaRpcTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -52,26 +52,26 @@ class SofaRpcAgentTest extends AbstractSofaRpcTest {
   }
 
   @Test
-  void staticAsyncCompletionProducesSpanAndMetric() throws Exception {
-    AsyncTestCall call = startAsyncTestCall("staticOnlySuccess", "ok");
+  void publicApiAsyncCompletionProducesSpanAndMetric() throws Exception {
+    AsyncTestCall call = startAsyncTestCall("publicApiOnlySuccess", "ok");
 
-    call.completeStatically(null);
+    call.completeThroughPublicApi(null);
 
-    assertSingleAsyncClientSpanAndMetric("staticOnlySuccess", false);
+    assertSingleAsyncClientSpanAndMetric("publicApiOnlySuccess", false);
   }
 
   @Test
-  void staticAsyncExceptionProducesSpanAndMetric() throws Exception {
+  void publicApiAsyncExceptionProducesSpanAndMetric() throws Exception {
     IllegalStateException callbackError = new IllegalStateException("callback failed");
-    AsyncTestCall call = startAsyncTestCall("staticOnlyException", null);
+    AsyncTestCall call = startAsyncTestCall("publicApiOnlyException", null);
 
-    call.completeStatically(callbackError);
+    call.completeThroughPublicApi(callbackError);
 
-    assertSingleAsyncClientSpanAndMetric("staticOnlyException", true);
+    assertSingleAsyncClientSpanAndMetric("publicApiOnlyException", true);
   }
 
   @Test
-  void standardAndStaticAsyncCompletionEndOnlyOnce() throws Exception {
+  void standardAndPublicApiAsyncCompletionEndOnlyOnce() throws Exception {
     AsyncTestCall call = startAsyncTestCall("completeOnce", "ok");
 
     ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -86,19 +86,19 @@ class SofaRpcAgentTest extends AbstractSofaRpcTest {
                 call.filter.onAsyncResponse(call.consumerConfig, call.request, call.response, null);
                 return null;
               });
-      Future<?> staticCompletion =
+      Future<?> publicApiCompletion =
           executor.submit(
               () -> {
                 ready.countDown();
                 start.await();
-                call.completeStatically(null);
+                call.completeThroughPublicApi(null);
                 return null;
               });
 
       ready.await();
       start.countDown();
       standardCompletion.get();
-      staticCompletion.get();
+      publicApiCompletion.get();
     } finally {
       executor.shutdownNow();
     }
@@ -107,11 +107,8 @@ class SofaRpcAgentTest extends AbstractSofaRpcTest {
   }
 
   @Test
-  void staticCompletionWithoutAsyncStateIsNoOp() throws Exception {
-    Method completeAsyncResponse = getStaticCompletionMethod();
-
-    completeAsyncResponse.invoke(
-        null, new ConsumerConfig<>(), new SofaRequest(), new SofaResponse(), null);
+  void publicApiCompletionWithoutAsyncStateIsNoOp() {
+    SofaRpcTelemetry.completeAsyncResponse(new SofaRequest(), new SofaResponse(), null);
 
     assertThat(testing.spans()).isEmpty();
   }
@@ -138,18 +135,7 @@ class SofaRpcAgentTest extends AbstractSofaRpcTest {
     FilterInvoker invoker = new FilterInvoker(terminalFilter, null, consumerConfig);
 
     runWithSpan("parent", () -> filter.invoke(invoker, request));
-    return new AsyncTestCall(
-        filter, getStaticCompletionMethod(), consumerConfig, request, response);
-  }
-
-  private static Method getStaticCompletionMethod() throws Exception {
-    return getClientFilterClass()
-        .getMethod(
-            "completeAsyncResponse",
-            ConsumerConfig.class,
-            SofaRequest.class,
-            SofaResponse.class,
-            Throwable.class);
+    return new AsyncTestCall(filter, consumerConfig, request, response);
   }
 
   private static Class<?> getClientFilterClass() throws Exception {
@@ -188,26 +174,23 @@ class SofaRpcAgentTest extends AbstractSofaRpcTest {
   private static final class AsyncTestCall {
 
     private final Filter filter;
-    private final Method completeAsyncResponse;
     private final ConsumerConfig<Object> consumerConfig;
     private final SofaRequest request;
     private final SofaResponse response;
 
     private AsyncTestCall(
         Filter filter,
-        Method completeAsyncResponse,
         ConsumerConfig<Object> consumerConfig,
         SofaRequest request,
         SofaResponse response) {
       this.filter = filter;
-      this.completeAsyncResponse = completeAsyncResponse;
       this.consumerConfig = consumerConfig;
       this.request = request;
       this.response = response;
     }
 
-    private void completeStatically(Throwable exception) throws Exception {
-      completeAsyncResponse.invoke(null, consumerConfig, request, response, exception);
+    private void completeThroughPublicApi(Throwable exception) {
+      SofaRpcTelemetry.completeAsyncResponse(request, response, exception);
     }
   }
 
