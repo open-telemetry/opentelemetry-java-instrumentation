@@ -34,8 +34,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.ToLongFunction;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -55,13 +53,7 @@ public final class KafkaInstrumenterFactory {
       AttributeKey.longKey("messaging.batch.message_count");
   private static final ContextKey<Long> CONSUMED_MESSAGES_COUNT_KEY =
       ContextKey.named("opentelemetry-kafka-consumed-messages-count");
-  private static final Cache<OpenTelemetry, Cache<Object, AtomicBoolean>>
-      countedDeliveryObjectsCache = Cache.weak();
-
-  private final OpenTelemetry openTelemetry;
-  private final String instrumentationName;
-  private final Cache<Object, AtomicBoolean> countedDeliveryObjects;
-  private final OperationMetrics consumedMessagesMetrics =
+  private static final OperationMetrics consumedMessagesMetrics =
       meter -> {
         OperationListener delegate = MessagingConsumerMetrics.getConsumedMessages().create(meter);
         return new OperationListener() {
@@ -86,6 +78,8 @@ public final class KafkaInstrumenterFactory {
         };
       };
 
+  private final OpenTelemetry openTelemetry;
+  private final String instrumentationName;
   private ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
   private IncludeExclude headers = IncludeExclude.builder().build();
   private boolean captureExperimentalSpanAttributes = false;
@@ -94,8 +88,6 @@ public final class KafkaInstrumenterFactory {
   public KafkaInstrumenterFactory(OpenTelemetry openTelemetry, String instrumentationName) {
     this.openTelemetry = openTelemetry;
     this.instrumentationName = instrumentationName;
-    countedDeliveryObjects =
-        countedDeliveryObjectsCache.computeIfAbsent(openTelemetry, unused -> Cache.weak());
   }
 
   @CanIgnoreReturnValue
@@ -243,7 +235,7 @@ public final class KafkaInstrumenterFactory {
       builder.addAttributesExtractor(new KafkaConsumerExperimentalAttributesExtractor());
     }
     addConsumedMessagesIfNoReceiveOperation(
-        builder, request -> countConsumedMessages(request.getRecord(), 1));
+        builder, request -> countConsumedMessages(request.getRecord()));
     setMessagingProcessExceptionEventExtractor(builder);
 
     return MessagingProcessInstrumenterFactory.create(
@@ -267,7 +259,7 @@ public final class KafkaInstrumenterFactory {
    * operation and the per-record process operations of the same delivery, which both run in some
    * frameworks, together count each record exactly once.
    */
-  private <REQUEST> void addConsumedMessagesIfNoReceiveOperation(
+  private static <REQUEST> void addConsumedMessagesIfNoReceiveOperation(
       InstrumenterBuilder<REQUEST, Void> builder, ToLongFunction<REQUEST> messageCounter) {
     if (emitStableMessagingSemconv()) {
       builder
@@ -283,7 +275,8 @@ public final class KafkaInstrumenterFactory {
     }
   }
 
-  private void addReceiveConsumedMessages(InstrumenterBuilder<KafkaReceiveRequest, Void> builder) {
+  private static void addReceiveConsumedMessages(
+      InstrumenterBuilder<KafkaReceiveRequest, Void> builder) {
     builder
         .addContextCustomizer(
             (context, request, startAttributes) -> {
@@ -294,22 +287,18 @@ public final class KafkaInstrumenterFactory {
   }
 
   /**
-   * Returns {@code messageCount} the first time the given delivery object is seen, and {@code 0}
-   * afterwards, so that operations that observe the same delivery do not count it twice.
+   * Returns {@code 1} the first time the given record is seen, and {@code 0} afterwards, so that
+   * operations that observe the same record do not count it twice.
    */
-  private long countConsumedMessages(Object delivery, long messageCount) {
-    boolean firstDeliveryObject =
-        countedDeliveryObjects
-            .computeIfAbsent(delivery, unused -> new AtomicBoolean())
-            .compareAndSet(false, true);
-    return firstDeliveryObject ? messageCount : 0;
+  private static long countConsumedMessages(ConsumerRecord<?, ?> record) {
+    return KafkaConsumerContextUtil.markConsumedMessageCounted(record) ? 1 : 0;
   }
 
   /** Counts the records of a batch individually, so that they can be deduplicated one by one. */
-  private long countConsumedMessages(ConsumerRecords<?, ?> records) {
+  private static long countConsumedMessages(ConsumerRecords<?, ?> records) {
     long consumedMessagesCount = 0;
     for (ConsumerRecord<?, ?> record : records) {
-      consumedMessagesCount += countConsumedMessages(record, 1);
+      consumedMessagesCount += countConsumedMessages(record);
     }
     return consumedMessagesCount;
   }

@@ -37,6 +37,8 @@ public final class KafkaConsumerContextUtil {
       VirtualField.find(ConsumerRecords.class, Context.class);
   private static final VirtualField<ConsumerRecords<?, ?>, String[]> recordsConsumerInfoField =
       VirtualField.find(ConsumerRecords.class, String[].class);
+  private static final VirtualField<ConsumerRecord<?, ?>, Boolean> recordCountedField =
+      VirtualField.find(ConsumerRecord.class, Boolean.class);
 
   public static Context withoutLeakedProcessSpan(Context context) {
     if (!emitStableMessagingSemconv()) {
@@ -64,6 +66,18 @@ public final class KafkaConsumerContextUtil {
 
   public static boolean hasReceiveOperation(Context context) {
     return Boolean.TRUE.equals(context.get(RECEIVE_OPERATION_KEY));
+  }
+
+  /**
+   * Returns {@code true} the first time the given record is seen, and {@code false} afterwards, so
+   * that operations that observe the same record do not count it twice.
+   */
+  public static boolean markConsumedMessageCounted(ConsumerRecord<?, ?> record) {
+    if (Boolean.TRUE.equals(recordCountedField.get(record))) {
+      return false;
+    }
+    recordCountedField.set(record, true);
+    return true;
   }
 
   public static KafkaConsumerContext get(ConsumerRecord<?, ?> records) {
