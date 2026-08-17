@@ -76,7 +76,7 @@ class DeclarativeConfigYamlGeneratorTest {
     // Two modules declaring the exact same declarative_name (as common configs typically do).
     String output = generate(List.of(module("mod-a", option), module("mod-b", option)));
 
-    assertThat(output.split("enabled:", -1).length - 1).isEqualTo(1);
+    assertThat(output).containsOnlyOnce("enabled:");
   }
 
   @Test

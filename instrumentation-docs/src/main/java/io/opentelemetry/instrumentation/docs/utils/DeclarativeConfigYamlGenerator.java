@@ -243,7 +243,6 @@ public class DeclarativeConfigYamlGenerator {
    * @param indent the current indentation level
    * @throws IOException if an I/O error occurs
    */
-  @SuppressWarnings("unchecked")
   private static void writeYaml(Map<String, Object> tree, BufferedWriter writer, int indent)
       throws IOException {
 
