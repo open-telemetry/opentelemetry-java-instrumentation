@@ -108,7 +108,6 @@ class LettuceSyncClientTest {
 
     // 2 sets (+ 1 connect trace when connection telemetry is enabled)
     testing.waitForTraces(connectionTelemetryEnabled() ? 3 : 2);
-    testing.clearData();
   }
 
   private static boolean connectionTelemetryEnabled() {

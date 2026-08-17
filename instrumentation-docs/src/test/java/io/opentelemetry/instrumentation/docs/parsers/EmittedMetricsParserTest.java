@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,16 +96,13 @@ class EmittedMetricsParserTest {
 
     try (MockedStatic<FileManager> fileManagerMock = mockStatic(FileManager.class)) {
       fileManagerMock
-          .when(
-              () -> FileManager.readFileToString(telemetryDir.resolve("metrics-1.yaml").toString()))
+          .when(() -> FileManager.readFileToString(telemetryDir.resolve("metrics-1.yaml")))
           .thenReturn(file1Content);
       fileManagerMock
-          .when(
-              () -> FileManager.readFileToString(telemetryDir.resolve("metrics-2.yaml").toString()))
+          .when(() -> FileManager.readFileToString(telemetryDir.resolve("metrics-2.yaml")))
           .thenReturn(file2Content);
 
-      Map<String, EmittedMetrics> result =
-          EmittedMetricsParser.getMetricsFromFiles(tempDir.toString(), "");
+      Map<String, EmittedMetrics> result = EmittedMetricsParser.getMetricsFromFiles(tempDir, "");
 
       EmittedMetrics.MetricsByScope metrics =
           result.get("default").getMetricsByScope().stream()
@@ -156,16 +154,13 @@ class EmittedMetricsParserTest {
 
     try (MockedStatic<FileManager> fileManagerMock = mockStatic(FileManager.class)) {
       fileManagerMock
-          .when(
-              () -> FileManager.readFileToString(telemetryDir.resolve("metrics-1.yaml").toString()))
+          .when(() -> FileManager.readFileToString(telemetryDir.resolve("metrics-1.yaml")))
           .thenReturn(withState);
       fileManagerMock
-          .when(
-              () -> FileManager.readFileToString(telemetryDir.resolve("metrics-2.yaml").toString()))
+          .when(() -> FileManager.readFileToString(telemetryDir.resolve("metrics-2.yaml")))
           .thenReturn(withoutState);
 
-      Map<String, EmittedMetrics> result =
-          EmittedMetricsParser.getMetricsFromFiles(tempDir.toString(), "");
+      Map<String, EmittedMetrics> result = EmittedMetricsParser.getMetricsFromFiles(tempDir, "");
 
       EmittedMetrics.MetricsByScope metrics =
           result.get("Java17").getMetricsByScope().stream()
@@ -186,7 +181,7 @@ class EmittedMetricsParserTest {
   @Test
   void getMetricsFromFilesHandlesNonexistentDirectory() throws JsonProcessingException {
     Map<String, EmittedMetrics> result =
-        EmittedMetricsParser.getMetricsFromFiles("/nonexistent", "path");
+        EmittedMetricsParser.getMetricsFromFiles(Paths.get("/nonexistent"), "path");
     assertThat(result).isEmpty();
   }
 }

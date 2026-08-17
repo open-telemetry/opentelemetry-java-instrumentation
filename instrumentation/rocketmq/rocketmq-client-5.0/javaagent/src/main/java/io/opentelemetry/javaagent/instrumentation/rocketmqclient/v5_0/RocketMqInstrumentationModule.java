@@ -21,7 +21,10 @@ public class RocketMqInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new PublishingMessageImplInstrumentation(), new ProducerImplInstrumentation(),
-        new ConsumerImplInstrumentation(), new ConsumeServiceInstrumentation());
+        new PublishingMessageImplInstrumentation(),
+        new ProducerImplInstrumentation(),
+        new ConsumerImplInstrumentation(),
+        new ConsumeServiceInstrumentation(),
+        new SimpleConsumerImplInstrumentation());
   }
 }

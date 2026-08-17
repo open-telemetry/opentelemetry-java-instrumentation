@@ -24,6 +24,8 @@ final class KafkaConsumerAttributesExtractor
       AttributeKey.stringKey("messaging.destination.partition.id");
   private static final AttributeKey<String> MESSAGING_KAFKA_CONSUMER_GROUP =
       AttributeKey.stringKey("messaging.kafka.consumer.group");
+  private static final AttributeKey<String> MESSAGING_CONSUMER_GROUP_NAME =
+      AttributeKey.stringKey("messaging.consumer.group.name");
   private static final AttributeKey<String> MESSAGING_KAFKA_MESSAGE_KEY =
       AttributeKey.stringKey("messaging.kafka.message.key");
   private static final AttributeKey<Long> MESSAGING_KAFKA_MESSAGE_OFFSET =
@@ -54,7 +56,12 @@ final class KafkaConsumerAttributesExtractor
       attributes.put(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
 
-    attributes.put(MESSAGING_KAFKA_CONSUMER_GROUP, request.getConsumerGroup());
+    if (emitOldMessagingSemconv()) {
+      attributes.put(MESSAGING_KAFKA_CONSUMER_GROUP, request.getConsumerGroup());
+    }
+    if (emitStableMessagingSemconv()) {
+      attributes.put(MESSAGING_CONSUMER_GROUP_NAME, request.getConsumerGroup());
+    }
   }
 
   private static boolean canSerialize(Class<?> keyClass) {

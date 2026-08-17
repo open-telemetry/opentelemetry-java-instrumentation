@@ -5,12 +5,13 @@ plugins {
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.64.0"
+val otelSdkVersion = "1.65.0"
+val otelZipkinVersion = "1.64.0" // last published version, remove with Zipkin support in 3.0
 val otelContribVersion = "1.59.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.32"
+val groovyVersion = "4.0.33"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -88,14 +89,14 @@ val DEPENDENCIES = listOf(
   "com.uber.nullaway:nullaway:0.13.8",
   "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.11.0",
-  "commons-codec:commons-codec:1.22.0",
+  "commons-codec:commons-codec:1.22.1",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.6.0",
   "commons-io:commons-io:2.22.0",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.4.0",
-  "commons-validator:commons-validator:1.10.1",
+  "commons-validator:commons-validator:1.11.0",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.contrib:opentelemetry-azure-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
@@ -105,6 +106,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-samplers:${otelContribVersion}",
   "io.opentelemetry.proto:opentelemetry-proto:1.11.0-alpha",
+  "io.opentelemetry:opentelemetry-exporter-zipkin:${otelZipkinVersion}",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
   "org.assertj:assertj-core:3.27.7",
   "org.awaitility:awaitility:4.3.0",
@@ -114,11 +116,17 @@ val DEPENDENCIES = listOf(
   "org.apache.groovy:groovy-json:${groovyVersion}",
   "org.codehaus.mojo:animal-sniffer-annotations:1.27",
   "org.junit-pioneer:junit-pioneer:1.9.1",
-  "org.objenesis:objenesis:3.5",
+  "org.objenesis:objenesis:3.6",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.10",
   "org.elasticmq:elasticmq-rest-sqs_2.13:1.7.1",
-  "io.github.netmikey.logunit:logunit-jul:2.0.0"
+  "io.github.netmikey.logunit:logunit-jul:2.0.0",
+
+  // OSGi runtime verification (see :smoke-tests-osgi). Versions track opentelemetry-java's osgi tests.
+  "org.apache.felix:org.apache.felix.framework:7.0.5",
+  "org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.7",
+  "org.osgi:osgi.core:8.0.0",
+  "org.osgi:org.osgi.test.junit5:1.3.0"
 )
 
 javaPlatform {

@@ -16,7 +16,12 @@ import java.util.concurrent.ConcurrentMap;
 
 final class Bridging {
 
-  private static final ConcurrentMap<String, String> descriptionsCache = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, String> descriptionsCache = new ConcurrentHashMap<>();
+  private final boolean v3Preview;
+
+  Bridging(boolean v3Preview) {
+    this.v3Preview = v3Preview;
+  }
 
   static Attributes tagsAsAttributes(Meter.Id id, NamingConvention namingConvention) {
     Iterable<Tag> tags = id.getTagsAsIterable();
@@ -36,9 +41,16 @@ final class Bridging {
     return namingConvention.name(id.getName(), id.getType(), id.getBaseUnit());
   }
 
-  static String description(Meter.Id id) {
+  // Micrometer allows every set of tags to carry its own description, while in OpenTelemetry the
+  // description is one of an instrument's identifying fields. Bridging the descriptions through
+  // unchanged would turn a single Micrometer metric into conflicting OpenTelemetry instruments that
+  // share a name, which the SDK exports as separate metric streams instead of aggregating into one.
+  // So the first description seen for an instrument name wins, which is also what Micrometer's own
+  // PrometheusMeterRegistry does. Callers must pass the name the instrument is actually emitted
+  // under, including any suffix such as ".max", since that is the name a conflict would occur on.
+  String description(String instrumentName, Meter.Id id) {
     return descriptionsCache.computeIfAbsent(
-        id.getName(),
+        instrumentName,
         n -> {
           String description = id.getDescription();
           return description != null ? description : "";
@@ -50,14 +62,14 @@ final class Bridging {
     return baseUnit == null ? "" : baseUnit;
   }
 
-  static String statisticInstrumentName(
+  String statisticInstrumentName(
       Meter.Id id, Statistic statistic, NamingConvention namingConvention) {
-    String prefix = id.getName() + ".";
     // use "total_time" instead of "total" to avoid clashing with Statistic.TOTAL
     String statisticStr =
         statistic == Statistic.TOTAL_TIME ? "total_time" : statistic.getTagValueRepresentation();
-    return namingConvention.name(prefix + statisticStr, id.getType(), id.getBaseUnit());
+    if (v3Preview) {
+      return name(id, namingConvention) + "." + statisticStr;
+    }
+    return namingConvention.name(id.getName() + "." + statisticStr, id.getType(), id.getBaseUnit());
   }
-
-  private Bridging() {}
 }

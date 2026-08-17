@@ -61,7 +61,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
-import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -101,7 +100,6 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     syncCommands.set("TESTKEY", "TESTVAL");
 
     testing.waitForTraces(connectionTelemetryEnabled() ? 2 : 1);
-    testing.clearData();
   }
 
   @AfterAll
@@ -163,11 +161,6 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
     assertThat(exception).isInstanceOf(ExecutionException.class);
 
-    // Windows includes "getsockopt: " in the connection refused message
-    String windowsGetsockopt = OS.WINDOWS.isCurrentOs() ? "getsockopt: " : "";
-    String expectedMessage =
-        "Connection refused: " + windowsGetsockopt + host + "/" + ip + ":" + incorrectPort;
-
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -188,7 +181,12 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                                         equalTo(
                                             stringKey("exception.type"),
                                             "io.netty.channel.AbstractChannel.AnnotatedConnectException"),
-                                        equalTo(stringKey("exception.message"), expectedMessage),
+                                        satisfies(
+                                            stringKey("exception.message"),
+                                            val ->
+                                                val.matches(
+                                                    expectedConnectionRefusedMessagePattern(
+                                                        incorrectPort))),
                                         satisfies(
                                             stringKey("exception.stacktrace"),
                                             val -> val.isNotNull())))));

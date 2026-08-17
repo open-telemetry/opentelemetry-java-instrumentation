@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -15,9 +17,12 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
@@ -36,6 +41,7 @@ import org.apache.pekko.http.scaladsl.Http;
 import org.elasticmq.rest.sqs.SQSRestServer;
 import org.elasticmq.rest.sqs.SQSRestServerBuilder;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -49,6 +55,8 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.SqsClientBuilder;
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
+import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest;
+import software.amazon.awssdk.services.sqs.model.QueueDoesNotExistException;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
@@ -158,6 +166,22 @@ public abstract class AbstractAws2SqsBaseTest {
     }
   }
 
+  @AfterEach
+  void purgeQueue() {
+    // some tests send messages that they don't consume; purge the queue so that leftovers don't
+    // leak into the next test
+    try (SqsClient client =
+        SqsClient.builder()
+            .endpointOverride(URI.create("http://localhost:" + sqsPort))
+            .region(Region.AP_NORTHEAST_1)
+            .credentialsProvider(CREDENTIALS_PROVIDER)
+            .build()) {
+      client.purgeQueue(PurgeQueueRequest.builder().queueUrl(queueUrl).build());
+    } catch (QueueDoesNotExistException ignored) {
+      // the queue is created by the tests, it may not exist
+    }
+  }
+
   @Test
   void testSimpleSqsProducerConsumerServicesSync() {
     SqsClientBuilder builder = SqsClient.builder();
@@ -232,10 +256,14 @@ public abstract class AbstractAws2SqsBaseTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   SpanDataAssert processSpan(SpanDataAssert span, SpanData parent) {
-    return span.hasName("testSdkSqs process")
+    return processSpan(span, parent, parent);
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  SpanDataAssert processSpan(SpanDataAssert span, SpanData parent, SpanData creationContext) {
+    span.hasName(emitStableMessagingSemconv() ? "process testSdkSqs" : "testSdkSqs process")
         .hasKind(SpanKind.CONSUMER)
         .hasParent(parent)
-        .hasTotalRecordedLinks(0)
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             equalTo(RPC_SYSTEM, "aws-api"),
@@ -248,13 +276,36 @@ public abstract class AbstractAws2SqsBaseTest {
             equalTo(SERVER_PORT, sqsPort),
             equalTo(MESSAGING_SYSTEM, AWS_SQS),
             equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-            equalTo(MESSAGING_OPERATION, "process"),
+            equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
+            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
+            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
+
+    if (emitStableMessagingSemconv()) {
+      // the creation context is linked even when it is also this span's parent
+      span.hasLinksSatisfying(
+          links ->
+              assertThat(links)
+                  .singleElement()
+                  .satisfies(
+                      link ->
+                          assertThat(link.getSpanContext().getSpanId())
+                              .isEqualTo(creationContext.getSpanId())));
+    } else {
+      span.hasTotalRecordedLinks(0);
+    }
+    return span;
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   SpanDataAssert publishSpan(SpanDataAssert span, String queueUrl, String rpcMethod) {
-    return span.hasName("testSdkSqs publish")
+    return publishSpan(span, queueUrl, rpcMethod, null);
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  SpanDataAssert publishSpan(
+      SpanDataAssert span, String queueUrl, String rpcMethod, Long batchMessageCount) {
+    return span.hasName(emitStableMessagingSemconv() ? "send testSdkSqs" : "testSdkSqs publish")
         .hasKind(SpanKind.PRODUCER)
         .hasNoParent()
         .hasAttributesSatisfyingExactly(
@@ -273,7 +324,12 @@ public abstract class AbstractAws2SqsBaseTest {
             equalTo(SERVER_PORT, sqsPort),
             equalTo(MESSAGING_SYSTEM, AWS_SQS),
             equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-            equalTo(MESSAGING_OPERATION, "publish"),
+            equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "publish" : null),
+            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
+            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
+            equalTo(
+                MESSAGING_BATCH_MESSAGE_COUNT,
+                emitStableMessagingSemconv() ? batchMessageCount : null),
             satisfies(
                 MESSAGING_MESSAGE_ID,
                 val ->

@@ -5,13 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0;
 
-import static java.util.Collections.emptyList;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
-import java.util.List;
+import java.util.function.Predicate;
 
 public class LogbackSingletons {
 
@@ -37,13 +36,13 @@ public class LogbackSingletons {
         config.getBoolean("capture_logstash_marker_attributes/development", false);
     boolean captureLogstashStructuredArguments =
         config.getBoolean("capture_logstash_structured_arguments/development", false);
-    List<String> captureMdcAttributes =
-        config.getScalarList("capture_mdc_attributes/development", String.class, emptyList());
+    Predicate<String> mdcAttributes =
+        SelectorConfig.resolveLegacyLiteral(config, "logback-appender", "mdc-attributes");
 
     mapper =
         LoggingEventMapper.builder()
             .setCaptureExperimentalAttributes(captureExperimentalAttributes)
-            .setCaptureMdcAttributes(captureMdcAttributes)
+            .setMdcAttributes(mdcAttributes)
             .setCaptureCodeAttributes(captureCodeAttributes)
             .setCaptureMarkerAttribute(captureMarkerAttribute)
             .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)

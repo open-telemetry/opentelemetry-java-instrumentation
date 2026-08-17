@@ -113,6 +113,12 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   }
 
   @Override
+  public Iterable<String> getRequestParameterNames(HttpServletRequest httpServletRequest) {
+    Enumeration<String> names = httpServletRequest.getParameterNames();
+    return names == null ? emptyList() : Collections.list(names);
+  }
+
+  @Override
   public List<String> getRequestParameterValues(
       HttpServletRequest httpServletRequest, String name) {
     String[] values = httpServletRequest.getParameterValues(name);

@@ -10,20 +10,13 @@ import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constan
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import io.opentelemetry.sdk.metrics.data.LongPointData;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JfrThreadCountTest {
 
-  @RegisterExtension
-  JfrExtension jfrExtension =
-      new JfrExtension(
-          jfrConfig -> {
-            jfrConfig.disableAllFeatures();
-            jfrConfig.enableFeature(JfrFeature.THREAD_METRICS);
-          });
+  @RegisterExtension JfrExtension jfrExtension = new JfrExtension("jvm.thread.count");
 
   @Test
   void shouldHaveJfrThreadCountEvents() throws InterruptedException {

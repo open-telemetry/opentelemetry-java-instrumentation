@@ -6,10 +6,14 @@
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental;
+import io.opentelemetry.instrumentation.runtimetelemetry.internal.Internal;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
 import io.opentelemetry.instrumentation.testing.internal.MetaDataCollector;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -35,7 +39,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 class JfrExtension implements BeforeEachCallback, AfterEachCallback {
 
-  private final Consumer<JfrConfig> jfrConfigConsumer;
+  private final IncludeExclude jfrMetrics;
 
   private SdkMeterProvider meterProvider;
   private InMemoryMetricReader metricReader;
@@ -44,8 +48,8 @@ class JfrExtension implements BeforeEachCallback, AfterEachCallback {
       new HashMap<>();
   private final Set<InstrumentationScopeInfo> instrumentationScopes = new HashSet<>();
 
-  JfrExtension(Consumer<JfrConfig> jfrConfigConsumer) {
-    this.jfrConfigConsumer = jfrConfigConsumer;
+  JfrExtension(String... jfrMetricPatterns) {
+    this.jfrMetrics = IncludeExclude.builder().setIncluded(asList(jfrMetricPatterns)).build();
   }
 
   @Override
@@ -61,7 +65,8 @@ class JfrExtension implements BeforeEachCallback, AfterEachCallback {
     meterProvider = SdkMeterProvider.builder().registerMetricReader(metricReader).build();
     OpenTelemetrySdk sdk = OpenTelemetrySdk.builder().setMeterProvider(meterProvider).build();
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(sdk);
-    jfrConfigConsumer.accept(builder.getJfrConfig());
+    Internal.setDisableJmx(builder, true);
+    Experimental.setJfrMetrics(builder, jfrMetrics);
     runtimeMetrics = builder.build();
     JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
         (JfrConfig.JfrRuntimeMetrics) runtimeMetrics.getJfrTelemetry();

@@ -8,12 +8,14 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal.memory;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
@@ -31,6 +33,14 @@ public final class CodeCacheConfigurationHandler implements RecordedEventHandler
 
   private volatile long initialSize = 0;
 
+  @Nullable
+  public static CodeCacheConfigurationHandler create(
+      Meter meter, Predicate<String> metricNamePredicate) {
+    return metricNamePredicate.test(Constants.METRIC_NAME_MEMORY_INIT)
+        ? new CodeCacheConfigurationHandler(meter)
+        : null;
+  }
+
   public CodeCacheConfigurationHandler(Meter meter) {
     observables.add(
         meter
@@ -46,8 +56,8 @@ public final class CodeCacheConfigurationHandler implements RecordedEventHandler
   }
 
   @Override
-  public JfrFeature getFeature() {
-    return JfrFeature.MEMORY_POOL_METRICS;
+  public Set<String> getMetricNames() {
+    return Set.of(Constants.METRIC_NAME_MEMORY_INIT);
   }
 
   @Override

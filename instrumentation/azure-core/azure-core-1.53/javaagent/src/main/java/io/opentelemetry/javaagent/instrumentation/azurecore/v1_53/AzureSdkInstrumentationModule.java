@@ -44,8 +44,7 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule {
         "io.opentelemetry.javaagent.instrumentation.azurecore.v1_53.shaded.com.azure.core.tracing.opentelemetry.OpenTelemetryTracerProvider");
   }
 
-  @Override
-  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+  static ElementMatcher.Junction<ClassLoader> azureCoreClassLoaderMatcher() {
     // added in 1.53
     return hasClassesNamed("com.azure.core.util.LibraryTelemetryOptions")
         // artifact presence gate (provides native OTel support)
@@ -54,11 +53,13 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    return azureCoreClassLoaderMatcher();
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new EmptyTypeInstrumentation(),
-        new AzureContextInstrumentation(),
-        new AzureHttpClientInstrumentation());
+    return asList(new EmptyTypeInstrumentation(), new AzureHttpClientInstrumentation());
   }
 
   private static class EmptyTypeInstrumentation implements TypeInstrumentation {

@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
@@ -77,6 +78,13 @@ class RocketMqConsumerProcessAttributeGetter
     return null;
   }
 
+  @Nullable
+  @Override
+  public String getErrorType(
+      MessageView messageView, @Nullable ConsumeResult consumeResult, @Nullable Throwable error) {
+    return consumeResult == ConsumeResult.FAILURE ? ConsumeResult.FAILURE.name() : null;
+  }
+
   @Override
   public List<String> getMessageHeader(MessageView messageView, String name) {
     String value = messageView.getProperties().get(name);
@@ -84,5 +92,10 @@ class RocketMqConsumerProcessAttributeGetter
       return singletonList(value);
     }
     return emptyList();
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(MessageView messageView) {
+    return messageView.getProperties().keySet();
   }
 }

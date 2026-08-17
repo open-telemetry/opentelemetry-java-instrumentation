@@ -73,7 +73,7 @@ import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
 
 // TODO: Remove after https://github.com/open-telemetry/semantic-conventions-genai/issues/247
 // is resolved.
-@SuppressWarnings("OtelDeprecatedApiUsage")
+@SuppressWarnings("deprecation")
 class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
 
   @RegisterExtension

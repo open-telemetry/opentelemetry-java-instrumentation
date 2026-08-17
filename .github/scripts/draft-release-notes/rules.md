@@ -52,7 +52,9 @@ Emitted-attribute, attribute-value, or span-name changes are Breaking
 **only** when they ship unconditionally. If the change is gated behind
 `otel.instrumentation.common.v3-preview`,
 `otel.semconv-stability.opt-in=…`, or an `experimental` property, the
-entry belongs under Enhancements.
+entry belongs under Enhancements. Unconditional changes to a metric
+attribute value that fix unbounded cardinality belong under Bug fixes —
+see that section.
 
 Deprecate-then-remove across two PRs in one cycle produces two bullets —
 one under Deprecations, one under Breaking.
@@ -101,6 +103,22 @@ propagation, and class-loading fixes. Restoring silently broken
 behavior is a bug fix, not an enhancement — diffs that remove an
 over-restrictive condition, add a fallback branch, or invert an `&&`
 usually belong here. Describe the user-visible symptom.
+
+An unconditional change to a **metric** attribute value is a bug fix, not
+a breaking change, when the previous value caused unbounded cardinality —
+it varied per process, per instance, or per restart (a per-process
+identity hash, a VM-allocated token, a restart-varying counter), so it
+could never aggregate into a stable time series.
+
+This exception is limited to metric attribute values. Span names, span
+attributes, and log attributes are not covered: they are not aggregated
+into time series, so an unstable value there is not a cardinality defect
+and the Breaking rule applies. It also does not cover metric attribute
+values that were stable but merely inconvenient, renamed, or
+reformatted — those remain Breaking.
+
+The bullet must still state that the value changes, so readers who
+aggregated on the old series are not surprised at upgrade.
 
 ## metadata.yaml is documentation, not evidence
 

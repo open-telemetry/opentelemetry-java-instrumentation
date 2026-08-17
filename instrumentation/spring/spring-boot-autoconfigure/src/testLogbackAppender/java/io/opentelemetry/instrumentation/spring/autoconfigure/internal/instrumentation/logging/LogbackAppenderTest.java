@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -41,6 +42,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.StandardEnvironment;
 
 class LogbackAppenderTest {
 
@@ -82,8 +85,14 @@ class LogbackAppenderTest {
     if (declarativeConfig) {
       properties.put("otel.file_format", "1.1");
       properties.put(
+          "otel.instrumentation/development.java.logback_appender.mdc_attributes/development.included",
+          "key*");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.mdc_attributes/development.excluded",
+          "key2");
+      properties.put(
           "otel.instrumentation/development.java.logback_appender.capture_mdc_attributes/development",
-          "*");
+          "key2");
       properties.put(
           "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
           false);
@@ -92,7 +101,11 @@ class LogbackAppenderTest {
           true);
     } else {
       properties.put(
-          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*");
+          "otel.instrumentation.logback-appender.experimental.mdc-attributes.included", "key*");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded", "key2");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "key2");
       properties.put(
           "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
       properties.put("otel.instrumentation.logback-appender.experimental.capture-template", true);
@@ -129,12 +142,11 @@ class LogbackAppenderTest {
               assertThat(logRecord.getBodyValue().asString()).contains("test log message: arg");
 
               Attributes attributes = logRecord.getAttributes();
-              // key1 and key2, the code attributes should not be present because they are enabled
+              // key1, the code attributes should not be present because they are enabled
               // in the logback.xml file but are disabled with a property
               assertThat(attributes.asMap())
-                  .hasSize(3)
+                  .hasSize(2)
                   .containsEntry(stringKey("key1"), "val1")
-                  .containsEntry(stringKey("key2"), "val2")
                   .containsEntry(stringKey("log.body.template"), "test log message: {}");
             });
 
@@ -145,6 +157,253 @@ class LogbackAppenderTest {
                     .satisfies(
                         e -> assertThat(e.getMessage()).isEqualTo("test log message: {}"),
                         e -> assertThat(e.getMDCPropertyMap()).containsOnlyKeys("key1", "key2")));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void deprecatedMdcPropertySelectsKeysLiterally(boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:logback-test-no-mdc.xml");
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_mdc_attributes/development",
+          "*,key1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
+          false);
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*,key1");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
+    }
+
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+    testing.clearData();
+
+    MDC.put("key1", "val1");
+    MDC.put("key2", "val2");
+    try {
+      LoggerFactory.getLogger("test").info("legacy MDC property");
+    } finally {
+      MDC.clear();
+    }
+
+    assertThat(testing.logRecords())
+        .satisfiesOnlyOnce(
+            logRecord ->
+                assertThat(logRecord.getAttributes().asMap())
+                    .containsExactly(entry(stringKey("key1"), "val1")));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void deprecatedMdcPropertyWithSoleWildcardSelectsEveryKey(boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:logback-test-no-mdc.xml");
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_mdc_attributes/development",
+          "*");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
+          false);
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "*");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
+    }
+
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+    testing.clearData();
+
+    MDC.put("key1", "val1");
+    MDC.put("key2", "val2");
+    try {
+      LoggerFactory.getLogger("test").info("legacy MDC property");
+    } finally {
+      MDC.clear();
+    }
+
+    assertThat(testing.logRecords())
+        .satisfiesOnlyOnce(
+            logRecord ->
+                assertThat(logRecord.getAttributes().asMap())
+                    .containsOnly(
+                        entry(stringKey("key1"), "val1"), entry(stringKey("key2"), "val2")));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void excludedOnlyMdcPropertySelectsEveryOtherKey(boolean declarativeConfig) {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:logback-test-no-mdc.xml");
+    if (declarativeConfig) {
+      properties.put("otel.file_format", "1.1");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.mdc_attributes/development.excluded",
+          "key2");
+      properties.put(
+          "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
+          false);
+    } else {
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded", "key2");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
+    }
+
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+    testing.clearData();
+
+    MDC.put("key1", "val1");
+    MDC.put("key2", "val2");
+    try {
+      LoggerFactory.getLogger("test").info("excluded MDC property");
+    } finally {
+      MDC.clear();
+    }
+
+    assertThat(testing.logRecords())
+        .satisfiesOnlyOnce(
+            logRecord ->
+                assertThat(logRecord.getAttributes().asMap())
+                    .containsExactly(entry(stringKey("key1"), "val1")));
+  }
+
+  @Test
+  void declarativeYamlSequenceMdcSelector() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:logback-test-no-mdc.xml");
+    properties.put("otel.file_format", "1.1");
+    // a YAML sequence is flattened by the Spring environment into indexed properties
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.mdc_attributes/development.included[0]",
+        "request-*");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.mdc_attributes/development.included[1]",
+        "user-?");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.mdc_attributes/development.excluded[0]",
+        "*-secret");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
+        false);
+
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+    testing.clearData();
+
+    MDC.put("request-id", "123");
+    MDC.put("user-1", "alice");
+    MDC.put("user-name", "ignored");
+    MDC.put("request-secret", "shh");
+    try {
+      LoggerFactory.getLogger("test").info("declarative MDC selector");
+    } finally {
+      MDC.clear();
+    }
+
+    assertThat(testing.logRecords())
+        .satisfiesOnlyOnce(
+            logRecord ->
+                assertThat(logRecord.getAttributes().asMap())
+                    .containsOnly(
+                        entry(stringKey("request-id"), "123"),
+                        entry(stringKey("user-1"), "alice")));
+  }
+
+  @Test
+  void declarativeYamlSequenceDeprecatedMdcProperty() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:logback-test-no-mdc.xml");
+    properties.put("otel.file_format", "1.1");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.capture_mdc_attributes/development[0]",
+        "*");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.capture_mdc_attributes/development[1]",
+        "key1");
+    properties.put(
+        "otel.instrumentation/development.java.logback_appender.capture_code_attributes/development",
+        false);
+
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+    testing.clearData();
+
+    MDC.put("key1", "val1");
+    MDC.put("key2", "val2");
+    try {
+      LoggerFactory.getLogger("test").info("declarative deprecated MDC property");
+    } finally {
+      MDC.clear();
+    }
+
+    assertThat(testing.logRecords())
+        .satisfiesOnlyOnce(
+            logRecord ->
+                assertThat(logRecord.getAttributes().asMap())
+                    .containsExactly(entry(stringKey("key1"), "val1")));
+  }
+
+  @Test
+  void deprecatedMdcPropertyDoesNotWarnWhenReplacementConfigured() {
+    ch.qos.logback.classic.Logger installerLogger =
+        (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(LogbackAppenderInstaller.class);
+    ListAppender<ILoggingEvent> warningAppender = new ListAppender<>();
+    warningAppender.start();
+    installerLogger.addAppender(warningAppender);
+    try {
+      Map<String, Object> properties = new HashMap<>();
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes", "key1");
+      properties.put(
+          "otel.instrumentation.logback-appender.experimental.mdc-attributes.included", "key2");
+      StandardEnvironment environment = new StandardEnvironment();
+      environment.getPropertySources().addFirst(new MapPropertySource("test", properties));
+
+      LogbackAppenderInstaller.initializeMdcAttributesFromProperties(
+          environment, new OpenTelemetryAppender());
+
+      assertThat(warningAppender.list)
+          .filteredOn(
+              event ->
+                  event
+                      .getFormattedMessage()
+                      .contains(
+                          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes"))
+          .isEmpty();
+    } finally {
+      installerLogger.detachAppender(warningAppender);
+      warningAppender.stop();
+    }
   }
 
   @Test

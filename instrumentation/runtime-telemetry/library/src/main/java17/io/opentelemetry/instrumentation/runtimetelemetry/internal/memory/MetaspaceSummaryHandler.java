@@ -8,13 +8,15 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal.memory;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import jdk.jfr.consumer.RecordedEvent;
 import jdk.jfr.consumer.RecordedObject;
 
@@ -38,6 +40,10 @@ public final class MetaspaceSummaryHandler implements RecordedEventHandler {
           "Compressed Class Space");
 
   private final List<AutoCloseable> observables = new ArrayList<>();
+  private final Set<String> metricNames;
+  private final boolean usageSelected;
+  private final boolean committedSelected;
+  private final boolean limitSelected;
 
   private volatile long classUsage = 0;
   private volatile long classCommitted = 0;
@@ -46,37 +52,58 @@ public final class MetaspaceSummaryHandler implements RecordedEventHandler {
   private volatile long classLimit = 0;
   private volatile long totalLimit = 0;
 
-  public MetaspaceSummaryHandler(Meter meter) {
-    observables.add(
-        meter
-            .upDownCounterBuilder(Constants.METRIC_NAME_MEMORY)
-            .setDescription(Constants.METRIC_DESCRIPTION_MEMORY)
-            .setUnit(Constants.BYTES)
-            .buildWithCallback(
-                measurement -> {
-                  measurement.record(classUsage, ATTR_MEMORY_COMPRESSED_CLASS_SPACE);
-                  measurement.record(totalUsage, ATTR_MEMORY_METASPACE);
-                }));
-    observables.add(
-        meter
-            .upDownCounterBuilder(Constants.METRIC_NAME_COMMITTED)
-            .setDescription(Constants.METRIC_DESCRIPTION_COMMITTED)
-            .setUnit(Constants.BYTES)
-            .buildWithCallback(
-                measurement -> {
-                  measurement.record(classCommitted, ATTR_MEMORY_COMPRESSED_CLASS_SPACE);
-                  measurement.record(totalCommitted, ATTR_MEMORY_METASPACE);
-                }));
-    observables.add(
-        meter
-            .upDownCounterBuilder(Constants.METRIC_NAME_MEMORY_LIMIT)
-            .setDescription(Constants.METRIC_DESCRIPTION_MEMORY_LIMIT)
-            .setUnit(Constants.BYTES)
-            .buildWithCallback(
-                measurement -> {
-                  measurement.record(classLimit, ATTR_MEMORY_COMPRESSED_CLASS_SPACE);
-                  measurement.record(totalLimit, ATTR_MEMORY_METASPACE);
-                }));
+  @Nullable
+  public static MetaspaceSummaryHandler create(Meter meter, Predicate<String> metricNamePredicate) {
+    Set<String> metricNames =
+        RecordedEventHandler.selectMetricNames(
+            metricNamePredicate,
+            Constants.METRIC_NAME_MEMORY,
+            Constants.METRIC_NAME_COMMITTED,
+            Constants.METRIC_NAME_MEMORY_LIMIT);
+    return metricNames.isEmpty() ? null : new MetaspaceSummaryHandler(meter, metricNames);
+  }
+
+  private MetaspaceSummaryHandler(Meter meter, Set<String> metricNames) {
+    this.metricNames = metricNames;
+    usageSelected = metricNames.contains(Constants.METRIC_NAME_MEMORY);
+    committedSelected = metricNames.contains(Constants.METRIC_NAME_COMMITTED);
+    limitSelected = metricNames.contains(Constants.METRIC_NAME_MEMORY_LIMIT);
+    if (usageSelected) {
+      observables.add(
+          meter
+              .upDownCounterBuilder(Constants.METRIC_NAME_MEMORY)
+              .setDescription(Constants.METRIC_DESCRIPTION_MEMORY)
+              .setUnit(Constants.BYTES)
+              .buildWithCallback(
+                  measurement -> {
+                    measurement.record(classUsage, ATTR_MEMORY_COMPRESSED_CLASS_SPACE);
+                    measurement.record(totalUsage, ATTR_MEMORY_METASPACE);
+                  }));
+    }
+    if (committedSelected) {
+      observables.add(
+          meter
+              .upDownCounterBuilder(Constants.METRIC_NAME_COMMITTED)
+              .setDescription(Constants.METRIC_DESCRIPTION_COMMITTED)
+              .setUnit(Constants.BYTES)
+              .buildWithCallback(
+                  measurement -> {
+                    measurement.record(classCommitted, ATTR_MEMORY_COMPRESSED_CLASS_SPACE);
+                    measurement.record(totalCommitted, ATTR_MEMORY_METASPACE);
+                  }));
+    }
+    if (limitSelected) {
+      observables.add(
+          meter
+              .upDownCounterBuilder(Constants.METRIC_NAME_MEMORY_LIMIT)
+              .setDescription(Constants.METRIC_DESCRIPTION_MEMORY_LIMIT)
+              .setUnit(Constants.BYTES)
+              .buildWithCallback(
+                  measurement -> {
+                    measurement.record(classLimit, ATTR_MEMORY_COMPRESSED_CLASS_SPACE);
+                    measurement.record(totalLimit, ATTR_MEMORY_METASPACE);
+                  }));
+    }
   }
 
   @Override
@@ -85,8 +112,8 @@ public final class MetaspaceSummaryHandler implements RecordedEventHandler {
   }
 
   @Override
-  public JfrFeature getFeature() {
-    return JfrFeature.MEMORY_POOL_METRICS;
+  public Set<String> getMetricNames() {
+    return metricNames;
   }
 
   @Override
@@ -95,13 +122,13 @@ public final class MetaspaceSummaryHandler implements RecordedEventHandler {
         event,
         "classSpace",
         classSpace -> {
-          if (classSpace.hasField(Constants.COMMITTED)) {
+          if (committedSelected && classSpace.hasField(Constants.COMMITTED)) {
             classCommitted = classSpace.getLong(Constants.COMMITTED);
           }
-          if (classSpace.hasField(Constants.USED)) {
+          if (usageSelected && classSpace.hasField(Constants.USED)) {
             classUsage = classSpace.getLong(Constants.USED);
           }
-          if (classSpace.hasField(Constants.RESERVED)) {
+          if (limitSelected && classSpace.hasField(Constants.RESERVED)) {
             classLimit = classSpace.getLong(Constants.RESERVED);
           }
         });
@@ -110,13 +137,13 @@ public final class MetaspaceSummaryHandler implements RecordedEventHandler {
         event,
         "metaspace",
         metaspace -> {
-          if (metaspace.hasField(Constants.COMMITTED)) {
+          if (committedSelected && metaspace.hasField(Constants.COMMITTED)) {
             totalCommitted = metaspace.getLong(Constants.COMMITTED);
           }
-          if (metaspace.hasField(Constants.USED)) {
+          if (usageSelected && metaspace.hasField(Constants.USED)) {
             totalUsage = metaspace.getLong(Constants.USED);
           }
-          if (metaspace.hasField(Constants.RESERVED)) {
+          if (limitSelected && metaspace.hasField(Constants.RESERVED)) {
             totalLimit = metaspace.getLong(Constants.RESERVED);
           }
         });

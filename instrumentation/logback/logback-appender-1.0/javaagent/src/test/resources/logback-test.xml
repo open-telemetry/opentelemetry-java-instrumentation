@@ -11,6 +11,9 @@
 
   <logger name="abc" level="INFO"/>
   <logger name="def" level="WARN"/>
+  <!-- the agent test runner sets the root logger to WARN, so the MDC selector test logger needs an
+       explicit level -->
+  <logger name="selector" level="INFO"/>
 
   <root level="INFO">
     <appender-ref ref="console"/>

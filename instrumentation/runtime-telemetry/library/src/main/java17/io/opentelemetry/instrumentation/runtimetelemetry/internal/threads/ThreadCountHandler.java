@@ -8,12 +8,14 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal.threads;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
@@ -31,6 +33,11 @@ public final class ThreadCountHandler implements RecordedEventHandler {
 
   private volatile long activeCount = 0;
   private volatile long daemonCount = 0;
+
+  @Nullable
+  public static ThreadCountHandler create(Meter meter, Predicate<String> metricNamePredicate) {
+    return metricNamePredicate.test(METRIC_NAME) ? new ThreadCountHandler(meter) : null;
+  }
 
   public ThreadCountHandler(Meter meter) {
     observables.add(
@@ -58,8 +65,8 @@ public final class ThreadCountHandler implements RecordedEventHandler {
   }
 
   @Override
-  public JfrFeature getFeature() {
-    return JfrFeature.THREAD_METRICS;
+  public Set<String> getMetricNames() {
+    return Set.of(METRIC_NAME);
   }
 
   @Override

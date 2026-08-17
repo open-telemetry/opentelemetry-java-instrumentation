@@ -258,8 +258,6 @@ class VertxRedisClientTest {
   @ParameterizedTest
   @MethodSource("batchScenarios")
   void batchCommand(BatchScenario scenario) throws Exception {
-    testing.clearData();
-
     connection.batch(scenario.requests).toCompletionStage().toCompletableFuture().get(30, SECONDS);
 
     testing.waitAndAssertTraces(

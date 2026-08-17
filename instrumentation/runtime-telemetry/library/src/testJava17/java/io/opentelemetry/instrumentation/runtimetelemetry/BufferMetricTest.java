@@ -11,20 +11,13 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import java.nio.ByteBuffer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class BufferMetricTest {
 
-  @RegisterExtension
-  JfrExtension jfrExtension =
-      new JfrExtension(
-          jfrConfig -> {
-            jfrConfig.disableAllFeatures();
-            jfrConfig.enableFeature(JfrFeature.BUFFER_METRICS);
-          });
+  @RegisterExtension JfrExtension jfrExtension = new JfrExtension("jvm.buffer.*");
 
   /**
    * This is a basic test that allocates some buffers and tests to make sure the resulting JFR event

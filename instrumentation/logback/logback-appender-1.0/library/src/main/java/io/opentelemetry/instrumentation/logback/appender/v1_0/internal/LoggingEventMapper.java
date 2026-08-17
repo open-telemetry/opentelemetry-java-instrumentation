@@ -11,7 +11,6 @@ import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static io.opentelemetry.semconv.OtelAttributes.OTEL_EVENT_NAME;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
@@ -37,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import net.logstash.logback.marker.LogstashMarker;
 import net.logstash.logback.marker.MapEntriesAppendingMarker;
@@ -75,8 +75,7 @@ public final class LoggingEventMapper {
       AttributeKey.stringArrayKey("log.body.parameters");
 
   private final boolean captureExperimentalAttributes;
-  private final List<AttributeKey<String>> captureMdcAttributeKeys;
-  private final boolean captureAllMdcAttributes;
+  @Nullable private final Predicate<String> mdcAttributes;
   private final boolean captureCodeAttributes;
   private final boolean captureMarkerAttribute;
   private final boolean captureKeyValuePairAttributes;
@@ -96,19 +95,7 @@ public final class LoggingEventMapper {
     this.captureArguments = builder.captureArguments;
     this.captureLogstashMarkerAttributes = builder.captureLogstashMarkerAttributes;
     this.captureLogstashStructuredArguments = builder.captureLogstashStructuredArguments;
-    this.captureAllMdcAttributes =
-        builder.captureMdcAttributes.size() == 1 && builder.captureMdcAttributes.get(0).equals("*");
-    if (captureAllMdcAttributes) {
-      this.captureMdcAttributeKeys = emptyList();
-    } else {
-      List<AttributeKey<String>> keys = new ArrayList<>(builder.captureMdcAttributes.size());
-      for (String key : builder.captureMdcAttributes) {
-        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
-          keys.add(getAttributeKey(key));
-        }
-      }
-      this.captureMdcAttributeKeys = keys;
-    }
+    this.mdcAttributes = builder.mdcAttributes;
   }
 
   public static Builder builder() {
@@ -271,19 +258,14 @@ public final class LoggingEventMapper {
       builder.setEventName(otelEventName);
     }
 
-    if (captureAllMdcAttributes) {
-      for (Map.Entry<String, String> entry : mdcProperties.entrySet()) {
-        String key = entry.getKey();
-        if (!OTEL_EVENT_NAME.getKey().equals(key)) {
-          builder.setAttribute(getAttributeKey(key), entry.getValue());
-        }
-      }
+    if (mdcAttributes == null) {
       return;
     }
-
-    for (AttributeKey<String> attributeKey : captureMdcAttributeKeys) {
-      String value = mdcProperties.get(attributeKey.getKey());
-      builder.setAttribute(attributeKey, value);
+    for (Map.Entry<String, String> entry : mdcProperties.entrySet()) {
+      String key = entry.getKey();
+      if (!OTEL_EVENT_NAME.getKey().equals(key) && mdcAttributes.test(key)) {
+        builder.setAttribute(getAttributeKey(key), entry.getValue());
+      }
     }
   }
 
@@ -697,7 +679,7 @@ public final class LoggingEventMapper {
    */
   public static final class Builder {
     private boolean captureExperimentalAttributes;
-    private List<String> captureMdcAttributes = emptyList();
+    @Nullable private Predicate<String> mdcAttributes;
     private boolean captureCodeAttributes;
     private boolean captureMarkerAttribute;
     private boolean captureKeyValuePairAttributes;
@@ -715,9 +697,13 @@ public final class LoggingEventMapper {
       return this;
     }
 
+    /**
+     * Sets the selector that decides which MDC keys are captured as log attributes. A {@code null}
+     * selector captures no MDC attributes.
+     */
     @CanIgnoreReturnValue
-    public Builder setCaptureMdcAttributes(List<String> captureMdcAttributes) {
-      this.captureMdcAttributes = captureMdcAttributes;
+    public Builder setMdcAttributes(@Nullable Predicate<String> mdcAttributes) {
+      this.mdcAttributes = mdcAttributes;
       return this;
     }
 

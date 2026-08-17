@@ -6,8 +6,10 @@
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import jdk.jfr.consumer.RecordedEvent;
@@ -28,8 +30,19 @@ public interface RecordedEventHandler
    */
   String getEventName();
 
-  /** Return the {@link JfrFeature} this handler is associated with. */
-  JfrFeature getFeature();
+  /** Return the metric names this handler registers. */
+  Set<String> getMetricNames();
+
+  static Set<String> selectMetricNames(
+      Predicate<String> metricNamePredicate, String... metricNames) {
+    Set<String> selectedMetricNames = new HashSet<>();
+    for (String metricName : metricNames) {
+      if (metricNamePredicate.test(metricName)) {
+        selectedMetricNames.add(metricName);
+      }
+    }
+    return Set.copyOf(selectedMetricNames);
+  }
 
   /**
    * Test to see if this event is interesting to this mapper

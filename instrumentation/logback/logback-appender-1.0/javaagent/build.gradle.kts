@@ -44,9 +44,64 @@ dependencies {
   testImplementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
 }
 
-tasks.test {
+tasks {
+  test {
+    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=key?")
+  }
+
+  val testMdcAttributeExclusionsOnly = register<Test>("testMdcAttributeExclusionsOnly") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*LogbackMdcSelectorTest")
+
+    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.excluded=request-secret")
+    systemProperty("testMdcConfiguration", "exclude-only")
+  }
+
+  val testLegacyMdcAttributes = register<Test>("testLegacyMdcAttributes") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*LogbackMdcSelectorTest")
+
+    // the deprecated setting matches keys literally, so "*" alongside another entry does not
+    // capture every key
+    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-mdc-attributes=*,legacy")
+    systemProperty("testMdcConfiguration", "legacy")
+  }
+
+  val testLegacyMdcAttributesCaptureAll = register<Test>("testLegacyMdcAttributesCaptureAll") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*LogbackMdcSelectorTest")
+
+    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-mdc-attributes=*")
+    systemProperty("testMdcConfiguration", "legacy-all")
+  }
+
+  val testMdcAttributePrecedence = register<Test>("testMdcAttributePrecedence") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*LogbackMdcSelectorTest")
+
+    jvmArgs(
+      "-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=new",
+      "-Dotel.instrumentation.logback-appender.experimental.capture-mdc-attributes=legacy",
+    )
+    systemProperty("testMdcConfiguration", "precedence")
+  }
+
+  check {
+    dependsOn(
+      testMdcAttributeExclusionsOnly,
+      testLegacyMdcAttributes,
+      testLegacyMdcAttributesCaptureAll,
+      testMdcAttributePrecedence,
+    )
+  }
+}
+
+tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental log attributes
-  jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-mdc-attributes=*")
   jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
   jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
   jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-marker-attribute=true")

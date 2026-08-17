@@ -49,7 +49,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 // TODO: Remove after https://github.com/open-telemetry/semantic-conventions-genai/issues/247
 // is resolved.
-@SuppressWarnings("OtelDeprecatedApiUsage")
+@SuppressWarnings("deprecation")
 class ChatTest extends AbstractChatTest {
 
   @RegisterExtension

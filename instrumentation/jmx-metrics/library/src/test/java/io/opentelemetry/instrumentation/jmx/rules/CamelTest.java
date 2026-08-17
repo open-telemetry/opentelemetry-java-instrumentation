@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.jmx.rules;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
@@ -38,6 +40,74 @@ class CamelTest extends TargetSystemTest {
 
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
+
+    startWeaverValidation(
+        "camel.yaml",
+        result ->
+            result
+                .checkNothingUnregisteredWithPrefix("camel.")
+                .checkRegisteredMetrics(
+                    "camel.",
+                    asList(
+                        "camel.context.exchange.completed",
+                        "camel.context.exchange.count",
+                        "camel.context.exchange.failed.count",
+                        "camel.context.exchange.failed.handled",
+                        "camel.context.exchange.inflight",
+                        "camel.context.exchange.processing.duration.last",
+                        "camel.context.exchange.processing.duration.last_delta",
+                        "camel.context.exchange.processing.duration.max",
+                        "camel.context.exchange.processing.duration.mean",
+                        "camel.context.exchange.processing.duration.min",
+                        "camel.context.exchange.processing.duration.sum",
+                        "camel.context.exchange.redelivered.count",
+                        "camel.context.exchange.redelivered.external",
+                        "camel.context.route.added",
+                        "camel.context.route.started",
+                        "camel.processor.exchange.completed",
+                        "camel.processor.exchange.count",
+                        "camel.processor.exchange.failed.count",
+                        "camel.processor.exchange.failed.handled",
+                        "camel.processor.exchange.inflight",
+                        "camel.processor.exchange.processing.duration.last",
+                        "camel.processor.exchange.processing.duration.last_delta",
+                        "camel.processor.exchange.processing.duration.max",
+                        "camel.processor.exchange.processing.duration.mean",
+                        "camel.processor.exchange.processing.duration.min",
+                        "camel.processor.exchange.processing.duration.sum",
+                        "camel.processor.exchange.redelivered.count",
+                        "camel.processor.exchange.redelivered.external",
+                        "camel.route.exchange.completed",
+                        "camel.route.exchange.count",
+                        "camel.route.exchange.failed.count",
+                        "camel.route.exchange.failed.handled",
+                        "camel.route.exchange.inflight",
+                        "camel.route.exchange.processing.duration.last",
+                        "camel.route.exchange.processing.duration.last_delta",
+                        "camel.route.exchange.processing.duration.max",
+                        "camel.route.exchange.processing.duration.mean",
+                        "camel.route.exchange.processing.duration.min",
+                        "camel.route.exchange.processing.duration.sum",
+                        "camel.route.exchange.redelivered.count",
+                        "camel.route.exchange.redelivered.external",
+                        "camel.threadpool.task.active",
+                        "camel.threadpool.task.completed",
+                        "camel.threadpool.task.count",
+                        "camel.threadpool.task.queue.size",
+                        "camel.threadpool.thread.count",
+                        "camel.threadpool.thread.limit.lower",
+                        "camel.threadpool.thread.limit.upper",
+                        "camel.threadpool.thread.max"),
+                    emptyList())
+                .checkRegisteredAttributes(
+                    "camel.",
+                    asList(
+                        "camel.route",
+                        "camel.processor",
+                        "camel.destination",
+                        "camel.context",
+                        "camel.threadpool.name"),
+                    emptyList()));
 
     copyTestAppToTarget(
         getArtifactPath("io.opentelemetry.cameltestapp.path"), target, "/camel_test.jar");

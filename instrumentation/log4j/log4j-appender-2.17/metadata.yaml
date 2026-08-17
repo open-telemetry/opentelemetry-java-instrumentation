@@ -42,13 +42,47 @@ configurations:
       Enables the capture of the log message arguments.
     type: boolean
     default: false
+  - name: otel.instrumentation.log4j-appender.experimental.mdc-attributes.included
+    declarative_name: java.log4j_appender.mdc_attributes/development.included
+    description: >
+      Comma-separated list of case-sensitive glob patterns for context data keys to capture as log
+      attributes. "*" matches any number of characters and "?" matches one character. Excluded
+      patterns take precedence over included patterns. No context data attributes are captured
+      unless an included pattern, an excluded pattern, or the deprecated
+      otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting is configured;
+      configuring only excluded patterns captures all context data attributes that do not match
+      them. Captured context data attributes may contain sensitive information.
+    type: list
+    default: ''
+    examples:
+      - "custom-context-key"
+      - "request-*,user-?"
+  - name: otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded
+    declarative_name: java.log4j_appender.mdc_attributes/development.excluded
+    description: >
+      Comma-separated list of case-sensitive glob patterns for context data keys not to capture as
+      log attributes. "*" matches any number of characters and "?" matches one character. Excluded
+      patterns take precedence over included patterns. No context data attributes are captured
+      unless an included pattern, an excluded pattern, or the deprecated
+      otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting is configured;
+      configuring only excluded patterns captures all context data attributes that do not match
+      them. Captured context data attributes may contain sensitive information.
+    type: list
+    default: ''
+    examples:
+      - "*-secret"
+      - "password,token"
   - name: otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes
     declarative_name: java.log4j_appender.capture_mdc_attributes/development
     description: >
-      Controls which MDC attributes to capture. Use "*" to capture all MDC attributes or provide a
-      comma-separated list of specific keys.
+      Deprecated include-only alias for
+      otel.instrumentation.log4j-appender.experimental.mdc-attributes.included. It does not support
+      glob patterns: a list containing only "*" captures all context data attributes, and otherwise
+      every entry, including one containing "*" or "?", is matched as a literal context data key. It
+      is ignored when an included or excluded pattern is configured, and it may be removed in the
+      next minor release.
     type: list
+    default: ''
     examples:
       - "*"
       - "key1,key2"
-    default: ''

@@ -10,10 +10,12 @@ import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.DurationUtil;
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
@@ -25,6 +27,14 @@ public final class OldGarbageCollectionHandler implements RecordedEventHandler {
 
   private final DoubleHistogram histogram;
   private final Attributes attributes;
+
+  @Nullable
+  public static OldGarbageCollectionHandler create(
+      Meter meter, Predicate<String> metricNamePredicate, String gc) {
+    return metricNamePredicate.test(Constants.METRIC_NAME_GC_DURATION)
+        ? new OldGarbageCollectionHandler(meter, gc)
+        : null;
+  }
 
   public OldGarbageCollectionHandler(Meter meter, String gc) {
     histogram =
@@ -50,8 +60,8 @@ public final class OldGarbageCollectionHandler implements RecordedEventHandler {
   }
 
   @Override
-  public JfrFeature getFeature() {
-    return JfrFeature.GC_DURATION_METRICS;
+  public Set<String> getMetricNames() {
+    return Set.of(Constants.METRIC_NAME_GC_DURATION);
   }
 
   @Override

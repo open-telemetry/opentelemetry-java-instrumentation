@@ -15,19 +15,12 @@ import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constan
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class SerialGcMemoryMetricTest {
 
-  @RegisterExtension
-  JfrExtension jfrExtension =
-      new JfrExtension(
-          jfrConfig -> {
-            jfrConfig.disableAllFeatures();
-            jfrConfig.enableFeature(JfrFeature.GC_DURATION_METRICS);
-          });
+  @RegisterExtension JfrExtension jfrExtension = new JfrExtension("jvm.gc.duration");
 
   @Test
   void shouldHaveMemoryMetrics() {

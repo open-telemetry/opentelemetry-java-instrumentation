@@ -5,7 +5,12 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
+
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetryBuilder;
+import java.util.List;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 
@@ -16,12 +21,40 @@ import javax.annotation.Nullable;
  */
 public final class Experimental {
 
+  /**
+   * The metrics that JFR and JMX both implement. These are exactly the metrics selected by the
+   * deprecated prefer-jfr option. Incomplete JFR implementations may remain sourced from JMX.
+   */
+  public static final List<String> JMX_OVERLAPPING_JFR_METRICS =
+      unmodifiableList(
+          asList(
+              "jvm.buffer.count",
+              "jvm.buffer.memory.limit",
+              "jvm.buffer.memory.used",
+              "jvm.class.count",
+              "jvm.class.loaded",
+              "jvm.class.unloaded",
+              "jvm.cpu.count",
+              "jvm.cpu.limit",
+              "jvm.cpu.recent_utilization",
+              "jvm.gc.duration",
+              "jvm.memory.committed",
+              "jvm.memory.init",
+              "jvm.memory.limit",
+              "jvm.memory.used",
+              "jvm.memory.used_after_last_gc",
+              "jvm.system.cpu.utilization",
+              "jvm.thread.count"));
+
   @Nullable
   private static volatile BiConsumer<RuntimeTelemetryBuilder, Boolean> setEmitExperimentalMetrics;
 
   @Nullable
   private static volatile BiConsumer<RuntimeTelemetryBuilder, Boolean>
       setEmitExperimentalJfrMetrics;
+
+  @Nullable
+  private static volatile BiConsumer<RuntimeTelemetryBuilder, IncludeExclude> setJfrMetrics;
 
   @Nullable
   private static volatile BiConsumer<RuntimeTelemetryBuilder, Boolean> setPreferJfrMetrics;
@@ -69,24 +102,50 @@ public final class Experimental {
   }
 
   /**
-   * Sets whether to prefer JFR over JMX for metrics where both collection methods are available.
-   * When set to {@code true}, metrics available from both sources will be collected using JFR. When
-   * set to {@code false} (default), metrics available from both sources will be collected using
-   * JMX. Metrics available from only one source are unaffected by this setting.
+   * Selects the metrics to source from JFR on Java 17+.
+   *
+   * <p>Metric names and selector patterns are matched case-sensitively. {@code ?} matches any
+   * single character and {@code *} matches any number of characters, including none. Excluded
+   * patterns take precedence over included patterns. JFR is inactive unless a selector is
+   * configured; a selector with only excluded patterns sources every metric that JFR implements and
+   * that it does not exclude.
+   *
+   * <p>Metrics that JFR actually registers are suppressed from JMX to avoid duplicates. This method
+   * is a no-op on Java versions prior to 17.
    *
    * @param builder the runtime telemetry builder
-   * @param preferJfrMetrics {@code true} to prefer JFR over JMX where both are available
+   * @param selector metric names to source from JFR
    */
-  public static void setPreferJfrMetrics(
-      RuntimeTelemetryBuilder builder, boolean preferJfrMetrics) {
-    if (setPreferJfrMetrics != null) {
-      setPreferJfrMetrics.accept(builder, preferJfrMetrics);
+  public static void setJfrMetrics(RuntimeTelemetryBuilder builder, IncludeExclude selector) {
+    if (setJfrMetrics != null) {
+      setJfrMetrics.accept(builder, selector);
     }
+  }
+
+  public static void internalSetJfrMetrics(
+      BiConsumer<RuntimeTelemetryBuilder, IncludeExclude> setJfrMetrics) {
+    Experimental.setJfrMetrics = setJfrMetrics;
   }
 
   public static void internalSetPreferJfrMetrics(
       BiConsumer<RuntimeTelemetryBuilder, Boolean> setPreferJfrMetrics) {
     Experimental.setPreferJfrMetrics = setPreferJfrMetrics;
+  }
+
+  /**
+   * Sets whether to prefer JFR over JMX for metrics where both collection methods are available.
+   *
+   * @param builder the runtime telemetry builder
+   * @param preferJfrMetrics {@code true} to prefer JFR over JMX where both are available
+   * @deprecated Use {@link #setJfrMetrics(RuntimeTelemetryBuilder, IncludeExclude)} instead,
+   *     passing the metric names to source from JFR. May be removed in the next minor release.
+   */
+  @Deprecated // may be removed in the next minor release
+  public static void setPreferJfrMetrics(
+      RuntimeTelemetryBuilder builder, boolean preferJfrMetrics) {
+    if (setPreferJfrMetrics != null) {
+      setPreferJfrMetrics.accept(builder, preferJfrMetrics);
+    }
   }
 
   private Experimental() {}
