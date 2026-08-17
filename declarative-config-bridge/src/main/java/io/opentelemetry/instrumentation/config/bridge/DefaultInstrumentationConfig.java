@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.config.bridge;
 
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.joining;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
@@ -112,6 +113,15 @@ public final class DefaultInstrumentationConfig {
   }
 
   /**
+   * Sets a list-valued default. The list is preserved when applying defaults to the declarative
+   * model and serialized as a comma-separated value for traditional configuration properties.
+   */
+  @CanIgnoreReturnValue
+  public DefaultInstrumentationConfig setDefault(String key, List<?> value) {
+    return setDefaultValue(key, value);
+  }
+
+  /**
    * Translates defaults to config properties for auto-configuration.
    *
    * <p>Defaults use {@code otel.instrumentation.*} keys unless a custom mapping overrides the
@@ -121,7 +131,11 @@ public final class DefaultInstrumentationConfig {
     HashMap<String, String> map = new HashMap<>();
     defaults.forEach(
         (declarativePath, value) ->
-            map.put(toConfigProperty(declarativePath), String.valueOf(value)));
+            map.put(
+                toConfigProperty(declarativePath),
+                value instanceof List
+                    ? ((List<?>) value).stream().map(String::valueOf).collect(joining(","))
+                    : String.valueOf(value)));
     return map;
   }
 

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -51,6 +52,16 @@ class DefaultInstrumentationConfigTest {
                 defaults ->
                     defaults.get("common").get("http").setDefault("known_methods", "GET,POST"),
             "otel.instrumentation.http.known-methods",
+            "GET,POST"),
+        Arguments.of(
+            "list default",
+            (Consumer<DefaultInstrumentationConfig>)
+                defaults ->
+                    defaults
+                        .get("common")
+                        .get("http")
+                        .setDefault("known_methods", asList("GET", "POST")),
+            "otel.instrumentation.http.known-methods",
             "GET,POST"));
   }
 
@@ -85,6 +96,24 @@ class DefaultInstrumentationConfigTest {
                 .getStructured("http")
                 .getString("known_methods"))
         .isEqualTo("GET,POST");
+  }
+
+  @Test
+  void toConfigPropertiesRoundTripsListThroughBridge() {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults.get("common").get("http").setDefault("known_methods", asList("GET", "POST"));
+
+    DeclarativeConfigProperties config =
+        ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
+            DefaultConfigProperties.createFromMap(defaults.toConfigProperties()));
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("http")
+                .getScalarList("known_methods", String.class))
+        .containsExactly("GET", "POST");
   }
 
   @Test

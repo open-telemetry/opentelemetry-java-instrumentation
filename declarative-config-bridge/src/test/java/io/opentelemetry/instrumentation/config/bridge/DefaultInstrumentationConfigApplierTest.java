@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.config.bridge;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -69,6 +70,26 @@ class DefaultInstrumentationConfigApplierTest {
     assertThat(instrumentation.getBoolean("bool_key")).isTrue();
     assertThat(instrumentation.getLong("int_key")).isEqualTo(42L);
     assertThat(instrumentation.getDouble("double_key")).isEqualTo(3.14);
+  }
+
+  @Test
+  void applyToModelPreservesTypedListDefaults() {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults.get("common").get("http").setDefault("known_methods", asList("GET", "POST"));
+
+    OpenTelemetryConfigurationModel model = newModel();
+    defaults.applyToModel(model);
+
+    DeclarativeConfigProperties config =
+        SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model))
+            .getInstrumentationConfig();
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("common")
+                .getStructured("http")
+                .getScalarList("known_methods", String.class))
+        .containsExactly("GET", "POST");
   }
 
   @Test
