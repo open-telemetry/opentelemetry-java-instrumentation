@@ -16,10 +16,11 @@
     // ── Scheduling & grouping ──────────────────────────────────────────
 
     {
-      // group all patch updates into a single weekly PR
-      groupName: 'all patch versions',
+      // group all patch and minor updates into a single weekly PR
+      groupName: 'all patch and minor versions',
       matchUpdateTypes: [
         'patch',
+        'minor',
       ],
       schedule: [
         '* 0-7 * * 2', // weekly, before 8am on Tuesday
@@ -42,6 +43,9 @@
       // gh-aw updates need a dedicated branch so CI can regenerate their workflow lockfiles
       matchPackageNames: [
         'github/gh-aw',
+      ],
+      schedule: [
+        '* 0-7 * * 2', // weekly, before 8am on Tuesday
       ],
       groupName: 'gh-aw',
     },
