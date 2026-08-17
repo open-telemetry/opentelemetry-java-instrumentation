@@ -300,15 +300,12 @@ public final class KafkaInstrumenterFactory {
       ConsumerRecord<?, ?> delivery,
       List<String> deliveryKeys) {
     Cache<String, Boolean> deliveryPendingFailedDeliveries =
-        pendingFailedDeliveries(request.getDeliveryIdentity(), delivery);
+        pendingFailedDeliveries(request.getDeliveryIdentity());
     long consumedMessagesCount =
         KafkaConsumerContextUtil.hasReceiveOperation(context)
             ? 0
             : countConsumedMessages(delivery, deliveryKeys, deliveryPendingFailedDeliveries);
-    return context
-        .with(
-            CONSUMED_MESSAGES_DELIVERY_STATE,
-            new DeliveryState(deliveryKeys, deliveryPendingFailedDeliveries))
+    return withDeliveryState(context, deliveryKeys, deliveryPendingFailedDeliveries)
         .with(CONSUMED_MESSAGES_COUNT_KEY, consumedMessagesCount);
   }
 
@@ -318,16 +315,25 @@ public final class KafkaInstrumenterFactory {
       Iterable<? extends ConsumerRecord<?, ?>> deliveries,
       List<String> deliveryKeys) {
     Cache<String, Boolean> deliveryPendingFailedDeliveries =
-        pendingFailedDeliveries(request.getDeliveryIdentity(), deliveries);
+        pendingFailedDeliveries(request.getDeliveryIdentity());
     long consumedMessagesCount =
         KafkaConsumerContextUtil.hasReceiveOperation(context)
             ? 0
             : countConsumedMessages(deliveries, deliveryKeys, deliveryPendingFailedDeliveries);
-    return context
-        .with(
-            CONSUMED_MESSAGES_DELIVERY_STATE,
-            new DeliveryState(deliveryKeys, deliveryPendingFailedDeliveries))
+    return withDeliveryState(context, deliveryKeys, deliveryPendingFailedDeliveries)
         .with(CONSUMED_MESSAGES_COUNT_KEY, consumedMessagesCount);
+  }
+
+  private static Context withDeliveryState(
+      Context context,
+      List<String> deliveryKeys,
+      @Nullable Cache<String, Boolean> deliveryPendingFailedDeliveries) {
+    if (deliveryPendingFailedDeliveries == null) {
+      return context;
+    }
+    return context.with(
+        CONSUMED_MESSAGES_DELIVERY_STATE,
+        new DeliveryState(deliveryKeys, deliveryPendingFailedDeliveries));
   }
 
   private void addReceiveConsumedMessages(InstrumenterBuilder<KafkaReceiveRequest, Void> builder) {
@@ -337,7 +343,7 @@ public final class KafkaInstrumenterFactory {
               Iterable<? extends ConsumerRecord<?, ?>> deliveries = request.getRecords();
               List<String> deliveryKeys = deliveryKeys(request);
               Cache<String, Boolean> deliveryPendingFailedDeliveries =
-                  pendingFailedDeliveries(request.getDeliveryIdentity(), deliveries);
+                  pendingFailedDeliveries(request.getDeliveryIdentity());
               return context.with(
                   CONSUMED_MESSAGES_COUNT_KEY,
                   countConsumedMessages(deliveries, deliveryKeys, deliveryPendingFailedDeliveries));
@@ -345,37 +351,50 @@ public final class KafkaInstrumenterFactory {
         .addOperationMetrics(consumedMessagesMetrics);
   }
 
-  private Cache<String, Boolean> pendingFailedDeliveries(
-      @Nullable Object deliveryIdentity, Object delivery) {
+  /**
+   * Returns the pending-failed deliveries of the consumer that produced the delivery, or {@code
+   * null} if the delivery has no identity. Without an identity a redelivery cannot be recognized,
+   * so tracking it would only allocate state that is never read again.
+   */
+  @Nullable
+  private Cache<String, Boolean> pendingFailedDeliveries(@Nullable Object deliveryIdentity) {
+    if (deliveryIdentity == null) {
+      return null;
+    }
     return pendingFailedDeliveries.computeIfAbsent(
-        deliveryIdentity != null ? deliveryIdentity : delivery,
-        unused -> Cache.bounded(MAX_PENDING_FAILED_DELIVERIES));
+        deliveryIdentity, unused -> Cache.bounded(MAX_PENDING_FAILED_DELIVERIES));
   }
 
   private static long countConsumedMessages(
       ConsumerRecord<?, ?> delivery,
       List<String> deliveryKeys,
-      Cache<String, Boolean> deliveryPendingFailedDeliveries) {
+      @Nullable Cache<String, Boolean> deliveryPendingFailedDeliveries) {
     if (!KafkaConsumerContextUtil.markConsumedMessageCounted(delivery)) {
       return 0;
     }
-    return deliveryPendingFailedDeliveries.get(deliveryKeys.get(0)) == null ? 1 : 0;
+    return isPendingFailed(deliveryPendingFailedDeliveries, deliveryKeys.get(0)) ? 0 : 1;
   }
 
   private static long countConsumedMessages(
       Iterable<? extends ConsumerRecord<?, ?>> deliveries,
       List<String> deliveryKeys,
-      Cache<String, Boolean> deliveryPendingFailedDeliveries) {
+      @Nullable Cache<String, Boolean> deliveryPendingFailedDeliveries) {
     long consumedMessagesCount = 0;
     int index = 0;
     for (ConsumerRecord<?, ?> delivery : deliveries) {
       if (KafkaConsumerContextUtil.markConsumedMessageCounted(delivery)
-          && deliveryPendingFailedDeliveries.get(deliveryKeys.get(index)) == null) {
+          && !isPendingFailed(deliveryPendingFailedDeliveries, deliveryKeys.get(index))) {
         consumedMessagesCount++;
       }
       index++;
     }
     return consumedMessagesCount;
+  }
+
+  private static boolean isPendingFailed(
+      @Nullable Cache<String, Boolean> deliveryPendingFailedDeliveries, String deliveryKey) {
+    return deliveryPendingFailedDeliveries != null
+        && deliveryPendingFailedDeliveries.get(deliveryKey) != null;
   }
 
   private static void endDeliveryTracking(DeliveryState state, boolean successful) {
