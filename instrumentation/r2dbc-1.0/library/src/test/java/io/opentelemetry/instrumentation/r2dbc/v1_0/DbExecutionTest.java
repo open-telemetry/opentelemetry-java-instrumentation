@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -108,6 +109,25 @@ class DbExecutionTest {
     assertThat(dbExecution.getServerAddress()).isEqualTo("dbhost");
     assertThat(dbExecution.getServerPort()).isEqualTo(5432);
     assertThat(dbExecution.getConnectionString()).isEqualTo("pool:postgresql://dbhost:5432");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"MixedCaseDb", "case_sensitive_DB"})
+  void dbExecutionPreservesNamespaceCase(String database) {
+    QueryExecutionInfo queryExecutionInfo =
+        MockQueryExecutionInfo.builder()
+            .queryInfo(new QueryInfo("SELECT 1"))
+            .connectionInfo(MockConnectionInfo.builder().build())
+            .build();
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+            .option(ConnectionFactoryOptions.DATABASE, database)
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo, factoryOptions);
+
+    assertThat(dbExecution.getNamespace()).isEqualTo(database);
   }
 
   @ParameterizedTest

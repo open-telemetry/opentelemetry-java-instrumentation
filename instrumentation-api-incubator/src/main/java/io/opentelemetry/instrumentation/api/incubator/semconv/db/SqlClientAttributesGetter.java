@@ -96,6 +96,21 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
   Collection<String> getRawQueryTexts(REQUEST request);
 
   /**
+   * Returns the raw SQL query texts used to derive old semantic convention attributes and span
+   * names.
+   *
+   * <p>By default, this returns {@link #getRawQueryTexts(Object)}. Instrumentations may override
+   * this method when preserving old semantic convention telemetry requires a different query
+   * representation.
+   *
+   * @deprecated This method supports old database semantic conventions and will be removed in 3.0.
+   */
+  @Deprecated // to be removed in 3.0
+  default Collection<String> getRawQueryTextsForOldSemconv(REQUEST request) {
+    return getRawQueryTexts(request);
+  }
+
+  /**
    * Returns whether the query at {@code queryIndex} in {@link #getRawQueryTexts(Object)} is
    * parameterized. Prepared statements are always considered parameterized even if no parameters
    * are bound. By using a parameterized query the user is giving a strong signal that any sensitive

@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -163,5 +164,22 @@ class DbClientAttributesExtractorTest {
 
     // then
     assertThat(attributes.build().isEmpty()).isTrue();
+  }
+
+  @Test
+  void shouldUseExceptionClassWhenErrorTypeIsUnavailable() {
+    AttributesExtractor<Map<String, String>, Void> underTest =
+        DbClientAttributesExtractor.create(new TestAttributesGetter());
+    IllegalStateException error = new IllegalStateException();
+
+    AttributesBuilder attributes = Attributes.builder();
+    underTest.onEnd(attributes, Context.root(), emptyMap(), null, error);
+
+    if (emitStableDatabaseSemconv()) {
+      assertThat(attributes.build())
+          .containsOnly(entry(ERROR_TYPE, IllegalStateException.class.getName()));
+    } else {
+      assertThat(attributes.build().isEmpty()).isTrue();
+    }
   }
 }

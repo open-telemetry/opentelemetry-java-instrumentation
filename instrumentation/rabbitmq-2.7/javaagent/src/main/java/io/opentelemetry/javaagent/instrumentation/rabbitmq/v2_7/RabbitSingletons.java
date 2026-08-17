@@ -20,7 +20,10 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
@@ -113,7 +116,8 @@ public class RabbitSingletons {
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, MessagingOperationType.SEND, PUBLISH_OPERATION_NAME))
-            .addAttributesExtractor(new RabbitChannelExtraAttributesExtractor());
+            .addAttributesExtractor(new RabbitChannelExtraAttributesExtractor())
+            .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
     setMessagingSendExceptionEventExtractor(builder);
     return builder.buildInstrumenter(channelAndMethod -> PRODUCER);
   }
@@ -144,7 +148,8 @@ public class RabbitSingletons {
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, MessagingOperationType.SETTLE, operationName))
-            .addAttributesExtractor(new RabbitChannelSettleAttributesExtractor());
+            .addAttributesExtractor(new RabbitChannelSettleAttributesExtractor())
+            .addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
     setMessagingSettleExceptionEventExtractor(builder);
     return builder.buildInstrumenter(
         MessagingSpanKindExtractor.create(MessagingOperationType.SETTLE));
@@ -175,7 +180,10 @@ public class RabbitSingletons {
         Instrumenter.<ReceiveRequest, GetResponse>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractors(extractors)
-            .setEnabled(ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
+            .setEnabled(
+                emitStableMessagingSemconv()
+                    || ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
+            .addOperationMetrics(MessagingConsumerMetrics.getForOperationType())
             .addSpanLinksExtractor(
                 new PropagatorBasedSpanLinksExtractor<>(
                     GlobalOpenTelemetry.getPropagators().getTextMapPropagator(),
@@ -209,7 +217,9 @@ public class RabbitSingletons {
     InstrumenterBuilder<DeliveryRequest, Void> builder =
         Instrumenter.<DeliveryRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
-            .addAttributesExtractors(extractors);
+            .addAttributesExtractors(extractors)
+            .addOperationMetrics(MessagingProcessMetrics.get())
+            .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     setMessagingProcessExceptionEventExtractor(builder);
     return MessagingProcessInstrumenterFactory.create(
         builder,
@@ -223,7 +233,7 @@ public class RabbitSingletons {
       MessagingOperationType operationType,
       String operationName) {
     return MessagingAttributesExtractor.builder(getter, operationType, operationName)
-        .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
+        .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
         .build();
   }
 
