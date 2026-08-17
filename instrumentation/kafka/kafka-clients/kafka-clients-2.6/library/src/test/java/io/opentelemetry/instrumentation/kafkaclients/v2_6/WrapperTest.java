@@ -89,11 +89,15 @@ class WrapperTest extends AbstractWrapperTest {
     Context failedContext = instrumenter.start(parentContext, failedRequest);
     instrumenter.end(failedContext, failedRequest, null, error);
 
+    Instrumenter<KafkaProcessRequest, Void> retryInstrumenter =
+        new KafkaInstrumenterFactory(testing.getOpenTelemetry(), instrumentationName)
+            .setMessagingReceiveTelemetryEnabled(true)
+            .createConsumerProcessInstrumenter();
     KafkaProcessRequest retryRequest =
         KafkaProcessRequest.create(
             consumerContext, new ConsumerRecord<>("unwrapped", 0, 1, "key", "value"));
-    Context retryContext = instrumenter.start(parentContext, retryRequest);
-    instrumenter.end(retryContext, retryRequest, null, null);
+    Context retryContext = retryInstrumenter.start(parentContext, retryRequest);
+    retryInstrumenter.end(retryContext, retryRequest, null, null);
 
     String errorType = RuntimeException.class.getName();
     assertProcessMetricsWithConsumedMessages(

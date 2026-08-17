@@ -36,6 +36,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -61,7 +62,8 @@ public final class KafkaInstrumenterFactory {
       ContextKey.named("opentelemetry-kafka-consumed-messages-count");
   private static final ContextKey<DeliveryState> CONSUMED_MESSAGES_DELIVERY_STATE =
       ContextKey.named("opentelemetry-kafka-consumed-messages-delivery");
-  private static final Cache<OpenTelemetry, DeliveryTracker> deliveryTrackers = Cache.weak();
+  private static final VirtualField<OpenTelemetry, DeliveryTracker> DELIVERY_TRACKER_FIELD =
+      VirtualField.find(OpenTelemetry.class, DeliveryTracker.class);
   private static final OperationMetrics consumedMessagesMetrics =
       meter -> {
         OperationListener delegate = MessagingConsumerMetrics.getConsumedMessages().create(meter);
@@ -468,7 +470,19 @@ public final class KafkaInstrumenterFactory {
   }
 
   private static DeliveryTracker getDeliveryTracker(OpenTelemetry openTelemetry) {
-    return deliveryTrackers.computeIfAbsent(openTelemetry, unused -> new DeliveryTracker());
+    DeliveryTracker deliveryTracker = DELIVERY_TRACKER_FIELD.get(openTelemetry);
+    if (deliveryTracker != null) {
+      return deliveryTracker;
+    }
+
+    synchronized (DELIVERY_TRACKER_FIELD) {
+      deliveryTracker = DELIVERY_TRACKER_FIELD.get(openTelemetry);
+      if (deliveryTracker == null) {
+        deliveryTracker = new DeliveryTracker();
+        DELIVERY_TRACKER_FIELD.set(openTelemetry, deliveryTracker);
+      }
+      return deliveryTracker;
+    }
   }
 
   private static Attributes withConsumedMessagesCount(
