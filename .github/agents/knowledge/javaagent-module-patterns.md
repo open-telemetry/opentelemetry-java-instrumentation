@@ -482,10 +482,10 @@ sufficient for optimization.
   is loadable from the agent class loader. For JDK types, use class literals only for primitives and
   primitive arrays, or types from these exact package names: `java.io`, `java.lang`,
   `java.lang.reflect`, `java.net`, `java.nio`, `java.time`, `java.util`, `java.util.concurrent`, and
-  `java.util.function`. These packages are in `java.base` and already have direct matcher
-  class-literal usage in this repository. Package matching is not recursive: `java.util` does not
-  include `java.util.logging`. The type must also be available at the module's minimum supported
-  Java version.
+  `java.util.function`. These exact packages belong to the mandatory `java.base` module, so an
+  accessible type from one of them is present in every supported runtime image and safe to use as a
+  class literal when it is available at the module's minimum supported Java version. Package
+  matching is not recursive: `java.util` does not include `java.util.logging`.
   Use `takesArgument(0, String.class)` and `returns(CompletableFuture.class)`, not
   `takesArgument(0, named("java.lang.String"))` or
   `returns(named("java.util.concurrent.CompletableFuture"))`.
