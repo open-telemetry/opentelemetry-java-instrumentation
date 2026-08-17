@@ -12,7 +12,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertClientOperationDurationMetricAbsent;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertConsumedMessagesMetrics;
-import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertSentMessagesMetrics;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
@@ -135,8 +135,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
     if (receiveTelemetryEnabled()) {
       assertConsumedMessagesMetrics(
           testing, instrumentationName, SHARED_TOPIC, "test", null, 1, null);
-      assertProcessDurationMetrics(
-          testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, null);
+      assertProcessMetrics(testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, null);
     } else {
       assertProcessMetricsWithConsumedMessages(
           testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, 1, null);
