@@ -24,7 +24,7 @@ public class KafkaReceiveRequest extends AbstractKafkaConsumerRequest {
         records,
         KafkaUtil.getConsumerGroup(consumer),
         KafkaUtil.getClientId(consumer),
-        KafkaUtil.getDeliveryIdentity(consumer));
+        KafkaUtil.getDeliveryTracker(consumer));
   }
 
   public static KafkaReceiveRequest create(
@@ -33,7 +33,7 @@ public class KafkaReceiveRequest extends AbstractKafkaConsumerRequest {
         records,
         consumerContext.getConsumerGroup(),
         consumerContext.getClientId(),
-        consumerContext.getDeliveryIdentity());
+        consumerContext.getDeliveryTracker());
   }
 
   public static KafkaReceiveRequest create(
@@ -45,16 +45,16 @@ public class KafkaReceiveRequest extends AbstractKafkaConsumerRequest {
       ConsumerRecords<?, ?> records,
       @Nullable String consumerGroup,
       @Nullable String clientId,
-      @Nullable Object deliveryIdentity) {
-    return new KafkaReceiveRequest(records, consumerGroup, clientId, deliveryIdentity);
+      @Nullable DeliveryTracker deliveryTracker) {
+    return new KafkaReceiveRequest(records, consumerGroup, clientId, deliveryTracker);
   }
 
   private KafkaReceiveRequest(
       ConsumerRecords<?, ?> records,
       @Nullable String consumerGroup,
       @Nullable String clientId,
-      @Nullable Object deliveryIdentity) {
-    super(consumerGroup, clientId, deliveryIdentity);
+      @Nullable DeliveryTracker deliveryTracker) {
+    super(consumerGroup, clientId, deliveryTracker);
     this.records = records;
   }
 

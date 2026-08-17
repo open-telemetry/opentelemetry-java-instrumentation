@@ -11,15 +11,15 @@ abstract class AbstractKafkaConsumerRequest {
 
   @Nullable private final String consumerGroup;
   @Nullable private final String clientId;
-  @Nullable private final Object deliveryIdentity;
+  @Nullable private final DeliveryTracker deliveryTracker;
 
   AbstractKafkaConsumerRequest(
       @Nullable String consumerGroup,
       @Nullable String clientId,
-      @Nullable Object deliveryIdentity) {
+      @Nullable DeliveryTracker deliveryTracker) {
     this.consumerGroup = consumerGroup;
     this.clientId = clientId;
-    this.deliveryIdentity = deliveryIdentity;
+    this.deliveryTracker = deliveryTracker;
   }
 
   @Nullable
@@ -33,14 +33,12 @@ abstract class AbstractKafkaConsumerRequest {
   }
 
   /**
-   * Returns the object that identifies the source of this delivery, or {@code null} if it is
-   * unknown. This must be stable across redeliveries of the same records, e.g. a token bound to the
-   * lifetime of the {@code Consumer}, so that a retried delivery can be recognized instead of being
-   * counted again.
+   * Returns the tracker of the consumer that produced this delivery, or {@code null} if it is
+   * unknown. Without a tracker a redelivery cannot be recognized, and is counted again.
    */
   @Nullable
-  Object getDeliveryIdentity() {
-    return deliveryIdentity;
+  DeliveryTracker getDeliveryTracker() {
+    return deliveryTracker;
   }
 
   @Nullable

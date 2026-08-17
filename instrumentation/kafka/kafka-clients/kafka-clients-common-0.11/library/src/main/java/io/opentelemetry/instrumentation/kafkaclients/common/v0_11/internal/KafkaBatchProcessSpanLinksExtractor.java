@@ -41,7 +41,7 @@ final class KafkaBatchProcessSpanLinksExtractor implements SpanLinksExtractor<Ka
                 record,
                 request.getConsumerGroup(),
                 request.getClientId(),
-                request.getDeliveryIdentity()));
+                request.getDeliveryTracker()));
       }
       return;
     }
@@ -53,7 +53,7 @@ final class KafkaBatchProcessSpanLinksExtractor implements SpanLinksExtractor<Ka
               record,
               request.getConsumerGroup(),
               request.getClientId(),
-              request.getDeliveryIdentity());
+              request.getDeliveryTracker());
       Context extracted = propagator.extract(Context.root(), processRequest, recordGetter);
       spanLinks.addLink(
           Span.fromContext(extracted).getSpanContext(), attributes.getLinkAttributes(record));

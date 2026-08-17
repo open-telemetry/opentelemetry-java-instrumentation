@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6.internal;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.Timer;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.DeliveryTracker;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import java.util.Map;
@@ -35,7 +36,7 @@ public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerIntercept
   @Nullable private String clientId;
   // this interceptor instance is bound to a single consumer, so it can identify deliveries from
   // that consumer across polls
-  private final Object deliveryIdentity = new Object();
+  private final DeliveryTracker deliveryTracker = new DeliveryTracker();
 
   @Override
   @CanIgnoreReturnValue
@@ -47,12 +48,12 @@ public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerIntercept
     Timer timer = Timer.start();
     Context receiveContext =
         consumerTelemetry.buildAndFinishSpan(
-            records, consumerGroup, clientId, deliveryIdentity, timer);
+            records, consumerGroup, clientId, deliveryTracker, timer);
     if (receiveContext == null) {
       receiveContext = Context.current();
     }
     KafkaConsumerContext consumerContext =
-        KafkaConsumerContextUtil.create(receiveContext, consumerGroup, clientId, deliveryIdentity);
+        KafkaConsumerContextUtil.create(receiveContext, consumerGroup, clientId, deliveryTracker);
     return consumerTelemetry.addTracing(records, consumerContext);
   }
 

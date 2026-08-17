@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
 
-import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -38,8 +37,8 @@ public final class KafkaUtil {
 
   private static final VirtualField<Consumer<?, ?>, Map<String, String>> consumerInfoField =
       VirtualField.find(Consumer.class, Map.class);
-
-  private static final Cache<Consumer<?, ?>, Object> deliveryIdentities = Cache.weak();
+  private static final VirtualField<Consumer<?, ?>, DeliveryTracker> deliveryTrackerField =
+      VirtualField.find(Consumer.class, DeliveryTracker.class);
 
   private static final MethodHandle GET_GROUP_METADATA;
   private static final MethodHandle GET_GROUP_ID;
@@ -88,16 +87,20 @@ public final class KafkaUtil {
   }
 
   /**
-   * Returns a token that identifies deliveries from the given consumer. The token is stable for the
-   * lifetime of the consumer, so that a redelivery can be recognized, but it does not reference the
-   * consumer, so that attaching it to consumer records does not keep the consumer alive.
+   * Returns the {@link DeliveryTracker} of the given consumer, creating it if it does not exist.
    */
   @Nullable
-  public static Object getDeliveryIdentity(@Nullable Consumer<?, ?> consumer) {
+  public static DeliveryTracker getDeliveryTracker(@Nullable Consumer<?, ?> consumer) {
     if (consumer == null) {
       return null;
     }
-    return deliveryIdentities.computeIfAbsent(consumer, unused -> new Object());
+    DeliveryTracker deliveryTracker = deliveryTrackerField.get(consumer);
+    if (deliveryTracker == null) {
+      // a Kafka consumer does not support multi-threaded access, so this does not have to be atomic
+      deliveryTracker = new DeliveryTracker();
+      deliveryTrackerField.set(consumer, deliveryTracker);
+    }
+    return deliveryTracker;
   }
 
   private static Map<String, String> getConsumerInfo(@Nullable Consumer<?, ?> consumer) {

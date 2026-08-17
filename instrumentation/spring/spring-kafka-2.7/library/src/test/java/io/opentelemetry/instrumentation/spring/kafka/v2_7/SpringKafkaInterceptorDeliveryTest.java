@@ -38,7 +38,7 @@ class SpringKafkaInterceptorDeliveryTest {
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Test
-  void batchRetriesUseInterceptorDeliveryIdentity() {
+  void batchRetriesUseInterceptorDeliveryTracker() {
     assumeTrue(emitStableMessagingSemconv());
     OpenTelemetryConsumerInterceptor<String, String> consumerInterceptor = consumerInterceptor();
     BatchInterceptor<String, String> springInterceptor =
@@ -59,7 +59,7 @@ class SpringKafkaInterceptorDeliveryTest {
   }
 
   @Test
-  void recordRetriesUseInterceptorDeliveryIdentity() {
+  void recordRetriesUseInterceptorDeliveryTracker() {
     assumeTrue(emitStableMessagingSemconv());
     OpenTelemetryConsumerInterceptor<String, String> consumerInterceptor = consumerInterceptor();
     RecordInterceptor<String, String> springInterceptor =

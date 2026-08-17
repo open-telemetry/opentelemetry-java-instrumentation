@@ -12,6 +12,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.DeliveryTracker;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
@@ -73,7 +74,7 @@ public class KafkaConsumerTelemetry {
         records,
         KafkaUtil.getConsumerGroup(consumer),
         KafkaUtil.getClientId(consumer),
-        KafkaUtil.getDeliveryIdentity(consumer),
+        KafkaUtil.getDeliveryTracker(consumer),
         timer);
   }
 
@@ -91,14 +92,14 @@ public class KafkaConsumerTelemetry {
       ConsumerRecords<K, V> records,
       @Nullable String consumerGroup,
       @Nullable String clientId,
-      @Nullable Object deliveryIdentity,
+      @Nullable DeliveryTracker deliveryTracker,
       Timer timer) {
     if (records.isEmpty()) {
       return null;
     }
     Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(Context.current());
     KafkaReceiveRequest request =
-        KafkaReceiveRequest.create(records, consumerGroup, clientId, deliveryIdentity);
+        KafkaReceiveRequest.create(records, consumerGroup, clientId, deliveryTracker);
     Context receiveContext = null;
     boolean receiveOperationStarted = false;
     if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {

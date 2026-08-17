@@ -23,7 +23,7 @@ public class KafkaProcessRequest extends AbstractKafkaConsumerRequest {
         record,
         KafkaUtil.getConsumerGroup(consumer),
         KafkaUtil.getClientId(consumer),
-        KafkaUtil.getDeliveryIdentity(consumer));
+        KafkaUtil.getDeliveryTracker(consumer));
   }
 
   public static KafkaProcessRequest create(
@@ -32,7 +32,7 @@ public class KafkaProcessRequest extends AbstractKafkaConsumerRequest {
         record,
         consumerContext.getConsumerGroup(),
         consumerContext.getClientId(),
-        consumerContext.getDeliveryIdentity());
+        consumerContext.getDeliveryTracker());
   }
 
   public static KafkaProcessRequest create(
@@ -44,8 +44,8 @@ public class KafkaProcessRequest extends AbstractKafkaConsumerRequest {
       ConsumerRecord<?, ?> record,
       @Nullable String consumerGroup,
       @Nullable String clientId,
-      @Nullable Object deliveryIdentity) {
-    return new KafkaProcessRequest(record, consumerGroup, clientId, deliveryIdentity);
+      @Nullable DeliveryTracker deliveryTracker) {
+    return new KafkaProcessRequest(record, consumerGroup, clientId, deliveryTracker);
   }
 
   public KafkaProcessRequest(
@@ -57,8 +57,8 @@ public class KafkaProcessRequest extends AbstractKafkaConsumerRequest {
       ConsumerRecord<?, ?> record,
       @Nullable String consumerGroup,
       @Nullable String clientId,
-      @Nullable Object deliveryIdentity) {
-    super(consumerGroup, clientId, deliveryIdentity);
+      @Nullable DeliveryTracker deliveryTracker) {
+    super(consumerGroup, clientId, deliveryTracker);
     this.record = record;
   }
 

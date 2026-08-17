@@ -20,8 +20,8 @@ public abstract class KafkaConsumerContext {
       @Nullable Context context,
       @Nullable String consumerGroup,
       @Nullable String clientId,
-      @Nullable Object deliveryIdentity) {
-    return new AutoValue_KafkaConsumerContext(context, consumerGroup, clientId, deliveryIdentity);
+      @Nullable DeliveryTracker deliveryTracker) {
+    return new AutoValue_KafkaConsumerContext(context, consumerGroup, clientId, deliveryTracker);
   }
 
   @Nullable
@@ -34,5 +34,5 @@ public abstract class KafkaConsumerContext {
   abstract String getClientId();
 
   @Nullable
-  abstract Object getDeliveryIdentity();
+  abstract DeliveryTracker getDeliveryTracker();
 }

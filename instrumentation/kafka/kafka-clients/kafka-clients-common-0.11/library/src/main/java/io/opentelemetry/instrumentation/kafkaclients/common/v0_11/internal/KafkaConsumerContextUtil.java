@@ -114,11 +114,11 @@ public final class KafkaConsumerContextUtil {
       @Nullable Consumer<?, ?> consumer) {
     String consumerGroup = null;
     String clientId = null;
-    Object deliveryIdentity = null;
+    DeliveryTracker deliveryTracker = null;
     if (consumerInfo != null) {
       consumerGroup = (String) consumerInfo[0];
       clientId = (String) consumerInfo[1];
-      deliveryIdentity = consumerInfo[2];
+      deliveryTracker = (DeliveryTracker) consumerInfo[2];
     }
     if (consumerGroup == null) {
       consumerGroup = KafkaUtil.getConsumerGroup(consumer);
@@ -126,10 +126,10 @@ public final class KafkaConsumerContextUtil {
     if (clientId == null) {
       clientId = KafkaUtil.getClientId(consumer);
     }
-    if (deliveryIdentity == null) {
-      deliveryIdentity = KafkaUtil.getDeliveryIdentity(consumer);
+    if (deliveryTracker == null) {
+      deliveryTracker = KafkaUtil.getDeliveryTracker(consumer);
     }
-    return create(receiveContext, consumerGroup, clientId, deliveryIdentity);
+    return create(receiveContext, consumerGroup, clientId, deliveryTracker);
   }
 
   public static KafkaConsumerContext create(@Nullable Context context, Consumer<?, ?> consumer) {
@@ -137,15 +137,15 @@ public final class KafkaConsumerContextUtil {
         context,
         KafkaUtil.getConsumerGroup(consumer),
         KafkaUtil.getClientId(consumer),
-        KafkaUtil.getDeliveryIdentity(consumer));
+        KafkaUtil.getDeliveryTracker(consumer));
   }
 
   public static KafkaConsumerContext create(
       @Nullable Context context,
       @Nullable String consumerGroup,
       @Nullable String clientId,
-      @Nullable Object deliveryIdentity) {
-    return KafkaConsumerContext.create(context, consumerGroup, clientId, deliveryIdentity);
+      @Nullable DeliveryTracker deliveryTracker) {
+    return KafkaConsumerContext.create(context, consumerGroup, clientId, deliveryTracker);
   }
 
   public static void set(ConsumerRecord<?, ?> record, KafkaConsumerContext consumerContext) {
@@ -154,7 +154,7 @@ public final class KafkaConsumerContextUtil {
         consumerContext.getContext(),
         consumerContext.getConsumerGroup(),
         consumerContext.getClientId(),
-        consumerContext.getDeliveryIdentity());
+        consumerContext.getDeliveryTracker());
   }
 
   private static void set(
@@ -162,9 +162,9 @@ public final class KafkaConsumerContextUtil {
       @Nullable Context context,
       @Nullable String consumerGroup,
       @Nullable String clientId,
-      @Nullable Object deliveryIdentity) {
+      @Nullable DeliveryTracker deliveryTracker) {
     recordContextField.set(record, context);
-    recordConsumerInfoField.set(record, new Object[] {consumerGroup, clientId, deliveryIdentity});
+    recordConsumerInfoField.set(record, new Object[] {consumerGroup, clientId, deliveryTracker});
   }
 
   public static void set(ConsumerRecords<?, ?> records, KafkaConsumerContext consumerContext) {
@@ -173,7 +173,7 @@ public final class KafkaConsumerContextUtil {
         consumerContext.getContext(),
         consumerContext.getConsumerGroup(),
         consumerContext.getClientId(),
-        consumerContext.getDeliveryIdentity());
+        consumerContext.getDeliveryTracker());
   }
 
   private static void set(
@@ -181,9 +181,9 @@ public final class KafkaConsumerContextUtil {
       @Nullable Context context,
       @Nullable String consumerGroup,
       @Nullable String clientId,
-      @Nullable Object deliveryIdentity) {
+      @Nullable DeliveryTracker deliveryTracker) {
     recordsContextField.set(records, context);
-    recordsConsumerInfoField.set(records, new Object[] {consumerGroup, clientId, deliveryIdentity});
+    recordsConsumerInfoField.set(records, new Object[] {consumerGroup, clientId, deliveryTracker});
   }
 
   public static void copy(ConsumerRecord<?, ?> from, ConsumerRecord<?, ?> to) {
