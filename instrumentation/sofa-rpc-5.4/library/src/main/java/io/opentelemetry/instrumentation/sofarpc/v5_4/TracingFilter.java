@@ -131,6 +131,8 @@ final class TracingFilter extends Filter {
     completeAsyncRequest(request, response, exception);
   }
 
+  // Completes an asynchronous request at most once across transport failures, standard filter
+  // callbacks, and custom completion callbacks.
   private static void completeAsyncRequest(
       SofaRequest request, SofaResponse response, Throwable exception) {
     AsyncState asyncState = ASYNC_STATE_FIELD.get(request);

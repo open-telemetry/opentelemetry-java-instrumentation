@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.sofarpc.v5_4;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -113,6 +112,8 @@ class SofaRpcAgentTest extends AbstractSofaRpcTest {
 
     completeAsyncResponse.invoke(
         null, new ConsumerConfig<>(), new SofaRequest(), new SofaResponse(), null);
+
+    assertThat(testing.spans()).isEmpty();
   }
 
   private static AsyncTestCall startAsyncTestCall(String methodName, Object appResponse)
@@ -172,18 +173,16 @@ class SofaRpcAgentTest extends AbstractSofaRpcTest {
                 }));
 
     String metricName = emitStableRpcSemconv() ? "rpc.client.call.duration" : "rpc.client.duration";
-    if (emitOldRpcSemconv() || emitStableRpcSemconv()) {
-      testing.waitAndAssertMetrics(
-          "io.opentelemetry.sofa-rpc-5.4",
-          metricName,
-          metrics ->
-              metrics.anySatisfy(
-                  metric ->
-                      assertThat(metric)
-                          .hasHistogramSatisfying(
-                              histogram ->
-                                  histogram.hasPointsSatisfying(point -> point.hasCount(1)))));
-    }
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.sofa-rpc-5.4",
+        metricName,
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric)
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(point -> point.hasCount(1)))));
   }
 
   private static final class AsyncTestCall {

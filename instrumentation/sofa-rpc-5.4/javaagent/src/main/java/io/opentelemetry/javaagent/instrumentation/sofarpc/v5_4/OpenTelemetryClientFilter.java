@@ -38,11 +38,6 @@ public class OpenTelemetryClientFilter extends Filter {
     completeAsyncResponse(config, request, response, exception);
   }
 
-  /**
-   * Internal Java agent extension hook that completes telemetry for an asynchronous client request
-   * whose transport does not invoke the standard SOFA RPC async filter callback. This method is not
-   * a stable public API. Calling it more than once, or after the standard callback, has no effect.
-   */
   public static void completeAsyncResponse(
       ConsumerConfig<?> config, SofaRequest request, SofaResponse response, Throwable exception) {
     clientFilter().onAsyncResponse(config, request, response, exception);
