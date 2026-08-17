@@ -5,9 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
-import static java.util.Collections.singletonList;
-
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -28,7 +27,11 @@ class SqsTracingTest extends AbstractSqsTracingTest {
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)
             .setMessagingReceiveTelemetryEnabled(true)
-            .setCapturedHeaders(singletonList("Test-Message-Header"))
+            .setHeaders(
+                IncludeExclude.builder()
+                    .setIncluded("Test-Message-*")
+                    .setExcluded("*-Excluded-Header")
+                    .build())
             .build()
             .createRequestHandler());
   }

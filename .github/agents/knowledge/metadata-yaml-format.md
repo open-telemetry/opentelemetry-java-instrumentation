@@ -112,6 +112,8 @@ Non-standard mappings (see `ConfigPropertiesBackedDeclarativeConfigProperties.ja
 | `otel.instrumentation.http.client.emit-experimental-telemetry`                  | `java.common.http.client.emit_experimental_telemetry/development` |
 | `otel.instrumentation.http.server.emit-experimental-telemetry`                  | `java.common.http.server.emit_experimental_telemetry/development` |
 | `otel.instrumentation.messaging.experimental.receive-telemetry.enabled`         | `java.common.messaging.receive_telemetry/development.enabled`     |
+| `otel.instrumentation.messaging.experimental.headers.included`                  | `java.common.messaging.headers/development.included`              |
+| `otel.instrumentation.messaging.experimental.headers.excluded`                  | `java.common.messaging.headers/development.excluded`              |
 | `otel.instrumentation.messaging.experimental.capture-headers`                   | `java.common.messaging.capture_headers/development`               |
 | `otel.instrumentation.genai.capture-message-content`                            | `java.common.gen_ai.capture_message_content`                      |
 | `otel.instrumentation.experimental.span-suppression-strategy`                   | `java.common.span_suppression_strategy/development`               |
@@ -202,7 +204,7 @@ This validates round-trip conversion (flat property → bridge → declarative p
 
 Example failure when flat name is wrong:
 
-```
+```text
 FAIL in ../instrumentation/liberty/liberty-20.0/metadata.yaml:
   flat property: otel.instrumentation.servlet.capture-request-parameters
   expected: [item1, item2, item3]

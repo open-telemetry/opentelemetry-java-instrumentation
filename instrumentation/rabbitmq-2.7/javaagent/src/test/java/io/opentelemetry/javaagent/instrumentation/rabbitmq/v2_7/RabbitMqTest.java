@@ -10,6 +10,11 @@ import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertNoMessagingMetrics;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertProducerMetrics;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertReceiveMetrics;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertSettleMetrics;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -21,6 +26,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -30,9 +36,11 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Consumer;
@@ -104,12 +112,59 @@ class RabbitMqTest extends AbstractRabbitMqTest {
       if (channel != null) {
         channel.close();
       }
-      if (conn != null) {
-        conn.close();
-      }
     } catch (ShutdownSignalException ignored) {
       // ignored
+    } finally {
+      try {
+        if (conn != null) {
+          conn.close();
+        }
+      } catch (ShutdownSignalException ignored) {
+        // ignored
+      }
     }
+  }
+
+  @Test
+  void testEmptyPullReceive() throws IOException {
+    String queueName = "empty-pull-queue";
+    channel.queueDeclare(queueName, false, true, true, null);
+    testing.clearData();
+
+    GetResponse response = channel.basicGet(queueName, true);
+
+    assertThat(response).isNull();
+    assertThat(testing.spans()).isEmpty();
+    assertNoMessagingMetrics(testing);
+  }
+
+  @Test
+  void testMessagingClientMetrics() throws IOException {
+    String queueName = channel.queueDeclare("metrics", false, true, true, null).getQueue();
+
+    channel.basicPublish("", queueName, null, "Hello, world!".getBytes(Charset.defaultCharset()));
+
+    assertProducerMetrics(testing, queueName, null);
+
+    testing.clearData();
+    GetResponse response = channel.basicGet(queueName, true);
+
+    assertThat(response).isNotNull();
+    assertReceiveMetrics(testing, queueName, null, 1);
+  }
+
+  @Test
+  void testMessagingPublishErrorMetrics() throws IOException {
+    channel.abort();
+
+    Throwable error =
+        catchThrowable(
+            () ->
+                channel.basicPublish(
+                    "", "metrics", null, "Hello, world!".getBytes(Charset.defaultCharset())));
+
+    assertThat(error).isInstanceOf(AlreadyClosedException.class);
+    assertProducerMetrics(testing, "metrics", error.getClass().getName());
   }
 
   @Test
@@ -180,7 +235,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   void testRabbitPublishPropagatesSuppressedProducerContext() throws IOException {
     String queueName = channel.queueDeclare().getQueue();
     AtomicReference<SpanContext> producerContext = new AtomicReference<>();
-    testing.clearData();
 
     testing.runWithSpan(
         "outer producer",
@@ -469,6 +523,13 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     }
 
     testing.waitAndAssertTraces(traceAssertions);
+    assertProcessMetrics(
+        testing,
+        isGeneratedQueueName(resource)
+            ? null
+            : destinationName(exchangeName, null, "process", resource),
+        null,
+        messageCount);
 
     assertThat(deliveries)
         .containsExactly(
@@ -526,6 +587,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                         error,
                         error.getMessage(),
                         false)));
+    assertProcessMetrics(testing, null, error.getClass().getName(), 1);
   }
 
   @SuppressWarnings("unchecked")
@@ -560,6 +622,9 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                         finalThrown,
                         accessor.getString(2),
                         false)));
+    if ("receive".equals(accessor.getString(3))) {
+      assertReceiveMetrics(testing, null, finalThrown.getClass().getName(), 0);
+    }
   }
 
   @Test
@@ -712,6 +777,17 @@ class RabbitMqTest extends AbstractRabbitMqTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span -> verifySettleSpan(span, trace.getSpan(0), operation, deliveryTag)));
+    assertSettleMetrics(testing, operation, null);
+  }
+
+  @Test
+  void testRabbitSettleErrorMetrics() throws IOException {
+    channel.abort();
+
+    Throwable error = catchThrowable(() -> channel.basicAck(1, false));
+
+    assertThat(error).isInstanceOf(AlreadyClosedException.class);
+    assertSettleMetrics(testing, "ack", error.getClass().getName());
   }
 
   @ParameterizedTest(name = "test rabbit {0} multiple")
@@ -1029,6 +1105,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         equalTo(
             MESSAGING_OPERATION_TYPE,
             emitStableMessagingSemconv() ? "publish".equals(operation) ? "send" : operation : null),
+        equalTo(MESSAGING_BATCH_MESSAGE_COUNT, null),
         satisfies(
             MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG,
             val -> {

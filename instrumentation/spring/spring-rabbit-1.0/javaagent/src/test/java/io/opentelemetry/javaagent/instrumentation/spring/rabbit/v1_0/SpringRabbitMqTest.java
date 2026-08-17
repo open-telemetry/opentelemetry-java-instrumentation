@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0.SpringRabbitMetricsAssertions.assertProcessMetrics;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -26,6 +28,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -46,9 +50,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -94,6 +100,7 @@ class SpringRabbitMqTest {
     props.put("spring.main.web-application-type", "none");
     props.put("spring.rabbitmq.host", rabbitMqContainer.getHost());
     props.put("spring.rabbitmq.port", rabbitMqContainer.getMappedPort(5672));
+    props.put("spring.rabbitmq.listener.simple.default-requeue-rejected", false);
     app.setDefaultProperties(props);
 
     applicationContext = app.run();
@@ -280,6 +287,32 @@ class SpringRabbitMqTest {
         trace -> {
           trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyAckSpan);
         });
+    assertProcessMetrics(testing, ConsumerConfig.TEST_QUEUE, null);
+  }
+
+  @Test
+  void testDefaultReceiveTelemetryMetricOwnership() throws InterruptedException {
+    applicationContext
+        .getBean(AmqpTemplate.class)
+        .convertAndSend(ConsumerConfig.METRICS_QUEUE, "test");
+
+    assertThat(ConsumerConfig.metricsMessageConsumed.await(10, SECONDS)).isTrue();
+    assertProcessMetrics(testing, ConsumerConfig.METRICS_QUEUE, null);
+  }
+
+  @Test
+  void testErrorMetrics() throws InterruptedException {
+    applicationContext
+        .getBean(AmqpTemplate.class)
+        .convertAndSend(ConsumerConfig.ERROR_QUEUE, "test");
+
+    assertThat(ConsumerConfig.errorMessageConsumed.await(10, SECONDS)).isTrue();
+    assertProcessMetrics(
+        testing,
+        ConsumerConfig.ERROR_QUEUE,
+        testLatestDeps()
+            ? "org.springframework.amqp.rabbit.support.ListenerExecutionFailedException"
+            : "org.springframework.amqp.rabbit.listener.exception.ListenerExecutionFailedException");
   }
 
   @ParameterizedTest
@@ -357,13 +390,27 @@ class SpringRabbitMqTest {
   static class ConsumerConfig {
 
     static final String TEST_QUEUE = "testQueue";
+    static final String METRICS_QUEUE = "metricsQueue";
+    static final String ERROR_QUEUE = "errorQueue";
     static final String LEGACY_ANONYMOUS_QUEUE = "123e4567-e89b-12d3-a456-426614174000";
     // the name that spring-cloud-stream's rabbit binder generates for a consumer without a group
     static final String ANONYMOUS_GROUP_QUEUE = "testDestination.anonymous.Q_bA0sGiTcyXMWXZMyOHwA";
+    private static final CountDownLatch metricsMessageConsumed = new CountDownLatch(1);
+    private static final CountDownLatch errorMessageConsumed = new CountDownLatch(1);
 
     @Bean
     Queue testQueue() {
       return new Queue(TEST_QUEUE);
+    }
+
+    @Bean
+    Queue metricsQueue() {
+      return new Queue(METRICS_QUEUE);
+    }
+
+    @Bean
+    Queue errorQueue() {
+      return new Queue(ERROR_QUEUE);
     }
 
     @Bean
@@ -384,6 +431,17 @@ class SpringRabbitMqTest {
     @RabbitListener(queues = TEST_QUEUE)
     void consume(String ignored) {
       GlobalTraceUtil.runWithSpan("consumer", () -> {});
+    }
+
+    @RabbitListener(queues = METRICS_QUEUE)
+    void consumeMetrics(String ignored) {
+      metricsMessageConsumed.countDown();
+    }
+
+    @RabbitListener(queues = ERROR_QUEUE)
+    void consumeError(String ignored) {
+      errorMessageConsumed.countDown();
+      throw new IllegalStateException("test");
     }
   }
 }

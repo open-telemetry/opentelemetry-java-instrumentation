@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -94,5 +95,10 @@ final class PulsarMessagingAttributesGetter
   public List<String> getMessageHeader(PulsarRequest request, String name) {
     String value = request.getMessage().getProperty(name);
     return value != null ? singletonList(value) : emptyList();
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(PulsarRequest request) {
+    return request.getMessage().getProperties().keySet();
   }
 }

@@ -91,7 +91,6 @@ class LettuceReactiveClientTest {
 
     // 1 set (+ 1 connect trace when connection telemetry is enabled)
     testing.waitForTraces(connectionTelemetryEnabled() ? 2 : 1);
-    testing.clearData();
   }
 
   private static boolean connectionTelemetryEnabled() {

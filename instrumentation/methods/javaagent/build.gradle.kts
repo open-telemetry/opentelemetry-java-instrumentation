@@ -9,7 +9,6 @@ muzzle {
 }
 
 dependencies {
-  compileOnly(project(":javaagent-tooling"))
   compileOnly(project(":instrumentation-annotations-support"))
 }
 
