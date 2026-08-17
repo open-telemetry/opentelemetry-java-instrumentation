@@ -40,7 +40,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.assertj.core.api.ListAssert;
 import org.awaitility.core.ConditionFactory;
@@ -121,29 +120,13 @@ public abstract class InstrumentationTestRunner {
   @SuppressWarnings("varargs")
   public final void waitAndAssertSortedTraces(
       Comparator<List<SpanData>> traceComparator, Consumer<TraceAssert>... assertions) {
-    waitAndAssertTraces(null, traceComparator, asList(assertions), true);
+    waitAndAssertTraces(traceComparator, asList(assertions), true);
   }
 
   public void waitAndAssertSortedTraces(
       Comparator<List<SpanData>> traceComparator,
       Iterable<? extends Consumer<TraceAssert>> assertions) {
-    waitAndAssertTraces(null, traceComparator, assertions, true);
-  }
-
-  @SafeVarargs
-  @SuppressWarnings("varargs")
-  public final void waitAndAssertSortedTraces(
-      Predicate<List<SpanData>> traceFilter,
-      Comparator<List<SpanData>> traceComparator,
-      Consumer<TraceAssert>... assertions) {
-    waitAndAssertTraces(traceFilter, traceComparator, asList(assertions), true);
-  }
-
-  public void waitAndAssertSortedTraces(
-      Predicate<List<SpanData>> traceFilter,
-      Comparator<List<SpanData>> traceComparator,
-      Iterable<? extends Consumer<TraceAssert>> assertions) {
-    waitAndAssertTraces(traceFilter, traceComparator, assertions, true);
+    waitAndAssertTraces(traceComparator, assertions, true);
   }
 
   @SafeVarargs
@@ -155,7 +138,7 @@ public abstract class InstrumentationTestRunner {
 
   public <T extends Consumer<TraceAssert>> void waitAndAssertTracesWithoutScopeVersionVerification(
       Iterable<T> assertions) {
-    waitAndAssertTraces(null, null, assertions, false);
+    waitAndAssertTraces(null, assertions, false);
   }
 
   @SafeVarargs
@@ -165,23 +148,20 @@ public abstract class InstrumentationTestRunner {
   }
 
   public <T extends Consumer<TraceAssert>> void waitAndAssertTraces(Iterable<T> assertions) {
-    waitAndAssertTraces(null, null, assertions, true);
+    waitAndAssertTraces(null, assertions, true);
   }
 
   private <T extends Consumer<TraceAssert>> void waitAndAssertTraces(
-      @Nullable Predicate<List<SpanData>> traceFilter,
       @Nullable Comparator<List<SpanData>> traceComparator,
       Iterable<T> assertions,
       boolean verifyScopeVersion) {
     List<T> assertionsList = new ArrayList<>();
     assertions.forEach(assertionsList::add);
 
-    awaitUntilAsserted(
-        () -> doAssertTraces(traceFilter, traceComparator, assertionsList, verifyScopeVersion));
+    awaitUntilAsserted(() -> doAssertTraces(traceComparator, assertionsList, verifyScopeVersion));
   }
 
   private <T extends Consumer<TraceAssert>> void doAssertTraces(
-      @Nullable Predicate<List<SpanData>> traceFilter,
       @Nullable Comparator<List<SpanData>> traceComparator,
       List<T> assertionsList,
       boolean verifyScopeVersion) {
@@ -189,14 +169,10 @@ public abstract class InstrumentationTestRunner {
     if (verifyScopeVersion) {
       TelemetryDataUtil.assertScopeVersion(traces);
     }
-    List<List<SpanData>> assertedTraces = traces;
-    if (traceFilter != null) {
-      assertedTraces = traces.stream().filter(traceFilter).collect(toList());
-    }
     if (traceComparator != null) {
-      assertedTraces.sort(traceComparator);
+      traces.sort(traceComparator);
     }
-    TracesAssert.assertThat(assertedTraces).hasTracesSatisfyingExactly(assertionsList);
+    TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertionsList);
 
     if (Boolean.getBoolean("collectMetadata")) {
       collectEmittedSpans(traces);

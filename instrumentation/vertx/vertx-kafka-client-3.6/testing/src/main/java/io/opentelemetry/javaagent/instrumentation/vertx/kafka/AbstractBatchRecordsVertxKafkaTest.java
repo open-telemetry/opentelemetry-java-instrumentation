@@ -222,102 +222,105 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
     AtomicReference<SpanData> producer1 = new AtomicReference<>();
     AtomicReference<SpanData> producer2 = new AtomicReference<>();
 
-    waitAndAssertStableTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER, SpanKind.CLIENT),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("producer"),
-              span ->
-                  span.hasName(spanName("testBatchTopic", "publish", "send"))
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(sendAttributes(record1)),
-              span ->
-                  span.hasName(spanName("testBatchTopic", "process", "process"))
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasParent(trace.getSpan(1))
-                      .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
-                      .hasAttributesSatisfyingExactly(processAttributes(record1)),
-              span -> span.hasName("process testSpan1").hasParent(trace.getSpan(2)),
-              span ->
-                  span.hasName(spanName("testBatchTopic", "publish", "send"))
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(sendAttributes(record2)),
-              span ->
-                  span.hasName(spanName("testBatchTopic", "process", "process"))
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasParent(trace.getSpan(4))
-                      .hasLinks(LinkData.create(trace.getSpan(4).getSpanContext()))
-                      .hasAttributesSatisfyingExactly(processAttributes(record2)),
-              span -> span.hasName("process testSpan2").hasParent(trace.getSpan(5)));
+    testing()
+        .waitAndAssertSortedTraces(
+            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER, SpanKind.CLIENT),
+            trace -> {
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("producer"),
+                  span ->
+                      span.hasName(spanName("testBatchTopic", "publish", "send"))
+                          .hasKind(SpanKind.PRODUCER)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(sendAttributes(record1)),
+                  span ->
+                      span.hasName(spanName("testBatchTopic", "process", "process"))
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                          .hasAttributesSatisfyingExactly(processAttributes(record1)),
+                  span -> span.hasName("process testSpan1").hasParent(trace.getSpan(2)),
+                  span ->
+                      span.hasName(spanName("testBatchTopic", "publish", "send"))
+                          .hasKind(SpanKind.PRODUCER)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(sendAttributes(record2)),
+                  span ->
+                      span.hasName(spanName("testBatchTopic", "process", "process"))
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(4))
+                          .hasLinks(LinkData.create(trace.getSpan(4).getSpanContext()))
+                          .hasAttributesSatisfyingExactly(processAttributes(record2)),
+                  span -> span.hasName("process testSpan2").hasParent(trace.getSpan(5)));
 
-          producer1.set(trace.getSpan(1));
-          producer2.set(trace.getSpan(4));
-        },
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(spanName("testBatchTopic", "process", "process"))
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasLinks(
-                            batchRecordLink(producer1.get()), batchRecordLink(producer2.get()))
-                        .hasAttributesSatisfyingExactly(batchProcessAttributes("testBatchTopic")),
-                span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(spanName("testBatchTopic", "receive", "poll"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasLinks(
-                            batchRecordLink(producer1.get()), batchRecordLink(producer2.get()))
-                        .hasAttributesSatisfyingExactly(receiveAttributes("testBatchTopic"))));
+              producer1.set(trace.getSpan(1));
+              producer2.set(trace.getSpan(4));
+            },
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(spanName("testBatchTopic", "process", "process"))
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasNoParent()
+                            .hasLinks(
+                                batchRecordLink(producer1.get()), batchRecordLink(producer2.get()))
+                            .hasAttributesSatisfyingExactly(
+                                batchProcessAttributes("testBatchTopic")),
+                    span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(spanName("testBatchTopic", "receive", "poll"))
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasLinks(
+                                batchRecordLink(producer1.get()), batchRecordLink(producer2.get()))
+                            .hasAttributesSatisfyingExactly(receiveAttributes("testBatchTopic"))));
   }
 
   private void assertStableBatchFailure(KafkaProducerRecord<String, String> record) {
     AtomicReference<SpanData> producer = new AtomicReference<>();
 
-    waitAndAssertStableTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER, SpanKind.CLIENT),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("producer"),
-              span ->
-                  span.hasName(spanName("testBatchTopic", "publish", "send"))
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(sendAttributes(record)),
-              span ->
-                  span.hasName(spanName("testBatchTopic", "process", "process"))
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasParent(trace.getSpan(1))
-                      .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
-                      .hasAttributesSatisfyingExactly(processAttributes(record)),
-              span -> span.hasName("process error").hasParent(trace.getSpan(2)));
+    testing()
+        .waitAndAssertSortedTraces(
+            orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER, SpanKind.CLIENT),
+            trace -> {
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("producer"),
+                  span ->
+                      span.hasName(spanName("testBatchTopic", "publish", "send"))
+                          .hasKind(SpanKind.PRODUCER)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(sendAttributes(record)),
+                  span ->
+                      span.hasName(spanName("testBatchTopic", "process", "process"))
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(1))
+                          .hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()))
+                          .hasAttributesSatisfyingExactly(processAttributes(record)),
+                  span -> span.hasName("process error").hasParent(trace.getSpan(2)));
 
-          producer.set(trace.getSpan(1));
-        },
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(spanName("testBatchTopic", "process", "process"))
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasLinks(batchRecordLink(producer.get()))
-                        .hasStatus(StatusData.error())
-                        .hasException(new IllegalArgumentException("boom"))
-                        .hasAttributesSatisfyingExactly(
-                            withErrorType(batchProcessAttributes("testBatchTopic"))),
-                span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span                    .hasName(spanName("testBatchTopic", "receive", "poll"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasLinks(batchRecordLink(producer.get()))
-                        .hasAttributesSatisfyingExactly(receiveAttributes("testBatchTopic"))));
+              producer.set(trace.getSpan(1));
+            },
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(spanName("testBatchTopic", "process", "process"))
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasNoParent()
+                            .hasLinks(batchRecordLink(producer.get()))
+                            .hasStatus(StatusData.error())
+                            .hasException(new IllegalArgumentException("boom"))
+                            .hasAttributesSatisfyingExactly(
+                                withErrorType(batchProcessAttributes("testBatchTopic"))),
+                    span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(spanName("testBatchTopic", "receive", "poll"))
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasLinks(batchRecordLink(producer.get()))
+                            .hasAttributesSatisfyingExactly(receiveAttributes("testBatchTopic"))));
   }
 }
