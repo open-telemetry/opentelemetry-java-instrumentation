@@ -479,19 +479,24 @@ sufficient for optimization.
   targets subclasses or implementors of a type.
 - `transform()` wires method matchers to advice classes via `applyAdviceToMethod()`.
 - Direct argument and return-type matchers inside `transform()` use `Type.class` only when the type
-  is loadable from the agent class loader, available at the module's minimum supported Java version,
-  and present in every supported runtime image. Types in `java.base` and modules required by the
-  agent meet the runtime-image requirement: use `takesArgument(0, String.class)` and
-  `returns(CompletableFuture.class)`, not `takesArgument(0, named("java.lang.String"))` or
+  is loadable from the agent class loader. For JDK types, use class literals only for primitives and
+  primitive arrays, or types from these exact package names: `java.io`, `java.lang`,
+  `java.lang.reflect`, `java.net`, `java.nio`, `java.time`, `java.util`, `java.util.concurrent`, and
+  `java.util.function`. These packages are in `java.base` and already have direct matcher
+  class-literal usage in this repository. Package matching is not recursive: `java.util` does not
+  include `java.util.logging`. The type must also be available at the module's minimum supported
+  Java version.
+  Use `takesArgument(0, String.class)` and `returns(CompletableFuture.class)`, not
+  `takesArgument(0, named("java.lang.String"))` or
   `returns(named("java.util.concurrent.CompletableFuture"))`.
   Compiling against a type is not enough — `transform()` runs in the agent class loader, which sees
   only JDK and agent classes, so a class literal for any other type fails to resolve and the whole
   instrumentation module is dropped.
   Keep `named(...)` for `typeMatcher()`, class-loader optimization, hierarchy matchers
-  (`extendsClass`, `implementsInterface`), all instrumented-library types, JDK types unavailable at
-  the module's minimum Java version, types in optional JDK modules that a custom runtime image can
-  omit, inaccessible JDK-internal classes, and advice-class name strings. This method-signature
-  convention does not change the type-level and advice-class classloading guidance above and below.
+  (`extendsClass`, `implementsInterface`), all instrumented-library types, JDK types outside the
+  allowlist or unavailable at the module's minimum Java version, inaccessible JDK-internal classes,
+  and advice-class name strings. This method-signature convention does not change the type-level and
+  advice-class classloading guidance above and below.
 - `isMethod()` in method matchers inside `transform()` is redundant when the matcher
   already names a specific, non-empty method — e.g. `named("foo")` or `namedOneOf("foo", "bar")`.
   Keep `isMethod()` when the name could be empty, since `named("")` matches constructors and
