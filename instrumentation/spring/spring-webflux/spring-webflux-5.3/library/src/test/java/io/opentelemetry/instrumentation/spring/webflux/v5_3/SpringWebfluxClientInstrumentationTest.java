@@ -29,9 +29,4 @@ class SpringWebfluxClientInstrumentationTest
             .build();
     return builder.filters(instrumentation::addFilterAndRegisterReactorHook);
   }
-
-  @Override
-  protected boolean hasServicePeerName() {
-    return false;
-  }
 }

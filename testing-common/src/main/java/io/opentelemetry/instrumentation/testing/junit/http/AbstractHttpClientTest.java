@@ -31,7 +31,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_NAME;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.UrlIncubatingAttributes.URL_TEMPLATE;
@@ -1102,14 +1101,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
             attrs -> {
-              // Check for service.peer.name when running with javaagent instrumentation
-              String distroName = span.actual().getResource().getAttribute(TELEMETRY_DISTRO_NAME);
-              if ("opentelemetry-java-instrumentation".equals(distroName)) {
-                String expectedServicePeerName = options.getExpectedServicePeerName().apply(uri);
-                if (expectedServicePeerName != null) {
-                  assertThat(attrs)
-                      .containsEntry(maybeStablePeerService(), expectedServicePeerName);
-                }
+              String expectedPeerService = testing.expectedPeerService();
+              if (expectedPeerService != null) {
+                assertThat(attrs).containsEntry(maybeStablePeerService(), expectedPeerService);
+              } else {
+                assertThat(attrs).doesNotContainKey(maybeStablePeerService());
               }
 
               // we're opting out of these attributes in the new semconv

@@ -56,10 +56,6 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
 
   protected abstract HttpClient configureHttpClient(HttpClient httpClient);
 
-  protected boolean hasServicePeerName() {
-    return false;
-  }
-
   @Override
   public HttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
     HttpRequest.Builder requestBuilder =
@@ -183,9 +179,7 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, method),
                             equalTo(ERROR_TYPE, CancellationException.class.getName()),
-                            equalTo(
-                                maybeStablePeerService(),
-                                hasServicePeerName() ? "test-peer-service" : null)),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService())),
                 span ->
                     span.hasName("test-http-server")
                         .hasKind(SpanKind.SERVER)
