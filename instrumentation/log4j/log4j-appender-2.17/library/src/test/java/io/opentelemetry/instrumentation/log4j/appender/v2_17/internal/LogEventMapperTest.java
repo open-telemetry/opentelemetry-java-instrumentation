@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_NAME;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
@@ -158,7 +159,7 @@ class LogEventMapperTest {
     mapper.captureContextDataAttributes(builder, contextData);
 
     verify(builder).setAttribute(stringKey("request-id"), "123");
-    verify(builder).setAttribute(stringKey("user.name"), "alice");
+    verify(builder).setAttribute(USER_NAME, "alice");
     verifyNoMoreInteractions(builder);
   }
 
