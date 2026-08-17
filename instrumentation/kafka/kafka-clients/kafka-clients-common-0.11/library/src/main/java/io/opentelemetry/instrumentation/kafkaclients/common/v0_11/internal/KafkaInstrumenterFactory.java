@@ -467,21 +467,6 @@ public final class KafkaInstrumenterFactory {
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
-  private static final class DeliveryState {
-    private final List<String> deliveryKeys;
-    private final Cache<String, Boolean> pendingFailedDeliveries;
-
-    private DeliveryState(
-        List<String> deliveryKeys, Cache<String, Boolean> pendingFailedDeliveries) {
-      this.deliveryKeys = deliveryKeys;
-      this.pendingFailedDeliveries = pendingFailedDeliveries;
-    }
-  }
-
-  private static class DeliveryTracker {
-    private final Cache<Object, Cache<String, Boolean>> pendingFailedDeliveries = Cache.weak();
-  }
-
   private static DeliveryTracker getDeliveryTracker(OpenTelemetry openTelemetry) {
     return deliveryTrackers.computeIfAbsent(openTelemetry, unused -> new DeliveryTracker());
   }
@@ -500,5 +485,20 @@ public final class KafkaInstrumenterFactory {
     return MessagingAttributesExtractor.builder(getter, operationType, operationName)
         .setHeaders(headers)
         .build();
+  }
+
+  private static final class DeliveryState {
+    private final List<String> deliveryKeys;
+    private final Cache<String, Boolean> pendingFailedDeliveries;
+
+    private DeliveryState(
+        List<String> deliveryKeys, Cache<String, Boolean> pendingFailedDeliveries) {
+      this.deliveryKeys = deliveryKeys;
+      this.pendingFailedDeliveries = pendingFailedDeliveries;
+    }
+  }
+
+  private static class DeliveryTracker {
+    private final Cache<Object, Cache<String, Boolean>> pendingFailedDeliveries = Cache.weak();
   }
 }
