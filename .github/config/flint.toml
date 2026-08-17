@@ -23,7 +23,6 @@ patterns = ["*.java"]
 skip_reflowing_long_strings = true
 off_on_markers = [
   { off = "// spotless:off", on = "// spotless:on" },
-  { off = "/* @formatter:off */", on = "/* @formatter:on */" },
 ]
 exclude = [
   "gradle-plugins/**",
@@ -53,6 +52,7 @@ skip_line_pattern = '^\s*import '
 add_lines_before_pattern = '^\s*import '
 add_lines_fallback_after_pattern = '^\s*package '
 ignore_regions = [
+  { start_pattern = '^\s*// spotless:off\s*$', end_pattern = '^\s*// spotless:on\s*$' },
   { start_pattern = '^\s*/\*(?:[^*]|\*+[^*/])*\**\s*$', end_pattern = '^\s*(?:\*/|[^/]*\*/\s*$)' },
   { start_pattern = '^\s*/\*.*\*/\s*$', end_pattern = '^\s*/\*.*\*/\s*$' },
 ]

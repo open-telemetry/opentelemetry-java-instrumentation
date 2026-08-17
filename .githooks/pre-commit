@@ -3,8 +3,8 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-if ! ./gradlew spotlessCheck; then
-  ./gradlew spotlessApply
+if ! mise run lint; then
+  mise run lint:fix
   echo ""
   echo ""
   echo -e "\033[0;33mCode has been formatted; please git diff/add and recommit."

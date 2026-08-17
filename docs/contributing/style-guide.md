@@ -19,14 +19,16 @@ In addition to Google Java Style formatting, Flint applies the repository's
 configured regular-expression import rules (for example, rewriting
 `Objects.requireNonNull` to a static import).
 
-Markdown files are formatted and linted separately through
-[flint](https://github.com/grafana/flint), run via [mise](https://mise.jdx.dev/):
+The same Flint command formats and lints Markdown files, checks links, and verifies
+license headers. The `license-header` check is check-only; it does not insert a missing header.
+
+Flint runs via [mise](https://mise.jdx.dev/):
 
 ```bash
 mise run lint:fix
 ```
 
-flint also checks that links in markdown files resolve.
+Flint also checks that links in Markdown files resolve.
 
 #### Pre-commit hook
 

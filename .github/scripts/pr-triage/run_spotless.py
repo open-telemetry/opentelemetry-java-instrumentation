@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run spotless on a PR branch, commit changes, push, and restore the branch."""
+"""Run lint fixes on a PR branch, commit changes, push, and restore the branch."""
 
 from __future__ import annotations
 
@@ -11,7 +11,6 @@ from common import (
     changed_files,
     commit_all_tracked,
     diff_check,
-    gradlew_cmd,
     progress,
     push,
     run,
@@ -32,26 +31,26 @@ def main() -> int:
     args = parse_args()
 
     def body(summary: Summary) -> int:
-        progress("Running Spotless")
-        run(gradlew_cmd("spotlessApply"), summary, stream_output=True)
-        progress("Checking Spotless changes")
+        progress("Running Flint lint fixes")
+        run(["mise", "run", "lint:fix"], summary, stream_output=True)
+        progress("Checking lint changes")
         diff_check(summary)
 
         if untracked_files(summary):
-            raise RuntimeError("spotless produced untracked files; refusing to continue")
+            raise RuntimeError("lint produced untracked files; refusing to continue")
 
         summary.changed_files = changed_files(summary)
         if not status_porcelain(summary).strip():
-            progress("No Spotless changes found")
-            summary.outcome = "PR was already spotless"
+            progress("No lint changes found")
+            summary.outcome = "PR already passed lint"
             return 0
 
-        commit_all_tracked("Run spotless", summary)
+        commit_all_tracked("Run Flint lint fixes", summary)
         if args.no_push:
             summary.push_result = "not pushed (--no-push)"
         else:
             push(summary)
-        summary.outcome = "spotless changes committed"
+        summary.outcome = "lint fixes committed"
         return 0
 
     return run_pr_workflow(args.pr, body)
