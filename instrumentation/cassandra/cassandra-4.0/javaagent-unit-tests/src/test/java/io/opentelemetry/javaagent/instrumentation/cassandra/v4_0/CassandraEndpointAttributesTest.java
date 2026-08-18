@@ -13,6 +13,7 @@ import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
+import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -23,14 +24,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 // The proxied (SNI) path cannot be exercised against the Cassandra test container, so this unit
-// test covers the endpoint-to-address mapping directly. Driver 4.0 to 4.2 have no SniEndPoint, so
-// the proxied endpoint is a plain mock of the EndPoint interface.
+// test covers the endpoint-to-address mapping directly.
 @ExtendWith(MockitoExtension.class)
 class CassandraEndpointAttributesTest {
 
   @Mock private ExecutionInfo executionInfo;
   @Mock private Node coordinator;
-  @Mock private EndPoint proxyEndPoint;
+  @Mock private EndPoint customEndPoint;
 
   @Test
   void defaultEndPointUsesResolvedAddressForServer() throws UnknownHostException {
@@ -45,17 +45,15 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void proxiedEndPointUsesBroadcastRpcAddressForServer() {
+  void sniEndPointUsesBroadcastRpcAddressForServer() throws UnknownHostException {
     // The proxy the client actually connects to differs from the node behind it. Under the stable
     // conventions the broadcast RPC address is recorded; under the frozen old conventions the proxy
     // returned by resolve() is recorded, so each mode pins a different value.
-    when(coordinator.getEndPoint()).thenReturn(proxyEndPoint);
+    SniEndPoint endPoint = new SniEndPoint(resolved(29042), "host-id");
+    when(coordinator.getEndPoint()).thenReturn(endPoint);
     if (emitStableDatabaseSemconv()) {
       when(coordinator.getBroadcastRpcAddress())
           .thenReturn(Optional.of(InetSocketAddress.createUnresolved("10.0.0.5", 9042)));
-    } else {
-      when(proxyEndPoint.resolve())
-          .thenReturn(InetSocketAddress.createUnresolved("proxy.example.com", 29042));
     }
 
     InetSocketAddress server = CassandraAttributesExtractor.getServerAddress(coordinator);
@@ -65,32 +63,45 @@ class CassandraEndpointAttributesTest {
       assertThat(server.getHostString()).isEqualTo("10.0.0.5");
       assertThat(server.getPort()).isEqualTo(9042);
     } else {
-      assertThat(server.getHostString()).isEqualTo("proxy.example.com");
+      assertThat(server.getAddress().isLoopbackAddress()).isTrue();
       assertThat(server.getPort()).isEqualTo(29042);
     }
   }
 
   @Test
-  void proxiedEndPointOmitsServerAddressWithoutBroadcastRpcAddress() {
-    when(coordinator.getEndPoint()).thenReturn(proxyEndPoint);
+  void sniEndPointOmitsServerAddressWithoutBroadcastRpcAddress() throws UnknownHostException {
+    SniEndPoint endPoint = new SniEndPoint(resolved(29042), "host-id");
+    when(coordinator.getEndPoint()).thenReturn(endPoint);
     if (emitStableDatabaseSemconv()) {
       when(coordinator.getBroadcastRpcAddress()).thenReturn(Optional.empty());
       assertThat(CassandraAttributesExtractor.getServerAddress(coordinator)).isNull();
     } else {
       // The old conventions are frozen and still record the proxy returned by resolve().
-      when(proxyEndPoint.resolve())
-          .thenReturn(InetSocketAddress.createUnresolved("proxy.example.com", 29042));
       InetSocketAddress server = CassandraAttributesExtractor.getServerAddress(coordinator);
       assertThat(server).isNotNull();
-      assertThat(server.getHostString()).isEqualTo("proxy.example.com");
+      assertThat(server.getAddress().isLoopbackAddress()).isTrue();
       assertThat(server.getPort()).isEqualTo(29042);
     }
   }
 
   @Test
-  void networkPeerIsOmittedForProxiedEndPoint() {
+  void customEndPointUsesResolvedAddressForServer() {
+    when(coordinator.getEndPoint()).thenReturn(customEndPoint);
+    when(customEndPoint.resolve())
+        .thenReturn(InetSocketAddress.createUnresolved("node.example.com", 9042));
+
+    InetSocketAddress server = CassandraAttributesExtractor.getServerAddress(coordinator);
+
+    assertThat(server).isNotNull();
+    assertThat(server.getHostString()).isEqualTo("node.example.com");
+    assertThat(server.getPort()).isEqualTo(9042);
+  }
+
+  @Test
+  void networkPeerIsOmittedForSniEndPoint() throws UnknownHostException {
     when(executionInfo.getCoordinator()).thenReturn(coordinator);
-    when(coordinator.getEndPoint()).thenReturn(proxyEndPoint);
+    SniEndPoint endPoint = new SniEndPoint(resolved(29042), "host-id");
+    when(coordinator.getEndPoint()).thenReturn(endPoint);
 
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
     if (emitStableDatabaseSemconv()) {
@@ -98,13 +109,26 @@ class CassandraEndpointAttributesTest {
     } else {
       // The old conventions are frozen and still record the proxy returned by resolve() as the
       // peer.
-      when(proxyEndPoint.resolve())
-          .thenReturn(InetSocketAddress.createUnresolved("proxy.example.com", 29042));
       InetSocketAddress peer = getter.getNetworkPeerInetSocketAddress(null, executionInfo);
       assertThat(peer).isNotNull();
-      assertThat(peer.getHostString()).isEqualTo("proxy.example.com");
+      assertThat(peer.getAddress().isLoopbackAddress()).isTrue();
       assertThat(peer.getPort()).isEqualTo(29042);
     }
+  }
+
+  @Test
+  void networkPeerIsResolvedAddressUnderCustomEndPoint() {
+    when(executionInfo.getCoordinator()).thenReturn(coordinator);
+    when(coordinator.getEndPoint()).thenReturn(customEndPoint);
+    when(customEndPoint.resolve())
+        .thenReturn(InetSocketAddress.createUnresolved("node.example.com", 9042));
+
+    CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
+    InetSocketAddress peer = getter.getNetworkPeerInetSocketAddress(null, executionInfo);
+
+    assertThat(peer).isNotNull();
+    assertThat(peer.getHostString()).isEqualTo("node.example.com");
+    assertThat(peer.getPort()).isEqualTo(9042);
   }
 
   @Test

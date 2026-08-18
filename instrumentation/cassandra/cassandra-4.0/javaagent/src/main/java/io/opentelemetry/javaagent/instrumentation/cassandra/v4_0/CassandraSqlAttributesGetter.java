@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraEndPoints.isSniEndPoint;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
-import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
@@ -65,23 +65,18 @@ final class CassandraSqlAttributesGetter
       return null;
     }
     EndPoint endPoint = coordinator.getEndPoint();
-    if (endPoint instanceof DefaultEndPoint) {
-      // resolve() returns the already-resolved InetSocketAddress, it does not do a dns lookup.
-      return ((DefaultEndPoint) endPoint).resolve();
-    }
-    if (!emitStableDatabaseSemconv()) {
+    if (!emitStableDatabaseSemconv() || !isSniEndPoint(endPoint)) {
       // The old database semantic conventions are frozen, so keep the pre-existing behavior, which
-      // resolves the endpoint and records the proxy as the peer under SNI. The fix below only
-      // applies under the stable conventions.
+      // records the proxy as the peer under SNI. Custom endpoints may represent direct connections,
+      // so preserve their resolved addresses under both old and stable conventions.
       SocketAddress address = endPoint.resolve();
       return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
     }
-    // Any other endpoint reaches the server through an intermediary, and under SNI (proxied
-    // deployments such as DataStax Astra) the only way to read that intermediary's socket is
-    // resolve(), which performs a dns lookup on every call and round-robins across the resolved
+    // Under SNI, resolve() performs a dns lookup on every call and round-robins across the resolved
     // addresses using a shared static counter that the driver also uses to pick a connection.
-    // Calling it here would add a per-span dns lookup, record a rotating address that may not match
-    // the connection, and perturb the driver's own rotation, so network.peer.* is left unset.
+    // Calling
+    // it here would add a per-span dns lookup, record a rotating address that may not match the
+    // connection, and perturb the driver's own rotation, so network.peer.* is left unset.
     return null;
   }
 
