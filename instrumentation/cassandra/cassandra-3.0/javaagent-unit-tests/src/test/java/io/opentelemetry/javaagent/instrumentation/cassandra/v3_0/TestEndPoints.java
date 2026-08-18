@@ -19,7 +19,11 @@ final class TestEndPoints {
       InetSocketAddress.createUnresolved("127.0.0.1", 29042);
 
   static SniEndPoint sniEndPoint() {
-    return new SniEndPoint(PROXY_ADDRESS, "host-id");
+    return sniEndPoint("host-id");
+  }
+
+  static SniEndPoint sniEndPoint(String serverName) {
+    return new SniEndPoint(PROXY_ADDRESS, serverName);
   }
 
   static EndPoint plainEndPoint(InetSocketAddress address) {

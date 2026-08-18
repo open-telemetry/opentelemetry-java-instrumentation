@@ -68,12 +68,14 @@ final class CassandraSqlAttributesGetter
       // resolve() returns the already-resolved InetSocketAddress, it does not do a dns lookup.
       return (InetSocketAddress) endPoint.resolve();
     }
-    // Under SNI (proxied deployments such as DataStax Astra) the peer is the proxy, but the only
-    // public accessor for it, SniEndPoint.resolve(), performs a dns lookup on every call and
-    // round-robins across the resolved addresses using a shared static counter that the driver
-    // also uses to pick a connection. Calling it here would add a per-span dns lookup, record a
-    // rotating address that may not match the connection, and perturb the driver's own rotation,
-    // so network.peer.* is left unset under SNI.
+    // Every other endpoint kind, including SNI (proxied deployments such as DataStax Astra), gets
+    // no network.peer.*. The peer is the proxy, but no address for it is worth recording. The only
+    // public accessor, SniEndPoint.resolve(), performs a dns lookup on every call and round-robins
+    // across the resolved addresses using a shared static counter that the driver also uses to pick
+    // a connection, so calling it here would add a per-span dns lookup, record a rotating address
+    // that may not match the connection, and perturb the driver's own rotation. The private
+    // proxyAddress field that the attributes extractor reads for the old conventions is unresolved
+    // for cloud deployments, so it carries no ip address to record either.
     return null;
   }
 

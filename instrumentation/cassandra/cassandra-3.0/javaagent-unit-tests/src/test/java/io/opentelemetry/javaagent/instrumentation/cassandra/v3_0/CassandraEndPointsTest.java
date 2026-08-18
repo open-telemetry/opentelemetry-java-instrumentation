@@ -16,16 +16,17 @@ import com.datastax.driver.core.Host;
 import com.datastax.driver.core.exceptions.UnavailableException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-// CassandraEndPoints reaches the driver's SNI api by reflection, naming one class and three methods
-// in string literals. CassandraResponseTest exercises these lookups through the endpoint mappings.
-// These focused assertions identify which lookup failed and verify that plain endpoints are not
-// mistaken for SNI endpoints. This module uses driver 3.11.5. The javaagent module's own tests use
-// driver 3.2.0, where the reflective api does not exist.
+// CassandraEndPoints reaches the driver's SNI api by reflection, naming one class, four methods and
+// one private field in string literals. CassandraResponseTest exercises these lookups through the
+// endpoint mappings. These focused assertions identify which lookup failed and verify that plain
+// endpoints are not mistaken for SNI endpoints. This module uses driver 3.11.5. The javaagent
+// module's own tests use driver 3.2.0, where the reflective api does not exist.
 @ExtendWith(MockitoExtension.class)
 class CassandraEndPointsTest {
 
@@ -71,5 +72,27 @@ class CassandraEndPointsTest {
 
     assertThat(CassandraEndPoints.getBroadcastRpcAddress(coordinator))
         .isEqualTo(broadcastRpcAddress);
+  }
+
+  @Test
+  void readsSniServerName() {
+    when(coordinator.getEndPoint()).thenReturn(sniEndPoint("node1.example.com"));
+
+    assertThat(CassandraEndPoints.getSniServerName(coordinator)).isEqualTo("node1.example.com");
+  }
+
+  @Test
+  void readsNoSniServerNameFromPlainEndPoint() throws UnknownHostException {
+    when(coordinator.getEndPoint()).thenReturn(plainEndPoint(address(LOOPBACK_IP, 9042)));
+
+    assertThat(CassandraEndPoints.getSniServerName(coordinator)).isNull();
+  }
+
+  @Test
+  void readsHostId() {
+    UUID hostId = UUID.randomUUID();
+    when(coordinator.getHostId()).thenReturn(hostId);
+
+    assertThat(CassandraEndPoints.getHostId(coordinator)).isEqualTo(hostId.toString());
   }
 }

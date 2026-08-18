@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -14,10 +16,13 @@ import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -44,11 +49,10 @@ class CassandraEndpointAttributesTest {
     DefaultEndPoint endPoint = new DefaultEndPoint(resolved(9042));
     when(coordinator.getEndPoint()).thenReturn(endPoint);
 
-    InetSocketAddress server = CassandraAttributesExtractor.getServerAddress(coordinator);
+    Attributes attributes = serverAttributes();
 
-    assertThat(server).isNotNull();
-    assertThat(server.getHostString()).isEqualTo("127.0.0.1");
-    assertThat(server.getPort()).isEqualTo(9042);
+    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("127.0.0.1");
+    assertThat(attributes.get(SERVER_PORT)).isEqualTo(9042L);
   }
 
   @Test
@@ -63,31 +67,56 @@ class CassandraEndpointAttributesTest {
           .thenReturn(Optional.of(InetSocketAddress.createUnresolved("10.0.0.5", 9042)));
     }
 
-    InetSocketAddress server = CassandraAttributesExtractor.getServerAddress(coordinator);
+    Attributes attributes = serverAttributes();
 
-    assertThat(server).isNotNull();
     if (emitStableDatabaseSemconv()) {
-      assertThat(server.getHostString()).isEqualTo("10.0.0.5");
-      assertThat(server.getPort()).isEqualTo(9042);
+      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("10.0.0.5");
+      assertThat(attributes.get(SERVER_PORT)).isEqualTo(9042L);
     } else {
-      assertThat(server.getAddress().isLoopbackAddress()).isTrue();
-      assertThat(server.getPort()).isEqualTo(29042);
+      assertProxyIsServer(attributes);
     }
   }
 
   @Test
-  void sniEndPointOmitsServerAddressWithoutBroadcastRpcAddress() {
-    SniEndPoint endPoint = new SniEndPoint(PROXY_ADDRESS, "host-id");
+  void sniEndPointOmitsServerAddressWhenServerNameIsHostId() {
+    // In cloud deployments the driver builds the SNI server name from the node's host id, which is
+    // not an address, so nothing is recorded rather than the host id. The frozen old conventions
+    // still record the proxy returned by resolve().
+    UUID hostId = UUID.fromString("2a1c1d5e-7b0e-4d3a-9a1f-2f5a6c8b0d31");
+    SniEndPoint endPoint = new SniEndPoint(PROXY_ADDRESS, hostId.toString());
     when(coordinator.getEndPoint()).thenReturn(endPoint);
     if (emitStableDatabaseSemconv()) {
       when(coordinator.getBroadcastRpcAddress()).thenReturn(Optional.empty());
-      assertThat(CassandraAttributesExtractor.getServerAddress(coordinator)).isNull();
+      when(coordinator.getHostId()).thenReturn(hostId);
+    }
+
+    Attributes attributes = serverAttributes();
+
+    if (emitStableDatabaseSemconv()) {
+      assertThat(attributes.get(SERVER_ADDRESS)).isNull();
+      assertThat(attributes.get(SERVER_PORT)).isNull();
     } else {
-      // The old conventions are frozen and still record the proxy returned by resolve().
-      InetSocketAddress server = CassandraAttributesExtractor.getServerAddress(coordinator);
-      assertThat(server).isNotNull();
-      assertThat(server.getAddress().isLoopbackAddress()).isTrue();
-      assertThat(server.getPort()).isEqualTo(29042);
+      assertProxyIsServer(attributes);
+    }
+  }
+
+  @Test
+  void sniEndPointFallsBackToServerNameWhenItIsNotHostId() {
+    SniEndPoint endPoint = new SniEndPoint(PROXY_ADDRESS, "node1.example.com");
+    when(coordinator.getEndPoint()).thenReturn(endPoint);
+    if (emitStableDatabaseSemconv()) {
+      when(coordinator.getBroadcastRpcAddress()).thenReturn(Optional.empty());
+      when(coordinator.getHostId())
+          .thenReturn(UUID.fromString("2a1c1d5e-7b0e-4d3a-9a1f-2f5a6c8b0d31"));
+    }
+
+    Attributes attributes = serverAttributes();
+
+    if (emitStableDatabaseSemconv()) {
+      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("node1.example.com");
+      assertThat(attributes.get(SERVER_PORT)).isNull();
+    } else {
+      assertProxyIsServer(attributes);
     }
   }
 
@@ -97,11 +126,10 @@ class CassandraEndpointAttributesTest {
     when(customEndPoint.resolve())
         .thenReturn(InetSocketAddress.createUnresolved("node.example.com", 9042));
 
-    InetSocketAddress server = CassandraAttributesExtractor.getServerAddress(coordinator);
+    Attributes attributes = serverAttributes();
 
-    assertThat(server).isNotNull();
-    assertThat(server.getHostString()).isEqualTo("node.example.com");
-    assertThat(server.getPort()).isEqualTo(9042);
+    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("node.example.com");
+    assertThat(attributes.get(SERVER_PORT)).isEqualTo(9042L);
   }
 
   @Test
@@ -150,6 +178,18 @@ class CassandraEndpointAttributesTest {
     assertThat(peer).isNotNull();
     assertThat(peer.getHostString()).isEqualTo("127.0.0.1");
     assertThat(peer.getPort()).isEqualTo(9042);
+  }
+
+  private Attributes serverAttributes() {
+    AttributesBuilder builder = Attributes.builder();
+    CassandraAttributesExtractor.updateServerAddressAndPort(builder, coordinator);
+    return builder.build();
+  }
+
+  // PROXY_ADDRESS is unresolved, so resolve() turns it into the loopback address it names.
+  private static void assertProxyIsServer(Attributes attributes) {
+    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("127.0.0.1");
+    assertThat(attributes.get(SERVER_PORT)).isEqualTo(29042L);
   }
 
   // DefaultEndPoint requires a resolved address; build one from raw loopback bytes so getHostString
