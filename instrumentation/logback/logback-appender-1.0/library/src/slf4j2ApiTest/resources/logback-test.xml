@@ -17,7 +17,7 @@
     <captureTemplate>true</captureTemplate>
     <captureArguments>true</captureArguments>
     <logstashMarkerAttributesIncluded>*</logstashMarkerAttributesIncluded>
-    <captureLogstashStructuredArguments>true</captureLogstashStructuredArguments>
+    <logstashStructuredArgumentAttributesIncluded>*</logstashStructuredArgumentAttributesIncluded>
     <mdcAttributesIncluded>key?</mdcAttributesIncluded>
   </appender>
 

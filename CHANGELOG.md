@@ -131,6 +131,15 @@
   programmatically as `OpenTelemetryAppender#setLogstashMarkerAttributes(IncludeExclude)`. The
   deprecated setting continues to capture every Logstash marker attribute when enabled.
   ([#19609](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19609))
+- Deprecate the Logback appender `experimental.capture-logstash-structured-arguments` configuration
+  property and `OpenTelemetryAppender#setCaptureLogstashStructuredArguments(boolean)` in favor of the
+  new `experimental.logstash-structured-argument-attributes.included` and
+  `experimental.logstash-structured-argument-attributes.excluded` selectors, which are also available
+  in `logback.xml` as `logstashStructuredArgumentAttributesIncluded` and
+  `logstashStructuredArgumentAttributesExcluded` and programmatically as
+  `OpenTelemetryAppender#setLogstashStructuredArgumentAttributes(IncludeExclude)`. The deprecated
+  setting continues to capture every Logstash structured argument attribute when enabled.
+  ([#19610](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19610))
 - Deprecate the Log4j appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender.Builder#setCaptureContextDataAttributes(String)` in favor of
   include/exclude context data selectors and

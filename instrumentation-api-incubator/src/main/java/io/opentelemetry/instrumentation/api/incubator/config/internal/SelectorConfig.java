@@ -136,15 +136,33 @@ public final class SelectorConfig {
   @Nullable
   public static Predicate<String> resolveLegacyBoolean(
       DeclarativeConfigProperties config, String instrumentationName, String selectorName) {
+    return resolveLegacyBoolean(config, instrumentationName, selectorName, selectorName);
+  }
+
+  /**
+   * Returns a predicate matching the configured selector, or {@code null} when nothing is
+   * configured to be captured.
+   *
+   * <p>Unlike {@link #resolveLegacyBoolean(DeclarativeConfigProperties, String, String)}, the
+   * deprecated boolean setting is named after {@code deprecatedSelectorName} instead of {@code
+   * selectorName}, for settings that were not renamed consistently with their replacement.
+   */
+  @Nullable
+  public static Predicate<String> resolveLegacyBoolean(
+      DeclarativeConfigProperties config,
+      String instrumentationName,
+      String selectorName,
+      String deprecatedSelectorName) {
     IncludeExclude selector = getSelector(config, instrumentationName, selectorName, false);
     if (selector != null) {
       return selector::matches;
     }
-    Boolean deprecated = config.getBoolean("capture_" + nodeName(selectorName) + "/development");
+    Boolean deprecated =
+        config.getBoolean("capture_" + nodeName(deprecatedSelectorName) + "/development");
     if (deprecated == null) {
       return null;
     }
-    warnDeprecated(instrumentationName, selectorName, selectorName);
+    warnDeprecated(instrumentationName, selectorName, deprecatedSelectorName);
     return deprecated ? value -> true : null;
   }
 
