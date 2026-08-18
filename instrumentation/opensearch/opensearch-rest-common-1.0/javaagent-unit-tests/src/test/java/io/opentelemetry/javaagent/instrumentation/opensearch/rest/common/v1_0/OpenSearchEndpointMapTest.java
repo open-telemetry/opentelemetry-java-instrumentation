@@ -25,17 +25,14 @@ class OpenSearchEndpointMapTest {
     int visited =
         forEachRoute(
             (method, route) -> {
-              assertThat(route.getOperationName())
-                  .as("operation name for %s %s", method, route.getTemplate())
-                  .isNotEmpty();
+              assertThat(route.getOperationName()).isNotEmpty();
 
               String concretePath = concretePath(route.getTemplate());
               assertThat(OpenSearchEndpointMap.getOperationName(method, concretePath))
-                  .as("%s %s resolves to its registered operation name", method, concretePath)
                   .isEqualTo(route.getOperationName());
             });
     // guard against a vacuous pass: an emptied or gutted table must fail here
-    assertThat(visited).as("route table is populated").isGreaterThanOrEqualTo(40);
+    assertThat(visited).isGreaterThanOrEqualTo(40);
   }
 
   @Test
@@ -45,32 +42,24 @@ class OpenSearchEndpointMapTest {
             (method, route) -> {
               String concretePath = concretePath(route.getTemplate());
               String masked = OpenSearchEndpointMap.maskPathParameters(method, concretePath);
-              assertThat(masked)
-                  .as("%s %s produces a masked path", method, concretePath)
-                  .isNotNull();
+              assertThat(masked).isNotNull();
 
               List<String> segments = split(concretePath);
               List<String> maskedSegments = split(masked);
-              assertThat(maskedSegments)
-                  .as("masking preserves the segment count for %s", concretePath)
-                  .hasSameSizeAs(segments);
+              assertThat(maskedSegments).hasSameSizeAs(segments);
 
               List<String> templateSegments = split(route.getTemplate());
               for (int i = 0; i < templateSegments.size(); i++) {
                 String templateSegment = templateSegments.get(i);
                 if (isParameter(templateSegment) && !isStructural(route, templateSegment)) {
-                  assertThat(maskedSegments.get(i))
-                      .as("path parameter %s is masked in %s", templateSegment, concretePath)
-                      .isEqualTo("?");
+                  assertThat(maskedSegments.get(i)).isEqualTo("?");
                 } else {
-                  assertThat(maskedSegments.get(i))
-                      .as("structural segment %s is preserved in %s", templateSegment, concretePath)
-                      .isEqualTo(segments.get(i));
+                  assertThat(maskedSegments.get(i)).isEqualTo(segments.get(i));
                 }
               }
             });
     // guard against a vacuous pass: an emptied or gutted table must fail here
-    assertThat(visited).as("route table is populated").isGreaterThanOrEqualTo(40);
+    assertThat(visited).isGreaterThanOrEqualTo(40);
   }
 
   // ---------------------------------------------------------------------------
