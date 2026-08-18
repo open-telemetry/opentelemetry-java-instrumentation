@@ -68,6 +68,7 @@ abstract class AbstractJms1Test {
   private static final Logger logger = LoggerFactory.getLogger(AbstractJms1Test.class);
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jms-1.1";
+
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
