@@ -588,3 +588,4 @@ opentelemetry-api-1.65:javaagent
 tomcat-dbcp-8.0:javaagent
 redisson-metrics-3.26:javaagent
 rocketmq-client-5.0:javaagent-unit-tests
+kafka-connect-2.6:javaagent-unit-tests
