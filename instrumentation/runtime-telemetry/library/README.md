@@ -164,8 +164,8 @@ These metrics are collected via JMX on all Java versions unless selected for JFR
 | `jvm.buffer.count`                 | Number of buffers in the pool               |
 | `jvm.buffer.memory.limit`          | Measure of total memory capacity of buffers |
 | `jvm.buffer.memory.used`           | Measure of memory used by buffers           |
-| `jvm.file_descriptor.count`        | Number of open file descriptors             |
-| `jvm.file_descriptor.limit`        | Maximum number of file descriptors          |
+| `jvm.file_descriptor.count`        | Number of open file descriptors (Unix systems only)    |
+| `jvm.file_descriptor.limit`        | Maximum number of file descriptors (Unix systems only) |
 | `jvm.memory.init`                  | Measure of initial memory requested         |
 | `jvm.system.cpu.utilization`       | System-wide CPU utilization                 |
 
