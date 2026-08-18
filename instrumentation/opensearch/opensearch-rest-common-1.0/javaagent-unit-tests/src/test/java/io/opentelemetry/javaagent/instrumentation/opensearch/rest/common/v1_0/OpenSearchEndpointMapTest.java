@@ -271,6 +271,15 @@ class OpenSearchEndpointMapTest {
   }
 
   @Test
+  void allIndexExpressionMatchesWithoutAdmittingReservedApiSegments() {
+    assertThat(OpenSearchEndpointMap.getOperationName("GET", "_all/_settings"))
+        .isEqualTo("indices.get_settings");
+    assertThat(OpenSearchEndpointMap.maskPathParameters("GET", "_all/_settings"))
+        .isEqualTo("_all/_settings");
+    assertThat(OpenSearchEndpointMap.getOperationName("GET", "_search/_settings")).isNull();
+  }
+
+  @Test
   void getTermvectorsWithoutIdDerivesOperationName() {
     assertThat(OpenSearchEndpointMap.getOperationName("GET", "test-index/_termvectors"))
         .isEqualTo("termvectors");
