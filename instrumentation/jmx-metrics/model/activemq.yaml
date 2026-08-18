@@ -42,7 +42,7 @@ groups:
     metric_name: activemq.consumer.count
     type: metric
     stability: development
-    brief: The number of consumers subscribed to this destination
+    brief: The number of consumers subscribed to this destination.
     unit: "{consumer}"
     instrument: updowncounter
     attributes:
@@ -54,7 +54,7 @@ groups:
     metric_name: activemq.destination.memory.usage
     type: metric
     stability: development
-    brief: The amount of used memory by this destination
+    brief: The amount of used memory by this destination.
     unit: By
     instrument: updowncounter
     attributes:
@@ -66,7 +66,7 @@ groups:
     metric_name: activemq.destination.memory.limit
     type: metric
     stability: development
-    brief: The amount of configured memory limit for this destination
+    brief: The amount of configured memory limit for this destination.
     unit: By
     instrument: updowncounter
     attributes:
@@ -78,7 +78,7 @@ groups:
     metric_name: activemq.destination.temp.utilization
     type: metric
     stability: development
-    brief: The fraction of non-persistent storage used by this destination
+    brief: The fraction of non-persistent storage used by this destination.
     unit: "1"
     instrument: gauge
     attributes:
@@ -90,7 +90,7 @@ groups:
     metric_name: activemq.destination.temp.limit
     type: metric
     stability: development
-    brief: The amount of configured non-persistent storage limit for this destination
+    brief: The amount of configured non-persistent storage limit for this destination.
     unit: By
     instrument: updowncounter
     attributes:
@@ -102,7 +102,7 @@ groups:
     metric_name: activemq.message.queue.size
     type: metric
     stability: development
-    brief: The current number of messages waiting to be consumed
+    brief: The current number of messages waiting to be consumed.
     unit: "{message}"
     instrument: updowncounter
     attributes:
@@ -114,7 +114,7 @@ groups:
     metric_name: activemq.message.expired
     type: metric
     stability: development
-    brief: The number of messages not delivered because they expired
+    brief: The number of messages not delivered because they expired.
     unit: "{message}"
     instrument: counter
     attributes:
@@ -126,7 +126,7 @@ groups:
     metric_name: activemq.message.enqueued
     type: metric
     stability: development
-    brief: The number of messages sent to this destination
+    brief: The number of messages sent to this destination.
     unit: "{message}"
     instrument: counter
     attributes:
@@ -138,7 +138,7 @@ groups:
     metric_name: activemq.message.dequeued
     type: metric
     stability: development
-    brief: The number of messages acknowledged and removed from this destination
+    brief: The number of messages acknowledged and removed from this destination.
     unit: "{message}"
     instrument: counter
     attributes:
@@ -150,7 +150,7 @@ groups:
     metric_name: activemq.message.enqueue.average_duration
     type: metric
     stability: development
-    brief: The average time a message was held on this destination
+    brief: The average time a message was held on this destination.
     unit: "s"
     instrument: gauge
     attributes:
@@ -162,7 +162,7 @@ groups:
     metric_name: activemq.connection.count
     type: metric
     stability: development
-    brief: The number of active connections
+    brief: The number of active connections.
     unit: "{connection}"
     instrument: updowncounter
     attributes:
@@ -172,7 +172,7 @@ groups:
     metric_name: activemq.memory.utilization
     type: metric
     stability: development
-    brief: The fraction of broker memory used
+    brief: The fraction of broker memory used.
     unit: "1"
     instrument: gauge
     attributes:
@@ -182,7 +182,7 @@ groups:
     metric_name: activemq.memory.limit
     type: metric
     stability: development
-    brief: The amount of configured broker memory limit
+    brief: The amount of configured broker memory limit.
     unit: By
     instrument: updowncounter
     attributes:
@@ -192,7 +192,7 @@ groups:
     metric_name: activemq.store.utilization
     type: metric
     stability: development
-    brief: The fraction of broker persistent storage used
+    brief: The fraction of broker persistent storage used.
     unit: "1"
     instrument: gauge
     attributes:
@@ -202,7 +202,7 @@ groups:
     metric_name: activemq.store.limit
     type: metric
     stability: development
-    brief: The amount of configured broker persistent storage limit
+    brief: The amount of configured broker persistent storage limit.
     unit: By
     instrument: updowncounter
     attributes:
@@ -212,7 +212,7 @@ groups:
     metric_name: activemq.temp.utilization
     type: metric
     stability: development
-    brief: The fraction of broker non-persistent storage used
+    brief: The fraction of broker non-persistent storage used.
     unit: "1"
     instrument: gauge
     attributes:
@@ -222,7 +222,7 @@ groups:
     metric_name: activemq.temp.limit
     type: metric
     stability: development
-    brief: The amount of configured broker non-persistent storage limit
+    brief: The amount of configured broker non-persistent storage limit.
     unit: By
     instrument: updowncounter
     attributes:
