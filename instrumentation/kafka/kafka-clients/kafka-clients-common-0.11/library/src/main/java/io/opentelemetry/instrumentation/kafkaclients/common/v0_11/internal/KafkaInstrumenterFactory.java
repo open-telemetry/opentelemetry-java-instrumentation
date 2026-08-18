@@ -115,6 +115,10 @@ public final class KafkaInstrumenterFactory {
             operationType, KafkaProducerRequest::isSpanContextPropagated));
   }
 
+  // the producer interceptor returns from onSend before the record is sent to the broker, and its
+  // onAcknowledgement hook does not report the outcome back, so the span covers only the header
+  // injection. timing it would be misleading, so this instrumenter records only the sent messages
+  // counter.
   public Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInterceptorInstrumenter(
       Iterable<AttributesExtractor<KafkaProducerRequest, RecordMetadata>> extractors) {
     return createProducerInstrumenter(extractors, MessagingProducerMetrics.getSentMessages());
@@ -160,6 +164,9 @@ public final class KafkaInstrumenterFactory {
     return builder.buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
+  // the consumer interceptor runs onConsume after the poll has already returned, so the interceptor
+  // can not measure how long the poll took. timing it would be misleading, so this instrumenter
+  // does not record the client operation duration.
   public Instrumenter<KafkaReceiveRequest, Void> createConsumerReceiveInterceptorInstrumenter(
       Iterable<AttributesExtractor<KafkaReceiveRequest, Void>> extractors) {
     return createConsumerReceiveInstrumenter(extractors, false);
