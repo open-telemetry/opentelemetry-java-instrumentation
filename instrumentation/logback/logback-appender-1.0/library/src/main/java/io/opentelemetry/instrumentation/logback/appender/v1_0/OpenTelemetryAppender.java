@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
-import static io.opentelemetry.instrumentation.logback.appender.v1_0.internal.MdcAttributeSelectors.split;
+import static io.opentelemetry.instrumentation.logback.appender.v1_0.internal.AttributeSelectors.split;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
@@ -15,8 +15,8 @@ import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.spi.AppenderAttachable;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.AttributeSelectors;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
-import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.MdcAttributeSelectors;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -37,7 +37,6 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureExperimentalAttributes = false;
   private boolean captureCodeAttributes = false;
   private boolean captureMarkerAttribute = false;
-  private boolean captureKeyValuePairAttributes = false;
   private boolean captureLoggerContext = false;
   private boolean captureTemplate = false;
   private boolean captureArguments = false;
@@ -48,6 +47,11 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   @Nullable private String mdcAttributesExcluded;
   @Nullable private String captureMdcAttributes;
   private final AtomicBoolean deprecatedMdcAttributesWarningLogged = new AtomicBoolean();
+  @Nullable private IncludeExclude keyValuePairAttributes;
+  @Nullable private String keyValuePairAttributesIncluded;
+  @Nullable private String keyValuePairAttributesExcluded;
+  @Nullable private Boolean captureKeyValuePairAttributes;
+  private final AtomicBoolean deprecatedKeyValuePairAttributesWarningLogged = new AtomicBoolean();
 
   private volatile OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
@@ -105,7 +109,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             .setMdcAttributes(resolveMdcAttributes())
             .setCaptureCodeAttributes(captureCodeAttributes)
             .setCaptureMarkerAttribute(captureMarkerAttribute)
-            .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
+            .setKeyValuePairAttributes(resolveKeyValuePairAttributes())
             .setCaptureLoggerContext(captureLoggerContext)
             .setCaptureTemplate(captureTemplate)
             .setCaptureArguments(captureArguments)
@@ -118,10 +122,10 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   @Nullable
   private Predicate<String> resolveMdcAttributes() {
-    Predicate<String> selector = MdcAttributeSelectors.create(mdcAttributes);
+    Predicate<String> selector = AttributeSelectors.create(mdcAttributes);
     if (selector == null) {
       selector =
-          MdcAttributeSelectors.create(
+          AttributeSelectors.create(
               IncludeExclude.builder()
                   .setIncluded(split(mdcAttributesIncluded))
                   .setExcluded(split(mdcAttributesExcluded))
@@ -131,7 +135,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
       return selector;
     }
     Predicate<String> deprecatedSelector =
-        MdcAttributeSelectors.createDeprecated(split(captureMdcAttributes));
+        AttributeSelectors.createDeprecated(split(captureMdcAttributes));
     if (deprecatedSelector != null
         && deprecatedMdcAttributesWarningLogged.compareAndSet(false, true)) {
       addWarn(
@@ -143,6 +147,33 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
               + " instead.");
     }
     return deprecatedSelector;
+  }
+
+  @Nullable
+  private Predicate<String> resolveKeyValuePairAttributes() {
+    Predicate<String> selector = AttributeSelectors.create(keyValuePairAttributes);
+    if (selector == null) {
+      selector =
+          AttributeSelectors.create(
+              IncludeExclude.builder()
+                  .setIncluded(split(keyValuePairAttributesIncluded))
+                  .setExcluded(split(keyValuePairAttributesExcluded))
+                  .build());
+    }
+    if (selector != null) {
+      return selector;
+    }
+    if (captureKeyValuePairAttributes != null
+        && deprecatedKeyValuePairAttributesWarningLogged.compareAndSet(false, true)) {
+      addWarn(
+          "The captureKeyValuePairAttributes setting of the OpenTelemetry appender and the"
+              + " otel.instrumentation.logback-appender.experimental"
+              + ".capture-key-value-pair-attributes property are deprecated and may be removed in"
+              + " the next minor release. Use keyValuePairAttributesIncluded,"
+              + " keyValuePairAttributesExcluded, or otel.instrumentation.logback-appender"
+              + ".experimental.key-value-pair-attributes.included instead.");
+    }
+    return AttributeSelectors.createDeprecated(captureKeyValuePairAttributes);
   }
 
   @SuppressWarnings("SystemOut")
@@ -210,10 +241,74 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   /**
    * Sets whether the key value pair attributes should be set to logs.
    *
+   * <p>This setter backs the {@code captureKeyValuePairAttributes} element in {@code logback.xml}.
+   *
    * @param captureKeyValuePairAttributes To enable or disable capturing key value pairs
+   * @deprecated Use {@link #setKeyValuePairAttributesIncluded(String)} and {@link
+   *     #setKeyValuePairAttributesExcluded(String)}, or {@link
+   *     #setKeyValuePairAttributes(IncludeExclude)}, which select key value pair keys by glob
+   *     pattern. May be removed in the next minor release.
    */
+  @Deprecated // may be removed in the next minor release
   public void setCaptureKeyValuePairAttributes(boolean captureKeyValuePairAttributes) {
     this.captureKeyValuePairAttributes = captureKeyValuePairAttributes;
+  }
+
+  /**
+   * Configures the key value pair attributes that will be copied to logs.
+   *
+   * <p>Key value pair keys and selector patterns are matched case-sensitively. {@code ?} matches
+   * any single character and {@code *} matches any number of characters, including none, so {@code
+   * *} captures all key value pair attributes. Excluded patterns take precedence over included
+   * patterns, so a selector with only excluded patterns captures every key value pair attribute
+   * that it does not exclude.
+   *
+   * <p>A {@code null} or empty selector leaves this appender without a programmatic selector, in
+   * which case the key value pair attributes are selected by {@link
+   * #setKeyValuePairAttributesIncluded(String)} and {@link
+   * #setKeyValuePairAttributesExcluded(String)}. When these are also absent or empty, the
+   * deprecated {@link #setCaptureKeyValuePairAttributes(boolean)} setting controls whether all key
+   * value pair attributes are captured. Only a non-empty selector configured with this method takes
+   * precedence over the other settings.
+   *
+   * <p>Captured key value pair attributes may contain sensitive information. Configure included and
+   * excluded patterns to limit the data exported as log attributes.
+   */
+  public void setKeyValuePairAttributes(@Nullable IncludeExclude keyValuePairAttributes) {
+    this.keyValuePairAttributes = keyValuePairAttributes;
+  }
+
+  /**
+   * Configures the comma-separated key value pair key patterns that will be copied to logs.
+   *
+   * <p>This setter backs the {@code keyValuePairAttributesIncluded} element in {@code logback.xml}.
+   * It is ignored when a non-empty selector is configured with {@link
+   * #setKeyValuePairAttributes(IncludeExclude)}, and it takes precedence over the deprecated {@link
+   * #setCaptureKeyValuePairAttributes(boolean)}.
+   *
+   * <p>Key value pair keys and patterns are matched case-sensitively. {@code ?} matches any single
+   * character and {@code *} matches any number of characters, including none, so {@code *} captures
+   * all key value pair attributes. Excluded patterns take precedence over included patterns.
+   */
+  public void setKeyValuePairAttributesIncluded(@Nullable String keyValuePairAttributesIncluded) {
+    this.keyValuePairAttributesIncluded = keyValuePairAttributesIncluded;
+  }
+
+  /**
+   * Configures the comma-separated key value pair key patterns that will not be copied to logs.
+   *
+   * <p>This setter backs the {@code keyValuePairAttributesExcluded} element in {@code logback.xml}.
+   * It is ignored when a non-empty selector is configured with {@link
+   * #setKeyValuePairAttributes(IncludeExclude)}, and it takes precedence over the deprecated {@link
+   * #setCaptureKeyValuePairAttributes(boolean)}.
+   *
+   * <p>Key value pair keys and patterns are matched case-sensitively. {@code ?} matches any single
+   * character and {@code *} matches any number of characters, including none. Excluded patterns
+   * take precedence over included patterns, so configuring only excluded patterns captures every
+   * key value pair attribute that they do not exclude.
+   */
+  public void setKeyValuePairAttributesExcluded(@Nullable String keyValuePairAttributesExcluded) {
+    this.keyValuePairAttributesExcluded = keyValuePairAttributesExcluded;
   }
 
   /**

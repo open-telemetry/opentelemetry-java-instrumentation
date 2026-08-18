@@ -78,7 +78,7 @@ public final class LoggingEventMapper {
   @Nullable private final Predicate<String> mdcAttributes;
   private final boolean captureCodeAttributes;
   private final boolean captureMarkerAttribute;
-  private final boolean captureKeyValuePairAttributes;
+  @Nullable private final Predicate<String> keyValuePairAttributes;
   private final boolean captureLoggerContext;
   private final boolean captureTemplate;
   private final boolean captureArguments;
@@ -89,7 +89,7 @@ public final class LoggingEventMapper {
     this.captureExperimentalAttributes = builder.captureExperimentalAttributes;
     this.captureCodeAttributes = builder.captureCodeAttributes;
     this.captureMarkerAttribute = builder.captureMarkerAttribute;
-    this.captureKeyValuePairAttributes = builder.captureKeyValuePairAttributes;
+    this.keyValuePairAttributes = builder.keyValuePairAttributes;
     this.captureLoggerContext = builder.captureLoggerContext;
     this.captureTemplate = builder.captureTemplate;
     this.captureArguments = builder.captureArguments;
@@ -218,8 +218,8 @@ public final class LoggingEventMapper {
 
     captureMdcAttributes(builder, loggingEvent.getMDCPropertyMap());
 
-    if (supportsKeyValuePairs && captureKeyValuePairAttributes) {
-      captureKeyValuePairAttributes(builder, loggingEvent);
+    if (supportsKeyValuePairs && keyValuePairAttributes != null) {
+      captureKeyValuePairAttributes(builder, loggingEvent, keyValuePairAttributes);
     }
 
     if (supportsKeyValuePairs) {
@@ -312,12 +312,18 @@ public final class LoggingEventMapper {
 
   @NoMuzzle
   private static void captureKeyValuePairAttributes(
-      LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+      LogRecordBuilder builder,
+      ILoggingEvent loggingEvent,
+      Predicate<String> keyValuePairAttributes) {
     List<KeyValuePair> keyValuePairs = loggingEvent.getKeyValuePairs();
     if (keyValuePairs != null) {
       for (KeyValuePair keyValuePair : keyValuePairs) {
-        if (!OTEL_EVENT_NAME.getKey().equals(keyValuePair.key)) {
-          captureAttribute(builder, keyValuePair.key, keyValuePair.value);
+        String key = keyValuePair.key;
+        // a null key is not selectable, and captureAttribute would skip it anyway
+        if (key != null
+            && !OTEL_EVENT_NAME.getKey().equals(key)
+            && keyValuePairAttributes.test(key)) {
+          captureAttribute(builder, key, keyValuePair.value);
         }
       }
     }
@@ -682,7 +688,7 @@ public final class LoggingEventMapper {
     @Nullable private Predicate<String> mdcAttributes;
     private boolean captureCodeAttributes;
     private boolean captureMarkerAttribute;
-    private boolean captureKeyValuePairAttributes;
+    @Nullable private Predicate<String> keyValuePairAttributes;
     private boolean captureLoggerContext;
     private boolean captureTemplate;
     private boolean captureArguments;
@@ -719,9 +725,13 @@ public final class LoggingEventMapper {
       return this;
     }
 
+    /**
+     * Sets the selector that decides which key value pair keys are captured as log attributes. A
+     * {@code null} selector captures no key value pair attributes.
+     */
     @CanIgnoreReturnValue
-    public Builder setCaptureKeyValuePairAttributes(boolean captureKeyValuePairAttributes) {
-      this.captureKeyValuePairAttributes = captureKeyValuePairAttributes;
+    public Builder setKeyValuePairAttributes(@Nullable Predicate<String> keyValuePairAttributes) {
+      this.keyValuePairAttributes = keyValuePairAttributes;
       return this;
     }
 
