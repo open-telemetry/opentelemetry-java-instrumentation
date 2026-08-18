@@ -16,7 +16,7 @@
     <keyValuePairAttributesIncluded>*</keyValuePairAttributesIncluded>
     <captureTemplate>true</captureTemplate>
     <captureArguments>true</captureArguments>
-    <captureLogstashMarkerAttributes>true</captureLogstashMarkerAttributes>
+    <logstashMarkerAttributesIncluded>*</logstashMarkerAttributesIncluded>
     <captureLogstashStructuredArguments>true</captureLogstashStructuredArguments>
     <mdcAttributesIncluded>key?</mdcAttributesIncluded>
   </appender>

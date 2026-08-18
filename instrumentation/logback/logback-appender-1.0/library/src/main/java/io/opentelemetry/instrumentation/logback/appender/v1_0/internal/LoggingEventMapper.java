@@ -82,7 +82,7 @@ public final class LoggingEventMapper {
   @Nullable private final Predicate<String> loggerContextAttributes;
   private final boolean captureTemplate;
   private final boolean captureArguments;
-  private final boolean captureLogstashMarkerAttributes;
+  @Nullable private final Predicate<String> logstashMarkerAttributes;
   private final boolean captureLogstashStructuredArguments;
 
   private LoggingEventMapper(Builder builder) {
@@ -93,7 +93,7 @@ public final class LoggingEventMapper {
     this.loggerContextAttributes = builder.loggerContextAttributes;
     this.captureTemplate = builder.captureTemplate;
     this.captureArguments = builder.captureArguments;
-    this.captureLogstashMarkerAttributes = builder.captureLogstashMarkerAttributes;
+    this.logstashMarkerAttributes = builder.logstashMarkerAttributes;
     this.captureLogstashStructuredArguments = builder.captureLogstashStructuredArguments;
     this.mdcAttributes = builder.mdcAttributes;
   }
@@ -184,7 +184,7 @@ public final class LoggingEventMapper {
     }
 
     if (captureMarkerAttribute) {
-      boolean skipLogstashMarkers = supportsLogstashMarkers && captureLogstashMarkerAttributes;
+      boolean skipLogstashMarkers = supportsLogstashMarkers && logstashMarkerAttributes != null;
       captureMarkerAttribute(builder, loggingEvent, skipLogstashMarkers);
     }
 
@@ -515,7 +515,7 @@ public final class LoggingEventMapper {
   @NoMuzzle
   private void captureLogstashMarkerAndReferences(LogRecordBuilder builder, Marker marker) {
     LogstashMarker logstashMarker = (LogstashMarker) marker;
-    captureLogstashMarker(builder, logstashMarker, captureLogstashMarkerAttributes);
+    captureLogstashMarker(builder, logstashMarker, logstashMarkerAttributes);
 
     if (logstashMarker.hasReferences()) {
       for (Iterator<Marker> it = logstashMarker.iterator(); it.hasNext(); ) {
@@ -528,7 +528,9 @@ public final class LoggingEventMapper {
   }
 
   private static void captureLogstashMarker(
-      LogRecordBuilder builder, Object logstashMarker, boolean captureAllAttributes) {
+      LogRecordBuilder builder,
+      Object logstashMarker,
+      @Nullable Predicate<String> capturedAttributes) {
     FieldReader fieldReader = LogstashFieldReaderHolder.valueField.get(logstashMarker.getClass());
     if (fieldReader != null) {
       fieldReader.read(
@@ -536,7 +538,7 @@ public final class LoggingEventMapper {
           (name, value) -> {
             if (OTEL_EVENT_NAME.getKey().equals(name) && value != null) {
               builder.setEventName(value.toString());
-            } else if (captureAllAttributes) {
+            } else if (capturedAttributes != null && capturedAttributes.test(name)) {
               captureAttribute(builder, name, value);
             }
           });
@@ -656,7 +658,8 @@ public final class LoggingEventMapper {
   private void processLogstashStructuredArguments(LogRecordBuilder builder, Object[] arguments) {
     for (Object argument : arguments) {
       if (isLogstashStructuredArgument(argument)) {
-        captureLogstashMarker(builder, argument, captureLogstashStructuredArguments);
+        captureLogstashMarker(
+            builder, argument, captureLogstashStructuredArguments ? key -> true : null);
       }
     }
   }
@@ -697,7 +700,7 @@ public final class LoggingEventMapper {
     @Nullable private Predicate<String> loggerContextAttributes;
     private boolean captureTemplate;
     private boolean captureArguments;
-    private boolean captureLogstashMarkerAttributes;
+    @Nullable private Predicate<String> logstashMarkerAttributes;
     private boolean captureLogstashStructuredArguments;
 
     Builder() {}
@@ -763,8 +766,9 @@ public final class LoggingEventMapper {
     }
 
     @CanIgnoreReturnValue
-    public Builder setCaptureLogstashMarkerAttributes(boolean captureLogstashMarkerAttributes) {
-      this.captureLogstashMarkerAttributes = captureLogstashMarkerAttributes;
+    public Builder setLogstashMarkerAttributes(
+        @Nullable Predicate<String> logstashMarkerAttributes) {
+      this.logstashMarkerAttributes = logstashMarkerAttributes;
       return this;
     }
 
