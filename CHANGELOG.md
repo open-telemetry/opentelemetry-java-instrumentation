@@ -50,6 +50,55 @@
   supporting exact names. The deprecated methods still match header names literally, so `*` and `?`
   are not treated as glob patterns.
   ([#19598](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19598))
+- Deprecate the `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods on
+  `ApacheHttpClientTelemetryBuilder` (Apache HttpClient 4.3 and 5.2) and `HelidonTelemetryBuilder`
+  in favor of `setRequestHeaders(IncludeExclude)` and `setResponseHeaders(IncludeExclude)`, which
+  select HTTP headers by glob pattern instead of by exact name only. The deprecated methods still
+  match header names literally, so `*` and `?` are not treated as glob patterns.
+  ([#19602](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19602))
+- Deprecate the `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods on
+  `JavaHttpClientTelemetryBuilder`, `JavaHttpServerTelemetryBuilder` and `OkHttpTelemetryBuilder` in
+  favor of `setRequestHeaders(IncludeExclude)` and `setResponseHeaders(IncludeExclude)`, which
+  select HTTP headers by glob pattern instead of by exact name only. The deprecated methods still
+  match header names literally, so `*` and `?` are not treated as glob patterns.
+  ([#19601](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19601))
+- Deprecate the `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods on
+  `NettyClientTelemetryBuilder`, `NettyServerTelemetryBuilder`, `RatpackClientTelemetryBuilder` and
+  `RatpackServerTelemetryBuilder` in favor of `setRequestHeaders(IncludeExclude)` and
+  `setResponseHeaders(IncludeExclude)`, which select HTTP headers by glob pattern instead of by
+  exact name only. The deprecated methods still match header names literally, so `*` and `?` are not
+  treated as glob patterns.
+  ([#19606](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19606))
+- Deprecate the `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods on
+  `JettyClientTelemetryBuilder` (Jetty HTTP client 9.2 and 12.0), `ArmeriaClientTelemetryBuilder`
+  and `ArmeriaServerTelemetryBuilder` in favor of `setRequestHeaders(IncludeExclude)` and
+  `setResponseHeaders(IncludeExclude)`, which select HTTP headers by glob pattern instead of by
+  exact name only. The deprecated methods still match header names literally, so `*` and `?` are not
+  treated as glob patterns.
+  ([#19603](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19603))
+- Deprecate the `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods on the Restlet
+  1.1, Restlet 2.0, Servlet 3.0 and Servlet 5.0 `RestletTelemetryBuilder` and
+  `ServletTelemetryBuilder` in favor of `setRequestHeaders(IncludeExclude)` and
+  `setResponseHeaders(IncludeExclude)`, which select HTTP headers by glob pattern instead of by
+  exact name only. The deprecated methods still match header names literally, so `*` and `?` are not
+  treated as glob patterns.
+  ([#19604](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19604))
+- Deprecate the `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods on
+  `SpringWebTelemetryBuilder`, `SpringWebfluxClientTelemetryBuilder`,
+  `SpringWebfluxServerTelemetryBuilder` and both `SpringWebMvcTelemetryBuilder` classes in favor of
+  `setRequestHeaders(IncludeExclude)` and `setResponseHeaders(IncludeExclude)`, which select HTTP
+  headers by glob pattern instead of by exact name only. The deprecated methods still match header
+  names literally, so `*` and `?` are not treated as glob patterns.
+  ([#19607](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19607))
+- Deprecate the Ktor `capturedRequestHeaders` and `capturedResponseHeaders` configuration functions
+  in the `KtorClientTelemetry` and `KtorServerTelemetry` plugin configuration blocks (Ktor 2.0 and
+  3.0) and the `setCapturedRequestHeaders` and `setCapturedResponseHeaders` functions on the Ktor
+  1.0 `KtorServerTelemetry` configuration, in favor of `requestHeaders(IncludeExclude)` /
+  `responseHeaders(IncludeExclude)` and `setRequestHeaders(IncludeExclude)` /
+  `setResponseHeaders(IncludeExclude)`, which select HTTP headers by glob pattern instead of by
+  exact name only. The deprecated methods still match header names literally, so `*` and `?` are not
+  treated as glob patterns.
+  ([#19608](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19608))
 - Deprecate the Logback appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of the new
   `experimental.mdc-attributes.included` and `experimental.mdc-attributes.excluded` selectors, which
@@ -74,6 +123,23 @@
   programmatically as `OpenTelemetryAppender#setLoggerContextAttributes(IncludeExclude)`. The
   deprecated setting continues to capture every logger context property when enabled.
   ([#19605](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19605))
+- Deprecate the Logback appender `experimental.capture-logstash-marker-attributes` configuration
+  property and `OpenTelemetryAppender#setCaptureLogstashMarkerAttributes(boolean)` in favor of the
+  new `experimental.logstash-marker-attributes.included` and
+  `experimental.logstash-marker-attributes.excluded` selectors, which are also available in
+  `logback.xml` as `logstashMarkerAttributesIncluded` and `logstashMarkerAttributesExcluded` and
+  programmatically as `OpenTelemetryAppender#setLogstashMarkerAttributes(IncludeExclude)`. The
+  deprecated setting continues to capture every Logstash marker attribute when enabled.
+  ([#19609](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19609))
+- Deprecate the Logback appender `experimental.capture-logstash-structured-arguments` configuration
+  property and `OpenTelemetryAppender#setCaptureLogstashStructuredArguments(boolean)` in favor of the
+  new `experimental.logstash-structured-argument-attributes.included` and
+  `experimental.logstash-structured-argument-attributes.excluded` selectors, which are also available
+  in `logback.xml` as `logstashStructuredArgumentAttributesIncluded` and
+  `logstashStructuredArgumentAttributesExcluded` and programmatically as
+  `OpenTelemetryAppender#setLogstashStructuredArgumentAttributes(IncludeExclude)`. The deprecated
+  setting continues to capture every Logstash structured argument attribute when enabled.
+  ([#19610](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19610))
 - Deprecate the Log4j appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender.Builder#setCaptureContextDataAttributes(String)` in favor of
   include/exclude context data selectors and

@@ -39,8 +39,6 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureMarkerAttribute = false;
   private boolean captureTemplate = false;
   private boolean captureArguments = false;
-  private boolean captureLogstashMarkerAttributes = false;
-  private boolean captureLogstashStructuredArguments = false;
   @Nullable private IncludeExclude mdcAttributes;
   @Nullable private String mdcAttributesIncluded;
   @Nullable private String mdcAttributesExcluded;
@@ -56,6 +54,17 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   @Nullable private String loggerContextAttributesExcluded;
   @Nullable private Boolean captureLoggerContext;
   private final AtomicBoolean deprecatedLoggerContextAttributesWarningLogged = new AtomicBoolean();
+  @Nullable private IncludeExclude logstashMarkerAttributes;
+  @Nullable private String logstashMarkerAttributesIncluded;
+  @Nullable private String logstashMarkerAttributesExcluded;
+  @Nullable private Boolean captureLogstashMarkerAttributes;
+  private final AtomicBoolean deprecatedLogstashMarkerAttributesWarningLogged = new AtomicBoolean();
+  @Nullable private IncludeExclude logstashStructuredArgumentAttributes;
+  @Nullable private String logstashStructuredArgumentAttributesIncluded;
+  @Nullable private String logstashStructuredArgumentAttributesExcluded;
+  @Nullable private Boolean captureLogstashStructuredArguments;
+  private final AtomicBoolean deprecatedLogstashStructuredArgumentsWarningLogged =
+      new AtomicBoolean();
 
   private volatile OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
@@ -117,8 +126,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             .setLoggerContextAttributes(resolveLoggerContextAttributes())
             .setCaptureTemplate(captureTemplate)
             .setCaptureArguments(captureArguments)
-            .setCaptureLogstashMarkerAttributes(captureLogstashMarkerAttributes)
-            .setCaptureLogstashStructuredArguments(captureLogstashStructuredArguments)
+            .setLogstashMarkerAttributes(resolveLogstashMarkerAttributes())
+            .setLogstashStructuredArgumentAttributes(resolveLogstashStructuredArgumentAttributes())
             .build();
     eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     super.start();
@@ -205,6 +214,61 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
               + ".experimental.logger-context-attributes.included instead.");
     }
     return AttributeSelectors.createDeprecated(captureLoggerContext);
+  }
+
+  @Nullable
+  private Predicate<String> resolveLogstashMarkerAttributes() {
+    Predicate<String> selector = AttributeSelectors.create(logstashMarkerAttributes);
+    if (selector == null) {
+      selector =
+          AttributeSelectors.create(
+              IncludeExclude.builder()
+                  .setIncluded(split(logstashMarkerAttributesIncluded))
+                  .setExcluded(split(logstashMarkerAttributesExcluded))
+                  .build());
+    }
+    if (selector != null) {
+      return selector;
+    }
+    if (captureLogstashMarkerAttributes != null
+        && deprecatedLogstashMarkerAttributesWarningLogged.compareAndSet(false, true)) {
+      addWarn(
+          "The captureLogstashMarkerAttributes setting of the OpenTelemetry appender and the"
+              + " otel.instrumentation.logback-appender.experimental"
+              + ".capture-logstash-marker-attributes property are deprecated and may be removed in"
+              + " the next minor release. Use logstashMarkerAttributesIncluded,"
+              + " logstashMarkerAttributesExcluded, or otel.instrumentation.logback-appender"
+              + ".experimental.logstash-marker-attributes.included instead.");
+    }
+    return AttributeSelectors.createDeprecated(captureLogstashMarkerAttributes);
+  }
+
+  @Nullable
+  private Predicate<String> resolveLogstashStructuredArgumentAttributes() {
+    Predicate<String> selector = AttributeSelectors.create(logstashStructuredArgumentAttributes);
+    if (selector == null) {
+      selector =
+          AttributeSelectors.create(
+              IncludeExclude.builder()
+                  .setIncluded(split(logstashStructuredArgumentAttributesIncluded))
+                  .setExcluded(split(logstashStructuredArgumentAttributesExcluded))
+                  .build());
+    }
+    if (selector != null) {
+      return selector;
+    }
+    if (captureLogstashStructuredArguments != null
+        && deprecatedLogstashStructuredArgumentsWarningLogged.compareAndSet(false, true)) {
+      addWarn(
+          "The captureLogstashStructuredArguments setting of the OpenTelemetry appender and the"
+              + " otel.instrumentation.logback-appender.experimental"
+              + ".capture-logstash-structured-arguments property are deprecated and may be removed"
+              + " in the next minor release. Use logstashStructuredArgumentAttributesIncluded,"
+              + " logstashStructuredArgumentAttributesExcluded, or"
+              + " otel.instrumentation.logback-appender.experimental"
+              + ".logstash-structured-argument-attributes.included instead.");
+    }
+    return AttributeSelectors.createDeprecated(captureLogstashStructuredArguments);
   }
 
   @SuppressWarnings("SystemOut")
@@ -434,14 +498,154 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     this.captureArguments = captureArguments;
   }
 
-  /** Sets whether the Logstash marker attributes should be captured. */
+  /**
+   * Sets whether the Logstash marker attributes should be captured.
+   *
+   * @param captureLogstashMarkerAttributes To enable or disable capturing Logstash marker
+   *     attributes
+   * @deprecated Use {@link #setLogstashMarkerAttributesIncluded(String)} and {@link
+   *     #setLogstashMarkerAttributesExcluded(String)}, or {@link
+   *     #setLogstashMarkerAttributes(IncludeExclude)}, which select Logstash marker keys by glob
+   *     pattern. May be removed in the next minor release.
+   */
+  @Deprecated // may be removed in the next minor release
   public void setCaptureLogstashMarkerAttributes(boolean captureLogstashMarkerAttributes) {
     this.captureLogstashMarkerAttributes = captureLogstashMarkerAttributes;
   }
 
-  /** Sets whether the Logstash StructuredArguments should be captured. */
+  /**
+   * Configures the Logstash marker attributes that will be copied to logs.
+   *
+   * <p>Logstash marker keys and selector patterns are matched case-sensitively. {@code ?} matches
+   * any single character and {@code *} matches any number of characters, including none, so {@code
+   * *} captures all Logstash marker attributes. Excluded patterns take precedence over included
+   * patterns, so a selector with only excluded patterns captures every Logstash marker attribute
+   * that it does not exclude.
+   *
+   * <p>A {@code null} or empty selector leaves this appender without a programmatic selector, in
+   * which case the Logstash marker attributes are selected by {@link
+   * #setLogstashMarkerAttributesIncluded(String)} and {@link
+   * #setLogstashMarkerAttributesExcluded(String)}, and then by the deprecated {@link
+   * #setCaptureLogstashMarkerAttributes(boolean)}. No Logstash marker attributes are captured when
+   * all of these are absent or empty.
+   *
+   * <p>Captured Logstash marker attributes may contain sensitive information. Configure included
+   * and excluded patterns to limit the data exported as log attributes.
+   */
+  public void setLogstashMarkerAttributes(@Nullable IncludeExclude logstashMarkerAttributes) {
+    this.logstashMarkerAttributes = logstashMarkerAttributes;
+  }
+
+  /**
+   * Configures the comma-separated Logstash marker key patterns that will be copied to logs.
+   *
+   * <p>This setter backs the {@code logstashMarkerAttributesIncluded} element in {@code
+   * logback.xml}. It is ignored when a non-empty selector is configured with {@link
+   * #setLogstashMarkerAttributes(IncludeExclude)}, and it takes precedence over the deprecated
+   * {@link #setCaptureLogstashMarkerAttributes(boolean)}.
+   *
+   * <p>Logstash marker keys and patterns are matched case-sensitively. {@code ?} matches any single
+   * character and {@code *} matches any number of characters, including none, so {@code *} captures
+   * all Logstash marker attributes. Excluded patterns take precedence over included patterns.
+   */
+  public void setLogstashMarkerAttributesIncluded(
+      @Nullable String logstashMarkerAttributesIncluded) {
+    this.logstashMarkerAttributesIncluded = logstashMarkerAttributesIncluded;
+  }
+
+  /**
+   * Configures the comma-separated Logstash marker key patterns that will not be copied to logs.
+   *
+   * <p>This setter backs the {@code logstashMarkerAttributesExcluded} element in {@code
+   * logback.xml}. It is ignored when a non-empty selector is configured with {@link
+   * #setLogstashMarkerAttributes(IncludeExclude)}, and it takes precedence over the deprecated
+   * {@link #setCaptureLogstashMarkerAttributes(boolean)}.
+   *
+   * <p>Logstash marker keys and patterns are matched case-sensitively. {@code ?} matches any single
+   * character and {@code *} matches any number of characters, including none. Excluded patterns
+   * take precedence over included patterns, so configuring only excluded patterns captures every
+   * Logstash marker attribute that they do not exclude.
+   */
+  public void setLogstashMarkerAttributesExcluded(
+      @Nullable String logstashMarkerAttributesExcluded) {
+    this.logstashMarkerAttributesExcluded = logstashMarkerAttributesExcluded;
+  }
+
+  /**
+   * Sets whether the Logstash StructuredArguments should be captured.
+   *
+   * @deprecated Use {@link #setLogstashStructuredArgumentAttributesIncluded(String)} and {@link
+   *     #setLogstashStructuredArgumentAttributesExcluded(String)}, or {@link
+   *     #setLogstashStructuredArgumentAttributes(IncludeExclude)}, which select Logstash structured
+   *     argument keys by glob pattern. May be removed in the next minor release.
+   */
+  @Deprecated // may be removed in the next minor release
   public void setCaptureLogstashStructuredArguments(boolean captureLogstashStructuredArguments) {
     this.captureLogstashStructuredArguments = captureLogstashStructuredArguments;
+  }
+
+  /**
+   * Configures the Logstash structured argument attributes that will be copied to logs.
+   *
+   * <p>Logstash structured argument keys and selector patterns are matched case-sensitively. {@code
+   * ?} matches any single character and {@code *} matches any number of characters, including none,
+   * so {@code *} captures all Logstash structured argument attributes. Excluded patterns take
+   * precedence over included patterns, so a selector with only excluded patterns captures every
+   * Logstash structured argument attribute that it does not exclude.
+   *
+   * <p>A {@code null} or empty selector leaves this appender without a programmatic selector, in
+   * which case the Logstash structured argument attributes are selected by {@link
+   * #setLogstashStructuredArgumentAttributesIncluded(String)} and {@link
+   * #setLogstashStructuredArgumentAttributesExcluded(String)}, and then by the deprecated {@link
+   * #setCaptureLogstashStructuredArguments(boolean)}. No Logstash structured argument attributes
+   * are captured when all of these are absent or empty.
+   *
+   * <p>Captured Logstash structured argument attributes may contain sensitive information.
+   * Configure included and excluded patterns to limit the data exported as log attributes.
+   */
+  public void setLogstashStructuredArgumentAttributes(
+      @Nullable IncludeExclude logstashStructuredArgumentAttributes) {
+    this.logstashStructuredArgumentAttributes = logstashStructuredArgumentAttributes;
+  }
+
+  /**
+   * Configures the comma-separated Logstash structured argument key patterns that will be copied to
+   * logs.
+   *
+   * <p>This setter backs the {@code logstashStructuredArgumentAttributesIncluded} element in {@code
+   * logback.xml}. It is ignored when a non-empty selector is configured with {@link
+   * #setLogstashStructuredArgumentAttributes(IncludeExclude)}, and it takes precedence over the
+   * deprecated {@link #setCaptureLogstashStructuredArguments(boolean)}.
+   *
+   * <p>Logstash structured argument keys and patterns are matched case-sensitively. {@code ?}
+   * matches any single character and {@code *} matches any number of characters, including none, so
+   * {@code *} captures all Logstash structured argument attributes. Excluded patterns take
+   * precedence over included patterns.
+   */
+  public void setLogstashStructuredArgumentAttributesIncluded(
+      @Nullable String logstashStructuredArgumentAttributesIncluded) {
+    this.logstashStructuredArgumentAttributesIncluded =
+        logstashStructuredArgumentAttributesIncluded;
+  }
+
+  /**
+   * Configures the comma-separated Logstash structured argument key patterns that will not be
+   * copied to logs.
+   *
+   * <p>This setter backs the {@code logstashStructuredArgumentAttributesExcluded} element in {@code
+   * logback.xml}. It is ignored when a non-empty selector is configured with {@link
+   * #setLogstashStructuredArgumentAttributes(IncludeExclude)}, and it takes precedence over the
+   * deprecated {@link #setCaptureLogstashStructuredArguments(boolean)}.
+   *
+   * <p>Logstash structured argument keys and patterns are matched case-sensitively. {@code ?}
+   * matches any single character and {@code *} matches any number of characters, including none.
+   * Excluded patterns take precedence over included patterns, so configuring only excluded patterns
+   * captures every Logstash structured argument attribute that they do not exclude.
+   */
+  public void setLogstashStructuredArgumentAttributesExcluded(
+      @Nullable String logstashStructuredArgumentAttributesExcluded) {
+    this.logstashStructuredArgumentAttributesExcluded =
+        logstashStructuredArgumentAttributesExcluded;
   }
 
   /**

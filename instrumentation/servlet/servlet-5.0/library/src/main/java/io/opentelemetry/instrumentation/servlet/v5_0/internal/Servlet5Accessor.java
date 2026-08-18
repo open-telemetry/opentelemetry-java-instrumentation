@@ -107,7 +107,7 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   }
 
   @Override
-  public Iterable<String> getRequestHeaderNames(HttpServletRequest httpServletRequest) {
+  public Collection<String> getRequestHeaderNames(HttpServletRequest httpServletRequest) {
     Enumeration<String> names = httpServletRequest.getHeaderNames();
     return names == null ? emptyList() : Collections.list(names);
   }
@@ -169,6 +169,12 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
       return (List<String>) values;
     }
     return new ArrayList<>(values);
+  }
+
+  @Override
+  public Collection<String> getResponseHeaderNames(HttpServletResponse response) {
+    Collection<String> names = response.getHeaderNames();
+    return names == null ? emptyList() : names;
   }
 
   @Override

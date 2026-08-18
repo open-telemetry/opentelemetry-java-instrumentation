@@ -855,14 +855,14 @@ definitions:
       name: otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes
       declarative_name: java.logback_appender.capture_logstash_marker_attributes/development
       description: |
-        Enables the capture of attributes from Logstash markers.
+        Deprecated setting that enables the capture of all attributes from Logstash markers, supported are those added to logs via Markers.append(), Markers.appendEntries(), Markers.appendArray() and Markers.appendRaw() methods. It is ignored when otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included or otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded is configured, and it may be removed in the next minor release. Use otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included instead.
       type: boolean
       default: false
     otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments:
       name: otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments
       declarative_name: java.logback_appender.capture_logstash_structured_arguments/development
       description: |
-        Enables the capture of attributes from Logstash structured arguments.
+        Deprecated setting that enables the capture of all attributes from Logstash structured arguments (e.g., StructuredArguments.v() and StructuredArguments.keyValue()). It is ignored when otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included or otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded is configured, and it may be removed in the next minor release. Use otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included instead.
       type: boolean
       default: false
     otel.instrumentation.logback-appender.experimental.capture-marker-attribute:
@@ -929,6 +929,46 @@ definitions:
       examples:
       - app.version
       - app.*,deployment-?
+    otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded:
+      name: otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded
+      declarative_name: java.logback_appender.logstash_marker_attributes/development.excluded
+      description: |
+        Comma-separated list of case-sensitive glob patterns for Logstash marker keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No Logstash marker attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes setting is configured; configuring only excluded patterns captures all Logstash marker attributes that do not match them. Captured Logstash marker attributes may contain sensitive information.
+      type: list
+      default: ''
+      examples:
+      - '*-secret'
+      - password,token
+    otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included:
+      name: otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included
+      declarative_name: java.logback_appender.logstash_marker_attributes/development.included
+      description: |
+        Comma-separated list of case-sensitive glob patterns for Logstash marker keys to capture as log attributes. "*" matches any number of characters and "?" matches one character, so "*" captures all Logstash marker attributes. Excluded patterns take precedence over included patterns. No Logstash marker attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes setting is configured; configuring only excluded patterns captures all Logstash marker attributes that do not match them. Captured Logstash marker attributes may contain sensitive information.
+      type: list
+      default: ''
+      examples:
+      - custom-key
+      - request-*,user-?
+    otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded:
+      name: otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded
+      declarative_name: java.logback_appender.logstash_structured_argument_attributes/development.excluded
+      description: |
+        Comma-separated list of case-sensitive glob patterns for Logstash structured argument keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No Logstash structured argument attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments setting is configured; configuring only excluded patterns captures all Logstash structured argument attributes that do not match them. Captured Logstash structured argument attributes may contain sensitive information.
+      type: list
+      default: ''
+      examples:
+      - '*-secret'
+      - password,token
+    otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included:
+      name: otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included
+      declarative_name: java.logback_appender.logstash_structured_argument_attributes/development.included
+      description: |
+        Comma-separated list of case-sensitive glob patterns for Logstash structured argument keys to capture as log attributes. "*" matches any number of characters and "?" matches one character, so "*" captures all Logstash structured argument attributes. Excluded patterns take precedence over included patterns. No Logstash structured argument attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments setting is configured; configuring only excluded patterns captures all Logstash structured argument attributes that do not match them. Captured Logstash structured argument attributes may contain sensitive information.
+      type: list
+      default: ''
+      examples:
+      - custom-key
+      - request-*,user-?
     otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded:
       name: otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded
       declarative_name: java.logback_appender.mdc_attributes/development.excluded
@@ -10883,6 +10923,10 @@ libraries:
   - otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included
   - otel.instrumentation.logback-appender.experimental.logger-context-attributes.excluded
   - otel.instrumentation.logback-appender.experimental.logger-context-attributes.included
+  - otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.excluded
+  - otel.instrumentation.logback-appender.experimental.logstash-marker-attributes.included
+  - otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.excluded
+  - otel.instrumentation.logback-appender.experimental.logstash-structured-argument-attributes.included
   - otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded
   - otel.instrumentation.logback-appender.experimental.mdc-attributes.included
 - name: logback-mdc-1.0
