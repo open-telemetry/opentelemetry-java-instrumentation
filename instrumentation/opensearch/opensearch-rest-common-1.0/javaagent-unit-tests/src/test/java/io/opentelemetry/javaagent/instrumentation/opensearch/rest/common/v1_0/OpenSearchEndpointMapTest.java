@@ -7,10 +7,15 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class OpenSearchEndpointMapTest {
 
@@ -98,6 +103,42 @@ class OpenSearchEndpointMapTest {
         .isEqualTo("index");
     assertThat(OpenSearchEndpointMap.maskPathParameters("PUT", "my-index/my-type/999"))
         .isEqualTo("my-index/my-type/?");
+  }
+
+  @ParameterizedTest
+  @MethodSource("legacyTypedSuffixRoutes")
+  void legacyTypedSuffixRoutesDeriveOperationsAndMaskIds(
+      String method, String path, String operationName, String maskedPath) {
+    assertThat(OpenSearchEndpointMap.getOperationName(method, path)).isEqualTo(operationName);
+    assertThat(OpenSearchEndpointMap.maskPathParameters(method, path)).isEqualTo(maskedPath);
+  }
+
+  private static Stream<Arguments> legacyTypedSuffixRoutes() {
+    return Stream.of(
+        argumentSet(
+            "create",
+            "PUT",
+            "my-index/my-type/999/_create",
+            "create",
+            "my-index/my-type/?/_create"),
+        argumentSet(
+            "update",
+            "POST",
+            "my-index/my-type/999/_update",
+            "update",
+            "my-index/my-type/?/_update"),
+        argumentSet(
+            "termvectors with id",
+            "GET",
+            "my-index/my-type/999/_termvectors",
+            "termvectors",
+            "my-index/my-type/?/_termvectors"),
+        argumentSet(
+            "termvectors without id",
+            "POST",
+            "my-index/my-type/_termvectors",
+            "termvectors",
+            "my-index/my-type/_termvectors"));
   }
 
   @Test
