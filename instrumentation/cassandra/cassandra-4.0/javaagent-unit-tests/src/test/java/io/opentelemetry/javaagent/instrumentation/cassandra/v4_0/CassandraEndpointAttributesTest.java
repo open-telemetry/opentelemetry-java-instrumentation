@@ -28,6 +28,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class CassandraEndpointAttributesTest {
 
+  // SniEndPoint.resolve() always looks the proxy host up with
+  // InetAddress.getAllByName(proxyAddress.getHostName()), so an unresolved literal keeps every test
+  // offline and deterministic. A resolved address would make getHostName() do a reverse dns lookup
+  // and the driver would then resolve whatever name came back.
+  private static final InetSocketAddress PROXY_ADDRESS =
+      InetSocketAddress.createUnresolved("127.0.0.1", 29042);
+
   @Mock private ExecutionInfo executionInfo;
   @Mock private Node coordinator;
   @Mock private EndPoint customEndPoint;
@@ -45,11 +52,11 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void sniEndPointUsesBroadcastRpcAddressForServer() throws UnknownHostException {
+  void sniEndPointUsesBroadcastRpcAddressForServer() {
     // The proxy the client actually connects to differs from the node behind it. Under the stable
     // conventions the broadcast RPC address is recorded; under the frozen old conventions the proxy
     // returned by resolve() is recorded, so each mode pins a different value.
-    SniEndPoint endPoint = new SniEndPoint(resolved(29042), "host-id");
+    SniEndPoint endPoint = new SniEndPoint(PROXY_ADDRESS, "host-id");
     when(coordinator.getEndPoint()).thenReturn(endPoint);
     if (emitStableDatabaseSemconv()) {
       when(coordinator.getBroadcastRpcAddress())
@@ -69,8 +76,8 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void sniEndPointOmitsServerAddressWithoutBroadcastRpcAddress() throws UnknownHostException {
-    SniEndPoint endPoint = new SniEndPoint(resolved(29042), "host-id");
+  void sniEndPointOmitsServerAddressWithoutBroadcastRpcAddress() {
+    SniEndPoint endPoint = new SniEndPoint(PROXY_ADDRESS, "host-id");
     when(coordinator.getEndPoint()).thenReturn(endPoint);
     if (emitStableDatabaseSemconv()) {
       when(coordinator.getBroadcastRpcAddress()).thenReturn(Optional.empty());
@@ -98,9 +105,9 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void networkPeerIsOmittedForSniEndPoint() throws UnknownHostException {
+  void networkPeerIsOmittedForSniEndPoint() {
     when(executionInfo.getCoordinator()).thenReturn(coordinator);
-    SniEndPoint endPoint = new SniEndPoint(resolved(29042), "host-id");
+    SniEndPoint endPoint = new SniEndPoint(PROXY_ADDRESS, "host-id");
     when(coordinator.getEndPoint()).thenReturn(endPoint);
 
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
@@ -146,7 +153,8 @@ class CassandraEndpointAttributesTest {
   }
 
   // DefaultEndPoint requires a resolved address; build one from raw loopback bytes so getHostString
-  // stays deterministic and no hostname is ever looked up.
+  // returns the literal without a lookup. Do not build an SNI proxy address this way, because
+  // SniEndPoint.resolve() reads getHostName(), which reverse-resolves an address built from bytes.
   private static InetSocketAddress resolved(int port) throws UnknownHostException {
     return new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), port);
   }
