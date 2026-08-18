@@ -52,9 +52,12 @@ class MuzzleGradlePluginUtil {
      * version passes different {@code userClassLoader}.
      */
     @Suppress("UNCHECKED_CAST")
-    fun assertInstrumentationMuzzled(agentClassLoader: ClassLoader, userClassLoader: ClassLoader,
-                                     excludedInstrumentationNames: Set<String>, assertPass: Boolean) {
-
+    fun assertInstrumentationMuzzled(
+      agentClassLoader: ClassLoader,
+      userClassLoader: ClassLoader,
+      excludedInstrumentationNames: Set<String>,
+      assertPass: Boolean
+    ) {
       val matcherClass = agentClassLoader.loadClass("io.opentelemetry.javaagent.tooling.muzzle.ClassLoaderMatcher")
 
       // We cannot reference Mismatch class directly here, because we are loaded from a different
@@ -93,8 +96,7 @@ class MuzzleGradlePluginUtil {
      * <p>Called by the {@code printMuzzleReferences} gradle task.
      */
     fun printMuzzleReferences(instrumentationClassLoader: ClassLoader) {
-      val matcherClass = instrumentationClassLoader.loadClass(
-        "io.opentelemetry.javaagent.tooling.muzzle.ReferencesPrinter")
+      val matcherClass = instrumentationClassLoader.loadClass("io.opentelemetry.javaagent.tooling.muzzle.ReferencesPrinter")
       matcherClass.getMethod("printMuzzleReferences").invoke(null)
     }
   }

@@ -9,7 +9,7 @@ This project follows the
 
 One of the CI checks will fail if source code is not formatted according to Google Java Style.
 
-Run the following command to format Java files and run the configured linters:
+Run the following command to format Java and Kotlin files and run the configured linters:
 
 ```bash
 mise run lint:fix
@@ -21,14 +21,7 @@ configured regular-expression import rules (for example, rewriting
 
 The same Flint command formats and lints Markdown files, checks links, and verifies
 license headers. The `license-header` check is check-only; it does not insert a missing header.
-
-Flint runs via [mise](https://mise.jdx.dev/):
-
-```bash
-mise run lint:fix
-```
-
-Flint also checks that links in Markdown files resolve.
+Flint runs via [mise](https://mise.jdx.dev/).
 
 #### Pre-commit hook
 

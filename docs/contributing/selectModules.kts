@@ -1,6 +1,6 @@
 #!/usr/bin/env kotlin
 
-//install kotlin compiler: https://kotlinlang.org/docs/tutorials/command-line.html
+// install kotlin compiler: https://kotlinlang.org/docs/tutorials/command-line.html
 import java.io.File
 
 val includeRegex = Regex("include\\(\"(.*?)\"\\)")
@@ -42,8 +42,6 @@ fun main(args: Array<String>) {
         emptyList()
       }
     } ?: listOf(line)
-
-
   }.joinToString("\n")
   target.writeText(text)
 }
@@ -80,4 +78,3 @@ fun children(file: File) = file.readText().lines().flatMap { line ->
     listOf(Module(module))
   } ?: emptyList()
 }
-

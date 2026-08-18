@@ -663,7 +663,16 @@ ij_groovy_while_brace_force = never
 ij_groovy_while_on_new_line = false
 ij_groovy_wrap_long_lines = false
 
-[{*.kt, *.kts}]
+[{*.kt,*.kts}]
+ktlint_code_style = intellij_idea
+indent_size = 2
+continuation_indent_size = 2
+max_line_length = 160
+ktlint_standard_no-wildcard-imports = disabled
+ktlint_standard_max-line-length = disabled
+ktlint_standard_trailing-comma-on-call-site = disabled
+ktlint_standard_trailing-comma-on-declaration-site = disabled
+ktlint_standard_wrapping = disabled
 ij_continuation_indent_size = 2
 ij_kotlin_align_in_columns_case_branch = false
 ij_kotlin_align_multiline_binary_operation = false
@@ -739,6 +748,16 @@ ij_kotlin_while_on_new_line = false
 ij_kotlin_wrap_elvis_expressions = 1
 ij_kotlin_wrap_expression_body_functions = 0
 ij_kotlin_wrap_first_method_in_call_chain = false
+
+[*.kt]
+ktlint_standard_package-name = disabled
+
+[*.kts]
+ktlint_standard_property-naming = disabled
+ktlint_standard_function-literal = disabled
+
+[examples/distro/buildSrc/src/main/kotlin/Versions.kt]
+ktlint_standard_property-naming = disabled
 
 [{*.har, *.jsb2, *.jsb3, *.json, .babelrc, .eslintrc, .stylelintrc, bowerrc, jest.config}]
 ij_json_keep_blank_lines_in_code = 0

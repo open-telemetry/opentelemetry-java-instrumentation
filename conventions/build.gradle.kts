@@ -1,28 +1,5 @@
 plugins {
   `kotlin-dsl`
-  // When updating, update below in dependencies too
-  id("com.diffplug.spotless") version "8.10.0"
-}
-
-spotless {
-  kotlinGradle {
-    // not sure why it's not using the indent settings from .editorconfig
-    ktlint().editorConfigOverride(mapOf(
-      "indent_size" to "2",
-      "continuation_indent_size" to "2",
-      "max_line_length" to "160",
-      "ktlint_standard_no-wildcard-imports" to "disabled",
-      // ktlint does not break up long lines, it just fails on them
-      "ktlint_standard_max-line-length" to "disabled",
-      // ktlint makes it *very* hard to locate where this actually happened
-      "ktlint_standard_trailing-comma-on-call-site" to "disabled",
-      // depends on ktlint_standard_wrapping
-      "ktlint_standard_trailing-comma-on-declaration-site" to "disabled",
-      // also very hard to find out where this happens
-      "ktlint_standard_wrapping" to "disabled"
-    ))
-    target("**/*.gradle.kts")
-  }
 }
 
 repositories {
@@ -45,7 +22,6 @@ dependencies {
   implementation("org.eclipse.aether:aether-transport-http:1.1.0")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
-  // When updating, update above in plugins too
   implementation("com.diffplug.spotless:spotless-plugin-gradle:8.10.0")
   implementation("com.google.guava:guava:33.6.0-jre")
   implementation("com.gradleup.shadow:shadow-gradle-plugin:9.6.1") {
