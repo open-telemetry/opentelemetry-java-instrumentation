@@ -250,8 +250,7 @@ class VertxSqlClientTest {
         .toCompletableFuture()
         .get(30, SECONDS);
 
-    // SqlClient.preparedQuery() does not guarantee that the query has no embedded literals.
-    assertPreparedSelect("select * from test where id = $1 and name = ?");
+    assertPreparedSelect(query, "select * from test where id = $1 and name = ?");
 
     assertDurationMetric(
         testing,
@@ -264,10 +263,11 @@ class VertxSqlClientTest {
   }
 
   private static void assertPreparedSelect() {
-    assertPreparedSelect("select * from test where id = $1");
+    String query = "select * from test where id = $1";
+    assertPreparedSelect(query, query);
   }
 
-  private static void assertPreparedSelect(String expectedQueryText) {
+  private static void assertPreparedSelect(String query, String sanitizedQuery) {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -282,7 +282,9 @@ class VertxSqlClientTest {
                                 emitStableDatabaseSemconv() ? POSTGRESQL : null),
                             equalTo(maybeStable(DB_NAME), DB),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                            equalTo(maybeStable(DB_STATEMENT), expectedQueryText),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                emitStableDatabaseSemconv() ? query : sanitizedQuery),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? "select test" : null),
@@ -306,9 +308,7 @@ class VertxSqlClientTest {
         .toCompletableFuture()
         .get(30, SECONDS);
 
-    // PreparedStatement.query() is parameterized, so its stable query text is not sanitized.
-    assertPreparedSelect(
-        emitStableDatabaseSemconv() ? query : "select * from test where id = $1 and name = ?");
+    assertPreparedSelect(query, "select * from test where id = $1 and name = ?");
 
     assertDurationMetric(
         testing,
@@ -478,7 +478,11 @@ class VertxSqlClientTest {
                                 emitStableDatabaseSemconv() ? POSTGRESQL : null),
                             equalTo(maybeStable(DB_NAME), DB),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                            equalTo(maybeStable(DB_STATEMENT), scenario.preparedQuery),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                emitStableDatabaseSemconv()
+                                    ? scenario.preparedQuery
+                                    : scenario.sanitizedQuery),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 emitStableDatabaseSemconv() ? scenario.querySummary : null),
@@ -513,7 +517,8 @@ class VertxSqlClientTest {
         argumentSet(
             "empty",
             BatchScenario.builder()
-                .preparedQuery("insert into batch_test values ($1, $2) returning *")
+                .preparedQuery("insert into batch_test values ($1, $2 + 1) returning *")
+                .sanitizedQuery("insert into batch_test values ($1, $2 + ?) returning *")
                 .tuples(emptyList())
                 .stableSpanName("BATCH insert batch_test")
                 .querySummary("BATCH insert batch_test")
@@ -523,7 +528,8 @@ class VertxSqlClientTest {
         argumentSet(
             "single",
             BatchScenario.builder()
-                .preparedQuery("insert into batch_test values ($1, $2) returning *")
+                .preparedQuery("insert into batch_test values ($1, $2 + 1) returning *")
+                .sanitizedQuery("insert into batch_test values ($1, $2 + ?) returning *")
                 .tuples(singletonList(Tuple.of(1, 1)))
                 .stableSpanName("insert batch_test")
                 .querySummary("insert batch_test")
@@ -531,7 +537,8 @@ class VertxSqlClientTest {
         argumentSet(
             "twoSameOperation",
             BatchScenario.builder()
-                .preparedQuery("insert into batch_test values ($1, $2) returning *")
+                .preparedQuery("insert into batch_test values ($1, $2 + 1) returning *")
+                .sanitizedQuery("insert into batch_test values ($1, $2 + ?) returning *")
                 .tuples(asList(Tuple.of(1, 1), Tuple.of(2, 2)))
                 .stableSpanName("BATCH insert batch_test")
                 .querySummary("BATCH insert batch_test")
@@ -722,6 +729,7 @@ class VertxSqlClientTest {
 
   private static final class BatchScenario {
     final String preparedQuery;
+    final String sanitizedQuery;
     final List<Tuple> tuples;
     final String stableSpanName;
     final String querySummary;
@@ -730,6 +738,7 @@ class VertxSqlClientTest {
 
     BatchScenario(Builder builder) {
       this.preparedQuery = builder.preparedQuery;
+      this.sanitizedQuery = builder.sanitizedQuery;
       this.tuples = builder.tuples;
       this.stableSpanName = builder.stableSpanName;
       this.querySummary = builder.querySummary;
@@ -743,6 +752,7 @@ class VertxSqlClientTest {
 
     static final class Builder {
       private String preparedQuery;
+      private String sanitizedQuery;
       private List<Tuple> tuples;
       private String stableSpanName;
       private String querySummary;
@@ -751,6 +761,11 @@ class VertxSqlClientTest {
 
       Builder preparedQuery(String preparedQuery) {
         this.preparedQuery = preparedQuery;
+        return this;
+      }
+
+      Builder sanitizedQuery(String sanitizedQuery) {
+        this.sanitizedQuery = sanitizedQuery;
         return this;
       }
 
