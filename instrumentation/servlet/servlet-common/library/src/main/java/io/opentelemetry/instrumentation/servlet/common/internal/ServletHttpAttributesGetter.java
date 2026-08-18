@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.servlet.common.internal;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
-import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -54,8 +53,7 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
   }
 
   @Override
-  public Collection<String> getHttpRequestHeaderNames(
-      ServletRequestContext<REQUEST> requestContext) {
+  public Iterable<String> getHttpRequestHeaderNames(ServletRequestContext<REQUEST> requestContext) {
     return accessor.getRequestHeaderNames(requestContext.request());
   }
 
@@ -97,7 +95,7 @@ public class ServletHttpAttributesGetter<REQUEST, RESPONSE>
   }
 
   @Override
-  public Collection<String> getHttpResponseHeaderNames(
+  public Iterable<String> getHttpResponseHeaderNames(
       ServletRequestContext<REQUEST> requestContext,
       ServletResponseContext<RESPONSE> responseContext) {
     RESPONSE response = responseContext.response();

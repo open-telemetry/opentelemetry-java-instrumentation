@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.servlet.common.javax;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.instrumentation.api.internal.EnumerationUtil;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletAccessor;
 import java.security.Principal;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -84,10 +84,12 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   }
 
   @Override
-  public Collection<String> getRequestHeaderNames(HttpServletRequest httpServletRequest) {
-    @SuppressWarnings("unchecked") // servlet api uses Enumeration without generic type
-    Enumeration<String> names = httpServletRequest.getHeaderNames();
-    return names == null ? emptyList() : Collections.list(names);
+  public Iterable<String> getRequestHeaderNames(HttpServletRequest httpServletRequest) {
+    return () -> {
+      @SuppressWarnings("unchecked") // servlet api uses Enumeration without generic type
+      Enumeration<String> names = httpServletRequest.getHeaderNames();
+      return EnumerationUtil.asIterator(names);
+    };
   }
 
   @Override

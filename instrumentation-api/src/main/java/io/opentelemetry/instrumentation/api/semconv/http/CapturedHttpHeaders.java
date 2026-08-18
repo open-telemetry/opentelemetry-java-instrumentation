@@ -101,7 +101,7 @@ final class CapturedHttpHeaders {
   }
 
   /** Returns the lowercase names of the captured headers among {@code enumeratedNames}. */
-  Collection<String> matchingNames(Collection<String> enumeratedNames) {
+  Collection<String> matchingNames(Iterable<String> enumeratedNames) {
     Set<String> names = new LinkedHashSet<>(exactNames);
     for (String name : enumeratedNames) {
       String lowercased = lowercase(name);
