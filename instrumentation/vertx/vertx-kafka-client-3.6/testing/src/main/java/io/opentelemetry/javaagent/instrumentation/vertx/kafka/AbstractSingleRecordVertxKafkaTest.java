@@ -82,7 +82,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span                              .hasName(spanName("testSingleTopic", "receive", "poll"))
+                          span.hasName(spanName("testSingleTopic", "receive", "poll"))
                               .hasKind(SpanKind.CLIENT)
                               .hasNoParent()
                               .hasLinks(batchRecordLink(producer.get()))
@@ -160,7 +160,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span                              .hasName(spanName("testSingleTopic", "receive", "poll"))
+                          span.hasName(spanName("testSingleTopic", "receive", "poll"))
                               .hasKind(SpanKind.CLIENT)
                               .hasNoParent()
                               .hasLinks(batchRecordLink(producer.get()))
