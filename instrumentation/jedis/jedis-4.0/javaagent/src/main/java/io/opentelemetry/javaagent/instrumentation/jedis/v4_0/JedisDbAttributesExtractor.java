@@ -19,7 +19,11 @@ final class JedisDbAttributesExtractor implements AttributesExtractor<JedisReque
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, JedisRequest request) {
     if (emitOldDatabaseSemconv()) {
-      attributes.put(DB_REDIS_DATABASE_INDEX, request.getDatabaseIndex());
+      Long databaseIndex = request.getDatabaseIndex();
+      // the old semantic conventions capture the database index only when it is not the default 0
+      if (databaseIndex != null && databaseIndex != 0) {
+        attributes.put(DB_REDIS_DATABASE_INDEX, databaseIndex);
+      }
     }
   }
 
