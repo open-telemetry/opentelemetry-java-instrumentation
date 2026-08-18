@@ -50,6 +50,12 @@
   supporting exact names. The deprecated methods still match header names literally, so `*` and `?`
   are not treated as glob patterns.
   ([#19598](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19598))
+- Deprecate the `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods on
+  `ApacheHttpClientTelemetryBuilder` (Apache HttpClient 4.3 and 5.2) and `HelidonTelemetryBuilder`
+  in favor of `setRequestHeaders(IncludeExclude)` and `setResponseHeaders(IncludeExclude)`, which
+  select HTTP headers by glob pattern instead of by exact name only. The deprecated methods still
+  match header names literally, so `*` and `?` are not treated as glob patterns.
+  ([#19602](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19602))
 - Deprecate the Logback appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of the new
   `experimental.mdc-attributes.included` and `experimental.mdc-attributes.excluded` selectors, which
