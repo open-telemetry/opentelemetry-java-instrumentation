@@ -71,7 +71,7 @@ dependencies {
   implementation("ru.vyarus:gradle-animalsniffer-plugin:2.0.1")
   implementation("org.spdx:spdx-gradle-plugin:0.12.0")
   // When updating, also update dependencyManagement/build.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.18.11")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.18.12")
   // Generates OSGi bundle metadata for published library artifacts (see otel.osgi-conventions)
   implementation("biz.aQute.bnd:biz.aQute.bnd.gradle:7.3.0")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
