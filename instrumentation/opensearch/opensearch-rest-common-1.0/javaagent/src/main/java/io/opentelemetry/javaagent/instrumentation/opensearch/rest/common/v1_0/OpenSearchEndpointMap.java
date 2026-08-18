@@ -215,6 +215,10 @@ final class OpenSearchEndpointMap {
     put(map, "PUT", "create", "/{index}/{type}/{id}/_create");
     put(map, "POST", "create", "/{index}/{type}/{id}/_create");
     put(map, "POST", "update", "/{index}/{type}/{id}/_update");
+    put(map, "GET", "get_source", "/{index}/{type}/{id}/_source");
+    put(map, "HEAD", "exists_source", "/{index}/{type}/{id}/_source");
+    put(map, "GET", "explain", "/{index}/{type}/{id}/_explain");
+    put(map, "POST", "explain", "/{index}/{type}/{id}/_explain");
     put(
         map,
         "GET",
