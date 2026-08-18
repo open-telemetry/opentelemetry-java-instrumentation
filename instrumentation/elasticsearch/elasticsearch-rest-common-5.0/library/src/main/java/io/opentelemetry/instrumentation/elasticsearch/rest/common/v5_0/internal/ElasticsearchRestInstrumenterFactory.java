@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import org.elasticsearch.client.Response;
 
 /**
@@ -37,9 +38,9 @@ public final class ElasticsearchRestInstrumenterFactory {
       Set<String> knownMethods,
       Set<String> sensitiveQueryParameters,
       boolean captureSearchQuery,
-      boolean sanitizeSearchQuery) {
+      @Nullable ElasticsearchQuerySanitizer sanitizer) {
     ElasticsearchDbAttributesGetter dbClientAttributesGetter =
-        new ElasticsearchDbAttributesGetter(captureSearchQuery, sanitizeSearchQuery);
+        new ElasticsearchDbAttributesGetter(captureSearchQuery, sanitizer);
     ElasticsearchClientAttributeExtractor esClientAttributesExtractor =
         new ElasticsearchClientAttributeExtractor(knownMethods, sensitiveQueryParameters);
     SpanNameExtractor<? super ElasticsearchRestRequest> spanNameExtractor =

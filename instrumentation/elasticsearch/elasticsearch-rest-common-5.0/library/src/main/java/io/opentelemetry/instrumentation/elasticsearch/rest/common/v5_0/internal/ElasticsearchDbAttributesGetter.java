@@ -32,11 +32,12 @@ final class ElasticsearchDbAttributesGetter
   private static final String ELASTICSEARCH = "elasticsearch";
 
   private final boolean captureSearchQuery;
-  private final boolean sanitizeSearchQuery;
+  @Nullable private final ElasticsearchQuerySanitizer sanitizer;
 
-  ElasticsearchDbAttributesGetter(boolean captureSearchQuery, boolean sanitizeSearchQuery) {
+  ElasticsearchDbAttributesGetter(
+      boolean captureSearchQuery, @Nullable ElasticsearchQuerySanitizer sanitizer) {
     this.captureSearchQuery = captureSearchQuery;
-    this.sanitizeSearchQuery = sanitizeSearchQuery;
+    this.sanitizer = sanitizer;
   }
 
   @Override
@@ -66,13 +67,13 @@ final class ElasticsearchDbAttributesGetter
       if (body == null) {
         return null;
       }
-      if (!sanitizeSearchQuery) {
+      if (sanitizer == null) {
         // sanitization was explicitly disabled, so capture the body verbatim
         return body;
       }
-      // the masker returns null when the body cannot be sanitized (malformed or non-JSON), in
-      // which case the body is dropped rather than captured raw
-      return ElasticsearchDbQuerySanitizer.sanitize(body);
+      // the sanitizer returns null when the body cannot be sanitized (malformed, non-JSON, or no
+      // sanitizer registered), in which case the body is dropped rather than captured raw
+      return sanitizer.sanitize(body);
     }
     return null;
   }

@@ -10,7 +10,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
@@ -26,45 +29,54 @@ class ElasticsearchDbAttributesGetterTest {
       "{\"query\":{\"match\":{\"title\":\"secret user data\"}}}";
   private static final String SANITIZED_BODY = "{\"query\":{\"match\":{\"title\":\"?\"}}}";
 
+  /** Records the bodies it is given and returns whatever it was configured to return. */
+  private static class RecordingSanitizer implements ElasticsearchQuerySanitizer {
+    final List<String> sanitized = new ArrayList<>();
+    @Nullable final String result;
+
+    RecordingSanitizer(@Nullable String result) {
+      this.result = result;
+    }
+
+    @Override
+    @Nullable
+    public String sanitize(String body) {
+      sanitized.add(body);
+      return result;
+    }
+  }
+
   @Test
-  void sanitizesSearchQueryByDefault() {
-    // the getter runs the captured body through the real masker and returns the sanitized result
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, true);
+  void returnsTheSanitizedBody() {
+    RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
 
     assertThat(
             getter.getDbQueryText(
                 searchRequest(new StringEntity(SEARCH_BODY, ContentType.APPLICATION_JSON))))
         .isEqualTo(SANITIZED_BODY);
+    assertThat(sanitizer.sanitized).containsExactly(SEARCH_BODY);
   }
 
   @Test
-  void masksScalarValuesOfEveryType() {
-    // strings, numbers, booleans and nulls are all masked to "?"
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, true);
-    String body = "{\"from\":0,\"size\":10,\"track_total_hits\":true,\"after\":null}";
+  void dropsBodyWhenTheSanitizerRejectsIt() {
+    // the sanitizer returns null when it cannot sanitize the body, which must never fall back to
+    // capturing it raw
+    RecordingSanitizer sanitizer = new RecordingSanitizer(null);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
 
     assertThat(
             getter.getDbQueryText(
-                searchRequest(new StringEntity(body, ContentType.APPLICATION_JSON))))
-        .isEqualTo("{\"from\":\"?\",\"size\":\"?\",\"track_total_hits\":\"?\",\"after\":\"?\"}");
-  }
-
-  @Test
-  void masksArrayElements() {
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, true);
-    String body = "{\"terms\":{\"tags\":[\"a\",\"b\",\"c\"]}}";
-
-    assertThat(
-            getter.getDbQueryText(
-                searchRequest(new StringEntity(body, ContentType.APPLICATION_JSON))))
-        .isEqualTo("{\"terms\":{\"tags\":[\"?\",\"?\",\"?\"]}}");
+                searchRequest(new StringEntity(SEARCH_BODY, ContentType.APPLICATION_JSON))))
+        .isNull();
   }
 
   @ParameterizedTest
   @MethodSource("multiSearchEndpoints")
-  void sanitizesMultiSearchNdJsonBody(
+  void joinsMultiSearchNdJsonLinesBeforeSanitizing(
       String endpointName, String requestPath, String endpointRoute) {
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, true);
+    RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
     String body =
         "{\"index\":\"private-index\"}\n"
             + "{\"query\":{\"match\":{\"title\":\"secret\"}}}\n"
@@ -77,14 +89,20 @@ class ElasticsearchDbAttributesGetterTest {
             new ElasticsearchEndpointDefinition(endpointName, new String[] {endpointRoute}, true),
             new StringEntity(body, ContentType.APPLICATION_JSON));
 
-    assertThat(getter.getDbQueryText(request))
-        .isEqualTo("{\"index\":\"?\"};{\"query\":{\"match\":{\"title\":\"?\"}}};{};{\"id\":\"?\"}");
+    assertThat(getter.getDbQueryText(request)).isEqualTo(SANITIZED_BODY);
+    // the line breaks are dropped while reading, so the sanitizer sees the values back to back
+    assertThat(sanitizer.sanitized)
+        .containsExactly(
+            "{\"index\":\"private-index\"}"
+                + "{\"query\":{\"match\":{\"title\":\"secret\"}}}"
+                + "{}"
+                + "{\"id\":\"private-template\"}");
   }
 
   @Test
   void capturesRawBodyWhenSanitizationDisabled() {
     // sanitization explicitly disabled: capture the body verbatim
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, false);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, null);
 
     assertThat(
             getter.getDbQueryText(
@@ -94,17 +112,20 @@ class ElasticsearchDbAttributesGetterTest {
 
   @Test
   void capturesNothingWhenCaptureDisabled() {
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(false, true);
+    RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(false, sanitizer);
 
     assertThat(
             getter.getDbQueryText(
                 searchRequest(new StringEntity(SEARCH_BODY, ContentType.APPLICATION_JSON))))
         .isNull();
+    assertThat(sanitizer.sanitized).isEmpty();
   }
 
   @Test
   void capturesNothingForNonSearchEndpoint() {
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, true);
+    RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
     ElasticsearchRestRequest request =
         ElasticsearchRestRequest.create(
             "PUT",
@@ -113,58 +134,19 @@ class ElasticsearchDbAttributesGetterTest {
             new StringEntity(SEARCH_BODY, ContentType.APPLICATION_JSON));
 
     assertThat(getter.getDbQueryText(request)).isNull();
+    assertThat(sanitizer.sanitized).isEmpty();
   }
 
   @Test
   void doesNotReadNonRepeatableEntity() {
     // a non-repeatable entity must never be read, otherwise the request body would be consumed
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, true);
+    RecordingSanitizer sanitizer = new RecordingSanitizer(SANITIZED_BODY);
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, sanitizer);
     HttpEntity entity =
         new InputStreamEntity(new ByteArrayInputStream(SEARCH_BODY.getBytes(UTF_8)));
 
     assertThat(getter.getDbQueryText(searchRequest(entity))).isNull();
-  }
-
-  @Test
-  void dropsBodyWhenNotJson() {
-    // a body that is not JSON must be dropped, never captured raw
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, true);
-
-    assertThat(
-            getter.getDbQueryText(
-                searchRequest(new StringEntity("this is not json", ContentType.TEXT_PLAIN))))
-        .isNull();
-  }
-
-  @Test
-  void dropsBodyWhenMalformedJson() {
-    // a truncated body must be dropped, never captured raw
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, true);
-
-    assertThat(
-            getter.getDbQueryText(
-                searchRequest(new StringEntity("{\"query\":", ContentType.APPLICATION_JSON))))
-        .isNull();
-  }
-
-  @Test
-  void dropsBodyWhenNestedTooDeeply() {
-    // a body nested past the sanitizer's depth cap is valid JSON but must be dropped, never
-    // captured raw
-    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, true);
-    int depth = ElasticsearchDbQuerySanitizer.MAX_NESTING_DEPTH + 1;
-    StringBuilder body = new StringBuilder();
-    for (int i = 0; i < depth; i++) {
-      body.append('[');
-    }
-    for (int i = 0; i < depth; i++) {
-      body.append(']');
-    }
-
-    assertThat(
-            getter.getDbQueryText(
-                searchRequest(new StringEntity(body.toString(), ContentType.APPLICATION_JSON))))
-        .isNull();
+    assertThat(sanitizer.sanitized).isEmpty();
   }
 
   private static Stream<Arguments> multiSearchEndpoints() {
