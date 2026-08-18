@@ -86,6 +86,8 @@ class OpenSearchEndpointMapTest {
         .isEqualTo("delete");
     assertThat(OpenSearchEndpointMap.getOperationName("PUT", "test-index/_doc/1"))
         .isEqualTo("index");
+    assertThat(OpenSearchEndpointMap.getOperationName("POST", "test-index/_doc/1"))
+        .isEqualTo("index");
     // HEAD registers /{index}/_doc/{id} as exists, but not /{index}/_create/{id}
     assertThat(OpenSearchEndpointMap.getOperationName("HEAD", "test-index/_create/1")).isNull();
   }

@@ -100,7 +100,7 @@ final class OpenSearchEndpointMap {
     put(map, "PUT", "create", "/{index}/_create/{id}");
     put(map, "POST", "create", "/{index}/_create/{id}");
     put(map, "PUT", "index", "/{index}/_doc/{id}");
-    put(map, "POST", "index", "/{index}/_doc");
+    put(map, "POST", "index", "/{index}/_doc/{id}", "/{index}/_doc");
     put(map, "POST", "update", "/{index}/_update/{id}");
     put(map, "DELETE", "delete", "/{index}/_doc/{id}");
     put(map, "GET", "get", "/{index}/_doc/{id}");
