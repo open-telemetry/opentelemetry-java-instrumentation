@@ -39,17 +39,21 @@ final class OpenSearchEndpointMap {
     return route != null ? route.getOperationName() : null;
   }
 
+  /** Exposes every registered route so a test can assert invariants across the whole table. */
+  static Map<String, List<OpenSearchEndpointRoute>> getRoutesByMethod() {
+    return Collections.unmodifiableMap(ROUTES_BY_METHOD);
+  }
+
   /**
    * Masks the path parameters of the matching route, so {@code my-index/_doc/12345} becomes {@code
-   * my-index/_doc/?} while index names stay intact. Returns {@code null} when no route matches.
+   * my-index/_doc/?} while index names stay intact. The {@code endpoint} must be a path with no
+   * query string; the caller masks any query separately. Returns {@code null} when no route
+   * matches.
    */
   @Nullable
   static String maskPathParameters(String method, String endpoint) {
-    int queryIdx = endpoint.indexOf('?');
-    String rawPath = queryIdx >= 0 ? endpoint.substring(0, queryIdx) : endpoint;
-    String query = queryIdx >= 0 ? endpoint.substring(queryIdx) : "";
-    boolean hadLeadingSlash = rawPath.startsWith("/");
-    String normalizedPath = hadLeadingSlash ? rawPath : "/" + rawPath;
+    boolean hadLeadingSlash = endpoint.startsWith("/");
+    String normalizedPath = hadLeadingSlash ? endpoint : "/" + endpoint;
 
     OpenSearchEndpointRoute route = findRoute(method, normalizedPath);
     if (route == null) {
@@ -62,7 +66,7 @@ final class OpenSearchEndpointMap {
     if (!hadLeadingSlash) {
       maskedPath = maskedPath.substring(1);
     }
-    return maskedPath + query;
+    return maskedPath;
   }
 
   @Nullable
@@ -160,8 +164,8 @@ final class OpenSearchEndpointMap {
     put(map, "GET", "cluster.stats", "/_cluster/stats");
     put(map, "GET", "cluster.get_settings", "/_cluster/settings");
     put(map, "PUT", "cluster.put_settings", "/_cluster/settings");
-    put(map, "GET", "nodes.info", "/_nodes", "/_nodes/{node_id}");
     put(map, "GET", "nodes.stats", "/_nodes/stats", "/_nodes/{node_id}/stats");
+    put(map, "GET", "nodes.info", "/_nodes", "/_nodes/{node_id}");
 
     // cat API
     put(map, "GET", "cat.indices", "/_cat/indices", "/_cat/indices/{index}");

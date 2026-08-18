@@ -28,12 +28,14 @@ final class OpenSearchEndpointRoute {
   private static final Pattern PATH_PART_NAMES_PATTERN = Pattern.compile("\\{([^}]+)}");
 
   private final String operationName;
+  private final String template;
   private final Pattern pattern;
   private final List<String> pathPartNames;
   private final Set<String> structuralGroups;
 
   OpenSearchEndpointRoute(String operationName, String template) {
     this.operationName = operationName;
+    this.template = template;
     this.pattern = buildRegexPattern(template);
     this.pathPartNames = new ArrayList<>();
     this.structuralGroups = new HashSet<>();
@@ -50,6 +52,18 @@ final class OpenSearchEndpointRoute {
 
   String getOperationName() {
     return operationName;
+  }
+
+  String getTemplate() {
+    return template;
+  }
+
+  List<String> getPathPartNames() {
+    return pathPartNames;
+  }
+
+  boolean isStructuralGroup(String groupName) {
+    return structuralGroups.contains(groupName);
   }
 
   boolean matches(String path) {
