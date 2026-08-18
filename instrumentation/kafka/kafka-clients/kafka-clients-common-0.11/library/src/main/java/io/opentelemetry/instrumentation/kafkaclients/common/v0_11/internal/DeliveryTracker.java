@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import java.util.List;
 
 /**
  * Identifies the source of a delivery and remembers which of its deliveries a process operation
@@ -28,18 +29,51 @@ public class DeliveryTracker {
   private static final int MAX_PENDING_FAILED_DELIVERIES = 1024;
 
   // bounded so that a consumer that never recovers cannot grow this without limit
-  private final Cache<String, Boolean> pendingFailedDeliveries =
+  private final Cache<String, Object> pendingFailedDeliveries =
       Cache.bounded(MAX_PENDING_FAILED_DELIVERIES);
 
-  boolean isPendingFailed(String deliveryKey) {
+  synchronized boolean isPendingFailed(String deliveryKey) {
     return pendingFailedDeliveries.get(deliveryKey) != null;
   }
 
-  void setPendingFailed(String deliveryKey, boolean pendingFailed) {
-    if (pendingFailed) {
-      pendingFailedDeliveries.put(deliveryKey, true);
-    } else {
-      pendingFailedDeliveries.remove(deliveryKey);
+  synchronized DeliveryState start(List<String> deliveryKeys) {
+    Object[] pendingFailures = new Object[deliveryKeys.size()];
+    for (int i = 0; i < deliveryKeys.size(); i++) {
+      pendingFailures[i] = pendingFailedDeliveries.get(deliveryKeys.get(i));
+    }
+    return new DeliveryState(this, deliveryKeys, pendingFailures);
+  }
+
+  private synchronized void end(DeliveryState state, boolean successful) {
+    for (int i = 0; i < state.deliveryKeys.size(); i++) {
+      String deliveryKey = state.deliveryKeys.get(i);
+      if (!successful) {
+        pendingFailedDeliveries.put(deliveryKey, new Object());
+      } else if (state.pendingFailures[i] != null
+          && state.pendingFailures[i] == pendingFailedDeliveries.get(deliveryKey)) {
+        pendingFailedDeliveries.remove(deliveryKey);
+      }
+    }
+  }
+
+  static final class DeliveryState {
+    private final DeliveryTracker deliveryTracker;
+    private final List<String> deliveryKeys;
+    private final Object[] pendingFailures;
+
+    private DeliveryState(
+        DeliveryTracker deliveryTracker, List<String> deliveryKeys, Object[] pendingFailures) {
+      this.deliveryTracker = deliveryTracker;
+      this.deliveryKeys = deliveryKeys;
+      this.pendingFailures = pendingFailures;
+    }
+
+    boolean wasPendingFailed(int index) {
+      return pendingFailures[index] != null;
+    }
+
+    void end(boolean successful) {
+      deliveryTracker.end(this, successful);
     }
   }
 }

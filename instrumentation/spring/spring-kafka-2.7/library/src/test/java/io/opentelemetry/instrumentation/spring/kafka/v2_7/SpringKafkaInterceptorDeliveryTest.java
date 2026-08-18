@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 
@@ -17,6 +18,7 @@ import io.opentelemetry.instrumentation.kafkaclients.v2_6.internal.OpenTelemetry
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -59,7 +61,7 @@ class SpringKafkaInterceptorDeliveryTest {
   }
 
   @Test
-  void recordRetriesUseInterceptorDeliveryTracker() {
+  void overlappingRecordRetriesUseInterceptorDeliveryTracker() {
     assumeTrue(emitStableMessagingSemconv());
     OpenTelemetryConsumerInterceptor<String, String> consumerInterceptor = consumerInterceptor();
     RecordInterceptor<String, String> springInterceptor =
@@ -67,14 +69,16 @@ class SpringKafkaInterceptorDeliveryTest {
     Consumer<String, String> consumer = consumer();
 
     for (int attempt = 0; attempt < 3; attempt++) {
-      ConsumerRecord<String, String> record =
-          consumerInterceptor.onConsume(records()).records(PARTITION).get(0);
+      Iterator<ConsumerRecord<String, String>> iterator =
+          consumerInterceptor.onConsume(records()).iterator();
+      ConsumerRecord<String, String> record = iterator.next();
       springInterceptor.intercept(record, consumer);
       if (attempt < 2) {
         springInterceptor.failure(record, failure(), consumer);
       } else {
         springInterceptor.success(record, consumer);
       }
+      assertThat(iterator.hasNext()).isFalse();
     }
 
     assertTotalConsumedMessages(testing, KAFKA_INSTRUMENTATION_NAME, 1);

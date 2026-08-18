@@ -57,7 +57,7 @@ public final class KafkaInstrumenterFactory {
   private static final AttributeKey<String> ERROR_TYPE = AttributeKey.stringKey("error.type");
   private static final ContextKey<Long> CONSUMED_MESSAGES_COUNT_KEY =
       ContextKey.named("opentelemetry-kafka-consumed-messages-count");
-  private static final ContextKey<DeliveryState> CONSUMED_MESSAGES_DELIVERY_STATE =
+  private static final ContextKey<DeliveryTracker.DeliveryState> CONSUMED_MESSAGES_DELIVERY_STATE =
       ContextKey.named("opentelemetry-kafka-consumed-messages-delivery");
   private static final OperationMetrics consumedMessagesMetrics =
       meter -> {
@@ -80,7 +80,8 @@ public final class KafkaInstrumenterFactory {
                   withConsumedMessagesCount(endAttributes, consumedMessagesCount),
                   endNanos);
             }
-            DeliveryState deliveryState = context.get(CONSUMED_MESSAGES_DELIVERY_STATE);
+            DeliveryTracker.DeliveryState deliveryState =
+                context.get(CONSUMED_MESSAGES_DELIVERY_STATE);
             if (deliveryState != null) {
               endDeliveryTracking(deliveryState, endAttributes.get(ERROR_TYPE) == null);
             }
@@ -294,11 +295,12 @@ public final class KafkaInstrumenterFactory {
       ConsumerRecord<?, ?> delivery,
       List<String> deliveryKeys) {
     DeliveryTracker deliveryTracker = request.getDeliveryTracker();
+    DeliveryTracker.DeliveryState deliveryState = startDeliveryState(deliveryTracker, deliveryKeys);
     long consumedMessagesCount =
         KafkaConsumerContextUtil.hasReceiveOperation(context)
             ? 0
-            : countConsumedMessages(delivery, deliveryKeys, deliveryTracker);
-    return withDeliveryState(context, deliveryKeys, deliveryTracker)
+            : countConsumedMessages(delivery, deliveryState);
+    return withDeliveryState(context, deliveryState)
         .with(CONSUMED_MESSAGES_COUNT_KEY, consumedMessagesCount);
   }
 
@@ -308,21 +310,27 @@ public final class KafkaInstrumenterFactory {
       Iterable<? extends ConsumerRecord<?, ?>> deliveries,
       List<String> deliveryKeys) {
     DeliveryTracker deliveryTracker = request.getDeliveryTracker();
+    DeliveryTracker.DeliveryState deliveryState = startDeliveryState(deliveryTracker, deliveryKeys);
     long consumedMessagesCount =
         KafkaConsumerContextUtil.hasReceiveOperation(context)
             ? 0
-            : countConsumedMessages(deliveries, deliveryKeys, deliveryTracker);
-    return withDeliveryState(context, deliveryKeys, deliveryTracker)
+            : countConsumedMessages(deliveries, deliveryState);
+    return withDeliveryState(context, deliveryState)
         .with(CONSUMED_MESSAGES_COUNT_KEY, consumedMessagesCount);
   }
 
+  @Nullable
+  private static DeliveryTracker.DeliveryState startDeliveryState(
+      @Nullable DeliveryTracker deliveryTracker, List<String> deliveryKeys) {
+    return deliveryTracker == null ? null : deliveryTracker.start(deliveryKeys);
+  }
+
   private static Context withDeliveryState(
-      Context context, List<String> deliveryKeys, @Nullable DeliveryTracker deliveryTracker) {
-    if (deliveryTracker == null) {
+      Context context, @Nullable DeliveryTracker.DeliveryState deliveryState) {
+    if (deliveryState == null) {
       return context;
     }
-    return context.with(
-        CONSUMED_MESSAGES_DELIVERY_STATE, new DeliveryState(deliveryKeys, deliveryTracker));
+    return context.with(CONSUMED_MESSAGES_DELIVERY_STATE, deliveryState);
   }
 
   private static void addReceiveConsumedMessages(
@@ -338,13 +346,26 @@ public final class KafkaInstrumenterFactory {
   }
 
   private static long countConsumedMessages(
-      ConsumerRecord<?, ?> delivery,
-      List<String> deliveryKeys,
-      @Nullable DeliveryTracker deliveryTracker) {
+      ConsumerRecord<?, ?> delivery, @Nullable DeliveryTracker.DeliveryState deliveryState) {
     if (!KafkaConsumerContextUtil.markConsumedMessageCounted(delivery)) {
       return 0;
     }
-    return isPendingFailed(deliveryTracker, deliveryKeys.get(0)) ? 0 : 1;
+    return deliveryState != null && deliveryState.wasPendingFailed(0) ? 0 : 1;
+  }
+
+  private static long countConsumedMessages(
+      Iterable<? extends ConsumerRecord<?, ?>> deliveries,
+      @Nullable DeliveryTracker.DeliveryState deliveryState) {
+    long consumedMessagesCount = 0;
+    int index = 0;
+    for (ConsumerRecord<?, ?> delivery : deliveries) {
+      if (KafkaConsumerContextUtil.markConsumedMessageCounted(delivery)
+          && (deliveryState == null || !deliveryState.wasPendingFailed(index))) {
+        consumedMessagesCount++;
+      }
+      index++;
+    }
+    return consumedMessagesCount;
   }
 
   private static long countConsumedMessages(
@@ -372,10 +393,8 @@ public final class KafkaInstrumenterFactory {
     return deliveryTracker != null && deliveryTracker.isPendingFailed(deliveryKey);
   }
 
-  private static void endDeliveryTracking(DeliveryState state, boolean successful) {
-    for (String deliveryKey : state.deliveryKeys) {
-      state.deliveryTracker.setPendingFailed(deliveryKey, !successful);
-    }
+  private static void endDeliveryTracking(DeliveryTracker.DeliveryState state, boolean successful) {
+    state.end(successful);
   }
 
   private static List<String> deliveryKeys(KafkaProcessRequest request) {
@@ -435,15 +454,5 @@ public final class KafkaInstrumenterFactory {
     return MessagingAttributesExtractor.builder(getter, operationType, operationName)
         .setHeaders(headers)
         .build();
-  }
-
-  private static final class DeliveryState {
-    private final List<String> deliveryKeys;
-    private final DeliveryTracker deliveryTracker;
-
-    private DeliveryState(List<String> deliveryKeys, DeliveryTracker deliveryTracker) {
-      this.deliveryKeys = deliveryKeys;
-      this.deliveryTracker = deliveryTracker;
-    }
   }
 }
