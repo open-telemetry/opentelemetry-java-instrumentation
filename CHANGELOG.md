@@ -41,6 +41,15 @@
   which select message headers by glob pattern instead of by exact name only. The deprecated
   property and methods still match header names literally; values containing `*` or `?` are ignored
   and logged, since they never supported wildcards.
+- Deprecate the `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods on
+  `HttpClientAttributesExtractorBuilder` and `HttpServerAttributesExtractorBuilder` in favor of
+  `setRequestHeaders(IncludeExclude)` and `setResponseHeaders(IncludeExclude)`, which select HTTP
+  headers by glob pattern instead of by exact name only. Wildcard and exclude-only selectors resolve
+  header names through the new `HttpCommonAttributesGetter#getHttpRequestHeaderNames` and
+  `#getHttpResponseHeaderNames` methods, so instrumentations that do not implement them keep
+  supporting exact names. The deprecated methods still match header names literally, so `*` and `?`
+  are not treated as glob patterns.
+  ([#19598](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19598))
 - Deprecate the Logback appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of the new
   `experimental.mdc-attributes.included` and `experimental.mdc-attributes.excluded` selectors, which

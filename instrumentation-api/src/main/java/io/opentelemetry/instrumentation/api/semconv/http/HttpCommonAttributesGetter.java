@@ -5,9 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.semconv.http;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -36,6 +39,24 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
   List<String> getHttpRequestHeader(REQUEST request, String name);
 
   /**
+   * Returns the names of all headers present on the request, or an empty collection if they cannot
+   * be enumerated.
+   *
+   * <p>This is only called when the configured request header selector uses wildcard patterns or
+   * only excluded patterns, in which case the header names to capture cannot be known in advance.
+   * Instrumentations that do not implement this method only support selectors that list header
+   * names literally.
+   *
+   * <p>Implementations of this method <b>must not</b> return a null value; an empty collection
+   * should be returned instead.
+   *
+   * @since 2.31.0
+   */
+  default Collection<String> getHttpRequestHeaderNames(REQUEST request) {
+    return emptyList();
+  }
+
+  /**
    * Returns the <a href="https://tools.ietf.org/html/rfc7231#section-6">HTTP response status
    * code</a>.
    *
@@ -58,6 +79,27 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    * returned instead.
    */
   List<String> getHttpResponseHeader(REQUEST request, RESPONSE response, String name);
+
+  /**
+   * Returns the names of all headers present on the response, or an empty collection if they cannot
+   * be enumerated.
+   *
+   * <p>This is only called when the configured response header selector uses wildcard patterns or
+   * only excluded patterns, in which case the header names to capture cannot be known in advance.
+   * Instrumentations that do not implement this method only support selectors that list header
+   * names literally.
+   *
+   * <p>This is called from {@link Instrumenter#end(Context, Object, Object, Throwable)}, only when
+   * {@code response} is non-{@code null}.
+   *
+   * <p>Implementations of this method <b>must not</b> return a null value; an empty collection
+   * should be returned instead.
+   *
+   * @since 2.31.0
+   */
+  default Collection<String> getHttpResponseHeaderNames(REQUEST request, RESPONSE response) {
+    return emptyList();
+  }
 
   /**
    * Returns a description of a class of error the operation ended with.
