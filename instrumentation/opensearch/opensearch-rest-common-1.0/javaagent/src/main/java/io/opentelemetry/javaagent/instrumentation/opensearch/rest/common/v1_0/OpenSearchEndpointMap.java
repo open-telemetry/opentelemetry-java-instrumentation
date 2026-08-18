@@ -196,6 +196,21 @@ final class OpenSearchEndpointMap {
 
     // legacy typed document routes (/{index}/{type}/{id}); listed last so keyword routes such as
     // /{index}/_doc/{id} match first. The type is treated as endpoint structure, the id is masked.
+    put(map, "PUT", "create", "/{index}/{type}/{id}/_create");
+    put(map, "POST", "create", "/{index}/{type}/{id}/_create");
+    put(map, "POST", "update", "/{index}/{type}/{id}/_update");
+    put(
+        map,
+        "GET",
+        "termvectors",
+        "/{index}/{type}/{id}/_termvectors",
+        "/{index}/{type}/_termvectors");
+    put(
+        map,
+        "POST",
+        "termvectors",
+        "/{index}/{type}/{id}/_termvectors",
+        "/{index}/{type}/_termvectors");
     put(map, "PUT", "index", "/{index}/{type}/{id}");
     put(map, "POST", "index", "/{index}/{type}/{id}", "/{index}/{type}");
     put(map, "GET", "get", "/{index}/{type}/{id}");
