@@ -5,20 +5,16 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1;
 
-import static java.util.Collections.singletonList;
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.TEST_HEADERS;
 
 import io.netty.channel.Channel;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class Netty41ClientTest extends AbstractNetty41ClientTest {
-
-  private static final IncludeExclude TEST_HEADERS =
-      IncludeExclude.builder().setIncluded(singletonList("x-test-*")).build();
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forLibrary();

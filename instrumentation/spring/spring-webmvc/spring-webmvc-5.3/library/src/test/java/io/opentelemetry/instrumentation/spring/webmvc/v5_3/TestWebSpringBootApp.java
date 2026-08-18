@@ -18,7 +18,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.util.Properties;
@@ -56,14 +55,8 @@ class TestWebSpringBootApp {
   @Bean
   Filter telemetryFilter() {
     return SpringWebMvcTelemetry.builder(GlobalOpenTelemetry.get())
-        .setRequestHeaders(
-            IncludeExclude.builder()
-                .setIncluded(AbstractHttpServerTest.TEST_REQUEST_HEADER)
-                .build())
-        .setResponseHeaders(
-            IncludeExclude.builder()
-                .setIncluded(AbstractHttpServerTest.TEST_RESPONSE_HEADER)
-                .build())
+        .setRequestHeaders(AbstractHttpServerTest.TEST_HEADERS)
+        .setResponseHeaders(AbstractHttpServerTest.TEST_HEADERS)
         .build()
         .createServletFilter();
   }

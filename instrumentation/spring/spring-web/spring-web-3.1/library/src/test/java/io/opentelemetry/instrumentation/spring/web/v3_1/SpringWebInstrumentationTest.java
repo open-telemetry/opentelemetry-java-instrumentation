@@ -9,7 +9,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -45,14 +44,8 @@ class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEntity<Str
         .getInterceptors()
         .add(
             SpringWebTelemetry.builder(testing.getOpenTelemetry())
-                .setRequestHeaders(
-                    IncludeExclude.builder()
-                        .setIncluded(AbstractHttpClientTest.TEST_REQUEST_HEADER)
-                        .build())
-                .setResponseHeaders(
-                    IncludeExclude.builder()
-                        .setIncluded(AbstractHttpClientTest.TEST_RESPONSE_HEADER)
-                        .build())
+                .setRequestHeaders(AbstractHttpClientTest.TEST_HEADERS)
+                .setResponseHeaders(AbstractHttpClientTest.TEST_HEADERS)
                 .build()
                 .createInterceptor());
   }

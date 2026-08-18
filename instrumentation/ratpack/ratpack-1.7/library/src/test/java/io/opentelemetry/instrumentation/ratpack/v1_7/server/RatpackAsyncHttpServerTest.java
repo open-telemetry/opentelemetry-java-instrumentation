@@ -5,9 +5,8 @@
 
 package io.opentelemetry.instrumentation.ratpack.v1_7.server;
 
-import static java.util.Collections.singletonList;
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.TEST_HEADERS;
 
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.ratpack.server.AbstractRatpackAsyncHttpServerTest;
 import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -17,9 +16,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import ratpack.server.RatpackServerSpec;
 
 class RatpackAsyncHttpServerTest extends AbstractRatpackAsyncHttpServerTest {
-
-  private static final IncludeExclude TEST_HEADERS =
-      IncludeExclude.builder().setIncluded(singletonList("x-test-*")).build();
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forLibrary();
