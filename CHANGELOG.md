@@ -107,6 +107,12 @@
   `MessagingConsumerMetrics.getForOperationType()`.
   ([#19357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19357))
 
+### 📈 Enhancements
+
+- Capture sanitized Elasticsearch search query bodies by default when
+  `otel.instrumentation.common.v3-preview` is enabled.
+  ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
+
 ## Version 2.30.0 (2026-07-22)
 
 This release targets the OpenTelemetry SDK 1.64.0.

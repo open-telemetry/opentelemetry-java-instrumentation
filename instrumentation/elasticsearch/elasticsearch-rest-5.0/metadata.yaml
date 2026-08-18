@@ -8,8 +8,9 @@ configurations:
   - name: otel.instrumentation.elasticsearch.capture-search-query
     declarative_name: java.elasticsearch.capture_search_query
     description: >
-      Enable the capture of search query bodies. It is important to note that Elasticsearch queries
-      may contain personal or sensitive information.
+      Enable the capture of search query bodies. The captured body is sanitized by default, see
+      otel.instrumentation.elasticsearch.query-sanitization.enabled. Defaults to true when
+      otel.instrumentation.common.v3-preview is enabled.
     type: boolean
     default: false
   - name: otel.instrumentation.elasticsearch.query-sanitization.enabled
