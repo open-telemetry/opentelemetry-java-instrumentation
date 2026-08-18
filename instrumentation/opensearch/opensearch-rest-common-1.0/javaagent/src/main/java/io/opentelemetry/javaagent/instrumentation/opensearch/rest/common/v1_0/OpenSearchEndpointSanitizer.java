@@ -47,7 +47,7 @@ final class OpenSearchEndpointSanitizer {
       if (previous != null && idIntroducingSegments.contains(previous)) {
         segments[i] = MASKED_VALUE;
       }
-      previous = segment;
+      previous = segments[i];
     }
     return String.join("/", segments);
   }

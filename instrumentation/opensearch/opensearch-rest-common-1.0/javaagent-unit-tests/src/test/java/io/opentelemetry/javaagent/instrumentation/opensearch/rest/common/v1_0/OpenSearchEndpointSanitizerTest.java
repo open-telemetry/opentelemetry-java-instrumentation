@@ -35,6 +35,7 @@ class OpenSearchEndpointSanitizerTest {
         arguments("test-index/_doc//12345", "test-index/_doc//?"),
         // only the segment right after the keyword is masked
         arguments("test-index/_doc/12345/_source", "test-index/_doc/?/_source"),
+        arguments("test-index/_doc/_source/_source", "test-index/_doc/?/_source"),
         // endpoints that carry no document id keep their structure
         arguments("_cluster/health", "_cluster/health"),
         arguments("test-index/_search", "test-index/_search"),
