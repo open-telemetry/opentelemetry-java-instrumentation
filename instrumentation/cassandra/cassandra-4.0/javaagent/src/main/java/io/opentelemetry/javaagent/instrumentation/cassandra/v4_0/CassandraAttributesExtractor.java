@@ -26,12 +26,13 @@ import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.cql.Statement;
+import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
+import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.UUID;
 import javax.annotation.Nullable;
 
@@ -56,10 +57,10 @@ final class CassandraAttributesExtractor
 
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator != null) {
-      SocketAddress address = coordinator.getEndPoint().resolve();
-      if (address instanceof InetSocketAddress) {
-        attributes.put(SERVER_ADDRESS, ((InetSocketAddress) address).getHostString());
-        attributes.put(SERVER_PORT, ((InetSocketAddress) address).getPort());
+      InetSocketAddress serverAddress = getServerAddress(coordinator);
+      if (serverAddress != null) {
+        attributes.put(SERVER_ADDRESS, serverAddress.getHostString());
+        attributes.put(SERVER_PORT, serverAddress.getPort());
       }
       String coordinatorDc = coordinator.getDatacenter();
       if (emitStableDatabaseSemconv()) {
@@ -131,5 +132,22 @@ final class CassandraAttributesExtractor
     if (emitOldDatabaseSemconv()) {
       attributes.put(DB_CASSANDRA_IDEMPOTENCE, idempotent);
     }
+  }
+
+  @Nullable
+  static InetSocketAddress getServerAddress(Node coordinator) {
+    EndPoint endPoint = coordinator.getEndPoint();
+    if (endPoint instanceof DefaultEndPoint) {
+      // resolve() returns the already-resolved InetSocketAddress, it does not do a dns lookup.
+      return ((DefaultEndPoint) endPoint).resolve();
+    }
+    // Any other endpoint reaches the server through an intermediary. Under SNI (proxied deployments
+    // such as DataStax Astra) that intermediary is a proxy, and resolve() would return the proxy
+    // rather than the server behind it. resolve() is also avoided deliberately: on an SNI endpoint
+    // it performs a dns lookup on every call and rotates a shared static counter the driver uses to
+    // pick a connection. Use the coordinator's own broadcast rpc address instead, which carries
+    // both the address and the port with no side effects. SniEndPoint cannot be named here because
+    // driver 4.0 to 4.2 do not have it.
+    return coordinator.getBroadcastRpcAddress().orElse(null);
   }
 }

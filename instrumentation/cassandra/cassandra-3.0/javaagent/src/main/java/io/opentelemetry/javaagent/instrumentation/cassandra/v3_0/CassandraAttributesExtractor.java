@@ -66,10 +66,10 @@ class CassandraAttributesExtractor
       return;
     }
 
-    InetSocketAddress coordinatorAddress = response.getCoordinatorAddress();
-    if (coordinatorAddress != null) {
-      attributes.put(SERVER_ADDRESS, coordinatorAddress.getHostString());
-      attributes.put(SERVER_PORT, coordinatorAddress.getPort());
+    InetSocketAddress serverAddress = response.getServerAddress();
+    if (serverAddress != null) {
+      attributes.put(SERVER_ADDRESS, serverAddress.getHostString());
+      attributes.put(SERVER_PORT, serverAddress.getPort());
     }
 
     ExecutionInfo executionInfo = response.getExecutionInfo();
