@@ -77,6 +77,7 @@ public final class LettuceTelemetryBuilder {
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(spanNameAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(new LettuceDbAttributesExtractor())
             .addOperationMetrics(DbClientMetrics.get())
             .setSpanStatusExtractor(
                 (spanStatusBuilder, request, response, error) -> {
