@@ -74,7 +74,7 @@ final class JacksonElasticsearchQuerySanitizer
         // the body held no JSON value at all
         return null;
       }
-    } catch (IOException | RuntimeException e) {
+    } catch (IOException | RuntimeException ignored) {
       // the body could not be sanitized: it is not valid JSON, or it is nested more deeply than
       // MAX_NESTING_DEPTH. Either way it must not be captured raw, so drop it instead.
       return null;
