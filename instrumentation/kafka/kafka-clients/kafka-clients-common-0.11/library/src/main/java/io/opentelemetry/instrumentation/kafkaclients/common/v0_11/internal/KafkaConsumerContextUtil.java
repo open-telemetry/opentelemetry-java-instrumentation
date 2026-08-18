@@ -45,8 +45,13 @@ public final class KafkaConsumerContextUtil {
       return context;
     }
 
+    Span processSpan = context.get(PROCESS_SPAN_KEY);
+    if (processSpan == null) {
+      return context;
+    }
+
     Span currentSpan = Span.fromContext(context);
-    if (currentSpan != context.get(PROCESS_SPAN_KEY)) {
+    if (currentSpan != processSpan) {
       return Boolean.TRUE.equals(context.get(RECEIVE_OPERATION_KEY))
           ? context.with(RECEIVE_OPERATION_KEY, false)
           : context;

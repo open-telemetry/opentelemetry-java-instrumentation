@@ -44,7 +44,7 @@ class KafkaConsumerContextUtilTest {
   }
 
   @Test
-  void clearsInheritedReceiveOperationWhenThereIsNoLeakedProcessSpan() {
+  void preservesInheritedReceiveOperationWhenThereIsNoLeakedProcessSpan() {
     assumeTrue(emitStableMessagingSemconv());
 
     Context context = KafkaConsumerContextUtil.withReceiveOperation(Context.current(), true);
@@ -52,7 +52,7 @@ class KafkaConsumerContextUtilTest {
     assertThat(
             KafkaConsumerContextUtil.hasReceiveOperation(
                 KafkaConsumerContextUtil.withoutLeakedProcessSpan(context)))
-        .isFalse();
+        .isTrue();
   }
 
   @Test
