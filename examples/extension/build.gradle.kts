@@ -13,6 +13,9 @@ plugins {
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
   id("com.gradleup.shadow") version "9.6.1"
+  // Spotless keeps this example self-contained when it is copied out of this repository.
+  // Copied projects may optionally use Flint instead.
+  id("com.diffplug.spotless") version "8.10.0"
 
   id("io.opentelemetry.instrumentation.muzzle-generation") version "2.31.0-alpha-SNAPSHOT"
   id("io.opentelemetry.instrumentation.muzzle-check") version "2.31.0-alpha-SNAPSHOT"
@@ -49,6 +52,14 @@ configurations {
   This agent is used only during integration test.
    */
   create("otel")
+}
+
+spotless {
+  java {
+    googleJavaFormat()
+    licenseHeaderFile(rootProject.file("spotless.license.java"), "(package|import|public)")
+    target("src/**/*.java")
+  }
 }
 
 dependencies {

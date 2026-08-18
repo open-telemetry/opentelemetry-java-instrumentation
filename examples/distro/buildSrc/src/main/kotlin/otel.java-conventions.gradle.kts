@@ -1,5 +1,6 @@
 plugins {
   java
+  id("com.diffplug.spotless")
 }
 
 version = rootProject.version
@@ -9,6 +10,16 @@ repositories {
   maven {
     name = "sonatype"
     url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+  }
+}
+
+// Spotless keeps this example self-contained when it is copied out of this repository.
+// Copied projects may optionally use Flint instead.
+spotless {
+  java {
+    googleJavaFormat()
+    licenseHeaderFile(rootProject.file("spotless.license.java"), "(package|import|public)")
+    target("src/**/*.java")
   }
 }
 
