@@ -145,6 +145,7 @@ final class OpenSearchEndpointMap {
 
     // mapping, settings and alias management
     put(map, "PUT", "indices.put_mapping", "/{index}/_mapping");
+    put(map, "POST", "indices.put_mapping", "/{index}/_mapping");
     put(map, "GET", "indices.get_mapping", "/_mapping", "/{index}/_mapping");
     put(map, "PUT", "indices.put_settings", "/_settings", "/{index}/_settings");
     put(map, "GET", "indices.get_settings", "/_settings", "/{index}/_settings");
