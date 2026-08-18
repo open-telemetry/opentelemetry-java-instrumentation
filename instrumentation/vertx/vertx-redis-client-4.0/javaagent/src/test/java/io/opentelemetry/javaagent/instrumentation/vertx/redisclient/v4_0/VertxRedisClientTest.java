@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -142,7 +143,18 @@ class VertxRedisClientTest {
                     span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            defaultDatabaseSpanAttributes("SET", "SET foo ?"))));
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            // old semconv output is unchanged: the default database 0 is not
+                            // reported
+                            equalTo(DB_REDIS_DATABASE_INDEX, null),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
 
     assertDurationMetric(
         testing,
@@ -393,37 +405,6 @@ class VertxRedisClientTest {
         equalTo(DB_STATEMENT, queryText),
         equalTo(DB_OPERATION, operationName),
         equalTo(DB_REDIS_DATABASE_INDEX, 1),
-        equalTo(SERVER_ADDRESS, host),
-        equalTo(SERVER_PORT, port),
-        equalTo(maybeStablePeerService(), "test-peer-service"),
-        equalTo(NETWORK_PEER_PORT, port),
-        equalTo(NETWORK_PEER_ADDRESS, ip)
-      };
-    }
-  }
-
-  private static AttributeAssertion[] defaultDatabaseSpanAttributes(
-      String operationName, String queryText) {
-    // not testing database/dup
-    if (emitStableDatabaseSemconv()) {
-      return new AttributeAssertion[] {
-        equalTo(DB_SYSTEM_NAME, REDIS),
-        equalTo(DB_QUERY_TEXT, queryText),
-        equalTo(DB_OPERATION_NAME, operationName),
-        equalTo(DB_NAMESPACE, "0"),
-        equalTo(SERVER_ADDRESS, host),
-        equalTo(SERVER_PORT, port),
-        equalTo(maybeStablePeerService(), "test-peer-service"),
-        equalTo(NETWORK_PEER_PORT, port),
-        equalTo(NETWORK_PEER_ADDRESS, ip)
-      };
-    } else {
-      return new AttributeAssertion[] {
-        equalTo(DB_SYSTEM, REDIS),
-        equalTo(DB_STATEMENT, queryText),
-        equalTo(DB_OPERATION, operationName),
-        // old semconv output is unchanged: the default database 0 is not reported
-        equalTo(DB_REDIS_DATABASE_INDEX, null),
         equalTo(SERVER_ADDRESS, host),
         equalTo(SERVER_PORT, port),
         equalTo(maybeStablePeerService(), "test-peer-service"),
