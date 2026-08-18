@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
-import ch.qos.logback.classic.Level;
-import io.opentelemetry.instrumentation.test.utils.LoggerUtils;
+import javax.jms.ConnectionFactory;
 import javax.jms.Message;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.jms.annotation.EnableJms;
 import org.springframework.jms.annotation.JmsListenerConfigurer;
+import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
+import org.springframework.jms.config.JmsListenerContainerFactory;
 import org.springframework.jms.config.JmsListenerEndpoint;
 import org.springframework.jms.config.JmsListenerEndpointRegistrar;
 import org.springframework.jms.listener.AbstractMessageListenerContainer;
@@ -20,12 +20,16 @@ import org.springframework.jms.listener.MessageListenerContainer;
 import org.springframework.jms.listener.SessionAwareMessageListener;
 
 @EnableJms
-class ManualListenerConfig extends AbstractConfig implements JmsListenerConfigurer {
+class LegacyDurableSubscriptionConfig extends AbstractConfig implements JmsListenerConfigurer {
 
-  private static final Logger logger = LoggerFactory.getLogger(ManualListenerConfig.class);
-
-  static {
-    LoggerUtils.setLevel(logger, Level.INFO);
+  @Bean
+  @Override
+  JmsListenerContainerFactory<?> jmsListenerContainerFactory(ConnectionFactory connectionFactory) {
+    DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
+    factory.setConnectionFactory(connectionFactory);
+    factory.setPubSubDomain(true);
+    factory.setClientId("spring-jms-2-legacy-test");
+    return factory;
   }
 
   @Override
@@ -34,18 +38,18 @@ class ManualListenerConfig extends AbstractConfig implements JmsListenerConfigur
         new JmsListenerEndpoint() {
           @Override
           public @NotNull String getId() {
-            return "testid";
+            return "legacy-durable-subscription";
           }
 
+          @SuppressWarnings("deprecation") // testing the legacy Spring 2.x setter
           @Override
           public void setupListenerContainer(@NotNull MessageListenerContainer listenerContainer) {
             AbstractMessageListenerContainer container =
                 (AbstractMessageListenerContainer) listenerContainer;
             container.setDestinationName("SpringListenerJms2");
-            container.setSubscriptionName("durable-subscription");
+            container.setDurableSubscriptionName("legacy-durable-subscription");
             container.setupMessageListener(
-                (SessionAwareMessageListener<Message>)
-                    (message, session) -> logger.info("received: {}", message));
+                (SessionAwareMessageListener<Message>) (message, session) -> {});
           }
         });
   }
