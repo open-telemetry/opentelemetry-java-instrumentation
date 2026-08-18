@@ -13,7 +13,6 @@ import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
@@ -32,14 +31,13 @@ class ElasticsearchDbAttributesGetterTest {
   /** Records the bodies it is given and returns whatever it was configured to return. */
   private static class RecordingSanitizer implements ElasticsearchQuerySanitizer {
     final List<String> sanitized = new ArrayList<>();
-    @Nullable final String result;
+    final String result;
 
-    RecordingSanitizer(@Nullable String result) {
+    RecordingSanitizer(String result) {
       this.result = result;
     }
 
     @Override
-    @Nullable
     public String sanitize(String body) {
       sanitized.add(body);
       return result;
