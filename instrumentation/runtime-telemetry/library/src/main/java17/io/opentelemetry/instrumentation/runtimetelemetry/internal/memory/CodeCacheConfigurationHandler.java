@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal.memory;
 
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_POOL_NAME;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_TYPE;
+
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
@@ -26,8 +29,7 @@ public final class CodeCacheConfigurationHandler implements RecordedEventHandler
   private static final String EVENT_NAME = "jdk.CodeCacheConfiguration";
 
   private static final Attributes ATTR =
-      Attributes.of(
-          Constants.ATTR_MEMORY_TYPE, Constants.NON_HEAP, Constants.ATTR_MEMORY_POOL, "CodeCache");
+      Attributes.of(JVM_MEMORY_TYPE, Constants.NON_HEAP, JVM_MEMORY_POOL_NAME, "CodeCache");
 
   private final List<AutoCloseable> observables = new ArrayList<>();
 

@@ -56,6 +56,12 @@
   and method keep their existing behavior, which matches keys literally unless the list contains
   only `*`, and may be removed in the next minor release.
   ([#19521](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19521))
+- Deprecate the Log4j appender `experimental.capture-map-message-attributes` configuration property
+  and `OpenTelemetryAppender.Builder#setCaptureMapMessageAttributes(boolean)` in favor of
+  include/exclude `MapMessage` attribute selectors and
+  `OpenTelemetryAppender.Builder#setMapMessageAttributes(IncludeExclude)`. The deprecated property
+  and method still select the same attributes, with `true` selecting every `MapMessage` attribute.
+  ([#19599](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19599))
 - Deprecate `otel.instrumentation.servlet.experimental.capture-request-parameters` and
   `Experimental#setCaptureRequestParameters(...)` in favor of the
   `otel.instrumentation.servlet.experimental.request-parameters.{included,excluded}` properties and
