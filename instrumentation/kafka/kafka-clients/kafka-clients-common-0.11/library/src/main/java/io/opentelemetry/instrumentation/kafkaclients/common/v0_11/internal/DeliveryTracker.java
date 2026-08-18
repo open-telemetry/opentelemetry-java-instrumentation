@@ -5,8 +5,16 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
-import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import javax.annotation.Nullable;
+import org.apache.kafka.common.TopicPartition;
 
 /**
  * Identifies the source of a delivery and remembers which of its deliveries a process operation
@@ -26,43 +34,91 @@ import java.util.List;
  */
 public class DeliveryTracker {
 
-  private static final int MAX_PENDING_FAILED_DELIVERIES = 1024;
+  private static final int MAX_PENDING_FAILED_OPERATIONS = 1024;
 
   // bounded so that a consumer that never recovers cannot grow this without limit
-  private final Cache<String, Object> pendingFailedDeliveries =
-      Cache.bounded(MAX_PENDING_FAILED_DELIVERIES);
+  private final Deque<PendingFailure> pendingFailures = new ArrayDeque<>();
 
-  synchronized boolean isPendingFailed(String deliveryKey) {
-    return pendingFailedDeliveries.get(deliveryKey) != null;
+  synchronized boolean isPendingFailed(DeliveryKey deliveryKey) {
+    return findPendingFailure(deliveryKey) != null;
   }
 
-  synchronized DeliveryState start(List<String> deliveryKeys) {
-    Object[] pendingFailures = new Object[deliveryKeys.size()];
+  synchronized DeliveryState start(List<DeliveryKey> deliveryKeys) {
+    PendingFailure[] pendingFailures = new PendingFailure[deliveryKeys.size()];
     for (int i = 0; i < deliveryKeys.size(); i++) {
-      pendingFailures[i] = pendingFailedDeliveries.get(deliveryKeys.get(i));
+      pendingFailures[i] = findPendingFailure(deliveryKeys.get(i));
     }
     return new DeliveryState(this, deliveryKeys, pendingFailures);
   }
 
   private synchronized void end(DeliveryState state, boolean successful) {
-    for (int i = 0; i < state.deliveryKeys.size(); i++) {
-      String deliveryKey = state.deliveryKeys.get(i);
-      if (!successful) {
-        pendingFailedDeliveries.put(deliveryKey, new Object());
-      } else if (state.pendingFailures[i] != null
-          && state.pendingFailures[i] == pendingFailedDeliveries.get(deliveryKey)) {
-        pendingFailedDeliveries.remove(deliveryKey);
+    if (!successful) {
+      removePendingFailures(state.deliveryKeys);
+      PendingFailure pendingFailure = PendingFailure.create(state.deliveryKeys);
+      if (pendingFailure.isEmpty()) {
+        return;
       }
+      pendingFailures.addFirst(pendingFailure);
+      if (pendingFailures.size() > MAX_PENDING_FAILED_OPERATIONS) {
+        pendingFailures.removeLast();
+      }
+      return;
+    }
+
+    for (int i = 0; i < state.deliveryKeys.size(); i++) {
+      DeliveryKey deliveryKey = state.deliveryKeys.get(i);
+      PendingFailure pendingFailure = state.pendingFailures[i];
+      if (pendingFailure != null && pendingFailure == findPendingFailure(deliveryKey)) {
+        pendingFailure.remove(deliveryKey);
+        if (pendingFailure.isEmpty()) {
+          pendingFailures.remove(pendingFailure);
+        }
+      }
+    }
+  }
+
+  @Nullable
+  private PendingFailure findPendingFailure(DeliveryKey deliveryKey) {
+    for (PendingFailure pendingFailure : pendingFailures) {
+      if (pendingFailure.contains(deliveryKey)) {
+        return pendingFailure;
+      }
+    }
+    return null;
+  }
+
+  private void removePendingFailures(List<DeliveryKey> deliveryKeys) {
+    Iterator<PendingFailure> iterator = pendingFailures.iterator();
+    while (iterator.hasNext()) {
+      PendingFailure pendingFailure = iterator.next();
+      for (DeliveryKey deliveryKey : deliveryKeys) {
+        pendingFailure.remove(deliveryKey);
+      }
+      if (pendingFailure.isEmpty()) {
+        iterator.remove();
+      }
+    }
+  }
+
+  static final class DeliveryKey {
+    private final TopicPartition topicPartition;
+    private final long offset;
+
+    DeliveryKey(String topic, int partition, long offset) {
+      this.topicPartition = new TopicPartition(topic, partition);
+      this.offset = offset;
     }
   }
 
   static final class DeliveryState {
     private final DeliveryTracker deliveryTracker;
-    private final List<String> deliveryKeys;
-    private final Object[] pendingFailures;
+    private final List<DeliveryKey> deliveryKeys;
+    private final PendingFailure[] pendingFailures;
 
     private DeliveryState(
-        DeliveryTracker deliveryTracker, List<String> deliveryKeys, Object[] pendingFailures) {
+        DeliveryTracker deliveryTracker,
+        List<DeliveryKey> deliveryKeys,
+        PendingFailure[] pendingFailures) {
       this.deliveryTracker = deliveryTracker;
       this.deliveryKeys = deliveryKeys;
       this.pendingFailures = pendingFailures;
@@ -74,6 +130,101 @@ public class DeliveryTracker {
 
     void end(boolean successful) {
       deliveryTracker.end(this, successful);
+    }
+  }
+
+  /** Stores one failed operation as offset ranges, so its batch size does not affect capacity. */
+  private static final class PendingFailure {
+    private final Map<TopicPartition, List<OffsetRange>> rangesByPartition;
+
+    private PendingFailure(Map<TopicPartition, List<OffsetRange>> rangesByPartition) {
+      this.rangesByPartition = rangesByPartition;
+    }
+
+    private static PendingFailure create(List<DeliveryKey> deliveryKeys) {
+      Map<TopicPartition, OffsetRange> boundsByPartition = new HashMap<>();
+      for (DeliveryKey deliveryKey : deliveryKeys) {
+        OffsetRange range = boundsByPartition.get(deliveryKey.topicPartition);
+        if (range == null) {
+          boundsByPartition.put(
+              deliveryKey.topicPartition, new OffsetRange(deliveryKey.offset, deliveryKey.offset));
+        } else {
+          range.include(deliveryKey.offset);
+        }
+      }
+
+      Map<TopicPartition, List<OffsetRange>> rangesByPartition = new HashMap<>();
+      for (Map.Entry<TopicPartition, OffsetRange> entry : boundsByPartition.entrySet()) {
+        List<OffsetRange> ranges = new ArrayList<>();
+        ranges.add(entry.getValue());
+        rangesByPartition.put(entry.getKey(), ranges);
+      }
+      return new PendingFailure(rangesByPartition);
+    }
+
+    private boolean contains(DeliveryKey deliveryKey) {
+      List<OffsetRange> ranges = rangesByPartition.get(deliveryKey.topicPartition);
+      if (ranges == null) {
+        return false;
+      }
+      for (OffsetRange range : ranges) {
+        if (range.contains(deliveryKey.offset)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    private void remove(DeliveryKey deliveryKey) {
+      List<OffsetRange> ranges = rangesByPartition.get(deliveryKey.topicPartition);
+      if (ranges == null) {
+        return;
+      }
+      ListIterator<OffsetRange> iterator = ranges.listIterator();
+      while (iterator.hasNext()) {
+        OffsetRange range = iterator.next();
+        if (!range.contains(deliveryKey.offset)) {
+          continue;
+        }
+        if (range.start == range.end) {
+          iterator.remove();
+        } else if (deliveryKey.offset == range.start) {
+          range.start++;
+        } else if (deliveryKey.offset == range.end) {
+          range.end--;
+        } else {
+          long end = range.end;
+          range.end = deliveryKey.offset - 1;
+          iterator.add(new OffsetRange(deliveryKey.offset + 1, end));
+        }
+        if (ranges.isEmpty()) {
+          rangesByPartition.remove(deliveryKey.topicPartition);
+        }
+        return;
+      }
+    }
+
+    private boolean isEmpty() {
+      return rangesByPartition.isEmpty();
+    }
+  }
+
+  private static final class OffsetRange {
+    private long start;
+    private long end;
+
+    private OffsetRange(long start, long end) {
+      this.start = start;
+      this.end = end;
+    }
+
+    private void include(long offset) {
+      start = Math.min(start, offset);
+      end = Math.max(end, offset);
+    }
+
+    private boolean contains(long offset) {
+      return offset >= start && offset <= end;
     }
   }
 }

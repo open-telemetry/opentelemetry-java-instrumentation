@@ -37,6 +37,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -54,6 +55,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -64,6 +66,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.common.TopicPartition;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
@@ -101,6 +105,31 @@ class WrapperTest extends AbstractWrapperTest {
         testing, instrumentationName, "unwrapped", "group", "0", 1, 1, errorType);
     assertProcessDurationMetrics(testing, instrumentationName, "unwrapped", "group", "0", 1, null);
     assertTotalConsumedMessages(testing, instrumentationName, 1);
+  }
+
+  @Test
+  void batchProcessCountsLargeRetriedDeliveryOnce() {
+    assumeTrue(emitStableMessagingSemconv());
+    String instrumentationName = "test-kafka-large-batch";
+    Instrumenter<KafkaReceiveRequest, Void> instrumenter =
+        new KafkaInstrumenterFactory(testing.getOpenTelemetry(), instrumentationName)
+            .createBatchProcessInstrumenter();
+    DeliveryTracker deliveryTracker = new DeliveryTracker();
+    int batchSize = 1025;
+
+    ConsumerRecords<String, String> failedRecords = records("large-batch", batchSize);
+    KafkaReceiveRequest failedRequest =
+        KafkaReceiveRequest.create(failedRecords, "group", "client", deliveryTracker);
+    Context failedContext = instrumenter.start(Context.root(), failedRequest);
+    instrumenter.end(failedContext, failedRequest, null, new RuntimeException("test"));
+
+    ConsumerRecords<String, String> retryRecords = records("large-batch", batchSize);
+    KafkaReceiveRequest retryRequest =
+        KafkaReceiveRequest.create(retryRecords, "group", "client", deliveryTracker);
+    Context retryContext = instrumenter.start(Context.root(), retryRequest);
+    instrumenter.end(retryContext, retryRequest, null, null);
+
+    assertTotalConsumedMessages(testing, instrumentationName, batchSize);
   }
 
   @Override
@@ -208,6 +237,15 @@ class WrapperTest extends AbstractWrapperTest {
 
   private static LinkData batchRecordLink(SpanContext producerSpanContext, long offset) {
     return LinkData.create(producerSpanContext, Attributes.of(MESSAGING_KAFKA_OFFSET, offset));
+  }
+
+  private static ConsumerRecords<String, String> records(String topic, int count) {
+    List<ConsumerRecord<String, String>> records = new ArrayList<>();
+    for (int offset = 0; offset < count; offset++) {
+      records.add(new ConsumerRecord<>(topic, 0, offset, "key", "value"));
+    }
+    TopicPartition partition = new TopicPartition(topic, 0);
+    return new ConsumerRecords<>(singletonMap(partition, records));
   }
 
   protected static List<AttributeAssertion> sendAttributes(

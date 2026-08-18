@@ -293,7 +293,7 @@ public final class KafkaInstrumenterFactory {
       Context context,
       AbstractKafkaConsumerRequest request,
       ConsumerRecord<?, ?> delivery,
-      List<String> deliveryKeys) {
+      List<DeliveryTracker.DeliveryKey> deliveryKeys) {
     DeliveryTracker deliveryTracker = request.getDeliveryTracker();
     DeliveryTracker.DeliveryState deliveryState = startDeliveryState(deliveryTracker, deliveryKeys);
     long consumedMessagesCount =
@@ -308,7 +308,7 @@ public final class KafkaInstrumenterFactory {
       Context context,
       AbstractKafkaConsumerRequest request,
       Iterable<? extends ConsumerRecord<?, ?>> deliveries,
-      List<String> deliveryKeys) {
+      List<DeliveryTracker.DeliveryKey> deliveryKeys) {
     DeliveryTracker deliveryTracker = request.getDeliveryTracker();
     DeliveryTracker.DeliveryState deliveryState = startDeliveryState(deliveryTracker, deliveryKeys);
     long consumedMessagesCount =
@@ -321,7 +321,7 @@ public final class KafkaInstrumenterFactory {
 
   @Nullable
   private static DeliveryTracker.DeliveryState startDeliveryState(
-      @Nullable DeliveryTracker deliveryTracker, List<String> deliveryKeys) {
+      @Nullable DeliveryTracker deliveryTracker, List<DeliveryTracker.DeliveryKey> deliveryKeys) {
     return deliveryTracker == null ? null : deliveryTracker.start(deliveryKeys);
   }
 
@@ -370,7 +370,7 @@ public final class KafkaInstrumenterFactory {
 
   private static long countConsumedMessages(
       Iterable<? extends ConsumerRecord<?, ?>> deliveries,
-      List<String> deliveryKeys,
+      List<DeliveryTracker.DeliveryKey> deliveryKeys,
       @Nullable DeliveryTracker deliveryTracker) {
     long consumedMessagesCount = 0;
     int index = 0;
@@ -389,7 +389,7 @@ public final class KafkaInstrumenterFactory {
    * recognized.
    */
   private static boolean isPendingFailed(
-      @Nullable DeliveryTracker deliveryTracker, String deliveryKey) {
+      @Nullable DeliveryTracker deliveryTracker, DeliveryTracker.DeliveryKey deliveryKey) {
     return deliveryTracker != null && deliveryTracker.isPendingFailed(deliveryKey);
   }
 
@@ -397,12 +397,12 @@ public final class KafkaInstrumenterFactory {
     state.end(successful);
   }
 
-  private static List<String> deliveryKeys(KafkaProcessRequest request) {
+  private static List<DeliveryTracker.DeliveryKey> deliveryKeys(KafkaProcessRequest request) {
     return singletonList(deliveryKey(request.getRecord()));
   }
 
-  private static List<String> deliveryKeys(KafkaReceiveRequest request) {
-    List<String> keys = new ArrayList<>();
+  private static List<DeliveryTracker.DeliveryKey> deliveryKeys(KafkaReceiveRequest request) {
+    List<DeliveryTracker.DeliveryKey> keys = new ArrayList<>();
     for (ConsumerRecord<?, ?> record : request.getRecords()) {
       keys.add(deliveryKey(record));
     }
@@ -413,8 +413,8 @@ public final class KafkaInstrumenterFactory {
    * Returns a key that tells deliveries apart. A {@link DeliveryTracker} belongs to one consumer,
    * so the topic, partition and offset are enough to identify a delivery within it.
    */
-  private static String deliveryKey(ConsumerRecord<?, ?> record) {
-    return record.topic() + ':' + record.partition() + ':' + record.offset();
+  private static DeliveryTracker.DeliveryKey deliveryKey(ConsumerRecord<?, ?> record) {
+    return new DeliveryTracker.DeliveryKey(record.topic(), record.partition(), record.offset());
   }
 
   public Instrumenter<KafkaReceiveRequest, Void> createBatchProcessInstrumenter() {
