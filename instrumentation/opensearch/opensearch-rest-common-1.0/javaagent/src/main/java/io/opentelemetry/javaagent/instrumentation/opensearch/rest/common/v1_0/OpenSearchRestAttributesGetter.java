@@ -36,14 +36,16 @@ final class OpenSearchRestAttributesGetter
   public String getDbQueryText(OpenSearchRestRequest request) {
     String endpoint = request.getEndpoint();
     if (querySanitizationEnabled) {
-      endpoint = OpenSearchEndpointSanitizer.sanitize(endpoint);
+      endpoint = OpenSearchEndpointSanitizer.sanitize(request.getMethod(), endpoint);
     }
     return request.getMethod() + " " + endpoint;
   }
 
   @Override
   public String getDbOperationName(OpenSearchRestRequest request) {
-    return request.getMethod();
+    String operationName =
+        OpenSearchEndpointMap.getOperationName(request.getMethod(), request.getEndpoint());
+    return operationName != null ? operationName : request.getMethod();
   }
 
   @Nullable
