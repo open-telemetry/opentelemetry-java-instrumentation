@@ -6,18 +6,15 @@
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.cassandra.v4_4.CassandraEndPoints.getProxyAddress;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
-import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
+import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -67,20 +64,16 @@ final class CassandraSqlAttributesGetter
       return null;
     }
     EndPoint endPoint = coordinator.getEndPoint();
-    if (!(endPoint instanceof SniEndPoint)) {
-      SocketAddress address = endPoint.resolve();
-      return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
-    }
-    if (!emitStableDatabaseSemconv()) {
-      // The old database semantic conventions are frozen, so preserve the proxy as the peer.
-      return getProxyAddress((SniEndPoint) endPoint);
+    if (endPoint instanceof DefaultEndPoint) {
+      // resolve() returns the already-resolved InetSocketAddress, it does not do a dns lookup.
+      return (InetSocketAddress) endPoint.resolve();
     }
     // Under SNI (proxied deployments such as DataStax Astra) the peer is the proxy, but the only
     // public accessor for it, SniEndPoint.resolve(), performs a dns lookup on every call and
     // round-robins across the resolved addresses using a shared static counter that the driver
     // also uses to pick a connection. Calling it here would add a per-span dns lookup, record a
     // rotating address that may not match the connection, and perturb the driver's own rotation,
-    // so network.peer.* is left unset under SNI in stable mode.
+    // so network.peer.* is left unset under SNI.
     return null;
   }
 
