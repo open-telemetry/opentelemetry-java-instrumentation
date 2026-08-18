@@ -10,11 +10,6 @@
   corresponding artifacts directly.
 - `jetty.thread.queue.size` Jetty JMX metric unit has been changed from `{thread}` to `{job}`.
 - Normalize the value of `activemq.destination.temp.utilization` JMX Metric for ActiveMQ to be between 0 and 1 (inclusive) instead of between 0 and 100 (inclusive).
-- For Cassandra SNI deployments that use stable database semantic
-  conventions, report the coordinator behind the proxy in `server.address`
-  and `server.port`. Existing time series keyed by these attributes will
-  shift.
-  ([#19667](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19667))
 
 ### 🚫 Deprecations
 
