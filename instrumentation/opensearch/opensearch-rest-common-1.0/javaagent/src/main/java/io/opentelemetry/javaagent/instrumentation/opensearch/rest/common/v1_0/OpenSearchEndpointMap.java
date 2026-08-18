@@ -170,8 +170,14 @@ final class OpenSearchEndpointMap {
 
     // cluster and node health
     put(map, "GET", "cluster.health", "/_cluster/health", "/_cluster/health/{index}");
-    put(map, "GET", "cluster.state", "/_cluster/state");
-    put(map, "GET", "cluster.stats", "/_cluster/stats");
+    put(
+        map,
+        "GET",
+        "cluster.state",
+        "/_cluster/state",
+        "/_cluster/state/{metric}",
+        "/_cluster/state/{metric}/{index}");
+    put(map, "GET", "cluster.stats", "/_cluster/stats", "/_cluster/stats/nodes/{node_id}");
     put(map, "GET", "cluster.get_settings", "/_cluster/settings");
     put(map, "PUT", "cluster.put_settings", "/_cluster/settings");
     put(
