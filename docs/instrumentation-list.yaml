@@ -11934,6 +11934,8 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - org.opensearch.client:opensearch-rest-client:[1.0,3.0)
+  configuration_refs:
+  - common.db.query-sanitization.enabled
   telemetry:
   - when: default
     spans:
@@ -11972,6 +11974,8 @@ libraries:
   has_javaagent: true
   javaagent_target_versions:
   - org.opensearch.client:opensearch-rest-client:[3.0,)
+  configuration_refs:
+  - common.db.query-sanitization.enabled
   telemetry:
   - when: default
     spans:

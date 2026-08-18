@@ -45,14 +45,34 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
+  test {
+    filter {
+      excludeTestsMatching("OpenSearchRestQuerySanitizationDisabledTest")
+    }
+  }
+
+  val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("OpenSearchRestQuerySanitizationDisabledTest")
+    }
+    jvmArgs("-Dotel.instrumentation.opensearch.query-sanitization.enabled=false")
+  }
+
   val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      excludeTestsMatching("OpenSearchRestQuerySanitizationDisabledTest")
+    }
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testStableSemconv, testQuerySanitizationDisabled)
   }
 }

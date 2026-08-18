@@ -60,6 +60,10 @@ public abstract class AbstractOpenSearchRestTest {
 
   protected abstract String getInstrumentationName();
 
+  protected boolean isQuerySanitizationEnabled() {
+    return true;
+  }
+
   @BeforeAll
   void setUp() throws Exception {
     opensearch =
@@ -190,5 +194,40 @@ public abstract class AbstractOpenSearchRestTest {
     getTesting().waitForTraces(1);
 
     assertDurationMetric(getTesting(), getInstrumentationName(), DB_OPERATION_NAME, DB_SYSTEM_NAME);
+  }
+
+  @Test
+  void shouldMaskDocumentIdInQueryText() throws IOException {
+    Request request = new Request("PUT", "test-index/_doc/12345");
+    request.setJsonEntity("{\"title\":\"test\"}");
+    Response response = client.performRequest(request);
+    assertThat(getResponseStatus(response)).isEqualTo(201);
+
+    String expectedStatement =
+        isQuerySanitizationEnabled() ? "PUT test-index/_doc/?" : "PUT test-index/_doc/12345";
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("PUT")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+                                equalTo(maybeStable(DB_OPERATION), "PUT"),
+                                equalTo(maybeStable(DB_STATEMENT), expectedStatement)),
+                    span ->
+                        span.hasName("PUT")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, httpHost.getPort()),
+                                equalTo(HTTP_REQUEST_METHOD, "PUT"),
+                                equalTo(maybeStablePeerService(), "test-peer-service"),
+                                equalTo(URL_FULL, httpHost + "/test-index/_doc/12345"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
   }
 }

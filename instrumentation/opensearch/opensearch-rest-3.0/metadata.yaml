@@ -6,3 +6,5 @@ library_link: https://docs.opensearch.org/latest/clients/
 semantic_conventions:
   - DATABASE_CLIENT_SPANS
   - DATABASE_CLIENT_METRICS
+configurations:
+  - ref: common.db.query-sanitization.enabled

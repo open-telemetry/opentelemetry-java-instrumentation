@@ -15,6 +15,12 @@ import javax.annotation.Nullable;
 final class OpenSearchRestAttributesGetter
     implements DbClientAttributesGetter<OpenSearchRestRequest, OpenSearchRestResponse> {
 
+  private final boolean querySanitizationEnabled;
+
+  OpenSearchRestAttributesGetter(boolean querySanitizationEnabled) {
+    this.querySanitizationEnabled = querySanitizationEnabled;
+  }
+
   @Override
   public String getDbSystemName(OpenSearchRestRequest request) {
     return DbSystemNameIncubatingValues.OPENSEARCH;
@@ -28,7 +34,11 @@ final class OpenSearchRestAttributesGetter
 
   @Override
   public String getDbQueryText(OpenSearchRestRequest request) {
-    return request.getMethod() + " " + request.getEndpoint();
+    String endpoint = request.getEndpoint();
+    if (querySanitizationEnabled) {
+      endpoint = OpenSearchEndpointSanitizer.sanitize(endpoint);
+    }
+    return request.getMethod() + " " + endpoint;
   }
 
   @Override

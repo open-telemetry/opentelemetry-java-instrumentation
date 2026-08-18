@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
@@ -19,7 +20,10 @@ public class OpenSearchRestInstrumenterFactory {
 
   public static Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> create(
       String instrumentationName) {
-    OpenSearchRestAttributesGetter dbClientAttributesGetter = new OpenSearchRestAttributesGetter();
+    boolean querySanitizationEnabled =
+        DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "opensearch");
+    OpenSearchRestAttributesGetter dbClientAttributesGetter =
+        new OpenSearchRestAttributesGetter(querySanitizationEnabled);
 
     InstrumenterBuilder<OpenSearchRestRequest, OpenSearchRestResponse> builder =
         Instrumenter.<OpenSearchRestRequest, OpenSearchRestResponse>builder(

@@ -10,3 +10,9 @@
 | -------------------------------------------------------------- | ------- | ------- | ---------------------------------------------------- |
 | `otel.instrumentation.opensearch.experimental-span-attributes` | Boolean | `false` | Enable the capture of experimental span attributes.  |
 | `otel.instrumentation.opensearch.capture-search-query`         | Boolean | `true`  | Enable the capture of sanitized search query bodies. |
+
+## Settings for the [OpenSearch REST Client](https://docs.opensearch.org/latest/clients/) instrumentation
+
+| System property                                              | Type    | Default | Description                        |
+| ------------------------------------------------------------ | ------- | ------- | ---------------------------------- |
+| `otel.instrumentation.opensearch.query-sanitization.enabled` | Boolean | `true`  | Enables the DB query sanitization. |
