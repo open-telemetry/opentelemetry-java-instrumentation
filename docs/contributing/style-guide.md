@@ -23,6 +23,9 @@ The same Flint command formats and lints Markdown files, checks links, and verif
 license headers. The `license-header` check is check-only; it does not insert a missing header.
 Flint runs via [mise](https://mise.jdx.dev/).
 
+Java and Kotlin source files use Flint. Groovy and Scala source files continue to use Spotless;
+run `./gradlew spotlessApply` to format them or `./gradlew spotlessCheck` to check them.
+
 #### Pre-commit hook
 
 To completely delegate code style formatting to the machine,
