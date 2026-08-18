@@ -5,10 +5,9 @@
 
 package io.opentelemetry.instrumentation.javahttpserver;
 
-import static java.util.Collections.singletonList;
-
 import com.sun.net.httpserver.Filter;
 import com.sun.net.httpserver.HttpContext;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
@@ -24,8 +23,14 @@ class JavaHttpServerTest extends AbstractJavaHttpServerTest {
   protected void configureContexts(List<HttpContext> contexts) {
     Filter filter =
         JavaHttpServerTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+            .setRequestHeaders(
+                IncludeExclude.builder()
+                    .setIncluded(AbstractHttpServerTest.TEST_REQUEST_HEADER)
+                    .build())
+            .setResponseHeaders(
+                IncludeExclude.builder()
+                    .setIncluded(AbstractHttpServerTest.TEST_RESPONSE_HEADER)
+                    .build())
             .build()
             .createFilter();
     contexts.forEach(ctx -> ctx.getFilters().add(filter));
