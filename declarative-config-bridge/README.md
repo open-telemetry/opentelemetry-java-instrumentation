@@ -142,9 +142,8 @@ acme.preserved=true
 ```
 
 The auto configuration **with declarative config** registers the defaults as a model customizer,
-injecting them under `instrumentation/development.java`. You can call
-`DefaultInstrumentationConfig#applyToModel(...)` directly, or use
-`DefaultInstrumentationConfigApplier` if a static helper fits better.
+injecting them under `instrumentation/development.java` via
+`DefaultInstrumentationConfig#applyToModel(...)`.
 
 Let's first look at the yaml file that the defaults effectively merge into:
 
