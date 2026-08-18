@@ -271,6 +271,12 @@ class OpenSearchEndpointMapTest {
   }
 
   @Test
+  void getTermvectorsWithoutIdDerivesOperationName() {
+    assertThat(OpenSearchEndpointMap.getOperationName("GET", "test-index/_termvectors"))
+        .isEqualTo("termvectors");
+  }
+
+  @Test
   void parameterizedClusterRoutesDeriveOperationsAndMaskNodeId() {
     assertThat(OpenSearchEndpointMap.getOperationName("GET", "_cluster/state/metadata/test-index"))
         .isEqualTo("cluster.state");
