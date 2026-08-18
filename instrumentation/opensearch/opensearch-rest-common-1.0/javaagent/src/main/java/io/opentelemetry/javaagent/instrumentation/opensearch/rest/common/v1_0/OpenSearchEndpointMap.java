@@ -147,7 +147,14 @@ final class OpenSearchEndpointMap {
     put(map, "GET", "indices.get_mapping", "/_mapping", "/{index}/_mapping");
     put(map, "PUT", "indices.put_settings", "/_settings", "/{index}/_settings");
     put(map, "GET", "indices.get_settings", "/_settings", "/{index}/_settings");
-    put(map, "GET", "indices.get_alias", "/_alias", "/{index}/_alias", "/{index}/_alias/{name}");
+    put(
+        map,
+        "GET",
+        "indices.get_alias",
+        "/_alias",
+        "/_alias/{name}",
+        "/{index}/_alias",
+        "/{index}/_alias/{name}");
     put(map, "PUT", "indices.put_alias", "/{index}/_alias/{name}", "/{index}/_aliases/{name}");
     put(
         map,
