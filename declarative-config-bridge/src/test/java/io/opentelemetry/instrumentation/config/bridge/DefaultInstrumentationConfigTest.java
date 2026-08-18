@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.config.bridge;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
@@ -19,6 +20,13 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class DefaultInstrumentationConfigTest {
+
+  @Test
+  void setDefaultOnRootNodeRejected() {
+    assertThatThrownBy(() -> new DefaultInstrumentationConfig().setDefault("some_key", true))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("defaults must be set below an instrumentation node, e.g. get(\"micrometer\")");
+  }
 
   private static Stream<Arguments> configPropertyDefaults() {
     return Stream.of(

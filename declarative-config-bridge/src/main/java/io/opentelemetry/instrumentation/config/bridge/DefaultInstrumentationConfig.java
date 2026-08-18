@@ -192,6 +192,10 @@ public final class DefaultInstrumentationConfig {
 
   @CanIgnoreReturnValue
   private DefaultInstrumentationConfig setDefaultValue(String key, Object value) {
+    if (path.isEmpty()) {
+      throw new IllegalArgumentException(
+          "defaults must be set below an instrumentation node, e.g. get(\"micrometer\")");
+    }
     defaults.put(pathWithName(key), value);
     return this;
   }

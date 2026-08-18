@@ -94,7 +94,7 @@ First, there is a single defaults object that is unaware of the source of the co
 ```java
 DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
 defaults.get("micrometer").setDefault("base_time_unit", "s");
-defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", "true");
+defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", true);
 defaults.addMapping("acme", "acme.full_name");
 defaults.get("acme").get("full_name").setDefault("preserved", "true");
 ```
@@ -125,7 +125,7 @@ public class MyDistroAutoConfig implements AutoConfigurationCustomizerProvider {
   private static DefaultInstrumentationConfig createDefaults() {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
     defaults.get("micrometer").setDefault("base_time_unit", "s");
-    defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", "true");
+    defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", true);
     defaults.addMapping("acme", "acme.full_name");
     defaults.get("acme").get("full_name").setDefault("preserved", "true");
     return defaults;
@@ -155,7 +155,7 @@ instrumentation/development:
     micrometer:
       base_time_unit: s
     log4j_appender:
-      experimental_log_attributes/development: "true"
+      experimental_log_attributes/development: true
     acme:
       full_name:
         preserved: "true"
@@ -176,7 +176,7 @@ public class MyDistroDeclarativeConfig implements DeclarativeConfigurationCustom
   private static DefaultInstrumentationConfig createDefaults() {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
     defaults.get("micrometer").setDefault("base_time_unit", "s");
-    defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", "true");
+    defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", true);
     defaults.addMapping("acme", "acme.full_name");
     defaults.get("acme").get("full_name").setDefault("preserved", "true");
     return defaults;
