@@ -22,47 +22,55 @@ class OpenSearchEndpointMapTest {
 
   @Test
   void everyRouteResolvesToItsOwnOperationName() {
-    forEachRoute(
-        (method, route) -> {
-          assertThat(route.getOperationName())
-              .as("operation name for %s %s", method, route.getTemplate())
-              .isNotEmpty();
+    int visited =
+        forEachRoute(
+            (method, route) -> {
+              assertThat(route.getOperationName())
+                  .as("operation name for %s %s", method, route.getTemplate())
+                  .isNotEmpty();
 
-          String concretePath = concretePath(route.getTemplate());
-          assertThat(OpenSearchEndpointMap.getOperationName(method, concretePath))
-              .as("%s %s resolves to its registered operation name", method, concretePath)
-              .isEqualTo(route.getOperationName());
-        });
+              String concretePath = concretePath(route.getTemplate());
+              assertThat(OpenSearchEndpointMap.getOperationName(method, concretePath))
+                  .as("%s %s resolves to its registered operation name", method, concretePath)
+                  .isEqualTo(route.getOperationName());
+            });
+    // guard against a vacuous pass: an emptied or gutted table must fail here
+    assertThat(visited).as("route table is populated").isGreaterThanOrEqualTo(40);
   }
 
   @Test
   void everyRouteMasksParametersAndKeepsStructure() {
-    forEachRoute(
-        (method, route) -> {
-          String concretePath = concretePath(route.getTemplate());
-          String masked = OpenSearchEndpointMap.maskPathParameters(method, concretePath);
-          assertThat(masked).as("%s %s produces a masked path", method, concretePath).isNotNull();
+    int visited =
+        forEachRoute(
+            (method, route) -> {
+              String concretePath = concretePath(route.getTemplate());
+              String masked = OpenSearchEndpointMap.maskPathParameters(method, concretePath);
+              assertThat(masked)
+                  .as("%s %s produces a masked path", method, concretePath)
+                  .isNotNull();
 
-          List<String> segments = split(concretePath);
-          List<String> maskedSegments = split(masked);
-          assertThat(maskedSegments)
-              .as("masking preserves the segment count for %s", concretePath)
-              .hasSameSizeAs(segments);
+              List<String> segments = split(concretePath);
+              List<String> maskedSegments = split(masked);
+              assertThat(maskedSegments)
+                  .as("masking preserves the segment count for %s", concretePath)
+                  .hasSameSizeAs(segments);
 
-          List<String> templateSegments = split(route.getTemplate());
-          for (int i = 0; i < templateSegments.size(); i++) {
-            String templateSegment = templateSegments.get(i);
-            if (isParameter(templateSegment) && !isStructural(route, templateSegment)) {
-              assertThat(maskedSegments.get(i))
-                  .as("path parameter %s is masked in %s", templateSegment, concretePath)
-                  .isEqualTo("?");
-            } else {
-              assertThat(maskedSegments.get(i))
-                  .as("structural segment %s is preserved in %s", templateSegment, concretePath)
-                  .isEqualTo(segments.get(i));
-            }
-          }
-        });
+              List<String> templateSegments = split(route.getTemplate());
+              for (int i = 0; i < templateSegments.size(); i++) {
+                String templateSegment = templateSegments.get(i);
+                if (isParameter(templateSegment) && !isStructural(route, templateSegment)) {
+                  assertThat(maskedSegments.get(i))
+                      .as("path parameter %s is masked in %s", templateSegment, concretePath)
+                      .isEqualTo("?");
+                } else {
+                  assertThat(maskedSegments.get(i))
+                      .as("structural segment %s is preserved in %s", templateSegment, concretePath)
+                      .isEqualTo(segments.get(i));
+                }
+              }
+            });
+    // guard against a vacuous pass: an emptied or gutted table must fail here
+    assertThat(visited).as("route table is populated").isGreaterThanOrEqualTo(40);
   }
 
   // ---------------------------------------------------------------------------
@@ -179,13 +187,16 @@ class OpenSearchEndpointMapTest {
     void accept(String method, OpenSearchEndpointRoute route);
   }
 
-  private static void forEachRoute(RouteConsumer consumer) {
+  private static int forEachRoute(RouteConsumer consumer) {
+    int visited = 0;
     for (Map.Entry<String, List<OpenSearchEndpointRoute>> entry :
         OpenSearchEndpointMap.getRoutesByMethod().entrySet()) {
       for (OpenSearchEndpointRoute route : entry.getValue()) {
         consumer.accept(entry.getKey(), route);
+        visited++;
       }
     }
+    return visited;
   }
 
   /** Turns a template such as {@code /{index}/_doc/{id}} into a concrete path. */
