@@ -3,6 +3,9 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+# Spotless still owns Scala, Groovy, and miscellaneous files. To keep commits fast,
+# run it here only when staged Scala or Groovy files need formatting; spotlessMisc
+# remains covered by CI's full spotlessCheck.
 run_spotless=false
 while IFS= read -r -d '' file; do
   case "$file" in
