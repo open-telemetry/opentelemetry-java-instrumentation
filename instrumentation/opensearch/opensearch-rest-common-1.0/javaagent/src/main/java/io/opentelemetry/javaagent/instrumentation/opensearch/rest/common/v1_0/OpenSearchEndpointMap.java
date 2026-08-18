@@ -121,8 +121,9 @@ final class OpenSearchEndpointMap {
     put(map, "POST", "search", "/_search", "/{index}/_search");
     put(map, "GET", "count", "/_count", "/{index}/_count");
     put(map, "POST", "count", "/_count", "/{index}/_count");
-    put(map, "POST", "search.scroll", "/_search/scroll");
-    put(map, "DELETE", "clear_scroll", "/_search/scroll");
+    put(map, "GET", "scroll", "/_search/scroll", "/_search/scroll/{scroll_id}");
+    put(map, "POST", "scroll", "/_search/scroll", "/_search/scroll/{scroll_id}");
+    put(map, "DELETE", "clear_scroll", "/_search/scroll", "/_search/scroll/{scroll_id}");
     put(map, "GET", "field_caps", "/_field_caps", "/{index}/_field_caps");
     put(map, "POST", "field_caps", "/_field_caps", "/{index}/_field_caps");
 
