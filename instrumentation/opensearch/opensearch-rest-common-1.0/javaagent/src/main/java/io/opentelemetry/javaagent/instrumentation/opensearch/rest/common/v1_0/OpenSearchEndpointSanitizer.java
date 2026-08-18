@@ -37,11 +37,42 @@ final class OpenSearchEndpointSanitizer {
       new HashSet<>(asList("_doc", "_create", "_update", "_source", "_explain", "_termvectors"));
 
   static String sanitize(String method, String endpoint) {
-    String masked = OpenSearchEndpointMap.maskPathParameters(method, endpoint);
-    if (masked != null) {
-      return masked;
+    int queryIdx = endpoint.indexOf('?');
+    String path = queryIdx >= 0 ? endpoint.substring(0, queryIdx) : endpoint;
+    String query = queryIdx >= 0 ? endpoint.substring(queryIdx) : "";
+
+    String maskedPath = OpenSearchEndpointMap.maskPathParameters(method, path);
+    if (maskedPath == null) {
+      maskedPath = sanitizeByKeyword(path);
     }
-    return sanitizeByKeyword(endpoint);
+    return maskedPath + maskQueryValues(query);
+  }
+
+  /**
+   * Masks the value of every query parameter while keeping the parameter names, so {@code
+   * ?routing=abc&refresh=true} becomes {@code ?routing=?&refresh=?}. A query parameter value is
+   * customer-controlled just like a path id, so it must not appear in {@code db.query.text}.
+   */
+  private static String maskQueryValues(String query) {
+    if (query.isEmpty()) {
+      return query;
+    }
+    // query starts with '?'; keep it, then mask each name=value value
+    String[] params = query.substring(1).split("&", -1);
+    StringBuilder result = new StringBuilder("?");
+    for (int i = 0; i < params.length; i++) {
+      if (i > 0) {
+        result.append('&');
+      }
+      String param = params[i];
+      int eq = param.indexOf('=');
+      if (eq >= 0) {
+        result.append(param, 0, eq + 1).append(MASKED_VALUE);
+      } else {
+        result.append(param);
+      }
+    }
+    return result.toString();
   }
 
   private static String sanitizeByKeyword(String endpoint) {
