@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.javahttpserver;
 
 import com.sun.net.httpserver.Filter;
 import com.sun.net.httpserver.HttpContext;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
@@ -23,14 +22,8 @@ class JavaHttpServerTest extends AbstractJavaHttpServerTest {
   protected void configureContexts(List<HttpContext> contexts) {
     Filter filter =
         JavaHttpServerTelemetry.builder(testing.getOpenTelemetry())
-            .setRequestHeaders(
-                IncludeExclude.builder()
-                    .setIncluded(AbstractHttpServerTest.TEST_REQUEST_HEADER)
-                    .build())
-            .setResponseHeaders(
-                IncludeExclude.builder()
-                    .setIncluded(AbstractHttpServerTest.TEST_RESPONSE_HEADER)
-                    .build())
+            .setRequestHeaders(AbstractHttpServerTest.TEST_HEADERS)
+            .setResponseHeaders(AbstractHttpServerTest.TEST_HEADERS)
             .build()
             .createFilter();
     contexts.forEach(ctx -> ctx.getFilters().add(filter));

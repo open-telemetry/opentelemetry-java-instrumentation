@@ -5,10 +5,7 @@
 
 package io.opentelemetry.instrumentation.restlet.v1_1;
 
-import static java.util.Collections.singletonList;
-
 import com.noelios.restlet.StatusFilter;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
@@ -25,14 +22,8 @@ class RestletServerTest extends AbstractRestletServerTest {
   protected Restlet wrapRestlet(Restlet restlet, String path) {
     RestletTelemetry telemetry =
         RestletTelemetry.builder(testing.getOpenTelemetry())
-            .setRequestHeaders(
-                IncludeExclude.builder()
-                    .setIncluded(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-                    .build())
-            .setResponseHeaders(
-                IncludeExclude.builder()
-                    .setIncluded(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
-                    .build())
+            .setRequestHeaders(AbstractHttpServerTest.TEST_HEADERS)
+            .setResponseHeaders(AbstractHttpServerTest.TEST_HEADERS)
             .build();
 
     Filter tracingFilter = telemetry.createFilter(path);

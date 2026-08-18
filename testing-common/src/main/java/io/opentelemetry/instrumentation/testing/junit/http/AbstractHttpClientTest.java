@@ -47,6 +47,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
@@ -87,6 +88,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   public static final Duration READ_TIMEOUT = Duration.ofSeconds(2);
   public static final String TEST_REQUEST_HEADER = "X-Test-Request";
   public static final String TEST_RESPONSE_HEADER = "X-Test-Response";
+
+  /**
+   * Header selector that the shared client tests configure. The wildcard pattern makes the tests
+   * exercise capturing headers by name enumeration.
+   */
+  public static final IncludeExclude TEST_HEADERS =
+      IncludeExclude.builder().setIncluded("X-Test-*").build();
 
   static final String BASIC_AUTH_KEY = "custom-authorization-header";
   static final String BASIC_AUTH_VAL = "plain text auth token";

@@ -5,10 +5,7 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_3;
 
-import static java.util.Collections.singletonList;
-
 import com.linecorp.armeria.client.WebClientBuilder;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -24,14 +21,8 @@ class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest {
   protected WebClientBuilder configureClient(WebClientBuilder clientBuilder) {
     return clientBuilder.decorator(
         ArmeriaClientTelemetry.builder(testing.getOpenTelemetry())
-            .setRequestHeaders(
-                IncludeExclude.builder()
-                    .setIncluded(singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
-                    .build())
-            .setResponseHeaders(
-                IncludeExclude.builder()
-                    .setIncluded(singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
-                    .build())
+            .setRequestHeaders(AbstractHttpClientTest.TEST_HEADERS)
+            .setResponseHeaders(AbstractHttpClientTest.TEST_HEADERS)
             .build()
             .createDecorator());
   }
