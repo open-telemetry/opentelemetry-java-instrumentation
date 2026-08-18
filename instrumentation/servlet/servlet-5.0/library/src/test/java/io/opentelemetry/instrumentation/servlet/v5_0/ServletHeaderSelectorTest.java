@@ -31,6 +31,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import jakarta.servlet.Filter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -87,6 +88,25 @@ class ServletHeaderSelectorTest {
         .doesNotContainKeys(
             stringArrayKey("http.request.header.x-secret"),
             stringArrayKey("http.response.header.x-secret"));
+  }
+
+  @Test
+  void requestHeaderNamesAreReiterable() {
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getHeaderNames())
+        .thenAnswer(invocation -> enumeration(asList("X-Test-Request", "X-Secret")));
+
+    Iterable<String> headerNames = Servlet5Accessor.INSTANCE.getRequestHeaderNames(request);
+
+    // ServletRequestGetter.keys() hands this iterable to a TextMapGetter, and a propagator may read
+    // it more than once
+    List<String> firstPass = new ArrayList<>();
+    headerNames.forEach(firstPass::add);
+    List<String> secondPass = new ArrayList<>();
+    headerNames.forEach(secondPass::add);
+
+    assertThat(firstPass).containsExactly("X-Test-Request", "X-Secret");
+    assertThat(secondPass).isEqualTo(firstPass);
   }
 
   @SuppressWarnings("deprecation") // testing deprecated API
