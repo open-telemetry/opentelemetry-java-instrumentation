@@ -62,7 +62,7 @@ groups:
         stability: development
         brief: Cassandra compaction task type.
         examples:
-          - "COMPACTION"
+          - "compaction"
 
   - id: metric.cassandra.compaction.tasks.completed
     metric_name: cassandra.compaction.tasks.completed
