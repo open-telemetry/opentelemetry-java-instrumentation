@@ -152,8 +152,23 @@ instrumentation/development:
         # list of attribute keys.
         resource_attributes: []
       messaging:
-        # A comma-separated list of header names to capture as span attributes.
+        # Deprecated: use `otel.instrumentation.messaging.experimental.headers.included` instead. A
+        # comma-separated list of header names to capture as span attributes. It does not support
+        # glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other
+        # entry is matched as a literal header name.
         capture_headers/development: []
+        headers/development:
+          # A comma-separated list of message header name patterns to exclude from span attributes.
+          # Excluded patterns take precedence over included patterns. Matching is case-sensitive.
+          # `?` matches one character and `*` matches zero or more characters. If included is not
+          # configured, all non-excluded headers are captured, which may expose sensitive
+          # information.
+          excluded: []
+
+          # A comma-separated list of message header name patterns to capture as span attributes.
+          # Matching is case-sensitive. `?` matches one character and `*` matches zero or more
+          # characters.
+          included: []
         receive_telemetry/development:
           # Enables experimental receive telemetry, which will cause consumers to start a new trace,
           # with only a span link connecting it to the producer trace.
@@ -233,11 +248,15 @@ instrumentation/development:
       capture_metadata:
         client:
           # Deprecated: use `otel.instrumentation.grpc.client.request-metadata.included` instead. A
-          # comma-separated list of request metadata keys to capture on client spans.
+          # comma-separated list of request metadata keys to capture on client spans. It does not
+          # support glob patterns: an entry containing `*` or `?` is ignored with a warning, and
+          # every other entry is matched as a literal metadata key.
           request: []
         server:
           # Deprecated: use `otel.instrumentation.grpc.server.request-metadata.included` instead. A
-          # comma-separated list of request metadata keys to capture on server spans.
+          # comma-separated list of request metadata keys to capture on server spans. It does not
+          # support glob patterns: an entry containing `*` or `?` is ignored with a warning, and
+          # every other entry is matched as a literal metadata key.
           request: []
       client:
         request_metadata:
@@ -394,7 +413,10 @@ instrumentation/development:
       # name, and line number.
       capture_code_attributes/development: false
 
-      # Enables the capture of attributes from Log4j MapMessage instances.
+      # Deprecated boolean alias for
+      # otel.instrumentation.log4j-appender.experimental.map-message-attributes.included, where true
+      # captures all MapMessage attributes and false captures none. It is ignored when an included
+      # or excluded pattern is configured, and it may be removed in the next minor release.
       capture_map_message_attributes/development: false
 
       # Enables the capture of the Log4j marker attribute.
@@ -413,6 +435,24 @@ instrumentation/development:
 
       # Enables the capture of experimental log attributes, including thread name and thread ID.
       experimental_log_attributes/development: false
+      map_message_attributes/development:
+        # Comma-separated list of case-sensitive glob patterns for MapMessage keys not to capture as
+        # log attributes. "*" matches any number of characters and "?" matches one character.
+        # Excluded patterns take precedence over included patterns. No MapMessage attributes are
+        # captured unless an included pattern, an excluded pattern, or the deprecated
+        # otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes setting is
+        # configured; configuring only excluded patterns captures all MapMessage attributes that do
+        # not match them. Captured MapMessage attributes may contain sensitive information.
+        excluded: []
+
+        # Comma-separated list of case-sensitive glob patterns for MapMessage keys to capture as log
+        # attributes. "*" matches any number of characters and "?" matches one character. Excluded
+        # patterns take precedence over included patterns. No MapMessage attributes are captured
+        # unless an included pattern, an excluded pattern, or the deprecated
+        # otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes setting is
+        # configured; configuring only excluded patterns captures all MapMessage attributes that do
+        # not match them. Captured MapMessage attributes may contain sensitive information.
+        included: []
       mdc_attributes/development:
         # Comma-separated list of case-sensitive glob patterns for context data keys not to capture
         # as log attributes. "*" matches any number of characters and "?" matches one character.
@@ -500,6 +540,11 @@ instrumentation/development:
       # s, min, h, d.
       base_time_unit: s
       histogram_gauges:
+        # Deprecated alias for
+        # `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled`. It will be
+        # removed in 3.0.
+        enabled: false
+      histogram_gauges/development:
         # Enables gauge-based Micrometer histograms for DistributionSummary and Timer instruments.
         enabled: false
       prometheus_mode:
@@ -605,8 +650,10 @@ instrumentation/development:
       experimental_span_attributes/development: false
     servlet:
       # Deprecated include-only alias for
-      # `otel.instrumentation.servlet.experimental.request-parameters.included`. It may be removed
-      # in the next minor release.
+      # `otel.instrumentation.servlet.experimental.request-parameters.included`. It does not support
+      # glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other
+      # entry is matched as a literal request parameter name. It may be removed in the next minor
+      # release.
       capture_request_parameters/development: []
 
       # Enables capturing the experimental `servlet.timeout` span attribute.
