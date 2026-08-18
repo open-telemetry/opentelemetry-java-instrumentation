@@ -75,7 +75,12 @@ final class OpenSearchEndpointSanitizer {
     return result.toString();
   }
 
-  private static String sanitizeByKeyword(String endpoint) {
+  /**
+   * Fallback for paths the route table does not match. Package-private so {@link
+   * OpenSearchEndpointSanitizerTest} can pin the keyword contract directly, without depending on
+   * which paths happen to be absent from the route table.
+   */
+  static String sanitizeByKeyword(String endpoint) {
     String[] segments = endpoint.split("/", -1);
     String previous = null;
     for (int i = 0; i < segments.length; i++) {

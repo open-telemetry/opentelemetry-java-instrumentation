@@ -17,8 +17,8 @@ class OpenSearchEndpointSanitizerTest {
 
   @ParameterizedTest
   @MethodSource("endpoints")
-  void sanitize(String endpoint, String expected) {
-    assertThat(OpenSearchEndpointSanitizer.sanitize(endpoint)).isEqualTo(expected);
+  void sanitizeByKeyword(String endpoint, String expected) {
+    assertThat(OpenSearchEndpointSanitizer.sanitizeByKeyword(endpoint)).isEqualTo(expected);
   }
 
   private static Stream<Arguments> endpoints() {
@@ -42,7 +42,8 @@ class OpenSearchEndpointSanitizerTest {
         arguments("test-index/_update_by_query", "test-index/_update_by_query"),
         arguments("test-index/_doc", "test-index/_doc"),
         arguments("test-index/_doc/", "test-index/_doc/"),
-        // the legacy typed document route carries no keyword, so it is left intact
+        // the legacy typed document route carries no keyword, so the fallback leaves it intact.
+        // The route table masks its id instead, which OpenSearchEndpointMapTest pins.
         arguments("test-index/test-type/12345", "test-index/test-type/12345"),
         arguments("", ""));
   }
