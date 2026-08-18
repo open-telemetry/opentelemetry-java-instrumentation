@@ -9,7 +9,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
-import javax.annotation.Nullable;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
@@ -122,7 +121,27 @@ class ElasticsearchDbAttributesGetterTest {
         .isNull();
   }
 
-  private static ElasticsearchRestRequest searchRequest(@Nullable HttpEntity httpEntity) {
+  @Test
+  void dropsBodyWhenNestedTooDeeply() {
+    // a body nested past the sanitizer's depth cap is valid JSON but must be dropped, never
+    // captured raw
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, true);
+    int depth = ElasticsearchDbQuerySanitizer.MAX_NESTING_DEPTH + 1;
+    StringBuilder body = new StringBuilder();
+    for (int i = 0; i < depth; i++) {
+      body.append('[');
+    }
+    for (int i = 0; i < depth; i++) {
+      body.append(']');
+    }
+
+    assertThat(
+            getter.getDbQueryText(
+                searchRequest(new StringEntity(body.toString(), ContentType.APPLICATION_JSON))))
+        .isNull();
+  }
+
+  private static ElasticsearchRestRequest searchRequest(HttpEntity httpEntity) {
     return ElasticsearchRestRequest.create(
         "POST",
         "/test-index/_search",

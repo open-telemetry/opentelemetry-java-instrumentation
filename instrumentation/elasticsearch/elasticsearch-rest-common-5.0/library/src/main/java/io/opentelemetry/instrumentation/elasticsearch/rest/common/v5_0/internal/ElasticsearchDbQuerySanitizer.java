@@ -31,8 +31,16 @@ final class ElasticsearchDbQuerySanitizer {
 
   private static final String MASKED_VALUE = "\"?\"";
 
+  // Bounds the recursion depth of the descent below so that a deeply nested but otherwise valid
+  // body cannot overflow the stack. This code runs on the application's own thread, already partway
+  // down a client-plus-instrumentation call stack that may have a small stack size, and a
+  // StackOverflowError would escape the RuntimeException handler in sanitize(). Real Elasticsearch
+  // query bodies nest at most a few dozen levels, so this sits well above any realistic query.
+  static final int MAX_NESTING_DEPTH = 200;
+
   private final String json;
   private int pos;
+  private int depth;
 
   private ElasticsearchDbQuerySanitizer(String json) {
     this.json = json;
@@ -50,8 +58,9 @@ final class ElasticsearchDbQuerySanitizer {
         // trailing content after a complete JSON value means the body is not valid JSON
         return null;
       }
-    } catch (RuntimeException e) {
-      // a body that is not valid JSON must not be captured raw, so drop it instead
+    } catch (RuntimeException ignored) {
+      // the body could not be sanitized: it is not valid JSON, or it is nested more deeply than
+      // MAX_NESTING_DEPTH. Either way it must not be captured raw, so drop it instead.
       return null;
     }
     return out.length() == 0 ? null : out.toString();
@@ -94,12 +103,14 @@ final class ElasticsearchDbQuerySanitizer {
   }
 
   private void maskObject(StringBuilder out) {
+    enterNesting();
     pos++; // consume '{'
     out.append('{');
     skipWhitespace();
     if (current() == '}') {
       pos++;
       out.append('}');
+      depth--;
       return;
     }
     while (true) {
@@ -124,6 +135,7 @@ final class ElasticsearchDbQuerySanitizer {
       } else if (c == '}') {
         pos++;
         out.append('}');
+        depth--;
         return;
       } else {
         throw new MalformedJsonException();
@@ -132,12 +144,14 @@ final class ElasticsearchDbQuerySanitizer {
   }
 
   private void maskArray(StringBuilder out) {
+    enterNesting();
     pos++; // consume '['
     out.append('[');
     skipWhitespace();
     if (current() == ']') {
       pos++;
       out.append(']');
+      depth--;
       return;
     }
     while (true) {
@@ -151,10 +165,17 @@ final class ElasticsearchDbQuerySanitizer {
       } else if (c == ']') {
         pos++;
         out.append(']');
+        depth--;
         return;
       } else {
         throw new MalformedJsonException();
       }
+    }
+  }
+
+  private void enterNesting() {
+    if (++depth > MAX_NESTING_DEPTH) {
+      throw new NestingTooDeepException();
     }
   }
 
@@ -264,6 +285,14 @@ final class ElasticsearchDbQuerySanitizer {
     private static final long serialVersionUID = 1L;
 
     MalformedJsonException() {
+      super(null, null, false, false);
+    }
+  }
+
+  private static class NestingTooDeepException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
+    NestingTooDeepException() {
       super(null, null, false, false);
     }
   }

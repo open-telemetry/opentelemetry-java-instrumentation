@@ -79,4 +79,34 @@ class ElasticsearchDbQuerySanitizerTest {
   void returnsNullForTrailingContent() {
     assertThat(ElasticsearchDbQuerySanitizer.sanitize("{\"a\":1} extra")).isNull();
   }
+
+  @Test
+  void returnsNullWhenNestedTooDeeply() {
+    // a body nested past the depth cap is valid JSON but must be dropped, not captured raw and not
+    // partially masked, and must not overflow the stack
+    int depth = ElasticsearchDbQuerySanitizer.MAX_NESTING_DEPTH + 1;
+
+    assertThat(ElasticsearchDbQuerySanitizer.sanitize(nestedArray(depth, ""))).isNull();
+  }
+
+  @Test
+  void masksBodyNestedUpToTheDepthCap() {
+    // a body nested exactly to the cap is still sanitized
+    int depth = ElasticsearchDbQuerySanitizer.MAX_NESTING_DEPTH;
+
+    assertThat(ElasticsearchDbQuerySanitizer.sanitize(nestedArray(depth, "\"secret\"")))
+        .isEqualTo(nestedArray(depth, "\"?\""));
+  }
+
+  private static String nestedArray(int depth, String innermost) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < depth; i++) {
+      sb.append('[');
+    }
+    sb.append(innermost);
+    for (int i = 0; i < depth; i++) {
+      sb.append(']');
+    }
+    return sb.toString();
+  }
 }
