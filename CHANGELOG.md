@@ -15,6 +15,13 @@
   `PUT my-index/_doc/?` by default. Set
   `otel.instrumentation.opensearch.query-sanitization.enabled=false` to restore the raw value.
   ([#19671](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19671))
+- The OpenSearch REST instrumentation now derives the stable `db.operation.name`, span name, and
+  `db.client.operation.duration` operation dimension from the request path instead of the HTTP
+  method. For example, `GET _cluster/health` now reports `cluster.health` instead of `GET`. Update
+  dashboards and alerts that filter stable telemetry by `GET`, `POST`, or `PUT` to use operation
+  names such as `search`, `index`, or `cluster.health`. Legacy semantic conventions still use the
+  HTTP method.
+  ([#19695](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19695))
 
 ### 🚫 Deprecations
 
