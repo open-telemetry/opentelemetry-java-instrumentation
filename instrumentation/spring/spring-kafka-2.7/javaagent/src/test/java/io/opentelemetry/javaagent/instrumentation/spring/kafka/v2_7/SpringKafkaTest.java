@@ -557,7 +557,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         "0",
         receiveCount,
         receiveCount,
-        1,
         null);
     assertProcessMetrics(
         testing,
@@ -587,7 +586,6 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         "0",
         receiveCount,
         receiveCount,
-        1,
         null);
     assertProcessMetrics(
         testing,
