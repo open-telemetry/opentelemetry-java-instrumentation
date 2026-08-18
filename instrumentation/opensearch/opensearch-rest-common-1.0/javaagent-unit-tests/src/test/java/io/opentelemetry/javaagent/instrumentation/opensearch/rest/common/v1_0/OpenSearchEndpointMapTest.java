@@ -128,6 +128,30 @@ class OpenSearchEndpointMapTest {
             "update",
             "my-index/my-type/?/_update"),
         argumentSet(
+            "get source",
+            "GET",
+            "my-index/my-type/999/_source",
+            "get_source",
+            "my-index/my-type/?/_source"),
+        argumentSet(
+            "exists source",
+            "HEAD",
+            "my-index/my-type/999/_source",
+            "exists_source",
+            "my-index/my-type/?/_source"),
+        argumentSet(
+            "explain with GET",
+            "GET",
+            "my-index/my-type/999/_explain",
+            "explain",
+            "my-index/my-type/?/_explain"),
+        argumentSet(
+            "explain with POST",
+            "POST",
+            "my-index/my-type/999/_explain",
+            "explain",
+            "my-index/my-type/?/_explain"),
+        argumentSet(
             "termvectors with id",
             "GET",
             "my-index/my-type/999/_termvectors",
