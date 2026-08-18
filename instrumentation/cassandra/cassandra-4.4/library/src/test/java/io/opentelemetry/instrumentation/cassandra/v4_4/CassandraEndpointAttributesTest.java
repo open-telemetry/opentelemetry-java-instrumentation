@@ -20,6 +20,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -65,17 +66,40 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void sniEndPointFallsBackToServerNameWhenNoRpcAddress() {
+  void sniEndPointOmitsServerAddressWhenServerNameIsHostId() {
+    // In cloud deployments the driver builds the SNI server name from the node's host id, which is
+    // not an address, so nothing is recorded rather than the host id.
+    UUID hostId = UUID.fromString("2a1c1d5e-7b0e-4d3a-9a1f-2f5a6c8b0d31");
     SniEndPoint endPoint =
-        new SniEndPoint(InetSocketAddress.createUnresolved("proxy.example.com", 29042), "host-id");
+        new SniEndPoint(
+            InetSocketAddress.createUnresolved("proxy.example.com", 29042), hostId.toString());
     when(coordinator.getEndPoint()).thenReturn(endPoint);
     when(coordinator.getBroadcastRpcAddress()).thenReturn(Optional.empty());
+    when(coordinator.getHostId()).thenReturn(hostId);
 
     AttributesBuilder builder = Attributes.builder();
     CassandraAttributesExtractor.updateServerAddressAndPort(builder, coordinator);
     Attributes attributes = builder.build();
 
-    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("host-id");
+    assertThat(attributes.get(SERVER_ADDRESS)).isNull();
+    assertThat(attributes.get(SERVER_PORT)).isNull();
+  }
+
+  @Test
+  void sniEndPointFallsBackToServerNameWhenItIsNotHostId() {
+    SniEndPoint endPoint =
+        new SniEndPoint(
+            InetSocketAddress.createUnresolved("proxy.example.com", 29042), "node1.example.com");
+    when(coordinator.getEndPoint()).thenReturn(endPoint);
+    when(coordinator.getBroadcastRpcAddress()).thenReturn(Optional.empty());
+    when(coordinator.getHostId())
+        .thenReturn(UUID.fromString("2a1c1d5e-7b0e-4d3a-9a1f-2f5a6c8b0d31"));
+
+    AttributesBuilder builder = Attributes.builder();
+    CassandraAttributesExtractor.updateServerAddressAndPort(builder, coordinator);
+    Attributes attributes = builder.build();
+
+    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("node1.example.com");
     assertThat(attributes.get(SERVER_PORT)).isNull();
   }
 

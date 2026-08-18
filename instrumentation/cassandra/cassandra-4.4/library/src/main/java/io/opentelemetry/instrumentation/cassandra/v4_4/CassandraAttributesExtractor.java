@@ -23,6 +23,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.net.InetSocketAddress;
+import java.util.UUID;
 import javax.annotation.Nullable;
 
 final class CassandraAttributesExtractor
@@ -160,13 +161,21 @@ final class CassandraAttributesExtractor
       // carries both the address and port with no side effects. resolve() is avoided deliberately:
       // it performs a dns lookup on every call and rotates a shared static counter the driver uses
       // to pick a connection. When the node has not published its RPC address, fall back to the SNI
-      // server name (a routing name with no port).
+      // server name, which carries no port.
       InetSocketAddress rpcAddress = coordinator.getBroadcastRpcAddress().orElse(null);
       if (rpcAddress != null) {
         attributes.put(SERVER_ADDRESS, rpcAddress.getHostString());
         attributes.put(SERVER_PORT, rpcAddress.getPort());
       } else {
-        attributes.put(SERVER_ADDRESS, ((SniEndPoint) endPoint).getServerName());
+        // In cloud deployments the driver sets the SNI server name to the node's host id, which is
+        // an opaque identifier rather than an address, and which is already recorded as
+        // cassandra.coordinator.id. Record the server name only when it is something else, such as
+        // a host name supplied for a custom SNI proxy.
+        String serverName = ((SniEndPoint) endPoint).getServerName();
+        UUID hostId = coordinator.getHostId();
+        if (hostId == null || !hostId.toString().equals(serverName)) {
+          attributes.put(SERVER_ADDRESS, serverName);
+        }
       }
     }
   }
