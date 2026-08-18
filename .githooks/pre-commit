@@ -3,8 +3,20 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-if ! mise run lint || ! ./gradlew spotlessCheck; then
-  ./gradlew spotlessApply
+run_spotless=false
+while IFS= read -r -d '' file; do
+  case "$file" in
+    *.scala | *.groovy)
+      run_spotless=true
+      break
+      ;;
+  esac
+done < <(git diff --cached --name-only --diff-filter=ACMR -z)
+
+if ! mise run lint || { [[ "$run_spotless" == true ]] && ! ./gradlew spotlessCheck; }; then
+  if [[ "$run_spotless" == true ]]; then
+    ./gradlew spotlessApply
+  fi
   mise run lint:fix
   echo ""
   echo ""
