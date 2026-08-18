@@ -113,7 +113,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                       span.hasName(spanName("testSingleTopic", "receive", "poll"))
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
-                          .hasLinks(LinkData.create(producer.get().getSpanContext()))
+                          .hasLinks(recordLink(producer.get()))
                           .hasAttributesSatisfyingExactly(
                               receiveAttributes("testSingleTopic", "testSingleListener", 1))));
       return;
@@ -346,9 +346,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                       span.hasName(spanName("testBatchTopic", "process", "process"))
                           .hasKind(SpanKind.CONSUMER)
                           .hasNoParent()
-                          .hasLinks(
-                              LinkData.create(producer1.get().getSpanContext()),
-                              LinkData.create(producer2.get().getSpanContext()))
+                          .hasLinks(recordLink(producer1.get()), recordLink(producer2.get()))
                           .hasAttributesSatisfyingExactly(
                               batchProcessAttributes("testBatchTopic", "testBatchListener", 2)),
                   span -> span.hasName("consumer").hasParent(trace.getSpan(0))),
@@ -358,9 +356,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                       span.hasName(spanName("testBatchTopic", "receive", "poll"))
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
-                          .hasLinks(
-                              LinkData.create(producer1.get().getSpanContext()),
-                              LinkData.create(producer2.get().getSpanContext()))
+                          .hasLinks(recordLink(producer1.get()), recordLink(producer2.get()))
                           .hasAttributesSatisfyingExactly(
                               receiveAttributes("testBatchTopic", "testBatchListener", 2))));
       return;
@@ -542,7 +538,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
           span.hasName(spanName("testBatchTopic", "process", "process"))
               .hasKind(SpanKind.CONSUMER)
               .hasNoParent()
-              .hasLinks(LinkData.create(producer.getSpanContext()))
+              .hasLinks(recordLink(producer))
               .hasAttributesSatisfyingExactly(
                   withErrorType(
                       batchProcessAttributes("testBatchTopic", "testBatchListener", 1), failed));
@@ -558,7 +554,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     span.hasName(spanName(topic, "receive", "poll"))
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
-        .hasLinks(LinkData.create(producer.getSpanContext()))
+        .hasLinks(recordLink(producer))
         .hasAttributesSatisfyingExactly(receiveAttributes(topic, group, 1));
   }
 
@@ -567,7 +563,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     span.hasName(spanName("testBatchTopic", "process", "process"))
         .hasKind(SpanKind.CONSUMER)
         .hasParent(trace.getSpan(0))
-        .hasLinks(LinkData.create(producer.getSpanContext()))
+        .hasLinks(recordLink(producer))
         .hasAttributesSatisfyingExactly(
             withErrorType(
                 batchProcessAttributes("testBatchTopic", "testBatchListener", 1), failed));
@@ -595,6 +591,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         messagingAttributes(topic, "receive", "poll", "receive", "consumer");
     addGroupAssertions(assertions, group);
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize));
+    addCommonBatchRecordAttributes(assertions);
     return assertions;
   }
 
@@ -626,7 +623,15 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         messagingAttributes(topic, "process", "process", "process", "consumer");
     addGroupAssertions(assertions, group);
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize));
+    addCommonBatchRecordAttributes(assertions);
     return assertions;
+  }
+
+  private static void addCommonBatchRecordAttributes(List<AttributeAssertion> assertions) {
+    if (!emitStableMessagingSemconv()) {
+      return;
+    }
+    assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
   }
 
   private static List<AttributeAssertion> messagingAttributes(
