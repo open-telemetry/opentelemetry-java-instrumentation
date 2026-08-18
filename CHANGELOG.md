@@ -10,6 +10,11 @@
   corresponding artifacts directly.
 - `jetty.thread.queue.size` Jetty JMX metric unit has been changed from `{thread}` to `{job}`.
 - Normalize the value of `activemq.destination.temp.utilization` JMX Metric for ActiveMQ to be between 0 and 1 (inclusive) instead of between 0 and 100 (inclusive).
+- The OpenSearch REST instrumentation now masks document ids in the endpoint path before recording it
+  in `db.query.text` and `db.statement`, so a request like `PUT my-index/_doc/12345` is recorded as
+  `PUT my-index/_doc/?` by default. Set
+  `otel.instrumentation.opensearch.query-sanitization.enabled=false` to restore the raw value.
+  ([#19671](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19671))
 
 ### 🚫 Deprecations
 
