@@ -102,6 +102,14 @@ class OpenSearchEndpointMapTest {
   }
 
   @Test
+  void legacyTypedPutRouteDerivesIndexOperationAndMasksOnlyId() {
+    assertThat(OpenSearchEndpointMap.getOperationName("PUT", "my-index/my-type/999"))
+        .isEqualTo("index");
+    assertThat(OpenSearchEndpointMap.maskPathParameters("PUT", "my-index/my-type/999"))
+        .isEqualTo("my-index/my-type/?");
+  }
+
+  @Test
   void pinsScrollRouteOperationNames() {
     assertThat(OpenSearchEndpointMap.getOperationName("GET", "_search/scroll")).isEqualTo("scroll");
     assertThat(OpenSearchEndpointMap.getOperationName("POST", "_search/scroll"))
@@ -120,9 +128,6 @@ class OpenSearchEndpointMapTest {
         .isEqualTo("test-index/_doc/?");
     assertThat(OpenSearchEndpointMap.maskPathParameters("GET", "_search/scroll/abc123"))
         .isEqualTo("_search/scroll/?");
-    // legacy typed document route: mask the id, keep index and type as structure
-    assertThat(OpenSearchEndpointMap.maskPathParameters("PUT", "my-index/my-type/999"))
-        .isEqualTo("my-index/my-type/?");
     // a structural-only path carries no id to mask
     assertThat(OpenSearchEndpointMap.maskPathParameters("GET", "test-index/_search"))
         .isEqualTo("test-index/_search");
