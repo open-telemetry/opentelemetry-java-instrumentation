@@ -26,6 +26,10 @@ final class OpenSearchEndpointRoute {
 
   private static final String UNDERSCORE_REPLACEMENT = "0";
   private static final Pattern PATH_PART_NAMES_PATTERN = Pattern.compile("\\{([^}]+)}");
+  private static final String NODE_INFO_METRIC =
+      "(?:settings|os|process|jvm|thread_pool|transport|http|plugins|ingest)";
+  private static final String NODE_INFO_METRIC_PATTERN =
+      NODE_INFO_METRIC + "(?:," + NODE_INFO_METRIC + ")*";
 
   private final String operationName;
   private final String template;
@@ -115,7 +119,7 @@ final class OpenSearchEndpointRoute {
       // parameter must not match a reserved path segment such as `_search` or `_doc`. This keeps a
       // generic template like /{index}/{type}/{id} from swallowing a keyword route such as
       // /{index}/_doc/{id}.
-      regex.append(isIndexOrType(groupName) ? ">[^_/][^/]*)" : ">[^/]+)");
+      regex.append('>').append(parameterPattern(groupName)).append(')');
 
       template = template.substring(endIndex + 1);
       startIdx = template.indexOf('{');
@@ -127,11 +131,19 @@ final class OpenSearchEndpointRoute {
     return Pattern.compile(regex.toString());
   }
 
+  private static String parameterPattern(String groupName) {
+    if ("node_info_metric".equals(groupName)) {
+      return NODE_INFO_METRIC_PATTERN;
+    }
+    return isIndexOrType(groupName) ? "[^_/][^/]*" : "[^/]+";
+  }
+
   private static boolean isStructural(String groupName) {
     return "index".equals(groupName)
         || "type".equals(groupName)
         || "metric".equals(groupName)
-        || "index_metric".equals(groupName);
+        || "index_metric".equals(groupName)
+        || "node_info_metric".equals(groupName);
   }
 
   private static boolean isIndexOrType(String groupName) {

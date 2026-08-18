@@ -170,6 +170,12 @@ class OpenSearchEndpointMapTest {
 
   @Test
   void nodeInfoMetricRouteMasksNodeIdAndKeepsMetric() {
+    assertThat(OpenSearchEndpointMap.getOperationName("GET", "_nodes/os,jvm"))
+        .isEqualTo("nodes.info");
+    assertThat(OpenSearchEndpointMap.maskPathParameters("GET", "_nodes/os,jvm"))
+        .isEqualTo("_nodes/os,jvm");
+    assertThat(OpenSearchEndpointMap.maskPathParameters("GET", "_nodes/nodeA"))
+        .isEqualTo("_nodes/?");
     assertThat(OpenSearchEndpointMap.getOperationName("GET", "_nodes/nodeA/os"))
         .isEqualTo("nodes.info");
     assertThat(OpenSearchEndpointMap.maskPathParameters("GET", "_nodes/nodeA/os"))
@@ -309,7 +315,9 @@ class OpenSearchEndpointMapTest {
     StringBuilder result = new StringBuilder();
     for (String segment : split(template)) {
       result.append('/');
-      if (isParameter(segment)) {
+      if ("{node_info_metric}".equals(segment)) {
+        result.append("os");
+      } else if (isParameter(segment)) {
         // a value that starts with a letter, so it satisfies both the strict
         // {index}/{type} regex ([^_/][^/]*) and the general parameter regex
         result.append('x').append(segment, 1, segment.length() - 1);
