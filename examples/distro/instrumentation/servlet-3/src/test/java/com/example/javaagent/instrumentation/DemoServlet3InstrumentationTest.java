@@ -2,6 +2,7 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package com.example.javaagent.instrumentation;
 
 import static org.assertj.core.api.Assertions.assertThat;
