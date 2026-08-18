@@ -212,6 +212,28 @@ final class OpenSearchEndpointMap {
 
     // legacy typed document routes (/{index}/{type}/{id}); listed last so keyword routes such as
     // /{index}/_doc/{id} match first. The type is treated as endpoint structure, the id is masked.
+    // Typed API routes that collide with the three-segment document route must come first.
+    put(map, "PUT", "bulk", "/{index}/{type}/_bulk");
+    put(map, "POST", "bulk", "/{index}/{type}/_bulk");
+    put(map, "GET", "count", "/{index}/{type}/_count");
+    put(map, "POST", "count", "/{index}/{type}/_count");
+    put(map, "POST", "delete_by_query", "/{index}/{type}/_delete_by_query");
+    put(map, "PUT", "indices.put_mapping", "/{index}/{type}/_mapping", "/{index}/{type}/_mappings");
+    put(
+        map,
+        "POST",
+        "indices.put_mapping",
+        "/{index}/{type}/_mapping",
+        "/{index}/{type}/_mappings");
+    put(map, "GET", "mget", "/{index}/{type}/_mget");
+    put(map, "POST", "mget", "/{index}/{type}/_mget");
+    put(map, "GET", "msearch", "/{index}/{type}/_msearch");
+    put(map, "POST", "msearch", "/{index}/{type}/_msearch");
+    put(map, "GET", "mtermvectors", "/{index}/{type}/_mtermvectors");
+    put(map, "POST", "mtermvectors", "/{index}/{type}/_mtermvectors");
+    put(map, "GET", "search", "/{index}/{type}/_search");
+    put(map, "POST", "search", "/{index}/{type}/_search");
+    put(map, "POST", "update_by_query", "/{index}/{type}/_update_by_query");
     put(map, "PUT", "create", "/{index}/{type}/{id}/_create");
     put(map, "POST", "create", "/{index}/{type}/{id}/_create");
     put(map, "POST", "update", "/{index}/{type}/{id}/_update");

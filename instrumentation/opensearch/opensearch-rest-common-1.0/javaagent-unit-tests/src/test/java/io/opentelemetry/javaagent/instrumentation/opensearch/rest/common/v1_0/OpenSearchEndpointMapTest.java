@@ -165,6 +165,31 @@ class OpenSearchEndpointMapTest {
             "my-index/my-type/_termvectors"));
   }
 
+  @ParameterizedTest
+  @MethodSource("collidingTypedApiRoutes")
+  void typedApiRoutesTakePrecedenceOverDocumentCatchAll(
+      String method, String path, String operationName) {
+    assertThat(OpenSearchEndpointMap.getOperationName(method, path)).isEqualTo(operationName);
+    assertThat(OpenSearchEndpointMap.maskPathParameters(method, path)).isEqualTo(path);
+  }
+
+  private static Stream<Arguments> collidingTypedApiRoutes() {
+    return Stream.of(
+        argumentSet("search", "GET", "my-index/my-type/_search", "search"),
+        argumentSet("multi-get", "POST", "my-index/my-type/_mget", "mget"),
+        argumentSet("put mapping", "PUT", "my-index/my-type/_mapping", "indices.put_mapping"),
+        argumentSet(
+            "delete by query", "POST", "my-index/my-type/_delete_by_query", "delete_by_query"));
+  }
+
+  @Test
+  void legacyTypedDocumentRouteAcceptsUnderscorePrefixedId() {
+    assertThat(OpenSearchEndpointMap.getOperationName("GET", "my-index/my-type/_document-id"))
+        .isEqualTo("get");
+    assertThat(OpenSearchEndpointMap.maskPathParameters("GET", "my-index/my-type/_document-id"))
+        .isEqualTo("my-index/my-type/?");
+  }
+
   @Test
   void pinsScrollRouteOperationNames() {
     assertThat(OpenSearchEndpointMap.getOperationName("GET", "_search/scroll")).isEqualTo("scroll");
