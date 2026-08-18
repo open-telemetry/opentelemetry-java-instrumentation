@@ -59,6 +59,7 @@ tasks {
       includeTestsMatching("OpenSearchRestQuerySanitizationDisabledTest")
     }
     jvmArgs("-Dotel.instrumentation.opensearch.query-sanitization.enabled=false")
+    systemProperty("metadataConfig", "otel.instrumentation.opensearch.query-sanitization.enabled=false")
   }
 
   val testStableSemconv = register<Test>("testStableSemconv") {
