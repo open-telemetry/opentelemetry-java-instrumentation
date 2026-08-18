@@ -76,6 +76,13 @@
   exact name only. The deprecated methods still match header names literally, so `*` and `?` are not
   treated as glob patterns.
   ([#19603](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19603))
+- Deprecate the `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods on the Restlet
+  1.1, Restlet 2.0, Servlet 3.0 and Servlet 5.0 `RestletTelemetryBuilder` and
+  `ServletTelemetryBuilder` in favor of `setRequestHeaders(IncludeExclude)` and
+  `setResponseHeaders(IncludeExclude)`, which select HTTP headers by glob pattern instead of by
+  exact name only. The deprecated methods still match header names literally, so `*` and `?` are not
+  treated as glob patterns.
+  ([#19604](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19604))
 - Deprecate the Logback appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of the new
   `experimental.mdc-attributes.included` and `experimental.mdc-attributes.excluded` selectors, which
