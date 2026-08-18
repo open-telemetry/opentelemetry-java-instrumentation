@@ -185,6 +185,16 @@ class OpenSearchEndpointMapTest {
   }
 
   @Test
+  void postAliasRoutesDeriveOperationNameAndMaskAlias() {
+    assertThat(OpenSearchEndpointMap.getOperationName("POST", "test-index/_alias/customer-alias"))
+        .isEqualTo("indices.put_alias");
+    assertThat(OpenSearchEndpointMap.getOperationName("POST", "test-index/_aliases/customer-alias"))
+        .isEqualTo("indices.put_alias");
+    assertThat(OpenSearchEndpointMap.maskPathParameters("POST", "test-index/_alias/customer-alias"))
+        .isEqualTo("test-index/_alias/?");
+  }
+
+  @Test
   void getAnalyzeRoutesDeriveOperationName() {
     assertThat(OpenSearchEndpointMap.getOperationName("GET", "_analyze"))
         .isEqualTo("indices.analyze");

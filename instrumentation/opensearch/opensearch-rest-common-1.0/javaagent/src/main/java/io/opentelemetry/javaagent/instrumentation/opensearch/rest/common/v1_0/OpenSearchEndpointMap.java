@@ -157,6 +157,7 @@ final class OpenSearchEndpointMap {
         "/{index}/_alias",
         "/{index}/_alias/{name}");
     put(map, "PUT", "indices.put_alias", "/{index}/_alias/{name}", "/{index}/_aliases/{name}");
+    put(map, "POST", "indices.put_alias", "/{index}/_alias/{name}", "/{index}/_aliases/{name}");
     put(
         map,
         "DELETE",
