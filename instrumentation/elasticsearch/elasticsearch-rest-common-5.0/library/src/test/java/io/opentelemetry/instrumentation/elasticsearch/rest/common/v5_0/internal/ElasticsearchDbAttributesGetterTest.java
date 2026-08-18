@@ -7,13 +7,18 @@ package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import java.io.ByteArrayInputStream;
+import java.util.stream.Stream;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class ElasticsearchDbAttributesGetterTest {
 
@@ -53,6 +58,27 @@ class ElasticsearchDbAttributesGetterTest {
             getter.getDbQueryText(
                 searchRequest(new StringEntity(body, ContentType.APPLICATION_JSON))))
         .isEqualTo("{\"terms\":{\"tags\":[\"?\",\"?\",\"?\"]}}");
+  }
+
+  @ParameterizedTest
+  @MethodSource("multiSearchEndpoints")
+  void sanitizesMultiSearchNdJsonBody(
+      String endpointName, String requestPath, String endpointRoute) {
+    ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(true, true);
+    String body =
+        "{\"index\":\"private-index\"}\n"
+            + "{\"query\":{\"match\":{\"title\":\"secret\"}}}\n"
+            + "{}\n"
+            + "{\"id\":\"private-template\"}\n";
+    ElasticsearchRestRequest request =
+        ElasticsearchRestRequest.create(
+            "POST",
+            requestPath,
+            new ElasticsearchEndpointDefinition(endpointName, new String[] {endpointRoute}, true),
+            new StringEntity(body, ContentType.APPLICATION_JSON));
+
+    assertThat(getter.getDbQueryText(request))
+        .isEqualTo("{\"index\":\"?\"};{\"query\":{\"match\":{\"title\":\"?\"}}};{};{\"id\":\"?\"}");
   }
 
   @Test
@@ -139,6 +165,16 @@ class ElasticsearchDbAttributesGetterTest {
             getter.getDbQueryText(
                 searchRequest(new StringEntity(body.toString(), ContentType.APPLICATION_JSON))))
         .isNull();
+  }
+
+  private static Stream<Arguments> multiSearchEndpoints() {
+    return Stream.of(
+        argumentSet("_msearch", "msearch", "/test-index/_msearch", "/{index}/_msearch"),
+        argumentSet(
+            "_msearch/template",
+            "msearch_template",
+            "/test-index/_msearch/template",
+            "/{index}/_msearch/template"));
   }
 
   private static ElasticsearchRestRequest searchRequest(HttpEntity httpEntity) {

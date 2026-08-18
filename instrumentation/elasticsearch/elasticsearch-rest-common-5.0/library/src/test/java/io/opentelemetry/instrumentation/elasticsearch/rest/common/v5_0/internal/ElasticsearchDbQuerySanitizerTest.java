@@ -63,6 +63,17 @@ class ElasticsearchDbQuerySanitizerTest {
   }
 
   @Test
+  void sanitizesNdJsonSequence() {
+    assertThat(
+            ElasticsearchDbQuerySanitizer.sanitize(
+                "{\"index\":\"private-index\"}\n"
+                    + "{\"query\":{\"match\":{\"title\":\"secret\"}}}\n"
+                    + "{}\n"
+                    + "{\"id\":\"private-template\"}\n"))
+        .isEqualTo("{\"index\":\"?\"};{\"query\":{\"match\":{\"title\":\"?\"}}};{};{\"id\":\"?\"}");
+  }
+
+  @Test
   void returnsNullForNonJson() {
     assertThat(ElasticsearchDbQuerySanitizer.sanitize("this is not json")).isNull();
   }
@@ -78,6 +89,11 @@ class ElasticsearchDbQuerySanitizerTest {
   @Test
   void returnsNullForTrailingContent() {
     assertThat(ElasticsearchDbQuerySanitizer.sanitize("{\"a\":1} extra")).isNull();
+  }
+
+  @Test
+  void returnsNullWhenAnyValueInSequenceIsMalformed() {
+    assertThat(ElasticsearchDbQuerySanitizer.sanitize("{\"a\":1}\n{\"b\":")).isNull();
   }
 
   @Test

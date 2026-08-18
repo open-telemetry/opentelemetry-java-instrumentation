@@ -11,7 +11,8 @@ import javax.annotation.Nullable;
  * Rewrites an Elasticsearch search request body so that every literal value is replaced with the
  * mask {@code "?"} while the structure and field names are preserved. For example {@code
  * {"query":{"match":{"title":"secret user data"}}}} becomes {@code
- * {"query":{"match":{"title":"?"}}}}.
+ * {"query":{"match":{"title":"?"}}}}. A sequence of JSON values, such as the header and body lines
+ * in an NDJSON multi-search request, is sanitized completely and separated with semicolons.
  *
  * <p>This is a small dependency-free JSON scanner. It is deliberately not backed by Jackson: the
  * Elasticsearch low-level REST client does not put Jackson on the application classpath, and a
@@ -21,8 +22,8 @@ import javax.annotation.Nullable;
  * boolean and null in value position is replaced with the JSON string {@code "?"}, while object
  * keys and structure are kept.
  *
- * <p>When the body is not valid JSON the scanner returns {@code null} so that the caller drops the
- * body rather than capturing it raw.
+ * <p>When the body is not a valid JSON value or sequence of JSON values, the scanner returns {@code
+ * null} so that the caller drops the body rather than capturing it raw.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
@@ -30,6 +31,7 @@ import javax.annotation.Nullable;
 final class ElasticsearchDbQuerySanitizer {
 
   private static final String MASKED_VALUE = "\"?\"";
+  private static final char QUERY_SEPARATOR = ';';
 
   // Bounds the recursion depth of the descent below so that a deeply nested but otherwise valid
   // body cannot overflow the stack. This code runs on the application's own thread, already partway
@@ -52,11 +54,12 @@ final class ElasticsearchDbQuerySanitizer {
     StringBuilder out = new StringBuilder(body.length());
     try {
       scanner.skipWhitespace();
-      scanner.maskValue(out);
-      scanner.skipWhitespace();
-      if (!scanner.atEnd()) {
-        // trailing content after a complete JSON value means the body is not valid JSON
-        return null;
+      while (!scanner.atEnd()) {
+        if (out.length() > 0) {
+          out.append(QUERY_SEPARATOR);
+        }
+        scanner.maskValue(out);
+        scanner.skipWhitespace();
       }
     } catch (RuntimeException ignored) {
       // the body could not be sanitized: it is not valid JSON, or it is nested more deeply than
