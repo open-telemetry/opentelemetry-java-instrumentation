@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.cassandra.v4_4;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.cassandra.v4_4.CassandraEndPoints.getProxyAddress;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static java.util.logging.Level.FINE;
 
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
@@ -23,17 +23,13 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.UUID;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 final class CassandraAttributesExtractor
     implements AttributesExtractor<CassandraRequest, ExecutionInfo> {
-
-  private static final Logger logger =
-      Logger.getLogger(CassandraAttributesExtractor.class.getName());
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_CASSANDRA_CONSISTENCY_LEVEL =
@@ -62,8 +58,6 @@ final class CassandraAttributesExtractor
       AttributeKey.booleanKey("cassandra.query.idempotent");
   private static final AttributeKey<Long> CASSANDRA_SPECULATIVE_EXECUTION_COUNT =
       AttributeKey.longKey("cassandra.speculative_execution.count");
-
-  private static final Field PROXY_ADDRESS_FIELD = getProxyAddressField();
 
   @Override
   public void onStart(
@@ -172,6 +166,12 @@ final class CassandraAttributesExtractor
         // server behind the proxy is applied only under the stable conventions above.
         updateLegacySniServerAddressAndPort(attributes, sniEndPoint);
       }
+    } else {
+      SocketAddress address = endPoint.resolve();
+      if (address instanceof InetSocketAddress) {
+        attributes.put(SERVER_ADDRESS, ((InetSocketAddress) address).getHostString());
+        attributes.put(SERVER_PORT, ((InetSocketAddress) address).getPort());
+      }
     }
   }
 
@@ -205,33 +205,10 @@ final class CassandraAttributesExtractor
 
   private static void updateLegacySniServerAddressAndPort(
       AttributesBuilder attributes, SniEndPoint sniEndPoint) {
-    if (PROXY_ADDRESS_FIELD == null) {
-      return;
-    }
-    Object object = null;
-    try {
-      object = PROXY_ADDRESS_FIELD.get(sniEndPoint);
-    } catch (Exception e) {
-      logger.log(
-          FINE,
-          "Error when accessing the private field proxyAddress of SniEndPoint using reflection.",
-          e);
-    }
-    if (object instanceof InetSocketAddress) {
-      InetSocketAddress address = (InetSocketAddress) object;
+    InetSocketAddress address = getProxyAddress(sniEndPoint);
+    if (address != null) {
       attributes.put(SERVER_ADDRESS, address.getHostString());
       attributes.put(SERVER_PORT, address.getPort());
-    }
-  }
-
-  @Nullable
-  private static Field getProxyAddressField() {
-    try {
-      Field field = SniEndPoint.class.getDeclaredField("proxyAddress");
-      field.setAccessible(true);
-      return field;
-    } catch (Exception ignored) {
-      return null;
     }
   }
 }
