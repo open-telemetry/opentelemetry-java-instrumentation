@@ -523,6 +523,10 @@ instrumentation/development:
       # Enable the capture of sanitized search query bodies. Search queries may contain personal or
       # sensitive information.
       capture_search_query: true
+      query_sanitization:
+        # Enables query sanitization for OpenSearch queries. Takes precedence over
+        # otel.instrumentation.common.db.query-sanitization.enabled.
+        enabled: true
     opentelemetry_extension_annotations:
       # All methods to be excluded from auto-instrumentation by annotation-based advices.
       exclude_methods: ''

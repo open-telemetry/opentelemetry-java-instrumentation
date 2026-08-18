@@ -995,6 +995,13 @@ definitions:
         Enable the capture of sanitized search query bodies. Search queries may contain personal or sensitive information.
       type: boolean
       default: true
+    otel.instrumentation.opensearch.query-sanitization.enabled:
+      name: otel.instrumentation.opensearch.query-sanitization.enabled
+      declarative_name: java.opensearch.query_sanitization.enabled
+      description: |
+        Enables query sanitization for OpenSearch queries. Takes precedence over otel.instrumentation.common.db.query-sanitization.enabled.
+      type: boolean
+      default: true
     otel.instrumentation.opentelemetry-annotations.exclude-methods:
       name: otel.instrumentation.opentelemetry-annotations.exclude-methods
       declarative_name: java.opentelemetry_extension_annotations.exclude_methods
@@ -11936,6 +11943,7 @@ libraries:
   - org.opensearch.client:opensearch-rest-client:[1.0,3.0)
   configuration_refs:
   - common.db.query-sanitization.enabled
+  - otel.instrumentation.opensearch.query-sanitization.enabled
   telemetry:
   - when: default
     spans:
@@ -11976,6 +11984,7 @@ libraries:
   - org.opensearch.client:opensearch-rest-client:[3.0,)
   configuration_refs:
   - common.db.query-sanitization.enabled
+  - otel.instrumentation.opensearch.query-sanitization.enabled
   telemetry:
   - when: default
     spans:

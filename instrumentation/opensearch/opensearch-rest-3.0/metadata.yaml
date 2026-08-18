@@ -7,4 +7,11 @@ semantic_conventions:
   - DATABASE_CLIENT_SPANS
   - DATABASE_CLIENT_METRICS
 configurations:
+  - name: otel.instrumentation.opensearch.query-sanitization.enabled
+    declarative_name: java.opensearch.query_sanitization.enabled
+    description: >
+      Enables query sanitization for OpenSearch queries. Takes precedence over
+      otel.instrumentation.common.db.query-sanitization.enabled.
+    type: boolean
+    default: true
   - ref: common.db.query-sanitization.enabled
