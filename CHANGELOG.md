@@ -14,7 +14,7 @@
   literal values with `?` while preserving the query structure, matching the OpenSearch
   instrumentation. Sanitization can be disabled with
   `otel.instrumentation.elasticsearch.query-sanitization.enabled=false`.
-  ([#NNNNN](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/NNNNN))
+  ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
 
 ### 🚫 Deprecations
 
