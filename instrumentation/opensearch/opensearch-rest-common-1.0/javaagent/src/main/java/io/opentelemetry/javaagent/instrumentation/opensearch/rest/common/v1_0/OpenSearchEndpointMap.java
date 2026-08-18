@@ -109,7 +109,7 @@ final class OpenSearchEndpointMap {
     put(map, "HEAD", "exists_source", "/{index}/_source/{id}");
     put(map, "GET", "explain", "/{index}/_explain/{id}");
     put(map, "POST", "explain", "/{index}/_explain/{id}");
-    put(map, "GET", "termvectors", "/{index}/_termvectors/{id}");
+    put(map, "GET", "termvectors", "/{index}/_termvectors/{id}", "/{index}/_termvectors");
     put(map, "POST", "termvectors", "/{index}/_termvectors/{id}", "/{index}/_termvectors");
 
     // bulk and multi-document routes
