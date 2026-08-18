@@ -85,7 +85,7 @@ final class OpenSearchEndpointRoute {
     for (int i = pathPartNames.size() - 1; i >= 0; i--) {
       String group = pathPartNames.get(i);
       if (structuralGroups.contains(group)) {
-        // index names and legacy mapping types are endpoint structure, not customer identifiers
+        // Preserve endpoint structure such as index names, mapping types, and metric selectors.
         continue;
       }
       result.replace(matcher.start(group), matcher.end(group), maskedValue);
@@ -115,7 +115,7 @@ final class OpenSearchEndpointRoute {
       // parameter must not match a reserved path segment such as `_search` or `_doc`. This keeps a
       // generic template like /{index}/{type}/{id} from swallowing a keyword route such as
       // /{index}/_doc/{id}.
-      regex.append(isStructural(groupName) ? ">[^_/][^/]*)" : ">[^/]+)");
+      regex.append(isIndexOrType(groupName) ? ">[^_/][^/]*)" : ">[^/]+)");
 
       template = template.substring(endIndex + 1);
       startIdx = template.indexOf('{');
@@ -128,6 +128,13 @@ final class OpenSearchEndpointRoute {
   }
 
   private static boolean isStructural(String groupName) {
+    return "index".equals(groupName)
+        || "type".equals(groupName)
+        || "metric".equals(groupName)
+        || "index_metric".equals(groupName);
+  }
+
+  private static boolean isIndexOrType(String groupName) {
     return "index".equals(groupName) || "type".equals(groupName);
   }
 }

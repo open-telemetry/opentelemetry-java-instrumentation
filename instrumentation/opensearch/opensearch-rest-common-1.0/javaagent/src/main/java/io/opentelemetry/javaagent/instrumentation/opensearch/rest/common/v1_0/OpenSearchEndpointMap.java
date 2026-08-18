@@ -164,7 +164,16 @@ final class OpenSearchEndpointMap {
     put(map, "GET", "cluster.stats", "/_cluster/stats");
     put(map, "GET", "cluster.get_settings", "/_cluster/settings");
     put(map, "PUT", "cluster.put_settings", "/_cluster/settings");
-    put(map, "GET", "nodes.stats", "/_nodes/stats", "/_nodes/{node_id}/stats");
+    put(
+        map,
+        "GET",
+        "nodes.stats",
+        "/_nodes/stats",
+        "/_nodes/{node_id}/stats",
+        "/_nodes/stats/{metric}",
+        "/_nodes/{node_id}/stats/{metric}",
+        "/_nodes/stats/{metric}/{index_metric}",
+        "/_nodes/{node_id}/stats/{metric}/{index_metric}");
     put(map, "GET", "nodes.info", "/_nodes", "/_nodes/{node_id}");
 
     // cat API

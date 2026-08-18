@@ -114,6 +114,20 @@ class OpenSearchEndpointMapTest {
   }
 
   @Test
+  void nodeStatsRoutesMaskNodeIdAndKeepMetricSelectors() {
+    assertThat(
+            OpenSearchEndpointMap.getOperationName("GET", "_nodes/nodeA/stats/indices/fielddata"))
+        .isEqualTo("nodes.stats");
+    assertThat(
+            OpenSearchEndpointMap.maskPathParameters("GET", "_nodes/nodeA/stats/indices/fielddata"))
+        .isEqualTo("_nodes/?/stats/indices/fielddata");
+    assertThat(OpenSearchEndpointMap.getOperationName("GET", "_nodes/stats/_all"))
+        .isEqualTo("nodes.stats");
+    assertThat(OpenSearchEndpointMap.maskPathParameters("GET", "_nodes/stats/_all"))
+        .isEqualTo("_nodes/stats/_all");
+  }
+
+  @Test
   void masksIdBearingSegmentAndKeepsStructureIntact() {
     assertThat(OpenSearchEndpointMap.maskPathParameters("PUT", "test-index/_doc/12345"))
         .isEqualTo("test-index/_doc/?");
