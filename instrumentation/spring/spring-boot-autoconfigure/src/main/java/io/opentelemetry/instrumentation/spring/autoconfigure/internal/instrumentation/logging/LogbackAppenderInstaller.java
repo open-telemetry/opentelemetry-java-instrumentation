@@ -35,6 +35,12 @@ class LogbackAppenderInstaller {
       "otel.instrumentation.logback-appender.experimental.mdc-attributes.included";
   private static final String MDC_ATTRIBUTES_EXCLUDED =
       "otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded";
+  private static final String DEPRECATED_LOGGER_CONTEXT_ATTRIBUTES =
+      "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes";
+  private static final String LOGGER_CONTEXT_ATTRIBUTES_INCLUDED =
+      "otel.instrumentation.logback-appender.experimental.logger-context-attributes.included";
+  private static final String LOGGER_CONTEXT_ATTRIBUTES_EXCLUDED =
+      "otel.instrumentation.logback-appender.experimental.logger-context-attributes.excluded";
   private static final String DEPRECATED_KEY_VALUE_PAIR_ATTRIBUTES =
       "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes";
   private static final String KEY_VALUE_PAIR_ATTRIBUTES_INCLUDED =
@@ -140,14 +146,6 @@ class LogbackAppenderInstaller {
       openTelemetryAppender.setCaptureExperimentalAttributes(logAttributes);
     }
 
-    Boolean loggerContextAttributes =
-        evaluateBooleanProperty(
-            applicationEnvironmentPreparedEvent,
-            "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes");
-    if (loggerContextAttributes != null) {
-      openTelemetryAppender.setCaptureLoggerContext(loggerContextAttributes);
-    }
-
     Boolean captureTemplate =
         evaluateBooleanProperty(
             applicationEnvironmentPreparedEvent,
@@ -184,6 +182,8 @@ class LogbackAppenderInstaller {
     initializeMdcAttributesFromProperties(
         applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
     initializeKeyValuePairAttributesFromProperties(
+        applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
+    initializeLoggerContextAttributesFromProperties(
         applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
   }
 
@@ -246,6 +246,38 @@ class LogbackAppenderInstaller {
     // the settings declared in logback.xml never survive as a fallback
     if (deprecated != null) {
       openTelemetryAppender.setCaptureKeyValuePairAttributes(deprecated);
+    }
+  }
+
+  // the appender resolves the precedence between these settings, ignoring the deprecated one when
+  // a non-empty selector is configured
+  @SuppressWarnings("deprecation") // the deprecated setter preserves the deprecated semantics
+  static void initializeLoggerContextAttributesFromProperties(
+      ConfigurableEnvironment environment, OpenTelemetryAppender openTelemetryAppender) {
+    List<String> included = getLoggingListProperty(environment, LOGGER_CONTEXT_ATTRIBUTES_INCLUDED);
+    List<String> excluded = getLoggingListProperty(environment, LOGGER_CONTEXT_ATTRIBUTES_EXCLUDED);
+    Boolean deprecated = evaluateBooleanProperty(environment, DEPRECATED_LOGGER_CONTEXT_ATTRIBUTES);
+    // an empty selector property is equivalent to an unset one, matching how the same flat
+    // properties are read outside of Spring, where empty values cannot be distinguished from unset
+    // ones
+    if (isEmpty(included) && isEmpty(excluded) && deprecated == null) {
+      return;
+    }
+
+    // configuration properties replace the logger context settings of an appender declared in
+    // logback.xml, so every source the appender resolves is set, including the ones that are not
+    // configured
+    openTelemetryAppender.setLoggerContextAttributes(
+        IncludeExclude.builder()
+            .setIncluded(included == null ? emptyList() : included)
+            .setExcluded(excluded == null ? emptyList() : excluded)
+            .build());
+    openTelemetryAppender.setLoggerContextAttributesIncluded(null);
+    openTelemetryAppender.setLoggerContextAttributesExcluded(null);
+    // reaching here with an empty selector implies that the deprecated property is configured, so
+    // the settings declared in logback.xml never survive as a fallback
+    if (deprecated != null) {
+      openTelemetryAppender.setCaptureLoggerContext(deprecated);
     }
   }
 

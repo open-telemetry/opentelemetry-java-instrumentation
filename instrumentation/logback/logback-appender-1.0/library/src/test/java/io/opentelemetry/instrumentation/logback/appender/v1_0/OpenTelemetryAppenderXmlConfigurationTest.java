@@ -38,6 +38,20 @@ class OpenTelemetryAppenderXmlConfigurationTest {
     assertThat(deprecationWarnings("", "capture-key-value-pair-attributes")).isEmpty();
   }
 
+  @Test
+  void deprecatedLoggerContextSettingIsAppliedFromXml() throws JoranException {
+    assertThat(
+            deprecationWarnings(
+                "<captureLoggerContext>true</captureLoggerContext>",
+                "capture-logger-context-attributes"))
+        .hasSize(1);
+  }
+
+  @Test
+  void deprecatedLoggerContextSettingIsAbsentByDefault() throws JoranException {
+    assertThat(deprecationWarnings("", "capture-logger-context-attributes")).isEmpty();
+  }
+
   /**
    * Configures an appender declaring {@code settings}, starts it, and returns the warnings it
    * reported that name {@code deprecatedProperty}.

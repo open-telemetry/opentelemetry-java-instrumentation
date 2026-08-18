@@ -77,6 +77,7 @@ testing {
 tasks {
   test {
     jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=key?")
+    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.logger-context-attributes.included=key?")
   }
 
   val slf4j2ApiTestSourceSet = sourceSets.named("slf4j2ApiTest")
@@ -132,6 +133,36 @@ tasks {
     systemProperty("testMdcConfiguration", "precedence")
   }
 
+  val testLoggerContextAttributeExclusionsOnly = register<Test>("testLoggerContextAttributeExclusionsOnly") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*LogbackLoggerContextSelectorTest")
+
+    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.logger-context-attributes.excluded=request-secret")
+    systemProperty("testLoggerContextConfiguration", "exclude-only")
+  }
+
+  val testLegacyLoggerContextAttributes = register<Test>("testLegacyLoggerContextAttributes") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*LogbackLoggerContextSelectorTest")
+
+    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-logger-context-attributes=true")
+    systemProperty("testLoggerContextConfiguration", "legacy")
+  }
+
+  val testLoggerContextAttributePrecedence = register<Test>("testLoggerContextAttributePrecedence") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*LogbackLoggerContextSelectorTest")
+
+    jvmArgs(
+      "-Dotel.instrumentation.logback-appender.experimental.logger-context-attributes.included=new",
+      "-Dotel.instrumentation.logback-appender.experimental.capture-logger-context-attributes=true",
+    )
+    systemProperty("testLoggerContextConfiguration", "precedence")
+  }
+
   check {
     dependsOn(
       testing.suites,
@@ -140,6 +171,9 @@ tasks {
       testLegacyMdcAttributes,
       testLegacyMdcAttributesCaptureAll,
       testMdcAttributePrecedence,
+      testLoggerContextAttributeExclusionsOnly,
+      testLegacyLoggerContextAttributes,
+      testLoggerContextAttributePrecedence,
     )
   }
 }

@@ -79,7 +79,7 @@ public final class LoggingEventMapper {
   private final boolean captureCodeAttributes;
   private final boolean captureMarkerAttribute;
   @Nullable private final Predicate<String> keyValuePairAttributes;
-  private final boolean captureLoggerContext;
+  @Nullable private final Predicate<String> loggerContextAttributes;
   private final boolean captureTemplate;
   private final boolean captureArguments;
   private final boolean captureLogstashMarkerAttributes;
@@ -90,7 +90,7 @@ public final class LoggingEventMapper {
     this.captureCodeAttributes = builder.captureCodeAttributes;
     this.captureMarkerAttribute = builder.captureMarkerAttribute;
     this.keyValuePairAttributes = builder.keyValuePairAttributes;
-    this.captureLoggerContext = builder.captureLoggerContext;
+    this.loggerContextAttributes = builder.loggerContextAttributes;
     this.captureTemplate = builder.captureTemplate;
     this.captureArguments = builder.captureArguments;
     this.captureLogstashMarkerAttributes = builder.captureLogstashMarkerAttributes;
@@ -202,8 +202,9 @@ public final class LoggingEventMapper {
 
     // Event name priority (last writer wins): KVP > MDC > structured args > logstash markers
     // > logger context. Sources are called in ascending priority order.
-    if (captureLoggerContext) {
-      captureLoggerContext(builder, loggingEvent.getLoggerContextVO().getPropertyMap());
+    if (loggerContextAttributes != null) {
+      captureLoggerContext(
+          builder, loggingEvent.getLoggerContextVO().getPropertyMap(), loggerContextAttributes);
     }
 
     if (supportsLogstashMarkers) {
@@ -403,9 +404,13 @@ public final class LoggingEventMapper {
   // per-log-event data. otel.event.name is not supported in logger context properties — use MDC,
   // key-value pairs, or structured arguments instead.
   private static void captureLoggerContext(
-      LogRecordBuilder builder, Map<String, String> loggerContextProperties) {
+      LogRecordBuilder builder,
+      Map<String, String> loggerContextProperties,
+      Predicate<String> loggerContextAttributes) {
     for (Map.Entry<String, String> entry : loggerContextProperties.entrySet()) {
-      builder.setAttribute(getAttributeKey(entry.getKey()), entry.getValue());
+      if (loggerContextAttributes.test(entry.getKey())) {
+        builder.setAttribute(getAttributeKey(entry.getKey()), entry.getValue());
+      }
     }
   }
 
@@ -689,7 +694,7 @@ public final class LoggingEventMapper {
     private boolean captureCodeAttributes;
     private boolean captureMarkerAttribute;
     @Nullable private Predicate<String> keyValuePairAttributes;
-    private boolean captureLoggerContext;
+    @Nullable private Predicate<String> loggerContextAttributes;
     private boolean captureTemplate;
     private boolean captureArguments;
     private boolean captureLogstashMarkerAttributes;
@@ -735,9 +740,13 @@ public final class LoggingEventMapper {
       return this;
     }
 
+    /**
+     * Sets the selector that decides which logger context property keys are captured as log
+     * attributes. A {@code null} selector captures no logger context attributes.
+     */
     @CanIgnoreReturnValue
-    public Builder setCaptureLoggerContext(boolean captureLoggerContext) {
-      this.captureLoggerContext = captureLoggerContext;
+    public Builder setLoggerContextAttributes(@Nullable Predicate<String> loggerContextAttributes) {
+      this.loggerContextAttributes = loggerContextAttributes;
       return this;
     }
 
