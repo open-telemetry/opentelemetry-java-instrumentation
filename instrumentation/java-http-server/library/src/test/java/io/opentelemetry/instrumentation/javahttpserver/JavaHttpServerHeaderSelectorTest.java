@@ -15,6 +15,7 @@ import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,7 +23,6 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.List;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -31,14 +31,9 @@ class JavaHttpServerHeaderSelectorTest {
   @RegisterExtension
   static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  private HttpServer server;
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  @AfterEach
-  void stopServer() {
-    if (server != null) {
-      server.stop(0);
-    }
-  }
+  private HttpServer server;
 
   @Test
   void capturesHeadersMatchingSelectorPatterns() throws Exception {
@@ -148,6 +143,7 @@ class JavaHttpServerHeaderSelectorTest {
             });
     context.getFilters().add(filter);
     server.start();
+    cleanup.deferCleanup(() -> server.stop(0));
   }
 
   private void send() throws IOException {

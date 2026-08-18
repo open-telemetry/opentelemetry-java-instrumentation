@@ -11,12 +11,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.net.InetSocketAddress;
 import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.http.HttpField;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -26,8 +26,9 @@ class JettyHttpClient12HeaderSelectorTest {
   @RegisterExtension
   static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private HttpServer server;
-  private HttpClient client;
 
   @BeforeEach
   void startServer() throws Exception {
@@ -41,31 +42,18 @@ class JettyHttpClient12HeaderSelectorTest {
           exchange.close();
         });
     server.start();
-  }
-
-  @AfterEach
-  void stopServer() throws Exception {
-    try {
-      if (client != null) {
-        client.stop();
-      }
-    } finally {
-      if (server != null) {
-        server.stop(0);
-      }
-    }
+    cleanup.deferCleanup(() -> server.stop(0));
   }
 
   @Test
   void capturesHeadersMatchingSelectorPatterns() throws Exception {
-    client =
-        JettyClientTelemetry.builder(testing.getOpenTelemetry())
-            .setRequestHeaders(IncludeExclude.builder().setIncluded("x-test-*").build())
-            .setResponseHeaders(IncludeExclude.builder().setExcluded("x-ignored-*").build())
-            .build()
-            .createHttpClient();
+    HttpClient client =
+        createClient(
+            JettyClientTelemetry.builder(testing.getOpenTelemetry())
+                .setRequestHeaders(IncludeExclude.builder().setIncluded("x-test-*").build())
+                .setResponseHeaders(IncludeExclude.builder().setExcluded("x-ignored-*").build()));
 
-    sendRequest();
+    sendRequest(client);
 
     assertCapturedHeaders();
   }
@@ -73,14 +61,13 @@ class JettyHttpClient12HeaderSelectorTest {
   @SuppressWarnings("deprecation") // testing deprecated API
   @Test
   void capturesHeadersConfiguredByName() throws Exception {
-    client =
-        JettyClientTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(singletonList("x-test-request"))
-            .setCapturedResponseHeaders(singletonList("x-test-response"))
-            .build()
-            .createHttpClient();
+    HttpClient client =
+        createClient(
+            JettyClientTelemetry.builder(testing.getOpenTelemetry())
+                .setCapturedRequestHeaders(singletonList("x-test-request"))
+                .setCapturedResponseHeaders(singletonList("x-test-response")));
 
-    sendRequest();
+    sendRequest(client);
 
     assertCapturedHeaders();
   }
@@ -88,19 +75,24 @@ class JettyHttpClient12HeaderSelectorTest {
   @SuppressWarnings("deprecation") // testing deprecated API
   @Test
   void deprecatedSettersMatchHeaderNamesLiterally() throws Exception {
-    client =
-        JettyClientTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(singletonList("*"))
-            .setCapturedResponseHeaders(singletonList("*"))
-            .build()
-            .createHttpClient();
+    HttpClient client =
+        createClient(
+            JettyClientTelemetry.builder(testing.getOpenTelemetry())
+                .setCapturedRequestHeaders(singletonList("*"))
+                .setCapturedResponseHeaders(singletonList("*")));
 
-    sendRequest();
+    sendRequest(client);
 
     assertNoCapturedHeaders();
   }
 
-  private void sendRequest() throws Exception {
+  private static HttpClient createClient(JettyClientTelemetryBuilder builder) {
+    HttpClient client = builder.build().createHttpClient();
+    cleanup.deferCleanup(client::stop);
+    return client;
+  }
+
+  private void sendRequest(HttpClient client) throws Exception {
     client.start();
 
     ContentResponse response =
