@@ -12,7 +12,7 @@ name: Build pull request
 # doesn't retrigger the build. Push another commit or close/reopen the
 # PR to pick it up. `comment-on-test-label.yml` posts a reminder when one
 # of those labels is added. `test openj9` and `test full smoke` also disable
-# reduced smoke-test selection; `test openj9` enables the OpenJ9 jobs.
+# reduced app-server selection; `test openj9` enables the OpenJ9 jobs.
 #
 # `test native` is detected automatically from the PR's changed paths (the
 # `resolve-native` job below). The manual `test native` label is still
@@ -99,5 +99,5 @@ jobs:
       skip-native-tests: ${{ !(needs.resolve-native.outputs.run-native-tests == 'true' || contains(github.event.pull_request.labels.*.name, 'test native')) }}
       skip-openj9-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test openj9') }}
       skip-windows-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test windows') }}
-      reduced-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test full smoke') && !contains(github.event.pull_request.labels.*.name, 'test openj9') }}
+      reduced-appserver-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test full smoke') && !contains(github.event.pull_request.labels.*.name, 'test openj9') }}
       skip-servlet-images: ${{ needs.resolve-servlet-images.outputs.build-servlet-images != 'true' }}

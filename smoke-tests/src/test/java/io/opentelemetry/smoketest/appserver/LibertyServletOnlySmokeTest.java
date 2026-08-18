@@ -32,15 +32,15 @@ abstract class LibertyServletOnlySmokeTest extends AppServerTest {
     return super.getSpanName(path);
   }
 
-  @AppServer(version = "21.0.0.12", jdk = "11", reduced = true)
+  @AppServer(version = "21.0.0.12", jdk = "11", inReducedMatrix = true)
   static class LibertyServletOnly21Jdk11 extends LibertyServletOnlySmokeTest {}
 
-  @AppServer(version = "22.0.0.12", jdk = "11", reduced = true)
+  @AppServer(version = "22.0.0.12", jdk = "11", inReducedMatrix = true)
   static class LibertyServletOnly22Jdk11 extends LibertyServletOnlySmokeTest {}
 
-  @AppServer(version = "23.0.0.12", jdk = "11", reduced = true)
+  @AppServer(version = "23.0.0.12", jdk = "11", inReducedMatrix = true)
   static class LibertyServletOnly23Jdk11 extends LibertyServletOnlySmokeTest {}
 
-  @AppServer(version = "26.0.0.3", jdk = "11", reduced = true)
+  @AppServer(version = "26.0.0.3", jdk = "11", inReducedMatrix = true)
   static class LibertyServletOnly26Jdk11 extends LibertyServletOnlySmokeTest {}
 }
