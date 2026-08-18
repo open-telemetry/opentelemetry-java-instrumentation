@@ -193,6 +193,13 @@ class OpenSearchEndpointMapTest {
   }
 
   @Test
+  void getFlushRoutesDeriveOperationName() {
+    assertThat(OpenSearchEndpointMap.getOperationName("GET", "_flush")).isEqualTo("indices.flush");
+    assertThat(OpenSearchEndpointMap.getOperationName("GET", "test-index/_flush"))
+        .isEqualTo("indices.flush");
+  }
+
+  @Test
   void masksIdBearingSegmentAndKeepsStructureIntact() {
     assertThat(OpenSearchEndpointMap.maskPathParameters("PUT", "test-index/_doc/12345"))
         .isEqualTo("test-index/_doc/?");
