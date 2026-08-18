@@ -36,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
@@ -90,8 +91,7 @@ class WrapperTest extends AbstractWrapperTest {
                     span.hasName("producer callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0)));
-            SpanContext spanContext = trace.getSpan(1).getSpanContext();
-            producerSpanContext.set(asRemote(spanContext));
+            producerSpanContext.set(asRemote(trace.getSpan(1).getSpanContext()));
           },
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -99,7 +99,7 @@ class WrapperTest extends AbstractWrapperTest {
                       span.hasName("poll " + SHARED_TOPIC)
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
-                          .hasLinks(LinkData.create(producerSpanContext.get()))
+                          .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
                           .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
       return;
     }
@@ -118,8 +118,7 @@ class WrapperTest extends AbstractWrapperTest {
                   span.hasName("producer callback")
                       .hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0)));
-          SpanContext spanContext = trace.getSpan(1).getSpanContext();
-          producerSpanContext.set(asRemote(spanContext));
+          producerSpanContext.set(asRemote(trace.getSpan(1).getSpanContext()));
         },
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -148,6 +147,10 @@ class WrapperTest extends AbstractWrapperTest {
         spanContext.getSpanId(),
         spanContext.getTraceFlags(),
         spanContext.getTraceState());
+  }
+
+  private static LinkData batchRecordLink(SpanContext producerSpanContext, long offset) {
+    return LinkData.create(producerSpanContext, Attributes.of(MESSAGING_KAFKA_OFFSET, offset));
   }
 
   protected static List<AttributeAssertion> sendAttributes(
@@ -222,6 +225,10 @@ class WrapperTest extends AbstractWrapperTest {
                     MESSAGING_CONSUMER_GROUP_NAME, emitStableMessagingSemconv() ? "test" : null),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     addClientIdAssertions(assertions, "consumer");
+    if (emitStableMessagingSemconv()) {
+      assertions.add(
+          satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
+    }
     if (testHeaders) {
       assertions.add(
           equalTo(

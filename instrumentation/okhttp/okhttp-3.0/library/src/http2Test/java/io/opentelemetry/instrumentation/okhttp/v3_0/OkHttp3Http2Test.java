@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.okhttp.v3_0;
 
 import static java.util.Collections.singletonList;
 
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -25,8 +26,14 @@ class OkHttp3Http2Test extends AbstractOkHttp3Test {
   public Call.Factory createCallFactory(OkHttpClient.Builder clientBuilder) {
     clientBuilder.protocols(singletonList(Protocol.H2_PRIOR_KNOWLEDGE));
     return OkHttpTelemetry.builder(testing.getOpenTelemetry())
-        .setCapturedRequestHeaders(singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
-        .setCapturedResponseHeaders(singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+        .setRequestHeaders(
+            IncludeExclude.builder()
+                .setIncluded(AbstractHttpClientTest.TEST_REQUEST_HEADER)
+                .build())
+        .setResponseHeaders(
+            IncludeExclude.builder()
+                .setIncluded(AbstractHttpClientTest.TEST_RESPONSE_HEADER)
+                .build())
         .build()
         .createCallFactory(clientBuilder.build());
   }

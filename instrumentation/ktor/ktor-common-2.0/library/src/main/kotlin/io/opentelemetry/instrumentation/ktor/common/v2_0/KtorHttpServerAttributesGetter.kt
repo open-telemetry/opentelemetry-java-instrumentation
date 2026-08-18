@@ -29,9 +29,13 @@ internal object KtorHttpServerAttributesGetter : HttpServerAttributesGetter<Appl
 
   override fun getHttpRequestHeader(request: ApplicationRequest, name: String): List<String> = request.headers.getAll(name) ?: emptyList()
 
+  override fun getHttpRequestHeaderNames(request: ApplicationRequest): Collection<String> = request.headers.names()
+
   override fun getHttpResponseStatusCode(request: ApplicationRequest, response: ApplicationResponse, error: Throwable?): Int? = response.status()?.value
 
   override fun getHttpResponseHeader(request: ApplicationRequest, response: ApplicationResponse, name: String): List<String> = response.headers.allValues().getAll(name) ?: emptyList()
+
+  override fun getHttpResponseHeaderNames(request: ApplicationRequest, response: ApplicationResponse): Collection<String> = response.headers.allValues().names()
 
   override fun getUrlScheme(request: ApplicationRequest): String = request.origin.scheme
 

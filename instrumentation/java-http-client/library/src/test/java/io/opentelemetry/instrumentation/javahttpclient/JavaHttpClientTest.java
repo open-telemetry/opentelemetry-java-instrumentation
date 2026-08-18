@@ -5,8 +5,7 @@
 
 package io.opentelemetry.instrumentation.javahttpclient;
 
-import static java.util.Collections.singletonList;
-
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -24,8 +23,14 @@ class JavaHttpClientTest {
     @Override
     protected HttpClient configureHttpClient(HttpClient httpClient) {
       return JavaHttpClientTelemetry.builder(testing.getOpenTelemetry())
-          .setCapturedRequestHeaders(singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
-          .setCapturedResponseHeaders(singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
+          .setRequestHeaders(
+              IncludeExclude.builder()
+                  .setIncluded(AbstractHttpClientTest.TEST_REQUEST_HEADER)
+                  .build())
+          .setResponseHeaders(
+              IncludeExclude.builder()
+                  .setIncluded(AbstractHttpClientTest.TEST_RESPONSE_HEADER)
+                  .build())
           .build()
           .wrap(httpClient);
     }

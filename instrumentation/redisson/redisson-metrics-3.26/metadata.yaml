@@ -13,4 +13,5 @@ configurations:
       conventions simultaneously. Stable semantic conventions will become the default in version
       3.0 of the agent.
     type: list
+    declarative_type: string
     default: ""

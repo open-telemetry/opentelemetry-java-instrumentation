@@ -12,6 +12,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
@@ -24,10 +27,14 @@ import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
@@ -42,6 +49,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.smoketest.SmokeTestInstrumentationExtension;
@@ -50,8 +58,11 @@ import io.opentelemetry.smoketest.TelemetryRetrieverProvider;
 import io.restassured.http.ContentType;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -179,6 +190,147 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
                           .anyMatch(span -> span.getName().contains("kafka-connect-status")));
               TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(asList(assertions));
             });
+  }
+
+  protected final void waitAndAssertMultiTopicTraces(
+      Map<String, String> expectedKeysByDestination,
+      Consumer<List<List<SpanData>>> processTraceAssertions) {
+    await()
+        .atMost(Duration.ofSeconds(60))
+        .untilAsserted(
+            () -> {
+              List<List<SpanData>> traces = groupTraces(testing.spans());
+              List<List<SpanData>> producerTraces = new ArrayList<>();
+              for (List<SpanData> trace : traces) {
+                if (trace.get(0).getName().equals("parent")) {
+                  producerTraces.add(trace);
+                }
+              }
+              assertThat(producerTraces).hasSize(1);
+
+              List<SpanData> producerTrace = producerTraces.get(0);
+              assertThat(producerTrace).hasSize(expectedKeysByDestination.size() + 1);
+              Map<String, Attributes> expectedRecordAttributesBySpan = new HashMap<>();
+              for (Map.Entry<String, String> expected : expectedKeysByDestination.entrySet()) {
+                List<SpanData> matchingProducers = new ArrayList<>();
+                for (SpanData span : producerTrace) {
+                  if (span.getKind() == SpanKind.PRODUCER
+                      && expected
+                          .getKey()
+                          .equals(span.getAttributes().get(MESSAGING_DESTINATION_NAME))) {
+                    matchingProducers.add(span);
+                  }
+                }
+                assertThat(matchingProducers).hasSize(1);
+                SpanData producer = matchingProducers.get(0);
+                assertThat(producer.getAttributes().get(MESSAGING_KAFKA_MESSAGE_KEY))
+                    .isEqualTo(expected.getValue());
+                expectedRecordAttributesBySpan.put(
+                    spanId(producer.getSpanContext()),
+                    recordAttributes(expected.getKey(), expected.getValue()));
+              }
+
+              List<List<SpanData>> processTraces = new ArrayList<>();
+              for (List<SpanData> trace : traces) {
+                SpanData root = trace.get(0);
+                if (root.getKind() != SpanKind.CONSUMER
+                    || !root.getInstrumentationScopeInfo()
+                        .getName()
+                        .equals("io.opentelemetry.kafka-connect-2.6")) {
+                  continue;
+                }
+                for (LinkData link : root.getLinks()) {
+                  if (expectedRecordAttributesBySpan.containsKey(spanId(link.getSpanContext()))) {
+                    processTraces.add(trace);
+                    break;
+                  }
+                }
+              }
+              assertThat(processTraces).isNotEmpty();
+
+              List<String> linkedSpanIds = new ArrayList<>();
+              List<Attributes> actualRecordAttributes = new ArrayList<>();
+              for (List<SpanData> trace : processTraces) {
+                SpanData process = trace.get(0);
+                assertThat(process.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT))
+                    .isEqualTo((long) process.getLinks().size());
+                for (LinkData link : process.getLinks()) {
+                  String linkedSpanId = spanId(link.getSpanContext());
+                  assertThat(expectedRecordAttributesBySpan).containsKey(linkedSpanId);
+                  linkedSpanIds.add(linkedSpanId);
+                  if (emitStableMessagingSemconv()) {
+                    assertThat(link.getAttributes().asMap().keySet())
+                        .isSubsetOf(
+                            MESSAGING_DESTINATION_NAME,
+                            MESSAGING_DESTINATION_PARTITION_ID,
+                            MESSAGING_KAFKA_OFFSET,
+                            MESSAGING_KAFKA_MESSAGE_KEY);
+                    actualRecordAttributes.add(effectiveRecordAttributes(process, link));
+                  } else {
+                    assertThat(link.getAttributes()).isEqualTo(Attributes.empty());
+                  }
+                }
+              }
+
+              assertThat(linkedSpanIds)
+                  .containsExactlyInAnyOrderElementsOf(expectedRecordAttributesBySpan.keySet());
+              if (emitStableMessagingSemconv()) {
+                assertThat(actualRecordAttributes)
+                    .containsExactlyInAnyOrderElementsOf(expectedRecordAttributesBySpan.values());
+              }
+              processTraceAssertions.accept(processTraces);
+            });
+  }
+
+  private static Attributes effectiveRecordAttributes(SpanData process, LinkData link) {
+    return Attributes.builder()
+        .put(MESSAGING_DESTINATION_NAME, batchAttribute(process, link, MESSAGING_DESTINATION_NAME))
+        .put(
+            MESSAGING_DESTINATION_PARTITION_ID,
+            batchAttribute(process, link, MESSAGING_DESTINATION_PARTITION_ID))
+        .put(MESSAGING_KAFKA_OFFSET, batchAttribute(process, link, MESSAGING_KAFKA_OFFSET))
+        .put(
+            MESSAGING_KAFKA_MESSAGE_KEY, batchAttribute(process, link, MESSAGING_KAFKA_MESSAGE_KEY))
+        .build();
+  }
+
+  private static <T> T batchAttribute(
+      SpanData process, LinkData link, AttributeKey<T> attributeKey) {
+    T spanValue = process.getAttributes().get(attributeKey);
+    T linkValue = link.getAttributes().get(attributeKey);
+    if (linkValue != null) {
+      assertThat(spanValue).isNull();
+      return linkValue;
+    }
+    assertThat(spanValue).isNotNull();
+    return spanValue;
+  }
+
+  private static Attributes recordAttributes(String destination, String messageKey) {
+    return Attributes.builder()
+        .put(MESSAGING_DESTINATION_NAME, destination)
+        .put(MESSAGING_DESTINATION_PARTITION_ID, "0")
+        .put(MESSAGING_KAFKA_OFFSET, 0)
+        .put(MESSAGING_KAFKA_MESSAGE_KEY, messageKey)
+        .build();
+  }
+
+  // the offset and the message key stay on the link even when the batch carries a single record,
+  // because they are only recommended on spans that describe an operation on a single message
+  protected static LinkData recordLink(SpanContext producerSpanContext, String messageKey) {
+    if (!emitStableMessagingSemconv()) {
+      return LinkData.create(producerSpanContext);
+    }
+    return LinkData.create(
+        producerSpanContext,
+        Attributes.builder()
+            .put(MESSAGING_KAFKA_OFFSET, 0)
+            .put(MESSAGING_KAFKA_MESSAGE_KEY, messageKey)
+            .build());
+  }
+
+  private static String spanId(SpanContext spanContext) {
+    return spanContext.getTraceId() + spanContext.getSpanId();
   }
 
   @Override
@@ -376,19 +528,10 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   protected static AttributeAssertion[] processAttributes(String destination, long batchSize) {
-    return processAttributes(destination, batchSize, true);
-  }
-
-  @SuppressWarnings("deprecation") // using deprecated semconv
-  protected static AttributeAssertion[] processAttributes(long batchSize) {
-    return processAttributes("", batchSize, false);
-  }
-
-  private static AttributeAssertion[] processAttributes(
-      String destination, long batchSize, boolean hasDestination) {
     return new AttributeAssertion[] {
       equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize),
-      equalTo(MESSAGING_DESTINATION_NAME, hasDestination ? destination : null),
+      equalTo(MESSAGING_DESTINATION_NAME, destination),
+      equalTo(MESSAGING_DESTINATION_PARTITION_ID, emitStableMessagingSemconv() ? "0" : null),
       equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? PROCESS : null),
       equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? PROCESS : null),
       equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? PROCESS : null),

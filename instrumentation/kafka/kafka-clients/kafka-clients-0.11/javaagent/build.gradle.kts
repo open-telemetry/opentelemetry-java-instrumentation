@@ -60,6 +60,7 @@ tasks {
       excludeTestsMatching("KafkaClientPropagationDisabledTest")
       excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
@@ -96,6 +97,7 @@ tasks {
       excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
     // with the v3 preview off, the legacy opt-in flag selects the new messaging semconv too
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.opt-in=messaging")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
   }
@@ -107,6 +109,7 @@ tasks {
       excludeTestsMatching("KafkaClientPropagationDisabledTest")
       excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     // the v3 preview does not support dual emit for messaging, so this degrades to emitting only
     // the new messaging semconv

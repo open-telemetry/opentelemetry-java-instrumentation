@@ -127,6 +127,46 @@ public final class SelectorConfig {
   }
 
   /**
+   * Returns a predicate matching the configured selector, or {@code null} when nothing is
+   * configured to be captured.
+   *
+   * <p>Unlike {@link #resolve}, the deprecated setting is a boolean, where {@code true} selects
+   * every value and {@code false} selects none.
+   */
+  @Nullable
+  public static Predicate<String> resolveLegacyBoolean(
+      DeclarativeConfigProperties config, String instrumentationName, String selectorName) {
+    return resolveLegacyBoolean(config, instrumentationName, selectorName, selectorName);
+  }
+
+  /**
+   * Returns a predicate matching the configured selector, or {@code null} when nothing is
+   * configured to be captured.
+   *
+   * <p>Unlike {@link #resolveLegacyBoolean(DeclarativeConfigProperties, String, String)}, the
+   * deprecated boolean setting is named after {@code deprecatedSelectorName} instead of {@code
+   * selectorName}, for settings that were not renamed consistently with their replacement.
+   */
+  @Nullable
+  public static Predicate<String> resolveLegacyBoolean(
+      DeclarativeConfigProperties config,
+      String instrumentationName,
+      String selectorName,
+      String deprecatedSelectorName) {
+    IncludeExclude selector = getSelector(config, instrumentationName, selectorName, false);
+    if (selector != null) {
+      return selector::matches;
+    }
+    Boolean deprecated =
+        config.getBoolean("capture_" + nodeName(deprecatedSelectorName) + "/development");
+    if (deprecated == null) {
+      return null;
+    }
+    warnDeprecated(instrumentationName, selectorName, deprecatedSelectorName);
+    return deprecated ? value -> true : null;
+  }
+
+  /**
    * Returns the configured selector, or {@code null} when it is not configured. An empty selector
    * is equivalent to no selector at all, matching flat configuration where empty property values
    * cannot be distinguished from unset ones.
@@ -178,6 +218,13 @@ public final class SelectorConfig {
     if (deprecated == null) {
       return null;
     }
+    warnDeprecated(instrumentationName, selectorName, selectorName);
+    return deprecated;
+  }
+
+  private static void warnDeprecated(
+      String instrumentationName, String selectorName, String deprecatedSelectorName) {
+    String flatProperty = deprecatedFlatProperty(instrumentationName, deprecatedSelectorName);
     warnOnce(
         flatProperty + ":deprecated",
         "The "
@@ -186,7 +233,6 @@ public final class SelectorConfig {
             + " may be removed in the next minor release. Use "
             + flatProperty(instrumentationName, selectorName, ".included")
             + " or equivalent declarative configuration instead.");
-    return deprecated;
   }
 
   @Nullable

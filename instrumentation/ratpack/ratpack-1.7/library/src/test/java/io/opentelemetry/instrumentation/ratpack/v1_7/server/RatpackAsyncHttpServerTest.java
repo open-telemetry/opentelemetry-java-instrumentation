@@ -7,16 +7,19 @@ package io.opentelemetry.instrumentation.ratpack.v1_7.server;
 
 import static java.util.Collections.singletonList;
 
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.ratpack.server.AbstractRatpackAsyncHttpServerTest;
 import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import ratpack.server.RatpackServerSpec;
 
 class RatpackAsyncHttpServerTest extends AbstractRatpackAsyncHttpServerTest {
+
+  private static final IncludeExclude TEST_HEADERS =
+      IncludeExclude.builder().setIncluded(singletonList("x-test-*")).build();
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forLibrary();
@@ -25,8 +28,8 @@ class RatpackAsyncHttpServerTest extends AbstractRatpackAsyncHttpServerTest {
   protected void configure(RatpackServerSpec serverSpec) throws Exception {
     RatpackServerTelemetry telemetry =
         RatpackServerTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+            .setRequestHeaders(TEST_HEADERS)
+            .setResponseHeaders(TEST_HEADERS)
             .build();
     serverSpec.registryOf(telemetry::configureRegistry);
   }

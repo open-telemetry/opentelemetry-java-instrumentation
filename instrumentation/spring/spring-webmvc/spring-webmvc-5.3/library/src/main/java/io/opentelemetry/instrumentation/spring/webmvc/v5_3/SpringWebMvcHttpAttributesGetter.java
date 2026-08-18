@@ -32,6 +32,12 @@ class SpringWebMvcHttpAttributesGetter
   }
 
   @Override
+  public Collection<String> getHttpRequestHeaderNames(HttpServletRequest request) {
+    Enumeration<String> headerNames = request.getHeaderNames();
+    return headerNames == null ? emptyList() : Collections.list(headerNames);
+  }
+
+  @Override
   public Integer getHttpResponseStatusCode(
       HttpServletRequest request, HttpServletResponse response, @Nullable Throwable error) {
 
@@ -61,6 +67,13 @@ class SpringWebMvcHttpAttributesGetter
       return (List<String>) headers;
     }
     return new ArrayList<>(headers);
+  }
+
+  @Override
+  public Collection<String> getHttpResponseHeaderNames(
+      HttpServletRequest request, HttpServletResponse response) {
+    Collection<String> headerNames = response.getHeaderNames();
+    return headerNames == null ? emptyList() : headerNames;
   }
 
   @Override
