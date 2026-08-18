@@ -210,6 +210,19 @@ class OpenSearchEndpointMapTest {
   }
 
   @Test
+  void parameterizedClusterRoutesDeriveOperationsAndMaskNodeId() {
+    assertThat(OpenSearchEndpointMap.getOperationName("GET", "_cluster/state/metadata/test-index"))
+        .isEqualTo("cluster.state");
+    assertThat(
+            OpenSearchEndpointMap.maskPathParameters("GET", "_cluster/state/metadata/test-index"))
+        .isEqualTo("_cluster/state/metadata/test-index");
+    assertThat(OpenSearchEndpointMap.getOperationName("GET", "_cluster/stats/nodes/nodeA"))
+        .isEqualTo("cluster.stats");
+    assertThat(OpenSearchEndpointMap.maskPathParameters("GET", "_cluster/stats/nodes/nodeA"))
+        .isEqualTo("_cluster/stats/nodes/?");
+  }
+
+  @Test
   void masksIdBearingSegmentAndKeepsStructureIntact() {
     assertThat(OpenSearchEndpointMap.maskPathParameters("PUT", "test-index/_doc/12345"))
         .isEqualTo("test-index/_doc/?");
