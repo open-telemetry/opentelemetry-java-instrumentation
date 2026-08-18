@@ -33,7 +33,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 //
 // Host.getSocketAddress() is deprecated in driver 3.11.5, but the instrumentation supports drivers
 // back to 3.0 where it is not, and the frozen old conventions still record it.
-@SuppressWarnings("OtelDeprecatedApiUsage")
+@SuppressWarnings("deprecation")
 @ExtendWith(MockitoExtension.class)
 class CassandraResponseTest {
 
