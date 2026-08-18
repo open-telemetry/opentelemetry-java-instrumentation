@@ -169,6 +169,14 @@ class OpenSearchEndpointMapTest {
   }
 
   @Test
+  void nodeInfoMetricRouteMasksNodeIdAndKeepsMetric() {
+    assertThat(OpenSearchEndpointMap.getOperationName("GET", "_nodes/nodeA/os"))
+        .isEqualTo("nodes.info");
+    assertThat(OpenSearchEndpointMap.maskPathParameters("GET", "_nodes/nodeA/os"))
+        .isEqualTo("_nodes/?/os");
+  }
+
+  @Test
   void globalNamedAliasRouteMasksAliasName() {
     assertThat(OpenSearchEndpointMap.getOperationName("GET", "_alias/customer-alias"))
         .isEqualTo("indices.get_alias");
