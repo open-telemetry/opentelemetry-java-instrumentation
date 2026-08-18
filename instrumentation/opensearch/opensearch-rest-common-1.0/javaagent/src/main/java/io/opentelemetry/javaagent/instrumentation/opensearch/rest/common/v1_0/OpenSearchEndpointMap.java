@@ -190,7 +190,14 @@ final class OpenSearchEndpointMap {
         "/_nodes/{node_id}/stats/{metric}",
         "/_nodes/stats/{metric}/{index_metric}",
         "/_nodes/{node_id}/stats/{metric}/{index_metric}");
-    put(map, "GET", "nodes.info", "/_nodes", "/_nodes/{node_id}", "/_nodes/{node_id}/{metric}");
+    put(
+        map,
+        "GET",
+        "nodes.info",
+        "/_nodes",
+        "/_nodes/{node_info_metric}",
+        "/_nodes/{node_id}",
+        "/_nodes/{node_id}/{metric}");
 
     // cat API
     put(map, "GET", "cat.indices", "/_cat/indices", "/_cat/indices/{index}");
