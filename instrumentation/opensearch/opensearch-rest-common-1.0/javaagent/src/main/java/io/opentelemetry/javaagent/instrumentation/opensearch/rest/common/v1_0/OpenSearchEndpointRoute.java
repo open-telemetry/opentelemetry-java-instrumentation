@@ -115,10 +115,9 @@ final class OpenSearchEndpointRoute {
       String groupName = template.substring(startIdx + 1, endIndex);
       regex.append("(?<");
       regex.append(groupName.replace("_", UNDERSCORE_REPLACEMENT));
-      // An index name or a legacy mapping type cannot begin with `_`, so an {index} or {type}
-      // parameter must not match a reserved path segment such as `_search` or `_doc`. This keeps a
-      // generic template like /{index}/{type}/{id} from swallowing a keyword route such as
-      // /{index}/_doc/{id}.
+      // An index name or a legacy mapping type cannot begin with `_`, except for the `_all` index
+      // expression. Rejecting other reserved segments keeps a generic template like
+      // /{index}/{type}/{id} from swallowing a keyword route such as /{index}/_doc/{id}.
       regex.append('>').append(parameterPattern(groupName)).append(')');
 
       template = template.substring(endIndex + 1);
@@ -135,7 +134,10 @@ final class OpenSearchEndpointRoute {
     if ("node_info_metric".equals(groupName)) {
       return NODE_INFO_METRIC_PATTERN;
     }
-    return isIndexOrType(groupName) ? "[^_/][^/]*" : "[^/]+";
+    if ("index".equals(groupName)) {
+      return "(?:_all|[^_/][^/]*)";
+    }
+    return "type".equals(groupName) ? "[^_/][^/]*" : "[^/]+";
   }
 
   private static boolean isStructural(String groupName) {
@@ -144,9 +146,5 @@ final class OpenSearchEndpointRoute {
         || "metric".equals(groupName)
         || "index_metric".equals(groupName)
         || "node_info_metric".equals(groupName);
-  }
-
-  private static boolean isIndexOrType(String groupName) {
-    return "index".equals(groupName) || "type".equals(groupName);
   }
 }
