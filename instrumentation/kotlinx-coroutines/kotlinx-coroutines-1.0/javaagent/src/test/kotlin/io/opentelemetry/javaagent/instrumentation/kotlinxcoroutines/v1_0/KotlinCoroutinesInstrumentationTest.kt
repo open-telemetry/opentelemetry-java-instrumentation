@@ -57,6 +57,8 @@ import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import java.util.stream.Stream
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
+import kotlin.coroutines.jvm.internal.CoroutineStackFrame
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExperimentalCoroutinesApi
@@ -494,6 +496,35 @@ class KotlinCoroutinesInstrumentationTest {
   @WithSpan("leaf")
   private suspend fun annotatedLeaf() {
     delay(10)
+  }
+
+  @Test
+  fun `WithSpan preserves coroutine stack frames`() {
+    Assumptions.assumeFalse(v3Preview())
+
+    runBlocking {
+      stackFrameCaller()
+    }
+  }
+
+  private suspend fun stackFrameCaller() {
+    annotatedStackFrame()
+    yield()
+  }
+
+  @WithSpan("stack-frame")
+  private suspend fun annotatedStackFrame() {
+    inspectStackFrame()
+  }
+
+  private suspend fun inspectStackFrame() {
+    suspendCoroutineUninterceptedOrReturn<Unit> { continuation ->
+      assertThat(continuation).isInstanceOf(CoroutineStackFrame::class.java)
+      val frame = continuation as CoroutineStackFrame
+      assertThat(frame.callerFrame).isNotNull()
+      assertThat(frame.getStackTraceElement()).isNull()
+      Unit
+    }
   }
 
   @Test

@@ -17,6 +17,7 @@ import javax.annotation.Nullable;
 import kotlin.coroutines.Continuation;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.intrinsics.IntrinsicsKt;
+import kotlin.coroutines.jvm.internal.CoroutineStackFrame;
 import kotlinx.coroutines.ThreadContextElement;
 import org.jetbrains.annotations.NotNull;
 
@@ -190,7 +191,7 @@ public class AnnotationInstrumentationHelper {
     // TODO: arrays and List not supported see AttributeBindingFactoryTest
   }
 
-  public static final class ContextContinuation<T> implements Continuation<T> {
+  public static final class ContextContinuation<T> implements Continuation<T>, CoroutineStackFrame {
     private final Continuation<T> delegate;
     private final CoroutineContext coroutineContext;
     private final ThreadContextElement<Scope> delegateContextElement;
@@ -213,6 +214,18 @@ public class AnnotationInstrumentationHelper {
     @Override
     public CoroutineContext getContext() {
       return coroutineContext;
+    }
+
+    @Nullable
+    @Override
+    public CoroutineStackFrame getCallerFrame() {
+      return delegate instanceof CoroutineStackFrame ? (CoroutineStackFrame) delegate : null;
+    }
+
+    @Nullable
+    @Override
+    public StackTraceElement getStackTraceElement() {
+      return null;
     }
 
     @Override
