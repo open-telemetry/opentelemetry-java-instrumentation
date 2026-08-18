@@ -94,6 +94,8 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                 equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
                 equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null)));
     addClientIdAssertion(assertions, "producer");
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     return assertions;
   }
 
@@ -122,6 +124,8 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
       assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     }
     addClientIdAssertion(assertions, "consumer");
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     return assertions;
   }
 

@@ -27,6 +27,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.ApiVersions;
 import org.apache.kafka.clients.producer.Callback;
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
@@ -101,6 +102,7 @@ class KafkaProducerInstrumentation implements TypeInstrumentation {
     })
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
+        @Advice.This KafkaProducer<?, ?> producer,
         @Advice.FieldValue("apiVersions") ApiVersions apiVersions,
         @Advice.FieldValue("clientId") String clientId,
         @Advice.FieldValue("producerConfig") ProducerConfig producerConfig,
@@ -120,7 +122,9 @@ class KafkaProducerInstrumentation implements TypeInstrumentation {
               record,
               clientId,
               bootstrapServers,
-              PRODUCER_SPAN_CONTEXT_PROPAGATION_ENABLED && canPropagateHeaders);
+              PRODUCER_SPAN_CONTEXT_PROPAGATION_ENABLED && canPropagateHeaders,
+              KafkaUtil.getClusterId(producer),
+              producer);
       AdviceScope adviceScope = AdviceScope.start(request);
       if (adviceScope == null) {
         return new Object[] {null, record, callback};

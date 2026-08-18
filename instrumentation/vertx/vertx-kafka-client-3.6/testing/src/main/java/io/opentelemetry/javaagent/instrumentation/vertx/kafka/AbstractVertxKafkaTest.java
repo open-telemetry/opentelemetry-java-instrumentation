@@ -104,6 +104,16 @@ public abstract class AbstractVertxKafkaTest {
     cleanup.deferAfterAll(() -> closeVertx(vertx));
     kafkaProducer = KafkaProducer.create(vertx, producerProps());
     cleanup.deferAfterAll(() -> closeKafkaProducer(kafkaProducer));
+    // Trigger metadata fetch so cluster id is available before the first send.
+    CountDownLatch primed = new CountDownLatch(1);
+    try {
+      kafkaProducer.partitionsFor("testSingleTopic", ar -> primed.countDown());
+      primed.await(10, SECONDS);
+    } catch (NoSuchMethodError ignored) {
+      // Vert.x 5 removed the Handler-based overload; priming is skipped (best-effort).
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
     kafkaConsumer = KafkaConsumer.create(vertx, consumerProps());
     cleanup.deferAfterAll(() -> closeKafkaConsumer(kafkaConsumer));
   }
@@ -180,6 +190,8 @@ public abstract class AbstractVertxKafkaTest {
         messagingAttributes(record.topic(), "publish", "send", "send", "producer");
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     addOffsetAssertion(assertions);
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(
@@ -210,6 +222,8 @@ public abstract class AbstractVertxKafkaTest {
             operation.equals("receive") ? "receive" : "process",
             "consumer");
     assertions.add(satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive));
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (hasConsumerGroup()) {
       addGroupAssertions(assertions);
     }
@@ -221,6 +235,8 @@ public abstract class AbstractVertxKafkaTest {
         messagingAttributes(record.topic(), "process", "process", "process", "consumer");
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     addOffsetAssertion(assertions);
+    assertions.add(
+        satisfies(stringKey("messaging.kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));

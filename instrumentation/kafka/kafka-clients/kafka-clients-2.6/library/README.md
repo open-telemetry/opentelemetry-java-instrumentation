@@ -100,6 +100,9 @@ are likely to double count. The implementation detects this scenario and only re
 granular set of attributes available. In the case
 of `records-consumed-total`, it reports `[client-id, topic]` and ignores `[client-id]`.
 
+`messaging.kafka.cluster.id` is added to these metrics once the client resolves cluster metadata,
+so data points emitted before the first metadata response are reported without it.
+
 The following table shows the full set of metrics exposed by the kafka client, and the corresponding
 OpenTelemetry metric each maps to (if available). Empty values in the Instrument Name, Instrument
 Description, etc column indicates there is no registered mapping for the metric and data is NOT
