@@ -160,7 +160,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     String instrumentationName = "io.opentelemetry.kafka-clients-0.11";
     String group = testLatestDeps() ? "test" : null;
     assertSendMetrics(testing, instrumentationName, SHARED_TOPIC, "0", 1, null);
-    assertReceiveDurationMetrics(testing, instrumentationName, SHARED_TOPIC, group, null, 1, null);
+    assertReceiveDurationMetrics(testing, instrumentationName, SHARED_TOPIC, group, "0", 1, null);
     assertProcessDurationMetrics(testing, instrumentationName, SHARED_TOPIC, group, "0", 1, null);
   }
 

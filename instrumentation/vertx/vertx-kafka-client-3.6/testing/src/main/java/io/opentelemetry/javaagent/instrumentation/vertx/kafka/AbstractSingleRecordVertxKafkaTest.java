@@ -208,7 +208,7 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
     String group = hasConsumerGroup() ? "test" : null;
     // the receive operation records poll duration whether or not it produced a receive span
     assertReceiveDurationMetrics(
-        testing(), "io.opentelemetry.kafka-clients-0.11", "testSingleTopic", group, null, 1, null);
+        testing(), "io.opentelemetry.kafka-clients-0.11", "testSingleTopic", group, "0", 1, null);
     assertProcessDurationMetrics(
         testing(),
         "io.opentelemetry.vertx-kafka-client-3.6",

@@ -114,24 +114,17 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
                             .hasAttributesSatisfyingExactly(
                                 batchProcessAttributes("testBatchTopic")),
                     span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))));
-    assertProcessDurationMetrics(
-        testing(),
-        "io.opentelemetry.vertx-kafka-client-3.6",
-        "testBatchTopic",
-        hasConsumerGroup() ? "test" : null,
-        null,
-        1,
-        null);
+    // all of the records come from the same partition, so the batch process operation and the
+    // per-record process operations share a single duration point
     assertProcessDurationMetrics(
         testing(),
         "io.opentelemetry.vertx-kafka-client-3.6",
         "testBatchTopic",
         hasConsumerGroup() ? "test" : null,
         "0",
-        2,
+        3,
         null);
-    // batch and per-record process operations produce separate duration points
-    assertProcessMetricPointCounts(testing(), "io.opentelemetry.vertx-kafka-client-3.6", 2);
+    assertProcessMetricPointCounts(testing(), "io.opentelemetry.vertx-kafka-client-3.6", 1);
   }
 
   @Order(2)
@@ -184,12 +177,13 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
                             .hasAttributesSatisfyingExactly(
                                 withErrorType(batchProcessAttributes("testBatchTopic"))),
                     span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))));
+    // the failed batch process operation gets a duration point of its own through error.type
     assertProcessDurationMetrics(
         testing(),
         "io.opentelemetry.vertx-kafka-client-3.6",
         "testBatchTopic",
         hasConsumerGroup() ? "test" : null,
-        null,
+        "0",
         1,
         IllegalArgumentException.class.getName());
     assertProcessDurationMetrics(

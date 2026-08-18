@@ -245,7 +245,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
         "io.opentelemetry.spring-kafka-2.7",
         "testBatchTopic",
         "testBatchListener",
-        null,
+        "0",
         1,
         null);
   }
@@ -333,7 +333,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
         "io.opentelemetry.spring-kafka-2.7",
         "testBatchTopic",
         "testBatchListener",
-        null,
+        "0",
         failureCount,
         IllegalArgumentException.class.getName());
     if (!isLibraryInstrumentationTest() || !testLatestDeps()) {
@@ -342,7 +342,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
           "io.opentelemetry.spring-kafka-2.7",
           "testBatchTopic",
           "testBatchListener",
-          null,
+          "0",
           1,
           null);
     }

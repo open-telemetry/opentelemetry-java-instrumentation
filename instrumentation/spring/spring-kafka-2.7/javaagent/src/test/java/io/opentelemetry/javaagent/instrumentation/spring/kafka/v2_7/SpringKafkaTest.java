@@ -415,7 +415,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         "io.opentelemetry.kafka-clients-0.11",
         "testSingleTopic",
         "testSingleListener",
-        null,
+        "0",
         1,
         null);
     assertProcessDurationMetrics(
@@ -434,7 +434,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         "io.opentelemetry.kafka-clients-0.11",
         "testBatchTopic",
         "testBatchListener",
-        null,
+        "0",
         1,
         null);
     assertProcessDurationMetrics(
@@ -442,7 +442,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         "io.opentelemetry.spring-kafka-2.7",
         "testBatchTopic",
         "testBatchListener",
-        null,
+        "0",
         1,
         null);
   }
@@ -552,7 +552,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         "io.opentelemetry.kafka-clients-0.11",
         "testSingleTopic",
         "testSingleListener",
-        null,
+        "0",
         receiveCount,
         null);
     assertProcessDurationMetrics(
@@ -580,7 +580,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         "io.opentelemetry.kafka-clients-0.11",
         "testBatchTopic",
         "testBatchListener",
-        null,
+        "0",
         receiveCount,
         null);
     assertProcessDurationMetrics(
@@ -588,7 +588,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         "io.opentelemetry.spring-kafka-2.7",
         "testBatchTopic",
         "testBatchListener",
-        null,
+        "0",
         2,
         IllegalArgumentException.class.getName());
     assertProcessDurationMetrics(
@@ -596,7 +596,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         "io.opentelemetry.spring-kafka-2.7",
         "testBatchTopic",
         "testBatchListener",
-        null,
+        "0",
         1,
         null);
   }

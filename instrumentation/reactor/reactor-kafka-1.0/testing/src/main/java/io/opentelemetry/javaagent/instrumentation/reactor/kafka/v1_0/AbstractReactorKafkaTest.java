@@ -269,7 +269,7 @@ public abstract class AbstractReactorKafkaTest {
   private static void assertReceiveAndProcessMetrics() {
     String group = HAS_CONSUMER_GROUP ? "test" : null;
     assertReceiveDurationMetrics(
-        testing, "io.opentelemetry.kafka-clients-0.11", "testTopic", group, null, 1, null);
+        testing, "io.opentelemetry.kafka-clients-0.11", "testTopic", group, "0", 1, null);
     assertProcessDurationMetrics(
         testing, "io.opentelemetry.reactor-kafka-1.0", "testTopic", group, "0", 1, null);
   }

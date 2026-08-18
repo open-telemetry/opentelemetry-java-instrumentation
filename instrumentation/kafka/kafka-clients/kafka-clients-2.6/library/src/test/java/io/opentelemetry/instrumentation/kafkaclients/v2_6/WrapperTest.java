@@ -149,7 +149,7 @@ class WrapperTest extends AbstractWrapperTest {
   private static void assertMessagingMetrics() {
     String instrumentationName = "io.opentelemetry.kafka-clients-2.6";
     assertSendMetrics(testing, instrumentationName, SHARED_TOPIC, "0", 1, null);
-    assertReceiveDurationMetrics(testing, instrumentationName, SHARED_TOPIC, "test", null, 1, null);
+    assertReceiveDurationMetrics(testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, null);
     assertProcessDurationMetrics(testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, null);
   }
 

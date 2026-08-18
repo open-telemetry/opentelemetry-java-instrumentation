@@ -197,13 +197,28 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
     String group = hasConsumerGroup() ? "test" : null;
     // receive telemetry is enabled here, so the receive operation records poll duration
     assertReceiveDurationMetrics(
-        testing(), "io.opentelemetry.kafka-clients-0.11", "testBatchTopic", group, null, 1, null);
+        testing(), "io.opentelemetry.kafka-clients-0.11", "testBatchTopic", group, "0", 1, null);
+    if (errorType == null) {
+      // all of the records come from the same partition, so the batch process operation and the
+      // per-record process operations share a single duration point
+      assertProcessDurationMetrics(
+          testing(),
+          "io.opentelemetry.vertx-kafka-client-3.6",
+          "testBatchTopic",
+          group,
+          "0",
+          messageCount + 1,
+          null);
+      assertProcessMetricPointCounts(testing(), "io.opentelemetry.vertx-kafka-client-3.6", 1);
+      return;
+    }
+    // the failed batch process operation gets a duration point of its own through error.type
     assertProcessDurationMetrics(
         testing(),
         "io.opentelemetry.vertx-kafka-client-3.6",
         "testBatchTopic",
         group,
-        null,
+        "0",
         1,
         errorType);
     assertProcessDurationMetrics(

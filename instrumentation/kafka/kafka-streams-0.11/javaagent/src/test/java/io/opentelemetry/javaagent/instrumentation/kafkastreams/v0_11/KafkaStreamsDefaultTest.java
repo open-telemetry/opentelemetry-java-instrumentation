@@ -252,7 +252,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
           "io.opentelemetry.kafka-clients-0.11",
           STREAM_PENDING,
           testLatestDeps() ? "test-application" : null,
-          null,
+          "0",
           1,
           null);
       return;
@@ -393,7 +393,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
         "io.opentelemetry.kafka-clients-0.11",
         STREAM_PENDING,
         testLatestDeps() ? "test-application" : null,
-        null,
+        "0",
         1,
         null);
   }
