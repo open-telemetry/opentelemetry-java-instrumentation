@@ -97,6 +97,25 @@ class OpenSearchEndpointMapTest {
     assertThat(OpenSearchEndpointMap.getOperationName("HEAD", "test-index/_create/1")).isNull();
   }
 
+  @ParameterizedTest
+  @MethodSource("typelessMultiDocumentRoutes")
+  void typelessMultiDocumentRoutesDeriveOperations(
+      String method, String path, String operationName) {
+    assertThat(OpenSearchEndpointMap.getOperationName(method, path)).isEqualTo(operationName);
+  }
+
+  private static Stream<Arguments> typelessMultiDocumentRoutes() {
+    return Stream.of(
+        argumentSet("delete by query", "POST", "my-index/_delete_by_query", "delete_by_query"),
+        argumentSet("update by query", "POST", "my-index/_update_by_query", "update_by_query"),
+        argumentSet("global mtermvectors with GET", "GET", "_mtermvectors", "mtermvectors"),
+        argumentSet("global mtermvectors with POST", "POST", "_mtermvectors", "mtermvectors"),
+        argumentSet(
+            "indexed mtermvectors with GET", "GET", "my-index/_mtermvectors", "mtermvectors"),
+        argumentSet(
+            "indexed mtermvectors with POST", "POST", "my-index/_mtermvectors", "mtermvectors"));
+  }
+
   @Test
   void legacyTypedPutRouteDerivesIndexOperationAndMasksOnlyId() {
     assertThat(OpenSearchEndpointMap.getOperationName("PUT", "my-index/my-type/999"))

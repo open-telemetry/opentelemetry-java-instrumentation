@@ -119,6 +119,10 @@ final class OpenSearchEndpointMap {
     put(map, "POST", "mget", "/_mget", "/{index}/_mget");
     put(map, "GET", "msearch", "/_msearch", "/{index}/_msearch");
     put(map, "POST", "msearch", "/_msearch", "/{index}/_msearch");
+    put(map, "GET", "mtermvectors", "/_mtermvectors", "/{index}/_mtermvectors");
+    put(map, "POST", "mtermvectors", "/_mtermvectors", "/{index}/_mtermvectors");
+    put(map, "POST", "delete_by_query", "/{index}/_delete_by_query");
+    put(map, "POST", "update_by_query", "/{index}/_update_by_query");
 
     // search and count
     put(map, "GET", "search", "/_search", "/{index}/_search");
