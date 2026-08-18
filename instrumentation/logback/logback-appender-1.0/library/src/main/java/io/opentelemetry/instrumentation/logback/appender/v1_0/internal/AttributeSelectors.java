@@ -17,21 +17,21 @@ import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 /**
- * Factories for the MDC key selectors used by the OpenTelemetry Logback appender.
+ * Factories for the attribute key selectors used by the OpenTelemetry Logback appender.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public final class MdcAttributeSelectors {
+public final class AttributeSelectors {
 
   /**
-   * Returns a selector that matches the MDC keys selected by {@code selector}, or {@code null} when
+   * Returns a selector that matches the keys selected by {@code selector}, or {@code null} when
    * {@code selector} selects nothing because it is absent or empty.
    *
-   * <p>MDC keys and selector patterns are matched case-sensitively. {@code ?} matches any single
+   * <p>Keys and selector patterns are matched case-sensitively. {@code ?} matches any single
    * character and {@code *} matches any number of characters, including none. Excluded patterns
    * take precedence over included patterns, and a selector with only excluded patterns matches
-   * every MDC key that it does not exclude.
+   * every key that it does not exclude.
    */
   @Nullable
   public static Predicate<String> create(@Nullable IncludeExclude selector) {
@@ -39,12 +39,21 @@ public final class MdcAttributeSelectors {
   }
 
   /**
+   * Returns a selector with the semantics of a deprecated boolean capture setting, which either
+   * matches every key or, when it is absent or {@code false}, selects nothing.
+   */
+  @Nullable
+  public static Predicate<String> createDeprecated(@Nullable Boolean captureEveryKey) {
+    return Boolean.TRUE.equals(captureEveryKey) ? key -> true : null;
+  }
+
+  /**
    * Returns a selector with the semantics of the deprecated comma-separated capture list, or {@code
    * null} when {@code capturedKeys} is empty and therefore selects nothing.
    *
-   * <p>A list whose only entry is {@code *} matches every MDC key. In every other list each entry
-   * matches only the MDC key that it equals, including an entry that contains {@code *} or {@code
-   * ?}, because the deprecated setting never supported patterns.
+   * <p>A list whose only entry is {@code *} matches every key. In every other list each entry
+   * matches only the key that it equals, including an entry that contains {@code *} or {@code ?},
+   * because the deprecated setting never supported patterns.
    */
   @Nullable
   public static Predicate<String> createDeprecated(List<String> capturedKeys) {
@@ -69,5 +78,5 @@ public final class MdcAttributeSelectors {
         .collect(toList());
   }
 
-  private MdcAttributeSelectors() {}
+  private AttributeSelectors() {}
 }

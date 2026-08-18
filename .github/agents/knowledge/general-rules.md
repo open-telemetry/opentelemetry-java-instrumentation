@@ -24,7 +24,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | Javaagent    | Module structure patterns                                                                                                                                                                                                                                                                                                                                                                                     | `InstrumentationModule`, `TypeInstrumentation`                                                                                                                  | `javaagent-module-patterns.md`     |
 | Javaagent    | Singletons patterns                                                                                                                                                                                                                                                                                                                                                                                           | `*Singletons`, `*SpanNaming`, and similar holder classes; singleton accessors; callers of singleton accessors/fields                                            | `javaagent-singletons-patterns.md` |
 | Javaagent    | Incorrect `classLoaderMatcher()`                                                                                                                                                                                                                                                                                                                                                                              | `classLoaderMatcher()` override that is redundant (muzzle already handles it) or missing when needed (muzzle cannot distinguish version range)                  | `javaagent-module-patterns.md`     |
-| Semconv      | Library vs javaagent semconv constant usage                                                                                                                                                                                                                                                                                                                                                                   | Semconv constants/assertions                                                                                                                                    | —                                  |
+| Semconv      | Search for an exact name-and-type semconv constant before constructing an `AttributeKey`; follow module-specific import/copy boundaries                                                                                                                                                                                                                                                                       | Semconv-looking `AttributeKey` constants/assertions                                                                                                             | —                                  |
 | Semconv      | Dual semconv testing                                                                                                                                                                                                                                                                                                                                                                                          | `SemconvStability`, `maybeStable`, semconv Gradle tasks                                                                                                         | `testing-semconv-stability.md`     |
 | Testing      | General test patterns                                                                                                                                                                                                                                                                                                                                                                                         | Test files in scope — assertion style, test method signatures and throws clauses, resource cleanup, attribute assertions                                        | `testing-general-patterns.md`      |
 | Testing      | Experimental flag tests                                                                                                                                                                                                                                                                                                                                                                                       | `testExperimental`, experimental attribute assertions, `experimental` flags in JVM args or system properties                                                    | `testing-experimental-flags.md`    |
@@ -386,16 +386,18 @@ ambiguous and the cast would otherwise be required). Do not flag those cases.
 
 ## [Semconv] Constants by Module Type
 
-- `library/src/main/`: constants from `io.opentelemetry.semconv.incubating.*` must be
-  copied locally as `private static final` fields with a `// copied from <ClassName>`
-  comment. Constants from `io.opentelemetry.semconv.*` (stable) must be imported
-  directly via `import static` and must not be copied locally.
-- `javaagent/src/main/`: all semconv artifact constants (stable and incubating) may be used
-  directly.
-- tests: all semconv artifact constants are allowed.
-
-The trigger for copying is the import package, not the constant name. Only convert an
-import to a local copy when it comes from `io.opentelemetry.semconv.incubating.*`.
+- Before constructing an `AttributeKey` for a semantic-convention attribute, search both the
+  stable and incubating semconv artifacts. Reuse a constant only when its attribute name and
+  `AttributeKey` type match exactly; direct reuse prevents local copies from drifting from the
+  canonical name or type.
+- In `javaagent/src/main/`, import stable and incubating constants directly, including deprecated
+  constants intentionally used for legacy semconv emission. The Java agent vendors the semconv
+  artifacts into the agent artifact, so these imports do not expose an incubating or deprecated
+  dependency to applications.
+- In `library/src/main/`, import stable constants directly, but copy incubating constants locally
+  as `private static final` fields with a `// copied from <ClassName>` comment. Library artifacts
+  must not depend on or expose the incubating semconv artifact.
+- In tests, import stable and incubating constants directly.
 
 ## [NewModule] New Instrumentation Checklist
 

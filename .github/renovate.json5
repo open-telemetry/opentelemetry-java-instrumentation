@@ -16,13 +16,19 @@
     // ── Scheduling & grouping ──────────────────────────────────────────
 
     {
-      // group all patch updates into a single weekly PR
-      groupName: 'all patch versions',
+      // group all patch and minor updates into a single weekly PR
+      // (OpenTelemetry artifacts are excluded so that dogfooding and cascaded releases land individually)
+      groupName: 'all patch and minor versions',
       matchUpdateTypes: [
         'patch',
+        'minor',
       ],
       schedule: [
         '* 0-7 * * 2', // weekly, before 8am on Tuesday
+      ],
+      matchPackageNames: [
+        '!io.opentelemetry**',
+        '!open-telemetry/**',
       ],
     },
     {
@@ -42,6 +48,9 @@
       // gh-aw updates need a dedicated branch so CI can regenerate their workflow lockfiles
       matchPackageNames: [
         'github/gh-aw',
+      ],
+      schedule: [
+        '* 0-7 * * 2', // weekly, before 8am on Tuesday
       ],
       groupName: 'gh-aw',
     },
