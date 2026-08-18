@@ -91,11 +91,11 @@ public abstract class AbstractOpenSearchRestTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("GET")
+                        span.hasName("cluster.health")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                                equalTo(maybeStable(DB_OPERATION), "GET"),
+                                equalTo(maybeStable(DB_OPERATION), "cluster.health"),
                                 equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health")),
                     span ->
                         span.hasName("GET")
@@ -161,12 +161,12 @@ public abstract class AbstractOpenSearchRestTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("GET")
+                        span.hasName("cluster.health")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                                equalTo(maybeStable(DB_OPERATION), "GET"),
+                                equalTo(maybeStable(DB_OPERATION), "cluster.health"),
                                 equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health")),
                     span ->
                         span.hasName("GET")
@@ -211,11 +211,11 @@ public abstract class AbstractOpenSearchRestTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("PUT")
+                        span.hasName("index")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                                equalTo(maybeStable(DB_OPERATION), "PUT"),
+                                equalTo(maybeStable(DB_OPERATION), "index"),
                                 equalTo(maybeStable(DB_STATEMENT), expectedStatement)),
                     span ->
                         span.hasName("PUT")

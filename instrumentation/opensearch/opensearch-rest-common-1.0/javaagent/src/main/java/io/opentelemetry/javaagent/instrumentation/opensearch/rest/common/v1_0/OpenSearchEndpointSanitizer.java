@@ -16,15 +16,15 @@ import java.util.Set;
  * becomes {@code /my-index/_doc/?}.
  *
  * <p>This is the single seam for endpoint sanitization: {@link
- * OpenSearchRestAttributesGetter#getDbQueryText} is the only caller. It intentionally works from
- * the raw path string alone, because {@link OpenSearchRestRequest} carries no endpoint metadata. A
- * route-based replacement (a parameterized route table that masks exactly the path parameters) can
- * swap this implementation without touching the getter.
+ * OpenSearchRestAttributesGetter#getDbQueryText} is the only caller. It masks exactly the path
+ * parameters of the route that matches the request, using the same {@link OpenSearchEndpointMap}
+ * route table that derives the operation name. Legacy typed document routes such as {@code
+ * /{index}/{type}/{id}} are matched too, so their id is masked while the index and type stay as
+ * structure.
  *
- * <p>Masking is conservative: only the segment immediately following a known single-document
- * identifier keyword is masked. Identifier-bearing routes that carry no such keyword, such as the
- * legacy typed {@code /{index}/{type}/{id}} document route, are left intact to avoid masking
- * segments that are really endpoint structure.
+ * <p>When no route matches, masking falls back to the conservative keyword rule: only the segment
+ * immediately following a known single-document identifier keyword is masked, so an unknown path
+ * never has structural segments masked by mistake.
  */
 final class OpenSearchEndpointSanitizer {
 
@@ -32,11 +32,19 @@ final class OpenSearchEndpointSanitizer {
 
   // Path segments that are immediately followed by a single-document identifier, e.g.
   // /{index}/_doc/{id} or /{index}/_update/{id}. The following segment is customer-controlled, so
-  // it is masked.
+  // it is masked. Used only as a fallback when no route matches.
   private static final Set<String> idIntroducingSegments =
       new HashSet<>(asList("_doc", "_create", "_update", "_source", "_explain", "_termvectors"));
 
-  static String sanitize(String endpoint) {
+  static String sanitize(String method, String endpoint) {
+    String masked = OpenSearchEndpointMap.maskPathParameters(method, endpoint);
+    if (masked != null) {
+      return masked;
+    }
+    return sanitizeByKeyword(endpoint);
+  }
+
+  private static String sanitizeByKeyword(String endpoint) {
     String[] segments = endpoint.split("/", -1);
     String previous = null;
     for (int i = 0; i < segments.length; i++) {
