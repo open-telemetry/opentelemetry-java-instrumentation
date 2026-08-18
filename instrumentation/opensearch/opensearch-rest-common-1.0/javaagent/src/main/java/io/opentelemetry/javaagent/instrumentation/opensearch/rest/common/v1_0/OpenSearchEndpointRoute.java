@@ -27,7 +27,7 @@ final class OpenSearchEndpointRoute {
   private static final String UNDERSCORE_REPLACEMENT = "0";
   private static final Pattern PATH_PART_NAMES_PATTERN = Pattern.compile("\\{([^}]+)}");
   private static final String NODE_INFO_METRIC =
-      "(?:settings|os|process|jvm|thread_pool|transport|http|plugins|ingest)";
+      "(?:settings|os|process|jvm|thread_pool|transport|http|plugins|ingest|aggregations|indices)";
   private static final String NODE_INFO_METRIC_PATTERN =
       NODE_INFO_METRIC + "(?:," + NODE_INFO_METRIC + ")*";
 

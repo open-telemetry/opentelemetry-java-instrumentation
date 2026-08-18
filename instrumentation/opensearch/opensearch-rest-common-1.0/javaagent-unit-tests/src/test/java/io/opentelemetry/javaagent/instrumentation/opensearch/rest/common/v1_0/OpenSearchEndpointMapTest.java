@@ -242,6 +242,10 @@ class OpenSearchEndpointMapTest {
         .isEqualTo("nodes.info");
     assertThat(OpenSearchEndpointMap.maskPathParameters("GET", "_nodes/os,jvm"))
         .isEqualTo("_nodes/os,jvm");
+    assertThat(OpenSearchEndpointMap.maskPathParameters("GET", "_nodes/indices"))
+        .isEqualTo("_nodes/indices");
+    assertThat(OpenSearchEndpointMap.maskPathParameters("GET", "_nodes/aggregations"))
+        .isEqualTo("_nodes/aggregations");
     assertThat(OpenSearchEndpointMap.maskPathParameters("GET", "_nodes/nodeA"))
         .isEqualTo("_nodes/?");
     assertThat(OpenSearchEndpointMap.getOperationName("GET", "_nodes/nodeA/os"))
