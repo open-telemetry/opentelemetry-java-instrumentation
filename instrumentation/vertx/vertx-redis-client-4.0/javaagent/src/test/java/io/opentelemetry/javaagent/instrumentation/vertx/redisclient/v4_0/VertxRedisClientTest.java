@@ -147,8 +147,6 @@ class VertxRedisClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            // old semconv output is unchanged: the default database 0 is not
-                            // reported
                             equalTo(DB_REDIS_DATABASE_INDEX, null),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
