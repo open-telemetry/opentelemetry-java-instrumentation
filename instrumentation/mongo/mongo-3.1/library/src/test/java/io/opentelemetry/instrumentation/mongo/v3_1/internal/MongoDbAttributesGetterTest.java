@@ -111,6 +111,7 @@ class MongoDbAttributesGetterTest {
   private static Stream<Arguments> errorTypes() {
     return Stream.of(
         argumentSet("server error code", new MongoException(11000, "duplicate key"), "11000"),
+        argumentSet("zero code falls back", new MongoException(0, "boom"), null),
         argumentSet("client message sentinel (-3)", new MongoException("boom"), null),
         argumentSet(
             "client message-and-cause sentinel (-4)",
