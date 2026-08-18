@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.logging.Level.FINE;
 
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
@@ -22,12 +23,17 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.util.UUID;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 final class CassandraAttributesExtractor
     implements AttributesExtractor<CassandraRequest, ExecutionInfo> {
+
+  private static final Logger logger =
+      Logger.getLogger(CassandraAttributesExtractor.class.getName());
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_CASSANDRA_CONSISTENCY_LEVEL =
@@ -56,6 +62,8 @@ final class CassandraAttributesExtractor
       AttributeKey.booleanKey("cassandra.query.idempotent");
   private static final AttributeKey<Long> CASSANDRA_SPECULATIVE_EXECUTION_COUNT =
       AttributeKey.longKey("cassandra.speculative_execution.count");
+
+  private static final Field PROXY_ADDRESS_FIELD = getProxyAddressField();
 
   @Override
   public void onStart(
@@ -155,28 +163,75 @@ final class CassandraAttributesExtractor
       attributes.put(SERVER_ADDRESS, address.getHostString());
       attributes.put(SERVER_PORT, address.getPort());
     } else if (endPoint instanceof SniEndPoint) {
-      // Under SNI (proxied deployments such as DataStax Astra) the client reaches the server
-      // through a proxy, and SniEndPoint.resolve() would return the proxy. server.address should
-      // be the server behind the proxy, so use the coordinator's own broadcast RPC address, which
-      // carries both the address and port with no side effects. resolve() is avoided deliberately:
-      // it performs a dns lookup on every call and rotates a shared static counter the driver uses
-      // to pick a connection. When the node has not published its RPC address, fall back to the SNI
-      // server name, which carries no port.
-      InetSocketAddress rpcAddress = coordinator.getBroadcastRpcAddress().orElse(null);
-      if (rpcAddress != null) {
-        attributes.put(SERVER_ADDRESS, rpcAddress.getHostString());
-        attributes.put(SERVER_PORT, rpcAddress.getPort());
+      SniEndPoint sniEndPoint = (SniEndPoint) endPoint;
+      if (emitStableDatabaseSemconv()) {
+        updateStableSniServerAddressAndPort(attributes, coordinator, sniEndPoint);
       } else {
-        // In cloud deployments the driver sets the SNI server name to the node's host id, which is
-        // an opaque identifier rather than an address, and which is already recorded as
-        // cassandra.coordinator.id. Record the server name only when it is something else, such as
-        // a host name supplied for a custom SNI proxy.
-        String serverName = ((SniEndPoint) endPoint).getServerName();
-        UUID hostId = coordinator.getHostId();
-        if (hostId == null || !hostId.toString().equals(serverName)) {
-          attributes.put(SERVER_ADDRESS, serverName);
-        }
+        // The old database semantic conventions are frozen, so keep the pre-existing behavior even
+        // though it records the proxy rather than the server behind it. The fix that reports the
+        // server behind the proxy is applied only under the stable conventions above.
+        updateLegacySniServerAddressAndPort(attributes, sniEndPoint);
       }
+    }
+  }
+
+  private static void updateStableSniServerAddressAndPort(
+      AttributesBuilder attributes, Node coordinator, SniEndPoint sniEndPoint) {
+    // Under SNI (proxied deployments such as DataStax Astra) the client reaches the server through
+    // a
+    // proxy, and SniEndPoint.resolve() would return the proxy. server.address should be the server
+    // behind the proxy, so use the coordinator's own broadcast RPC address, which carries both the
+    // address and port with no side effects. resolve() is avoided deliberately: it performs a dns
+    // lookup on every call and rotates a shared static counter the driver uses to pick a
+    // connection.
+    // When the node has not published its RPC address, fall back to the SNI server name, which
+    // carries no port.
+    InetSocketAddress rpcAddress = coordinator.getBroadcastRpcAddress().orElse(null);
+    if (rpcAddress != null) {
+      attributes.put(SERVER_ADDRESS, rpcAddress.getHostString());
+      attributes.put(SERVER_PORT, rpcAddress.getPort());
+    } else {
+      // In cloud deployments the driver sets the SNI server name to the node's host id, which is an
+      // opaque identifier rather than an address, and which is already recorded as
+      // cassandra.coordinator.id. Record the server name only when it is something else, such as a
+      // host name supplied for a custom SNI proxy.
+      String serverName = sniEndPoint.getServerName();
+      UUID hostId = coordinator.getHostId();
+      if (hostId == null || !hostId.toString().equals(serverName)) {
+        attributes.put(SERVER_ADDRESS, serverName);
+      }
+    }
+  }
+
+  private static void updateLegacySniServerAddressAndPort(
+      AttributesBuilder attributes, SniEndPoint sniEndPoint) {
+    if (PROXY_ADDRESS_FIELD == null) {
+      return;
+    }
+    Object object = null;
+    try {
+      object = PROXY_ADDRESS_FIELD.get(sniEndPoint);
+    } catch (Exception e) {
+      logger.log(
+          FINE,
+          "Error when accessing the private field proxyAddress of SniEndPoint using reflection.",
+          e);
+    }
+    if (object instanceof InetSocketAddress) {
+      InetSocketAddress address = (InetSocketAddress) object;
+      attributes.put(SERVER_ADDRESS, address.getHostString());
+      attributes.put(SERVER_PORT, address.getPort());
+    }
+  }
+
+  @Nullable
+  private static Field getProxyAddressField() {
+    try {
+      Field field = SniEndPoint.class.getDeclaredField("proxyAddress");
+      field.setAccessible(true);
+      return field;
+    } catch (Exception ignored) {
+      return null;
     }
   }
 }

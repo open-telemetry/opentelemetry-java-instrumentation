@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -45,25 +46,45 @@ class CassandraEndpointAttributesTest {
 
   @Test
   void proxiedEndPointUsesBroadcastRpcAddressForServer() {
-    // The proxy the client actually connects to differs from the node behind it, so asserting the
-    // broadcast rpc values fails against the old behavior, which recorded the proxy in server.*.
+    // The proxy the client actually connects to differs from the node behind it. Under the stable
+    // conventions the broadcast RPC address is recorded; under the frozen old conventions the proxy
+    // returned by resolve() is recorded, so each mode pins a different value.
     when(coordinator.getEndPoint()).thenReturn(proxyEndPoint);
-    when(coordinator.getBroadcastRpcAddress())
-        .thenReturn(Optional.of(InetSocketAddress.createUnresolved("10.0.0.5", 9042)));
+    if (emitStableDatabaseSemconv()) {
+      when(coordinator.getBroadcastRpcAddress())
+          .thenReturn(Optional.of(InetSocketAddress.createUnresolved("10.0.0.5", 9042)));
+    } else {
+      when(proxyEndPoint.resolve())
+          .thenReturn(InetSocketAddress.createUnresolved("proxy.example.com", 29042));
+    }
 
     InetSocketAddress server = CassandraAttributesExtractor.getServerAddress(coordinator);
 
     assertThat(server).isNotNull();
-    assertThat(server.getHostString()).isEqualTo("10.0.0.5");
-    assertThat(server.getPort()).isEqualTo(9042);
+    if (emitStableDatabaseSemconv()) {
+      assertThat(server.getHostString()).isEqualTo("10.0.0.5");
+      assertThat(server.getPort()).isEqualTo(9042);
+    } else {
+      assertThat(server.getHostString()).isEqualTo("proxy.example.com");
+      assertThat(server.getPort()).isEqualTo(29042);
+    }
   }
 
   @Test
   void proxiedEndPointOmitsServerAddressWithoutBroadcastRpcAddress() {
     when(coordinator.getEndPoint()).thenReturn(proxyEndPoint);
-    when(coordinator.getBroadcastRpcAddress()).thenReturn(Optional.empty());
-
-    assertThat(CassandraAttributesExtractor.getServerAddress(coordinator)).isNull();
+    if (emitStableDatabaseSemconv()) {
+      when(coordinator.getBroadcastRpcAddress()).thenReturn(Optional.empty());
+      assertThat(CassandraAttributesExtractor.getServerAddress(coordinator)).isNull();
+    } else {
+      // The old conventions are frozen and still record the proxy returned by resolve().
+      when(proxyEndPoint.resolve())
+          .thenReturn(InetSocketAddress.createUnresolved("proxy.example.com", 29042));
+      InetSocketAddress server = CassandraAttributesExtractor.getServerAddress(coordinator);
+      assertThat(server).isNotNull();
+      assertThat(server.getHostString()).isEqualTo("proxy.example.com");
+      assertThat(server.getPort()).isEqualTo(29042);
+    }
   }
 
   @Test
@@ -72,9 +93,18 @@ class CassandraEndpointAttributesTest {
     when(coordinator.getEndPoint()).thenReturn(proxyEndPoint);
 
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
-    InetSocketAddress peer = getter.getNetworkPeerInetSocketAddress(null, executionInfo);
-
-    assertThat(peer).isNull();
+    if (emitStableDatabaseSemconv()) {
+      assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isNull();
+    } else {
+      // The old conventions are frozen and still record the proxy returned by resolve() as the
+      // peer.
+      when(proxyEndPoint.resolve())
+          .thenReturn(InetSocketAddress.createUnresolved("proxy.example.com", 29042));
+      InetSocketAddress peer = getter.getNetworkPeerInetSocketAddress(null, executionInfo);
+      assertThat(peer).isNotNull();
+      assertThat(peer.getHostString()).isEqualTo("proxy.example.com");
+      assertThat(peer.getPort()).isEqualTo(29042);
+    }
   }
 
   @Test

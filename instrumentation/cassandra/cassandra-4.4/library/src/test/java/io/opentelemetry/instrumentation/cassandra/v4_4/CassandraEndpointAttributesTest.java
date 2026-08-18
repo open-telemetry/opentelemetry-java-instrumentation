@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,40 +50,56 @@ class CassandraEndpointAttributesTest {
 
   @Test
   void sniEndPointUsesBroadcastRpcAddressForServer() {
-    // The proxy the client actually connects to differs from the node behind it, so asserting the
-    // broadcast RPC values fails against the old behavior, which recorded the proxy in server.*.
+    // The proxy the client actually connects to differs from the node behind it. Under the stable
+    // conventions the broadcast RPC address is recorded; under the frozen old conventions the proxy
+    // read by reflection is recorded, so each mode pins a different value.
     SniEndPoint endPoint =
         new SniEndPoint(InetSocketAddress.createUnresolved("proxy.example.com", 29042), "host-id");
     when(coordinator.getEndPoint()).thenReturn(endPoint);
-    when(coordinator.getBroadcastRpcAddress())
-        .thenReturn(Optional.of(InetSocketAddress.createUnresolved("10.0.0.5", 9042)));
+    if (emitStableDatabaseSemconv()) {
+      when(coordinator.getBroadcastRpcAddress())
+          .thenReturn(Optional.of(InetSocketAddress.createUnresolved("10.0.0.5", 9042)));
+    }
 
     AttributesBuilder builder = Attributes.builder();
     CassandraAttributesExtractor.updateServerAddressAndPort(builder, coordinator);
     Attributes attributes = builder.build();
 
-    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("10.0.0.5");
-    assertThat(attributes.get(SERVER_PORT)).isEqualTo(9042L);
+    if (emitStableDatabaseSemconv()) {
+      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("10.0.0.5");
+      assertThat(attributes.get(SERVER_PORT)).isEqualTo(9042L);
+    } else {
+      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("proxy.example.com");
+      assertThat(attributes.get(SERVER_PORT)).isEqualTo(29042L);
+    }
   }
 
   @Test
   void sniEndPointOmitsServerAddressWhenServerNameIsHostId() {
     // In cloud deployments the driver builds the SNI server name from the node's host id, which is
-    // not an address, so nothing is recorded rather than the host id.
+    // not an address, so nothing is recorded rather than the host id. The frozen old conventions
+    // still record the proxy read by reflection.
     UUID hostId = UUID.fromString("2a1c1d5e-7b0e-4d3a-9a1f-2f5a6c8b0d31");
     SniEndPoint endPoint =
         new SniEndPoint(
             InetSocketAddress.createUnresolved("proxy.example.com", 29042), hostId.toString());
     when(coordinator.getEndPoint()).thenReturn(endPoint);
-    when(coordinator.getBroadcastRpcAddress()).thenReturn(Optional.empty());
-    when(coordinator.getHostId()).thenReturn(hostId);
+    if (emitStableDatabaseSemconv()) {
+      when(coordinator.getBroadcastRpcAddress()).thenReturn(Optional.empty());
+      when(coordinator.getHostId()).thenReturn(hostId);
+    }
 
     AttributesBuilder builder = Attributes.builder();
     CassandraAttributesExtractor.updateServerAddressAndPort(builder, coordinator);
     Attributes attributes = builder.build();
 
-    assertThat(attributes.get(SERVER_ADDRESS)).isNull();
-    assertThat(attributes.get(SERVER_PORT)).isNull();
+    if (emitStableDatabaseSemconv()) {
+      assertThat(attributes.get(SERVER_ADDRESS)).isNull();
+      assertThat(attributes.get(SERVER_PORT)).isNull();
+    } else {
+      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("proxy.example.com");
+      assertThat(attributes.get(SERVER_PORT)).isEqualTo(29042L);
+    }
   }
 
   @Test
@@ -91,16 +108,23 @@ class CassandraEndpointAttributesTest {
         new SniEndPoint(
             InetSocketAddress.createUnresolved("proxy.example.com", 29042), "node1.example.com");
     when(coordinator.getEndPoint()).thenReturn(endPoint);
-    when(coordinator.getBroadcastRpcAddress()).thenReturn(Optional.empty());
-    when(coordinator.getHostId())
-        .thenReturn(UUID.fromString("2a1c1d5e-7b0e-4d3a-9a1f-2f5a6c8b0d31"));
+    if (emitStableDatabaseSemconv()) {
+      when(coordinator.getBroadcastRpcAddress()).thenReturn(Optional.empty());
+      when(coordinator.getHostId())
+          .thenReturn(UUID.fromString("2a1c1d5e-7b0e-4d3a-9a1f-2f5a6c8b0d31"));
+    }
 
     AttributesBuilder builder = Attributes.builder();
     CassandraAttributesExtractor.updateServerAddressAndPort(builder, coordinator);
     Attributes attributes = builder.build();
 
-    assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("node1.example.com");
-    assertThat(attributes.get(SERVER_PORT)).isNull();
+    if (emitStableDatabaseSemconv()) {
+      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("node1.example.com");
+      assertThat(attributes.get(SERVER_PORT)).isNull();
+    } else {
+      assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("proxy.example.com");
+      assertThat(attributes.get(SERVER_PORT)).isEqualTo(29042L);
+    }
   }
 
   @Test

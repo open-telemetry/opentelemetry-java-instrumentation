@@ -33,6 +33,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.UUID;
 import javax.annotation.Nullable;
 
@@ -140,6 +141,13 @@ final class CassandraAttributesExtractor
     if (endPoint instanceof DefaultEndPoint) {
       // resolve() returns the already-resolved InetSocketAddress, it does not do a dns lookup.
       return ((DefaultEndPoint) endPoint).resolve();
+    }
+    if (!emitStableDatabaseSemconv()) {
+      // The old database semantic conventions are frozen, so keep the pre-existing behavior, which
+      // resolves the endpoint and records the proxy under SNI. The fix below only applies under the
+      // stable conventions.
+      SocketAddress address = endPoint.resolve();
+      return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
     }
     // Any other endpoint reaches the server through an intermediary. Under SNI (proxied deployments
     // such as DataStax Astra) that intermediary is a proxy, and resolve() would return the proxy

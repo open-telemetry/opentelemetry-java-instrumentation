@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
@@ -16,6 +17,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -66,6 +68,13 @@ final class CassandraSqlAttributesGetter
     if (endPoint instanceof DefaultEndPoint) {
       // resolve() returns the already-resolved InetSocketAddress, it does not do a dns lookup.
       return ((DefaultEndPoint) endPoint).resolve();
+    }
+    if (!emitStableDatabaseSemconv()) {
+      // The old database semantic conventions are frozen, so keep the pre-existing behavior, which
+      // resolves the endpoint and records the proxy as the peer under SNI. The fix below only
+      // applies under the stable conventions.
+      SocketAddress address = endPoint.resolve();
+      return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
     }
     // Any other endpoint reaches the server through an intermediary, and under SNI (proxied
     // deployments such as DataStax Astra) the only way to read that intermediary's socket is

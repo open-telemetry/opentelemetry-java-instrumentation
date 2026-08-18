@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import com.datastax.driver.core.ExecutionInfo;
 import com.datastax.driver.core.Host;
 import com.datastax.driver.core.exceptions.CoordinatorException;
@@ -30,13 +32,14 @@ class CassandraResponse {
     if (coordinator == null) {
       return new CassandraResponse(executionInfo, null, null);
     }
-    if (CassandraEndPoints.isSniEndPoint(coordinator)) {
+    if (emitStableDatabaseSemconv() && CassandraEndPoints.isSniEndPoint(coordinator)) {
       // Under SNI (proxied deployments such as DataStax Astra) the client connects to a proxy, so
       // the coordinator's socket address is the proxy rather than the server behind it. Reading it
       // also calls SniEndPoint.resolve(), which performs a dns lookup on every call and rotates a
       // shared static counter the driver uses to pick a connection. Record the coordinator's own
       // broadcast rpc address as the server, and leave the peer unset because the proxy socket is
-      // only reachable through resolve().
+      // only reachable through resolve(). This applies only under the stable database semantic
+      // conventions; the old conventions are frozen and keep recording the proxy below.
       return new CassandraResponse(
           executionInfo, null, CassandraEndPoints.getBroadcastRpcAddress(coordinator));
     }
@@ -50,9 +53,10 @@ class CassandraResponse {
       return null;
     }
     CoordinatorException exception = (CoordinatorException) throwable;
-    if (CassandraEndPoints.isSniEndPoint(exception)) {
+    if (emitStableDatabaseSemconv() && CassandraEndPoints.isSniEndPoint(exception)) {
       // the exception knows only the proxy endpoint, and getAddress() would resolve it, so neither
-      // address is recorded
+      // address is recorded. This applies only under the stable database semantic conventions; the
+      // old conventions are frozen and keep recording the proxy below.
       return new CassandraResponse(null, null, null);
     }
     InetSocketAddress address = exception.getAddress();
