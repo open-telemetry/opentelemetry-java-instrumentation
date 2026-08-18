@@ -128,6 +128,14 @@ class OpenSearchEndpointMapTest {
   }
 
   @Test
+  void globalNamedAliasRouteMasksAliasName() {
+    assertThat(OpenSearchEndpointMap.getOperationName("GET", "_alias/customer-alias"))
+        .isEqualTo("indices.get_alias");
+    assertThat(OpenSearchEndpointMap.maskPathParameters("GET", "_alias/customer-alias"))
+        .isEqualTo("_alias/?");
+  }
+
+  @Test
   void masksIdBearingSegmentAndKeepsStructureIntact() {
     assertThat(OpenSearchEndpointMap.maskPathParameters("PUT", "test-index/_doc/12345"))
         .isEqualTo("test-index/_doc/?");
