@@ -48,6 +48,14 @@ final class OpenSearchRestAttributesGetter
     return operationName != null ? operationName : request.getMethod();
   }
 
+  @Override
+  @SuppressWarnings("deprecation") // old database semconv still use db.operation
+  public String getDbOperation(OpenSearchRestRequest request) {
+    // old semconv output is deliberately left unchanged: it still reports the HTTP method rather
+    // than the route-derived operation name
+    return request.getMethod();
+  }
+
   @Nullable
   @Override
   public String getErrorType(
