@@ -90,6 +90,15 @@
   headers by glob pattern instead of by exact name only. The deprecated methods still match header
   names literally, so `*` and `?` are not treated as glob patterns.
   ([#19607](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19607))
+- Deprecate the Ktor `capturedRequestHeaders` and `capturedResponseHeaders` configuration functions
+  in the `KtorClientTelemetry` and `KtorServerTelemetry` plugin configuration blocks (Ktor 2.0 and
+  3.0) and the `setCapturedRequestHeaders` and `setCapturedResponseHeaders` functions on the Ktor
+  1.0 `KtorServerTelemetry` configuration, in favor of `requestHeaders(IncludeExclude)` /
+  `responseHeaders(IncludeExclude)` and `setRequestHeaders(IncludeExclude)` /
+  `setResponseHeaders(IncludeExclude)`, which select HTTP headers by glob pattern instead of by
+  exact name only. The deprecated methods still match header names literally, so `*` and `?` are not
+  treated as glob patterns.
+  ([#19608](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19608))
 - Deprecate the Logback appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of the new
   `experimental.mdc-attributes.included` and `experimental.mdc-attributes.excluded` selectors, which
