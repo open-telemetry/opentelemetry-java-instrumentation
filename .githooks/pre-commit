@@ -3,7 +3,8 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-if ! mise run lint; then
+if ! mise run lint || ! ./gradlew spotlessCheck; then
+  ./gradlew spotlessApply
   mise run lint:fix
   echo ""
   echo ""
