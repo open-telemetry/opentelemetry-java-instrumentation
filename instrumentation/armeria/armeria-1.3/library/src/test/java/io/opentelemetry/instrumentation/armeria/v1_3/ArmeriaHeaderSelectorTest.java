@@ -20,9 +20,9 @@ import com.linecorp.armeria.common.ResponseHeaders;
 import com.linecorp.armeria.server.Server;
 import com.linecorp.armeria.server.ServerBuilder;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.function.UnaryOperator;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -31,14 +31,7 @@ class ArmeriaHeaderSelectorTest {
   @RegisterExtension
   static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  private Server server;
-
-  @AfterEach
-  void stopServer() {
-    if (server != null) {
-      server.stop().join();
-    }
-  }
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
   void clientCapturesHeadersMatchingSelectorPatterns() {
@@ -176,7 +169,7 @@ class ArmeriaHeaderSelectorTest {
     assertNoCapturedHeaders();
   }
 
-  private int startServer(UnaryOperator<ServerBuilder> customizer) {
+  private static int startServer(UnaryOperator<ServerBuilder> customizer) {
     ServerBuilder sb = Server.builder();
     sb.http(0);
     sb.service(
@@ -189,7 +182,8 @@ class ArmeriaHeaderSelectorTest {
                     .build(),
                 HttpData.ofUtf8("success")));
 
-    server = customizer.apply(sb).build();
+    Server server = customizer.apply(sb).build();
+    cleanup.deferCleanup(() -> server.stop().join());
     server.start().join();
     return server.activeLocalPort();
   }
