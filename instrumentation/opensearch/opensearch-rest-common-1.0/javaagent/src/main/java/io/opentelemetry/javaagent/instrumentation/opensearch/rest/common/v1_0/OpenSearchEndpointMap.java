@@ -139,6 +139,7 @@ final class OpenSearchEndpointMap {
     put(map, "POST", "indices.refresh", "/_refresh", "/{index}/_refresh");
     put(map, "GET", "indices.refresh", "/_refresh", "/{index}/_refresh");
     put(map, "POST", "indices.flush", "/_flush", "/{index}/_flush");
+    put(map, "GET", "indices.flush", "/_flush", "/{index}/_flush");
     put(map, "POST", "indices.open", "/{index}/_open");
     put(map, "POST", "indices.close", "/{index}/_close");
 
