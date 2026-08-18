@@ -130,6 +130,7 @@ class JavaHttpServerHeaderSelectorTest {
 
   private void start(Filter filter) throws IOException {
     server = HttpServer.create(new InetSocketAddress(0), 0);
+    cleanup.deferCleanup(() -> server.stop(0));
     HttpContext context =
         server.createContext(
             "/",
@@ -143,7 +144,6 @@ class JavaHttpServerHeaderSelectorTest {
             });
     context.getFilters().add(filter);
     server.start();
-    cleanup.deferCleanup(() -> server.stop(0));
   }
 
   private void send() throws IOException {

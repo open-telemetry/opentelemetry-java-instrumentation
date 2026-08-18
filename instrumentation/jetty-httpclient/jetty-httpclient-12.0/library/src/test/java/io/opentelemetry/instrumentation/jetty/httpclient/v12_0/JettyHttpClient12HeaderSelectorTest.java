@@ -33,6 +33,7 @@ class JettyHttpClient12HeaderSelectorTest {
   @BeforeEach
   void startServer() throws Exception {
     server = HttpServer.create(new InetSocketAddress(0), 0);
+    cleanup.deferCleanup(() -> server.stop(0));
     server.createContext(
         "/",
         exchange -> {
@@ -42,7 +43,6 @@ class JettyHttpClient12HeaderSelectorTest {
           exchange.close();
         });
     server.start();
-    cleanup.deferCleanup(() -> server.stop(0));
   }
 
   @Test

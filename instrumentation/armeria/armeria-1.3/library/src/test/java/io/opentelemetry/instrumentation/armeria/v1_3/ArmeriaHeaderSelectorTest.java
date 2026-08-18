@@ -183,8 +183,8 @@ class ArmeriaHeaderSelectorTest {
                 HttpData.ofUtf8("success")));
 
     Server server = customizer.apply(sb).build();
-    server.start().join();
     cleanup.deferCleanup(() -> server.stop().join());
+    server.start().join();
     return server.activeLocalPort();
   }
 
