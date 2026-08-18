@@ -8,6 +8,8 @@ spotless {
   // Match .gitattributes without probing source files during configuration.
   lineEndings = LineEnding.UNIX
 
+  // Kotlin has broad usage and ktlint support in Flint. Keep the much smaller Scala source set
+  // in Spotless rather than adding a separate Flint integration for it.
   plugins.withId("scala") {
     scala {
       scalafmt()
