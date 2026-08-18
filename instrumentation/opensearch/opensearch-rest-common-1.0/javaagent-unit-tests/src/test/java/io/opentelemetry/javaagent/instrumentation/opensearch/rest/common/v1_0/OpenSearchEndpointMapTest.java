@@ -177,6 +177,14 @@ class OpenSearchEndpointMapTest {
   }
 
   @Test
+  void getAnalyzeRoutesDeriveOperationName() {
+    assertThat(OpenSearchEndpointMap.getOperationName("GET", "_analyze"))
+        .isEqualTo("indices.analyze");
+    assertThat(OpenSearchEndpointMap.getOperationName("GET", "test-index/_analyze"))
+        .isEqualTo("indices.analyze");
+  }
+
+  @Test
   void masksIdBearingSegmentAndKeepsStructureIntact() {
     assertThat(OpenSearchEndpointMap.maskPathParameters("PUT", "test-index/_doc/12345"))
         .isEqualTo("test-index/_doc/?");

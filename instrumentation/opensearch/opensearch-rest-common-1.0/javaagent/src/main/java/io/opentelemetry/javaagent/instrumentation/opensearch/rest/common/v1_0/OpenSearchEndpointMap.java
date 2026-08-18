@@ -163,6 +163,7 @@ final class OpenSearchEndpointMap {
         "/{index}/_alias/{name}",
         "/{index}/_aliases/{name}");
     put(map, "POST", "indices.update_aliases", "/_aliases");
+    put(map, "GET", "indices.analyze", "/_analyze", "/{index}/_analyze");
     put(map, "POST", "indices.analyze", "/_analyze", "/{index}/_analyze");
 
     // cluster and node health
