@@ -44,9 +44,8 @@ final class KafkaBatchRecordAttributes {
 
   // this has to be derived from the same partition set that
   // KafkaReceiveAttributesGetter#getDestination uses, and not from the records themselves,
-  // otherwise
-  // a batch that carries an empty partition of a second topic would leave the batch span without a
-  // destination name while still keeping the partition id and the offset on it
+  // otherwise a batch that carries an empty partition of a second topic would leave the batch span
+  // without a destination name while still keeping the partition id and the offset on it
   private static boolean destinationVaries(ConsumerRecords<?, ?> records) {
     Set<String> destinations = new HashSet<>();
     for (TopicPartition partition : records.partitions()) {
