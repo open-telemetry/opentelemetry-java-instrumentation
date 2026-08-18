@@ -65,9 +65,15 @@ final class CassandraSqlAttributesGetter
     }
     EndPoint endPoint = coordinator.getEndPoint();
     if (endPoint instanceof DefaultEndPoint) {
-      // resolve() returns an existing InetSocketAddress, it does not do a dns resolve,
+      // resolve() returns the already-resolved InetSocketAddress, it does not do a dns lookup.
       return (InetSocketAddress) endPoint.resolve();
     }
+    // Under SNI (proxied deployments such as DataStax Astra) the peer is the proxy, but the only
+    // public accessor for it, SniEndPoint.resolve(), performs a dns lookup on every call and
+    // round-robins across the resolved addresses using a shared static counter that the driver
+    // also uses to pick a connection. Calling it here would add a per-span dns lookup, record a
+    // rotating address that may not match the connection, and perturb the driver's own rotation,
+    // so network.peer.* is left unset under SNI.
     return null;
   }
 
