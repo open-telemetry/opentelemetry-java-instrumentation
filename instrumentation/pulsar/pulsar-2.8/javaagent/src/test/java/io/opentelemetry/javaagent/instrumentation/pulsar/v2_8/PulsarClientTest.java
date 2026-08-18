@@ -1252,4 +1252,18 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))));
   }
+
+  @Test
+  void testMessageListenerNotWrappedMultipleTimes() {
+    org.apache.pulsar.client.impl.conf.ConsumerConfigurationData<String> conf =
+        new org.apache.pulsar.client.impl.conf.ConsumerConfigurationData<>();
+    MessageListener<String> originalListener = (consumer, msg) -> {};
+    conf.setMessageListener(originalListener);
+
+    MessageListener<String> wrapped1 = conf.getMessageListener();
+    MessageListener<String> wrapped2 = conf.getMessageListener();
+
+    assertThat(wrapped1).isInstanceOf(MessageListenerInstrumentation.MessageListenerWrapper.class);
+    assertThat(wrapped2).isSameAs(wrapped1);
+  }
 }
