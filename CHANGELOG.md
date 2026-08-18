@@ -41,6 +41,15 @@
   which select message headers by glob pattern instead of by exact name only. The deprecated
   property and methods still match header names literally; values containing `*` or `?` are ignored
   and logged, since they never supported wildcards.
+- Deprecate the `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods on
+  `HttpClientAttributesExtractorBuilder` and `HttpServerAttributesExtractorBuilder` in favor of
+  `setRequestHeaders(IncludeExclude)` and `setResponseHeaders(IncludeExclude)`, which select HTTP
+  headers by glob pattern instead of by exact name only. Wildcard and exclude-only selectors resolve
+  header names through the new `HttpCommonAttributesGetter#getHttpRequestHeaderNames` and
+  `#getHttpResponseHeaderNames` methods, so instrumentations that do not implement them keep
+  supporting exact names. The deprecated methods still match header names literally, so `*` and `?`
+  are not treated as glob patterns.
+  ([#19598](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19598))
 - Deprecate the Logback appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of the new
   `experimental.mdc-attributes.included` and `experimental.mdc-attributes.excluded` selectors, which
@@ -49,6 +58,22 @@
   setting continues to select MDC keys literally, except that the single value `*` selects every MDC
   key, and it may be removed in the next minor release.
   ([#19520](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19520))
+- Deprecate the Logback appender `experimental.capture-key-value-pair-attributes` configuration
+  property and `OpenTelemetryAppender#setCaptureKeyValuePairAttributes(boolean)` in favor of the new
+  `experimental.key-value-pair-attributes.included` and
+  `experimental.key-value-pair-attributes.excluded` selectors, which are also available in
+  `logback.xml` as `keyValuePairAttributesIncluded` and `keyValuePairAttributesExcluded` and
+  programmatically as `OpenTelemetryAppender#setKeyValuePairAttributes(IncludeExclude)`. The
+  deprecated setting continues to capture every key value pair when enabled.
+  ([#19600](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19600))
+- Deprecate the Logback appender `experimental.capture-logger-context-attributes` configuration
+  property and `OpenTelemetryAppender#setCaptureLoggerContext(boolean)` in favor of the new
+  `experimental.logger-context-attributes.included` and
+  `experimental.logger-context-attributes.excluded` selectors, which are also available in
+  `logback.xml` as `loggerContextAttributesIncluded` and `loggerContextAttributesExcluded` and
+  programmatically as `OpenTelemetryAppender#setLoggerContextAttributes(IncludeExclude)`. The
+  deprecated setting continues to capture every logger context property when enabled.
+  ([#19605](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19605))
 - Deprecate the Log4j appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender.Builder#setCaptureContextDataAttributes(String)` in favor of
   include/exclude context data selectors and
@@ -56,6 +81,12 @@
   and method keep their existing behavior, which matches keys literally unless the list contains
   only `*`, and may be removed in the next minor release.
   ([#19521](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19521))
+- Deprecate the Log4j appender `experimental.capture-map-message-attributes` configuration property
+  and `OpenTelemetryAppender.Builder#setCaptureMapMessageAttributes(boolean)` in favor of
+  include/exclude `MapMessage` attribute selectors and
+  `OpenTelemetryAppender.Builder#setMapMessageAttributes(IncludeExclude)`. The deprecated property
+  and method still select the same attributes, with `true` selecting every `MapMessage` attribute.
+  ([#19599](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19599))
 - Deprecate `otel.instrumentation.servlet.experimental.capture-request-parameters` and
   `Experimental#setCaptureRequestParameters(...)` in favor of the
   `otel.instrumentation.servlet.experimental.request-parameters.{included,excluded}` properties and

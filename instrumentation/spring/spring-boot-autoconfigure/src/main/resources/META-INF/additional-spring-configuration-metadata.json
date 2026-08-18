@@ -464,10 +464,25 @@
       "defaultValue": false
     },
     {
+      "name": "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Comma-separated list of case-sensitive glob patterns for Logback key value pair keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all key value pair attributes. Excluded patterns take precedence over included patterns. No key value pair attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes` setting is configured; configuring only excluded patterns captures all key value pair attributes that do not match them. Captured key value pair attributes may contain sensitive information."
+    },
+    {
+      "name": "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Comma-separated list of case-sensitive glob patterns for Logback key value pair keys not to capture as log attributes. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. No key value pair attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes` setting is configured; configuring only excluded patterns captures all key value pair attributes that do not match them. Captured key value pair attributes may contain sensitive information."
+    },
+    {
       "name": "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes",
       "type": "java.lang.Boolean",
-      "description": "Enable the capture of Logback key value pairs as attributes.",
-      "defaultValue": false
+      "description": "Deprecated setting that enables the capture of all attributes from Logback key value pairs. It is ignored when `otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included` or `otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded` is configured, and it may be removed in the next minor release. Use `otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included` instead.",
+      "defaultValue": false,
+      "deprecation": {
+        "level": "warning",
+        "reason": "Use the key value pair attribute selector properties instead.",
+        "replacement": "otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included"
+      }
     },
     {
       "name": "otel.instrumentation.logback-appender.experimental-log-attributes",
@@ -476,10 +491,25 @@
       "defaultValue": false
     },
     {
+      "name": "otel.instrumentation.logback-appender.experimental.logger-context-attributes.included",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Comma-separated list of case-sensitive glob patterns for Logback logger context property keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all logger context attributes. Excluded patterns take precedence over included patterns. No logger context attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes` setting is configured; configuring only excluded patterns captures all logger context attributes that do not match them. Captured logger context attributes may contain sensitive information."
+    },
+    {
+      "name": "otel.instrumentation.logback-appender.experimental.logger-context-attributes.excluded",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Comma-separated list of case-sensitive glob patterns for Logback logger context property keys not to capture as log attributes. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. No logger context attributes are captured unless an included pattern, an excluded pattern, or the deprecated `otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes` setting is configured; configuring only excluded patterns captures all logger context attributes that do not match them. Captured logger context attributes may contain sensitive information."
+    },
+    {
       "name": "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes",
       "type": "java.lang.Boolean",
-      "description": "Enable the capture of Logback logger context properties as attributes.",
-      "defaultValue": false
+      "description": "Deprecated setting that enables the capture of all attributes from the Logback logger context. It is ignored when `otel.instrumentation.logback-appender.experimental.logger-context-attributes.included` or `otel.instrumentation.logback-appender.experimental.logger-context-attributes.excluded` is configured, and it may be removed in the next minor release. Use `otel.instrumentation.logback-appender.experimental.logger-context-attributes.included` instead.",
+      "defaultValue": false,
+      "deprecation": {
+        "level": "warning",
+        "reason": "Use the logger context attribute selector properties instead.",
+        "replacement": "otel.instrumentation.logback-appender.experimental.logger-context-attributes.included"
+      }
     },
     {
       "name": "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes",

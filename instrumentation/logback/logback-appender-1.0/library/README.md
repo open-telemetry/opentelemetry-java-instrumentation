@@ -99,12 +99,16 @@ The available settings are:
 | `captureExperimentalAttributes`      | Boolean | `false` | Enable the capture of experimental log attributes `thread.name` and `thread.id`.                                                                                                                                                                                                  |
 | `captureCodeAttributes`              | Boolean | `false` | Enable the capture of [source code attributes]. Note that capturing source code attributes at logging sites might add a performance overhead.                                                                                                                                     |
 | `captureMarkerAttribute`             | Boolean | `false` | Enable the capture of Logback markers as attributes.                                                                                                                                                                                                                              |
-| `captureKeyValuePairAttributes`      | Boolean | `false` | Enable the capture of Logback key value pairs as attributes.                                                                                                                                                                                                                      |
-| `captureLoggerContext`               | Boolean | `false` | Enable the capture of Logback logger context properties as attributes.                                                                                                                                                                                                            |
+| `captureKeyValuePairAttributes`      | Boolean | `false` | **Deprecated.** Enable the capture of all Logback key value pairs as attributes. It may be removed in the next minor release; use `keyValuePairAttributesIncluded` instead.                                                                                                       |
+| `captureLoggerContext`               | Boolean | `false` | **Deprecated.** Enable the capture of all Logback logger context properties as attributes. It may be removed in the next minor release; use `loggerContextAttributesIncluded` instead.                                                                                            |
 | `captureTemplate`                    | Boolean | `false` | Enable the capture of Logback log event message template (if arguments are provided).                                                                                                                                                                                             |
 | `captureArguments`                   | Boolean | `false` | Enable the capture of Logback log event arguments.                                                                                                                                                                                                                                |
 | `captureLogstashMarkerAttributes`    | Boolean | `false` | Enable the capture of Logstash markers, supported are those added to logs via `Markers.append()`, `Markers.appendEntries()`, `Markers.appendArray()` and `Markers.appendRaw()` methods.                                                                                           |
 | `captureLogstashStructuredArguments` | Boolean | `false` | Enable the capture of Logstash StructuredArguments as attributes (e.g., `StructuredArguments.v()` and `StructuredArguments.keyValue()`).                                                                                                                                          |
+| `keyValuePairAttributesIncluded`     | String  |         | Comma-separated list of case-sensitive glob patterns for Logback key value pair keys to capture as log attributes.                                                                                                                                                                |
+| `keyValuePairAttributesExcluded`     | String  |         | Comma-separated list of case-sensitive glob patterns for Logback key value pair keys not to capture as log attributes.                                                                                                                                                            |
+| `loggerContextAttributesIncluded`    | String  |         | Comma-separated list of case-sensitive glob patterns for Logback logger context property keys to capture as log attributes.                                                                                                                                                       |
+| `loggerContextAttributesExcluded`    | String  |         | Comma-separated list of case-sensitive glob patterns for Logback logger context property keys not to capture as log attributes.                                                                                                                                                   |
 | `mdcAttributesIncluded`              | String  |         | Comma-separated list of case-sensitive glob patterns for MDC keys to capture as log attributes.                                                                                                                                                                                   |
 | `mdcAttributesExcluded`              | String  |         | Comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log attributes.                                                                                                                                                                               |
 | `captureMdcAttributes`               | String  |         | **Deprecated.** Comma-separated list of MDC keys to capture as log attributes. Keys are matched literally, including `*` and `?`, except that the single value `*` captures all MDC attributes. It may be removed in the next minor release; use `mdcAttributesIncluded` instead. |
@@ -132,6 +136,68 @@ No MDC attributes are captured when all of these are absent or empty.
 
 Captured MDC attributes may contain sensitive information. Configure included and excluded patterns
 to limit the data exported as log attributes.
+
+The key value pair attributes captured from the SLF4J 2.x fluent API are selected the same way:
+
+```xml
+<appender name="OpenTelemetry" class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+  <keyValuePairAttributesIncluded>request-*,user-?</keyValuePairAttributesIncluded>
+  <keyValuePairAttributesExcluded>*-secret</keyValuePairAttributesExcluded>
+</appender>
+```
+
+```java
+appender.setKeyValuePairAttributes(
+    IncludeExclude.builder()
+        .setIncluded("request-*", "user-?")
+        .setExcluded("*-secret")
+        .build());
+```
+
+Key value pair keys and selector patterns are matched case-sensitively. `?` matches any single
+character and `*` matches any number of characters, including none, so `*` captures all key value
+pair attributes. Excluded patterns take precedence over included patterns, so a selector with only
+excluded patterns captures every key value pair attribute that it does not exclude.
+
+Key value pair attributes are captured only when at least one of these settings is configured. A
+non-empty `setKeyValuePairAttributes(IncludeExclude)` selector takes precedence over
+`keyValuePairAttributesIncluded` and `keyValuePairAttributesExcluded`, which in turn take precedence
+over the deprecated `captureKeyValuePairAttributes`. No key value pair attributes are captured when
+all of these are absent or empty.
+
+Captured key value pair attributes may contain sensitive information. Configure included and
+excluded patterns to limit the data exported as log attributes.
+
+The logger context properties are selected the same way:
+
+```xml
+<appender name="OpenTelemetry" class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+  <loggerContextAttributesIncluded>app.*</loggerContextAttributesIncluded>
+  <loggerContextAttributesExcluded>*-secret</loggerContextAttributesExcluded>
+</appender>
+```
+
+```java
+appender.setLoggerContextAttributes(
+    IncludeExclude.builder()
+        .setIncluded("app.*")
+        .setExcluded("*-secret")
+        .build());
+```
+
+Logger context property keys and selector patterns are matched case-sensitively. `?` matches any
+single character and `*` matches any number of characters, including none, so `*` captures all
+logger context properties. Excluded patterns take precedence over included patterns, so a selector
+with only excluded patterns captures every logger context property that it does not exclude.
+
+Logger context properties are captured only when at least one of these settings is configured. A
+non-empty `setLoggerContextAttributes(IncludeExclude)` selector takes precedence over
+`loggerContextAttributesIncluded` and `loggerContextAttributesExcluded`, which in turn take
+precedence over the deprecated `captureLoggerContext`. No logger context properties are captured
+when all of these are absent or empty.
+
+Captured logger context properties may contain sensitive information. Configure included and
+excluded patterns to limit the data exported as log attributes.
 
 The `otel.event.name` key is supported in key-value pairs (SLF4J 2.x fluent API), MDC entries, Logstash markers (e.g., `Markers.append("otel.event.name", ...)`), and Logstash structured arguments (e.g., `StructuredArguments.keyValue("otel.event.name", ...)`). When present, its value is used as the log event name and is not emitted as an attribute.
 

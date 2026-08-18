@@ -11,6 +11,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
+import io.opentelemetry.instrumentation.docs.utils.DeclarativeConfigYamlGenerator;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import java.io.BufferedWriter;
@@ -48,6 +49,18 @@ public class DocGeneratorApplication {
           "# For more information see: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13468\n\n");
       writer.write("file_format: 0.6\n\n");
       YamlHelper.generateInstrumentationYaml(modules, writer);
+    }
+
+    try (BufferedWriter configWriter =
+        Files.newBufferedWriter(
+            baseRepoPath.resolve("docs/declarative-configuration-example.yaml"))) {
+      configWriter.write("# This file is generated and should not be manually edited.\n");
+      configWriter.write(
+          "# It shows all available instrumentation configurations in declarative config format.\n\n");
+      configWriter.write(
+          "# For an interactive builder, see: https://explorer.opentelemetry.io/java-agent/configuration/builder.\n\n");
+      configWriter.write("file_format: '1.0'\n\n");
+      DeclarativeConfigYamlGenerator.generateConfigurationYaml(modules, configWriter);
     }
 
     printStats(modules);

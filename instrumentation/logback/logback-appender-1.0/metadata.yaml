@@ -24,16 +24,90 @@ configurations:
       Enables the capture of the Logback marker attribute.
     type: boolean
     default: false
+  - name: otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included
+    declarative_name: java.logback_appender.key_value_pair_attributes/development.included
+    description: >
+      Comma-separated list of case-sensitive glob patterns for Logback key value pair keys to
+      capture as log attributes. "*" matches any number of characters and "?" matches one
+      character, so "*" captures all key value pair attributes. Excluded patterns take precedence
+      over included patterns. No key value pair attributes are captured unless an included pattern,
+      an excluded pattern, or the deprecated
+      otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes setting
+      is configured; configuring only excluded patterns captures all key value pair attributes that
+      do not match them. Captured key value pair attributes may contain sensitive information.
+    type: list
+    default: ''
+    examples:
+      - "custom-key"
+      - "request-*,user-?"
+  - name: otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded
+    declarative_name: java.logback_appender.key_value_pair_attributes/development.excluded
+    description: >
+      Comma-separated list of case-sensitive glob patterns for Logback key value pair keys not to
+      capture as log attributes. "*" matches any number of characters and "?" matches one
+      character. Excluded patterns take precedence over included patterns. No key value pair
+      attributes are captured unless an included pattern, an excluded pattern, or the deprecated
+      otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes setting
+      is configured; configuring only excluded patterns captures all key value pair attributes that
+      do not match them. Captured key value pair attributes may contain sensitive information.
+    type: list
+    default: ''
+    examples:
+      - "*-secret"
+      - "password,token"
   - name: otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes
     declarative_name: java.logback_appender.capture_key_value_pair_attributes/development
     description: >
-      Enables the capture of attributes from Logback key-value pairs.
+      Deprecated setting that enables the capture of all attributes from Logback key value pairs.
+      It is ignored when
+      otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included or
+      otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded is
+      configured, and it may be removed in the next minor release. Use
+      otel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included
+      instead.
     type: boolean
     default: false
+  - name: otel.instrumentation.logback-appender.experimental.logger-context-attributes.included
+    declarative_name: java.logback_appender.logger_context_attributes/development.included
+    description: >
+      Comma-separated list of case-sensitive glob patterns for Logback logger context property keys
+      to capture as log attributes. "*" matches any number of characters and "?" matches one
+      character, so "*" captures all logger context attributes. Excluded patterns take precedence
+      over included patterns. No logger context attributes are captured unless an included pattern,
+      an excluded pattern, or the deprecated
+      otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes setting
+      is configured; configuring only excluded patterns captures all logger context attributes that
+      do not match them. Captured logger context attributes may contain sensitive information.
+    type: list
+    default: ''
+    examples:
+      - "app.version"
+      - "app.*,deployment-?"
+  - name: otel.instrumentation.logback-appender.experimental.logger-context-attributes.excluded
+    declarative_name: java.logback_appender.logger_context_attributes/development.excluded
+    description: >
+      Comma-separated list of case-sensitive glob patterns for Logback logger context property keys
+      not to capture as log attributes. "*" matches any number of characters and "?" matches one
+      character. Excluded patterns take precedence over included patterns. No logger context
+      attributes are captured unless an included pattern, an excluded pattern, or the deprecated
+      otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes setting
+      is configured; configuring only excluded patterns captures all logger context attributes that
+      do not match them. Captured logger context attributes may contain sensitive information.
+    type: list
+    default: ''
+    examples:
+      - "*-secret"
+      - "password,token"
   - name: otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes
     declarative_name: java.logback_appender.capture_logger_context_attributes/development
     description: >
-      Enables the capture of attributes from the Logback logger context.
+      Deprecated setting that enables the capture of all attributes from the Logback logger context.
+      It is ignored when
+      otel.instrumentation.logback-appender.experimental.logger-context-attributes.included or
+      otel.instrumentation.logback-appender.experimental.logger-context-attributes.excluded is
+      configured, and it may be removed in the next minor release. Use
+      otel.instrumentation.logback-appender.experimental.logger-context-attributes.included
+      instead.
     type: boolean
     default: false
   - name: otel.instrumentation.logback-appender.experimental.capture-template

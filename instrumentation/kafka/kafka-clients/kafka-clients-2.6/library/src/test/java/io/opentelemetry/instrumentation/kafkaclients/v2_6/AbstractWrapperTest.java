@@ -29,6 +29,8 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
 
   static final String greeting = "Hello Kafka!";
 
+  protected long consumedOffset;
+
   @ParameterizedTest
   @CsvSource({
     "true, true",
@@ -75,6 +77,7 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
     for (ConsumerRecord<?, ?> record : records) {
       assertThat(record.value()).isEqualTo(greeting);
       assertThat(record.key()).isNull();
+      consumedOffset = record.offset();
       testing.runWithSpan("process child", () -> {});
     }
 

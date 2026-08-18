@@ -137,6 +137,8 @@ class DbExecutionTest {
     "r2dbc:mariadb://localhost/db, mariadb",
     "r2dbc:mssql://localhost/db, microsoft.sql_server",
     "r2dbc:oracle://localhost/db, oracle.db",
+    "r2dbc:db2://localhost/db, ibm.db2",
+    "r2dbc:clickhouse://localhost/db, clickhouse",
     "r2dbc:h2:mem:///testdb, h2database",
     "r2dbc:unknown://localhost/db, other_sql",
   })

@@ -56,7 +56,7 @@ public final class HostIdResource {
   private static final Logger logger = Logger.getLogger(HostIdResource.class.getName());
 
   // copied from HostIncubatingAttributes
-  static final AttributeKey<String> HOST_ID = AttributeKey.stringKey("host.id");
+  private static final AttributeKey<String> HOST_ID = AttributeKey.stringKey("host.id");
 
   /**
    * @deprecated This constant is no longer used and will be removed in a future release. The

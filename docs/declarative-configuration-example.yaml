@@ -1,0 +1,747 @@
+# This file is generated and should not be manually edited.
+# It shows all available instrumentation configurations in declarative config format.
+
+# For an interactive builder, see: https://explorer.opentelemetry.io/java-agent/configuration/builder.
+
+file_format: '1.0'
+
+instrumentation/development:
+  general:
+    http:
+      client:
+        # List of HTTP request headers to capture in HTTP client telemetry.
+        request_captured_headers: []
+
+        # List of HTTP response headers to capture in HTTP client telemetry.
+        response_captured_headers: []
+      server:
+        # List of HTTP request headers to capture in HTTP server telemetry.
+        request_captured_headers: []
+
+        # List of HTTP response headers to capture in HTTP server telemetry.
+        response_captured_headers: []
+    sanitization:
+      url:
+        # List of URL query parameter names whose values are redacted in URL attributes. See
+        # https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+        sensitive_query_parameters:
+          - AWSAccessKeyId
+          - Signature
+          - X-Amz-Signature
+          - X-Amz-Credential
+          - X-Amz-Security-Token
+          - sig
+          - X-Goog-Signature
+
+    # Opt-in to emit stable semantic conventions instead of the old experimental semantic
+    # conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`,
+    # `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously.
+    # Stable semantic conventions will become the default in version 3.0 of the agent.
+    stability_opt_in_list: ''
+  java:
+    apache_elasticjob:
+      # Enables experimental span attributes `job.system`, `scheduling.apache-elasticjob.job.name`,
+      # `scheduling.apache-elasticjob.task.id`, `scheduling.apache-elasticjob.sharding.item.index`,
+      # `scheduling.apache-elasticjob.sharding.total.count`,
+      # `scheduling.apache-elasticjob.sharding.item.parameter`, and
+      # `scheduling.apache-elasticjob.job.type`.
+      experimental_span_attributes/development: false
+    apache_shenyu:
+      # Enables experimental `apache-shenyu.meta.` prefixed span attributes `app-name`,
+      # `service-name`, `context-path`, `param-types`, `id`, `method-name`, `rpc-type`, `path` and
+      # `rpc-ext`.
+      experimental_span_attributes/development: false
+    aws_lambda:
+      # Flush timeout in milliseconds.
+      flush_timeout: 10000
+    aws_sdk:
+      # Enables the experimental span attributes `aws.agent`, `aws.queue.name`,
+      # `aws.lambda.function.arn` and `aws.lambda.function.name` for AWS SDK instrumentation.
+      experimental_span_attributes/development: false
+
+      # Determines whether errors returned by each individual HTTP request should be recorded as
+      # events for the SDK span.
+      record_individual_http_error/development: false
+
+      # Determines whether the configured TextMapPropagator should be used to inject into supported
+      # messaging attributes (for SQS).
+      use_propagator_for_messaging/development: false
+    camel:
+      # Enable the capture of experimental `camel.uri`, `camel.kafka.partitionKey`,
+      # `camel.kafka.key` and `camel.kafka.offset` span attributes.
+      experimental_span_attributes/development: false
+    cassandra:
+      query_sanitization:
+        # Enables query sanitization for Cassandra queries. Takes precedence over
+        # otel.instrumentation.common.db.query-sanitization.enabled.
+        enabled: true
+    common:
+      controller_telemetry/development:
+        # Enables the creation of experimental controller spans.
+        enabled: false
+      db:
+        query_sanitization:
+          # Enables query sanitization for database queries.
+          enabled: true
+      enduser:
+        id:
+          # Enables capturing the enduser.id attribute. This property and the associated attribute
+          # are not supported when v3 preview is enabled.
+          enabled: false
+        role:
+          # Enables capturing the enduser.role attribute. This property and the associated attribute
+          # are not supported when v3 preview is enabled.
+          enabled: false
+        scope:
+          # Enables capturing the enduser.scope attribute when v3 preview is not enabled. This
+          # property is not honored when v3 preview is enabled.
+          enabled: false
+      gen_ai:
+        # Determines whether Generative AI events include full content of user and assistant
+        # messages. Note that full content can have data privacy and size concerns and care should
+        # be taken when enabling this
+        capture_message_content: false
+      http:
+        client:
+          # Enable the capture of experimental HTTP client telemetry. Adds the
+          # `http.request.body.size` and `http.response.body.size` attributes to spans, and records
+          # `http.client.request.body.size` and `http.client.response.body.size` metrics.
+          emit_experimental_telemetry/development: false
+
+          # Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs.
+          # Only applied when experimental HTTP client telemetry is enabled.
+          # Each list entry is an object with the following properties:
+          #   pattern (string, required): Regular expression matched against the request URL.
+          #   template (string, required): Template used to derive the low-cardinality route.
+          #   override (boolean): Whether this rule overrides an already-applied template.
+          # Example:
+          #   url_template_rules:
+          #     - pattern: /users/\d+
+          #       template: /users/{id}
+          #       override: false
+          url_template_rules: []
+
+        # Configures the instrumentation to recognize an alternative set of HTTP request methods.
+        # All other methods will be treated as `_OTHER`.
+        known_methods:
+          - CONNECT
+          - DELETE
+          - GET
+          - HEAD
+          - OPTIONS
+          - PATCH
+          - POST
+          - PUT
+          - TRACE
+        server:
+          # Enable the capture of experimental HTTP server telemetry. Adds the
+          # `http.request.body.size` and `http.response.body.size` attributes to spans, and records
+          # `http.server.request.body.size` and `http.server.response.body.size` metrics.
+          emit_experimental_telemetry/development: false
+      logging:
+        # Specifies the key name used to store the span ID in the logging context.
+        span_id_key: span_id
+
+        # Specifies the key name used to store the trace flags in the logging context.
+        trace_flags_key: trace_flags
+
+        # Specifies the key name used to store the trace ID in the logging context.
+        trace_id_key: trace_id
+      mdc:
+        # Specifies which resource attributes to add to the logging context as a comma-separated
+        # list of attribute keys.
+        resource_attributes: []
+      messaging:
+        # Deprecated: use `otel.instrumentation.messaging.experimental.headers.included` instead. A
+        # comma-separated list of header names to capture as span attributes. It does not support
+        # glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other
+        # entry is matched as a literal header name.
+        capture_headers/development: []
+        headers/development:
+          # A comma-separated list of message header name patterns to exclude from span attributes.
+          # Excluded patterns take precedence over included patterns. Matching is case-sensitive.
+          # `?` matches one character and `*` matches zero or more characters. If included is not
+          # configured, all non-excluded headers are captured, which may expose sensitive
+          # information.
+          excluded: []
+
+          # A comma-separated list of message header name patterns to capture as span attributes.
+          # Matching is case-sensitive. `?` matches one character and `*` matches zero or more
+          # characters.
+          included: []
+        receive_telemetry/development:
+          # Enables experimental receive telemetry, which will cause consumers to start a new trace,
+          # with only a span link connecting it to the producer trace.
+          enabled: false
+
+      # Used to specify a mapping from host names or IP addresses to peer services.
+      # Each list entry is an object with the following properties:
+      #   peer (string, required): Host name or IP address to match against.
+      #   service_name (string, required): Peer service name to record for matching peers.
+      # Example:
+      #   service_peer_mapping:
+      #     - peer: host
+      #       service_name: serviceName
+      service_peer_mapping: []
+      user:
+        name:
+          # Enables capturing the user.name attribute when v3 preview is enabled. This property and
+          # the associated attribute are not supported when v3 preview is disabled.
+          enabled: false
+        roles:
+          # Enables capturing the user.roles attribute when v3 preview is enabled. This property and
+          # the associated attribute are not supported when v3 preview is disabled.
+          enabled: false
+      view_telemetry/development:
+        # Enables the creation of experimental view spans.
+        enabled: false
+    couchbase:
+      # Enables experimental span attributes emitted from the underlying Couchbase library.
+      experimental_span_attributes/development: false
+    dropwizard_metrics:
+      # Enables the dropwizard metrics instrumentation.
+      enabled: false
+    elasticsearch:
+      # Enable the capture of search query bodies. It is important to note that Elasticsearch
+      # queries may contain personal or sensitive information.
+      capture_search_query: false
+
+      # Enable the capture of `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`,
+      # `elasticsearch.request.indices`, `elasticsearch.request.write.type`,
+      # `elasticsearch.request.write.version`, `elasticsearch.response.status`,
+      # `elasticsearch.shard.replication.failed`, `elasticsearch.shard.replication.successful`,
+      # `elasticsearch.shard.replication.total`, `elasticsearch.type`, and `elasticsearch.version`
+      # experimental span attributes.
+      experimental_span_attributes/development: false
+    executors:
+      # List of Executor subclasses to be instrumented.
+      include: []
+
+      # Whether to instrument all classes that implement the Executor interface.
+      include_all: false
+    external_annotations:
+      # All methods to be excluded from auto-instrumentation by annotation-based advices.
+      exclude_methods: ''
+
+      # Semicolon-separated list of annotation class names to instrument.
+      include: []
+    graphql:
+      # Whether to capture the query in `graphql.document` span attribute.
+      capture_query: true
+      data_fetcher:
+        # Enables span generation for data fetchers.
+        enabled: false
+      operation_name_in_span_name:
+        # Whether GraphQL operation name is added to the span name. WARNING: The GraphQL operation
+        # name is provided by the client and can have high cardinality. Use only when the server is
+        # not exposed to malicious clients.
+        enabled: false
+      query_sanitization:
+        # Enables sanitization of sensitive information from queries so they aren't added as span
+        # attributes.
+        enabled: true
+      trivial_data_fetcher:
+        # Whether to create spans for trivial data fetchers. A trivial data fetcher is one that
+        # simply maps data from an object to a field.
+        enabled: false
+    grpc:
+      capture_metadata:
+        client:
+          # Deprecated: use `otel.instrumentation.grpc.client.request-metadata.included` instead. A
+          # comma-separated list of request metadata keys to capture on client spans. It does not
+          # support glob patterns: an entry containing `*` or `?` is ignored with a warning, and
+          # every other entry is matched as a literal metadata key.
+          request: []
+        server:
+          # Deprecated: use `otel.instrumentation.grpc.server.request-metadata.included` instead. A
+          # comma-separated list of request metadata keys to capture on server spans. It does not
+          # support glob patterns: an entry containing `*` or `?` is ignored with a warning, and
+          # every other entry is matched as a literal metadata key.
+          request: []
+      client:
+        request_metadata:
+          # A comma-separated list of ASCII request metadata key patterns to exclude from client
+          # spans. Excluded patterns take precedence over included patterns. Matching is
+          # case-insensitive. `?` matches one character and `*` matches zero or more characters. If
+          # included is not configured, all non-excluded ASCII metadata is captured, which may
+          # expose sensitive information.
+          excluded: []
+
+          # A comma-separated list of ASCII request metadata key patterns to capture on client
+          # spans. Matching is case-insensitive. `?` matches one character and `*` matches zero or
+          # more characters.
+          included: []
+
+      # Determines whether to emit a span event for each individual message received and sent.
+      emit_message_events: true
+
+      # Enable the capture of experimental span attributes `grpc.received.message_count`,
+      # `grpc.sent.message_count` and `grpc.canceled`.
+      experimental_span_attributes/development: false
+      server:
+        request_metadata:
+          # A comma-separated list of ASCII request metadata key patterns to exclude from server
+          # spans. Excluded patterns take precedence over included patterns. Matching is
+          # case-insensitive. `?` matches one character and `*` matches zero or more characters. If
+          # included is not configured, all non-excluded ASCII metadata is captured, which may
+          # expose sensitive information.
+          excluded: []
+
+          # A comma-separated list of ASCII request metadata key patterns to capture on server
+          # spans. Matching is case-insensitive. `?` matches one character and `*` matches zero or
+          # more characters.
+          included: []
+    guava:
+      # Enables experimental span attribute `guava.canceled` for cancelled operations.
+      experimental_span_attributes/development: false
+    hibernate:
+      # Enables the experimental `hibernate.session_id` span attribute.
+      experimental_span_attributes/development: false
+    hystrix:
+      # Enables capturing the experimental `hystrix.command`, `hystrix.circuit_open` and
+      # `hystrix.group` span attributes.
+      experimental_span_attributes/development: false
+    java_util_logging:
+      # Enables the capture of the log message arguments.
+      capture_arguments/development: false
+
+      # Enables the capture of the log message template (if arguments are provided).
+      capture_template/development: false
+
+      # Enables capturing the experimental `thread.name` and `thread.id` log attributes.
+      experimental_log_attributes/development: false
+    jaxrs:
+      # Enables the experimental `jaxrs.canceled` span attribute.
+      experimental_span_attributes/development: false
+    jboss_logmanager:
+      # Enables the capture of the log message arguments.
+      capture_arguments/development: false
+
+      # Deprecated: use `otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included`
+      # instead. Entries are matched as exact MDC keys rather than as glob patterns, except that a
+      # list containing only `*` captures all MDC attributes; in a multi-entry list, `*` and `?` are
+      # literal characters. It is ignored when an included or excluded pattern is configured, and it
+      # may be removed in the next minor release.
+      capture_mdc_attributes/development: []
+
+      # Enables the capture of the log message template (if arguments are provided).
+      capture_template/development: false
+
+      # Enables the capture of experimental log attributes, including thread name and thread ID.
+      experimental_log_attributes/development: false
+      mdc_attributes/development:
+        # A comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log
+        # attributes. `*` matches any number of characters and `?` matches one character. Excluded
+        # patterns take precedence over included patterns. No MDC attributes are captured unless an
+        # included or excluded pattern, or the deprecated setting, is configured; configuring only
+        # excluded patterns captures all MDC attributes that do not match them. Captured MDC
+        # attributes may contain sensitive information.
+        excluded: []
+
+        # A comma-separated list of case-sensitive glob patterns for MDC keys to capture as log
+        # attributes. `*` matches any number of characters and `?` matches one character. Excluded
+        # patterns take precedence over included patterns. No MDC attributes are captured unless an
+        # included or excluded pattern, or the deprecated setting, is configured; configuring only
+        # excluded patterns captures all MDC attributes that do not match them. Captured MDC
+        # attributes may contain sensitive information.
+        included: []
+    jdbc:
+      # Sets whether the query parameters should be captured as span attributes named
+      # <code>db.query.parameter.&lt;key&gt;</code>. Enabling this option disables the statement
+      # sanitization.<p>WARNING: captured query parameters may contain sensitive information such as
+      # passwords, personally identifiable information or protected health info.
+      capture_query_parameters/development: false
+      query_sanitization:
+        # Enables query sanitization for database queries. Takes precedence over
+        # otel.instrumentation.common.db.query-sanitization.enabled.
+        enabled: true
+      sqlcommenter/development:
+        # Enables augmenting queries with a comment containing the tracing information. See
+        # [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting
+        # queries with tracing context will make query texts unique, which may have adverse impact
+        # on database performance. Consult with database experts before enabling.
+        enabled: false
+      transaction/development:
+        # Enables experimental instrumentation to create spans for COMMIT and ROLLBACK operations.
+        enabled: false
+    jdbc_datasource:
+      # Enables instrumentation of JDBC datasource connections.
+      enabled: false
+    jmx:
+      # List of paths to JMX metric definition YAML files.
+      config: []
+      discovery:
+        # Time in milliseconds between JMX MBean detection attempts.
+        delay: 60000
+
+      # Enables collection of JMX metrics.
+      enabled: true
+      target:
+        # List of predefined JMX target systems to collect metrics for.
+        system: []
+    jsp:
+      # Enables experimental span attributes `jsp.forwardOrigin`, `jsp.requestURL`, `jsp.compiler`,
+      # and `jsp.classFQCN`.
+      experimental_span_attributes/development: false
+    kafka:
+      # Enables the capture of the experimental consumer attributes `kafka.record.queue_time_ms` and
+      # `messaging.kafka.bootstrap.servers`.
+      experimental_span_attributes/development: false
+      producer_propagation:
+        # Enable context propagation for Kafka message producers.
+        enabled: true
+    kubernetes_client:
+      # Enables experimental span attributes `kubernetes-client.namespace` and
+      # `kubernetes-client.name` for Kubernetes API requests.
+      experimental_span_attributes/development: false
+    lettuce:
+      command_encoding_events/development:
+        # Enables capturing `redis.encode.start` and `redis.encode.end` span events.
+        enabled: false
+      connection_telemetry:
+        # Enables connection telemetry spans for Redis connections.
+        enabled: false
+
+      # Enables experimental span attributes `lettuce.command.cancelled` and
+      # `lettuce.command.results.count`.
+      experimental_span_attributes/development: false
+    log4j_appender:
+      # Enables the capture of the log message arguments.
+      capture_arguments/development: false
+
+      # Enables the capture of code location attributes, including file path, class name, method
+      # name, and line number.
+      capture_code_attributes/development: false
+
+      # Deprecated boolean alias for
+      # otel.instrumentation.log4j-appender.experimental.map-message-attributes.included, where true
+      # captures all MapMessage attributes and false captures none. It is ignored when an included
+      # or excluded pattern is configured, and it may be removed in the next minor release.
+      capture_map_message_attributes/development: false
+
+      # Enables the capture of the Log4j marker attribute.
+      capture_marker_attribute/development: false
+
+      # Deprecated include-only alias for
+      # otel.instrumentation.log4j-appender.experimental.mdc-attributes.included. It does not
+      # support glob patterns: a list containing only "*" captures all context data attributes, and
+      # otherwise every entry, including one containing "*" or "?", is matched as a literal context
+      # data key. It is ignored when an included or excluded pattern is configured, and it may be
+      # removed in the next minor release.
+      capture_mdc_attributes/development: []
+
+      # Enables the capture of the log message template (if arguments are provided).
+      capture_template/development: false
+
+      # Enables the capture of experimental log attributes, including thread name and thread ID.
+      experimental_log_attributes/development: false
+      map_message_attributes/development:
+        # Comma-separated list of case-sensitive glob patterns for MapMessage keys not to capture as
+        # log attributes. "*" matches any number of characters and "?" matches one character.
+        # Excluded patterns take precedence over included patterns. No MapMessage attributes are
+        # captured unless an included pattern, an excluded pattern, or the deprecated
+        # otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes setting is
+        # configured; configuring only excluded patterns captures all MapMessage attributes that do
+        # not match them. Captured MapMessage attributes may contain sensitive information.
+        excluded: []
+
+        # Comma-separated list of case-sensitive glob patterns for MapMessage keys to capture as log
+        # attributes. "*" matches any number of characters and "?" matches one character. Excluded
+        # patterns take precedence over included patterns. No MapMessage attributes are captured
+        # unless an included pattern, an excluded pattern, or the deprecated
+        # otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes setting is
+        # configured; configuring only excluded patterns captures all MapMessage attributes that do
+        # not match them. Captured MapMessage attributes may contain sensitive information.
+        included: []
+      mdc_attributes/development:
+        # Comma-separated list of case-sensitive glob patterns for context data keys not to capture
+        # as log attributes. "*" matches any number of characters and "?" matches one character.
+        # Excluded patterns take precedence over included patterns. No context data attributes are
+        # captured unless an included pattern, an excluded pattern, or the deprecated
+        # otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting is
+        # configured; configuring only excluded patterns captures all context data attributes that
+        # do not match them. Captured context data attributes may contain sensitive information.
+        excluded: []
+
+        # Comma-separated list of case-sensitive glob patterns for context data keys to capture as
+        # log attributes. "*" matches any number of characters and "?" matches one character.
+        # Excluded patterns take precedence over included patterns. No context data attributes are
+        # captured unless an included pattern, an excluded pattern, or the deprecated
+        # otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting is
+        # configured; configuring only excluded patterns captures all context data attributes that
+        # do not match them. Captured context data attributes may contain sensitive information.
+        included: []
+    log4j_context_data:
+      # Enables adding baggage entries to the Log4j ThreadContext, prefixed with "baggage.".
+      add_baggage: false
+    logback_appender:
+      # Enables the capture of log message arguments as separate attributes.
+      capture_arguments/development: false
+
+      # Enables the capture of code location attributes, including file path, class name, method
+      # name, and line number.
+      capture_code_attributes/development: false
+
+      # Enables the capture of attributes from Logback key-value pairs.
+      capture_key_value_pair_attributes/development: false
+
+      # Enables the capture of attributes from the Logback logger context.
+      capture_logger_context_attributes/development: false
+
+      # Enables the capture of attributes from Logstash markers.
+      capture_logstash_marker_attributes/development: false
+
+      # Enables the capture of attributes from Logstash structured arguments.
+      capture_logstash_structured_arguments/development: false
+
+      # Enables the capture of the Logback marker attribute.
+      capture_marker_attribute/development: false
+
+      # Deprecated comma-separated list of MDC keys to capture as log attributes. Keys are matched
+      # literally, including "*" and "?", except that the single value "*" captures all MDC
+      # attributes. It is ignored when
+      # otel.instrumentation.logback-appender.experimental.mdc-attributes.included or
+      # otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded is configured,
+      # and it may be removed in the next minor release. Use
+      # otel.instrumentation.logback-appender.experimental.mdc-attributes.included instead.
+      capture_mdc_attributes/development: []
+
+      # Enables the capture of the log message template before parameter substitution.
+      capture_template/development: false
+
+      # Enables the capture of experimental log attributes, including thread name and thread ID.
+      experimental_log_attributes/development: false
+      mdc_attributes/development:
+        # Comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log
+        # attributes. "*" matches any number of characters and "?" matches one character. Excluded
+        # patterns take precedence over included patterns. No MDC attributes are captured unless an
+        # included pattern, an excluded pattern, or the deprecated
+        # otel.instrumentation.logback-appender.experimental.capture-mdc-attributes setting is
+        # configured; configuring only excluded patterns captures all MDC attributes that do not
+        # match them. Captured MDC attributes may contain sensitive information.
+        excluded: []
+
+        # Comma-separated list of case-sensitive glob patterns for MDC keys to capture as log
+        # attributes. "*" matches any number of characters and "?" matches one character, so "*"
+        # captures all MDC attributes. Excluded patterns take precedence over included patterns. No
+        # MDC attributes are captured unless an included pattern, an excluded pattern, or the
+        # deprecated otel.instrumentation.logback-appender.experimental.capture-mdc-attributes
+        # setting is configured; configuring only excluded patterns captures all MDC attributes that
+        # do not match them. Captured MDC attributes may contain sensitive information.
+        included: []
+    logback_mdc:
+      # Enables adding baggage entries to the Logback MDC, prefixed with "baggage.".
+      add_baggage: false
+    methods:
+      # Semicolon-separated list of fully qualified class and method patterns to instrument.
+      include: []
+    micrometer:
+      # Sets the base time unit for the OpenTelemetry MeterRegistry. Supported values: ns, us, ms,
+      # s, min, h, d.
+      base_time_unit: s
+      histogram_gauges:
+        # Deprecated alias for
+        # `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled`. It will be
+        # removed in 3.0.
+        enabled: false
+      histogram_gauges/development:
+        # Enables gauge-based Micrometer histograms for DistributionSummary and Timer instruments.
+        enabled: false
+      prometheus_mode:
+        # Simulates the behavior of Micrometer's PrometheusMeterRegistry. The instruments will be
+        # renamed to match Micrometer instrument naming, and the base time unit will be set to
+        # seconds.
+        enabled: false
+    mongo:
+      query_sanitization:
+        # Enables query sanitization for MongoDB queries. Takes precedence over
+        # otel.instrumentation.common.db.query-sanitization.enabled.
+        enabled: true
+    netty:
+      connection_telemetry:
+        # Enable the creation of Connect and DNS spans.
+        enabled: false
+      ssl_telemetry:
+        # Enable SSL telemetry.
+        enabled: false
+    opensearch:
+      # Enable the capture of sanitized search query bodies. Search queries may contain personal or
+      # sensitive information.
+      capture_search_query: true
+    opentelemetry_extension_annotations:
+      # All methods to be excluded from auto-instrumentation by annotation-based advices.
+      exclude_methods: ''
+    opentelemetry_instrumentation_annotations:
+      # All methods to be excluded from auto-instrumentation by annotation-based advices.
+      exclude_methods: ''
+    oshi:
+      experimental_metrics/development:
+        # Enable the experimental `runtime.java.memory` and `runtime.java.cpu_time` metrics.
+        enabled: false
+    powerjob:
+      # Enables experimental span attributes `job.system`, `scheduling.powerjob.job.id`,
+      # `scheduling.powerjob.job.param`, `scheduling.powerjob.job.instance.param`, and
+      # `scheduling.powerjob.job.type`.
+      experimental_span_attributes/development: false
+    pulsar:
+      # Enables capturing experimental span attribute `messaging.pulsar.message.type` on PRODUCER
+      # spans.
+      experimental_span_attributes/development: false
+    quartz:
+      # Enables the experimental `job.system` span attribute.
+      experimental_span_attributes/development: false
+    r2dbc:
+      query_sanitization:
+        # Enables query sanitization for database queries. Takes precedence over
+        # otel.instrumentation.common.db.query-sanitization.enabled.
+        enabled: true
+      sqlcommenter/development:
+        # Enables augmenting queries with a comment containing the tracing information. See
+        # [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting
+        # queries with tracing context will make query texts unique, which may have adverse impact
+        # on database performance.
+        enabled: false
+    rabbitmq:
+      # Enables experimental span attributes `rabbitmq.command`, `rabbitmq.delivery_mode`,
+      # `rabbitmq.queue`, and `rabbitmq.record.queue_time_ms`.
+      experimental_span_attributes/development: false
+    reactor:
+      # Enables the capture of the experimental `reactor.canceled` attribute on spans when reactive
+      # streams are cancelled.
+      experimental_span_attributes/development: false
+    reactor_netty:
+      connection_telemetry:
+        # Enables the creation of Connect and DNS spans.
+        enabled: false
+    rocketmq_client:
+      # Enables capturing experimental span attributes `messaging.rocketmq.message.tag`,
+      # `messaging.rocketmq.broker_address`, `messaging.rocketmq.send_result`,
+      # `messaging.rocketmq.queue_id`, and `messaging.rocketmq.queue_offset`.
+      experimental_span_attributes/development: false
+    runtime_telemetry:
+      # Enables the capture of experimental JFR-based JVM runtime metrics on Java 17+.
+      emit_experimental_jfr_metrics/development: false
+
+      # Enables the capture of experimental JMX-based JVM runtime metrics.
+      emit_experimental_metrics/development: false
+      jfr_metrics/development:
+        # Excludes JVM runtime metrics from JFR on Java 17+ using exact names or glob patterns with
+        # * and ?. Excluded patterns take precedence over included patterns, including over
+        # shorthand and legacy selections. Configuring this property without included selects all
+        # metrics except those excluded.
+        excluded: []
+
+        # Selects JVM runtime metrics to source from JFR on Java 17+. Supports exact names and glob
+        # patterns with * and ?. Configuring either JFR metric selector property activates JFR. Use
+        # * to select all metrics.
+        included: []
+      package_emitter/development:
+        # Enables creating events for JAR libraries used by the application.
+        enabled: false
+
+        # The number of JAR files processed per second by the package emitter.
+        jars_per_second: 10
+
+      # Deprecated: use `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included`
+      # instead. Prefer JFR over JMX for metrics available from both sources, on Java 17+.
+      prefer_jfr/development: false
+    rxjava:
+      # Enables the experimental span attribute `rxjava.canceled`.
+      experimental_span_attributes/development: false
+    servlet:
+      # Deprecated include-only alias for
+      # `otel.instrumentation.servlet.experimental.request-parameters.included`. It does not support
+      # glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other
+      # entry is matched as a literal request parameter name. It may be removed in the next minor
+      # release.
+      capture_request_parameters/development: []
+
+      # Enables capturing the experimental `servlet.timeout` span attribute.
+      experimental_span_attributes/development: false
+
+      # Experimental setting to inject a JavaScript snippet into HTML responses after the opening
+      # `<head>` tag.
+      javascript_snippet/development: ''
+      request_parameters/development:
+        # A comma-separated list of case-sensitive request parameter name patterns to exclude from
+        # span attributes. `?` matches one character and `*` matches zero or more characters.
+        # Excluded patterns take precedence over included patterns. No request parameters are
+        # captured unless an included or excluded pattern is configured; configuring only excluded
+        # patterns captures all request parameters that do not match them, which may expose
+        # sensitive information.
+        excluded: []
+
+        # A comma-separated list of case-sensitive request parameter name patterns to capture as
+        # span attributes. `?` matches one character and `*` matches zero or more characters.
+        # Excluded patterns take precedence over included patterns. No request parameters are
+        # captured unless an included or excluded pattern is configured; configuring only excluded
+        # patterns captures all request parameters that do not match them, which may expose
+        # sensitive information.
+        included: []
+      trace_id_request_attribute/development:
+        # Enables adding the trace ID and span ID as request attributes for downstream servlet
+        # access.
+        enabled: true
+    spring_batch:
+      chunk/development:
+        # When enabled, a new root span will be created for each chunk processing. Please note that
+        # this may lead to a high number of spans being created.
+        new_trace: false
+
+      # Adds the experimental attribute `job.system` to spans.
+      experimental_span_attributes/development: false
+      item:
+        # When enabled, spans will be created for each item processed. Please note that this may
+        # lead to a high number of spans being created.
+        enabled: false
+    spring_cloud_gateway:
+      # Enables experimental `spring-cloud-gateway.route` attributes (e.g.,
+      # `spring-cloud-gateway.route.id`, `spring-cloud-gateway.route.uri`, etc.) on spans.
+      experimental_span_attributes/development: false
+    spring_integration:
+      # A list of Spring channel name patterns that will be intercepted.
+      global_channel_interceptor_patterns:
+        - '*'
+      producer:
+        # Create producer spans when messages are sent to an output channel. Enable when you're
+        # using a messaging library that doesn't have its own instrumentation for generating
+        # producer spans. Note that the detection of output channels only works for Spring Cloud
+        # Stream `DirectWithAttributesChannel`.
+        enabled: false
+    spring_scheduling:
+      # Adds the experimental span attribute `job.system` with the value `spring_scheduling`.
+      experimental_span_attributes/development: false
+    spring_security:
+      enduser:
+        role:
+          # Prefix of granted authorities identifying roles to capture in the `enduser.role`
+          # semantic attribute. This property is not honored when v3 preview is enabled; use the
+          # `user.roles` variant instead.
+          granted_authority_prefix: ROLE_
+        scope:
+          # Prefix of granted authorities identifying scopes to capture in the `enduser.scope`
+          # semantic attribute. This property and the associated attribute are not supported when v3
+          # preview is enabled.
+          granted_authority_prefix: SCOPE_
+      user:
+        roles:
+          # Prefix of granted authorities identifying roles to capture in the `user.roles` semantic
+          # attribute when v3 preview is enabled. This property is not honored when v3 preview is
+          # disabled; use the `enduser.role` variant instead.
+          granted_authority_prefix: ROLE_
+    spring_webmvc:
+      # Enables the capture of experimental span attributes `spring-webmvc.view.name` and
+      # `spring-webmvc.view.type`.
+      experimental_span_attributes/development: false
+    spymemcached:
+      # Enables experimental span attributes `spymemcached.result` and
+      # `spymemcached.command.cancelled`.
+      experimental_span_attributes/development: false
+    twilio:
+      # Enables experimental span attributes `twilio.type`, `twilio.account`, `twilio.sid`,
+      # `twilio.parentSid`, and `twilio.status`.
+      experimental_span_attributes/development: false
+    xxl_job:
+      # Enables experimental span attributes `job.system`, `scheduling.xxl-job.glue.type`, and
+      # `scheduling.xxl-job.job.id`.
+      experimental_span_attributes/development: false

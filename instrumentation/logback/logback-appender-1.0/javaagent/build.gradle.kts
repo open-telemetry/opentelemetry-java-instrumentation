@@ -44,9 +44,52 @@ dependencies {
   testImplementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("slf4j2ApiTest") {
+      dependencies {
+        implementation("ch.qos.logback:logback-classic") {
+          version {
+            strictly(baseVersion("1.3.0").orLatest())
+          }
+        }
+        implementation("org.slf4j:slf4j-api") {
+          version {
+            strictly(baseVersion("2.0.0").orLatest())
+          }
+        }
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs(
+              "-Dotel.instrumentation.logback-appender.experimental.key-value-pair-attributes.included=key*",
+              "-Dotel.instrumentation.logback-appender.experimental.key-value-pair-attributes.excluded=*2",
+            )
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
   test {
     jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=key?")
+    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.logger-context-attributes.included=key?")
+  }
+
+  val slf4j2ApiTestSourceSet = sourceSets.named("slf4j2ApiTest")
+
+  val testLegacyKeyValuePairAttributes = register<Test>("testLegacyKeyValuePairAttributes") {
+    testClassesDirs = slf4j2ApiTestSourceSet.get().output.classesDirs
+    classpath = slf4j2ApiTestSourceSet.get().runtimeClasspath
+
+    jvmArgs(
+      "-Dotel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes=true"
+    )
+    systemProperty("testKeyValuePairConfiguration", "legacy")
   }
 
   val testMdcAttributeExclusionsOnly = register<Test>("testMdcAttributeExclusionsOnly") {
@@ -90,12 +133,47 @@ tasks {
     systemProperty("testMdcConfiguration", "precedence")
   }
 
+  val testLoggerContextAttributeExclusionsOnly = register<Test>("testLoggerContextAttributeExclusionsOnly") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*LogbackLoggerContextSelectorTest")
+
+    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.logger-context-attributes.excluded=request-secret")
+    systemProperty("testLoggerContextConfiguration", "exclude-only")
+  }
+
+  val testLegacyLoggerContextAttributes = register<Test>("testLegacyLoggerContextAttributes") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*LogbackLoggerContextSelectorTest")
+
+    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-logger-context-attributes=true")
+    systemProperty("testLoggerContextConfiguration", "legacy")
+  }
+
+  val testLoggerContextAttributePrecedence = register<Test>("testLoggerContextAttributePrecedence") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*LogbackLoggerContextSelectorTest")
+
+    jvmArgs(
+      "-Dotel.instrumentation.logback-appender.experimental.logger-context-attributes.included=new",
+      "-Dotel.instrumentation.logback-appender.experimental.capture-logger-context-attributes=true",
+    )
+    systemProperty("testLoggerContextConfiguration", "precedence")
+  }
+
   check {
     dependsOn(
+      testing.suites,
+      testLegacyKeyValuePairAttributes,
       testMdcAttributeExclusionsOnly,
       testLegacyMdcAttributes,
       testLegacyMdcAttributesCaptureAll,
       testMdcAttributePrecedence,
+      testLoggerContextAttributeExclusionsOnly,
+      testLegacyLoggerContextAttributes,
+      testLoggerContextAttributePrecedence,
     )
   }
 }
