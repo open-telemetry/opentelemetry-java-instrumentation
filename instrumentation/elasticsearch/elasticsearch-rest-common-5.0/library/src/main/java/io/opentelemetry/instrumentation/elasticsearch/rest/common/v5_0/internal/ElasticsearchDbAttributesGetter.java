@@ -32,9 +32,11 @@ final class ElasticsearchDbAttributesGetter
   private static final String ELASTICSEARCH = "elasticsearch";
 
   private final boolean captureSearchQuery;
+  private final boolean sanitizeSearchQuery;
 
-  ElasticsearchDbAttributesGetter(boolean captureSearchQuery) {
+  ElasticsearchDbAttributesGetter(boolean captureSearchQuery, boolean sanitizeSearchQuery) {
     this.captureSearchQuery = captureSearchQuery;
+    this.sanitizeSearchQuery = sanitizeSearchQuery;
   }
 
   @Override
@@ -60,12 +62,28 @@ final class ElasticsearchDbAttributesGetter
         && httpEntity.isRepeatable()) {
       // Retrieve HTTP body for search-type Elasticsearch requests when captureSearchQuery is
       // enabled.
-      try (BufferedReader reader =
-          new BufferedReader(new InputStreamReader(httpEntity.getContent(), UTF_8))) {
-        return reader.lines().collect(joining());
-      } catch (IOException e) {
-        logger.log(FINE, "Failed reading HTTP body content.", e);
+      String body = readBody(httpEntity);
+      if (body == null) {
+        return null;
       }
+      if (!sanitizeSearchQuery) {
+        // sanitization was explicitly disabled, so capture the body verbatim
+        return body;
+      }
+      // the masker returns null when the body cannot be sanitized (malformed or non-JSON), in
+      // which case the body is dropped rather than captured raw
+      return ElasticsearchDbQuerySanitizer.sanitize(body);
+    }
+    return null;
+  }
+
+  @Nullable
+  private static String readBody(HttpEntity httpEntity) {
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(httpEntity.getContent(), UTF_8))) {
+      return reader.lines().collect(joining());
+    } catch (IOException e) {
+      logger.log(FINE, "Failed reading HTTP body content.", e);
     }
     return null;
   }

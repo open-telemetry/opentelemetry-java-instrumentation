@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchRestInstrumenterFactory;
@@ -22,6 +23,9 @@ public class ElasticsearchRestJavaagentInstrumenterFactory {
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "elasticsearch")
           .getBoolean("capture_search_query", false);
 
+  private static final boolean SANITIZE_SEARCH_QUERY =
+      DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "elasticsearch");
+
   public static Instrumenter<ElasticsearchRestRequest, Response> create(
       String instrumentationName) {
     return ElasticsearchRestInstrumenterFactory.create(
@@ -31,7 +35,8 @@ public class ElasticsearchRestJavaagentInstrumenterFactory {
         Function.identity(),
         AgentCommonConfig.get().getKnownHttpRequestMethods(),
         AgentCommonConfig.get().getSensitiveQueryParameters(),
-        CAPTURE_SEARCH_QUERY);
+        CAPTURE_SEARCH_QUERY,
+        SANITIZE_SEARCH_QUERY);
   }
 
   private ElasticsearchRestJavaagentInstrumenterFactory() {}

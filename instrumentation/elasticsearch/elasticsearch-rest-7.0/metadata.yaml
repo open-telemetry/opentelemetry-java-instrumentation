@@ -12,4 +12,12 @@ configurations:
       may contain personal or sensitive information.
     type: boolean
     default: false
+  - name: otel.instrumentation.elasticsearch.query-sanitization.enabled
+    declarative_name: java.elasticsearch.query_sanitization.enabled
+    description: >
+      Enables sanitization of the captured search query bodies. Takes precedence over
+      otel.instrumentation.common.db.query-sanitization.enabled.
+    type: boolean
+    default: true
+  - ref: common.db.query-sanitization.enabled
   - ref: http.known-methods
