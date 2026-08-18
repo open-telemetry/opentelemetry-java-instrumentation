@@ -250,6 +250,12 @@ class OpenSearchEndpointMapTest {
   }
 
   @Test
+  void postPutMappingRouteDerivesOperationName() {
+    assertThat(OpenSearchEndpointMap.getOperationName("POST", "test-index/_mapping"))
+        .isEqualTo("indices.put_mapping");
+  }
+
+  @Test
   void getAnalyzeRoutesDeriveOperationName() {
     assertThat(OpenSearchEndpointMap.getOperationName("GET", "_analyze"))
         .isEqualTo("indices.analyze");
