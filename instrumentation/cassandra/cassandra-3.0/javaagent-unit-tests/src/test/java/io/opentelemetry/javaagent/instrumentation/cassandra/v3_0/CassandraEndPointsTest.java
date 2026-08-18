@@ -22,12 +22,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 // CassandraEndPoints reaches the driver's SNI api by reflection, naming one class and three methods
-// in string literals. A typo in any of them makes findClass or findMethod return null,
-// isSniEndPoint
-// silently return false, and the fix quietly do nothing while every mapping test still passes. The
-// javaagent module's own tests cannot catch that: they compile against driver 3.2.0, where those
-// lookups legitimately return null, so a typo is indistinguishable from an old driver. Only this
-// module runs against a driver that has the api, so these assertions are the only guard.
+// in string literals. CassandraResponseTest exercises these lookups through the endpoint mappings.
+// These focused assertions identify which lookup failed and verify that plain endpoints are not
+// mistaken for SNI endpoints. This module uses driver 3.11.5. The javaagent module's own tests use
+// driver 3.2.0, where the reflective api does not exist.
 @ExtendWith(MockitoExtension.class)
 class CassandraEndPointsTest {
 
