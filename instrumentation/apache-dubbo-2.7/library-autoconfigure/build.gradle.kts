@@ -13,6 +13,17 @@ dependencies {
   testLibrary("org.apache.dubbo:dubbo-config-api:2.7.0")
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("testClusterInvoker") {
+      dependencies {
+        implementation(project())
+        implementation("org.apache.dubbo:dubbo:${baseVersion("2.7.14").orLatest()}")
+      }
+    }
+  }
+}
+
 tasks.withType<Test>().configureEach {
   systemProperty("testLatestDeps", otelProps.testLatestDeps)
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
@@ -40,6 +51,6 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv, testBothSemconv)
+    dependsOn(testing.suites, testStableSemconv, testBothSemconv)
   }
 }
