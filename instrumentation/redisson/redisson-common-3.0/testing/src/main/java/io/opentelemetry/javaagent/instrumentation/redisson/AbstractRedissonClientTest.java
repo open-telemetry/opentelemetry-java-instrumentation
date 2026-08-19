@@ -50,7 +50,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
@@ -124,7 +123,7 @@ public abstract class AbstractRedissonClientTest {
     testing.clearData();
   }
 
-  private Config createConfig(int database, @Nullable Integer connectionMinimumIdleSize)
+  private Config createConfig(int database, Integer connectionMinimumIdleSize)
       throws InvocationTargetException, IllegalAccessException {
     String newAddress = address;
     if (useRedisProtocol()) {
@@ -762,12 +761,10 @@ public abstract class AbstractRedissonClientTest {
     return false;
   }
 
-  @Nullable
   private String dbNamespace() {
     return dbNamespace("0");
   }
 
-  @Nullable
   private String dbNamespace(String databaseIndex) {
     return emitStableDatabaseSemconv() && hasDatabaseIndex() ? databaseIndex : null;
   }

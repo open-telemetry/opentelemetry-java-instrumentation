@@ -40,7 +40,6 @@ import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
@@ -318,7 +317,6 @@ public abstract class AbstractRedissonAsyncClientTest {
     return false;
   }
 
-  @Nullable
   private String dbNamespace() {
     return emitStableDatabaseSemconv() && hasDatabaseIndex() ? "0" : null;
   }
