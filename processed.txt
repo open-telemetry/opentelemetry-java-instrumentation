@@ -590,3 +590,4 @@ redisson-metrics-3.26:javaagent
 rocketmq-client-5.0:javaagent-unit-tests
 kafka-connect-2.6:javaagent-unit-tests
 apache-commons-pool-2.0:javaagent
+apache-commons-pool-2.0:library
