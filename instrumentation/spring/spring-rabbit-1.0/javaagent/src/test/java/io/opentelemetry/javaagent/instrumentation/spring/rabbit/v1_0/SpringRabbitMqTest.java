@@ -292,8 +292,6 @@ class SpringRabbitMqTest {
 
   @Test
   void testDefaultReceiveTelemetryMetricOwnership() throws InterruptedException {
-    testing.clearData();
-
     applicationContext
         .getBean(AmqpTemplate.class)
         .convertAndSend(ConsumerConfig.METRICS_QUEUE, "test");

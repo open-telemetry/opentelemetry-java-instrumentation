@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
-import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.ATTR_DAEMON;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.UNIT_THREADS;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_THREAD_DAEMON;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -53,6 +53,6 @@ class JfrThreadCountTest {
   }
 
   private static boolean isDaemon(LongPointData point) {
-    return requireNonNull(point.getAttributes().get(ATTR_DAEMON));
+    return requireNonNull(point.getAttributes().get(JVM_THREAD_DAEMON));
   }
 }

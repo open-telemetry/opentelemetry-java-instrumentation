@@ -13,6 +13,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -142,6 +143,15 @@ public final class KafkaUtil {
       return null;
     }
     return serversConfig.stream().map(Object::toString).collect(joining(","));
+  }
+
+  @Nullable
+  public static String serializeKey(@Nullable Object key) {
+    // Calling toString() does not produce useful message-key values for byte[] or ByteBuffer.
+    if (key == null || key.getClass().isArray() || key instanceof ByteBuffer) {
+      return null;
+    }
+    return key.toString();
   }
 
   private KafkaUtil() {}

@@ -68,12 +68,16 @@ configurations:
     type: list
     description: >
       Deprecated: use `otel.instrumentation.grpc.client.request-metadata.included` instead. A
-      comma-separated list of request metadata keys to capture on client spans.
+      comma-separated list of request metadata keys to capture on client spans. It does not support
+      glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other
+      entry is matched as a literal metadata key.
     default: ''
   - name: otel.instrumentation.grpc.capture-metadata.server.request
     declarative_name: java.grpc.capture_metadata.server.request
     type: list
     description: >
       Deprecated: use `otel.instrumentation.grpc.server.request-metadata.included` instead. A
-      comma-separated list of request metadata keys to capture on server spans.
+      comma-separated list of request metadata keys to capture on server spans. It does not support
+      glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other
+      entry is matched as a literal metadata key.
     default: ''

@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 
-import com.datastax.driver.core.ExecutionInfo;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
@@ -16,7 +15,7 @@ import java.util.Collection;
 import javax.annotation.Nullable;
 
 final class CassandraSqlAttributesGetter
-    implements SqlClientAttributesGetter<CassandraRequest, ExecutionInfo> {
+    implements SqlClientAttributesGetter<CassandraRequest, CassandraResponse> {
 
   @Override
   public String getDbSystemName(CassandraRequest request) {
@@ -50,8 +49,8 @@ final class CassandraSqlAttributesGetter
   @Nullable
   @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(
-      CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
-    return executionInfo == null ? null : executionInfo.getQueriedHost().getSocketAddress();
+      CassandraRequest request, @Nullable CassandraResponse response) {
+    return response == null ? null : response.getCoordinatorAddress();
   }
 
   @Override

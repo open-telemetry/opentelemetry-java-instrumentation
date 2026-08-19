@@ -100,8 +100,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(0))
                             .hasLinks(
-                                LinkData.create(producer1.get().getSpanContext()),
-                                LinkData.create(producer2.get().getSpanContext()))
+                                batchRecordLink(producer1.get()), batchRecordLink(producer2.get()))
                             .hasAttributesSatisfyingExactly(
                                 batchProcessAttributes("testBatchTopic")),
                     span -> span.hasName("batch consumer").hasParent(trace.getSpan(1)),
@@ -171,7 +170,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
                         span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(0))
-                            .hasLinks(LinkData.create(producer.get().getSpanContext()))
+                            .hasLinks(batchRecordLink(producer.get()))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
                             .hasAttributesSatisfyingExactly(
@@ -233,8 +232,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
                             .hasLinks(
-                                LinkData.create(producer1.get().getSpanContext()),
-                                LinkData.create(producer2.get().getSpanContext()))
+                                batchRecordLink(producer1.get()), batchRecordLink(producer2.get()))
                             .hasAttributesSatisfyingExactly(
                                 batchProcessAttributes("testBatchTopic")),
                     span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))),
@@ -245,8 +243,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
                             .hasLinks(
-                                LinkData.create(producer1.get().getSpanContext()),
-                                LinkData.create(producer2.get().getSpanContext()))
+                                batchRecordLink(producer1.get()), batchRecordLink(producer2.get()))
                             .hasAttributesSatisfyingExactly(receiveAttributes("testBatchTopic"))));
   }
 
@@ -280,7 +277,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
                         span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
-                            .hasLinks(LinkData.create(producer.get().getSpanContext()))
+                            .hasLinks(batchRecordLink(producer.get()))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
                             .hasAttributesSatisfyingExactly(
@@ -292,7 +289,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
                         span.hasName(spanName("testBatchTopic", "receive", "poll"))
                             .hasKind(SpanKind.CLIENT)
                             .hasNoParent()
-                            .hasLinks(LinkData.create(producer.get().getSpanContext()))
+                            .hasLinks(batchRecordLink(producer.get()))
                             .hasAttributesSatisfyingExactly(receiveAttributes("testBatchTopic"))));
   }
 }

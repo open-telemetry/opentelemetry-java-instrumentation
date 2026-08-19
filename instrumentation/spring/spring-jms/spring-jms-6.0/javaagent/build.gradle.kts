@@ -20,6 +20,7 @@ dependencies {
   implementation(project(":instrumentation:jms:jms-3.0:javaagent"))
 
   library("org.springframework:spring-jms:6.0.0")
+  compileOnly("org.springframework:spring-context:6.0.0")
   compileOnly("jakarta.jms:jakarta.jms-api:3.0.0")
 
   testInstrumentation(project(":instrumentation:jms:jms-3.0:javaagent"))
@@ -62,6 +63,18 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
+  val testJmsDisabled = register<Test>("testJmsDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    filter {
+      includeTestsMatching("*.testSpringJmsListenerWithJmsDisabled")
+    }
+    jvmArgs("-Dotel.instrumentation.jms.enabled=false")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("testJmsDisabled", "true")
+  }
+
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -85,6 +98,6 @@ tasks {
   }
 
   check {
-    dependsOn(testReceiveSpansDisabled, testMessagingPreview, testBothSemconv)
+    dependsOn(testReceiveSpansDisabled, testMessagingPreview, testJmsDisabled, testBothSemconv)
   }
 }

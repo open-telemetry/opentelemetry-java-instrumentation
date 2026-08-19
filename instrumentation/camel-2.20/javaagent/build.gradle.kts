@@ -53,7 +53,6 @@ dependencies {
   testImplementation("org.elasticmq:elasticmq-rest-sqs_2.13")
 
   testImplementation("org.testcontainers:testcontainers-cassandra")
-  testImplementation("org.testcontainers:testcontainers")
   testImplementation("org.testcontainers:testcontainers-junit-jupiter")
   testImplementation("com.datastax.oss:java-driver-core:4.16.0") {
     exclude(group = "io.dropwizard.metrics", module = "metrics-core")

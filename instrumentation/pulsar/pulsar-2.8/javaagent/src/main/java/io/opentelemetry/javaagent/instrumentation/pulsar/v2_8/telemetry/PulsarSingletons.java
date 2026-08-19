@@ -196,9 +196,6 @@ public class PulsarSingletons {
     }
     String brokerUrl = VirtualFieldStore.extract(consumer);
     PulsarRequest request = PulsarRequest.create(message, brokerUrl, consumer);
-    if (!consumerReceiveInstrumenter.shouldStart(parent, request)) {
-      return null;
-    }
     if (!receiveInstrumentationEnabled) {
       // suppress receive span when receive telemetry is not enabled and message is going to be
       // processed by a listener
@@ -208,6 +205,9 @@ public class PulsarSingletons {
       if (!emitStableMessagingSemconv()) {
         parent = propagator.extract(parent, request, MessageTextMapGetter.INSTANCE);
       }
+    }
+    if (!consumerReceiveInstrumenter.shouldStart(parent, request)) {
+      return null;
     }
     Context receiveContext =
         InstrumenterUtil.startAndEnd(
