@@ -14,9 +14,10 @@ import java.util.Map;
  * Elasticsearch REST and api-client instrumentations, so that the same logical operation gets the
  * same {@code db.operation.name} no matter which client the application uses.
  *
- * <p>Actions are keyed on the action class simple name because the packages holding these classes
- * moved between Elasticsearch 5.x, 6.x and 7.x, so a fully qualified name would not match across
- * the supported versions.
+ * <p>The table is keyed on the action class simple name, which is the identifier this
+ * instrumentation already reports for an action in the {@code elasticsearch.action} attribute.
+ * Keying on the action classes themselves is not an option, because this module is shared across
+ * Elasticsearch 5.0 to 7.17 and most of these classes are absent from some of those versions.
  *
  * <p>An action is deliberately absent, and so keeps its action class name, when it has no REST API
  * equivalent, such as the internal persistent task actions and {@code AutoCreateAction}, or when it
