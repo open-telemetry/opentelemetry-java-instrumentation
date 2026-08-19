@@ -212,7 +212,7 @@ public abstract class AbstractElasticsearchTransportClientTest
     assertThat(emptyResult.getIndex()).isEqualTo(indexName);
 
     IndexResponse createResult =
-        client.prepareIndex(indexName, indexType, id).setSource(emptyMap()).get();
+        client.prepareIndex(indexName, indexType, id).setSource(emptyMap()).setCreate(true).get();
     assertThat(createResult.getId()).isEqualTo(id);
     assertThat(createResult.getType()).isEqualTo(indexType);
     assertThat(createResult.getIndex()).isEqualTo(indexName);
@@ -230,7 +230,7 @@ public abstract class AbstractElasticsearchTransportClientTest
         orderByRootSpanName(
             operationName("CreateIndexAction", "indices.create"),
             putMappingOperationName(),
-            operationName("IndexAction", "index"),
+            "IndexAction",
             operationName("GetAction", "get")),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -273,7 +273,7 @@ public abstract class AbstractElasticsearchTransportClientTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(operationName("IndexAction", "index"))
+                    span.hasName("IndexAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -281,9 +281,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(NETWORK_PEER_ADDRESS, getAddress()),
                                 equalTo(NETWORK_PEER_PORT, getPort()),
                                 equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                                equalTo(
-                                    maybeStable(DB_OPERATION),
-                                    operationName("IndexAction", "index")),
+                                equalTo(maybeStable(DB_OPERATION), "IndexAction"),
                                 equalTo(
                                     stringKey("elasticsearch.action"), experimental("IndexAction")),
                                 equalTo(

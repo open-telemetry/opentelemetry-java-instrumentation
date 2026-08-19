@@ -22,9 +22,9 @@ import java.util.Map;
  * <p>An action is deliberately absent, and so keeps its action class name, when it has no REST API
  * equivalent, such as the internal persistent task actions and {@code AutoCreateAction}, or when it
  * covers several REST APIs that the REST and api-client instrumentations report under different
- * names, such as {@code ResizeAction} covering shrink, split and clone. Reporting the action class
- * name is less specific than the REST API name, but it never attributes an operation to a REST API
- * the caller did not use.
+ * names, such as {@code IndexAction} covering index and create or {@code ResizeAction} covering
+ * shrink, split and clone. Reporting the action class name is less specific than the REST API name,
+ * but it never attributes an operation to a REST API the caller did not use.
  */
 final class ElasticsearchTransportOperationNames {
 
@@ -100,7 +100,6 @@ final class ElasticsearchTransportOperationNames {
     operationNames.put("GetStoredScriptAction", "get_script");
     operationNames.put("GetTaskAction", "tasks.get");
     operationNames.put("ImportDanglingIndexAction", "dangling_indices.import_dangling_index");
-    operationNames.put("IndexAction", "index");
     operationNames.put("IndicesAliasesAction", "indices.update_aliases");
     operationNames.put("IndicesExistsAction", "indices.exists");
     operationNames.put("IndicesSegmentsAction", "indices.segments");
