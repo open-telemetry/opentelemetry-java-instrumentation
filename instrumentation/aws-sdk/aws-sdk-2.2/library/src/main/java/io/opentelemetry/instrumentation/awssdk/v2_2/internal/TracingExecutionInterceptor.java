@@ -26,7 +26,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
-import java.time.Instant;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.auth.signer.AwsSignerExecutionAttribute;
@@ -71,6 +70,8 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".SdkRequest");
   private static final ExecutionAttribute<RequestSpanFinisher> REQUEST_FINISHER_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".RequestFinisher");
+  private static final ExecutionAttribute<Timer> REQUEST_TIMER_ATTRIBUTE =
+      new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".RequestTimer");
   static final ExecutionAttribute<TracingList> TRACING_MESSAGES_ATTRIBUTE =
       new ExecutionAttribute<>(TracingExecutionInterceptor.class.getName() + ".TracingMessages");
   private static final RequestHeaderSetter requestHeaderSetter = new RequestHeaderSetter();
@@ -179,7 +180,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
     RequestSpanFinisher requestFinisher;
     io.opentelemetry.context.Context otelContext;
-    Instant requestStart = Instant.now();
+    Timer requestTimer = Timer.start();
     // Skip creating request span for SqsClient.receiveMessage if there is no parent span and also
     // suppress the span from the underlying http client. Request/http client span appears in a
     // separate trace from message producer/consumer spans if there is no parent span just having
@@ -200,8 +201,8 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
                   finisherExecutionAttributes,
                   response,
                   exception,
-                  requestStart,
-                  Instant.now());
+                  requestTimer.startTime(),
+                  requestTimer.now());
             }
           };
     } else {
@@ -212,6 +213,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     executionAttributes.putAttribute(PARENT_CONTEXT_ATTRIBUTE, parentOtelContext);
     executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, otelContext);
     executionAttributes.putAttribute(REQUEST_FINISHER_ATTRIBUTE, requestFinisher);
+    executionAttributes.putAttribute(REQUEST_TIMER_ATTRIBUTE, requestTimer);
 
     Span span = Span.fromContext(otelContext);
 
@@ -365,7 +367,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     if (executionAttributes.getAttribute(SDK_HTTP_REQUEST_ATTRIBUTE) != null) {
       // Other special handling could be shortcut-&&ed after this (false is returned if not
       // handled).
-      Timer timer = Timer.start();
+      Timer timer = executionAttributes.getAttribute(REQUEST_TIMER_ATTRIBUTE);
       SqsAccess.afterReceiveMessageExecution(context, executionAttributes, this, timer);
     }
 
@@ -459,6 +461,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     executionAttributes.putAttribute(AWS_SDK_REQUEST_ATTRIBUTE, null);
     executionAttributes.putAttribute(SDK_HTTP_REQUEST_ATTRIBUTE, null);
     executionAttributes.putAttribute(REQUEST_FINISHER_ATTRIBUTE, null);
+    executionAttributes.putAttribute(REQUEST_TIMER_ATTRIBUTE, null);
     executionAttributes.putAttribute(TRACING_MESSAGES_ATTRIBUTE, null);
   }
 
