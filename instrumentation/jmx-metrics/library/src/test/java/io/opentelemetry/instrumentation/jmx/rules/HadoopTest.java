@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jmx.rules;
 
+import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
