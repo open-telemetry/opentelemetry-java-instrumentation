@@ -30,6 +30,7 @@ import static org.assertj.core.api.Assertions.catchException;
 import com.google.common.collect.ImmutableMap;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisConnectionException;
+import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.trace.SpanKind;
@@ -183,6 +184,39 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
         DB_NAMESPACE,
         SERVER_ADDRESS,
         SERVER_PORT);
+  }
+
+  @Test
+  void testUriMutationDoesNotChangeEstablishedDatabaseIndex() {
+    RedisURI redisUri = RedisURI.create(embeddedDbUri);
+    RedisClient testClient = RedisClient.create(redisUri);
+    testClient.setOptions(CLIENT_OPTIONS);
+    cleanup.deferCleanup(() -> shutdown(testClient));
+    StatefulRedisConnection<String, String> testConnection = testClient.connect();
+    cleanup.deferCleanup(testConnection);
+
+    if (connectionTelemetryEnabled()) {
+      testing.waitForTraces(1);
+    }
+    testing.clearData();
+
+    redisUri.setDatabase(1);
+    assertThat(testConnection.sync().set("URI_MUTATION_TEST_KEY", "URI_MUTATION_TEST_VALUE"))
+        .isEqualTo("OK");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStable(DB_STATEMENT), "SET URI_MUTATION_TEST_KEY ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"))));
   }
 
   @Test

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import com.lambdaworks.redis.RedisURI;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -15,28 +14,28 @@ final class LettuceBatchRequest {
   private final String operationName;
   @Nullable private final Long batchSize;
   @Nullable private final InetSocketAddress serverAddress;
-  @Nullable private final RedisURI redisUri;
+  @Nullable private final Integer databaseIndex;
 
   private LettuceBatchRequest(
       String operationName,
       @Nullable Long batchSize,
       @Nullable InetSocketAddress serverAddress,
-      @Nullable RedisURI redisUri) {
+      @Nullable Integer databaseIndex) {
     this.operationName = operationName;
     this.batchSize = batchSize;
     this.serverAddress = serverAddress;
-    this.redisUri = redisUri;
+    this.databaseIndex = databaseIndex;
   }
 
   static LettuceBatchRequest create(
       List<RedisCommand<?, ?, ?>> commands,
       @Nullable InetSocketAddress serverAddress,
-      @Nullable RedisURI redisUri) {
+      @Nullable Integer databaseIndex) {
     return new LettuceBatchRequest(
         operationName(commands),
         commands.size() != 1 ? (long) commands.size() : null,
         serverAddress,
-        redisUri);
+        databaseIndex);
   }
 
   String getOperationName() {
@@ -54,8 +53,8 @@ final class LettuceBatchRequest {
   }
 
   @Nullable
-  RedisURI getRedisUri() {
-    return redisUri;
+  Integer getDatabaseIndex() {
+    return databaseIndex;
   }
 
   private static String operationName(List<RedisCommand<?, ?, ?>> commands) {

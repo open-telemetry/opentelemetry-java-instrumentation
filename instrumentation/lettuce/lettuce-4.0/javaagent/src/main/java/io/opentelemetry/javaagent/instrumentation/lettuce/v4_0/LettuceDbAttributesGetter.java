@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import com.lambdaworks.redis.RedisURI;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
@@ -24,8 +23,8 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
   public String getDbNamespace(RedisCommand<?, ?, ?> request) {
     // Lettuce does not expose database changes made through SELECT, so report the index established
     // when the connection was created.
-    RedisURI redisUri = LettuceSingletons.COMMAND_URI.get(request);
-    return redisUri != null ? String.valueOf(redisUri.getDatabase()) : null;
+    Integer databaseIndex = LettuceSingletons.COMMAND_DATABASE_INDEX.get(request);
+    return databaseIndex != null ? String.valueOf(databaseIndex) : null;
   }
 
   @Deprecated // to be removed in 3.0

@@ -51,11 +51,11 @@ public class LettuceSingletons {
   public static final VirtualField<RedisCommand<?, ?, ?>, InetSocketAddress> COMMAND_ADDRESS =
       VirtualField.find(RedisCommand.class, InetSocketAddress.class);
 
-  public static final VirtualField<RedisChannelHandler<?, ?>, RedisURI> CONNECTION_URI =
-      VirtualField.find(RedisChannelHandler.class, RedisURI.class);
+  public static final VirtualField<RedisChannelHandler<?, ?>, Integer> CONNECTION_DATABASE_INDEX =
+      VirtualField.find(RedisChannelHandler.class, Integer.class);
 
-  public static final VirtualField<RedisCommand<?, ?, ?>, RedisURI> COMMAND_URI =
-      VirtualField.find(RedisCommand.class, RedisURI.class);
+  public static final VirtualField<RedisCommand<?, ?, ?>, Integer> COMMAND_DATABASE_INDEX =
+      VirtualField.find(RedisCommand.class, Integer.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
@@ -133,7 +133,7 @@ public class LettuceSingletons {
   public static void attachAddress(
       RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
     COMMAND_ADDRESS.set(command, serverAddress(connection));
-    COMMAND_URI.set(command, redisUri(connection));
+    COMMAND_DATABASE_INDEX.set(command, databaseIndex(connection));
   }
 
   @Nullable
@@ -144,9 +144,9 @@ public class LettuceSingletons {
   }
 
   @Nullable
-  static RedisURI redisUri(StatefulConnection<?, ?> connection) {
+  static Integer databaseIndex(StatefulConnection<?, ?> connection) {
     return connection instanceof RedisChannelHandler
-        ? CONNECTION_URI.get((RedisChannelHandler<?, ?>) connection)
+        ? CONNECTION_DATABASE_INDEX.get((RedisChannelHandler<?, ?>) connection)
         : null;
   }
 

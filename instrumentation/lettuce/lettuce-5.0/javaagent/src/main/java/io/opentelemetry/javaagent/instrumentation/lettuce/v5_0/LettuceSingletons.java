@@ -44,8 +44,14 @@ public class LettuceSingletons {
   public static final VirtualField<DefaultEndpoint, RedisURI> ENDPOINT_URI =
       VirtualField.find(DefaultEndpoint.class, RedisURI.class);
 
+  public static final VirtualField<DefaultEndpoint, Integer> ENDPOINT_DATABASE_INDEX =
+      VirtualField.find(DefaultEndpoint.class, Integer.class);
+
   public static final VirtualField<RedisCommand<?, ?, ?>, RedisURI> COMMAND_URI =
       VirtualField.find(RedisCommand.class, RedisURI.class);
+
+  public static final VirtualField<RedisCommand<?, ?, ?>, Integer> COMMAND_DATABASE_INDEX =
+      VirtualField.find(RedisCommand.class, Integer.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
@@ -126,7 +132,9 @@ public class LettuceSingletons {
     if (connection instanceof RedisChannelHandler) {
       Object channelWriter = ((RedisChannelHandler<?, ?>) connection).getChannelWriter();
       if (channelWriter instanceof DefaultEndpoint) {
-        COMMAND_URI.set(command, ENDPOINT_URI.get((DefaultEndpoint) channelWriter));
+        DefaultEndpoint endpoint = (DefaultEndpoint) channelWriter;
+        COMMAND_URI.set(command, ENDPOINT_URI.get(endpoint));
+        COMMAND_DATABASE_INDEX.set(command, ENDPOINT_DATABASE_INDEX.get(endpoint));
       }
     }
   }
