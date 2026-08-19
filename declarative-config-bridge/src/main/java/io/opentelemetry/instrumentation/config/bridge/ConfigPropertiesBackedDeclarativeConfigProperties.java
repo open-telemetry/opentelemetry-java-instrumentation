@@ -52,6 +52,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "general.sanitization.url.sensitive_query_parameters/development",
         "otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters");
+    SPECIAL_MAPPINGS.put("general.stability_opt_in_list", "otel.semconv-stability.opt-in");
     SPECIAL_MAPPINGS.put("general.semconv_stability.opt_in", "otel.semconv-stability.opt-in");
     SPECIAL_MAPPINGS.put(
         "general.semconv_exception.signal.preview", "otel.semconv.exception.signal.preview");

@@ -80,7 +80,14 @@ class DefaultInstrumentationConfigTest {
             (Consumer<DefaultInstrumentationConfig>)
                 defaults -> setGeneralClientRequestHeaders(defaults, "X-Request-Id"),
             "otel.instrumentation.http.client.capture-request-headers",
-            "X-Request-Id"));
+            "X-Request-Id"),
+        argumentSet(
+            "semconv stability opt-in default",
+            (Consumer<DefaultInstrumentationConfig>)
+                defaults ->
+                    defaults.customizeGeneral(general -> general.withStabilityOptInList("http")),
+            "otel.semconv-stability.opt-in",
+            "http"));
   }
 
   @ParameterizedTest
@@ -144,6 +151,18 @@ class DefaultInstrumentationConfigTest {
                 .get("client")
                 .getScalarList("request_captured_headers", String.class))
         .containsExactly("X-Request-Id");
+  }
+
+  @Test
+  void toConfigPropertiesRoundTripsSemconvStabilityOptInThroughBridge() {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults.customizeGeneral(general -> general.withStabilityOptInList("http"));
+
+    DeclarativeConfigProperties config =
+        ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
+            DefaultConfigProperties.createFromMap(defaults.toConfigProperties()));
+
+    assertThat(config.get("general").getString("stability_opt_in_list")).isEqualTo("http");
   }
 
   @Test
