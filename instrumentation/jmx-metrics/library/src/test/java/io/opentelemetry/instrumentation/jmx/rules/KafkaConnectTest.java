@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.Metric;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.StateMapping;
+import io.opentelemetry.instrumentation.jmx.rules.kafka.KafkaContainerFactory;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
@@ -39,14 +40,11 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.builder.Transferable;
 
 class KafkaConnectTest extends TargetSystemTest {
-  private static final String APACHE_KAFKA_IMAGE = "apache/kafka:3.8.0";
+  private static final String KAFKA_IMAGE = "apache/kafka:3.8.0";
   private static final int KAFKA_PORT = 9092;
-  private static final int KAFKA_CONTROLLER_PORT = 9093;
   private static final int CONNECT_PORT = 8083;
   private static final String KAFKA_ALIAS = "kafka";
   private static final String CONNECT_ALIAS = "kafka-connect";
-  private static final String KAFKA_SERVER_PROPERTIES_PATH =
-      "/opt/kafka/config/kraft/server.properties";
   private static final String CONNECT_PROPERTIES_PATH =
       "/opt/kafka/config/connect-distributed.properties";
   private static final String SOURCE_CONNECTOR = "file-source";
@@ -143,25 +141,11 @@ class KafkaConnectTest extends TargetSystemTest {
     Set<String> expectedCreatedMetrics = loadKafkaConnectMetricNames(false);
     Set<String> registeredMetrics = ConcurrentHashMap.newKeySet();
 
-    String kafkaCommand =
-        "/opt/kafka/bin/kafka-storage.sh format -t $(/opt/kafka/bin/kafka-storage.sh random-uuid) -c "
-            + KAFKA_SERVER_PROPERTIES_PATH
-            + " && /opt/kafka/bin/kafka-server-start.sh "
-            + KAFKA_SERVER_PROPERTIES_PATH;
-
-    GenericContainer<?> kafka =
-        new GenericContainer<>(APACHE_KAFKA_IMAGE)
-            .withNetworkAliases(KAFKA_ALIAS)
-            .withCopyToContainer(
-                Transferable.of(kafkaServerProperties()), KAFKA_SERVER_PROPERTIES_PATH)
-            .withExposedPorts(KAFKA_PORT)
-            .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint("/bin/sh"))
-            .withCommand("-c", kafkaCommand)
-            .withStartupTimeout(Duration.ofMinutes(3))
-            .waitingFor(Wait.forListeningPort());
+    GenericContainer<?> kafka = KafkaContainerFactory.createKafkaContainer(KAFKA_IMAGE, KAFKA_ALIAS,
+        KAFKA_PORT);
 
     GenericContainer<?> kafkaConnect =
-        new GenericContainer<>(APACHE_KAFKA_IMAGE)
+        new GenericContainer<>(KAFKA_IMAGE)
             .withNetworkAliases(CONNECT_ALIAS)
             .withEnv("JAVA_TOOL_OPTIONS", String.join(" ", jvmArgs))
             .withCopyToContainer(
@@ -254,29 +238,6 @@ class KafkaConnectTest extends TargetSystemTest {
         registeredMetrics.add(metricName);
       }
     }
-  }
-
-  private static String kafkaServerProperties() {
-    return String.join(
-        "\n",
-        "process.roles=broker,controller",
-        "node.id=1",
-        "controller.quorum.voters=1@" + KAFKA_ALIAS + ":" + KAFKA_CONTROLLER_PORT,
-        "listeners=PLAINTEXT://0.0.0.0:"
-            + KAFKA_PORT
-            + ",CONTROLLER://0.0.0.0:"
-            + KAFKA_CONTROLLER_PORT,
-        "listener.security.protocol.map=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT",
-        "inter.broker.listener.name=PLAINTEXT",
-        "controller.listener.names=CONTROLLER",
-        "advertised.listeners=PLAINTEXT://" + KAFKA_ALIAS + ":" + KAFKA_PORT,
-        "log.dirs=/tmp/kraft-combined-logs",
-        "num.partitions=1",
-        "offsets.topic.replication.factor=1",
-        "transaction.state.log.replication.factor=1",
-        "transaction.state.log.min.isr=1",
-        "group.initial.rebalance.delay.ms=0",
-        "auto.create.topics.enable=true");
   }
 
   private static String connectWorkerProperties() {
