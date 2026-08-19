@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.jmx.rules.kafka;
 
 import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.instrumentation.jmx.rules.MetricsVerifier;
 import io.opentelemetry.instrumentation.jmx.rules.TargetSystemTest;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,13 +28,20 @@ class KafkaBrokerTest extends TargetSystemTest {
     jvmArgs.add(javaAgentJvmArgument());
     jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
 
-    GenericContainer<?> target = KafkaContainerFactory.createKafkaContainer(KAFKA_IMAGE);
+    GenericContainer<?> target = KafkaContainerFactory.createKafkaContainer(KAFKA_IMAGE)
+        .withEnv("JAVA_TOOL_OPTIONS", String.join(" ", jvmArgs));
 
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
 
+    // TODO: add weaver validation
+
     startTarget(target);
 
-    assertThat(jvmArgs).isNotEmpty();
+    verifyMetrics(createMetricsVerifier());
+  }
+
+  private static MetricsVerifier createMetricsVerifier() {
+    return MetricsVerifier.create();
   }
 }
