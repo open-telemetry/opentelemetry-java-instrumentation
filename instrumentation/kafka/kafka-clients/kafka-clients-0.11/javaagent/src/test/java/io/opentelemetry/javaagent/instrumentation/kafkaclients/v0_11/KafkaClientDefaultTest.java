@@ -6,9 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
-import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveDurationMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertSendMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -160,8 +161,12 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     String instrumentationName = "io.opentelemetry.kafka-clients-0.11";
     String group = testLatestDeps() ? "test" : null;
     assertSendMetrics(testing, instrumentationName, SHARED_TOPIC, "0", 1, null);
-    assertReceiveDurationMetrics(testing, instrumentationName, SHARED_TOPIC, group, "0", 1, null);
-    assertProcessDurationMetrics(testing, instrumentationName, SHARED_TOPIC, group, "0", 1, null);
+    // every test task that runs this class enables receive telemetry, so the receive operation
+    // always owns the consumed messages count here; KafkaClientSuppressReceiveSpansTest covers the
+    // case where it is disabled and the process operation owns the count instead
+    assertReceiveMetrics(testing, instrumentationName, SHARED_TOPIC, group, "0", 1, 1, null);
+    assertProcessMetrics(testing, instrumentationName, SHARED_TOPIC, group, "0", 1, null);
+    assertTotalConsumedMessages(testing, instrumentationName, 1);
   }
 
   @Test
