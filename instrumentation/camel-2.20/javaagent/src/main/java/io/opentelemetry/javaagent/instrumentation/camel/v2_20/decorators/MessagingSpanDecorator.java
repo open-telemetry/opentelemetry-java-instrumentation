@@ -103,7 +103,7 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
    * @param endpoint The endpoint
    * @return The message bus destination
    */
-  public String getDestination(Exchange exchange, Endpoint endpoint) {
+  protected String getDestination(Exchange exchange, Endpoint endpoint) {
     switch (component) {
       case "cometds":
       case "cometd":
@@ -189,7 +189,7 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
    * @return The message id, or null if no id exists for the exchange
    */
   @Nullable
-  public String getMessageId(Exchange exchange) {
+  protected String getMessageId(Exchange exchange) {
     switch (component) {
       case "aws-sns":
         return (String) exchange.getIn().getHeader("CamelAwsSnsMessageId");
