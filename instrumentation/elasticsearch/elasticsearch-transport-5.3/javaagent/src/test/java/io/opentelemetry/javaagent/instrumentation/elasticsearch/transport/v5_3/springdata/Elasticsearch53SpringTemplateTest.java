@@ -281,13 +281,12 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(operationName("IndexAction", "index"))
+                    span.hasName("IndexAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(
-                                maybeStable(DB_OPERATION), operationName("IndexAction", "index")),
+                            equalTo(maybeStable(DB_OPERATION), "IndexAction"),
                             equalTo(stringKey("elasticsearch.action"), experimental("IndexAction")),
                             equalTo(
                                 stringKey("elasticsearch.request"), experimental("IndexRequest")),

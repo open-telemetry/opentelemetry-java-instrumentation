@@ -122,7 +122,7 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(assertFunctionName("index")),
                 span ->
-                    span.hasName(operationName("IndexAction", "index"))
+                    span.hasName("IndexAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(indexActionAssertions(201)),
@@ -164,7 +164,7 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(assertFunctionName("index")),
                 span ->
-                    span.hasName(operationName("IndexAction", "index"))
+                    span.hasName("IndexAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(indexActionAssertions(200)),
@@ -260,7 +260,7 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
     return new ArrayList<>(
         asList(
             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-            equalTo(maybeStable(DB_OPERATION), operationName("IndexAction", "index")),
+            equalTo(maybeStable(DB_OPERATION), "IndexAction"),
             equalTo(stringKey("elasticsearch.action"), experimental("IndexAction")),
             equalTo(stringKey("elasticsearch.request"), experimental("IndexRequest")),
             equalTo(stringKey("elasticsearch.request.indices"), experimental("test-index")),
