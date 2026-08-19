@@ -1261,6 +1261,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     conf.setMessageListener(originalListener);
 
     MessageListener<String> wrapped1 = conf.getMessageListener();
+    conf.setMessageListener(wrapped1);
     MessageListener<String> wrapped2 = conf.getMessageListener();
 
     assertThat(wrapped1).isInstanceOf(MessageListenerInstrumentation.MessageListenerWrapper.class);
