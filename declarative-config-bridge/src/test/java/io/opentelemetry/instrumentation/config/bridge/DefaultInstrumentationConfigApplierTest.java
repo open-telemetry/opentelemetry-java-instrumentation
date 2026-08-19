@@ -13,6 +13,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalHttpClientInstrumentationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalHttpInstrumentationModel;
 import io.opentelemetry.sdk.internal.SdkConfigProvider;
 import java.io.ByteArrayInputStream;
 import org.junit.jupiter.api.Test;
@@ -95,11 +97,7 @@ class DefaultInstrumentationConfigApplierTest {
   @Test
   void applyToModelAppliesGeneralDefaults() {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
-    defaults
-        .getGeneral()
-        .get("http")
-        .get("client")
-        .setDefault("request_captured_headers", asList("X-Request-Id"));
+    setGeneralClientRequestHeaders(defaults, "X-Request-Id");
 
     OpenTelemetryConfigurationModel model = newModel();
     defaults.applyToModel(model);
@@ -119,18 +117,16 @@ class DefaultInstrumentationConfigApplierTest {
   void applyToModelDoesNotOverrideExistingGeneralDefault() {
     OpenTelemetryConfigurationModel model = newModel();
     DefaultInstrumentationConfig seed = new DefaultInstrumentationConfig();
-    seed.getGeneral()
-        .get("http")
-        .get("client")
-        .setDefault("request_captured_headers", asList("Existing"));
+    setGeneralClientRequestHeaders(seed, "Existing");
     seed.applyToModel(model);
 
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    setGeneralClientRequestHeaders(defaults, "Default");
     defaults
         .getGeneral()
-        .get("http")
-        .get("client")
-        .setDefault("request_captured_headers", asList("Default"));
+        .getHttp()
+        .getClient()
+        .withResponseCapturedHeaders(asList("Default-Response"));
     defaults.applyToModel(model);
 
     assertThat(
@@ -141,6 +137,14 @@ class DefaultInstrumentationConfigApplierTest {
                 .getClient()
                 .getRequestCapturedHeaders())
         .containsExactly("Existing");
+    assertThat(
+            model
+                .getInstrumentationDevelopment()
+                .getGeneral()
+                .getHttp()
+                .getClient()
+                .getResponseCapturedHeaders())
+        .containsExactly("Default-Response");
   }
 
   @Test
@@ -220,5 +224,16 @@ class DefaultInstrumentationConfigApplierTest {
                 .get("acme")
                 .getAdditionalProperties())
         .containsEntry("full_name", singletonMap("preserved", "true"));
+  }
+
+  private static void setGeneralClientRequestHeaders(
+      DefaultInstrumentationConfig defaults, String header) {
+    defaults
+        .getGeneral()
+        .withHttp(
+            new ExperimentalHttpInstrumentationModel()
+                .withClient(
+                    new ExperimentalHttpClientInstrumentationModel()
+                        .withRequestCapturedHeaders(asList(header))));
   }
 }

@@ -10,10 +10,12 @@ import static java.util.stream.Collectors.joining;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalGeneralInstrumentationModel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * Defines instrumentation defaults that work with both traditional property-based configuration and
@@ -22,7 +24,8 @@ import java.util.Map;
  * <p>Java instrumentation navigation mirrors {@link
  * io.opentelemetry.api.incubator.config.DeclarativeConfigProperties}: read-side uses {@code
  * config.get(name).getString(key)}; write-side uses {@code defaults.get(name).setDefault(key,
- * value)}. General instrumentation defaults use {@link #getGeneral()} as their root.
+ * value)}. General instrumentation defaults use the declarative configuration model returned by
+ * {@link #getGeneral()}.
  *
  * <p>Usage:
  *
@@ -41,27 +44,24 @@ import java.util.Map;
  */
 public final class DefaultInstrumentationConfig {
 
-  private static final String JAVA_ROOT = "java";
-  private static final String GENERAL_ROOT = "general";
-
   private final Map<String, Object> defaults;
-  private final String root;
   private final List<String> path;
   private final Map<String, String> propertyMappings;
+  private final GeneralDefaults generalDefaults;
 
   public DefaultInstrumentationConfig() {
-    this(new HashMap<>(), JAVA_ROOT, emptyList(), new HashMap<>());
+    this(new HashMap<>(), emptyList(), new HashMap<>(), new GeneralDefaults());
   }
 
   private DefaultInstrumentationConfig(
       Map<String, Object> defaults,
-      String root,
       List<String> path,
-      Map<String, String> propertyMappings) {
+      Map<String, String> propertyMappings,
+      GeneralDefaults generalDefaults) {
     this.defaults = defaults;
-    this.root = root;
     this.path = path;
     this.propertyMappings = propertyMappings;
+    this.generalDefaults = generalDefaults;
   }
 
   /**
@@ -71,12 +71,15 @@ public final class DefaultInstrumentationConfig {
   public DefaultInstrumentationConfig get(String name) {
     List<String> newPath = new ArrayList<>(path);
     newPath.add(name);
-    return new DefaultInstrumentationConfig(defaults, root, newPath, propertyMappings);
+    return new DefaultInstrumentationConfig(defaults, newPath, propertyMappings, generalDefaults);
   }
 
-  /** Returns the defaults root for general instrumentation configuration. */
-  public DefaultInstrumentationConfig getGeneral() {
-    return new DefaultInstrumentationConfig(defaults, GENERAL_ROOT, emptyList(), propertyMappings);
+  /** Returns the type-safe declarative model used for general instrumentation defaults. */
+  public ExperimentalGeneralInstrumentationModel getGeneral() {
+    if (generalDefaults.model == null) {
+      generalDefaults.model = new ExperimentalGeneralInstrumentationModel();
+    }
+    return generalDefaults.model;
   }
 
   /**
@@ -150,13 +153,31 @@ public final class DefaultInstrumentationConfig {
                 value instanceof List
                     ? ((List<?>) value).stream().map(String::valueOf).collect(joining(","))
                     : String.valueOf(value)));
+    ExperimentalGeneralInstrumentationModel general = generalDefaults.model;
+    if (general != null) {
+      DeclarativeModelUtil.forEachLeaf(
+          general,
+          (path, value) -> {
+            String propertyKey =
+                ConfigPropertiesBackedDeclarativeConfigProperties.toPropertyKey("general." + path);
+            if (propertyKey.isEmpty()) {
+              throw new IllegalArgumentException(
+                  "general instrumentation default has no config property mapping: " + path);
+            }
+            map.put(
+                propertyKey,
+                value instanceof List
+                    ? ((List<?>) value).stream().map(String::valueOf).collect(joining(","))
+                    : String.valueOf(value));
+          });
+    }
     return map;
   }
 
   /**
    * Applies defaults to the declarative configuration model under {@code
-   * instrumentation/development.java}. Existing values in the model take precedence; defaults are
-   * only set for properties not already present.
+   * instrumentation/development}. Existing values in the model take precedence; defaults are only
+   * set for properties not already present.
    */
   @CanIgnoreReturnValue
   public OpenTelemetryConfigurationModel applyToModel(OpenTelemetryConfigurationModel model) {
@@ -167,6 +188,11 @@ public final class DefaultInstrumentationConfig {
     return defaults;
   }
 
+  @Nullable
+  ExperimentalGeneralInstrumentationModel getGeneralDefaults() {
+    return generalDefaults.model;
+  }
+
   private String pathWithName(String name) {
     if (path.isEmpty()) {
       return name;
@@ -175,20 +201,11 @@ public final class DefaultInstrumentationConfig {
   }
 
   private String toConfigProperty(String declarativePath) {
-    if (declarativePath.startsWith(GENERAL_ROOT + ".")) {
-      return ConfigPropertiesBackedDeclarativeConfigProperties.toPropertyKey(declarativePath);
-    }
-    if (!declarativePath.startsWith(JAVA_ROOT + ".")) {
-      throw new IllegalStateException(
-          "unexpected instrumentation default path: " + declarativePath);
-    }
-    String javaPath = declarativePath.substring((JAVA_ROOT + ".").length());
-
     String propertyPrefix = null;
     String declarativePrefix = null;
     for (Map.Entry<String, String> entry : propertyMappings.entrySet()) {
       String candidate = entry.getValue();
-      if (!matchesPrefix(javaPath, candidate)) {
+      if (!matchesPrefix(declarativePath, candidate)) {
         continue;
       }
       if (declarativePrefix == null || candidate.length() > declarativePrefix.length()) {
@@ -198,27 +215,28 @@ public final class DefaultInstrumentationConfig {
     }
 
     if (propertyPrefix == null) {
-      return ConfigPropertiesBackedDeclarativeConfigProperties.toPropertyKey(declarativePath);
+      return ConfigPropertiesBackedDeclarativeConfigProperties.toPropertyKey(
+          "java." + declarativePath);
     }
     if (declarativePrefix == null) {
       throw new IllegalStateException("missing declarative prefix for property mapping");
     }
 
-    if (javaPath.equals(declarativePrefix)) {
+    if (declarativePath.equals(declarativePrefix)) {
       return propertyPrefix;
     }
 
     int matchedPrefixLength = declarativePrefix.length();
-    return propertyPrefix + "." + translatePath(javaPath.substring(matchedPrefixLength + 1));
+    return propertyPrefix + "." + translatePath(declarativePath.substring(matchedPrefixLength + 1));
   }
 
   @CanIgnoreReturnValue
   private DefaultInstrumentationConfig setDefaultValue(String key, Object value) {
-    if (path.isEmpty() && root.equals(JAVA_ROOT)) {
+    if (path.isEmpty()) {
       throw new IllegalArgumentException(
           "defaults must be set below an instrumentation node, e.g. get(\"micrometer\")");
     }
-    defaults.put(root + "." + pathWithName(key), value);
+    defaults.put(pathWithName(key), value);
     return this;
   }
 
@@ -246,5 +264,9 @@ public final class DefaultInstrumentationConfig {
       }
     }
     return name.replace('_', '-');
+  }
+
+  private static final class GeneralDefaults {
+    @Nullable private ExperimentalGeneralInstrumentationModel model;
   }
 }

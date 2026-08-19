@@ -10,6 +10,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalHttpClientInstrumentationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalHttpInstrumentationModel;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -74,12 +76,7 @@ class DefaultInstrumentationConfigTest {
         Arguments.of(
             "general default",
             (Consumer<DefaultInstrumentationConfig>)
-                defaults ->
-                    defaults
-                        .getGeneral()
-                        .get("http")
-                        .get("client")
-                        .setDefault("request_captured_headers", asList("X-Request-Id")),
+                defaults -> setGeneralClientRequestHeaders(defaults, "X-Request-Id"),
             "otel.instrumentation.http.client.capture-request-headers",
             "X-Request-Id"));
   }
@@ -138,11 +135,7 @@ class DefaultInstrumentationConfigTest {
   @Test
   void toConfigPropertiesRoundTripsGeneralDefaultThroughBridge() {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
-    defaults
-        .getGeneral()
-        .get("http")
-        .get("client")
-        .setDefault("request_captured_headers", asList("X-Request-Id"));
+    setGeneralClientRequestHeaders(defaults, "X-Request-Id");
 
     DeclarativeConfigProperties config =
         ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
@@ -174,5 +167,16 @@ class DefaultInstrumentationConfigTest {
     defaults.get("acme").get("full_name").setDefault("preserved", "true");
 
     assertThat(defaults.toConfigProperties()).containsEntry("acme.preserved", "true").hasSize(1);
+  }
+
+  private static void setGeneralClientRequestHeaders(
+      DefaultInstrumentationConfig defaults, String header) {
+    defaults
+        .getGeneral()
+        .withHttp(
+            new ExperimentalHttpInstrumentationModel()
+                .withClient(
+                    new ExperimentalHttpClientInstrumentationModel()
+                        .withRequestCapturedHeaders(asList(header))));
   }
 }
