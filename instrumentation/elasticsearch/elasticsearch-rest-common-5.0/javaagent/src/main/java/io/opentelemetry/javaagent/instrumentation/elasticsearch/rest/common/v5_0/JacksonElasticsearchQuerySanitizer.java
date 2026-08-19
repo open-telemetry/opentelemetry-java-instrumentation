@@ -32,10 +32,10 @@ final class JacksonElasticsearchQuerySanitizer
   private static final String MASKED_VALUE = "?";
   private static final char QUERY_SEPARATOR = ';';
 
-  // Bounds how deeply the masking below descends, so that a deeply nested but otherwise valid body
-  // cannot overflow the stack. This code runs on the application's own thread, already partway down
-  // a client-plus-instrumentation call stack that may have a small stack size. Real Elasticsearch
-  // query bodies nest at most a few dozen levels, so this sits well above any realistic query.
+  // Rejects a body nested more deeply than this. The parser and the generator each hold one nesting
+  // context per level, so an absurdly deep body costs memory and time on the application's own
+  // thread for a query nobody meant to send. Real Elasticsearch query bodies nest at most a few
+  // dozen levels, so this sits well above any realistic query.
   static final int MAX_NESTING_DEPTH = 200;
 
   // held in a nested class so that applications that never send an Elasticsearch search query do

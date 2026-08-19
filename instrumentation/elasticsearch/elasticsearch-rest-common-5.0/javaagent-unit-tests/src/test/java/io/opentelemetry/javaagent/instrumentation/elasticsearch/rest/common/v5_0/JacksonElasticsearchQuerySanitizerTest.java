@@ -116,7 +116,7 @@ class JacksonElasticsearchQuerySanitizerTest {
   @Test
   void returnsNullWhenNestedTooDeeply() {
     // a body nested past the depth cap is valid JSON but must be dropped, not captured raw and not
-    // partially masked, and must not overflow the stack
+    // partially masked
     int depth = JacksonElasticsearchQuerySanitizer.MAX_NESTING_DEPTH + 1;
 
     assertThat(sanitize(nestedArray(depth, ""))).isNull();
