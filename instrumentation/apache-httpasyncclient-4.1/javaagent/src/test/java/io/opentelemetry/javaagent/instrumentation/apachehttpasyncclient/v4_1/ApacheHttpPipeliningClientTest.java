@@ -14,6 +14,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -30,6 +31,7 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
@@ -78,11 +80,7 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     super.configure(optionsBuilder);
-    optionsBuilder
-        .disableTestRedirects()
-        .disableTestConnectionFailure()
-        .disableTestRemoteConnection()
-        .spanEndsAfterBody();
+    optionsBuilder.disableTestRedirects().disableTestRemoteConnection().spanEndsAfterBody();
   }
 
   @Override
@@ -510,13 +508,143 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
   }
 
   @Test
+  void directProducerSynchronousFailureCreatesSpan() {
+    URI uri = resolveAddress("/success");
+    AtomicInteger generateCalls = new AtomicInteger();
+    HttpAsyncRequestProducer requestProducer =
+        new BasicAsyncRequestProducer(target(uri), new HttpGet(uri.toString())) {
+          @Override
+          public HttpRequest generateRequest() {
+            generateCalls.incrementAndGet();
+            return super.generateRequest();
+          }
+        };
+
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                testing.runWithSpan(
+                    "parent",
+                    () ->
+                        client.execute(
+                            null,
+                            singletonList(requestProducer),
+                            singletonList(new BasicAsyncResponseConsumer()),
+                            context(uri),
+                            null)));
+
+    assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
+    assertThat(generateCalls).hasValue(1);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasKind(INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error()),
+                span ->
+                    assertClientSpan(span, uri, "GET", null, null)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())
+                        .hasException(thrown)));
+  }
+
+  @Test
+  void directProducerConnectionFailureCreatesSpanAndPropagatesCallbackContext() throws Exception {
+    URI uri = URI.create("http://localhost:" + PortUtils.UNUSABLE_PORT + '/');
+    HttpHost target = target(uri);
+    AtomicInteger generateCalls = new AtomicInteger();
+
+    HttpAsyncRequestProducer requestProducer =
+        new BasicAsyncRequestProducer(target, new HttpGet(uri.getRawPath())) {
+          @Override
+          public HttpRequest generateRequest() {
+            generateCalls.incrementAndGet();
+            return super.generateRequest();
+          }
+        };
+
+    CountDownLatch callbackDone = new CountDownLatch(1);
+    AtomicReference<Throwable> callbackFailure = new AtomicReference<>();
+    FutureCallback<List<HttpResponse>> callback =
+        new FutureCallback<List<HttpResponse>>() {
+          @Override
+          public void completed(List<HttpResponse> ignored) {
+            callbackFailure.set(new AssertionError("failed pipeline completed"));
+            callbackDone.countDown();
+          }
+
+          @Override
+          public void failed(Exception e) {
+            try {
+              testing.runWithSpan("connection-failure-callback", () -> {});
+              callbackFailure.set(e);
+            } catch (Throwable t) {
+              callbackFailure.set(t);
+            } finally {
+              callbackDone.countDown();
+            }
+          }
+
+          @Override
+          public void cancelled() {
+            callbackFailure.set(new AssertionError("failed pipeline was cancelled"));
+            callbackDone.countDown();
+          }
+        };
+
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                testing.runWithSpan(
+                    "parent",
+                    () ->
+                        client
+                            .execute(
+                                target,
+                                singletonList(requestProducer),
+                                singletonList(new BasicAsyncResponseConsumer()),
+                                context(uri),
+                                callback)
+                            .get()));
+
+    assertThat(thrown).isInstanceOf(ExecutionException.class);
+    Throwable connectionFailure = thrown.getCause();
+    assertThat(callbackDone.await(10, SECONDS)).isTrue();
+    assertThat(callbackFailure.get()).isSameAs(connectionFailure);
+    assertThat(generateCalls).hasValue(1);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactlyInAnyOrder(
+                span ->
+                    span.hasName("parent")
+                        .hasKind(INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error()),
+                span ->
+                    assertClientSpan(span, uri, "GET", null, null)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())
+                        .hasException(connectionFailure),
+                span ->
+                    span.hasName("connection-failure-callback")
+                        .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
   void nullGeneratedRequestUsesApacheValidation() throws Exception {
     URI uri = resolveAddress("/success");
     HttpHost target = target(uri);
+    AtomicInteger generateCalls = new AtomicInteger();
     HttpAsyncRequestProducer nullRequestProducer =
         new BasicAsyncRequestProducer(target, new HttpGet(uri.getRawPath())) {
           @Override
           public HttpRequest generateRequest() {
+            generateCalls.incrementAndGet();
             return null;
           }
         };
@@ -539,6 +667,7 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
     assertThat(thrown)
         .isInstanceOf(ExecutionException.class)
         .hasCauseInstanceOf(IllegalArgumentException.class);
+    assertThat(generateCalls).hasValue(1);
 
     testing.waitAndAssertTraces(
         trace ->
