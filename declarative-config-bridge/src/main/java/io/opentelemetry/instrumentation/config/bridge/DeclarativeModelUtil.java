@@ -22,9 +22,6 @@ import javax.annotation.Nullable;
  */
 final class DeclarativeModelUtil {
 
-  private static final String MODEL_PACKAGE =
-      "io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.";
-
   static void mergeDefaults(Object target, Object defaults) {
     for (Method getter : defaults.getClass().getMethods()) {
       Method wither = findWither(defaults.getClass(), getter);
@@ -89,7 +86,12 @@ final class DeclarativeModelUtil {
   }
 
   private static boolean isModel(Object value) {
-    return value.getClass().getName().startsWith(MODEL_PACKAGE);
+    for (Method method : value.getClass().getMethods()) {
+      if (findWither(value.getClass(), method) != null) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static Object newModel(Class<?> modelClass) {
