@@ -12,17 +12,27 @@ import static java.util.Collections.singletonList;
 import io.opentelemetry.instrumentation.jmx.rules.MetricsVerifier;
 import io.opentelemetry.instrumentation.jmx.rules.TargetSystemTest;
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 
 class KafkaBrokerTest extends TargetSystemTest {
 
-  private static final String KAFKA_IMAGE = "apache/kafka:3.8.0";
-
   @Test
   void kafkaBroker() {
+    doTest("apache/kafka:3.8.0", null);
+  }
+
+  @Test
+  void kafkaBrokerZookeeper() {
+    doTest("bitnamilegacy/kafka:2.8.1", "zookeeper:3.5");
+  }
+
+  private void doTest(String image, String zookeeperImage) {
     List<String> yamlFiles = singletonList("experimental-kafka-broker.yaml");
 
     yamlFiles.forEach(this::validateYamlSyntax);
@@ -31,21 +41,31 @@ class KafkaBrokerTest extends TargetSystemTest {
     jvmArgs.add(javaAgentJvmArgument());
     jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
 
-    GenericContainer<?> target =
-        KafkaContainerFactory.createKafkaContainer(KAFKA_IMAGE)
-            .withEnv("JAVA_TOOL_OPTIONS", String.join(" ", jvmArgs));
+    KafkaContainer target = KafkaContainer.create(image)
+        .withEnv("JAVA_TOOL_OPTIONS", String.join(" ", jvmArgs));
 
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
 
     // TODO: add weaver validation
 
-    startTarget(target);
+    List<GenericContainer<?>> dependencies = Collections.emptyList();
+    if (zookeeperImage != null) {
+      GenericContainer<?> zookeeper = new GenericContainer<>(zookeeperImage)
+          .withNetworkAliases("zookeeper")
+          .withStartupTimeout(Duration.ofMinutes(1))
+          .waitingFor(Wait.forListeningPort());
 
-    verifyMetrics(createMetricsVerifier());
+      target.withZookeeper("zookeeper", 2181);
+      dependencies = singletonList(zookeeper);
+
+    }
+    startTarget(target, dependencies);
+
+    verifyMetrics(createMetricsVerifier(zookeeperImage != null));
   }
 
-  private static MetricsVerifier createMetricsVerifier() {
+  private static MetricsVerifier createMetricsVerifier(boolean useZookeeper) {
 
     AttributeMatcherGroup fetchType = attributeGroup(attribute("type", "fetch"));
     AttributeMatcherGroup produceType = attributeGroup(attribute("type", "produce"));
@@ -56,7 +76,7 @@ class KafkaBrokerTest extends TargetSystemTest {
     AttributeMatcherGroup requestTypeFetchFollower =
         attributeGroup(attribute("type", "FetchFollower"));
 
-    return MetricsVerifier.create()
+    MetricsVerifier verifier = MetricsVerifier.create()
         .add(
             "kafka.message.count",
             metric ->
@@ -181,26 +201,6 @@ class KafkaBrokerTest extends TargetSystemTest {
                     .hasDescription(
                         "The max lag in messages between follower and leader replicas")
                     .hasDataPointsWithoutAttributes())
-        // TODO: kafka.leaderElection.count and kafka.leaderElection.unclean.count are defined in
-        // the YAML (kafka.controller:type=ControllerStats) but are not reported by KRaft brokers.
-        // These should be enabled once KRaft exposes those MBeans or a ZooKeeper-mode test is added.
-        // .add(
-        //     "kafka.leaderElection.count",
-        //     metric ->
-        //         metric
-        //             .isCounter()
-        //             .hasUnit("{elections}")
-        //             .hasDescription("The leader election count")
-        //             .hasDataPointsWithoutAttributes())
-        // .add(
-        //     "kafka.leaderElection.unclean.count",
-        //     metric ->
-        //         metric
-        //             .isCounter()
-        //             .hasUnit("{elections}")
-        //             .hasDescription(
-        //                 "Unclean leader election count - increasing indicates broker failures")
-        //             .hasDataPointsWithoutAttributes())
         .add(
             "kafka.controller.active.count",
             metric ->
@@ -209,29 +209,52 @@ class KafkaBrokerTest extends TargetSystemTest {
                     .hasUnit("{controllers}")
                     .hasDescription("The number of controllers active on the broker")
                     .hasDataPointsWithoutAttributes())
-        .add(
-            "kafka.logs.flush.Count",
-            metric ->
-                metric
-                    .isCounter()
-                    .hasUnit("ms")
-                    .hasDescription("Log flush count")
-                    .hasDataPointsWithoutAttributes())
-        .add(
-            "kafka.logs.flush.time.50p",
-            metric ->
-                metric
-                    .isGauge()
-                    .hasUnit("ms")
-                    .hasDescription("Log flush time - 50th percentile")
-                    .hasDataPointsWithoutAttributes())
-        .add(
-            "kafka.logs.flush.time.99p",
-            metric ->
-                metric
-                    .isGauge()
-                    .hasUnit("ms")
-                    .hasDescription("Log flush time - 99th percentile")
-                    .hasDataPointsWithoutAttributes());
+          .add(
+              "kafka.logs.flush.Count",
+              metric ->
+                  metric
+                      .isCounter()
+                      .hasUnit("ms")
+                      .hasDescription("Log flush count")
+                      .hasDataPointsWithoutAttributes())
+          .add(
+              "kafka.logs.flush.time.50p",
+              metric ->
+                  metric
+                      .isGauge()
+                      .hasUnit("ms")
+                      .hasDescription("Log flush time - 50th percentile")
+                      .hasDataPointsWithoutAttributes())
+          .add(
+              "kafka.logs.flush.time.99p",
+              metric ->
+                  metric
+                      .isGauge()
+                      .hasUnit("ms")
+                      .hasDescription("Log flush time - 99th percentile")
+                      .hasDataPointsWithoutAttributes());
+
+    if (useZookeeper) {
+      // those metrics are only reported when using zookeeper
+      verifier
+          .add(
+              "kafka.leaderElection.count",
+              metric ->
+                  metric
+                      .isCounter()
+                      .hasUnit("{elections}")
+                      .hasDescription("The leader election count")
+                      .hasDataPointsWithoutAttributes())
+          .add(
+              "kafka.leaderElection.unclean.count",
+              metric ->
+                  metric
+                      .isCounter()
+                      .hasUnit("{elections}")
+                      .hasDescription(
+                          "Unclean leader election count - increasing indicates broker failures")
+                      .hasDataPointsWithoutAttributes());
+    }
+    return verifier;
   }
 }

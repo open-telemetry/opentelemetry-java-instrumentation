@@ -7,8 +7,6 @@ package io.opentelemetry.instrumentation.jmx.rules.kafka;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
-import static io.opentelemetry.instrumentation.jmx.rules.kafka.KafkaContainerFactory.createKafkaConnectContainer;
-import static io.opentelemetry.instrumentation.jmx.rules.kafka.KafkaContainerFactory.createKafkaContainer;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -137,10 +135,10 @@ class KafkaConnectTest extends TargetSystemTest {
     Set<String> expectedCreatedMetrics = loadKafkaConnectMetricNames(false);
     Set<String> registeredMetrics = ConcurrentHashMap.newKeySet();
 
-    GenericContainer<?> kafka = createKafkaContainer(KAFKA_IMAGE);
+    GenericContainer<?> kafka = KafkaContainer.create(KAFKA_IMAGE);
 
     GenericContainer<?> kafkaConnect =
-        createKafkaConnectContainer(KAFKA_IMAGE)
+        KafkaContainer.create(KAFKA_IMAGE).withKafkaConnect()
             .withEnv("JAVA_TOOL_OPTIONS", String.join(" ", jvmArgs))
             .withCopyToContainer(Transferable.of("first\nsecond\nthird\n"), SOURCE_FILE_PATH)
             .withLogConsumer(frame -> recordMetricRegistrations(frame, registeredMetrics));
