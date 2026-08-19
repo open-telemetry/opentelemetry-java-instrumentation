@@ -20,6 +20,7 @@ import org.apache.dubbo.rpc.RpcInvocation;
 import org.apache.dubbo.rpc.cluster.Cluster;
 import org.apache.dubbo.rpc.cluster.ClusterInvoker;
 import org.apache.dubbo.rpc.cluster.Directory;
+import org.apache.dubbo.rpc.cluster.RouterChain;
 import org.junit.jupiter.api.Test;
 
 class RegistryCapturingClusterInvokerTest {
@@ -39,6 +40,13 @@ class RegistryCapturingClusterInvokerTest {
     assertThat(clusterInvoker.getRegistryUrl()).isSameAs(REGISTRY_URL);
     assertThat(clusterInvoker.getDirectory()).isSameAs(delegate.getDirectory());
     assertThat(clusterInvoker.isDestroyed()).isFalse();
+    assertThat(clusterInvoker.equals(clusterInvoker)).isTrue();
+    assertThat(clusterInvoker.hashCode()).isEqualTo(System.identityHashCode(clusterInvoker));
+    assertThat(clusterInvoker.toString())
+        .isEqualTo(
+            RegistryCapturingInvoker.class.getName()
+                + "@"
+                + Integer.toHexString(System.identityHashCode(clusterInvoker)));
 
     Result result = clusterInvoker.invoke(new RpcInvocation());
 
@@ -71,9 +79,25 @@ class RegistryCapturingClusterInvokerTest {
       this.invoker = invoker;
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({
+      "unchecked",
+      "UnusedMethod",
+      "UnusedVariable",
+      "MissingOverride",
+      "EffectivelyPrivate"
+    })
     public <T> Invoker<T> join(Directory<T> directory) {
+      return (Invoker<T>) invoker;
+    }
+
+    @SuppressWarnings({
+      "unchecked",
+      "UnusedMethod",
+      "UnusedVariable",
+      "MissingOverride",
+      "EffectivelyPrivate"
+    })
+    public <T> Invoker<T> join(Directory<T> directory, boolean buildFilterChain) {
       return (Invoker<T>) invoker;
     }
   }
@@ -164,6 +188,20 @@ class RegistryCapturingClusterInvokerTest {
 
     @Override
     public void discordAddresses() {}
+
+    @SuppressWarnings({"UnusedMethod", "MissingOverride"})
+    public RouterChain<Object> getRouterChain() {
+      return null;
+    }
+
+    @SuppressWarnings({"UnusedMethod", "UnusedVariable", "MissingOverride"})
+    public void addInvalidateInvoker(Invoker<Object> invoker) {}
+
+    @SuppressWarnings({"UnusedMethod", "UnusedVariable", "MissingOverride"})
+    public void addDisabledInvoker(Invoker<Object> invoker) {}
+
+    @SuppressWarnings({"UnusedMethod", "UnusedVariable", "MissingOverride"})
+    public void recoverDisabledInvoker(Invoker<Object> invoker) {}
 
     @Override
     public URL getUrl() {

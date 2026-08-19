@@ -18,7 +18,7 @@ testing {
     register<JvmTestSuite>("testClusterInvoker") {
       dependencies {
         implementation(project())
-        implementation("org.apache.dubbo:dubbo:2.7.14")
+        implementation("org.apache.dubbo:dubbo:${baseVersion("2.7.14").orLatest()}")
       }
     }
   }
