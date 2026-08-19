@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.config.bridge;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalHttpClientInstrumentationModel;
@@ -32,13 +33,13 @@ class DefaultInstrumentationConfigTest {
 
   private static Stream<Arguments> configPropertyDefaults() {
     return Stream.of(
-        Arguments.of(
+        argumentSet(
             "string default",
             (Consumer<DefaultInstrumentationConfig>)
                 defaults -> defaults.get("micrometer").setDefault("base_time_unit", "s"),
             "otel.instrumentation.micrometer.base-time-unit",
             "s"),
-        Arguments.of(
+        argumentSet(
             "boolean experimental default",
             (Consumer<DefaultInstrumentationConfig>)
                 defaults ->
@@ -47,7 +48,7 @@ class DefaultInstrumentationConfigTest {
                         .setDefault("experimental_log_attributes/development", true),
             "otel.instrumentation.log4j-appender.experimental-log-attributes",
             "true"),
-        Arguments.of(
+        argumentSet(
             "boolean non-experimental development default",
             (Consumer<DefaultInstrumentationConfig>)
                 defaults ->
@@ -56,14 +57,14 @@ class DefaultInstrumentationConfigTest {
                         .setDefault("controller_telemetry/development", false),
             "otel.instrumentation.spring-scheduling.experimental.controller-telemetry",
             "false"),
-        Arguments.of(
+        argumentSet(
             "experimental special mapping",
             (Consumer<DefaultInstrumentationConfig>)
                 defaults ->
                     defaults.get("common").get("http").setDefault("known_methods", "GET,POST"),
             "otel.instrumentation.http.known-methods",
             "GET,POST"),
-        Arguments.of(
+        argumentSet(
             "list default",
             (Consumer<DefaultInstrumentationConfig>)
                 defaults ->
@@ -73,7 +74,7 @@ class DefaultInstrumentationConfigTest {
                         .setDefault("known_methods", asList("GET", "POST")),
             "otel.instrumentation.http.known-methods",
             "GET,POST"),
-        Arguments.of(
+        argumentSet(
             "general default",
             (Consumer<DefaultInstrumentationConfig>)
                 defaults -> setGeneralClientRequestHeaders(defaults, "X-Request-Id"),
@@ -84,7 +85,6 @@ class DefaultInstrumentationConfigTest {
   @ParameterizedTest
   @MethodSource("configPropertyDefaults")
   void toConfigProperties(
-      String name,
       Consumer<DefaultInstrumentationConfig> defaultsCustomizer,
       String expectedPropertyKey,
       String expectedValue) {
