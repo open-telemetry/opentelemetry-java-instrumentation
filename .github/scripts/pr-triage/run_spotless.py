@@ -11,6 +11,7 @@ from common import (
     changed_files,
     commit_all_tracked,
     diff_check,
+    gradlew_cmd,
     progress,
     push,
     run,
@@ -31,6 +32,8 @@ def main() -> int:
     args = parse_args()
 
     def body(summary: Summary) -> int:
+        progress("Running Spotless for Scala, Groovy, and miscellaneous files")
+        run(gradlew_cmd("spotlessApply"), summary, stream_output=True)
         progress("Running Flint lint fixes")
         run(["mise", "run", "lint:fix"], summary, stream_output=True)
         progress("Checking lint changes")
