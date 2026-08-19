@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -53,8 +54,6 @@ public final class KafkaInstrumenterFactory {
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<Long> MESSAGING_BATCH_MESSAGE_COUNT =
       AttributeKey.longKey("messaging.batch.message_count");
-  // copied from ErrorAttributes
-  private static final AttributeKey<String> ERROR_TYPE = AttributeKey.stringKey("error.type");
   private static final ContextKey<Long> CONSUMED_MESSAGES_COUNT_KEY =
       ContextKey.named("opentelemetry-kafka-consumed-messages-count");
   private static final ContextKey<DeliveryTracker.DeliveryState> CONSUMED_MESSAGES_DELIVERY_STATE =
