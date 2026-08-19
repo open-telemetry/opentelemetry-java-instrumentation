@@ -6,9 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONNECTION_URI;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.connectInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import com.lambdaworks.redis.RedisChannelHandler;
 import com.lambdaworks.redis.RedisURI;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -65,8 +67,12 @@ class LettuceConnectInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(1) RedisURI redisUri,
+        @Advice.Return @Nullable Object connection,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (connection instanceof RedisChannelHandler) {
+        CONNECTION_URI.set((RedisChannelHandler<?, ?>) connection, redisUri);
+      }
       if (adviceScope != null) {
         adviceScope.end(throwable, redisUri);
       }

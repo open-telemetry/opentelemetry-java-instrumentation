@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
+import com.lambdaworks.redis.RedisURI;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-final class LettuceBatchAttributesGetter
-    implements DbClientAttributesGetter<LettuceBatchRequest, Void> {
+class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBatchRequest, Void> {
 
   @Override
   public String getDbSystemName(LettuceBatchRequest request) {
@@ -21,6 +21,15 @@ final class LettuceBatchAttributesGetter
   @Override
   @Nullable
   public String getDbNamespace(LettuceBatchRequest request) {
+    RedisURI redisUri = request.getRedisUri();
+    return redisUri != null ? String.valueOf(redisUri.getDatabase()) : null;
+  }
+
+  @Deprecated // to be removed in 3.0
+  @Override
+  @Nullable
+  public String getDbName(LettuceBatchRequest request) {
+    // old semconv reports the redis database index as db.redis.database_index, not db.name
     return null;
   }
 

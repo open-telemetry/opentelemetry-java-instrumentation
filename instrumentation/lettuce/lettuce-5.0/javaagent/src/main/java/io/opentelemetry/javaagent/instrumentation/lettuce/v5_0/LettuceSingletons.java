@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import javax.annotation.Nullable;
 
 public class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-5.0";
@@ -48,12 +49,22 @@ public class LettuceSingletons {
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
+    // Redis semantic conventions don't follow the regular pattern of adding db.namespace to the
+    // span name.
+    LettuceDbAttributesGetter spanNameAttributesGetter =
+        new LettuceDbAttributesGetter() {
+          @Override
+          @Nullable
+          public String getDbNamespace(RedisCommand<?, ?, ?> request) {
+            return null;
+          }
+        };
 
     InstrumenterBuilder<RedisCommand<?, ?, ?>, Void> builder =
         Instrumenter.<RedisCommand<?, ?, ?>, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
+                DbClientSpanNameExtractor.create(spanNameAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
@@ -61,11 +72,19 @@ public class LettuceSingletons {
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     LettuceBatchAttributesGetter batchAttributesGetter = new LettuceBatchAttributesGetter();
+    LettuceBatchAttributesGetter batchSpanNameAttributesGetter =
+        new LettuceBatchAttributesGetter() {
+          @Override
+          @Nullable
+          public String getDbNamespace(LettuceBatchRequest request) {
+            return null;
+          }
+        };
     InstrumenterBuilder<LettuceBatchRequest, Void> batchBuilder =
         Instrumenter.<LettuceBatchRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(batchAttributesGetter))
+                DbClientSpanNameExtractor.create(batchSpanNameAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(batchAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(batchBuilder);

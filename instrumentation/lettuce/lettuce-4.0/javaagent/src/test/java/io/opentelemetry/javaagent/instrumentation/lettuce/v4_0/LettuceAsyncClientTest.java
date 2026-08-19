@@ -57,6 +57,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
@@ -84,6 +85,7 @@ class LettuceAsyncClientTest {
       DockerImageName.parse("redis:6.2.3-alpine");
 
   private static final int DB_INDEX = 0;
+  private static final int NON_DEFAULT_DB_INDEX = 1;
 
   // Disable auto reconnect, so we do not get stray traces popping up on server shutdown
   private static final ClientOptions CLIENT_OPTIONS =
@@ -110,6 +112,7 @@ class LettuceAsyncClientTest {
   private static RedisClient redisClient;
   private static StatefulRedisConnection<String, String> connection;
   private static RedisAsyncCommands<String, String> asyncCommands;
+  private static RedisAsyncCommands<String, String> nonDefaultDbCommands;
 
   @BeforeAll
   static void setUp() {
@@ -131,10 +134,20 @@ class LettuceAsyncClientTest {
     asyncCommands = connection.async();
     RedisCommands<String, String> syncCommands = connection.sync();
 
+    RedisClient nonDefaultDbClient =
+        RedisClient.create("redis://" + host + ":" + port + "/" + NON_DEFAULT_DB_INDEX);
+    nonDefaultDbClient.setOptions(CLIENT_OPTIONS);
+    cleanup.deferAfterAll(nonDefaultDbClient::shutdown);
+    StatefulRedisConnection<String, String> nonDefaultDbConnection = nonDefaultDbClient.connect();
+    cleanup.deferAfterAll(nonDefaultDbConnection);
+    nonDefaultDbCommands = nonDefaultDbConnection.async();
+
     syncCommands.set("TESTKEY", "TESTVAL");
 
-    // 1 set (+ 1 connect trace when connection telemetry is enabled)
-    testing.waitForTraces(connectionTelemetryEnabled() ? 2 : 1);
+    // 1 set + 1 SELECT issued while connecting to the non-default database
+    // (+ 1 connect trace per client when connection telemetry is enabled, with the SELECT nested
+    // under it)
+    testing.waitForTraces(connectionTelemetryEnabled() ? 3 : 2);
   }
 
   private static boolean connectionTelemetryEnabled() {
@@ -220,6 +233,7 @@ class LettuceAsyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
@@ -252,6 +266,7 @@ class LettuceAsyncClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
@@ -316,6 +331,7 @@ class LettuceAsyncClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
@@ -362,6 +378,7 @@ class LettuceAsyncClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
@@ -409,6 +426,7 @@ class LettuceAsyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "HMSET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))),
@@ -422,6 +440,7 @@ class LettuceAsyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "HGETALL"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
@@ -460,6 +479,7 @@ class LettuceAsyncClientTest {
         new ArrayList<>(
             asList(
                 equalTo(maybeStable(DB_SYSTEM), REDIS),
+                equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                 equalTo(maybeStable(DB_OPERATION), "DEL"),
                 equalTo(SERVER_ADDRESS, host),
                 equalTo(SERVER_PORT, port)));
@@ -514,6 +534,7 @@ class LettuceAsyncClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "SADD"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -559,6 +580,7 @@ class LettuceAsyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), scenario.operationName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -568,6 +590,63 @@ class LettuceAsyncClientTest {
                             equalTo(
                                 ERROR_TYPE,
                                 emitStableDatabaseSemconv() ? scenario.errorType : null))));
+  }
+
+  @Test
+  void testNonDefaultDatabaseIndex() throws Exception {
+    nonDefaultDbCommands.set("NONDEFAULTKEY", "NONDEFAULTVAL").get(10, SECONDS);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, expectedNonDefaultNamespace()),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port))));
+  }
+
+  @Test
+  void testNonDefaultDatabaseIndexOnBatch() throws Exception {
+    nonDefaultDbCommands.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> nonDefaultDbCommands.setAutoFlushCommands(true));
+
+    List<RedisFuture<String>> futures =
+        asList(
+            nonDefaultDbCommands.set("NONDEFAULTBATCH1", "v1"),
+            nonDefaultDbCommands.set("NONDEFAULTBATCH2", "v2"));
+    nonDefaultDbCommands.flushCommands();
+    for (RedisFuture<String> future : futures) {
+      future.get(10, SECONDS);
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "PIPELINE SET " + host + ":" + port
+                                : "PIPELINE SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, expectedNonDefaultNamespace()),
+                            equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? 2L : null))));
+  }
+
+  @Nullable
+  private static String expectedNonDefaultNamespace() {
+    return emitStableDatabaseSemconv() ? String.valueOf(NON_DEFAULT_DB_INDEX) : null;
   }
 
   private static Stream<Arguments> deferredFlushScenarios() {
@@ -698,6 +777,7 @@ class LettuceAsyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "DEBUG"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, serverPort))));
@@ -739,6 +819,7 @@ class LettuceAsyncClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, shutdownServerPort))));

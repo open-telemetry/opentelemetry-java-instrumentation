@@ -61,6 +61,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -81,6 +82,11 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
           "age", "53");
 
   private RedisAsyncCommands<String, String> asyncCommands;
+  private RedisClient nonDefaultDbClient;
+  private StatefulRedisConnection<String, String> nonDefaultDbConnection;
+  private RedisAsyncCommands<String, String> nonDefaultDbCommands;
+
+  private static final int NON_DEFAULT_DB_INDEX = 1;
 
   @BeforeAll
   void setUp() throws UnknownHostException {
@@ -101,13 +107,24 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     asyncCommands = connection.async();
     RedisCommands<String, String> syncCommands = connection.sync();
 
+    nonDefaultDbClient =
+        RedisClient.create("redis://" + host + ":" + port + "/" + NON_DEFAULT_DB_INDEX);
+    nonDefaultDbClient.setOptions(CLIENT_OPTIONS);
+    nonDefaultDbConnection = nonDefaultDbClient.connect();
+    nonDefaultDbCommands = nonDefaultDbConnection.async();
+
     syncCommands.set("TESTKEY", "TESTVAL");
 
-    testing.waitForTraces(connectionTelemetryEnabled() ? 2 : 1);
+    // 1 set + 1 SELECT issued while connecting to the non-default database
+    // (+ 1 connect trace per client when connection telemetry is enabled, with the SELECT nested
+    // under it)
+    testing.waitForTraces(connectionTelemetryEnabled() ? 3 : 2);
   }
 
   @AfterAll
   void cleanUp() {
+    nonDefaultDbConnection.close();
+    shutdown(nonDefaultDbClient);
     connection.close();
     shutdown(redisClient);
     redisServer.stop();
@@ -216,6 +233,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))));
   }
@@ -250,6 +268,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY"),
                             equalTo(maybeStable(DB_OPERATION), "GET")),
                 span ->
@@ -309,6 +328,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY"),
                             equalTo(maybeStable(DB_OPERATION), "GET")),
                 span ->
@@ -357,6 +377,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY")),
                 span ->
@@ -406,6 +427,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "HMSET TESTHM firstname ? lastname ? age ?"),
@@ -422,6 +444,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM"),
                             equalTo(maybeStable(DB_OPERATION), "HGETALL"))));
   }
@@ -461,6 +484,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                 equalTo(SERVER_ADDRESS, host),
                 equalTo(SERVER_PORT, port),
                 equalTo(maybeStable(DB_SYSTEM), REDIS),
+                equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                 equalTo(maybeStable(DB_STATEMENT), "DEL key1 key2"),
                 equalTo(maybeStable(DB_OPERATION), "DEL")));
 
@@ -517,6 +541,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SADD SKEY ? ?"),
                             equalTo(maybeStable(DB_OPERATION), "SADD"),
                             equalTo(booleanKey("lettuce.command.cancelled"), experimental(true))),
@@ -563,6 +588,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
                             equalTo(maybeStable(DB_OPERATION), scenario.operationName),
                             equalTo(
@@ -571,6 +597,69 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(
                                 ERROR_TYPE,
                                 emitStableDatabaseSemconv() ? scenario.errorType : null))));
+  }
+
+  @Test
+  void testNonDefaultDatabaseIndex() throws Exception {
+    nonDefaultDbCommands.set("NONDEFAULTKEY", "NONDEFAULTVAL").get(10, SECONDS);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, expectedNonDefaultNamespace()),
+                            equalTo(maybeStable(DB_STATEMENT), "SET NONDEFAULTKEY ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"))));
+  }
+
+  @Test
+  void testNonDefaultDatabaseIndexOnBatch() throws Exception {
+    nonDefaultDbConnection.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> nonDefaultDbConnection.setAutoFlushCommands(true));
+
+    List<RedisFuture<String>> futures =
+        asList(
+            nonDefaultDbCommands.set("NONDEFAULTBATCH1", "v1"),
+            nonDefaultDbCommands.set("NONDEFAULTBATCH2", "v2"));
+    nonDefaultDbConnection.flushCommands();
+    for (RedisFuture<String> future : futures) {
+      future.get(10, SECONDS);
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "PIPELINE SET " + host + ":" + port
+                                : "PIPELINE SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, expectedNonDefaultNamespace()),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                emitStableDatabaseSemconv()
+                                    ? "SET NONDEFAULTBATCH1 ?; SET NONDEFAULTBATCH2 ?"
+                                    : "SET NONDEFAULTBATCH1 ?;SET NONDEFAULTBATCH2 ?"),
+                            equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? 2L : null))));
+  }
+
+  @Nullable
+  private static String expectedNonDefaultNamespace() {
+    return emitStableDatabaseSemconv() ? String.valueOf(NON_DEFAULT_DB_INDEX) : null;
   }
 
   private static Stream<Arguments> deferredFlushScenarios() {
@@ -708,6 +797,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                                   equalTo(SERVER_ADDRESS, host),
                                   equalTo(SERVER_PORT, port),
                                   equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                  equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                                   equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT"),
                                   equalTo(maybeStable(DB_OPERATION), "DEBUG"))));
         });
@@ -733,6 +823,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                                   equalTo(SERVER_ADDRESS, host),
                                   equalTo(SERVER_PORT, port),
                                   equalTo(maybeStable(DB_SYSTEM), REDIS),
+                                  equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                                   equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE"),
                                   equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"))));
         });

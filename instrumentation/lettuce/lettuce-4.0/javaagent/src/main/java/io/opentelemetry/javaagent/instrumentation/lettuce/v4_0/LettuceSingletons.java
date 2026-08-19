@@ -51,14 +51,30 @@ public class LettuceSingletons {
   public static final VirtualField<RedisCommand<?, ?, ?>, InetSocketAddress> COMMAND_ADDRESS =
       VirtualField.find(RedisCommand.class, InetSocketAddress.class);
 
+  public static final VirtualField<RedisChannelHandler<?, ?>, RedisURI> CONNECTION_URI =
+      VirtualField.find(RedisChannelHandler.class, RedisURI.class);
+
+  public static final VirtualField<RedisCommand<?, ?, ?>, RedisURI> COMMAND_URI =
+      VirtualField.find(RedisCommand.class, RedisURI.class);
+
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
+    // Redis semantic conventions don't follow the regular pattern of adding db.namespace to the
+    // span name.
+    LettuceDbAttributesGetter spanNameAttributesGetter =
+        new LettuceDbAttributesGetter() {
+          @Override
+          @Nullable
+          public String getDbNamespace(RedisCommand<?, ?, ?> request) {
+            return null;
+          }
+        };
 
     InstrumenterBuilder<RedisCommand<?, ?, ?>, Void> builder =
         Instrumenter.<RedisCommand<?, ?, ?>, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(dbAttributesGetter))
+                DbClientSpanNameExtractor.create(spanNameAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
@@ -66,11 +82,19 @@ public class LettuceSingletons {
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     LettuceBatchAttributesGetter batchAttributesGetter = new LettuceBatchAttributesGetter();
+    LettuceBatchAttributesGetter batchSpanNameAttributesGetter =
+        new LettuceBatchAttributesGetter() {
+          @Override
+          @Nullable
+          public String getDbNamespace(LettuceBatchRequest request) {
+            return null;
+          }
+        };
     InstrumenterBuilder<LettuceBatchRequest, Void> batchBuilder =
         Instrumenter.<LettuceBatchRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(batchAttributesGetter))
+                DbClientSpanNameExtractor.create(batchSpanNameAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(batchAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(batchBuilder);
@@ -109,12 +133,20 @@ public class LettuceSingletons {
   public static void attachAddress(
       RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
     COMMAND_ADDRESS.set(command, serverAddress(connection));
+    COMMAND_URI.set(command, redisUri(connection));
   }
 
   @Nullable
   static InetSocketAddress serverAddress(StatefulConnection<?, ?> connection) {
     return connection instanceof RedisChannelHandler
         ? CONNECTION_ADDRESS.get((RedisChannelHandler<?, ?>) connection)
+        : null;
+  }
+
+  @Nullable
+  static RedisURI redisUri(StatefulConnection<?, ?> connection) {
+    return connection instanceof RedisChannelHandler
+        ? CONNECTION_URI.get((RedisChannelHandler<?, ?>) connection)
         : null;
   }
 
