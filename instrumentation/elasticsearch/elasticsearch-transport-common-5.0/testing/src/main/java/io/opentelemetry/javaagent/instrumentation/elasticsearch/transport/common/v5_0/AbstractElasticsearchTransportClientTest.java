@@ -188,7 +188,11 @@ public abstract class AbstractElasticsearchTransportClientTest
   }
 
   private String putMappingOperationName() {
-    return operationName(getPutMappingActionName(), "indices.put_mapping");
+    String actionName = getPutMappingActionName();
+    // AutoPutMappingAction has no REST API equivalent, so it keeps its action class name
+    return "AutoPutMappingAction".equals(actionName)
+        ? actionName
+        : operationName(actionName, "indices.put_mapping");
   }
 
   @Test

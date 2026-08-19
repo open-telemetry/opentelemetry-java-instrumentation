@@ -14,8 +14,16 @@ import java.util.Map;
  * Elasticsearch REST and api-client instrumentations, so that the same logical operation gets the
  * same {@code db.operation.name} no matter which client the application uses.
  *
- * <p>Actions that have no REST API equivalent, such as the internal persistent task and dangling
- * index actions, are deliberately absent and keep their action class name.
+ * <p>Actions are keyed on the action class simple name because the packages holding these classes
+ * moved between Elasticsearch 5.x, 6.x and 7.x, so a fully qualified name would not match across
+ * the supported versions.
+ *
+ * <p>An action is deliberately absent, and so keeps its action class name, when it has no REST API
+ * equivalent, such as the internal persistent task and dangling index actions, or when it covers
+ * several REST APIs that the REST and api-client instrumentations report under different names,
+ * such as {@code ResizeAction} covering shrink, split and clone. Reporting the action class name is
+ * less specific than the REST API name, but it never attributes an operation to a REST API the
+ * caller did not use.
  */
 final class ElasticsearchTransportOperationNames {
 
@@ -23,7 +31,7 @@ final class ElasticsearchTransportOperationNames {
 
   /**
    * Returns the Elasticsearch REST API name for the given action class simple name, falling back to
-   * the action class simple name when the action has no REST API equivalent.
+   * the action class simple name when the action is not mapped.
    */
   static String operationName(String actionClassName) {
     String operationName = OPERATION_NAMES.get(actionClassName);
@@ -37,7 +45,6 @@ final class ElasticsearchTransportOperationNames {
     operationNames.put("AliasesExistAction", "indices.exists_alias");
     operationNames.put("AnalyzeAction", "indices.analyze");
     operationNames.put("AnalyzeIndexDiskUsageAction", "indices.disk_usage");
-    operationNames.put("AutoPutMappingAction", "indices.put_mapping");
     operationNames.put("BulkAction", "bulk");
     operationNames.put("CancelTasksAction", "tasks.cancel");
     operationNames.put("CleanupRepositoryAction", "snapshot.cleanup_repository");
@@ -126,7 +133,6 @@ final class ElasticsearchTransportOperationNames {
     operationNames.put("ReindexAction", "reindex");
     operationNames.put("RemoteInfoAction", "cluster.remote_info");
     operationNames.put("ResetFeatureStateAction", "features.reset_features");
-    operationNames.put("ResizeAction", "indices.shrink");
     operationNames.put("ResolveIndexAction", "indices.resolve_index");
     operationNames.put("RestoreSnapshotAction", "snapshot.restore");
     operationNames.put("RolloverAction", "indices.rollover");
