@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
@@ -47,6 +48,7 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
   public static class MessageListenerAdvice {
 
     public static class AdviceScope {
+      private final Instrumenter<MessageWithDestination, Void> instrumenter;
       private final MessageWithDestination messageWithDestination;
       @Nullable private final Context context;
       @Nullable private final Scope scope;
@@ -55,10 +57,12 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
       @Nullable private final Message messageWithListenerSubscriptionName;
 
       private AdviceScope(
+          Instrumenter<MessageWithDestination, Void> instrumenter,
           MessageWithDestination messageWithDestination,
           @Nullable Context context,
           @Nullable Scope scope,
           @Nullable Message messageWithListenerSubscriptionName) {
+        this.instrumenter = instrumenter;
         this.messageWithDestination = messageWithDestination;
         this.context = context;
         this.scope = scope;
@@ -73,15 +77,22 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
                 JavaxMessageAdapter.create(message), null, JmsSubscriptionNames.get(message));
 
         Context parentContext = Context.current();
-        if (!consumerProcessInstrumenter().shouldStart(parentContext, messageWithDestination)) {
+        Instrumenter<MessageWithDestination, Void> instrumenter =
+            consumerProcessInstrumenter(
+                messageWithDestination.message().wasReceiveTelemetryRecorded());
+        if (!instrumenter.shouldStart(parentContext, messageWithDestination)) {
           // an advice scope is still needed, to clear the listener's subscription name on exit
           return new AdviceScope(
-              messageWithDestination, null, null, messageWithListenerSubscriptionName);
+              instrumenter,
+              messageWithDestination,
+              null,
+              null,
+              messageWithListenerSubscriptionName);
         }
 
-        Context context =
-            consumerProcessInstrumenter().start(parentContext, messageWithDestination);
+        Context context = instrumenter.start(parentContext, messageWithDestination);
         return new AdviceScope(
+            instrumenter,
             messageWithDestination,
             context,
             context.makeCurrent(),
@@ -111,7 +122,7 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
         try {
           if (context != null && scope != null) {
             scope.close();
-            consumerProcessInstrumenter().end(context, messageWithDestination, null, throwable);
+            instrumenter.end(context, messageWithDestination, null, throwable);
           }
         } finally {
           if (messageWithListenerSubscriptionName != null) {
