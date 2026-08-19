@@ -11,6 +11,7 @@ readonly INSTRUMENTATIONS=(
   "akka:akka-http-10.0:javaagent:testStableSemconv"
   "alibaba-druid-1.0:javaagent:test"
   "alibaba-druid-1.0:javaagent:testStableSemconv"
+  "apache-commons-pool-2.0:javaagent:test"
   "apache-dbcp-2.0:javaagent:test"
   "apache-dbcp-2.0:javaagent:testStableSemconv"
   "apache-dubbo-2.7:javaagent:testDubbo"
