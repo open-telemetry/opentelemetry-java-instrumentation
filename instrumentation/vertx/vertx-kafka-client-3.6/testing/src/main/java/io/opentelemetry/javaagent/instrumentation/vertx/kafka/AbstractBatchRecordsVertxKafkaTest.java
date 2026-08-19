@@ -6,6 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricPointCounts;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveDurationMetrics;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -60,6 +63,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
 
     if (emitStableMessagingSemconv()) {
       assertStableBatchSuccess(record1, record2);
+      assertBatchMetrics(2, null);
       return;
     }
 
@@ -122,6 +126,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
                             .hasLinks(LinkData.create(producer2.get().getSpanContext()))
                             .hasAttributesSatisfyingExactly(processAttributes(record2)),
                     span -> span.hasName("process testSpan2").hasParent(trace.getSpan(5))));
+    assertBatchMetrics(2, null);
   }
 
   @Order(2)
@@ -137,6 +142,7 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
 
     if (emitStableMessagingSemconv()) {
       assertStableBatchFailure(record);
+      assertBatchMetrics(1, IllegalArgumentException.class.getName());
       return;
     }
 
@@ -184,6 +190,46 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(processAttributes(record)),
                     span -> span.hasName("process error").hasParent(trace.getSpan(3))));
+    assertBatchMetrics(1, IllegalArgumentException.class.getName());
+  }
+
+  private void assertBatchMetrics(long messageCount, String errorType) {
+    String group = hasConsumerGroup() ? "test" : null;
+    // receive telemetry is enabled here, so the receive operation records poll duration
+    assertReceiveDurationMetrics(
+        testing(), "io.opentelemetry.kafka-clients-0.11", "testBatchTopic", group, "0", 1, null);
+    if (errorType == null) {
+      // all of the records come from the same partition, so the batch process operation and the
+      // per-record process operations share a single duration point
+      assertProcessDurationMetrics(
+          testing(),
+          "io.opentelemetry.vertx-kafka-client-3.6",
+          "testBatchTopic",
+          group,
+          "0",
+          messageCount + 1,
+          null);
+      assertProcessMetricPointCounts(testing(), "io.opentelemetry.vertx-kafka-client-3.6", 1);
+      return;
+    }
+    // the failed batch process operation gets a duration point of its own through error.type
+    assertProcessDurationMetrics(
+        testing(),
+        "io.opentelemetry.vertx-kafka-client-3.6",
+        "testBatchTopic",
+        group,
+        "0",
+        1,
+        errorType);
+    assertProcessDurationMetrics(
+        testing(),
+        "io.opentelemetry.vertx-kafka-client-3.6",
+        "testBatchTopic",
+        group,
+        "0",
+        messageCount,
+        null);
+    assertProcessMetricPointCounts(testing(), "io.opentelemetry.vertx-kafka-client-3.6", 2);
   }
 
   private void assertStableBatchSuccess(
