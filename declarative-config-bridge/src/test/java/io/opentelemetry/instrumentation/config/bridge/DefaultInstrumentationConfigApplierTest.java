@@ -96,7 +96,7 @@ class DefaultInstrumentationConfigApplierTest {
   void applyToModelAppliesGeneralDefaults() {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
     defaults
-        .get("general")
+        .getGeneral()
         .get("http")
         .get("client")
         .setDefault("request_captured_headers", asList("X-Request-Id"));
@@ -119,7 +119,7 @@ class DefaultInstrumentationConfigApplierTest {
   void applyToModelDoesNotOverrideExistingGeneralDefault() {
     OpenTelemetryConfigurationModel model = newModel();
     DefaultInstrumentationConfig seed = new DefaultInstrumentationConfig();
-    seed.get("general")
+    seed.getGeneral()
         .get("http")
         .get("client")
         .setDefault("request_captured_headers", asList("Existing"));
@@ -127,7 +127,7 @@ class DefaultInstrumentationConfigApplierTest {
 
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
     defaults
-        .get("general")
+        .getGeneral()
         .get("http")
         .get("client")
         .setDefault("request_captured_headers", asList("Default"));
@@ -141,6 +141,25 @@ class DefaultInstrumentationConfigApplierTest {
                 .getClient()
                 .getRequestCapturedHeaders())
         .containsExactly("Existing");
+  }
+
+  @Test
+  void applyToModelTreatsGeneralNamedJavaInstrumentationAsJava() {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults.get("general").setDefault("enabled", true);
+
+    OpenTelemetryConfigurationModel model = newModel();
+    defaults.applyToModel(model);
+
+    assertThat(model.getInstrumentationDevelopment().getGeneral()).isNull();
+    assertThat(
+            model
+                .getInstrumentationDevelopment()
+                .getJava()
+                .getAdditionalProperties()
+                .get("general")
+                .getAdditionalProperties())
+        .containsEntry("enabled", true);
   }
 
   @Test

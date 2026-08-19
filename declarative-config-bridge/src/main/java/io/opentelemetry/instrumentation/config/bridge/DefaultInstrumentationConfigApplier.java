@@ -46,8 +46,12 @@ final class DefaultInstrumentationConfigApplier {
       if (declarativePath.startsWith("general.")) {
         applyGeneralDefault(
             instrumentation, declarativePath.substring("general.".length()), entry.getValue());
+      } else if (declarativePath.startsWith("java.")) {
+        applyJavaDefault(
+            instrumentation, declarativePath.substring("java.".length()), entry.getValue());
       } else {
-        applyJavaDefault(instrumentation, declarativePath, entry.getValue());
+        throw new IllegalStateException(
+            "unexpected instrumentation default path: " + declarativePath);
       }
     }
 

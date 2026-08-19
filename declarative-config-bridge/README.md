@@ -95,6 +95,8 @@ First, there is a single defaults object that is unaware of the source of the co
 DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
 defaults.get("micrometer").setDefault("base_time_unit", "s");
 defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", true);
+defaults.getGeneral().get("http").get("client")
+    .setDefault("request_captured_headers", List.of("X-Request-Id"));
 defaults.addMapping("acme", "acme.full_name");
 defaults.get("acme").get("full_name").setDefault("preserved", "true");
 ```
@@ -102,7 +104,8 @@ defaults.get("acme").get("full_name").setDefault("preserved", "true");
 Navigation mirrors `DeclarativeConfigProperties` — reading uses
 `config.get("micrometer").getString("base_time_unit")`; writing defaults uses
 `defaults.get("micrometer").setDefault("base_time_unit", "s")`, and deeper nested paths can chain
-`get(...)` the same way.
+`get(...)` the same way. General instrumentation configuration uses the separate `getGeneral()`
+root, leaving `get("general")` available for a Java instrumentation named `general`.
 
 Keys use the same declarative config shape as `DeclarativeConfigProperties`. When producing system
 property keys, underscores are translated to hyphens, and keys ending in `/development` are

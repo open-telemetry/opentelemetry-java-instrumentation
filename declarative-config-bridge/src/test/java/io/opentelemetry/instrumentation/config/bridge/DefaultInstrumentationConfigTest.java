@@ -76,7 +76,7 @@ class DefaultInstrumentationConfigTest {
             (Consumer<DefaultInstrumentationConfig>)
                 defaults ->
                     defaults
-                        .get("general")
+                        .getGeneral()
                         .get("http")
                         .get("client")
                         .setDefault("request_captured_headers", asList("X-Request-Id")),
@@ -139,7 +139,7 @@ class DefaultInstrumentationConfigTest {
   void toConfigPropertiesRoundTripsGeneralDefaultThroughBridge() {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
     defaults
-        .get("general")
+        .getGeneral()
         .get("http")
         .get("client")
         .setDefault("request_captured_headers", asList("X-Request-Id"));
@@ -155,6 +155,16 @@ class DefaultInstrumentationConfigTest {
                 .getStructured("client")
                 .getScalarList("request_captured_headers", String.class))
         .containsExactly("X-Request-Id");
+  }
+
+  @Test
+  void generalNamedJavaInstrumentationRemainsUnderJava() {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults.get("general").setDefault("enabled", true);
+
+    assertThat(defaults.toConfigProperties())
+        .containsEntry("otel.instrumentation.general.enabled", "true")
+        .hasSize(1);
   }
 
   @Test
