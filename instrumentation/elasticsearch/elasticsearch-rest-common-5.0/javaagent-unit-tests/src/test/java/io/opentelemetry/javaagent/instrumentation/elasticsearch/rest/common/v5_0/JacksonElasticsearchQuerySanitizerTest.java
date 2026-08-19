@@ -21,7 +21,7 @@ class JacksonElasticsearchQuerySanitizerTest {
       new JacksonElasticsearchQuerySanitizer();
 
   private String sanitize(String body) {
-    return sanitizer.sanitize(body);
+    return sanitizer.apply(body);
   }
 
   @Test

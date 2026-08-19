@@ -12,6 +12,7 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
@@ -29,7 +30,7 @@ class ElasticsearchDbAttributesGetterTest {
   private static final String SANITIZED_BODY = "{\"query\":{\"match\":{\"title\":\"?\"}}}";
 
   /** Records the bodies it is given and returns whatever it was configured to return. */
-  private static class RecordingSanitizer implements ElasticsearchQuerySanitizer {
+  private static class RecordingSanitizer implements UnaryOperator<String> {
     final List<String> sanitized = new ArrayList<>();
     final String result;
 
@@ -38,7 +39,7 @@ class ElasticsearchDbAttributesGetterTest {
     }
 
     @Override
-    public String sanitize(String body) {
+    public String apply(String body) {
       sanitized.add(body);
       return result;
     }

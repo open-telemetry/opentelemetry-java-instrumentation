@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.bootstrap.elasticsearch;
 
 import io.opentelemetry.instrumentation.api.internal.Initializer;
+import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 
 /**
@@ -20,14 +21,7 @@ import javax.annotation.Nullable;
  */
 public final class ElasticsearchQuerySanitizerAccess {
 
-  /** Rewrites a search query body so that literal values are replaced with a mask. */
-  public interface Sanitizer {
-    /** Returns the sanitized body, or {@code null} if the body could not be sanitized. */
-    @Nullable
-    String sanitize(String body);
-  }
-
-  @Nullable private static volatile Sanitizer sanitizer;
+  @Nullable private static volatile UnaryOperator<String> sanitizer;
 
   /**
    * Returns the sanitized body, or {@code null} if the body could not be sanitized or no sanitizer
@@ -36,16 +30,16 @@ public final class ElasticsearchQuerySanitizerAccess {
    */
   @Nullable
   public static String sanitize(String body) {
-    Sanitizer sanitizer = ElasticsearchQuerySanitizerAccess.sanitizer;
-    return sanitizer == null ? null : sanitizer.sanitize(body);
+    UnaryOperator<String> sanitizer = ElasticsearchQuerySanitizerAccess.sanitizer;
+    return sanitizer == null ? null : sanitizer.apply(body);
   }
 
   /**
-   * Sets the {@link Sanitizer} to use. This is called from the agent class loader, which is the
-   * only place the JSON parser is visible. Instrumentation must not call this.
+   * Sets the sanitizer to use. This is called from the agent class loader, which is the only place
+   * the JSON parser is visible. Instrumentation must not call this.
    */
   @Initializer
-  public static void internalSetSanitizer(Sanitizer sanitizer) {
+  public static void internalSetSanitizer(UnaryOperator<String> sanitizer) {
     if (ElasticsearchQuerySanitizerAccess.sanitizer != null) {
       // Only possible by misuse of this API, just ignore.
       return;

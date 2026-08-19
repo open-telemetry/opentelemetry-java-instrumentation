@@ -12,6 +12,7 @@ import com.fasterxml.jackson.core.StreamReadConstraints;
 import io.opentelemetry.javaagent.bootstrap.elasticsearch.ElasticsearchQuerySanitizerAccess;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 
 /**
@@ -26,8 +27,7 @@ import javax.annotation.Nullable;
  * <p>When the body is not a valid JSON value or sequence of JSON values, this returns {@code null}
  * so that the caller drops the body rather than capturing it raw.
  */
-final class JacksonElasticsearchQuerySanitizer
-    implements ElasticsearchQuerySanitizerAccess.Sanitizer {
+final class JacksonElasticsearchQuerySanitizer implements UnaryOperator<String> {
 
   private static final String MASKED_VALUE = "?";
   private static final char QUERY_SEPARATOR = ';';
@@ -52,7 +52,7 @@ final class JacksonElasticsearchQuerySanitizer
 
   @Override
   @Nullable
-  public String sanitize(String body) {
+  public String apply(String body) {
     JsonFactory jsonFactory = JsonFactoryHolder.jsonFactory;
     StringWriter out = new StringWriter(body.length());
     try (JsonParser parser = jsonFactory.createParser(body)) {
