@@ -42,7 +42,7 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class SqsImpl {
-  private static final VirtualField<SendMessageBatchRequest, Context[]> batchMessageContexts =
+  private static final VirtualField<SendMessageBatchRequest, Context[]> BATCH_MESSAGE_CONTEXTS =
       VirtualField.find(SendMessageBatchRequest.class, Context[].class);
 
   static {
@@ -209,7 +209,7 @@ public final class SqsImpl {
       preparedEntries.add(preparedEntry);
     }
     preparedRequest.setEntries(preparedEntries);
-    batchMessageContexts.set(preparedRequest, creationContexts.toArray(new Context[0]));
+    BATCH_MESSAGE_CONTEXTS.set(preparedRequest, creationContexts.toArray(new Context[0]));
     return preparedRequest;
   }
 
@@ -222,7 +222,7 @@ public final class SqsImpl {
       return new ArrayList<>();
     }
     Context[] contexts =
-        batchMessageContexts.get((SendMessageBatchRequest) request.getOriginalRequest());
+        BATCH_MESSAGE_CONTEXTS.get((SendMessageBatchRequest) request.getOriginalRequest());
     return contexts != null ? asList(contexts) : new ArrayList<>();
   }
 
