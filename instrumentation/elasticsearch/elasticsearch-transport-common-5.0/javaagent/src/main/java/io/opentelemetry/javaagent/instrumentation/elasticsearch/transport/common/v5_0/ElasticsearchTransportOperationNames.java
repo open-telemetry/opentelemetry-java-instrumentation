@@ -19,11 +19,11 @@ import java.util.Map;
  * the supported versions.
  *
  * <p>An action is deliberately absent, and so keeps its action class name, when it has no REST API
- * equivalent, such as the internal persistent task and dangling index actions, or when it covers
- * several REST APIs that the REST and api-client instrumentations report under different names,
- * such as {@code ResizeAction} covering shrink, split and clone. Reporting the action class name is
- * less specific than the REST API name, but it never attributes an operation to a REST API the
- * caller did not use.
+ * equivalent, such as the internal persistent task actions and {@code AutoCreateAction}, or when it
+ * covers several REST APIs that the REST and api-client instrumentations report under different
+ * names, such as {@code ResizeAction} covering shrink, split and clone. Reporting the action class
+ * name is less specific than the REST API name, but it never attributes an operation to a REST API
+ * the caller did not use.
  */
 final class ElasticsearchTransportOperationNames {
 
