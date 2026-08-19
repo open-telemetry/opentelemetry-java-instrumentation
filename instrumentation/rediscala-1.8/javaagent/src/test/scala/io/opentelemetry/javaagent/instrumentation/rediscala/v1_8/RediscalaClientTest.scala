@@ -245,6 +245,37 @@ class RediscalaClientTest {
     assertCommandSpan("PUBLISH")
   }
 
+  @Test def testCommandWithOption(): Unit = {
+    val value = testing.runWithSpan(
+      "parent",
+      new ThrowingSupplier[Future[_], Exception] {
+        override def get(): Future[_] =
+          redisClient.zrangeWithscores[String]("sorted-set", 0, -1)
+      }
+    )
+
+    Await.result(value, Duration.apply("3 second"))
+
+    // ZrangeWithscores sends ZRANGE with the WITHSCORES option
+    assertCommandSpan(
+      if (emitStableDatabaseSemconv()) "ZRANGE" else "ZRANGEWITHSCORES"
+    )
+  }
+
+  @Test def testCommandWithoutArguments(): Unit = {
+    val value = testing.runWithSpan(
+      "parent",
+      new ThrowingSupplier[Future[_], Exception] {
+        override def get(): Future[_] = redisClient.ping()
+      }
+    )
+
+    Await.result(value, Duration.apply("3 second"))
+
+    // commands without arguments are scala objects, whose class name ends with $
+    assertCommandSpan(if (emitStableDatabaseSemconv()) "PING" else "PING$")
+  }
+
   private def assertCommandSpan(operationName: String): Unit =
     testing.waitAndAssertTraces(new Consumer[TraceAssert] {
       override def accept(trace: TraceAssert): Unit =

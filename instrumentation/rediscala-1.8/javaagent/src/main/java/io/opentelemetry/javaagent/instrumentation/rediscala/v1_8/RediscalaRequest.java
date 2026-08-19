@@ -7,8 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
 import static java.util.Arrays.asList;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import javax.annotation.Nullable;
 import redis.Operation;
 import redis.RedisCommand;
@@ -17,8 +19,14 @@ import scala.collection.immutable.Queue;
 
 class RediscalaRequest {
 
-  // Redis commands that are split into a container command and a subcommand, e.g. CONFIG GET.
-  // Rediscala names the command class after both tokens, e.g. ConfigGet.
+  // Command classes that rediscala names after something other than the command it sends, either
+  // because the name also covers an option, e.g. ZrangeWithscores sends ZRANGE ... WITHSCORES, or
+  // because the class name does not start with the container command, e.g. SenMasters sends
+  // SENTINEL MASTERS.
+  private static final Map<String, String> COMMAND_NAMES = commandNames();
+
+  // Redis commands that take a subcommand, e.g. CONFIG GET. Rediscala names the command class
+  // after both tokens, e.g. ConfigGet.
   private static final List<String> CONTAINER_COMMANDS =
       asList(
           "ACL", "CLIENT", "CLUSTER", "COMMAND", "CONFIG", "DEBUG", "LATENCY", "MEMORY", "OBJECT",
@@ -110,7 +118,19 @@ class RediscalaRequest {
 
   private static String operationName(RedisCommand<?, ?> command, boolean stable) {
     String name = command.getClass().getSimpleName().toUpperCase(Locale.ROOT);
-    return stable ? containerCommand(name) : name;
+    return stable ? stableOperationName(name) : name;
+  }
+
+  private static String stableOperationName(String className) {
+    // commands without arguments are scala objects, whose class name ends with $
+    String name =
+        className.endsWith("$") ? className.substring(0, className.length() - 1) : className;
+
+    String commandName = COMMAND_NAMES.get(name);
+    if (commandName != null) {
+      return commandName;
+    }
+    return containerCommand(name);
   }
 
   private static String containerCommand(String name) {
@@ -120,5 +140,29 @@ class RediscalaRequest {
       }
     }
     return name;
+  }
+
+  private static Map<String, String> commandNames() {
+    Map<String, String> names = new HashMap<>();
+    names.put("BITCOUNTRANGE", "BITCOUNT");
+    names.put("EXISTSMANY", "EXISTS");
+    names.put("GEORADIUSBYMEMBERWITHOPT", "GEORADIUSBYMEMBER");
+    names.put("RENAMEX", "RENAMENX");
+    names.put("SENGETMASTERADDR", "SENTINEL");
+    names.put("SENMASTERFAILOVER", "SENTINEL");
+    names.put("SENMASTERINFO", "SENTINEL");
+    names.put("SENMASTERS", "SENTINEL");
+    names.put("SENRESETMASTER", "SENTINEL");
+    names.put("SENSLAVES", "SENTINEL");
+    names.put("SLAVEOFNOONE", "SLAVEOF");
+    names.put("SORTSTORE", "SORT");
+    names.put("SRANDMEMBERS", "SRANDMEMBER");
+    names.put("ZINTERSTOREWEIGHTED", "ZINTERSTORE");
+    names.put("ZRANGEBYSCOREWITHSCORES", "ZRANGEBYSCORE");
+    names.put("ZRANGEWITHSCORES", "ZRANGE");
+    names.put("ZREVRANGEBYSCOREWITHSCORES", "ZREVRANGEBYSCORE");
+    names.put("ZREVRANGEWITHSCORES", "ZREVRANGE");
+    names.put("ZUNIONSTOREWEIGHTED", "ZUNIONSTORE");
+    return names;
   }
 }
