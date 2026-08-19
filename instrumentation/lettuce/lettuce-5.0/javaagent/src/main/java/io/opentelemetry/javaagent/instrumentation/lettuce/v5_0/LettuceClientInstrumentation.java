@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_ADDRESS;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_DATABASE_INDEX;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.ENDPOINT_URI;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.connectInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
@@ -23,6 +23,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -58,8 +59,10 @@ class LettuceClientInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(1) DefaultEndpoint endpoint, @Advice.Argument(2) RedisURI redisUri) {
       ENDPOINT_DATABASE_INDEX.set(endpoint, redisUri.getDatabase());
-      if (redisUri.getHost() != null) {
-        ENDPOINT_URI.set(endpoint, redisUri);
+      String host = redisUri.getHost();
+      if (host != null) {
+        ENDPOINT_ADDRESS.set(
+            endpoint, InetSocketAddress.createUnresolved(host, redisUri.getPort()));
       }
     }
   }

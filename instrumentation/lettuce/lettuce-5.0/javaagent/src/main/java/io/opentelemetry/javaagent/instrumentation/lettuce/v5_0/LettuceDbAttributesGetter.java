@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static java.util.Collections.emptyList;
 
-import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
@@ -15,6 +14,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -66,14 +66,14 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
   @Nullable
   @Override
   public String getServerAddress(RedisCommand<?, ?, ?> request) {
-    RedisURI redisUri = LettuceSingletons.COMMAND_URI.get(request);
-    return redisUri != null ? redisUri.getHost() : null;
+    InetSocketAddress serverAddress = LettuceSingletons.COMMAND_ADDRESS.get(request);
+    return serverAddress != null ? serverAddress.getHostString() : null;
   }
 
   @Nullable
   @Override
   public Integer getServerPort(RedisCommand<?, ?, ?> request) {
-    RedisURI redisUri = LettuceSingletons.COMMAND_URI.get(request);
-    return redisUri != null ? redisUri.getPort() : null;
+    InetSocketAddress serverAddress = LettuceSingletons.COMMAND_ADDRESS.get(request);
+    return serverAddress != null ? serverAddress.getPort() : null;
   }
 }

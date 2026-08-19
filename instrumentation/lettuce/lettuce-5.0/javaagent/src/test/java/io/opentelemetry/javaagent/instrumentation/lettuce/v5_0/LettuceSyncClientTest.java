@@ -187,7 +187,7 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
-  void testUriMutationDoesNotChangeEstablishedDatabaseIndex() {
+  void testUriMutationDoesNotChangeEstablishedAttributes() {
     RedisURI redisUri = RedisURI.create(embeddedDbUri);
     RedisClient testClient = RedisClient.create(redisUri);
     testClient.setOptions(CLIENT_OPTIONS);
@@ -200,6 +200,8 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
     }
     testing.clearData();
 
+    redisUri.setHost("example.com");
+    redisUri.setPort(1234);
     redisUri.setDatabase(1);
     assertThat(testConnection.sync().set("URI_MUTATION_TEST_KEY", "URI_MUTATION_TEST_VALUE"))
         .isEqualTo("OK");

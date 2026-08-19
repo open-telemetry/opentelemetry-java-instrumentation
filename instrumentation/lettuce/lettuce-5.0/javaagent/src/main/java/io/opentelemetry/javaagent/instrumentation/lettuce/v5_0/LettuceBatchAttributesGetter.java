@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import io.lettuce.core.RedisURI;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBatchRequest, Void> {
@@ -52,14 +52,14 @@ class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBa
   @Nullable
   @Override
   public String getServerAddress(LettuceBatchRequest request) {
-    RedisURI redisUri = request.getRedisUri();
-    return redisUri != null ? redisUri.getHost() : null;
+    InetSocketAddress serverAddress = request.getServerAddress();
+    return serverAddress != null ? serverAddress.getHostString() : null;
   }
 
   @Nullable
   @Override
   public Integer getServerPort(LettuceBatchRequest request) {
-    RedisURI redisUri = request.getRedisUri();
-    return redisUri != null ? redisUri.getPort() : null;
+    InetSocketAddress serverAddress = request.getServerAddress();
+    return serverAddress != null ? serverAddress.getPort() : null;
   }
 }

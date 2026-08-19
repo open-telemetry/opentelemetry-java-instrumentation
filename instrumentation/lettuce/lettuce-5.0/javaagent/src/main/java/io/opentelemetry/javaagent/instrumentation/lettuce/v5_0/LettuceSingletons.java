@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 public class LettuceSingletons {
@@ -41,14 +42,14 @@ public class LettuceSingletons {
   public static final VirtualField<AsyncCommand<?, ?, ?>, Context> CONTEXT =
       VirtualField.find(AsyncCommand.class, Context.class);
 
-  public static final VirtualField<DefaultEndpoint, RedisURI> ENDPOINT_URI =
-      VirtualField.find(DefaultEndpoint.class, RedisURI.class);
+  public static final VirtualField<DefaultEndpoint, InetSocketAddress> ENDPOINT_ADDRESS =
+      VirtualField.find(DefaultEndpoint.class, InetSocketAddress.class);
+
+  public static final VirtualField<RedisCommand<?, ?, ?>, InetSocketAddress> COMMAND_ADDRESS =
+      VirtualField.find(RedisCommand.class, InetSocketAddress.class);
 
   public static final VirtualField<DefaultEndpoint, Integer> ENDPOINT_DATABASE_INDEX =
       VirtualField.find(DefaultEndpoint.class, Integer.class);
-
-  public static final VirtualField<RedisCommand<?, ?, ?>, RedisURI> COMMAND_URI =
-      VirtualField.find(RedisCommand.class, RedisURI.class);
 
   public static final VirtualField<RedisCommand<?, ?, ?>, Integer> COMMAND_DATABASE_INDEX =
       VirtualField.find(RedisCommand.class, Integer.class);
@@ -133,7 +134,7 @@ public class LettuceSingletons {
       Object channelWriter = ((RedisChannelHandler<?, ?>) connection).getChannelWriter();
       if (channelWriter instanceof DefaultEndpoint) {
         DefaultEndpoint endpoint = (DefaultEndpoint) channelWriter;
-        COMMAND_URI.set(command, ENDPOINT_URI.get(endpoint));
+        COMMAND_ADDRESS.set(command, ENDPOINT_ADDRESS.get(endpoint));
         COMMAND_DATABASE_INDEX.set(command, ENDPOINT_DATABASE_INDEX.get(endpoint));
       }
     }
