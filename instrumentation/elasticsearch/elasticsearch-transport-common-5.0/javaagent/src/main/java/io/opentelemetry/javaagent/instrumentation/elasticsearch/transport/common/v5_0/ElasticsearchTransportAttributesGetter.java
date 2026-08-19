@@ -32,6 +32,15 @@ public class ElasticsearchTransportAttributesGetter
 
   @Override
   public String getDbOperationName(ElasticTransportRequest request) {
+    return ElasticsearchTransportOperationNames.operationName(
+        request.getAction().getClass().getSimpleName());
+  }
+
+  @Deprecated
+  @Override
+  @SuppressWarnings("deprecation") // old database semconv still use db.operation
+  public String getDbOperation(ElasticTransportRequest request) {
+    // frozen: old semantic conventions keep reporting the action class name
     return request.getAction().getClass().getSimpleName();
   }
 }

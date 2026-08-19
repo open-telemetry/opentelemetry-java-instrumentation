@@ -174,7 +174,7 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("RefreshAction")
+                    span.hasName(operationName("RefreshAction", "indices.refresh"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
@@ -224,12 +224,14 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("CreateIndexAction")
+                    span.hasName(operationName("CreateIndexAction", "indices.create"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "CreateIndexAction"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                operationName("CreateIndexAction", "indices.create")),
                             equalTo(
                                 stringKey("elasticsearch.action"),
                                 experimental("CreateIndexAction")),
@@ -242,12 +244,14 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("ClusterHealthAction")
+                    span.hasName(operationName("ClusterHealthAction", "cluster.health"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "ClusterHealthAction"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                operationName("ClusterHealthAction", "cluster.health")),
                             equalTo(
                                 stringKey("elasticsearch.action"),
                                 experimental("ClusterHealthAction")),
@@ -257,12 +261,13 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SearchAction")
+                    span.hasName(operationName("SearchAction", "search"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "SearchAction"),
+                            equalTo(
+                                maybeStable(DB_OPERATION), operationName("SearchAction", "search")),
                             equalTo(
                                 stringKey("elasticsearch.action"), experimental("SearchAction")),
                             equalTo(
@@ -276,12 +281,13 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("IndexAction")
+                    span.hasName(operationName("IndexAction", "index"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "IndexAction"),
+                            equalTo(
+                                maybeStable(DB_OPERATION), operationName("IndexAction", "index")),
                             equalTo(stringKey("elasticsearch.action"), experimental("IndexAction")),
                             equalTo(
                                 stringKey("elasticsearch.request"), experimental("IndexRequest")),
@@ -305,7 +311,7 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("RefreshAction")
+                    span.hasName(operationName("RefreshAction", "indices.refresh"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -313,12 +319,13 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SearchAction")
+                    span.hasName(operationName("SearchAction", "search"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "SearchAction"),
+                            equalTo(
+                                maybeStable(DB_OPERATION), operationName("SearchAction", "search")),
                             equalTo(
                                 stringKey("elasticsearch.action"), experimental("SearchAction")),
                             equalTo(
@@ -335,7 +342,7 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
     return new ArrayList<>(
         asList(
             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-            equalTo(maybeStable(DB_OPERATION), "RefreshAction"),
+            equalTo(maybeStable(DB_OPERATION), operationName("RefreshAction", "indices.refresh")),
             equalTo(stringKey("elasticsearch.action"), experimental("RefreshAction")),
             equalTo(stringKey("elasticsearch.request"), experimental("RefreshRequest")),
             equalTo(stringKey("elasticsearch.request.indices"), experimental(indexName))));
@@ -423,12 +430,13 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SearchAction")
+                    span.hasName(operationName("SearchAction", "search"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "SearchAction"),
+                            equalTo(
+                                maybeStable(DB_OPERATION), operationName("SearchAction", "search")),
                             equalTo(
                                 stringKey("elasticsearch.action"), experimental("SearchAction")),
                             equalTo(

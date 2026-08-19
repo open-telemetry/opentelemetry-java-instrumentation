@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3.springdata;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 abstract class ElasticsearchSpringTest {
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.elasticsearch.experimental-span-attributes");
@@ -21,5 +23,9 @@ abstract class ElasticsearchSpringTest {
       return null;
     }
     return value;
+  }
+
+  protected static String operationName(String actionClassName, String stableOperationName) {
+    return emitStableDatabaseSemconv() ? stableOperationName : actionClassName;
   }
 }

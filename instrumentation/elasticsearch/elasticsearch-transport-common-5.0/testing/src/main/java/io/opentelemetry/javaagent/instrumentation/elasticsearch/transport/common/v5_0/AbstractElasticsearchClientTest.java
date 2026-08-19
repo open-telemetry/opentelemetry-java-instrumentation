@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -99,6 +100,10 @@ abstract class AbstractElasticsearchClientTest {
       return null;
     }
     return value;
+  }
+
+  static String operationName(String actionClassName, String stableOperationName) {
+    return emitStableDatabaseSemconv() ? stableOperationName : actionClassName;
   }
 
   static class Result<RESPONSE> {

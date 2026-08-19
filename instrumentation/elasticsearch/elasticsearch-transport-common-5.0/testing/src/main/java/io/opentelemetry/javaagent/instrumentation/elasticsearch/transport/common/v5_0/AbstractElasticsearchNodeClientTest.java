@@ -71,12 +71,14 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("ClusterHealthAction")
+                    span.hasName(operationName("ClusterHealthAction", "cluster.health"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "ClusterHealthAction"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                operationName("ClusterHealthAction", "cluster.health")),
                             equalTo(
                                 stringKey("elasticsearch.action"),
                                 experimental("ClusterHealthAction")),
@@ -114,7 +116,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
         new ArrayList<>(
             asList(
                 equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                equalTo(maybeStable(DB_OPERATION), "GetAction"),
+                equalTo(maybeStable(DB_OPERATION), operationName("GetAction", "get")),
                 equalTo(stringKey("elasticsearch.action"), experimental("GetAction")),
                 equalTo(stringKey("elasticsearch.request"), experimental("GetRequest")),
                 equalTo(
@@ -134,7 +136,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasStatus(StatusData.error())
                         .hasException(expectedException),
                 span ->
-                    span.hasName("GetAction")
+                    span.hasName(operationName("GetAction", "get"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
@@ -161,7 +163,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
     return new ArrayList<>(
         asList(
             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-            equalTo(maybeStable(DB_OPERATION), "GetAction"),
+            equalTo(maybeStable(DB_OPERATION), operationName("GetAction", "get")),
             equalTo(stringKey("elasticsearch.action"), experimental("GetAction")),
             equalTo(stringKey("elasticsearch.request"), experimental("GetRequest")),
             equalTo(stringKey("elasticsearch.request.indices"), experimental(indexName)),
@@ -205,12 +207,14 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("CreateIndexAction")
+                    span.hasName(operationName("CreateIndexAction", "indices.create"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "CreateIndexAction"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                operationName("CreateIndexAction", "indices.create")),
                             equalTo(
                                 stringKey("elasticsearch.action"),
                                 experimental("CreateIndexAction")),
@@ -223,12 +227,14 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("ClusterHealthAction")
+                    span.hasName(operationName("ClusterHealthAction", "cluster.health"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "ClusterHealthAction"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                operationName("ClusterHealthAction", "cluster.health")),
                             equalTo(
                                 stringKey("elasticsearch.action"),
                                 experimental("ClusterHealthAction")),
@@ -238,7 +244,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GetAction")
+                    span.hasName(operationName("GetAction", "get"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -246,12 +252,13 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("IndexAction")
+                    span.hasName(operationName("IndexAction", "index"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "IndexAction"),
+                            equalTo(
+                                maybeStable(DB_OPERATION), operationName("IndexAction", "index")),
                             equalTo(stringKey("elasticsearch.action"), experimental("IndexAction")),
                             equalTo(
                                 stringKey("elasticsearch.request"), experimental("IndexRequest")),
@@ -275,7 +282,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GetAction")
+                    span.hasName(operationName("GetAction", "get"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
