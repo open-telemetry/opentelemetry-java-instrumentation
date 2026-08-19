@@ -35,7 +35,7 @@ public class ElasticsearchRestJavaagentInstrumenterFactory {
   // the sanitizer needs a JSON parser, which only exists in the agent class loader, so it is
   // reached through a bootstrap class rather than referenced directly from this injected helper
   @Nullable
-  private static final ElasticsearchQuerySanitizer SANITIZER =
+  private static final ElasticsearchQuerySanitizer sanitizer =
       SANITIZE_SEARCH_QUERY ? ElasticsearchQuerySanitizerAccess::sanitize : null;
 
   public static Instrumenter<ElasticsearchRestRequest, Response> create(
@@ -48,7 +48,7 @@ public class ElasticsearchRestJavaagentInstrumenterFactory {
         AgentCommonConfig.get().getKnownHttpRequestMethods(),
         AgentCommonConfig.get().getSensitiveQueryParameters(),
         CAPTURE_SEARCH_QUERY,
-        SANITIZER);
+        sanitizer);
   }
 
   private ElasticsearchRestJavaagentInstrumenterFactory() {}
