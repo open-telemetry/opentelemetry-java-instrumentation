@@ -16,8 +16,8 @@ import java.util.Map;
  *
  * <p>The table is keyed on the action class simple name, which is the identifier this
  * instrumentation already reports for an action in the {@code elasticsearch.action} attribute.
- * Keying on the action classes themselves is not an option, because this module is shared across
- * Elasticsearch 5.0 to 7.17 and most of these classes are absent from some of those versions.
+ * Referring to the action classes themselves is not an option, because this module is shared across
+ * Elasticsearch 5.0 to 7.17 and many of these classes do not exist in every version in that range.
  *
  * <p>An action is deliberately absent, and so keeps its action class name, when it has no REST API
  * equivalent, such as the internal persistent task actions and {@code AutoCreateAction}, or when it
