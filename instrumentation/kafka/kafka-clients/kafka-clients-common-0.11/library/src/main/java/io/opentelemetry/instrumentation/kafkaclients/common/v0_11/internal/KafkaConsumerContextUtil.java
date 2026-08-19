@@ -52,9 +52,7 @@ public final class KafkaConsumerContextUtil {
 
     Span currentSpan = Span.fromContext(context);
     if (currentSpan != processSpan) {
-      return Boolean.TRUE.equals(context.get(RECEIVE_OPERATION_KEY))
-          ? context.with(RECEIVE_OPERATION_KEY, false)
-          : context;
+      return context;
     }
 
     Span parentSpan = context.get(PROCESS_PARENT_SPAN_KEY);

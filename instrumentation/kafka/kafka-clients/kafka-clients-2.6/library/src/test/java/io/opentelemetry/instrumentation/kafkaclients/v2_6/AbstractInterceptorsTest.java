@@ -134,7 +134,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
     assertClientOperationDurationMetricAbsent(testing, instrumentationName);
     if (receiveTelemetryEnabled()) {
       assertConsumedMessagesMetrics(
-          testing, instrumentationName, SHARED_TOPIC, "test", null, 1, null);
+          testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, null);
       assertProcessMetrics(testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, null);
     } else {
       assertProcessMetricsWithConsumedMessages(
