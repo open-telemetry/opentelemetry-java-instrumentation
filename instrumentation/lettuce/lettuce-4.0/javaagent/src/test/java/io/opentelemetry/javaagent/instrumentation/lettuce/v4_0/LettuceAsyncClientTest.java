@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.ExperimentalHelper.experimental;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -45,6 +46,7 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +59,6 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
@@ -644,7 +645,39 @@ class LettuceAsyncClientTest {
                                 emitStableDatabaseSemconv() ? 2L : null))));
   }
 
-  @Nullable
+  @Test
+  void testNonDefaultDatabaseIndexOnConnect() {
+    RedisClient client =
+        RedisClient.create("redis://" + host + ":" + port + "/" + NON_DEFAULT_DB_INDEX);
+    client.setOptions(CLIENT_OPTIONS);
+    cleanup.deferCleanup(client::shutdown);
+    cleanup.deferCleanup(client.connect());
+
+    // lettuce sends SELECT while connecting to a non-default database. Older lettuce connects
+    // synchronously and nests that span under CONNECT, newer lettuce connects asynchronously and
+    // starts a new trace for it, so assert the span itself instead of the trace it lands in.
+    await()
+        .untilAsserted(
+            () -> {
+              List<SpanData> selectSpans = new ArrayList<>();
+              for (SpanData span : testing.spans()) {
+                if (span.getName().startsWith("SELECT")) {
+                  selectSpans.add(span);
+                }
+              }
+              assertThat(selectSpans).hasSize(1);
+              assertThat(selectSpans.get(0))
+                  .hasName(emitStableDatabaseSemconv() ? "SELECT " + host + ":" + port : "SELECT")
+                  .hasKind(SpanKind.CLIENT)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(maybeStable(DB_SYSTEM), REDIS),
+                      equalTo(DB_NAMESPACE, expectedNonDefaultNamespace()),
+                      equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                      equalTo(SERVER_ADDRESS, host),
+                      equalTo(SERVER_PORT, port));
+            });
+  }
+
   private static String expectedNonDefaultNamespace() {
     return emitStableDatabaseSemconv() ? String.valueOf(NON_DEFAULT_DB_INDEX) : null;
   }

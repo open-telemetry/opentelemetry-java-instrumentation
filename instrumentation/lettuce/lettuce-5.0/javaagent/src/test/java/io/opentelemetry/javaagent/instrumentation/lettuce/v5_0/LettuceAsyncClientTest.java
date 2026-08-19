@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.ExperimentalHelper.experimental;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -46,6 +47,7 @@ import io.lettuce.core.protocol.AsyncCommand;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -61,7 +63,6 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -116,9 +117,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     syncCommands.set("TESTKEY", "TESTVAL");
 
     // 1 set + 1 SELECT issued while connecting to the non-default database
-    // (+ 1 connect trace per client when connection telemetry is enabled, with the SELECT nested
-    // under it)
-    testing.waitForTraces(connectionTelemetryEnabled() ? 3 : 2);
+    // (+ 1 connect trace per client when connection telemetry is enabled)
+    testing.waitForTraces(connectionTelemetryEnabled() ? 4 : 2);
   }
 
   @AfterAll
@@ -657,7 +657,40 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                                 emitStableDatabaseSemconv() ? 2L : null))));
   }
 
-  @Nullable
+  @Test
+  void testNonDefaultDatabaseIndexOnConnect() {
+    RedisClient client =
+        RedisClient.create("redis://" + host + ":" + port + "/" + NON_DEFAULT_DB_INDEX);
+    client.setOptions(CLIENT_OPTIONS);
+    cleanup.deferCleanup(() -> shutdown(client));
+    cleanup.deferCleanup(client.connect());
+
+    // lettuce sends SELECT while connecting to a non-default database. Depending on the lettuce
+    // version that span either nests under CONNECT or starts a new trace, so assert the span itself
+    // instead of the trace it lands in.
+    await()
+        .untilAsserted(
+            () -> {
+              List<SpanData> selectSpans = new ArrayList<>();
+              for (SpanData span : testing.spans()) {
+                if (span.getName().startsWith("SELECT")) {
+                  selectSpans.add(span);
+                }
+              }
+              assertThat(selectSpans).hasSize(1);
+              assertThat(selectSpans.get(0))
+                  .hasName(emitStableDatabaseSemconv() ? "SELECT " + host + ":" + port : "SELECT")
+                  .hasKind(SpanKind.CLIENT)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(SERVER_ADDRESS, host),
+                      equalTo(SERVER_PORT, port),
+                      equalTo(maybeStable(DB_SYSTEM), REDIS),
+                      equalTo(DB_NAMESPACE, expectedNonDefaultNamespace()),
+                      equalTo(maybeStable(DB_STATEMENT), "SELECT " + NON_DEFAULT_DB_INDEX),
+                      equalTo(maybeStable(DB_OPERATION), "SELECT"));
+            });
+  }
+
   private static String expectedNonDefaultNamespace() {
     return emitStableDatabaseSemconv() ? String.valueOf(NON_DEFAULT_DB_INDEX) : null;
   }
