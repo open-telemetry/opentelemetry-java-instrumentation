@@ -16,6 +16,7 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.or
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -29,10 +30,12 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.util.Arrays.asList;
 import static java.util.Collections.nCopies;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -47,6 +50,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
@@ -113,6 +117,15 @@ public abstract class AbstractRedissonClientTest {
 
   @BeforeEach
   void setup(TestInfo testInfo) throws InvocationTargetException, IllegalAccessException {
+    // the stringCommandLazyConnection test case simulates reconnection during Redis command
+    // execution, which needs an empty idle connection pool
+    Integer connectionMinimumIdleSize = testInfo.getTags().contains(TEST_RECONNECT) ? 0 : null;
+    redisson = Redisson.create(createConfig(0, connectionMinimumIdleSize));
+    testing.clearData();
+  }
+
+  private Config createConfig(int database, @Nullable Integer connectionMinimumIdleSize)
+      throws InvocationTargetException, IllegalAccessException {
     String newAddress = address;
     if (useRedisProtocol()) {
       // Newer versions of redisson require scheme, older versions forbid it
@@ -129,11 +142,9 @@ public abstract class AbstractRedissonClientTest {
     SingleServerConfig singleServerConfig = config.useSingleServer();
     singleServerConfig.setAddress(newAddress);
     singleServerConfig.setTimeout(30_000);
-    if (testInfo.getTags().contains(TEST_RECONNECT)) {
-      // When verifying the stringCommandLazyConnection test case, simulate reconnection during
-      // Redis
-      // command execution.
-      singleServerConfig.setConnectionMinimumIdleSize(0);
+    singleServerConfig.setDatabase(database);
+    if (connectionMinimumIdleSize != null) {
+      singleServerConfig.setConnectionMinimumIdleSize(connectionMinimumIdleSize);
     }
     try {
       // disable connection ping if it exists
@@ -144,8 +155,7 @@ public abstract class AbstractRedissonClientTest {
     } catch (NoSuchMethodException ignored) {
       // ignored
     }
-    redisson = Redisson.create(config);
-    testing.clearData();
+    return config;
   }
 
   @AfterEach
@@ -180,6 +190,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET")),
                 span ->
@@ -193,6 +204,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "GET foo"),
                             equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
@@ -216,19 +228,54 @@ public abstract class AbstractRedissonClientTest {
                           equalTo(SERVER_ADDRESS, host),
                           equalTo(SERVER_PORT, port),
                           equalTo(maybeStable(DB_SYSTEM), REDIS),
+                          equalTo(DB_NAMESPACE, dbNamespace()),
                           equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                           equalTo(maybeStable(DB_OPERATION), "SET")));
         });
 
+    List<AttributeKey<?>> expectedKeys =
+        new ArrayList<>(
+            asList(
+                DB_SYSTEM_NAME,
+                DB_OPERATION_NAME,
+                NETWORK_PEER_PORT,
+                NETWORK_PEER_ADDRESS,
+                SERVER_PORT,
+                SERVER_ADDRESS));
+    if (hasDatabaseIndex()) {
+      expectedKeys.add(DB_NAMESPACE);
+    }
     assertDurationMetric(
-        testing,
-        instrumentationName.get(),
-        DB_SYSTEM_NAME,
-        DB_OPERATION_NAME,
-        NETWORK_PEER_PORT,
-        NETWORK_PEER_ADDRESS,
-        SERVER_PORT,
-        SERVER_ADDRESS);
+        testing, instrumentationName.get(), expectedKeys.toArray(new AttributeKey<?>[0]));
+  }
+
+  @Test
+  void configuredDatabaseIndex() throws InvocationTargetException, IllegalAccessException {
+    RedissonClient databaseOne = Redisson.create(createConfig(1, null));
+    try {
+      testing.clearData();
+      RBucket<String> keyObject = databaseOne.getBucket("foo");
+      keyObject.set("bar");
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName(emitStableDatabaseSemconv() ? "SET " + address : "SET")
+                          .hasKind(CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                              equalTo(NETWORK_PEER_ADDRESS, ip),
+                              equalTo(NETWORK_PEER_PORT, port),
+                              equalTo(SERVER_ADDRESS, host),
+                              equalTo(SERVER_PORT, port),
+                              equalTo(maybeStable(DB_SYSTEM), REDIS),
+                              equalTo(DB_NAMESPACE, dbNamespace("1")),
+                              equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
+                              equalTo(maybeStable(DB_OPERATION), "SET"))));
+    } finally {
+      databaseOne.shutdown();
+    }
   }
 
   @Test
@@ -252,6 +299,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))),
         trace ->
@@ -266,6 +314,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "GET foo"),
                             equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
@@ -303,6 +352,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv()
@@ -390,6 +440,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(
                                 DB_OPERATION_NAME,
                                 emitStableDatabaseSemconv() ? "PIPELINE SET" : null),
@@ -438,6 +489,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(
                                 DB_OPERATION_NAME,
                                 emitStableDatabaseSemconv() ? "MULTI SET" : null),
@@ -460,6 +512,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "SET batch2 ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))
                         .hasParent(trace.getSpan(0)),
@@ -473,6 +526,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "EXEC"),
                             equalTo(maybeStable(DB_OPERATION), "EXEC"))
                         .hasParent(trace.getSpan(0))));
@@ -497,6 +551,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "RPUSH list1 ?"),
                             equalTo(maybeStable(DB_OPERATION), "RPUSH"))
                         .hasNoParent()));
@@ -524,6 +579,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 String.format("EVAL %s 1 map1 ? ?", script)),
@@ -540,6 +596,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "HGET map1 key1"),
                             equalTo(maybeStable(DB_OPERATION), "HGET"))));
   }
@@ -563,6 +620,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "SADD set1 ?"),
                             equalTo(maybeStable(DB_OPERATION), "SADD"))));
   }
@@ -592,6 +650,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "ZADD sort_set1 ? ? ? ? ? ?"),
                             equalTo(maybeStable(DB_OPERATION), "ZADD"))));
   }
@@ -620,6 +679,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "INCR AtomicLong"),
                             equalTo(maybeStable(DB_OPERATION), "INCR"))));
   }
@@ -648,6 +708,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_OPERATION), "EVAL"),
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("EVAL")))));
     traceAsserts.add(
@@ -663,6 +724,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_OPERATION), "EVAL"),
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("EVAL")))));
     if (lockHas3Traces()) {
@@ -679,6 +741,7 @@ public abstract class AbstractRedissonClientTest {
                               equalTo(SERVER_ADDRESS, host),
                               equalTo(SERVER_PORT, port),
                               equalTo(maybeStable(DB_SYSTEM), REDIS),
+                              equalTo(DB_NAMESPACE, dbNamespace()),
                               equalTo(maybeStable(DB_OPERATION), "DEL"),
                               satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("DEL")))));
     }
@@ -692,6 +755,21 @@ public abstract class AbstractRedissonClientTest {
 
   protected boolean lockHas3Traces() {
     return false;
+  }
+
+  /** Whether the instrumented redisson version can report the Redis database index. */
+  protected boolean hasDatabaseIndex() {
+    return false;
+  }
+
+  @Nullable
+  private String dbNamespace() {
+    return dbNamespace("0");
+  }
+
+  @Nullable
+  private String dbNamespace(String databaseIndex) {
+    return emitStableDatabaseSemconv() && hasDatabaseIndex() ? databaseIndex : null;
   }
 
   protected RBatch createBatch(RedissonClient redisson) {

@@ -13,6 +13,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -39,6 +40,7 @@ import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
@@ -151,6 +153,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))));
   }
@@ -187,6 +190,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "SADD set1 ?"),
                             equalTo(maybeStable(DB_OPERATION), "SADD"))
                         .hasParent(trace.getSpan(0)),
@@ -261,6 +265,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(
                                 DB_OPERATION_NAME,
                                 emitStableDatabaseSemconv() ? "MULTI SET" : null),
@@ -283,6 +288,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "SET batch2 ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))
                         .hasParent(trace.getSpan(0)),
@@ -296,6 +302,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "EXEC"),
                             equalTo(maybeStable(DB_OPERATION), "EXEC"))
                         .hasParent(trace.getSpan(0)),
@@ -304,6 +311,16 @@ public abstract class AbstractRedissonAsyncClientTest {
 
   protected boolean useRedisProtocol() {
     return testLatestDeps();
+  }
+
+  /** Whether the instrumented redisson version can report the Redis database index. */
+  protected boolean hasDatabaseIndex() {
+    return false;
+  }
+
+  @Nullable
+  private String dbNamespace() {
+    return emitStableDatabaseSemconv() && hasDatabaseIndex() ? "0" : null;
   }
 
   private static class MyCallable implements Serializable, Callable<Object> {
