@@ -377,6 +377,20 @@ class RediscalaClientTest {
         )
       ),
       Arguments.argumentSet(
+        "twoSameStableOperation",
+        BatchScenario(
+          commands = Seq(
+            _.zrange[String]("transaction-same-stable", 0, -1),
+            _.zrangeWithscores[String]("transaction-same-stable", 0, -1)
+          ),
+          // Zrange and ZrangeWithscores both send ZRANGE, so they group together only when the
+          // stable operation name is used
+          operationName =
+            if (emitStableDatabaseSemconv()) "MULTI ZRANGE" else "MULTI",
+          batchSize = 2L
+        )
+      ),
+      Arguments.argumentSet(
         "twoDifferentOperations",
         BatchScenario(
           commands = Seq(
