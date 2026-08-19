@@ -277,7 +277,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                                 longKey("elasticsearch.shard.replication.failed"), experimental(0)),
                             equalTo(
                                 longKey("elasticsearch.request.write.version"),
-                                hasWriteVersion() ? experimental(-3) : null))),
+                                hasWriteVersion() ? experimental(-4) : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
