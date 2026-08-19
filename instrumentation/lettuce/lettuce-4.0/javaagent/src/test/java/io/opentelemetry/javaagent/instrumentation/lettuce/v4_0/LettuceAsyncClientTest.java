@@ -146,8 +146,9 @@ class LettuceAsyncClientTest {
     syncCommands.set("TESTKEY", "TESTVAL");
 
     // 1 set + 1 SELECT issued while connecting to the non-default database
-    // (+ 1 connect trace per client when connection telemetry is enabled, with the SELECT nested
-    // under it)
+    // (+ 1 connect trace per client when connection telemetry is enabled). Older lettuce connects
+    // synchronously and nests the SELECT under CONNECT, newer lettuce connects asynchronously and
+    // starts a new trace for it, so this is the minimum number of traces.
     testing.waitForTraces(connectionTelemetryEnabled() ? 3 : 2);
   }
 
