@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.jmx.rules.kafka;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
+import static io.opentelemetry.instrumentation.jmx.rules.kafka.KafkaContainerFactory.createKafkaConnectContainer;
+import static io.opentelemetry.instrumentation.jmx.rules.kafka.KafkaContainerFactory.createKafkaContainer;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -37,17 +39,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.OutputFrame;
-import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.builder.Transferable;
 
 class KafkaConnectTest extends TargetSystemTest {
   private static final String KAFKA_IMAGE = "apache/kafka:3.8.0";
-  private static final int KAFKA_PORT = 9092;
-  private static final int CONNECT_PORT = 8083;
-  private static final String KAFKA_ALIAS = "kafka";
-  private static final String CONNECT_ALIAS = "kafka-connect";
-  private static final String CONNECT_PROPERTIES_PATH =
-      "/opt/kafka/config/connect-distributed.properties";
   private static final String SOURCE_CONNECTOR = "file-source";
   private static final String SINK_CONNECTOR = "file-sink";
   private static final String SOURCE_FILE_PATH = "/tmp/source.txt";
@@ -142,25 +137,13 @@ class KafkaConnectTest extends TargetSystemTest {
     Set<String> expectedCreatedMetrics = loadKafkaConnectMetricNames(false);
     Set<String> registeredMetrics = ConcurrentHashMap.newKeySet();
 
-    GenericContainer<?> kafka = KafkaContainerFactory.createKafkaContainer(KAFKA_IMAGE, KAFKA_ALIAS,
-        KAFKA_PORT);
+    GenericContainer<?> kafka = createKafkaContainer(KAFKA_IMAGE);
 
     GenericContainer<?> kafkaConnect =
-        new GenericContainer<>(KAFKA_IMAGE)
-            .withNetworkAliases(CONNECT_ALIAS)
+        createKafkaConnectContainer(KAFKA_IMAGE)
             .withEnv("JAVA_TOOL_OPTIONS", String.join(" ", jvmArgs))
-            .withCopyToContainer(
-                Transferable.of(connectWorkerProperties()), CONNECT_PROPERTIES_PATH)
             .withCopyToContainer(Transferable.of("first\nsecond\nthird\n"), SOURCE_FILE_PATH)
-            .withExposedPorts(CONNECT_PORT)
-            .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint("/bin/sh"))
-            .withCommand("-c", "/opt/kafka/bin/connect-distributed.sh " + CONNECT_PROPERTIES_PATH)
-            .withStartupTimeout(Duration.ofMinutes(5))
-            .withLogConsumer(frame -> recordMetricRegistrations(frame, registeredMetrics))
-            .waitingFor(
-                Wait.forHttp("/connectors")
-                    .forPort(CONNECT_PORT)
-                    .withStartupTimeout(Duration.ofMinutes(5)));
+            .withLogConsumer(frame -> recordMetricRegistrations(frame, registeredMetrics));
 
     copyAgentToTarget(kafkaConnect);
     copyYamlFilesToTarget(kafkaConnect, yamlFiles);
@@ -239,27 +222,6 @@ class KafkaConnectTest extends TargetSystemTest {
         registeredMetrics.add(metricName);
       }
     }
-  }
-
-  private static String connectWorkerProperties() {
-    return String.join(
-        "\n",
-        "bootstrap.servers=" + KAFKA_ALIAS + ":" + KAFKA_PORT,
-        "group.id=connect-cluster",
-        "key.converter=org.apache.kafka.connect.storage.StringConverter",
-        "value.converter=org.apache.kafka.connect.storage.StringConverter",
-        "key.converter.schemas.enable=false",
-        "value.converter.schemas.enable=false",
-        "offset.storage.topic=connect-offsets",
-        "config.storage.topic=connect-configs",
-        "status.storage.topic=connect-status",
-        "offset.storage.replication.factor=1",
-        "config.storage.replication.factor=1",
-        "status.storage.replication.factor=1",
-        "plugin.path=/opt/kafka/libs",
-        "rest.host.name=0.0.0.0",
-        "rest.advertised.host.name=" + CONNECT_ALIAS,
-        "listeners=http://0.0.0.0:" + CONNECT_PORT);
   }
 
   private static MetricsVerifier createKafkaConnectMetricsVerifier() {
@@ -713,7 +675,7 @@ class KafkaConnectTest extends TargetSystemTest {
   }
 
   private static String connectUrl(GenericContainer<?> container) {
-    return "http://" + container.getHost() + ":" + container.getMappedPort(CONNECT_PORT);
+    return "http://" + container.getHost() + ":" + container.getFirstMappedPort();
   }
 
   private static void createConnector(String connectUrl, String connectorConfigJson) {
