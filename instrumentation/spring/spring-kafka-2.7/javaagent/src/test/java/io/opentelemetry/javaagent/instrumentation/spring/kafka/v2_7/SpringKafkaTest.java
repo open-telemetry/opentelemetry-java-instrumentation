@@ -10,7 +10,9 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveDurationMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -556,7 +558,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         "testSingleListener",
         "0",
         receiveCount,
-        receiveCount,
+        1,
         null);
     assertProcessMetrics(
         testing,
@@ -578,15 +580,15 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
 
   private static void assertBatchFailureMetrics() {
     int receiveCount = testLatestDeps() ? 1 : 3;
-    assertReceiveMetrics(
+    assertReceiveDurationMetrics(
         testing,
         "io.opentelemetry.kafka-clients-0.11",
         "testBatchTopic",
         "testBatchListener",
         "0",
         receiveCount,
-        receiveCount,
         null);
+    assertTotalConsumedMessages(testing, "io.opentelemetry.kafka-clients-0.11", 1);
     assertProcessMetrics(
         testing,
         "io.opentelemetry.spring-kafka-2.7",
