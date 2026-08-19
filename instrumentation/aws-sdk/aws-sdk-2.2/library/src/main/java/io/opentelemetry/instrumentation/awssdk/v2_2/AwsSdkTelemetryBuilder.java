@@ -144,7 +144,9 @@ public final class AwsSdkTelemetryBuilder {
   }
 
   /**
-   * Sets whether a producer "Create" span is emitted for each entry in an SQS batch send.
+   * Sets whether a producer "Create" span is emitted for each eligible entry in an SQS batch send.
+   * An entry is eligible when it does not already contain a creation context and has enough
+   * message-attribute capacity to inject one.
    *
    * <p>This option only applies when the stable messaging semantic conventions are enabled. It is
    * enabled by default.
