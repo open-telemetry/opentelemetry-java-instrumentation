@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
@@ -14,13 +13,13 @@ import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAss
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
@@ -60,10 +59,6 @@ import org.springframework.jms.listener.SessionAwareMessageListener;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 class SpringListenerTest extends AbstractJmsTest {
-
-  // messaging.destination.subscription.name only exists in the v1.43 messaging semantic conventions
-  private static final AttributeKey<String> MESSAGING_DESTINATION_SUBSCRIPTION_NAME =
-      stringKey("messaging.destination.subscription.name");
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

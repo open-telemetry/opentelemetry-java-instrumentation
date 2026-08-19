@@ -5,19 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertCounter;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertHistogram;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoMetric;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoStableMetrics;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.awaitility.Awaitility.await;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.spring.jms.v2_0.AbstractJmsTest;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -32,10 +31,6 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
 class SpringListenerSuppressReceiveSpansTest extends AbstractJmsTest {
-
-  // messaging.destination.subscription.name only exists in the v1.43 messaging semantic conventions
-  private static final AttributeKey<String> MESSAGING_DESTINATION_SUBSCRIPTION_NAME =
-      stringKey("messaging.destination.subscription.name");
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
