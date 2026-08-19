@@ -32,8 +32,9 @@ public class ElasticsearchTransportAttributesGetter
 
   @Override
   public String getDbOperationName(ElasticTransportRequest request) {
+    Class<?> actionClass = request.getAction().getClass();
     return ElasticsearchTransportOperationNames.operationName(
-        request.getAction().getClass().getSimpleName());
+        actionClass.getName(), actionClass.getSimpleName());
   }
 
   @Deprecated
