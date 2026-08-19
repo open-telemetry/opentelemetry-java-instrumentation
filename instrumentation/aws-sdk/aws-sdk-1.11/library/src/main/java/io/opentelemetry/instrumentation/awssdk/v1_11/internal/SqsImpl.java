@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
 import com.amazonaws.AmazonWebServiceRequest;
@@ -28,7 +27,6 @@ import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,9 +40,6 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class SqsImpl {
-  private static final VirtualField<SendMessageBatchRequest, Context[]> BATCH_MESSAGE_CONTEXTS =
-      VirtualField.find(SendMessageBatchRequest.class, Context[].class);
-
   static {
     // Force loading of SQS class; this ensures that an exception is thrown at this point when the
     // SQS library is not present, which will cause SqsAccess to have enabled=false in library mode.
@@ -170,7 +165,6 @@ public final class SqsImpl {
       Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter) {
     SendMessageBatchRequest preparedRequest = request.clone();
     List<SendMessageBatchRequestEntry> preparedEntries = new ArrayList<>();
-    List<Context> creationContexts = new ArrayList<>();
     Context parentContext = Context.current().with(Span.getInvalid());
     TextMapPropagator xrayPropagator = AwsXrayPropagator.getInstance();
     for (SendMessageBatchRequestEntry entry : request.getEntries()) {
@@ -178,7 +172,6 @@ public final class SqsImpl {
       Map<String, MessageAttributeValue> attributes = entry.getMessageAttributes();
       Context customCreationContext = SqsParentContext.ofMessageAttributes(toStringMap(attributes));
       if (Span.fromContext(customCreationContext).getSpanContext().isValid()) {
-        creationContexts.add(customCreationContext);
         preparedEntries.add(preparedEntry);
         continue;
       }
@@ -194,9 +187,7 @@ public final class SqsImpl {
         preparedEntries.add(preparedEntry);
         continue;
       }
-
       Context creationContext = producerCreateInstrumenter.start(parentContext, createRequest);
-      creationContexts.add(creationContext);
       Map<String, MessageAttributeValue> updatedAttributes = new HashMap<>(attributes);
       xrayPropagator.inject(
           creationContext,
@@ -209,7 +200,6 @@ public final class SqsImpl {
       preparedEntries.add(preparedEntry);
     }
     preparedRequest.setEntries(preparedEntries);
-    BATCH_MESSAGE_CONTEXTS.set(preparedRequest, creationContexts.toArray(new Context[0]));
     return preparedRequest;
   }
 
@@ -221,9 +211,16 @@ public final class SqsImpl {
     if (!(request.getOriginalRequest() instanceof SendMessageBatchRequest)) {
       return new ArrayList<>();
     }
-    Context[] contexts =
-        BATCH_MESSAGE_CONTEXTS.get((SendMessageBatchRequest) request.getOriginalRequest());
-    return contexts != null ? asList(contexts) : new ArrayList<>();
+    List<Context> contexts = new ArrayList<>();
+    SendMessageBatchRequest batchRequest = (SendMessageBatchRequest) request.getOriginalRequest();
+    for (SendMessageBatchRequestEntry entry : batchRequest.getEntries()) {
+      Context context =
+          SqsParentContext.ofMessageAttributes(toStringMap(entry.getMessageAttributes()));
+      if (Span.fromContext(context).getSpanContext().isValid()) {
+        contexts.add(context);
+      }
+    }
+    return contexts;
   }
 
   private static Map<String, String> toStringMap(

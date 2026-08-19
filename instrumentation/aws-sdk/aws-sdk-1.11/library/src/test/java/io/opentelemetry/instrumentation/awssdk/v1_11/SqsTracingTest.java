@@ -9,6 +9,8 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import com.amazonaws.AmazonWebServiceRequest;
+import com.amazonaws.handlers.RequestHandler2;
 import com.amazonaws.services.sqs.AmazonSQSAsync;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import com.amazonaws.services.sqs.model.MessageAttributeValue;
@@ -87,6 +89,66 @@ class SqsTracingTest extends AbstractSqsTracingTest {
                               .hasKind(SpanKind.PRODUCER)
                               .hasNoParent()
                               .hasTotalRecordedLinks(0)));
+    } finally {
+      client.shutdown();
+    }
+  }
+
+  @Test
+  void testBatchLinksSurviveLaterRequestClone() {
+    assumeTrue(emitStableMessagingSemconv());
+    RequestHandler2 tracingHandler =
+        AwsSdkTelemetry.builder(testing().getOpenTelemetry()).build().createRequestHandler();
+    RequestHandler2 cloningHandler =
+        new RequestHandler2() {
+          @Override
+          public AmazonWebServiceRequest beforeMarshalling(AmazonWebServiceRequest request) {
+            return request instanceof SendMessageBatchRequest
+                ? ((SendMessageBatchRequest) request).clone()
+                : request;
+          }
+        };
+    AmazonSQSAsync client =
+        newClientBuilder().withRequestHandlers(tracingHandler, cloningHandler).build();
+    try {
+      String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+      client.createQueue("testSdkSqs");
+      client.sendMessageBatch(
+          new SendMessageBatchRequest()
+              .withQueueUrl(queueUrl)
+              .withEntries(
+                  new SendMessageBatchRequestEntry("i1", "e1"),
+                  new SendMessageBatchRequestEntry("i2", "e2")));
+
+      AtomicReference<SpanData> firstCreateSpan = new AtomicReference<>();
+      AtomicReference<SpanData> secondCreateSpan = new AtomicReference<>();
+      testing()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("SQS.CreateQueue").hasKind(SpanKind.CLIENT)),
+              trace -> {
+                firstCreateSpan.set(trace.getSpan(0));
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("create testSdkSqs").hasKind(SpanKind.PRODUCER));
+              },
+              trace -> {
+                secondCreateSpan.set(trace.getSpan(0));
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("create testSdkSqs").hasKind(SpanKind.PRODUCER));
+              },
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("send testSdkSqs")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasLinksSatisfying(
+                                  links ->
+                                      assertThat(links)
+                                          .extracting(link -> link.getSpanContext().getSpanId())
+                                          .containsExactlyInAnyOrder(
+                                              firstCreateSpan.get().getSpanId(),
+                                              secondCreateSpan.get().getSpanId()))));
     } finally {
       client.shutdown();
     }
