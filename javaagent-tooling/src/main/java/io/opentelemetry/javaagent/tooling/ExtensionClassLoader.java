@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.channels.Channels;
@@ -210,7 +209,7 @@ public class ExtensionClassLoader extends URLClassLoader {
       }
       addLog(FINE, "Loaded extension jar file \"" + file + "\"");
       return true;
-    } catch (MalformedURLException e) {
+    } catch (IOException e) {
       addLog(WARNING, "Failed to load extension jar file \"" + file + "\": " + e.getMessage());
       return false;
     }
