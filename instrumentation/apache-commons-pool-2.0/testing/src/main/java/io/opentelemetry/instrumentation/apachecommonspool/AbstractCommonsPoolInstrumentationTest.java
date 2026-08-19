@@ -58,6 +58,36 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
   }
 
   @Test
+  void shouldNotReportUnlimitedGenericObjectPoolLimits() throws Exception {
+    String poolName = "unlimitedObjectPool";
+    GenericObjectPoolConfig config = new GenericObjectPoolConfig();
+    config.setJmxEnabled(false);
+    config.setJmxNamePrefix(poolName);
+    config.setMaxTotal(-1);
+    config.setMaxIdle(-1);
+    GenericObjectPool<Object> pool =
+        new GenericObjectPool<>(new TestObjectFactory(), config);
+    Object borrowed = null;
+    try {
+      configure(pool, poolName);
+
+      borrowed = pool.borrowObject();
+
+      verifyObjectCount(poolName);
+      verifyMetricNotReported("apache_commons_pool.object.idle.max");
+      verifyMetricNotReported("apache_commons_pool.object.max");
+    } finally {
+      if (borrowed != null) {
+        pool.returnObject(borrowed);
+      }
+      shutdown(pool);
+      pool.close();
+    }
+
+    assertNoMetrics();
+  }
+
+  @Test
   void shouldReusePoolNameAfterShutdown() throws Exception {
     String poolName = "pool";
     GenericObjectPool<Object> first = createGenericObjectPool(poolName, false);
@@ -128,6 +158,35 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
     testGenericKeyedObjectPoolMetrics(false);
   }
 
+  @Test
+  void shouldNotReportDefaultUnlimitedGenericKeyedObjectPoolMax() throws Exception {
+    String jmxNamePrefix = "unlimitedKeyedObjectPool";
+    String poolName = "keyed-" + jmxNamePrefix;
+    GenericKeyedObjectPoolConfig config = new GenericKeyedObjectPoolConfig();
+    config.setJmxEnabled(false);
+    config.setJmxNamePrefix(jmxNamePrefix);
+    // Keep the default maxTotal of -1, which means unlimited.
+    GenericKeyedObjectPool<String, Object> pool =
+        new GenericKeyedObjectPool<>(new TestKeyedObjectFactory(), config);
+    Object borrowed = null;
+    try {
+      configure(pool, poolName);
+
+      borrowed = pool.borrowObject("key");
+
+      verifyObjectCount(poolName);
+      verifyMetricNotReported("apache_commons_pool.object.max");
+    } finally {
+      if (borrowed != null) {
+        pool.returnObject("key", borrowed);
+      }
+      shutdown(pool);
+      pool.close();
+    }
+
+    assertNoMetrics();
+  }
+
   private void testGenericKeyedObjectPoolMetrics(boolean jmxEnabled) throws Exception {
     String jmxNamePrefix = jmxEnabled ? "keyedObjectPool" : "pool";
     String poolName = "keyed-" + jmxNamePrefix;
@@ -192,14 +251,16 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
   }
 
   private void verifyIdleLimitsNotReported() {
+    verifyMetricNotReported("apache_commons_pool.object.idle.min");
+    verifyMetricNotReported("apache_commons_pool.object.idle.max");
+  }
+
+  private void verifyMetricNotReported(String metricName) {
     assertThat(testing().metrics())
         .filteredOn(
             metricData ->
                 metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
-        .noneMatch(
-            metricData ->
-                metricData.getName().equals("apache_commons_pool.object.idle.min")
-                    || metricData.getName().equals("apache_commons_pool.object.idle.max"));
+        .noneMatch(metricData -> metricData.getName().equals(metricName));
   }
 
   private void verifyObjectCount(String poolName) {

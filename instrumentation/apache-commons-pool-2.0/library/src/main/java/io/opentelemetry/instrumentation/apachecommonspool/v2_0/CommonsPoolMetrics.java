@@ -97,10 +97,16 @@ final class CommonsPoolMetrics {
             minIdleObjects.record(minIdle.getAsInt(), attributes);
           }
           if (maxIdle != null) {
-            maxIdleObjects.record(maxIdle.getAsInt(), attributes);
+            int maxIdleValue = maxIdle.getAsInt();
+            if (maxIdleValue >= 0) {
+              maxIdleObjects.record(maxIdleValue, attributes);
+            }
           }
 
-          maxObjects.record(maxTotal.getAsInt(), attributes);
+          int maxTotalValue = maxTotal.getAsInt();
+          if (maxTotalValue >= 0) {
+            maxObjects.record(maxTotalValue, attributes);
+          }
           pendingRequests.record(waiters.getAsInt(), attributes);
         },
         objects,
