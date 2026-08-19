@@ -74,7 +74,6 @@ tasks {
     filter {
       includeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
     }
-    include("**/InfluxDbQuerySanitizationDisabledTest.*")
     systemProperty("metadataConfig", "otel.instrumentation.common.db.query-sanitization.enabled=false")
     jvmArgs("-Dotel.instrumentation.common.db.query-sanitization.enabled=false")
   }
@@ -86,7 +85,6 @@ tasks {
     filter {
       includeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
     }
-    include("**/InfluxDbQuerySanitizationDisabledTest.*")
     systemProperty("metadataConfig", "otel.instrumentation.common.db.query-sanitization.enabled=false")
     jvmArgs("-Dotel.instrumentation.common.db.query-sanitization.enabled=false")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
