@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeOrderlyStatus;
@@ -19,6 +20,7 @@ import org.apache.rocketmq.common.message.MessageExt;
 
 class TracingMessageListener implements MessageListenerOrderly {
 
+  private final AtomicBoolean failurePending = new AtomicBoolean();
   private final AtomicInteger lastBatchSize = new AtomicInteger();
   private volatile CountDownLatch messageReceived = new CountDownLatch(1);
 
@@ -28,12 +30,19 @@ class TracingMessageListener implements MessageListenerOrderly {
     lastBatchSize.set(list.size());
     messageReceived.countDown();
     runWithSpan("messageListener", () -> {});
+    if (failurePending.compareAndSet(true, false)) {
+      return ConsumeOrderlyStatus.SUSPEND_CURRENT_QUEUE_A_MOMENT;
+    }
     return ConsumeOrderlyStatus.SUCCESS;
   }
 
   void reset() {
     messageReceived = new CountDownLatch(1);
     lastBatchSize.set(0);
+  }
+
+  void failNextMessage() {
+    failurePending.set(true);
   }
 
   void waitForMessages() throws InterruptedException {

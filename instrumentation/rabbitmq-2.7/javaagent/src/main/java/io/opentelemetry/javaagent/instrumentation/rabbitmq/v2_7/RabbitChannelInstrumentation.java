@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_CONTEXT;
@@ -35,10 +36,10 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -71,13 +72,35 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
                         .or(isSetter())
                         .or(nameEndsWith("Listener"))
                         .or(nameEndsWith("Listeners"))
-                        .or(namedOneOf("processAsync", "open", "close", "abort", "basicGet"))))
+                        .or(
+                            namedOneOf(
+                                "processAsync",
+                                "open",
+                                "close",
+                                "abort",
+                                "basicGet",
+                                "basicPublish",
+                                "basicAck",
+                                "basicNack",
+                                "basicReject"))))
             .and(isPublic())
             .and(canThrow(IOException.class).or(canThrow(InterruptedException.class))),
         getClass().getName() + "$ChannelMethodAdvice");
     transformer.applyAdviceToMethod(
         named("basicPublish").and(takesArguments(6)),
         getClass().getName() + "$ChannelPublishAdvice");
+    // amqp-client 5.30.0 added a ByteBuffer overload that ChannelN implements directly instead of
+    // delegating to the byte array one, so it needs its own advice; the trailing WriteListener
+    // argument is deliberately neither bound nor referenced, so that this stays loadable on the
+    // older versions that the instrumentation still supports
+    transformer.applyAdviceToMethod(
+        named("basicPublish").and(takesArguments(7)).and(takesArgument(5, ByteBuffer.class)),
+        getClass().getName() + "$ChannelPublishByteBufferAdvice");
+    transformer.applyAdviceToMethod(
+        namedOneOf("basicAck", "basicNack", "basicReject")
+            .and(isPublic())
+            .and(takesArgument(0, long.class)),
+        getClass().getName() + "$ChannelSettleAdvice");
     transformer.applyAdviceToMethod(
         named("basicGet").and(takesArgument(0, String.class)),
         getClass().getName() + "$ChannelGetAdvice");
@@ -88,7 +111,6 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$ChannelConsumeAdvice");
   }
 
-  // TODO Why do we start span here and not in ChannelPublishAdvice below?
   @SuppressWarnings("unused")
   public static class ChannelMethodAdvice {
 
@@ -110,13 +132,16 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
       }
 
       public static ChannelMethodAdviceScope start(
-          CallDepth callDepth, Channel channel, String method) {
+          CallDepth callDepth, Channel channel, String method, @Nullable Long deliveryTag) {
         if (callDepth.getAndIncrement() > 0) {
           return new ChannelMethodAdviceScope(callDepth, null, null, null);
         }
 
         Context parentContext = Context.current();
-        ChannelAndMethod request = ChannelAndMethod.create(channel, method);
+        ChannelAndMethod request =
+            deliveryTag == null
+                ? ChannelAndMethod.create(channel, method)
+                : ChannelAndMethod.createSettle(channel, method, deliveryTag);
 
         if (!channelInstrumenter(request).shouldStart(parentContext, request)) {
           return new ChannelMethodAdviceScope(callDepth, null, null, null);
@@ -147,7 +172,8 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ChannelMethodAdviceScope onEnter(
         @Advice.This Channel channel, @Advice.Origin("Channel.#m") String method) {
-      return ChannelMethodAdviceScope.start(CallDepth.forClass(Channel.class), channel, method);
+      return ChannelMethodAdviceScope.start(
+          CallDepth.forClass(Channel.class), channel, method, null);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -159,23 +185,126 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
+  public static class ChannelSettleAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static ChannelMethodAdvice.ChannelMethodAdviceScope onEnter(
+        @Advice.This Channel channel,
+        @Advice.Origin("Channel.#m") String method,
+        @Advice.Argument(0) long deliveryTag) {
+      return ChannelMethodAdvice.ChannelMethodAdviceScope.start(
+          CallDepth.forClass(Channel.class), channel, method, deliveryTag);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void stopSpan(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter ChannelMethodAdvice.ChannelMethodAdviceScope adviceScope) {
+      adviceScope.end(throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
   public static class ChannelPublishAdvice {
 
-    @Advice.AssignReturned.ToArguments(@Advice.AssignReturned.ToArguments.ToArgument(4))
+    public static class ChannelPublishAdviceScope {
+      private final CallDepth callDepth;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
+      @Nullable private final ChannelAndMethod request;
+
+      private ChannelPublishAdviceScope(
+          CallDepth callDepth,
+          @Nullable Context context,
+          @Nullable Scope scope,
+          @Nullable ChannelAndMethod request) {
+        this.callDepth = callDepth;
+        this.context = context;
+        this.scope = scope;
+        this.request = request;
+      }
+
+      @Nullable
+      public Context getContext() {
+        return context;
+      }
+
+      public static ChannelPublishAdviceScope start(
+          Channel channel, String exchange, String routingKey) {
+        CallDepth callDepth = CallDepth.forClass(Channel.class);
+        if (callDepth.getAndIncrement() > 0) {
+          return new ChannelPublishAdviceScope(callDepth, null, null, null);
+        }
+
+        Context parentContext = Context.current();
+        ChannelAndMethod request = ChannelAndMethod.createPublish(channel, exchange, routingKey);
+
+        if (!channelInstrumenter(request).shouldStart(parentContext, request)) {
+          return new ChannelPublishAdviceScope(callDepth, null, null, null);
+        }
+
+        Context context = channelInstrumenter(request).start(parentContext, request);
+        CURRENT_RABBIT_CONTEXT.set(context);
+        helper().setChannelAndMethod(context, request);
+
+        return new ChannelPublishAdviceScope(callDepth, context, context.makeCurrent(), request);
+      }
+
+      public void end(@Nullable Throwable throwable) {
+        if (callDepth.decrementAndGet() > 0) {
+          return;
+        }
+        if (scope == null) {
+          return;
+        }
+
+        scope.close();
+
+        CURRENT_RABBIT_CONTEXT.remove();
+        channelInstrumenter(request).end(context, request, null, throwable);
+      }
+    }
+
+    @Advice.AssignReturned.ToArguments(
+        @Advice.AssignReturned.ToArguments.ToArgument(value = 4, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AMQP.BasicProperties setSpanNameAddHeaders(
+    public static Object[] setSpanNameAddHeaders(
+        @Advice.This Channel channel,
         @Advice.Argument(0) String exchange,
         @Advice.Argument(1) String routingKey,
         @Advice.Argument(4) AMQP.BasicProperties originalProps,
         @Advice.Argument(5) byte[] body) {
-      Context context = Java8BytecodeBridge.currentContext();
-      Span span = Java8BytecodeBridge.spanFromContext(context);
+      ChannelPublishAdviceScope adviceScope =
+          ChannelPublishAdviceScope.start(channel, exchange, routingKey);
+
+      try {
+        return new Object[] {
+          adviceScope,
+          addHeaders(adviceScope, originalProps, body == null ? null : (long) body.length)
+        };
+      } catch (Throwable ignored) {
+        // the advice suppresses throwables, so a failure here would leave the scope, the call depth
+        // and the current rabbit context behind; publish the message without headers instead
+        return new Object[] {adviceScope, originalProps};
+      }
+    }
+
+    public static AMQP.BasicProperties addHeaders(
+        ChannelPublishAdviceScope adviceScope,
+        @Nullable AMQP.BasicProperties originalProps,
+        @Nullable Long bodySize) {
+      // when the span was not started, e.g. because it was suppressed, fall back to the current
+      // context so that the message headers still get injected
+      Context context = adviceScope.getContext();
+      if (context == null) {
+        context = Context.current();
+      }
+      Span span = Span.fromContext(context);
       AMQP.BasicProperties props = originalProps;
 
       if (span.getSpanContext().isValid()) {
-        helper().onPublish(span, exchange, routingKey);
-        if (body != null) {
-          span.setAttribute(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length);
+        if (bodySize != null && emitOldMessagingSemconv()) {
+          span.setAttribute(MESSAGING_MESSAGE_BODY_SIZE, bodySize);
         }
 
         // This is the internal behavior when props are null.  We're just doing it earlier now.
@@ -210,6 +339,59 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
 
       return props;
     }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void stopSpan(
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
+      if (enterArgs == null) {
+        return;
+      }
+      ((ChannelPublishAdviceScope) enterArgs[0]).end(throwable);
+    }
+  }
+
+  /**
+   * Instruments the {@link ByteBuffer} overload of {@code basicPublish} that amqp-client 5.30.0
+   * added. {@code Channel} declares it as a default method that delegates to the byte array
+   * overload, but {@code ChannelN} overrides it and publishes directly, so it would otherwise get
+   * no span and no context propagation.
+   */
+  @SuppressWarnings("unused")
+  public static class ChannelPublishByteBufferAdvice {
+
+    @Advice.AssignReturned.ToArguments(
+        @Advice.AssignReturned.ToArguments.ToArgument(value = 4, index = 1))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Object[] setSpanNameAddHeaders(
+        @Advice.This Channel channel,
+        @Advice.Argument(0) String exchange,
+        @Advice.Argument(1) String routingKey,
+        @Advice.Argument(4) AMQP.BasicProperties originalProps,
+        @Advice.Argument(5) ByteBuffer body) {
+      ChannelPublishAdvice.ChannelPublishAdviceScope adviceScope =
+          ChannelPublishAdvice.ChannelPublishAdviceScope.start(channel, exchange, routingKey);
+
+      try {
+        // remaining() reports the body size without consuming the buffer
+        Long bodySize = body == null ? null : (long) body.remaining();
+        return new Object[] {
+          adviceScope, ChannelPublishAdvice.addHeaders(adviceScope, originalProps, bodySize)
+        };
+      } catch (Throwable ignored) {
+        // the advice suppresses throwables, so a failure here would leave the scope, the call depth
+        // and the current rabbit context behind; publish the message without headers instead
+        return new Object[] {adviceScope, originalProps};
+      }
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void stopSpan(
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
+      if (enterArgs == null) {
+        return;
+      }
+      ((ChannelPublishAdvice.ChannelPublishAdviceScope) enterArgs[0]).end(throwable);
+    }
   }
 
   @SuppressWarnings("unused")
@@ -237,6 +419,9 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
           @Nullable GetResponse response,
           @Nullable Throwable throwable) {
         if (callDepth.decrementAndGet() > 0) {
+          return;
+        }
+        if (throwable == null && response == null) {
           return;
         }
 

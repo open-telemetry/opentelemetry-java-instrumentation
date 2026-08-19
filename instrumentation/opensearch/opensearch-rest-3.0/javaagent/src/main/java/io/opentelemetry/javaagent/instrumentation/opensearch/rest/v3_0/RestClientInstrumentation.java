@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v3_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.opensearch.rest.v3_0.OpenSearchRestSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -64,7 +63,7 @@ class RestClientInstrumentation implements TypeInstrumentation {
 
     @Nullable
     public static AdviceScope start(Request request) {
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
       OpenSearchRestRequest otelRequest =
           OpenSearchRestRequest.create(request.getMethod(), request.getEndpoint());
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {

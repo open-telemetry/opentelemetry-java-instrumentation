@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0.SpringJmsSingletons.listenerInstrumenter;
@@ -20,6 +21,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageWithDestination;
 import io.opentelemetry.javaagent.instrumentation.jms.v3_0.JakartaMessageAdapter;
+import io.opentelemetry.javaagent.instrumentation.jms.v3_0.JmsSubscriptionNames;
 import jakarta.jms.Message;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -66,12 +68,15 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(Message message) {
         Context parentContext = Context.current();
-        Context receiveContext = JmsReceiveContextHolder.getReceiveContext(parentContext);
-        if (receiveContext != null) {
-          parentContext = receiveContext;
+        if (!emitStableMessagingSemconv()) {
+          Context receiveContext = JmsReceiveContextHolder.getReceiveContext(parentContext);
+          if (receiveContext != null) {
+            parentContext = receiveContext;
+          }
         }
         MessageWithDestination request =
-            MessageWithDestination.create(JakartaMessageAdapter.create(message), null);
+            MessageWithDestination.create(
+                JakartaMessageAdapter.create(message), null, JmsSubscriptionNames.get(message));
 
         if (!listenerInstrumenter().shouldStart(parentContext, request)) {
           return null;

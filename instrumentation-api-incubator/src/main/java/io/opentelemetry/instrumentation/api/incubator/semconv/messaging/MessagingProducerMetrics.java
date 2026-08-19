@@ -68,7 +68,16 @@ public final class MessagingProducerMetrics implements OperationListener {
             || sentMessagesCounter != null;
   }
 
-  /** Returns metrics for extractors configured with {@link MessageOperation}. */
+  /**
+   * Returns metrics for extractors configured with {@link MessageOperation}.
+   *
+   * <p>In 3.0 this method name will be reused for {@link #getForOperationType()}, which emits
+   * different instruments, so callers must migrate rather than rely on this name continuing to
+   * behave the same way.
+   *
+   * @deprecated Use {@link #getForOperationType()}. May be removed in the next minor release.
+   */
+  @Deprecated // may be removed in the next minor release
   public static OperationMetrics get() {
     return OperationMetricsUtil.create(
         "messaging producer", meter -> new MessagingProducerMetrics(meter, Variant.LEGACY));

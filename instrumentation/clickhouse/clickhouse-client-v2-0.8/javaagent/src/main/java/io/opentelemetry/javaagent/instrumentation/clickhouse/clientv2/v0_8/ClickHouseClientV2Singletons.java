@@ -28,7 +28,8 @@ public class ClickHouseClientV2Singletons {
             INSTRUMENTER_NAME,
             error -> {
               if (error instanceof ServerException) {
-                return Integer.toString(((ServerException) error).getCode());
+                int errorCode = ((ServerException) error).getCode();
+                return errorCode == 0 ? null : Integer.toString(errorCode);
               }
               return null;
             });

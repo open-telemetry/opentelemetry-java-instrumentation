@@ -33,7 +33,11 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
         true);
   }
 
-  /** Returns a messaging span name extractor for the given operation. */
+  /**
+   * @deprecated Use {@link #create(MessagingAttributesGetter, MessagingOperationType, String)}. May
+   *     be removed in the next minor release.
+   */
+  @Deprecated // may be removed in the next minor release
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       MessagingAttributesGetter<REQUEST, ?> getter, MessageOperation operation) {
     MessagingOperationType operationType = operation.type();

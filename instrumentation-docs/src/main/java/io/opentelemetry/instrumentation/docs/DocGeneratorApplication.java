@@ -11,11 +11,13 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
+import io.opentelemetry.instrumentation.docs.utils.DeclarativeConfigYamlGenerator;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.List;
@@ -29,18 +31,14 @@ public class DocGeneratorApplication {
 
   public static void main(String[] args) throws IOException {
     // Identify path to repo so we can use absolute paths
-    String baseRepoPath = System.getProperty("basePath");
-    if (baseRepoPath == null) {
-      baseRepoPath = "./";
-    } else {
-      baseRepoPath += "/";
-    }
+    String basePath = System.getProperty("basePath");
+    Path baseRepoPath = Paths.get(basePath == null ? "." : basePath);
 
     FileManager fileManager = new FileManager(baseRepoPath);
     List<InstrumentationModule> modules = new InstrumentationAnalyzer(fileManager).analyze();
 
     try (BufferedWriter writer =
-        Files.newBufferedWriter(Paths.get(baseRepoPath + "docs/instrumentation-list.yaml"))) {
+        Files.newBufferedWriter(baseRepoPath.resolve("docs/instrumentation-list.yaml"))) {
       writer.write("# This file is generated and should not be manually edited.\n");
       writer.write("# The structure and contents are a work in progress and subject to change.\n");
       writer.write(
@@ -51,6 +49,18 @@ public class DocGeneratorApplication {
           "# For more information see: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13468\n\n");
       writer.write("file_format: 0.6\n\n");
       YamlHelper.generateInstrumentationYaml(modules, writer);
+    }
+
+    try (BufferedWriter configWriter =
+        Files.newBufferedWriter(
+            baseRepoPath.resolve("docs/declarative-configuration-example.yaml"))) {
+      configWriter.write("# This file is generated and should not be manually edited.\n");
+      configWriter.write(
+          "# It shows all available instrumentation configurations in declarative config format.\n\n");
+      configWriter.write(
+          "# For an interactive builder, see: https://explorer.opentelemetry.io/java-agent/configuration/builder.\n\n");
+      configWriter.write("file_format: '1.0'\n\n");
+      DeclarativeConfigYamlGenerator.generateConfigurationYaml(modules, configWriter);
     }
 
     printStats(modules);

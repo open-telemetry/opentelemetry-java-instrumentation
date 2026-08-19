@@ -19,6 +19,8 @@ public class VirtualFieldStore {
       VirtualField.find(MessageView.class, Context.class);
   private static final VirtualField<PublishingMessageImpl, Map<String, String>>
       MESSAGE_EXTRA_PROPERTIES = VirtualField.find(PublishingMessageImpl.class, Map.class);
+  private static final VirtualField<PublishingMessageImpl, String> MESSAGE_NAMESPACE =
+      VirtualField.find(PublishingMessageImpl.class, String.class);
   private static final VirtualField<MessageView, String> MESSAGE_CONSUMER_GROUP =
       VirtualField.find(MessageView.class, String.class);
 
@@ -50,6 +52,15 @@ public class VirtualFieldStore {
   public static void setExtraPropertiesByMessage(
       PublishingMessageImpl message, Map<String, String> extraProperties) {
     MESSAGE_EXTRA_PROPERTIES.set(message, extraProperties);
+  }
+
+  @Nullable
+  public static String getNamespaceByMessage(PublishingMessageImpl message) {
+    return MESSAGE_NAMESPACE.get(message);
+  }
+
+  public static void setNamespaceByMessage(PublishingMessageImpl message, String namespace) {
+    MESSAGE_NAMESPACE.set(message, namespace);
   }
 
   @Nullable

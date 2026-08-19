@@ -40,7 +40,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 // TODO: Remove after https://github.com/open-telemetry/semantic-conventions-genai/issues/247
 // is resolved.
-@SuppressWarnings("OtelDeprecatedApiUsage")
+@SuppressWarnings("deprecation")
 public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
   private static final String MODEL = "text-embedding-3-small";
 

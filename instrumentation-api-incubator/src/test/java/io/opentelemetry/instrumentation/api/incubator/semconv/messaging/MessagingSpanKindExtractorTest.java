@@ -52,6 +52,7 @@ class MessagingSpanKindExtractorTest {
     assertThat(spanKind).isEqualTo(SpanKind.PRODUCER);
   }
 
+  @SuppressWarnings("deprecation")
   @Test
   void messageOperationUsesLegacySpanKind() {
     SpanKind receiveKind =
