@@ -181,6 +181,26 @@ class KafkaBrokerTest extends TargetSystemTest {
                     .hasDescription(
                         "The max lag in messages between follower and leader replicas")
                     .hasDataPointsWithoutAttributes())
+        // TODO: kafka.leaderElection.count and kafka.leaderElection.unclean.count are defined in
+        // the YAML (kafka.controller:type=ControllerStats) but are not reported by KRaft brokers.
+        // These should be enabled once KRaft exposes those MBeans or a ZooKeeper-mode test is added.
+        // .add(
+        //     "kafka.leaderElection.count",
+        //     metric ->
+        //         metric
+        //             .isCounter()
+        //             .hasUnit("{elections}")
+        //             .hasDescription("The leader election count")
+        //             .hasDataPointsWithoutAttributes())
+        // .add(
+        //     "kafka.leaderElection.unclean.count",
+        //     metric ->
+        //         metric
+        //             .isCounter()
+        //             .hasUnit("{elections}")
+        //             .hasDescription(
+        //                 "Unclean leader election count - increasing indicates broker failures")
+        //             .hasDataPointsWithoutAttributes())
         .add(
             "kafka.controller.active.count",
             metric ->
