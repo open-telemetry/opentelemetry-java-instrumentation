@@ -558,7 +558,7 @@ class KotlinCoroutinesInstrumentationTest {
     unannotatedFailure(exception)
   }
 
-  private suspend fun unannotatedFailure(exception: RuntimeException): Nothing {
+  private suspend fun unannotatedFailure(exception: RuntimeException) {
     delay(10)
     throw exception
   }
