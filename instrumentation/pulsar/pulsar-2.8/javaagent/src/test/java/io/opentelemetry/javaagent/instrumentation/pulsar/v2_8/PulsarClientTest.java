@@ -39,6 +39,7 @@ import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
 import org.apache.pulsar.client.api.TopicMetadata;
 import org.apache.pulsar.client.api.transaction.Transaction;
+import org.apache.pulsar.client.impl.conf.ConsumerConfigurationData;
 import org.junit.jupiter.api.Test;
 
 class PulsarClientTest extends AbstractPulsarClientTest {
@@ -1255,8 +1256,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
 
   @Test
   void testMessageListenerNotWrappedMultipleTimes() {
-    org.apache.pulsar.client.impl.conf.ConsumerConfigurationData<String> conf =
-        new org.apache.pulsar.client.impl.conf.ConsumerConfigurationData<>();
+    ConsumerConfigurationData<String> conf = new ConsumerConfigurationData<>();
     MessageListener<String> originalListener = (consumer, msg) -> {};
     conf.setMessageListener(originalListener);
 
