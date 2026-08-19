@@ -9,10 +9,12 @@ import static io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12.Spym
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.internal.GetFuture;
+import net.spy.memcached.ops.OperationStatus;
 
 public class GetCompletionListener extends CompletionListener<GetFuture<?>>
     implements net.spy.memcached.internal.GetCompletionListener {
@@ -45,6 +47,13 @@ public class GetCompletionListener extends CompletionListener<GetFuture<?>>
   protected void processResult(Span span, GetFuture<?> future)
       throws ExecutionException, InterruptedException {
     Object result = future.get();
+    OperationStatus status = future.getStatus();
+    if (status != null && !status.isSuccess()) {
+      if (future.isCancelled()) {
+        throw new CancellationException(status.getMessage());
+      }
+      throw new ExecutionException(new RuntimeException(status.getMessage()));
+    }
     setResultTag(span, result != null);
   }
 }

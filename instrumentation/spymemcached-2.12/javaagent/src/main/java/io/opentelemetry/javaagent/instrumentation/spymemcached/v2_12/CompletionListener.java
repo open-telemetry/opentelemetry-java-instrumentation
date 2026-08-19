@@ -54,7 +54,7 @@ public abstract class CompletionListener<T> {
           span.setAttribute(DB_COMMAND_CANCELLED, true);
         }
       } else {
-        error = e;
+        error = e.getCause() != null ? e.getCause() : e;
       }
     } catch (InterruptedException e) {
       // Avoid swallowing InterruptedException
