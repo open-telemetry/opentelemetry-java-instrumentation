@@ -122,11 +122,9 @@ class DefaultInstrumentationConfigApplierTest {
 
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
     setGeneralClientRequestHeaders(defaults, "Default");
-    defaults
-        .getGeneral()
-        .getHttp()
-        .getClient()
-        .withResponseCapturedHeaders(asList("Default-Response"));
+    defaults.customizeGeneral(
+        general ->
+            general.getHttp().getClient().withResponseCapturedHeaders(asList("Default-Response")));
     defaults.applyToModel(model);
 
     assertThat(
@@ -228,12 +226,12 @@ class DefaultInstrumentationConfigApplierTest {
 
   private static void setGeneralClientRequestHeaders(
       DefaultInstrumentationConfig defaults, String header) {
-    defaults
-        .getGeneral()
-        .withHttp(
-            new ExperimentalHttpInstrumentationModel()
-                .withClient(
-                    new ExperimentalHttpClientInstrumentationModel()
-                        .withRequestCapturedHeaders(asList(header))));
+    defaults.customizeGeneral(
+        general ->
+            general.withHttp(
+                new ExperimentalHttpInstrumentationModel()
+                    .withClient(
+                        new ExperimentalHttpClientInstrumentationModel()
+                            .withRequestCapturedHeaders(asList(header)))));
   }
 }

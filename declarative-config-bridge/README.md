@@ -95,10 +95,10 @@ First, there is a single defaults object that is unaware of the source of the co
 DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
 defaults.get("micrometer").setDefault("base_time_unit", "s");
 defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", true);
-defaults.getGeneral().withHttp(
+defaults.customizeGeneral(general -> general.withHttp(
     new ExperimentalHttpInstrumentationModel().withClient(
         new ExperimentalHttpClientInstrumentationModel()
-            .withRequestCapturedHeaders(List.of("X-Request-Id"))));
+            .withRequestCapturedHeaders(List.of("X-Request-Id")))));
 defaults.addMapping("acme", "acme.full_name");
 defaults.get("acme").get("full_name").setDefault("preserved", "true");
 ```
@@ -106,9 +106,9 @@ defaults.get("acme").get("full_name").setDefault("preserved", "true");
 Navigation mirrors `DeclarativeConfigProperties` — reading uses
 `config.get("micrometer").getString("base_time_unit")`; writing defaults uses
 `defaults.get("micrometer").setDefault("base_time_unit", "s")`, and deeper nested paths can chain
-`get(...)` the same way. General instrumentation configuration uses the type-safe declarative model
-returned by `getGeneral()`, leaving `get("general")` available for a Java instrumentation named
-`general`.
+`get(...)` the same way. General instrumentation configuration uses `customizeGeneral(...)`, which
+provides the type-safe declarative model to the customizer, leaving `get("general")` available for a
+Java instrumentation named `general`.
 
 Keys use the same declarative config shape as `DeclarativeConfigProperties`. When producing system
 property keys, underscores are translated to hyphens, and keys ending in `/development` are
@@ -132,10 +132,10 @@ public class MyDistroAutoConfig implements AutoConfigurationCustomizerProvider {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
     defaults.get("micrometer").setDefault("base_time_unit", "s");
     defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", true);
-    defaults.getGeneral().withHttp(
+    defaults.customizeGeneral(general -> general.withHttp(
         new ExperimentalHttpInstrumentationModel().withClient(
             new ExperimentalHttpClientInstrumentationModel()
-                .withRequestCapturedHeaders(List.of("X-Request-Id"))));
+                .withRequestCapturedHeaders(List.of("X-Request-Id")))));
     defaults.addMapping("acme", "acme.full_name");
     defaults.get("acme").get("full_name").setDefault("preserved", "true");
     return defaults;
@@ -192,10 +192,10 @@ public class MyDistroDeclarativeConfig implements DeclarativeConfigurationCustom
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
     defaults.get("micrometer").setDefault("base_time_unit", "s");
     defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", true);
-    defaults.getGeneral().withHttp(
+    defaults.customizeGeneral(general -> general.withHttp(
         new ExperimentalHttpInstrumentationModel().withClient(
             new ExperimentalHttpClientInstrumentationModel()
-                .withRequestCapturedHeaders(List.of("X-Request-Id"))));
+                .withRequestCapturedHeaders(List.of("X-Request-Id")))));
     defaults.addMapping("acme", "acme.full_name");
     defaults.get("acme").get("full_name").setDefault("preserved", "true");
     return defaults;

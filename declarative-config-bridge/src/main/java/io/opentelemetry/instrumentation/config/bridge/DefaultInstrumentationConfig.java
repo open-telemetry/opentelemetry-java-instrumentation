@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 /**
@@ -24,8 +25,8 @@ import javax.annotation.Nullable;
  * <p>Java instrumentation navigation mirrors {@link
  * io.opentelemetry.api.incubator.config.DeclarativeConfigProperties}: read-side uses {@code
  * config.get(name).getString(key)}; write-side uses {@code defaults.get(name).setDefault(key,
- * value)}. General instrumentation defaults use the declarative configuration model returned by
- * {@link #getGeneral()}.
+ * value)}. General instrumentation defaults use the type-safe declarative configuration model
+ * provided to {@link #customizeGeneral(Consumer)}.
  *
  * <p>Usage:
  *
@@ -74,12 +75,15 @@ public final class DefaultInstrumentationConfig {
     return new DefaultInstrumentationConfig(defaults, newPath, propertyMappings, generalDefaults);
   }
 
-  /** Returns the type-safe declarative model used for general instrumentation defaults. */
-  public ExperimentalGeneralInstrumentationModel getGeneral() {
+  /** Customizes general instrumentation defaults using the type-safe declarative model. */
+  @CanIgnoreReturnValue
+  public DefaultInstrumentationConfig customizeGeneral(
+      Consumer<ExperimentalGeneralInstrumentationModel> customizer) {
     if (generalDefaults.model == null) {
       generalDefaults.model = new ExperimentalGeneralInstrumentationModel();
     }
-    return generalDefaults.model;
+    customizer.accept(generalDefaults.model);
+    return this;
   }
 
   /**

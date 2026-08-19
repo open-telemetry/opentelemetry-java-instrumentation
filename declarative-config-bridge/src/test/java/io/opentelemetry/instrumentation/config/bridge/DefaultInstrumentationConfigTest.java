@@ -171,12 +171,12 @@ class DefaultInstrumentationConfigTest {
 
   private static void setGeneralClientRequestHeaders(
       DefaultInstrumentationConfig defaults, String header) {
-    defaults
-        .getGeneral()
-        .withHttp(
-            new ExperimentalHttpInstrumentationModel()
-                .withClient(
-                    new ExperimentalHttpClientInstrumentationModel()
-                        .withRequestCapturedHeaders(asList(header))));
+    defaults.customizeGeneral(
+        general ->
+            general.withHttp(
+                new ExperimentalHttpInstrumentationModel()
+                    .withClient(
+                        new ExperimentalHttpClientInstrumentationModel()
+                            .withRequestCapturedHeaders(asList(header)))));
   }
 }
