@@ -36,9 +36,11 @@ configurations:
         peer:
           type: string
           description: "Host name or IP address to match against."
+          example: host
         service_name:
           type: string
           description: "Peer service name to record for matching peers."
+          example: serviceName
 
   http.client.capture-request-headers:
     name: otel.instrumentation.http.client.capture-request-headers
@@ -120,6 +122,6 @@ configurations:
   messaging.capture-headers:
     name: otel.instrumentation.messaging.experimental.capture-headers
     declarative_name: java.common.messaging.capture_headers/development
-    description: "Deprecated: use `otel.instrumentation.messaging.experimental.headers.included` instead. A comma-separated list of header names to capture as span attributes."
+    description: "Deprecated: use `otel.instrumentation.messaging.experimental.headers.included` instead. A comma-separated list of header names to capture as span attributes. It does not support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other entry is matched as a literal header name."
     type: list
     default: ""

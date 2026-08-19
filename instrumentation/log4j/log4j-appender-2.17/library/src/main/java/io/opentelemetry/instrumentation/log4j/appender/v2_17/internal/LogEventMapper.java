@@ -60,7 +60,7 @@ public final class LogEventMapper<T> {
 
   private final boolean captureExperimentalAttributes;
   private final boolean captureCodeAttributes;
-  private final boolean captureMapMessageAttributes;
+  @Nullable private final Predicate<String> mapMessageAttributes;
   private final boolean captureMarkerAttribute;
   private final boolean captureTemplate;
   private final boolean captureArguments;
@@ -72,7 +72,7 @@ public final class LogEventMapper<T> {
       ContextDataAccessor<T> contextDataAccessor,
       boolean captureExperimentalAttributes,
       boolean captureCodeAttributes,
-      boolean captureMapMessageAttributes,
+      @Nullable Predicate<String> mapMessageAttributes,
       boolean captureMarkerAttribute,
       boolean captureTemplate,
       boolean captureArguments,
@@ -82,7 +82,7 @@ public final class LogEventMapper<T> {
     this.contextDataAccessor = contextDataAccessor;
     this.captureCodeAttributes = captureCodeAttributes;
     this.captureExperimentalAttributes = captureExperimentalAttributes;
-    this.captureMapMessageAttributes = captureMapMessageAttributes;
+    this.mapMessageAttributes = mapMessageAttributes;
     this.captureMarkerAttribute = captureMarkerAttribute;
     this.captureTemplate = captureTemplate;
     this.captureArguments = captureArguments;
@@ -211,7 +211,7 @@ public final class LogEventMapper<T> {
       builder.setEventName(eventName);
     }
 
-    if (captureMapMessageAttributes) {
+    if (mapMessageAttributes != null) {
       // TODO (trask) this could be optimized in 2.9 and later by calling MapMessage.forEach()
       mapMessage
           .getData()
@@ -220,7 +220,8 @@ public final class LogEventMapper<T> {
                 if (value != null
                     && !key.equals(OTEL_EVENT_NAME.getKey())
                     && (!checkSpecialMapMessageAttribute
-                        || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
+                        || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))
+                    && mapMessageAttributes.test(key)) {
                   builder.setAttribute(getMapMessageAttributeKey(key), value.toString());
                 }
               });

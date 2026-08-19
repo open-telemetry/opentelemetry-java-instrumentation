@@ -48,6 +48,8 @@ tasks {
     jvmArgs(
       "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
       "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
+      "-Dotel.instrumentation.log4j-appender.experimental.map-message-attributes.included=key1,key2,order-*,user-?",
+      "-Dotel.instrumentation.log4j-appender.experimental.map-message-attributes.excluded=*-secret",
     )
   }
 
@@ -58,6 +60,8 @@ tasks {
       "-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector",
       "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
       "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
+      "-Dotel.instrumentation.log4j-appender.experimental.map-message-attributes.included=key1,key2,order-*,user-?",
+      "-Dotel.instrumentation.log4j-appender.experimental.map-message-attributes.excluded=*-secret",
     )
   }
 
@@ -68,6 +72,8 @@ tasks {
       "-Dotel.instrumentation.common.v3-preview=true",
       "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
       "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
+      "-Dotel.instrumentation.log4j-appender.experimental.map-message-attributes.included=key1,key2,order-*,user-?",
+      "-Dotel.instrumentation.log4j-appender.experimental.map-message-attributes.excluded=*-secret",
     )
   }
 
@@ -103,6 +109,36 @@ tasks {
     systemProperty("testMdcConfiguration", "precedence")
   }
 
+  val testLegacyMapMessageAttributes = register<Test>("testLegacyMapMessageAttributes") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*Log4jMapMessageSelectorTest")
+
+    jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-map-message-attributes=true")
+    systemProperty("testMapMessageConfiguration", "legacy")
+  }
+
+  val testMapMessageAttributeExclusionsOnly = register<Test>("testMapMessageAttributeExclusionsOnly") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*Log4jMapMessageSelectorTest")
+
+    jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.map-message-attributes.excluded=*-secret")
+    systemProperty("testMapMessageConfiguration", "exclude-only")
+  }
+
+  val testMapMessageAttributePrecedence = register<Test>("testMapMessageAttributePrecedence") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("*Log4jMapMessageSelectorTest")
+
+    jvmArgs(
+      "-Dotel.instrumentation.log4j-appender.experimental.map-message-attributes.included=order-id",
+      "-Dotel.instrumentation.log4j-appender.experimental.capture-map-message-attributes=true",
+    )
+    systemProperty("testMapMessageConfiguration", "precedence")
+  }
+
   check {
     dependsOn(
       testAsync,
@@ -110,6 +146,9 @@ tasks {
       testLegacyMdcAttributes,
       testMdcAttributeExclusionsOnly,
       testMdcAttributePrecedence,
+      testLegacyMapMessageAttributes,
+      testMapMessageAttributeExclusionsOnly,
+      testMapMessageAttributePrecedence,
     )
   }
 
@@ -124,7 +163,6 @@ tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental log attributes
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-map-message-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-marker-attribute=true")
 }
 

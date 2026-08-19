@@ -238,7 +238,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Number of exchanges redelivered (internal only)  since context start-up or the last reset operation.")
+                        "Number of exchanges redelivered (internal only) since context start-up or the last reset operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(contextAttributes))
@@ -367,7 +367,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Number of exchanges redelivered (internal only)  since route start-up or the last reset operation.")
+                        "Number of exchanges redelivered (internal only) since route start-up or the last reset operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(routeAttributes))
@@ -510,7 +510,7 @@ class CamelTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "Number of exchanges redelivered (internal only)  since selected processor start-up or the last reset operation.")
+                        "Number of exchanges redelivered (internal only) since selected processor start-up or the last reset operation.")
                     .hasUnit("{exchange}")
                     .hasDataPointsWithIntValues(value -> value.isEqualTo(0))
                     .hasDataPointsWithAttributes(

@@ -5,18 +5,22 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
@@ -104,6 +108,8 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(DB_REDIS_DATABASE_INDEX, null),
                             equalTo(maybeStablePeerService(), "test-peer-service"))));
   }
 
@@ -130,6 +136,8 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, incorrectPort),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(DB_REDIS_DATABASE_INDEX, null),
                             equalTo(maybeStablePeerService(), "test-peer-service"))
                         .hasEventsSatisfyingExactly(
                             event ->
@@ -137,17 +145,15 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                                     .hasName("exception")
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(
-                                            stringKey("exception.type"),
+                                            EXCEPTION_TYPE,
                                             "io.netty.channel.AbstractChannel.AnnotatedConnectException"),
                                         satisfies(
-                                            stringKey("exception.message"),
+                                            EXCEPTION_MESSAGE,
                                             val ->
                                                 val.matches(
                                                     expectedConnectionRefusedMessagePattern(
                                                         incorrectPort))),
-                                        satisfies(
-                                            stringKey("exception.stacktrace"),
-                                            val -> val.isNotNull())))));
+                                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())))));
   }
 
   @Test

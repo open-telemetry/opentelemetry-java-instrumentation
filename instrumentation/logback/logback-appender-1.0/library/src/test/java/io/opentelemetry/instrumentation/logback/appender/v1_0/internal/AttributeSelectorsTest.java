@@ -14,18 +14,18 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 
-class MdcAttributeSelectorsTest {
+class AttributeSelectorsTest {
 
   @Test
   void emptySelectorSelectsNothing() {
-    assertThat(MdcAttributeSelectors.create(null)).isNull();
-    assertThat(MdcAttributeSelectors.create(IncludeExclude.builder().build())).isNull();
+    assertThat(AttributeSelectors.create(null)).isNull();
+    assertThat(AttributeSelectors.create(IncludeExclude.builder().build())).isNull();
   }
 
   @Test
   void selectorMatchesGlobPatterns() {
     Predicate<String> selector =
-        MdcAttributeSelectors.create(
+        AttributeSelectors.create(
             IncludeExclude.builder()
                 .setIncluded(asList("request-*", "user-?"))
                 .setExcluded(singletonList("*-secret"))
@@ -40,14 +40,28 @@ class MdcAttributeSelectorsTest {
   }
 
   @Test
+  void deprecatedBooleanSelectorSelectsEveryKeyWhenEnabled() {
+    Predicate<String> selector = AttributeSelectors.createDeprecated(Boolean.TRUE);
+
+    assertThat(selector).isNotNull();
+    assertThat(selector.test("anything")).isTrue();
+    assertThat(selector.test("")).isTrue();
+  }
+
+  @Test
+  void deprecatedBooleanSelectorSelectsNothingWhenDisabledOrAbsent() {
+    assertThat(AttributeSelectors.createDeprecated(Boolean.FALSE)).isNull();
+    assertThat(AttributeSelectors.createDeprecated((Boolean) null)).isNull();
+  }
+
+  @Test
   void deprecatedSelectorIsEmptyWhenNoKeysAreConfigured() {
-    assertThat(MdcAttributeSelectors.createDeprecated(emptyList())).isNull();
+    assertThat(AttributeSelectors.createDeprecated(emptyList())).isNull();
   }
 
   @Test
   void deprecatedSelectorMatchesKeysLiterally() {
-    Predicate<String> selector =
-        MdcAttributeSelectors.createDeprecated(asList("*", "key?", "userId"));
+    Predicate<String> selector = AttributeSelectors.createDeprecated(asList("*", "key?", "userId"));
 
     assertThat(selector).isNotNull();
     assertThat(selector.test("*")).isTrue();
@@ -59,7 +73,7 @@ class MdcAttributeSelectorsTest {
 
   @Test
   void deprecatedSelectorMatchesEverythingWithSoleWildcard() {
-    Predicate<String> selector = MdcAttributeSelectors.createDeprecated(singletonList("*"));
+    Predicate<String> selector = AttributeSelectors.createDeprecated(singletonList("*"));
 
     assertThat(selector).isNotNull();
     assertThat(selector.test("anything")).isTrue();
@@ -67,10 +81,10 @@ class MdcAttributeSelectorsTest {
 
   @Test
   void splitsCommaSeparatedValues() {
-    assertThat(MdcAttributeSelectors.split(null)).isEmpty();
-    assertThat(MdcAttributeSelectors.split("")).isEmpty();
-    assertThat(MdcAttributeSelectors.split(" , ")).isEmpty();
-    assertThat(MdcAttributeSelectors.split("key1, key2 ,,key3"))
+    assertThat(AttributeSelectors.split(null)).isEmpty();
+    assertThat(AttributeSelectors.split("")).isEmpty();
+    assertThat(AttributeSelectors.split(" , ")).isEmpty();
+    assertThat(AttributeSelectors.split("key1, key2 ,,key3"))
         .containsExactly("key1", "key2", "key3");
   }
 }

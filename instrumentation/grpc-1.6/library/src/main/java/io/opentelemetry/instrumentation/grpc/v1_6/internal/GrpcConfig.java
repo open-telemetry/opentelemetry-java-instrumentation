@@ -11,6 +11,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.List;
 import java.util.Set;
@@ -112,8 +113,9 @@ public class GrpcConfig {
               + replacementProperty
               + " or equivalent declarative configuration instead.");
     }
-    return deprecatedIncluded.isEmpty()
-        ? null
-        : IncludeExclude.builder().setIncluded(deprecatedIncluded).build();
+    return DeprecatedCaptureNames.toSelector(
+        deprecatedIncluded,
+        "the " + deprecatedProperty + " setting or equivalent declarative configuration",
+        replacementProperty + " or equivalent declarative configuration");
   }
 }

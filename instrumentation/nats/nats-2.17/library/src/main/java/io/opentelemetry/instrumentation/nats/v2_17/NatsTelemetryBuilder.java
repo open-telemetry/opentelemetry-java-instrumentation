@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.nats.v2_17;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory;
 import java.util.Collection;
 
@@ -43,6 +44,9 @@ public final class NatsTelemetryBuilder {
   /**
    * Configures the messaging headers that will be captured as span attributes.
    *
+   * <p>The header names are matched literally. Names containing {@code *} or {@code ?} are ignored
+   * and logged, since this setting never supported wildcards.
+   *
    * @param capturedHeaders A list of messaging header names.
    * @deprecated Use {@link #setHeaders(IncludeExclude)} instead. May be removed in the next minor
    *     release.
@@ -50,7 +54,11 @@ public final class NatsTelemetryBuilder {
   @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public NatsTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
-    return setHeaders(IncludeExclude.builder().setIncluded(capturedHeaders).build());
+    return setHeaders(
+        DeprecatedCaptureNames.toSelectorOrEmpty(
+            capturedHeaders,
+            "NatsTelemetryBuilder.setCapturedHeaders()",
+            "setHeaders(IncludeExclude)"));
   }
 
   /** Returns a new {@link NatsTelemetry} with the settings of this {@link NatsTelemetryBuilder}. */

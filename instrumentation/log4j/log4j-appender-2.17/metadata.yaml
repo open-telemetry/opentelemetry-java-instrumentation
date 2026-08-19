@@ -18,10 +18,43 @@ configurations:
       name, and line number.
     type: boolean
     default: false
+  - name: otel.instrumentation.log4j-appender.experimental.map-message-attributes.included
+    declarative_name: java.log4j_appender.map_message_attributes/development.included
+    description: >
+      Comma-separated list of case-sensitive glob patterns for MapMessage keys to capture as log
+      attributes. "*" matches any number of characters and "?" matches one character. Excluded
+      patterns take precedence over included patterns. No MapMessage attributes are captured unless
+      an included pattern, an excluded pattern, or the deprecated
+      otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes setting is
+      configured; configuring only excluded patterns captures all MapMessage attributes that do not
+      match them. Captured MapMessage attributes may contain sensitive information.
+    type: list
+    default: ''
+    examples:
+      - "custom-map-message-key"
+      - "request-*,user-?"
+  - name: otel.instrumentation.log4j-appender.experimental.map-message-attributes.excluded
+    declarative_name: java.log4j_appender.map_message_attributes/development.excluded
+    description: >
+      Comma-separated list of case-sensitive glob patterns for MapMessage keys not to capture as log
+      attributes. "*" matches any number of characters and "?" matches one character. Excluded
+      patterns take precedence over included patterns. No MapMessage attributes are captured unless
+      an included pattern, an excluded pattern, or the deprecated
+      otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes setting is
+      configured; configuring only excluded patterns captures all MapMessage attributes that do not
+      match them. Captured MapMessage attributes may contain sensitive information.
+    type: list
+    default: ''
+    examples:
+      - "*-secret"
+      - "password,token"
   - name: otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes
     declarative_name: java.log4j_appender.capture_map_message_attributes/development
     description: >
-      Enables the capture of attributes from Log4j MapMessage instances.
+      Deprecated boolean alias for
+      otel.instrumentation.log4j-appender.experimental.map-message-attributes.included, where true
+      captures all MapMessage attributes and false captures none. It is ignored when an included or
+      excluded pattern is configured, and it may be removed in the next minor release.
     type: boolean
     default: false
   - name: otel.instrumentation.log4j-appender.experimental.capture-marker-attribute

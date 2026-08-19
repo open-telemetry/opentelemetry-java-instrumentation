@@ -141,6 +141,30 @@ class MessagingHeadersTest {
     assertThat(attributes.build().asMap()).isEmpty();
   }
 
+  @SuppressWarnings("deprecation") // testing deprecated API
+  @Test
+  void deprecatedCapturedHeadersSetterIgnoresWildcards() {
+    AttributesBuilder attributes = Attributes.builder();
+    builder()
+        .setCapturedHeaders(asList("Test-Message-Header", "Test-Message-*", "Authorizatio?"))
+        .build()
+        .onEnd(attributes, Context.root(), MESSAGE, null, null);
+
+    assertThat(attributes.build().asMap()).containsOnly(headerEntry("Test-Message-Header", "one"));
+  }
+
+  @SuppressWarnings("deprecation") // testing deprecated API
+  @Test
+  void deprecatedCapturedHeadersSetterWithOnlyWildcardsCapturesNothing() {
+    AttributesBuilder attributes = Attributes.builder();
+    builder()
+        .setCapturedHeaders(singletonList("*"))
+        .build()
+        .onEnd(attributes, Context.root(), MESSAGE, null, null);
+
+    assertThat(attributes.build().asMap()).isEmpty();
+  }
+
   private static Map<AttributeKey<?>, Object> capture(IncludeExclude headers) {
     AttributesBuilder attributes = Attributes.builder();
     extractor(new MapGetter(true), headers).onEnd(attributes, Context.root(), MESSAGE, null, null);

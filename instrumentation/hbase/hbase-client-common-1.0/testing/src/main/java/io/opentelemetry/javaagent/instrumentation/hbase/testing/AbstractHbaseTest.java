@@ -304,7 +304,12 @@ public abstract class AbstractHbaseTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName(GET + " " + TABLE_NAME.getNameAsString())
+                        span.hasName(
+                                GET
+                                    + " "
+                                    + (emitStableDatabaseSemconv()
+                                        ? TABLE_NAME.getQualifierAsString()
+                                        : TABLE_NAME.getNameAsString()))
                             .hasKind(SpanKind.CLIENT)
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
@@ -320,7 +325,7 @@ public abstract class AbstractHbaseTest {
                                 equalTo(
                                     DB_COLLECTION_NAME,
                                     emitStableDatabaseSemconv()
-                                        ? TABLE_NAME.getNameAsString()
+                                        ? TABLE_NAME.getQualifierAsString()
                                         : null),
                                 equalTo(SERVER_ADDRESS, hostname),
                                 equalTo(SERVER_PORT, REGION_SERVER_PORT),
@@ -605,7 +610,12 @@ public abstract class AbstractHbaseTest {
       TableName table, String operation, int port, boolean hasTable, Long batchSize) {
     String spanName;
     if (hasTable) {
-      spanName = operation + " " + table.getNameAsString();
+      spanName =
+          operation
+              + " "
+              + (emitStableDatabaseSemconv()
+                  ? table.getQualifierAsString()
+                  : table.getNameAsString());
     } else if (emitStableDatabaseSemconv()) {
       spanName = operation + " " + hostname + ":" + port;
     } else {
@@ -645,7 +655,7 @@ public abstract class AbstractHbaseTest {
 
   private static String dbCollectionName(TableName table, boolean hasTable) {
     if (hasTable && emitStableDatabaseSemconv()) {
-      return table.getNameAsString();
+      return table.getQualifierAsString();
     }
     return null;
   }
