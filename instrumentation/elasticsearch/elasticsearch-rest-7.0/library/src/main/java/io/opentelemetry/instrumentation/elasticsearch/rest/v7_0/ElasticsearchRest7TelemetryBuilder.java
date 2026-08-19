@@ -96,7 +96,10 @@ public final class ElasticsearchRest7TelemetryBuilder {
             spanNameExtractorCustomizer,
             knownMethods,
             HttpConstants.SENSITIVE_QUERY_PARAMETERS,
-            false);
+            // this instrumentation offers no way to turn search query capture on, so it never reads
+            // the request body and never needs a sanitizer
+            false,
+            null);
 
     return new ElasticsearchRest7Telemetry(instrumenter);
   }

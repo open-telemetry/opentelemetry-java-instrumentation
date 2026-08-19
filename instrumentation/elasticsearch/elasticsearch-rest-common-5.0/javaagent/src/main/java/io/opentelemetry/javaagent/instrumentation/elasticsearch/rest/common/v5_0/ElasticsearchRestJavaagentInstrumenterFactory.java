@@ -8,19 +8,35 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchRestInstrumenterFactory;
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchRestRequest;
+import io.opentelemetry.javaagent.bootstrap.elasticsearch.ElasticsearchQuerySanitizerAccess;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
+import javax.annotation.Nullable;
 import org.elasticsearch.client.Response;
 
 public class ElasticsearchRestJavaagentInstrumenterFactory {
 
+  // semconv says db.query.text "Should be collected by default for search-type queries and only if
+  // there is sanitization that excludes sensitive information", which the sanitizer now provides.
+  // The default flips only under v3-preview so that existing 2.x deployments keep their span shape.
   private static final boolean CAPTURE_SEARCH_QUERY =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "elasticsearch")
-          .getBoolean("capture_search_query", false);
+          .getBoolean("capture_search_query", AgentCommonConfig.get().isV3Preview());
+
+  private static final boolean SANITIZE_SEARCH_QUERY =
+      DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "elasticsearch");
+
+  // the sanitizer needs a JSON parser, which only exists in the agent class loader, so it is
+  // reached through a bootstrap class rather than referenced directly from this injected helper
+  @Nullable
+  private static final UnaryOperator<String> sanitizer =
+      SANITIZE_SEARCH_QUERY ? ElasticsearchQuerySanitizerAccess::sanitize : null;
 
   public static Instrumenter<ElasticsearchRestRequest, Response> create(
       String instrumentationName) {
@@ -31,7 +47,8 @@ public class ElasticsearchRestJavaagentInstrumenterFactory {
         Function.identity(),
         AgentCommonConfig.get().getKnownHttpRequestMethods(),
         AgentCommonConfig.get().getSensitiveQueryParameters(),
-        CAPTURE_SEARCH_QUERY);
+        CAPTURE_SEARCH_QUERY,
+        sanitizer);
   }
 
   private ElasticsearchRestJavaagentInstrumenterFactory() {}

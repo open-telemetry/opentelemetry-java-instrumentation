@@ -10,6 +10,10 @@
   corresponding artifacts directly.
 - `jetty.thread.queue.size` Jetty JMX metric unit has been changed from `{thread}` to `{job}`.
 - Normalize the value of `activemq.destination.temp.utilization` JMX Metric for ActiveMQ to be between 0 and 1 (inclusive) instead of between 0 and 100 (inclusive).
+- Elasticsearch REST instrumentation now sanitizes captured search query bodies by default, replacing
+  literal values with `?` while preserving the query structure. Sanitization can be disabled with
+  `otel.instrumentation.elasticsearch.query-sanitization.enabled=false`.
+  ([#19675](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19675))
 
 ### 🚫 Deprecations
 
