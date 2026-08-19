@@ -13,6 +13,7 @@ import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
@@ -24,9 +25,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 /**
@@ -42,10 +40,9 @@ public final class KafkaInstrumenterFactory {
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
   private ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
-  private List<String> capturedHeaders = emptyList();
+  private IncludeExclude headers = IncludeExclude.builder().build();
   private boolean captureExperimentalSpanAttributes = false;
   private boolean messagingReceiveInstrumentationEnabled = false;
-  private boolean messagingReceiveInstrumentationConfigured = false;
 
   public KafkaInstrumenterFactory(OpenTelemetry openTelemetry, String instrumentationName) {
     this.openTelemetry = openTelemetry;
@@ -59,8 +56,8 @@ public final class KafkaInstrumenterFactory {
   }
 
   @CanIgnoreReturnValue
-  public KafkaInstrumenterFactory setCapturedHeaders(Collection<String> capturedHeaders) {
-    this.capturedHeaders = new ArrayList<>(capturedHeaders);
+  public KafkaInstrumenterFactory setHeaders(IncludeExclude headers) {
+    this.headers = headers;
     return this;
   }
 
@@ -75,7 +72,6 @@ public final class KafkaInstrumenterFactory {
   public KafkaInstrumenterFactory setMessagingReceiveTelemetryEnabled(
       boolean messagingReceiveInstrumentationEnabled) {
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
-    this.messagingReceiveInstrumentationConfigured = true;
     return this;
   }
 
@@ -96,7 +92,7 @@ public final class KafkaInstrumenterFactory {
                 MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME))
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
-                    getter, operationType, SEND_OPERATION_NAME, capturedHeaders))
+                    getter, operationType, SEND_OPERATION_NAME, headers))
             .addAttributesExtractors(extractors)
             .addAttributesExtractor(new KafkaProducerAttributesExtractor())
             .setErrorCauseExtractor(errorCauseExtractor);
@@ -126,7 +122,7 @@ public final class KafkaInstrumenterFactory {
                 MessagingSpanNameExtractor.create(getter, operationType, POLL_OPERATION_NAME))
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
-                    getter, operationType, POLL_OPERATION_NAME, capturedHeaders))
+                    getter, operationType, POLL_OPERATION_NAME, headers))
             .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
             .addAttributesExtractors(extractors)
             .setErrorCauseExtractor(errorCauseExtractor)
@@ -156,7 +152,7 @@ public final class KafkaInstrumenterFactory {
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
-                    getter, operationType, PROCESS_OPERATION_NAME, capturedHeaders))
+                    getter, operationType, PROCESS_OPERATION_NAME, headers))
             .addAttributesExtractor(new KafkaConsumerAttributesExtractor())
             .addAttributesExtractors(extractors)
             .setErrorCauseExtractor(errorCauseExtractor);
@@ -173,9 +169,7 @@ public final class KafkaInstrumenterFactory {
   }
 
   private boolean receiveInstrumentationEnabled() {
-    return messagingReceiveInstrumentationConfigured
-        ? messagingReceiveInstrumentationEnabled
-        : emitStableMessagingSemconv();
+    return messagingReceiveInstrumentationEnabled;
   }
 
   public Instrumenter<KafkaReceiveRequest, Void> createBatchProcessInstrumenter() {
@@ -189,7 +183,7 @@ public final class KafkaInstrumenterFactory {
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
-                    getter, operationType, PROCESS_OPERATION_NAME, capturedHeaders))
+                    getter, operationType, PROCESS_OPERATION_NAME, headers))
             .addAttributesExtractor(new KafkaReceiveAttributesExtractor())
             .addSpanLinksExtractor(
                 new KafkaBatchProcessSpanLinksExtractor(
@@ -204,9 +198,9 @@ public final class KafkaInstrumenterFactory {
           MessagingAttributesGetter<REQUEST, RESPONSE> getter,
           MessagingOperationType operationType,
           String operationName,
-          List<String> capturedHeaders) {
+          IncludeExclude headers) {
     return MessagingAttributesExtractor.builder(getter, operationType, operationName)
-        .setCapturedHeaders(capturedHeaders)
+        .setHeaders(headers)
         .build();
   }
 }

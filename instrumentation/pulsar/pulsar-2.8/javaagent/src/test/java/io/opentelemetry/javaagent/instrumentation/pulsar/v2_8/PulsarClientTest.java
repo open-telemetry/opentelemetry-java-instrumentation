@@ -14,6 +14,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
@@ -102,8 +103,6 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                           .hasUnit("{message}")
                           .hasDescription(
                               "Number of messages that were delivered to the application.")
-                          .satisfies(
-                              data -> assertThat(data.getLongSumData().getPoints()).hasSize(1))
                           .hasLongSumSatisfying(
                               sum ->
                                   sum.hasPointsSatisfying(
@@ -349,6 +348,68 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))));
+  }
+
+  @Test
+  void testShortTopicNameOnProducer() throws Exception {
+    String shortTopic = "testShortTopicNameOnProducer";
+    String topic = "persistent://public/default/" + shortTopic;
+    admin.topics().createNonPartitionedTopic(topic);
+    consumer =
+        client
+            .newConsumer(Schema.STRING)
+            .subscriptionName("test_sub")
+            .topic(topic)
+            .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
+            .subscribe();
+    // the producer uses the short topic name, while the consumer uses the fully qualified one
+    producer = client.newProducer(Schema.STRING).topic(shortTopic).enableBatching(false).create();
+
+    String msg = "test";
+    MessageId msgId = testing.runWithSpan("parent", () -> producer.send(msg));
+
+    Message<String> receivedMsg = consumer.receive();
+    consumer.acknowledge(receivedMsg);
+
+    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    AtomicReference<SpanData> consumerSpan = new AtomicReference<>();
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanKind(
+            SpanKind.INTERNAL, emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER),
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span ->
+                  span.hasName(
+                          emitStableMessagingSemconv() ? "send " + topic : shortTopic + " publish")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          sendAttributes(shortTopic, msgId.toString(), false)));
+
+          producerSpan.set(trace.getSpan(1));
+        },
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName(
+                          emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
+                      .hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                      .hasNoParent()
+                      .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                      .hasAttributesSatisfyingExactly(
+                          receiveAttributes(topic, msgId.toString(), false)));
+
+          consumerSpan.set(trace.getSpan(0));
+        });
+
+    if (emitStableMessagingSemconv()) {
+      // a backend can only join producer and consumer spans for a topic when both sides report the
+      // same destination name for it
+      assertThat(producerSpan.get().getAttributes().get(MESSAGING_DESTINATION_NAME))
+          .isEqualTo(consumerSpan.get().getAttributes().get(MESSAGING_DESTINATION_NAME))
+          .isEqualTo(topic);
+    }
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -766,13 +827,13 @@ class PulsarClientTest extends AbstractPulsarClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("send " + partitionTopic)
+                    span.hasName("send " + topic)
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             sendAttributes(partitionTopic, msgId.toString(), false)),
                 span ->
-                    span.hasName("process " + partitionTopic)
+                    span.hasName("process " + topic)
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -782,7 +843,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName("receive " + partitionTopic)
+                      span.hasName("receive " + topic)
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))

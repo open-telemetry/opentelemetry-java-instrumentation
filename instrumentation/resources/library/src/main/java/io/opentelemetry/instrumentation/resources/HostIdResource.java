@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.resources;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.logging.Level.FINE;
 import static java.util.stream.Collectors.toList;
@@ -55,7 +56,7 @@ public final class HostIdResource {
   private static final Logger logger = Logger.getLogger(HostIdResource.class.getName());
 
   // copied from HostIncubatingAttributes
-  static final AttributeKey<String> HOST_ID = AttributeKey.stringKey("host.id");
+  private static final AttributeKey<String> HOST_ID = AttributeKey.stringKey("host.id");
 
   /**
    * @deprecated This constant is no longer used and will be removed in a future release. The
@@ -72,9 +73,9 @@ public final class HostIdResource {
       asList("/etc/machine-id", "/var/lib/dbus/machine-id");
   private static final String BSD_HOSTID_PATH = "/etc/hostid";
   private static final List<String> BSD_KENV_COMMAND =
-      asList("/bin/kenv", "-q", "smbios.system.uuid");
+      unmodifiableList(asList("/bin/kenv", "-q", "smbios.system.uuid"));
   private static final List<String> MACOS_IOREG_COMMAND =
-      asList("/usr/sbin/ioreg", "-rd1", "-c", "IOPlatformExpertDevice");
+      unmodifiableList(asList("/usr/sbin/ioreg", "-rd1", "-c", "IOPlatformExpertDevice"));
 
   // Prefer the SystemRoot/windir environment variables to locate the Windows directory, falling
   // back to the conventional install path only if neither is set.

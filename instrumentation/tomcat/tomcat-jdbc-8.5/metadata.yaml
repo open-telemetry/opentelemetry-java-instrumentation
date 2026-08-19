@@ -9,7 +9,7 @@ semantic_conventions:
   - DATABASE_POOL_METRICS
 configurations:
   - name: otel.semconv-stability.opt-in
-    declarative_name: general.semconv_stability.opt_in
+    declarative_name: general.stability_opt_in_list
     description: >
       Opt-in to emit stable semantic conventions instead of the old
       experimental semantic conventions. Accepts a comma-separated list of semantic convention
@@ -17,4 +17,5 @@ configurations:
       conventions simultaneously. Stable semantic conventions will become the default in version
       3.0 of the agent.
     type: list
+    declarative_type: string
     default: ""

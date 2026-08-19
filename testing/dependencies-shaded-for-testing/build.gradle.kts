@@ -74,6 +74,10 @@ tasks {
     filesMatching("META-INF/services/**") {
       duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
+    // avoid warning about duplicate kotlin module files being silently dropped
+    filesMatching("META-INF/*.kotlin_module") {
+      duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
     // exclude caffeine shaded in armeria
     if (otelProps.denyUnsafe) {
       exclude("com/linecorp/armeria/internal/shaded/caffeine/**")

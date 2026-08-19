@@ -13,6 +13,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -90,6 +91,7 @@ abstract class AbstractJms3Test {
     connectionFactory.setPassword("test");
 
     connection = connectionFactory.createConnection();
+    connection.setClientID("jms-3-test");
     connection.start();
 
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -302,6 +304,12 @@ abstract class AbstractJms3Test {
 
   static AttributeAssertion operationType(String operation) {
     return equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? operation : null);
+  }
+
+  static AttributeAssertion subscriptionName(String subscriptionName) {
+    return equalTo(
+        MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+        emitStableMessagingSemconv() ? subscriptionName : null);
   }
 
   private static Stream<Arguments> emptyReceiveArguments() {

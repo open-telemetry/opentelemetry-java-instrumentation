@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.DYNAMODB;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static java.util.stream.Collectors.joining;
@@ -78,6 +79,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private final Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> settleInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter;
   private final Logger eventLogger;
@@ -115,6 +117,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter,
       Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter,
       Instrumenter<ExecutionAttributes, Response> producerInstrumenter,
+      Instrumenter<ExecutionAttributes, Response> settleInstrumenter,
       Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter,
       Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter,
       Logger eventLogger,
@@ -127,6 +130,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
     this.producerInstrumenter = producerInstrumenter;
+    this.settleInstrumenter = settleInstrumenter;
     this.dynamoDbInstrumenter = dynamoDbInstrumenter;
     this.bedrockRuntimeInstrumenter = bedrockRuntimeInstrumenter;
     this.eventLogger = eventLogger;
@@ -474,6 +478,9 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       SdkRequest request, AwsSdkRequest awsSdkRequest) {
     if (SqsAccess.isSqsProducerRequest(request)) {
       return producerInstrumenter;
+    }
+    if (emitStableMessagingSemconv() && SqsAccess.isSqsDeleteRequest(request)) {
+      return settleInstrumenter;
     }
     if (BedrockRuntimeAccess.isBedrockRuntimeRequest(request)) {
       return bedrockRuntimeInstrumenter;

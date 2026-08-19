@@ -8,16 +8,23 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -83,10 +90,10 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   }
 
   /**
-   * @deprecated Use {@link #create(MessagingAttributesGetter, MessagingOperationType, String)}.
-   *     Will be removed in 3.0.
+   * @deprecated Use {@link #create(MessagingAttributesGetter, MessagingOperationType, String)}. May
+   *     be removed in the next minor release.
    */
-  @Deprecated // to be removed in 3.0
+  @Deprecated // may be removed in the next minor release
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter, @Nullable MessageOperation operation) {
     return builder(getter, operation).build();
@@ -109,9 +116,9 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
 
   /**
    * @deprecated Use {@link #builder(MessagingAttributesGetter, MessagingOperationType, String)}.
-   *     Will be removed in 3.0.
+   *     May be removed in the next minor release.
    */
-  @Deprecated // to be removed in 3.0
+  @Deprecated // may be removed in the next minor release
   public static <REQUEST, RESPONSE> MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter, @Nullable MessageOperation operation) {
     return new MessagingAttributesExtractorBuilder<>(
@@ -122,19 +129,45 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   @Nullable private final MessagingOperationType operationType;
   @Nullable private final String operationName;
   private final boolean supportsStableSemconv;
-  private final List<String> capturedHeaders;
+  @Nullable private final IncludeExclude headers;
+  // exact header names that the selector includes, queried directly so that getters which only
+  // implement getMessageHeader() keep working
+  private final List<String> exactHeaderNames;
+  private final Map<String, AttributeKey<List<String>>> exactHeaderAttributeKeys;
+  // whether the selector can match header names that are not listed in exactHeaderNames, which
+  // requires enumerating the header names of each message
+  private final boolean enumerateHeaderNames;
 
   MessagingAttributesExtractor(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter,
       @Nullable MessagingOperationType operationType,
       @Nullable String operationName,
       boolean supportsStableSemconv,
-      List<String> capturedHeaders) {
+      @Nullable IncludeExclude headers) {
     this.getter = getter;
     this.operationType = operationType;
     this.operationName = operationName;
     this.supportsStableSemconv = supportsStableSemconv;
-    this.capturedHeaders = new ArrayList<>(capturedHeaders);
+    this.headers = headers;
+
+    Set<String> exactNames = new LinkedHashSet<>();
+    boolean enumerate = false;
+    if (headers != null) {
+      List<String> included = headers.getIncluded();
+      // a selector without included patterns matches every header name that is not excluded
+      enumerate = included.isEmpty();
+      for (String pattern : included) {
+        if (pattern.indexOf('*') != -1 || pattern.indexOf('?') != -1) {
+          enumerate = true;
+        } else if (headers.matches(pattern)) {
+          exactNames.add(pattern);
+        }
+      }
+    }
+    this.exactHeaderNames = unmodifiableList(new ArrayList<>(exactNames));
+    this.exactHeaderAttributeKeys =
+        CapturedMessageHeadersUtil.createLiteralAttributeKeys(exactHeaderNames);
+    this.enumerateHeaderNames = enumerate;
   }
 
   @Override
@@ -202,12 +235,29 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       attributes.put(ERROR_TYPE, errorType);
     }
 
-    for (String name : capturedHeaders) {
+    for (String name : headerNames(request)) {
       List<String> values = getter.getMessageHeader(request, name);
       if (!values.isEmpty()) {
-        attributes.put(CapturedMessageHeadersUtil.attributeKey(name), values);
+        attributes.put(
+            CapturedMessageHeadersUtil.attributeKey(name, exactHeaderAttributeKeys), values);
       }
     }
+  }
+
+  private Collection<String> headerNames(REQUEST request) {
+    if (headers == null) {
+      return emptyList();
+    }
+    if (!enumerateHeaderNames) {
+      return exactHeaderNames;
+    }
+    Set<String> names = new LinkedHashSet<>(exactHeaderNames);
+    for (String name : getter.getMessageHeaderNames(request)) {
+      if (headers.matches(name)) {
+        names.add(name);
+      }
+    }
+    return names;
   }
 
   /**

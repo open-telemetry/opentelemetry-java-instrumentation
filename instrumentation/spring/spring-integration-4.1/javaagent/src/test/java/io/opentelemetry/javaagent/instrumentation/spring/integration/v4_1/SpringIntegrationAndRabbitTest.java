@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
+import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertNoMetrics;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -183,6 +184,10 @@ class SpringIntegrationAndRabbitTest {
                     span.hasName(emitStableMessagingSemconv() ? "ack" : "basic.ack")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(ackAssertions())));
+
+    // Rabbit and Spring Rabbit own the active messaging layers, so Spring Integration must not
+    // start operation listeners that could duplicate their metric points.
+    assertNoMetrics(testing);
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv

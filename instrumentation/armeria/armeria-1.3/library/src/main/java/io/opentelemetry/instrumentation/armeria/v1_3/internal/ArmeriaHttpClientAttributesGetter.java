@@ -13,6 +13,7 @@ import com.linecorp.armeria.common.logging.RequestLog;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -65,6 +66,11 @@ final class ArmeriaHttpClientAttributesGetter
   }
 
   @Override
+  public Collection<String> getHttpRequestHeaderNames(ClientRequestContext ctx) {
+    return ArmeriaHeaderUtil.getHeaderNames(request(ctx).headers());
+  }
+
+  @Override
   @Nullable
   public Integer getHttpResponseStatusCode(
       ClientRequestContext ctx, RequestLog requestLog, @Nullable Throwable error) {
@@ -79,6 +85,12 @@ final class ArmeriaHttpClientAttributesGetter
   public List<String> getHttpResponseHeader(
       ClientRequestContext ctx, RequestLog requestLog, String name) {
     return requestLog.responseHeaders().getAll(name);
+  }
+
+  @Override
+  public Collection<String> getHttpResponseHeaderNames(
+      ClientRequestContext ctx, RequestLog requestLog) {
+    return ArmeriaHeaderUtil.getHeaderNames(requestLog.responseHeaders());
   }
 
   @Override

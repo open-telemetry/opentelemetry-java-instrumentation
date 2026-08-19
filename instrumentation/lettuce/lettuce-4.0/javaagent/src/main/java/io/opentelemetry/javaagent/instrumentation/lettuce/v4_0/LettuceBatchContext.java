@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.batchInstrumenter;
 
@@ -91,7 +90,7 @@ public final class LettuceBatchContext {
         @Nullable InetSocketAddress serverAddress) {
       LettuceBatchRequest request = LettuceBatchRequest.create(commands, serverAddress);
       Context parentContext =
-          capturedParentContext == null ? currentContext() : capturedParentContext;
+          capturedParentContext == null ? Context.current() : capturedParentContext;
       if (!batchInstrumenter().shouldStart(parentContext, request)) {
         return null;
       }

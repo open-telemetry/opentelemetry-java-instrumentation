@@ -6,6 +6,7 @@ on:
       cache-read-only:
         type: boolean
         required: false
+        default: true
       no-build-cache:
         type: boolean
         required: false

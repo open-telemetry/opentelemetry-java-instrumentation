@@ -50,7 +50,8 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
       DistributionStatisticConfigModifier modifier,
       double scale,
       boolean emitMaxGauge,
-      Meter otelMeter) {
+      Meter otelMeter,
+      Bridging bridging) {
     super(id, clock, modifier.modify(distributionStatisticConfig), scale, false);
 
     if (isUsingMicrometerHistograms()) {
@@ -66,7 +67,7 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
     DoubleHistogramBuilder otelHistogramBuilder =
         otelMeter
             .histogramBuilder(name)
-            .setDescription(Bridging.description(id))
+            .setDescription(bridging.description(name, id))
             .setUnit(baseUnit(id));
     setExplicitBucketsIfConfigured(otelHistogramBuilder, distributionStatisticConfig);
     this.otelHistogram = otelHistogramBuilder.build();
@@ -74,7 +75,7 @@ final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
         emitMaxGauge
             ? otelMeter
                 .gaugeBuilder(name + ".max")
-                .setDescription(Bridging.description(id))
+                .setDescription(bridging.description(name + ".max", id))
                 .setUnit(baseUnit(id))
                 .buildWithCallback(
                     new DoubleMeasurementRecorder<>(max, TimeWindowMax::poll, attributes))

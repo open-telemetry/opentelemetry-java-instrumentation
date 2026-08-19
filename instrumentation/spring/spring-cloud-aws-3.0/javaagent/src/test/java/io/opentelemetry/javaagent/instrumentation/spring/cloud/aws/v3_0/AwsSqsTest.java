@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -186,7 +187,10 @@ class AwsSqsTest {
                 span ->
                     span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(3)),
                 span ->
-                    span.hasName("Sqs.DeleteMessageBatch")
+                    span.hasName(
+                            emitStableMessagingSemconv()
+                                ? "delete test-queue"
+                                : "Sqs.DeleteMessageBatch")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
@@ -207,6 +211,25 @@ class AwsSqsTest {
                                 "http://localhost:"
                                     + AwsSqsTestApplication.sqsPort
                                     + "/000000000000/test-queue"),
+                            equalTo(
+                                MESSAGING_SYSTEM, emitStableMessagingSemconv() ? AWS_SQS : null),
+                            equalTo(
+                                MESSAGING_DESTINATION_NAME,
+                                emitStableMessagingSemconv() ? "test-queue" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_NAME,
+                                emitStableMessagingSemconv() ? "delete" : null),
+                            equalTo(
+                                MESSAGING_OPERATION_TYPE,
+                                emitStableMessagingSemconv() ? "settle" : null),
+                            equalTo(
+                                MESSAGING_OPERATION,
+                                emitStableMessagingSemconv() && emitOldMessagingSemconv()
+                                    ? "settle"
+                                    : null),
+                            equalTo(
+                                MESSAGING_BATCH_MESSAGE_COUNT,
+                                emitStableMessagingSemconv() ? Long.valueOf(1) : null),
                             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)))));
   }
 }

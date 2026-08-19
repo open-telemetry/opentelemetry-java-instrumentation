@@ -6,10 +6,12 @@
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Collections.singletonList;
 
 import io.github.netmikey.logunit.api.LogCapturer;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.runtimetelemetry.internal.Experimental;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
@@ -81,7 +83,8 @@ class RuntimeTelemetryTest {
   @Test
   void builder_WithFeatureEnabled() {
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(sdk);
-    builder.getJfrConfig().enableFeature(JfrFeature.LOCK_METRICS);
+    Experimental.setJfrMetrics(
+        builder, IncludeExclude.builder().setIncluded(singletonList("jvm.cpu.longlock")).build());
     var runtimeTelemetry = builder.build();
     cleanup.deferCleanup(runtimeTelemetry);
 
@@ -92,15 +95,15 @@ class RuntimeTelemetryTest {
         .hasSizeGreaterThan(0)
         .allSatisfy(
             handler -> {
-              assertThat(handler.getFeature()).isEqualTo(JfrFeature.LOCK_METRICS);
+              assertThat(handler.getMetricNames()).contains("jvm.cpu.longlock");
             });
   }
 
   @Test
   void close() throws InterruptedException {
     RuntimeTelemetryBuilder builder = RuntimeTelemetry.builder(sdk);
-    // Enable a feature to test close behavior with JFR
-    builder.getJfrConfig().enableFeature(JfrFeature.LOCK_METRICS);
+    Experimental.setJfrMetrics(
+        builder, IncludeExclude.builder().setIncluded(singletonList("jvm.cpu.longlock")).build());
     try (RuntimeTelemetry jfrTelemetry = builder.build()) {
       JfrConfig.JfrRuntimeMetrics jfrRuntimeMetrics =
           (JfrConfig.JfrRuntimeMetrics) jfrTelemetry.getJfrTelemetry();

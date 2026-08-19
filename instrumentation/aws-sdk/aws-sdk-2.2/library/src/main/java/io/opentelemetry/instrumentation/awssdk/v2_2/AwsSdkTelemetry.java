@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkInstrumenterFactory;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.BedrockRuntimeImpl;
@@ -17,7 +18,6 @@ import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsProcessRequest;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsReceiveRequest;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
-import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
@@ -52,6 +52,7 @@ public class AwsSdkTelemetry {
   private final Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> settleInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter;
   private final Logger eventLogger;
@@ -75,7 +76,7 @@ public class AwsSdkTelemetry {
 
   AwsSdkTelemetry(
       OpenTelemetry openTelemetry,
-      List<String> capturedHeaders,
+      IncludeExclude headers,
       boolean captureExperimentalSpanAttributes,
       boolean useMessagingPropagator,
       boolean useXrayPropagator,
@@ -90,7 +91,7 @@ public class AwsSdkTelemetry {
         new AwsSdkInstrumenterFactory(
             openTelemetry,
             messagingPropagator,
-            capturedHeaders,
+            headers,
             captureExperimentalSpanAttributes,
             messagingReceiveInstrumentationEnabled,
             useXrayPropagator);
@@ -99,6 +100,7 @@ public class AwsSdkTelemetry {
     this.consumerReceiveInstrumenter = instrumenterFactory.consumerReceiveInstrumenter();
     this.consumerProcessInstrumenter = instrumenterFactory.consumerProcessInstrumenter();
     this.producerInstrumenter = instrumenterFactory.producerInstrumenter();
+    this.settleInstrumenter = instrumenterFactory.settleInstrumenter();
     this.dynamoDbInstrumenter = instrumenterFactory.dynamoDbInstrumenter();
     this.bedrockRuntimeInstrumenter = instrumenterFactory.bedrockRuntimeInstrumenter();
     this.eventLogger = instrumenterFactory.eventLogger();
@@ -117,6 +119,7 @@ public class AwsSdkTelemetry {
         consumerReceiveInstrumenter,
         consumerProcessInstrumenter,
         producerInstrumenter,
+        settleInstrumenter,
         dynamoDbInstrumenter,
         bedrockRuntimeInstrumenter,
         eventLogger,

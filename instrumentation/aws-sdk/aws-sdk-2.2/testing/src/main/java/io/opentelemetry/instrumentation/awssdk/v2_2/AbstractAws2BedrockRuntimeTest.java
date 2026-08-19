@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.EventIncubatingAttributes.EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MAX_TOKENS;
@@ -30,7 +31,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.within;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.SpanContext;
@@ -88,14 +88,11 @@ import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
 
 // TODO: Remove after https://github.com/open-telemetry/semantic-conventions-genai/issues/247
 // is resolved.
-@SuppressWarnings("OtelDeprecatedApiUsage")
+@SuppressWarnings("deprecation")
 public abstract class AbstractAws2BedrockRuntimeTest {
   protected static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
 
   private static final String API_URL = "https://bedrock-runtime.us-east-1.amazonaws.com";
-
-  protected static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
-
   @RegisterExtension static final RecordingExtension recording = new RecordingExtension(API_URL);
 
   protected abstract InstrumentationExtension getTesting();

@@ -27,7 +27,7 @@ class MessagingSpanNameExtractorTest {
 
   @Mock MessagingAttributesGetter<Message, Void> getter;
 
-  @SuppressWarnings("OtelDeprecatedApiUsage")
+  @SuppressWarnings("deprecation")
   @Test
   void shouldKeepLegacyNameForMessageOperation() {
     Message message = new Message();

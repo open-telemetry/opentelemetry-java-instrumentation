@@ -32,11 +32,13 @@ sourceSets {
 }
 
 configurations {
+  // the javaSpring3 and javaSpring4 source sets are bundled into the main jar, so they need to see
+  // the same dependencies as the main source set
   named("javaSpring3CompileOnly") {
-    extendsFrom(configurations["compileOnly"])
+    extendsFrom(configurations["compileOnly"], configurations["implementation"])
   }
   named("javaSpring4CompileOnly") {
-    extendsFrom(configurations["compileOnly"])
+    extendsFrom(configurations["compileOnly"], configurations["implementation"])
   }
 }
 
