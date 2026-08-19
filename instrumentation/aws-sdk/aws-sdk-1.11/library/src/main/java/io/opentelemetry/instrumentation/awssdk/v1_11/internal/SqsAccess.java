@@ -36,10 +36,9 @@ final class SqsAccess {
   static AmazonWebServiceRequest beforeMarshalling(
       AmazonWebServiceRequest request,
       Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter,
-      boolean sqsMessageCreateSpansEnabled) {
+      boolean messageCreateSpansEnabled) {
     return enabled
-        ? SqsImpl.beforeMarshalling(
-            request, producerCreateInstrumenter, sqsMessageCreateSpansEnabled)
+        ? SqsImpl.beforeMarshalling(request, producerCreateInstrumenter, messageCreateSpansEnabled)
         : request;
   }
 

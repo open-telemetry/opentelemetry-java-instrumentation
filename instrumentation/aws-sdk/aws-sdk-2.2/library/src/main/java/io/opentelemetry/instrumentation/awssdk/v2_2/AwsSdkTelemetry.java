@@ -63,7 +63,7 @@ public class AwsSdkTelemetry {
   private final boolean useXrayPropagator;
   private final boolean recordIndividualHttpError;
   private final boolean genAiCaptureMessageContent;
-  private final boolean sqsMessageCreateSpansEnabled;
+  private final boolean messageCreateSpansEnabled;
 
   /** Returns a new {@link AwsSdkTelemetry} configured with the given {@link OpenTelemetry}. */
   public static AwsSdkTelemetry create(OpenTelemetry openTelemetry) {
@@ -86,7 +86,7 @@ public class AwsSdkTelemetry {
       boolean recordIndividualHttpError,
       boolean messagingReceiveInstrumentationEnabled,
       boolean genAiCaptureMessageContent,
-      boolean sqsMessageCreateSpansEnabled) {
+      boolean messageCreateSpansEnabled) {
     this.useXrayPropagator = useXrayPropagator;
     this.messagingPropagator =
         useMessagingPropagator ? openTelemetry.getPropagators().getTextMapPropagator() : null;
@@ -99,7 +99,7 @@ public class AwsSdkTelemetry {
             captureExperimentalSpanAttributes,
             messagingReceiveInstrumentationEnabled,
             useXrayPropagator,
-            sqsMessageCreateSpansEnabled);
+            messageCreateSpansEnabled);
 
     this.requestInstrumenter = instrumenterFactory.requestInstrumenter();
     this.consumerReceiveInstrumenter = instrumenterFactory.consumerReceiveInstrumenter();
@@ -113,7 +113,7 @@ public class AwsSdkTelemetry {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.recordIndividualHttpError = recordIndividualHttpError;
     this.genAiCaptureMessageContent = genAiCaptureMessageContent;
-    this.sqsMessageCreateSpansEnabled = sqsMessageCreateSpansEnabled;
+    this.messageCreateSpansEnabled = messageCreateSpansEnabled;
   }
 
   /**
@@ -136,7 +136,7 @@ public class AwsSdkTelemetry {
         useXrayPropagator,
         recordIndividualHttpError,
         genAiCaptureMessageContent,
-        sqsMessageCreateSpansEnabled);
+        messageCreateSpansEnabled);
   }
 
   /**

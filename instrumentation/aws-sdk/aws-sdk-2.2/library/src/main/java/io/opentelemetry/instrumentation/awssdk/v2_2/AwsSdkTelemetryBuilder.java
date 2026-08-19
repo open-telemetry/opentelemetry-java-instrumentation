@@ -22,7 +22,7 @@ public final class AwsSdkTelemetryBuilder {
   private boolean useXrayPropagator = true;
   private boolean messagingReceiveTelemetryEnabled;
   private boolean genaiCaptureMessageContent;
-  private boolean sqsMessageCreateSpansEnabled = true;
+  private boolean messageCreateSpansEnabled = true;
 
   AwsSdkTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -142,9 +142,8 @@ public final class AwsSdkTelemetryBuilder {
    * enabled by default.
    */
   @CanIgnoreReturnValue
-  public AwsSdkTelemetryBuilder setSqsMessageCreateSpansEnabled(
-      boolean sqsMessageCreateSpansEnabled) {
-    this.sqsMessageCreateSpansEnabled = sqsMessageCreateSpansEnabled;
+  public AwsSdkTelemetryBuilder setMessageCreateSpansEnabled(boolean messageCreateSpansEnabled) {
+    this.messageCreateSpansEnabled = messageCreateSpansEnabled;
     return this;
   }
 
@@ -173,6 +172,6 @@ public final class AwsSdkTelemetryBuilder {
         recordIndividualHttpError,
         messagingReceiveTelemetryEnabled,
         genaiCaptureMessageContent,
-        sqsMessageCreateSpansEnabled);
+        messageCreateSpansEnabled);
   }
 }

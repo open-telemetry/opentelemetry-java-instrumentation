@@ -108,7 +108,7 @@ public final class AwsSdkInstrumenterFactory {
   private final boolean captureExperimentalSpanAttributes;
   private final boolean messagingReceiveInstrumentationEnabled;
   private final boolean useXrayPropagator;
-  private final boolean sqsMessageCreateSpansEnabled;
+  private final boolean messageCreateSpansEnabled;
 
   public AwsSdkInstrumenterFactory(
       OpenTelemetry openTelemetry,
@@ -117,14 +117,14 @@ public final class AwsSdkInstrumenterFactory {
       boolean captureExperimentalSpanAttributes,
       boolean messagingReceiveInstrumentationEnabled,
       boolean useXrayPropagator,
-      boolean sqsMessageCreateSpansEnabled) {
+      boolean messageCreateSpansEnabled) {
     this.openTelemetry = openTelemetry;
     this.messagingPropagator = messagingPropagator;
     this.headers = headers;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
     this.useXrayPropagator = useXrayPropagator;
-    this.sqsMessageCreateSpansEnabled = sqsMessageCreateSpansEnabled;
+    this.messageCreateSpansEnabled = messageCreateSpansEnabled;
   }
 
   public Instrumenter<ExecutionAttributes, Response> requestInstrumenter() {
@@ -279,7 +279,7 @@ public final class AwsSdkInstrumenterFactory {
           SdkRequest sdkRequest =
               request.getAttribute(TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE);
           return emitStableMessagingSemconv()
-                  && sqsMessageCreateSpansEnabled
+                  && messageCreateSpansEnabled
                   && SqsAccess.isBatchRequest(sdkRequest)
               ? SpanKind.CLIENT
               : SpanKind.PRODUCER;
@@ -288,7 +288,7 @@ public final class AwsSdkInstrumenterFactory {
         singletonList(messagingAttributeExtractor),
         builder -> {
           setMessagingSendExceptionEventExtractor(builder);
-          if (emitStableMessagingSemconv() && sqsMessageCreateSpansEnabled) {
+          if (emitStableMessagingSemconv() && messageCreateSpansEnabled) {
             builder.addSpanLinksExtractor(
                 (spanLinks, parentContext, request) -> {
                   for (Context creationContext :

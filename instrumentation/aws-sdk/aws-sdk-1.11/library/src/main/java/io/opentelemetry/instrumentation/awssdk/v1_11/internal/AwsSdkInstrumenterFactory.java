@@ -73,19 +73,19 @@ public final class AwsSdkInstrumenterFactory {
   private final IncludeExclude headers;
   private final boolean captureExperimentalSpanAttributes;
   private final boolean messagingReceiveInstrumentationEnabled;
-  private final boolean sqsMessageCreateSpansEnabled;
+  private final boolean messageCreateSpansEnabled;
 
   public AwsSdkInstrumenterFactory(
       OpenTelemetry openTelemetry,
       IncludeExclude headers,
       boolean captureExperimentalSpanAttributes,
       boolean messagingReceiveInstrumentationEnabled,
-      boolean sqsMessageCreateSpansEnabled) {
+      boolean messageCreateSpansEnabled) {
     this.openTelemetry = openTelemetry;
     this.headers = headers;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
-    this.sqsMessageCreateSpansEnabled = sqsMessageCreateSpansEnabled;
+    this.messageCreateSpansEnabled = messageCreateSpansEnabled;
   }
 
   private static List<AttributesExtractor<Request<?>, Response<?>>> createAttributesExtractors(
@@ -243,7 +243,7 @@ public final class AwsSdkInstrumenterFactory {
         MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME),
         request ->
             emitStableMessagingSemconv()
-                    && sqsMessageCreateSpansEnabled
+                    && messageCreateSpansEnabled
                     && SqsAccess.isBatchRequest(request)
                 ? SpanKind.CLIENT
                 : SpanKind.PRODUCER,
@@ -251,7 +251,7 @@ public final class AwsSdkInstrumenterFactory {
         singletonList(messagingAttributeExtractor),
         builder -> {
           setMessagingSendExceptionEventExtractor(builder);
-          if (emitStableMessagingSemconv() && sqsMessageCreateSpansEnabled) {
+          if (emitStableMessagingSemconv() && messageCreateSpansEnabled) {
             builder.addSpanLinksExtractor(
                 (spanLinks, parentContext, request) -> {
                   for (Context creationContext : SqsAccess.getBatchMessageContexts(request)) {

@@ -132,7 +132,7 @@ class SqsParentContextTest {
             Context.root(),
             /* useXrayPropagator= */ true,
             /* messagingPropagator= */ null,
-            /* sqsMessageCreateSpansEnabled= */ false);
+            /* messageCreateSpansEnabled= */ false);
 
     assertThat(modifiedRequest).isInstanceOf(ReceiveMessageRequest.class);
     assertThat(((ReceiveMessageRequest) modifiedRequest).messageAttributeNames())

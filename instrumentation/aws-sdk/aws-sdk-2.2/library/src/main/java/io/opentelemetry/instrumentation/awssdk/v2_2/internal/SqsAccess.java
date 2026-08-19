@@ -46,14 +46,10 @@ final class SqsAccess {
       io.opentelemetry.context.Context otelContext,
       boolean useXrayPropagator,
       TextMapPropagator messagingPropagator,
-      boolean sqsMessageCreateSpansEnabled) {
+      boolean messageCreateSpansEnabled) {
     return enabled
         ? SqsImpl.modifyRequest(
-            request,
-            otelContext,
-            useXrayPropagator,
-            messagingPropagator,
-            sqsMessageCreateSpansEnabled)
+            request, otelContext, useXrayPropagator, messagingPropagator, messageCreateSpansEnabled)
         : null;
   }
 

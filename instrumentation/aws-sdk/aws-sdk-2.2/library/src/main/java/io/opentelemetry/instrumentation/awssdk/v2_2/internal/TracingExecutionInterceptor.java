@@ -129,7 +129,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private final boolean useXrayPropagator;
   private final boolean recordIndividualHttpError;
   private final boolean genAiCaptureMessageContent;
-  private final boolean sqsMessageCreateSpansEnabled;
+  private final boolean messageCreateSpansEnabled;
   private final FieldMapper fieldMapper;
 
   @SuppressWarnings("TooManyParameters") // internal method
@@ -148,7 +148,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       boolean useXrayPropagator,
       boolean recordIndividualHttpError,
       boolean genAiCaptureMessageContent,
-      boolean sqsMessageCreateSpansEnabled) {
+      boolean messageCreateSpansEnabled) {
     this.requestInstrumenter = requestInstrumenter;
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
@@ -162,7 +162,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     this.useXrayPropagator = useXrayPropagator;
     this.recordIndividualHttpError = recordIndividualHttpError;
     this.genAiCaptureMessageContent = genAiCaptureMessageContent;
-    this.sqsMessageCreateSpansEnabled = sqsMessageCreateSpansEnabled;
+    this.messageCreateSpansEnabled = messageCreateSpansEnabled;
     this.fieldMapper = new FieldMapper(captureExperimentalSpanAttributes);
   }
 
@@ -189,7 +189,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       return request;
     }
 
-    if (emitStableMessagingSemconv() && sqsMessageCreateSpansEnabled) {
+    if (emitStableMessagingSemconv() && messageCreateSpansEnabled) {
       SdkRequest preparedRequest =
           SqsAccess.prepareBatchRequest(
               request,
@@ -271,7 +271,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
             otelContext,
             useXrayPropagator,
             messagingPropagator,
-            sqsMessageCreateSpansEnabled);
+            messageCreateSpansEnabled);
     if (modifiedRequest != null) {
       return modifiedRequest;
     }

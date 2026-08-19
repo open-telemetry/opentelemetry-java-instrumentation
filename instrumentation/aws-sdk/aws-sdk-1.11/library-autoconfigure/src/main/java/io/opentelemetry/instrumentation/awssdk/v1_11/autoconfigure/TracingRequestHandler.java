@@ -38,13 +38,13 @@ public final class TracingRequestHandler extends RequestHandler2 {
                 // necessary to support configuration via system properties.
                 SystemProperty.getBoolean(
                     "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
-        .setSqsMessageCreateSpansEnabled(
+        .setMessageCreateSpansEnabled(
             awsSdk
-                .get("sqs_message_create_spans/development")
+                .get("message_create_spans/development")
                 .getBoolean(
                     "enabled",
                     SystemProperty.getBoolean(
-                        "otel.instrumentation.aws-sdk.experimental-sqs-message-create-spans.enabled",
+                        "otel.instrumentation.aws-sdk.experimental.message-create-spans.enabled",
                         true)))
         .setMessagingReceiveTelemetryEnabled(
             messaging

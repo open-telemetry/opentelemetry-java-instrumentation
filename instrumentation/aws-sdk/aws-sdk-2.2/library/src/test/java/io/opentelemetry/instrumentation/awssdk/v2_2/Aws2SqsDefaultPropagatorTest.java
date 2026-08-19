@@ -59,7 +59,7 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
     AwsSdkTelemetry disabledTelemetry =
         AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)
-            .setSqsMessageCreateSpansEnabled(false)
+            .setMessageCreateSpansEnabled(false)
             .build();
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);

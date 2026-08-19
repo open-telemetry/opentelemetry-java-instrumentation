@@ -42,7 +42,7 @@ class SqsParentContextTest {
     ReceiveMessageRequest request = new ReceiveMessageRequest("https://example.com/queue");
 
     SqsImpl.beforeMarshalling(
-        request, /* producerCreateInstrumenter= */ null, /* sqsMessageCreateSpansEnabled= */ false);
+        request, /* producerCreateInstrumenter= */ null, /* messageCreateSpansEnabled= */ false);
 
     assertThat(request.getMessageAttributeNames())
         .contains(SqsParentContext.AWS_TRACE_MESSAGE_ATTRIBUTE);

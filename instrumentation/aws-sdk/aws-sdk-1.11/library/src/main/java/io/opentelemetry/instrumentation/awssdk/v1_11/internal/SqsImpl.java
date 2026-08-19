@@ -142,7 +142,7 @@ public final class SqsImpl {
   static AmazonWebServiceRequest beforeMarshalling(
       AmazonWebServiceRequest rawRequest,
       Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter,
-      boolean sqsMessageCreateSpansEnabled) {
+      boolean messageCreateSpansEnabled) {
     if (rawRequest instanceof ReceiveMessageRequest) {
       ReceiveMessageRequest request = (ReceiveMessageRequest) rawRequest;
       if (!request.getAttributeNames().contains(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE)) {
@@ -158,7 +158,7 @@ public final class SqsImpl {
     }
     if (rawRequest instanceof SendMessageBatchRequest
         && emitStableMessagingSemconv()
-        && sqsMessageCreateSpansEnabled) {
+        && messageCreateSpansEnabled) {
       return injectBatchCreationContexts(
           (SendMessageBatchRequest) rawRequest, producerCreateInstrumenter);
     }

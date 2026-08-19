@@ -36,7 +36,7 @@ public final class AwsSdkTelemetry {
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> settleInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter;
-  private final boolean sqsMessageCreateSpansEnabled;
+  private final boolean messageCreateSpansEnabled;
 
   /** Returns a new {@link AwsSdkTelemetry} configured with the given {@link OpenTelemetry}. */
   public static AwsSdkTelemetry create(OpenTelemetry openTelemetry) {
@@ -55,14 +55,14 @@ public final class AwsSdkTelemetry {
       IncludeExclude headers,
       boolean captureExperimentalSpanAttributes,
       boolean messagingReceiveInstrumentationEnabled,
-      boolean sqsMessageCreateSpansEnabled) {
+      boolean messageCreateSpansEnabled) {
     AwsSdkInstrumenterFactory instrumenterFactory =
         new AwsSdkInstrumenterFactory(
             openTelemetry,
             headers,
             captureExperimentalSpanAttributes,
             messagingReceiveInstrumentationEnabled,
-            sqsMessageCreateSpansEnabled);
+            messageCreateSpansEnabled);
     requestInstrumenter = instrumenterFactory.requestInstrumenter();
     consumerReceiveInstrumenter = instrumenterFactory.consumerReceiveInstrumenter();
     consumerProcessInstrumenter = instrumenterFactory.consumerProcessInstrumenter();
@@ -70,7 +70,7 @@ public final class AwsSdkTelemetry {
     producerInstrumenter = instrumenterFactory.producerInstrumenter();
     settleInstrumenter = instrumenterFactory.settleInstrumenter();
     dynamoDbInstrumenter = instrumenterFactory.dynamoDbInstrumenter();
-    this.sqsMessageCreateSpansEnabled = sqsMessageCreateSpansEnabled;
+    this.messageCreateSpansEnabled = messageCreateSpansEnabled;
   }
 
   /**
@@ -86,7 +86,7 @@ public final class AwsSdkTelemetry {
         producerInstrumenter,
         settleInstrumenter,
         dynamoDbInstrumenter,
-        sqsMessageCreateSpansEnabled);
+        messageCreateSpansEnabled);
   }
 
   /**

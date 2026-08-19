@@ -53,7 +53,7 @@ public final class TracingRequestHandler extends RequestHandler2 {
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> settleInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter;
-  private final boolean sqsMessageCreateSpansEnabled;
+  private final boolean messageCreateSpansEnabled;
 
   public TracingRequestHandler(
       Instrumenter<Request<?>, Response<?>> requestInstrumenter,
@@ -63,7 +63,7 @@ public final class TracingRequestHandler extends RequestHandler2 {
       Instrumenter<Request<?>, Response<?>> producerInstrumenter,
       Instrumenter<Request<?>, Response<?>> settleInstrumenter,
       Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter,
-      boolean sqsMessageCreateSpansEnabled) {
+      boolean messageCreateSpansEnabled) {
     this.requestInstrumenter = requestInstrumenter;
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
@@ -71,7 +71,7 @@ public final class TracingRequestHandler extends RequestHandler2 {
     this.producerInstrumenter = producerInstrumenter;
     this.settleInstrumenter = settleInstrumenter;
     this.dynamoDbInstrumenter = dynamoDbInstrumenter;
-    this.sqsMessageCreateSpansEnabled = sqsMessageCreateSpansEnabled;
+    this.messageCreateSpansEnabled = messageCreateSpansEnabled;
   }
 
   @Override
@@ -119,7 +119,7 @@ public final class TracingRequestHandler extends RequestHandler2 {
   @CanIgnoreReturnValue
   public AmazonWebServiceRequest beforeMarshalling(AmazonWebServiceRequest request) {
     return SqsAccess.beforeMarshalling(
-        request, producerCreateInstrumenter, sqsMessageCreateSpansEnabled);
+        request, producerCreateInstrumenter, messageCreateSpansEnabled);
   }
 
   Instrumenter<SqsReceiveRequest, Response<?>> getConsumerReceiveInstrumenter() {
