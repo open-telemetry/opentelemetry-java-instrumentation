@@ -65,8 +65,7 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
     config.setJmxNamePrefix(poolName);
     config.setMaxTotal(-1);
     config.setMaxIdle(-1);
-    GenericObjectPool<Object> pool =
-        new GenericObjectPool<>(new TestObjectFactory(), config);
+    GenericObjectPool<Object> pool = new GenericObjectPool<>(new TestObjectFactory(), config);
     Object borrowed = null;
     try {
       configure(pool, poolName);
