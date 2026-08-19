@@ -16,27 +16,32 @@ final class LettuceBatchRequest {
   @Nullable private final Long batchSize;
   @Nullable private final InetSocketAddress serverAddress;
   @Nullable private final RedisURI redisUri;
+  @Nullable private final Integer database;
 
   private LettuceBatchRequest(
       String operationName,
       @Nullable Long batchSize,
       @Nullable InetSocketAddress serverAddress,
-      @Nullable RedisURI redisUri) {
+      @Nullable RedisURI redisUri,
+      @Nullable Integer database) {
     this.operationName = operationName;
     this.batchSize = batchSize;
     this.serverAddress = serverAddress;
     this.redisUri = redisUri;
+    this.database = database;
   }
 
   static LettuceBatchRequest create(
       List<RedisCommand<?, ?, ?>> commands,
       @Nullable InetSocketAddress serverAddress,
-      @Nullable RedisURI redisUri) {
+      @Nullable RedisURI redisUri,
+      @Nullable Integer database) {
     return new LettuceBatchRequest(
         operationName(commands),
         commands.size() != 1 ? (long) commands.size() : null,
         serverAddress,
-        redisUri);
+        redisUri,
+        database);
   }
 
   String getOperationName() {
@@ -56,6 +61,11 @@ final class LettuceBatchRequest {
   @Nullable
   RedisURI getRedisUri() {
     return redisUri;
+  }
+
+  @Nullable
+  Integer getDatabase() {
+    return database;
   }
 
   private static String operationName(List<RedisCommand<?, ?, ?>> commands) {

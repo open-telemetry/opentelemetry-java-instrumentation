@@ -66,8 +66,14 @@ public final class LettuceBatchContext {
     BATCH_STATE.set(commands, new BatchState());
     InetSocketAddress serverAddress = LettuceSingletons.serverAddress(commands.getConnection());
     RedisURI redisUri = LettuceSingletons.redisUri(commands.getConnection());
+    Integer database = LettuceSingletons.databaseIndex(commands.getConnection());
     return BatchScope.start(
-        state.commands, state.asyncCommands, state.parentContext, serverAddress, redisUri);
+        state.commands,
+        state.asyncCommands,
+        state.parentContext,
+        serverAddress,
+        redisUri,
+        database);
   }
 
   private LettuceBatchContext() {}
@@ -90,8 +96,10 @@ public final class LettuceBatchContext {
         List<AsyncCommand<?, ?, ?>> asyncCommands,
         @Nullable Context capturedParentContext,
         @Nullable InetSocketAddress serverAddress,
-        @Nullable RedisURI redisUri) {
-      LettuceBatchRequest request = LettuceBatchRequest.create(commands, serverAddress, redisUri);
+        @Nullable RedisURI redisUri,
+        @Nullable Integer database) {
+      LettuceBatchRequest request =
+          LettuceBatchRequest.create(commands, serverAddress, redisUri, database);
       Context parentContext =
           capturedParentContext == null ? Context.current() : capturedParentContext;
       if (!batchInstrumenter().shouldStart(parentContext, request)) {

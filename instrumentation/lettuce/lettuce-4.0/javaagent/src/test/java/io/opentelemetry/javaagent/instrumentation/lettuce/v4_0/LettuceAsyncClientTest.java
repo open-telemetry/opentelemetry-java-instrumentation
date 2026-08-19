@@ -87,6 +87,7 @@ class LettuceAsyncClientTest {
 
   private static final int DB_INDEX = 0;
   private static final int NON_DEFAULT_DB_INDEX = 1;
+  private static final int SELECTED_DB_INDEX = 2;
 
   // Disable auto reconnect, so we do not get stray traces popping up on server shutdown
   private static final ClientOptions CLIENT_OPTIONS =
@@ -647,6 +648,63 @@ class LettuceAsyncClientTest {
   }
 
   @Test
+  void testDatabaseIndexAfterSelect() throws Exception {
+    StatefulRedisConnection<String, String> selectedConnection = redisClient.connect();
+    cleanup.deferCleanup(selectedConnection);
+    RedisAsyncCommands<String, String> selectedCommands = selectedConnection.async();
+
+    selectedCommands.select(SELECTED_DB_INDEX);
+    testing.waitForTraces(connectionTelemetryEnabled() ? 2 : 1);
+    testing.clearData();
+
+    selectedCommands.set("SELECTEDKEY", "SELECTEDVAL").get(10, SECONDS);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, expectedNamespace(SELECTED_DB_INDEX)),
+                            equalTo(maybeStable(DB_OPERATION), "SET"))));
+    testing.clearData();
+
+    selectedCommands.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> selectedCommands.setAutoFlushCommands(true));
+    List<RedisFuture<String>> futures =
+        asList(
+            selectedCommands.set("SELECTEDBATCH1", "v1"),
+            selectedCommands.set("SELECTEDBATCH2", "v2"));
+    selectedCommands.flushCommands();
+    for (RedisFuture<String> future : futures) {
+      future.get(10, SECONDS);
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "PIPELINE SET " + host + ":" + port
+                                : "PIPELINE SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, expectedNamespace(SELECTED_DB_INDEX)),
+                            equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? 2L : null))));
+  }
+
+  @Test
   void testNonDefaultDatabaseIndexOnConnect() {
     RedisClient client =
         RedisClient.create("redis://" + host + ":" + port + "/" + NON_DEFAULT_DB_INDEX);
@@ -680,7 +738,11 @@ class LettuceAsyncClientTest {
   }
 
   private static String expectedNonDefaultNamespace() {
-    return emitStableDatabaseSemconv() ? String.valueOf(NON_DEFAULT_DB_INDEX) : null;
+    return expectedNamespace(NON_DEFAULT_DB_INDEX);
+  }
+
+  private static String expectedNamespace(int database) {
+    return emitStableDatabaseSemconv() ? String.valueOf(database) : null;
   }
 
   private static Stream<Arguments> deferredFlushScenarios() {

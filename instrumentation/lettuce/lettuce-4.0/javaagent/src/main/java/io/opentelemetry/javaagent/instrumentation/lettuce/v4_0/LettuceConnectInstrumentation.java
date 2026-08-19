@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONNECTION_URI;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.connectInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -52,7 +51,7 @@ class LettuceConnectInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) RedisChannelHandler<?, ?> connection,
         @Advice.Argument(2) RedisURI redisUri) {
       if (redisUri.getHost() != null) {
-        CONNECTION_URI.set(connection, redisUri);
+        LettuceSingletons.attachConnection(connection, redisUri);
       }
     }
   }

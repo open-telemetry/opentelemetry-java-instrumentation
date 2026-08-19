@@ -54,7 +54,10 @@ class LettuceObservableCommandInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This RedisCommand<?, ?, ?> command) {
+    public static void onExit(
+        @Advice.This RedisCommand<?, ?, ?> command,
+        @Advice.Argument(0) RedisCommand<?, ?, ?> sourceCommand) {
+      LettuceSingletons.copyDatabaseState(sourceCommand, command);
       Context context = Java8BytecodeBridge.currentContext();
       if (context.get(COMMAND_CONTEXT_KEY) != null) {
         CONTEXT.set(command, context);
@@ -71,6 +74,11 @@ class LettuceObservableCommandInstrumentation implements TypeInstrumentation {
         @Advice.This RedisCommand<?, ?, ?> command,
         @Advice.Origin("#m") String methodName,
         @Advice.Argument(value = 0, optional = true) @Nullable Throwable commandError) {
+      LettuceSingletons.updateDatabase(
+          command,
+          "complete".equals(methodName)
+              && command.getOutput() != null
+              && !command.getOutput().hasError());
       Context context = CONTEXT.get(command);
       if (context == null) {
         return null;

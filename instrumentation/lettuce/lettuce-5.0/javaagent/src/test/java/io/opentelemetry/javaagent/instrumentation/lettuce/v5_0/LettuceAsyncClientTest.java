@@ -88,6 +88,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   private RedisAsyncCommands<String, String> nonDefaultDbCommands;
 
   private static final int NON_DEFAULT_DB_INDEX = 1;
+  private static final int SELECTED_DB_INDEX = 2;
 
   @BeforeAll
   void setUp() throws UnknownHostException {
@@ -658,6 +659,69 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
+  void testDatabaseIndexAfterSelect() throws Exception {
+    StatefulRedisConnection<String, String> selectedConnection = redisClient.connect();
+    cleanup.deferCleanup(selectedConnection);
+    RedisAsyncCommands<String, String> selectedCommands = selectedConnection.async();
+
+    selectedCommands.select(SELECTED_DB_INDEX);
+    testing.waitForTraces(connectionTelemetryEnabled() ? 2 : 1);
+    testing.clearData();
+
+    selectedCommands.set("SELECTEDKEY", "SELECTEDVAL").get(10, SECONDS);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, expectedNamespace(SELECTED_DB_INDEX)),
+                            equalTo(maybeStable(DB_STATEMENT), "SET SELECTEDKEY ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port))));
+    testing.clearData();
+
+    selectedConnection.setAutoFlushCommands(false);
+    cleanup.deferCleanup(() -> selectedConnection.setAutoFlushCommands(true));
+    List<RedisFuture<String>> futures =
+        asList(
+            selectedCommands.set("SELECTEDBATCH1", "v1"),
+            selectedCommands.set("SELECTEDBATCH2", "v2"));
+    selectedConnection.flushCommands();
+    for (RedisFuture<String> future : futures) {
+      future.get(10, SECONDS);
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "PIPELINE SET " + host + ":" + port
+                                : "PIPELINE SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, expectedNamespace(SELECTED_DB_INDEX)),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                emitStableDatabaseSemconv()
+                                    ? "SET SELECTEDBATCH1 ?; SET SELECTEDBATCH2 ?"
+                                    : "SET SELECTEDBATCH1 ?;SET SELECTEDBATCH2 ?"),
+                            equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? 2L : null))));
+  }
+
+  @Test
   void testNonDefaultDatabaseIndexOnConnect() {
     RedisClient client =
         RedisClient.create("redis://" + host + ":" + port + "/" + NON_DEFAULT_DB_INDEX);
@@ -692,7 +756,11 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   }
 
   private static String expectedNonDefaultNamespace() {
-    return emitStableDatabaseSemconv() ? String.valueOf(NON_DEFAULT_DB_INDEX) : null;
+    return expectedNamespace(NON_DEFAULT_DB_INDEX);
+  }
+
+  private static String expectedNamespace(int database) {
+    return emitStableDatabaseSemconv() ? String.valueOf(database) : null;
   }
 
   private static Stream<Arguments> deferredFlushScenarios() {

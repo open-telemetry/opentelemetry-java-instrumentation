@@ -11,6 +11,8 @@ import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.protocol.AsyncCommand;
+import io.lettuce.core.protocol.CommandArgsAccessor;
+import io.lettuce.core.protocol.CommandType;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -46,6 +48,15 @@ public class LettuceSingletons {
 
   public static final VirtualField<RedisCommand<?, ?, ?>, RedisURI> COMMAND_URI =
       VirtualField.find(RedisCommand.class, RedisURI.class);
+
+  public static final VirtualField<RedisCommand<?, ?, ?>, Integer> COMMAND_DATABASE =
+      VirtualField.find(RedisCommand.class, Integer.class);
+
+  private static final VirtualField<DefaultEndpoint, DatabaseState> ENDPOINT_DATABASE =
+      VirtualField.find(DefaultEndpoint.class, DatabaseState.class);
+
+  private static final VirtualField<RedisCommand<?, ?, ?>, DatabaseState> COMMAND_DATABASE_STATE =
+      VirtualField.find(RedisCommand.class, DatabaseState.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
@@ -126,8 +137,82 @@ public class LettuceSingletons {
     if (connection instanceof RedisChannelHandler) {
       Object channelWriter = ((RedisChannelHandler<?, ?>) connection).getChannelWriter();
       if (channelWriter instanceof DefaultEndpoint) {
-        COMMAND_URI.set(command, ENDPOINT_URI.get((DefaultEndpoint) channelWriter));
+        DefaultEndpoint endpoint = (DefaultEndpoint) channelWriter;
+        COMMAND_URI.set(command, ENDPOINT_URI.get(endpoint));
+        attachDatabaseState(command, ENDPOINT_DATABASE.get(endpoint));
       }
+    }
+  }
+
+  public static void attachEndpoint(DefaultEndpoint endpoint, RedisURI redisUri) {
+    ENDPOINT_URI.set(endpoint, redisUri);
+    ENDPOINT_DATABASE.set(endpoint, new DatabaseState(redisUri.getDatabase()));
+  }
+
+  public static void attachDatabase(RedisCommand<?, ?, ?> command, DefaultEndpoint endpoint) {
+    attachDatabaseState(command, ENDPOINT_DATABASE.get(endpoint));
+  }
+
+  public static void trackDatabaseSelection(
+      RedisCommand<?, ?, ?> command, @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
+    DatabaseState state = COMMAND_DATABASE_STATE.get(command);
+    Integer database = selectedDatabase(command);
+    if (state == null || database == null || asyncCommand == null) {
+      return;
+    }
+    asyncCommand.handle(
+        (value, throwable) -> {
+          if (throwable == null && "OK".equals(value)) {
+            state.set(database);
+          }
+          return null;
+        });
+  }
+
+  public static void updateDatabase(RedisCommand<?, ?, ?> command, boolean successful) {
+    DatabaseState state = COMMAND_DATABASE_STATE.get(command);
+    Integer database = selectedDatabase(command);
+    if (successful && state != null && database != null) {
+      state.set(database);
+    }
+  }
+
+  @Nullable
+  static Integer databaseIndex(DefaultEndpoint endpoint) {
+    DatabaseState state = ENDPOINT_DATABASE.get(endpoint);
+    return state == null ? null : state.get();
+  }
+
+  private static void attachDatabaseState(
+      RedisCommand<?, ?, ?> command, @Nullable DatabaseState state) {
+    if (state != null) {
+      COMMAND_DATABASE.set(command, state.get());
+      COMMAND_DATABASE_STATE.set(command, state);
+    }
+  }
+
+  @Nullable
+  private static Integer selectedDatabase(RedisCommand<?, ?, ?> command) {
+    if (!command.getType().equals(CommandType.SELECT) || command.getArgs() == null) {
+      return null;
+    }
+    Long database = CommandArgsAccessor.getFirstInteger(command.getArgs());
+    return database == null ? null : database.intValue();
+  }
+
+  private static final class DatabaseState {
+    private volatile int database;
+
+    private DatabaseState(int database) {
+      this.database = database;
+    }
+
+    private int get() {
+      return database;
+    }
+
+    private void set(int database) {
+      this.database = database;
     }
   }
 

@@ -32,8 +32,8 @@ class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisCommand
   @Override
   @Nullable
   public String getDbNamespace(RedisCommand<?, ?, ?> request) {
-    RedisURI redisUri = LettuceSingletons.COMMAND_URI.get(request);
-    return redisUri != null ? String.valueOf(redisUri.getDatabase()) : null;
+    Integer database = LettuceSingletons.COMMAND_DATABASE.get(request);
+    return database == null ? null : String.valueOf(database);
   }
 
   @Deprecated // to be removed in 3.0

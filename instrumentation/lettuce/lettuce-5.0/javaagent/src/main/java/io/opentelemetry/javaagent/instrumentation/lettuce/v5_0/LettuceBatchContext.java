@@ -65,7 +65,11 @@ public final class LettuceBatchContext {
     // flushCommands() does not re-enable auto-flush, so keep batching active with a fresh buffer
     BATCH_STATE.set(endpoint, new BatchState());
     return BatchScope.start(
-        state.commands, state.asyncCommands, state.parentContext, ENDPOINT_URI.get(endpoint));
+        state.commands,
+        state.asyncCommands,
+        state.parentContext,
+        ENDPOINT_URI.get(endpoint),
+        LettuceSingletons.databaseIndex(endpoint));
   }
 
   private LettuceBatchContext() {}
@@ -87,8 +91,9 @@ public final class LettuceBatchContext {
         List<RedisCommand<?, ?, ?>> commands,
         List<AsyncCommand<?, ?, ?>> asyncCommands,
         @Nullable Context capturedParentContext,
-        @Nullable RedisURI redisUri) {
-      LettuceBatchRequest request = LettuceBatchRequest.create(commands, redisUri);
+        @Nullable RedisURI redisUri,
+        @Nullable Integer database) {
+      LettuceBatchRequest request = LettuceBatchRequest.create(commands, redisUri, database);
       Context parentContext =
           capturedParentContext == null ? Context.current() : capturedParentContext;
       if (!batchInstrumenter().shouldStart(parentContext, request)) {

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import com.lambdaworks.redis.RedisURI;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
@@ -21,8 +20,8 @@ class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBa
   @Override
   @Nullable
   public String getDbNamespace(LettuceBatchRequest request) {
-    RedisURI redisUri = request.getRedisUri();
-    return redisUri != null ? String.valueOf(redisUri.getDatabase()) : null;
+    Integer database = request.getDatabase();
+    return database == null ? null : String.valueOf(database);
   }
 
   @Deprecated // to be removed in 3.0

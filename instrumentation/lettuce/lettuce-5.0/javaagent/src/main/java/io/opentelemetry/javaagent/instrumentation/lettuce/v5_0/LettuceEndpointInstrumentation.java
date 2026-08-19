@@ -61,6 +61,8 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
         @Advice.This DefaultEndpoint endpoint, @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
       AsyncCommand<?, ?, ?> asyncCommand = asAsyncCommand(command);
       COMMAND_URI.set(command, ENDPOINT_URI.get(endpoint));
+      LettuceSingletons.attachDatabase(command, endpoint);
+      LettuceSingletons.trackDatabaseSelection(command, asyncCommand);
 
       if (LettuceBatchContext.isBatching(endpoint)) {
         LettuceBatchContext.capture(endpoint, command, asyncCommand);

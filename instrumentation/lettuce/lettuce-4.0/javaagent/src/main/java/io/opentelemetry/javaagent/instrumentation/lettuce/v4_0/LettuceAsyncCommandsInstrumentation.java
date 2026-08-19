@@ -115,6 +115,7 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Return @Nullable AsyncCommand<?, ?, ?> asyncCommand,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
+      LettuceSingletons.trackDatabaseSelection(command, asyncCommand);
       if (adviceScope != null) {
         adviceScope.end(throwable, command, asyncCommand);
       }
