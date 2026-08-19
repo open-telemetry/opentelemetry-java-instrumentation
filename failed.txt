@@ -6,3 +6,4 @@ oshi-5.0:testing	2026-05-27T18:25:03Z	git apply failed (patch conflict)
 tomcat-dbcp-8.0:javaagent	2026-08-13T04:33:52Z	git apply failed (patch conflict)
 rocketmq-client-5.0:javaagent-unit-tests	2026-08-14T18:45:59Z	agent_result=failure
 kafka-connect-2.6:javaagent-unit-tests	2026-08-18T11:39:55Z	git apply failed (patch conflict)
+apache-commons-pool-2.0:testing	2026-08-19T23:59:05Z	git apply failed (patch conflict)
