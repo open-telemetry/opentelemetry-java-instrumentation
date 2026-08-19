@@ -32,7 +32,7 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
 
-// ignore using deprecated createDatabase and deleteDatabase methods warning.
+// using deprecated InfluxDB and semconv APIs
 @SuppressWarnings("deprecation")
 @TestInstance(Lifecycle.PER_CLASS)
 class InfluxDbQuerySanitizationDisabledTest {
