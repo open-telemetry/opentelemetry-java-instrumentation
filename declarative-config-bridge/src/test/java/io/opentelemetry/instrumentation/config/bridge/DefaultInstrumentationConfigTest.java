@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.config.bridge;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -105,12 +106,7 @@ class DefaultInstrumentationConfigTest {
         ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
             DefaultConfigProperties.createFromMap(defaults.toConfigProperties()));
 
-    assertThat(
-            config
-                .getStructured("java")
-                .getStructured("common")
-                .getStructured("http")
-                .getString("known_methods"))
+    assertThat(config.get("java").get("common").get("http").getString("known_methods"))
         .isEqualTo("GET,POST");
   }
 
@@ -125,9 +121,9 @@ class DefaultInstrumentationConfigTest {
 
     assertThat(
             config
-                .getStructured("java")
-                .getStructured("common")
-                .getStructured("http")
+                .get("java")
+                .get("common")
+                .get("http")
                 .getScalarList("known_methods", String.class))
         .containsExactly("GET", "POST");
   }
@@ -143,9 +139,9 @@ class DefaultInstrumentationConfigTest {
 
     assertThat(
             config
-                .getStructured("general")
-                .getStructured("http")
-                .getStructured("client")
+                .get("general")
+                .get("http")
+                .get("client")
                 .getScalarList("request_captured_headers", String.class))
         .containsExactly("X-Request-Id");
   }
@@ -177,6 +173,6 @@ class DefaultInstrumentationConfigTest {
                 new ExperimentalHttpInstrumentationModel()
                     .withClient(
                         new ExperimentalHttpClientInstrumentationModel()
-                            .withRequestCapturedHeaders(asList(header)))));
+                            .withRequestCapturedHeaders(singletonList(header)))));
   }
 }

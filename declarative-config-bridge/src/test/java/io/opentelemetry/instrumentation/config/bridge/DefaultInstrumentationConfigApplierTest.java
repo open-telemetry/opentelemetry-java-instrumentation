@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.config.bridge;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -67,8 +68,7 @@ class DefaultInstrumentationConfigApplierTest {
         SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model))
             .getInstrumentationConfig();
 
-    DeclarativeConfigProperties instrumentation =
-        config.getStructured("java").getStructured("example_instrumentation");
+    DeclarativeConfigProperties instrumentation = config.get("java").get("example_instrumentation");
     assertThat(instrumentation.getBoolean("bool_key")).isTrue();
     assertThat(instrumentation.getLong("int_key")).isEqualTo(42L);
     assertThat(instrumentation.getDouble("double_key")).isEqualTo(3.14);
@@ -87,9 +87,9 @@ class DefaultInstrumentationConfigApplierTest {
             .getInstrumentationConfig();
     assertThat(
             config
-                .getStructured("java")
-                .getStructured("common")
-                .getStructured("http")
+                .get("java")
+                .get("common")
+                .get("http")
                 .getScalarList("known_methods", String.class))
         .containsExactly("GET", "POST");
   }
@@ -232,6 +232,6 @@ class DefaultInstrumentationConfigApplierTest {
                 new ExperimentalHttpInstrumentationModel()
                     .withClient(
                         new ExperimentalHttpClientInstrumentationModel()
-                            .withRequestCapturedHeaders(asList(header)))));
+                            .withRequestCapturedHeaders(singletonList(header)))));
   }
 }
