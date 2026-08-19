@@ -9,12 +9,10 @@ import static io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12.Spym
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.internal.BulkGetFuture;
-import net.spy.memcached.ops.OperationStatus;
 
 public class BulkGetCompletionListener extends CompletionListener<BulkGetFuture<?>>
     implements net.spy.memcached.internal.BulkGetCompletionListener {
@@ -51,12 +49,5 @@ public class BulkGetCompletionListener extends CompletionListener<BulkGetFuture<
     i.e. we cannot say that we got 4 hits out of 10. So we will just ignore results for now.
     */
     future.get();
-    OperationStatus status = future.getStatus();
-    if (status != null && !status.isSuccess()) {
-      if (future.isCancelled()) {
-        throw new CancellationException(status.getMessage());
-      }
-      throw new ExecutionException(new RuntimeException(status.getMessage()));
-    }
   }
 }
