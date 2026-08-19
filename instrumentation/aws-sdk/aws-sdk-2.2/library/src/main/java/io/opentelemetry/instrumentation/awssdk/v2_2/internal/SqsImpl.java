@@ -229,11 +229,12 @@ public final class SqsImpl {
 
       io.opentelemetry.context.Context creationContext =
           producerCreateInstrumenter.start(creationParentContext, createRequest);
-      creationContexts.add(creationContext);
       Map<String, MessageAttributeValue> updatedAttributes = new HashMap<>(messageAttributes);
-      injectCreationContextIfCapacity(
-          updatedAttributes, creationContext, useXrayPropagator, messagingPropagator);
-      entries.set(i, entry.toBuilder().messageAttributes(updatedAttributes).build());
+      if (injectCreationContextIfCapacity(
+          updatedAttributes, creationContext, useXrayPropagator, messagingPropagator)) {
+        creationContexts.add(creationContext);
+        entries.set(i, entry.toBuilder().messageAttributes(updatedAttributes).build());
+      }
       producerCreateInstrumenter.end(creationContext, createRequest, null, null);
     }
     TracingExecutionInterceptor.setBatchMessageContexts(executionAttributes, creationContexts);
