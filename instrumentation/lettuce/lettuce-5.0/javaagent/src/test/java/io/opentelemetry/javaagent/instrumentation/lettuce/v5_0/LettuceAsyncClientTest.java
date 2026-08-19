@@ -82,12 +82,12 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
           "lastname", "Doe",
           "age", "53");
 
+  private static final int NON_DEFAULT_DB_INDEX = 1;
+
   private RedisAsyncCommands<String, String> asyncCommands;
   private RedisClient nonDefaultDbClient;
   private StatefulRedisConnection<String, String> nonDefaultDbConnection;
   private RedisAsyncCommands<String, String> nonDefaultDbCommands;
-
-  private static final int NON_DEFAULT_DB_INDEX = 1;
 
   @BeforeAll
   void setUp() throws UnknownHostException {
