@@ -83,25 +83,66 @@ Setting can be configured as XML attributes, for example:
 ```xml
 <Appenders>
   <OpenTelemetry name="OpenTelemetryAppender"
-      captureMapMessageAttributes="true"
       captureMarkerAttribute="true"
-      captureContextDataAttributes="*"
+      contextDataAttributesIncluded="request-*,user-?"
+      contextDataAttributesExcluded="*-secret"
+      mapMessageAttributesIncluded="order-*"
+      mapMessageAttributesExcluded="*-secret"
   />
 </Appenders>
 ```
 
 The available settings are:
 
-| XML Attribute                      | Type    | Default | Description                                                                                                                                                                                                |
-| ---------------------------------- | ------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `captureExperimentalAttributes`    | Boolean | `false` | Enable the capture of experimental log attributes `thread.name` and `thread.id`.                                                                                                                           |
-| `captureCodeAttributes`            | Boolean | `false` | Enable the capture of [source code attributes]. Note that capturing source code attributes at logging sites might add a performance overhead.                                                              |
-| `captureMapMessageAttributes`      | Boolean | `false` | Enable the capture of `MapMessage` attributes.                                                                                                                                                             |
-| `captureMarkerAttribute`           | Boolean | `false` | Enable the capture of Log4j markers as attributes.                                                                                                                                                         |
-| `captureTemplate`                  | Boolean | `false` | Enable the capture of the log message template (if arguments are provided).                                                                                                                                |
-| `captureArguments`                 | Boolean | `false` | Enable the capture of the log message arguments.                                                                                                                                                           |
-| `captureContextDataAttributes`     | String  |         | Comma separated list of context data attributes to capture. Use the wildcard character `*` to capture all attributes.                                                                                      |
-| `numLogsCapturedBeforeOtelInstall` | Integer | 1000    | Log telemetry is emitted after the initialization of the OpenTelemetry Log4j appender with an OpenTelemetry object. This setting allows you to modify the size of the cache used to replay the first logs. |
+| XML Attribute                      | Type    | Default | Description                                                                                                                                                                                                                                                                                                                                         |
+| ---------------------------------- | ------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `captureExperimentalAttributes`    | Boolean | `false` | Enable the capture of experimental log attributes `thread.name` and `thread.id`.                                                                                                                                                                                                                                                                    |
+| `captureCodeAttributes`            | Boolean | `false` | Enable the capture of [source code attributes]. Note that capturing source code attributes at logging sites might add a performance overhead.                                                                                                                                                                                                       |
+| `captureMarkerAttribute`           | Boolean | `false` | Enable the capture of Log4j markers as attributes.                                                                                                                                                                                                                                                                                                  |
+| `captureTemplate`                  | Boolean | `false` | Enable the capture of the log message template (if arguments are provided).                                                                                                                                                                                                                                                                         |
+| `captureArguments`                 | Boolean | `false` | Enable the capture of the log message arguments.                                                                                                                                                                                                                                                                                                    |
+| `mapMessageAttributesIncluded`     | String  |         | Comma-separated list of case-sensitive glob patterns for `MapMessage` keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all `MapMessage` attributes.                                                                                                                           |
+| `mapMessageAttributesExcluded`     | String  |         | Comma-separated list of case-sensitive glob patterns for `MapMessage` keys not to capture as log attributes. Excluded patterns take precedence over included patterns.                                                                                                                                                                              |
+| `captureMapMessageAttributes`      | Boolean | `false` | Deprecated boolean compatibility setting, where `true` captures all `MapMessage` attributes and `false` captures none. Use `mapMessageAttributesIncluded` instead. May be removed in the next minor release.                                                                                                                                        |
+| `contextDataAttributesIncluded`    | String  |         | Comma-separated list of case-sensitive glob patterns for context data keys to capture as log attributes. `*` matches any number of characters and `?` matches one character, so `*` captures all context data attributes.                                                                                                                           |
+| `contextDataAttributesExcluded`    | String  |         | Comma-separated list of case-sensitive glob patterns for context data keys not to capture as log attributes. Excluded patterns take precedence over included patterns.                                                                                                                                                                              |
+| `captureContextDataAttributes`     | String  |         | Deprecated include-only compatibility setting. It does not support glob patterns: a list containing only `*` captures all context data attributes, and otherwise every entry, including one containing `*` or `?`, is matched as a literal context data key. Use `contextDataAttributesIncluded` instead. May be removed in the next minor release. |
+| `numLogsCapturedBeforeOtelInstall` | Integer | 1000    | Log telemetry is emitted after the initialization of the OpenTelemetry Log4j appender with an OpenTelemetry object. This setting allows you to modify the size of the cache used to replay the first logs.                                                                                                                                          |
+
+For programmatic configuration, use an `IncludeExclude` selector:
+
+```java
+OpenTelemetryAppender appender =
+    OpenTelemetryAppender.builder()
+        .setName("OpenTelemetryAppender")
+        .setContextDataAttributes(
+            IncludeExclude.builder()
+                .setIncluded("request-*", "user-?")
+                .setExcluded("*-secret")
+                .build())
+        .setMapMessageAttributes(
+            IncludeExclude.builder().setIncluded("order-*").setExcluded("*-secret").build())
+        .build();
+```
+
+Context data keys and selector patterns are matched case-sensitively. `?` matches any single
+character and `*` matches any number of characters, including none. Excluded patterns take
+precedence over included patterns. A selector with only excluded patterns captures every context
+data attribute that it does not exclude. Only a non-empty selector set with
+`setContextDataAttributes(IncludeExclude)` takes precedence over the `contextDataAttributesIncluded`
+and `contextDataAttributesExcluded` settings, which in turn take precedence over the deprecated
+`captureContextDataAttributes` setting. A null or empty selector carries no configuration, so it
+does not disable capture and the next configured source is used instead. No context data attributes
+are captured only when every one of these sources is absent or empty.
+
+`MapMessage` attributes are selected the same way, with the same pattern syntax, case sensitivity,
+and precedence. Only a non-empty selector set with `setMapMessageAttributes(IncludeExclude)` takes
+precedence over the `mapMessageAttributesIncluded` and `mapMessageAttributesExcluded` settings,
+which in turn take precedence over the deprecated `captureMapMessageAttributes` setting. No
+`MapMessage` attributes are captured when the selector and the pattern settings are absent or empty
+and `captureMapMessageAttributes` is `false`, which is also its default.
+
+Captured context data and `MapMessage` attributes may contain sensitive information. Configure included and excluded patterns to limit the data exported as log attributes.
 
 The `otel.event.name` key is supported in `MapMessage` entries and context data entries. When present, its value is used as the log event name and is not emitted as an attribute.
 

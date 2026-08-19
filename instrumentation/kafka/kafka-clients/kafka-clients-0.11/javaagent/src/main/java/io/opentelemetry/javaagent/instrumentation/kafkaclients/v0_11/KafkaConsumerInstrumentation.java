@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerReceiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -67,15 +68,15 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Context parentContext = currentContext();
+      Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(currentContext());
       KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
 
       // disable process tracing and store the receive span for each individual record too
       boolean previousValue = KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
       try {
-        Context context = null;
+        Context receiveContext = null;
         if (consumerReceiveInstrumenter().shouldStart(parentContext, request)) {
-          context =
+          receiveContext =
               InstrumenterUtil.startAndEnd(
                   consumerReceiveInstrumenter(),
                   parentContext,
@@ -86,16 +87,14 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
                   timer.now());
         }
 
-        // we're storing the context of the receive span so that process spans can use it as
-        // parent context even though the span has ended
-        // this is the suggested behavior according to the spec batch receive scenario:
-        // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#batch-receiving
+        Context processParentContext =
+            emitStableMessagingSemconv() ? parentContext : receiveContext;
         // we're attaching the consumer to the records to be able to retrieve things like consumer
         // group or clientId later
-        KafkaConsumerContextUtil.set(records, context, consumer);
+        KafkaConsumerContextUtil.set(records, processParentContext, consumer);
 
         for (ConsumerRecord<?, ?> record : records) {
-          KafkaConsumerContextUtil.set(record, context, consumer);
+          KafkaConsumerContextUtil.set(record, processParentContext, consumer);
         }
       } finally {
         KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);

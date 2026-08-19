@@ -22,22 +22,43 @@ public final class KafkaProducerRequest {
   private final ProducerRecord<?, ?> record;
   @Nullable private final String clientId;
   @Nullable private final String bootstrapServers;
+  private final boolean spanContextPropagated;
 
   public static KafkaProducerRequest create(
       ProducerRecord<?, ?> record, Producer<?, ?> producer, @Nullable String bootstrapServers) {
-    return create(record, extractClientId(producer), bootstrapServers);
+    return create(record, extractClientId(producer), bootstrapServers, true);
+  }
+
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record,
+      Producer<?, ?> producer,
+      @Nullable String bootstrapServers,
+      boolean spanContextPropagated) {
+    return create(record, extractClientId(producer), bootstrapServers, spanContextPropagated);
   }
 
   public static KafkaProducerRequest create(
       ProducerRecord<?, ?> record, @Nullable String clientId, @Nullable String bootstrapServers) {
-    return new KafkaProducerRequest(record, clientId, bootstrapServers);
+    return create(record, clientId, bootstrapServers, true);
+  }
+
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      boolean spanContextPropagated) {
+    return new KafkaProducerRequest(record, clientId, bootstrapServers, spanContextPropagated);
   }
 
   private KafkaProducerRequest(
-      ProducerRecord<?, ?> record, @Nullable String clientId, @Nullable String bootstrapServers) {
+      ProducerRecord<?, ?> record,
+      @Nullable String clientId,
+      @Nullable String bootstrapServers,
+      boolean spanContextPropagated) {
     this.record = record;
     this.clientId = clientId;
     this.bootstrapServers = bootstrapServers;
+    this.spanContextPropagated = spanContextPropagated;
   }
 
   public ProducerRecord<?, ?> getRecord() {
@@ -52,6 +73,10 @@ public final class KafkaProducerRequest {
   @Nullable
   public String getBootstrapServers() {
     return bootstrapServers;
+  }
+
+  public boolean isSpanContextPropagated() {
+    return spanContextPropagated;
   }
 
   @Nullable

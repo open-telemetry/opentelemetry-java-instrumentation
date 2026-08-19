@@ -14,15 +14,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.instrumentation.config.internal.DeclarativeConfigV3Preview;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.DistributionModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.DistributionPropertyModel;
-import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
-import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalInstrumentationModel;
-import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalLanguageSpecificInstrumentationModel;
-import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalLanguageSpecificInstrumentationPropertyModel;
 import java.io.IOException;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -60,31 +57,12 @@ public final class JavaagentDistributionAccessCustomizerProvider
   public void customize(DeclarativeConfigurationCustomizer customizer) {
     customizer.addModelCustomizer(
         model -> {
-          boolean isV3Preview = isV3Preview(model);
+          boolean isV3Preview = DeclarativeConfigV3Preview.isEnabled(model);
           AgentDistributionConfig distributionConfig =
               parseConfig(model.getDistribution(), isV3Preview);
           AgentDistributionConfig.set(distributionConfig);
           return model;
         });
-  }
-
-  // to be removed for 3.0.0
-  private static boolean isV3Preview(OpenTelemetryConfigurationModel model) {
-    ExperimentalInstrumentationModel instrumentationDevelopment =
-        model.getInstrumentationDevelopment();
-    if (instrumentationDevelopment == null) {
-      return false;
-    }
-    ExperimentalLanguageSpecificInstrumentationModel java = instrumentationDevelopment.getJava();
-    if (java == null) {
-      return false;
-    }
-    ExperimentalLanguageSpecificInstrumentationPropertyModel common =
-        java.getAdditionalProperties().get("common");
-    if (common == null) {
-      return false;
-    }
-    return Boolean.TRUE.equals(common.getAdditionalProperties().get("v3_preview"));
   }
 
   private static AgentDistributionConfig parseConfig(

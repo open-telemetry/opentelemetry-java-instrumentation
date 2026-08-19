@@ -36,9 +36,11 @@ configurations:
         peer:
           type: string
           description: "Host name or IP address to match against."
+          example: host
         service_name:
           type: string
           description: "Peer service name to record for matching peers."
+          example: serviceName
 
   http.client.capture-request-headers:
     name: otel.instrumentation.http.client.capture-request-headers
@@ -91,10 +93,10 @@ configurations:
 
   sanitization.url.sensitive-query-parameters:
     name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
-    declarative_name: general.sanitization.url.sensitive_query_parameters/development
+    declarative_name: general.sanitization.url.sensitive_query_parameters
     description: "List of URL query parameter names whose values are redacted in URL attributes. See https://opentelemetry.io/docs/specs/semconv/http/http-spans."
     type: list
-    default: "AWSAccessKeyId,Signature,sig,X-Goog-Signature"
+    default: "AWSAccessKeyId,Signature,X-Amz-Signature,X-Amz-Credential,X-Amz-Security-Token,sig,X-Goog-Signature"
 
   common.db.query-sanitization.enabled:
     name: otel.instrumentation.common.db.query-sanitization.enabled
@@ -103,9 +105,23 @@ configurations:
     type: boolean
     default: true
 
+  messaging.headers.included:
+    name: otel.instrumentation.messaging.experimental.headers.included
+    declarative_name: java.common.messaging.headers/development.included
+    description: "A comma-separated list of message header name patterns to capture as span attributes. Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters."
+    type: list
+    default: ""
+
+  messaging.headers.excluded:
+    name: otel.instrumentation.messaging.experimental.headers.excluded
+    declarative_name: java.common.messaging.headers/development.excluded
+    description: "A comma-separated list of message header name patterns to exclude from span attributes. Excluded patterns take precedence over included patterns. Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters. If included is not configured, all non-excluded headers are captured, which may expose sensitive information."
+    type: list
+    default: ""
+
   messaging.capture-headers:
     name: otel.instrumentation.messaging.experimental.capture-headers
     declarative_name: java.common.messaging.capture_headers/development
-    description: "A comma-separated list of header names to capture as span attributes."
+    description: "Deprecated: use `otel.instrumentation.messaging.experimental.headers.included` instead. A comma-separated list of header names to capture as span attributes. It does not support glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other entry is matched as a literal header name."
     type: list
     default: ""

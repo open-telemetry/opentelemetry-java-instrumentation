@@ -11,6 +11,8 @@ configurations:
       only a span link connecting it to the producer trace.
     type: boolean
     default: false
+  - ref: messaging.headers.included
+  - ref: messaging.headers.excluded
   - ref: messaging.capture-headers
   - name: otel.instrumentation.pulsar.experimental-span-attributes
     declarative_name: java.pulsar.experimental_span_attributes/development

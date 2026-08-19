@@ -30,14 +30,15 @@ final class OpenTelemetryGauge<T> extends AbstractMeter
       NamingConvention namingConvention,
       @Nullable T obj,
       ToDoubleFunction<T> objMetric,
-      Meter otelMeter) {
+      Meter otelMeter,
+      Bridging bridging) {
     super(id);
 
     String name = name(id, namingConvention);
     observableGauge =
         otelMeter
             .gaugeBuilder(name)
-            .setDescription(Bridging.description(id))
+            .setDescription(bridging.description(name, id))
             .setUnit(baseUnit(id))
             .buildWithCallback(
                 new DoubleMeasurementRecorder<>(

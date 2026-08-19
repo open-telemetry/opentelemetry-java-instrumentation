@@ -5,12 +5,15 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
+import static java.util.Collections.emptyList;
+
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import java.util.Collection;
 import javax.annotation.Nullable;
 
 final class SqsAccess {
@@ -34,8 +37,19 @@ final class SqsAccess {
 
   @NoMuzzle
   @Nullable
+  static Long getBatchMessageCount(Request<?> request) {
+    return enabled ? SqsImpl.getBatchMessageCount(request) : null;
+  }
+
+  @NoMuzzle
+  @Nullable
   static String getMessageAttribute(Request<?> request, String name) {
     return enabled ? SqsImpl.getMessageAttribute(request, name) : null;
+  }
+
+  @NoMuzzle
+  static Collection<String> getMessageAttributeNames(Request<?> request) {
+    return enabled ? SqsImpl.getMessageAttributeNames(request) : emptyList();
   }
 
   @NoMuzzle

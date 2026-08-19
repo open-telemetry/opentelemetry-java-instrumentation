@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
@@ -34,14 +36,21 @@ public final class TracingRequestHandler extends RequestHandler2 {
       ContextKey.named(TracingRequestHandler.class.getName() + ".Timer");
   private static final ContextKey<Boolean> REQUEST_SPAN_SUPPRESSED_KEY =
       ContextKey.named(TracingRequestHandler.class.getName() + ".RequestSpanSuppressed");
+  private static final String SEND_MESSAGE_BATCH_REQUEST_CLASS =
+      "com.amazonaws.services.sqs.model.SendMessageBatchRequest";
   private static final String SEND_MESSAGE_REQUEST_CLASS =
       "com.amazonaws.services.sqs.model.SendMessageRequest";
+  private static final String DELETE_MESSAGE_BATCH_REQUEST_CLASS =
+      "com.amazonaws.services.sqs.model.DeleteMessageBatchRequest";
+  private static final String DELETE_MESSAGE_REQUEST_CLASS =
+      "com.amazonaws.services.sqs.model.DeleteMessageRequest";
   private static final String DYNAMODBV2_CLASS_PREFIX = "com.amazonaws.services.dynamodbv2.model.";
 
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
   private final Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
+  private final Instrumenter<Request<?>, Response<?>> settleInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter;
 
   public TracingRequestHandler(
@@ -49,11 +58,13 @@ public final class TracingRequestHandler extends RequestHandler2 {
       Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter,
       Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter,
       Instrumenter<Request<?>, Response<?>> producerInstrumenter,
+      Instrumenter<Request<?>, Response<?>> settleInstrumenter,
       Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter) {
     this.requestInstrumenter = requestInstrumenter;
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
     this.producerInstrumenter = producerInstrumenter;
+    this.settleInstrumenter = settleInstrumenter;
     this.dynamoDbInstrumenter = dynamoDbInstrumenter;
   }
 
@@ -168,8 +179,14 @@ public final class TracingRequestHandler extends RequestHandler2 {
     if (className.startsWith(DYNAMODBV2_CLASS_PREFIX)) {
       return dynamoDbInstrumenter;
     }
-    if (className.equals(SEND_MESSAGE_REQUEST_CLASS)) {
+    if (className.equals(SEND_MESSAGE_REQUEST_CLASS)
+        || (emitStableMessagingSemconv() && className.equals(SEND_MESSAGE_BATCH_REQUEST_CLASS))) {
       return producerInstrumenter;
+    }
+    if (emitStableMessagingSemconv()
+        && (className.equals(DELETE_MESSAGE_REQUEST_CLASS)
+            || className.equals(DELETE_MESSAGE_BATCH_REQUEST_CLASS))) {
+      return settleInstrumenter;
     }
     return requestInstrumenter;
   }

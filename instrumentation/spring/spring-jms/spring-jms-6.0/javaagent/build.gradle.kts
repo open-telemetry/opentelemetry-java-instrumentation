@@ -20,6 +20,7 @@ dependencies {
   implementation(project(":instrumentation:jms:jms-3.0:javaagent"))
 
   library("org.springframework:spring-jms:6.0.0")
+  compileOnly("org.springframework:spring-context:6.0.0")
   compileOnly("jakarta.jms:jakarta.jms-api:3.0.0")
 
   testInstrumentation(project(":instrumentation:jms:jms-3.0:javaagent"))
@@ -51,6 +52,40 @@ tasks {
     include("**/SpringListenerSuppressReceiveSpansTest.*")
   }
 
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("SpringListenerSuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
+  val testJmsDisabled = register<Test>("testJmsDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    filter {
+      includeTestsMatching("*.testSpringJmsListenerWithJmsDisabled")
+    }
+    jvmArgs("-Dotel.instrumentation.jms.enabled=false")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("testJmsDisabled", "true")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      excludeTestsMatching("SpringListenerSuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+  }
+
   test {
     filter {
       excludeTestsMatching("SpringListenerSuppressReceiveSpansTest")
@@ -63,6 +98,6 @@ tasks {
   }
 
   check {
-    dependsOn(testReceiveSpansDisabled)
+    dependsOn(testReceiveSpansDisabled, testMessagingPreview, testJmsDisabled, testBothSemconv)
   }
 }

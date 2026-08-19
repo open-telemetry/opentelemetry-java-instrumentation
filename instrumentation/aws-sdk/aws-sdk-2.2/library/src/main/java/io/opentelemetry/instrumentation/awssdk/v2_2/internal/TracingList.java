@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.services.sqs.model.Message;
 
@@ -25,32 +26,32 @@ public final class TracingList extends ArrayList<Message> {
   private final ExecutionAttributes request;
   private final Response response;
   private final TracingExecutionInterceptor config;
-  private final Context receiveContext;
+  @Nullable private final Context processParentContext;
   private boolean firstIterator = true;
 
-  private TracingList(
-      List<Message> list,
+  public static TracingList wrap(
+      List<Message> messages,
       Instrumenter<SqsProcessRequest, Response> instrumenter,
       ExecutionAttributes request,
       Response response,
       TracingExecutionInterceptor config,
-      Context receiveContext) {
-    super(list);
+      @Nullable Context processParentContext) {
+    return new TracingList(messages, instrumenter, request, response, config, processParentContext);
+  }
+
+  private TracingList(
+      List<Message> messages,
+      Instrumenter<SqsProcessRequest, Response> instrumenter,
+      ExecutionAttributes request,
+      Response response,
+      TracingExecutionInterceptor config,
+      @Nullable Context processParentContext) {
+    super(messages);
     this.instrumenter = instrumenter;
     this.request = request;
     this.response = response;
     this.config = config;
-    this.receiveContext = receiveContext;
-  }
-
-  public static TracingList wrap(
-      List<Message> list,
-      Instrumenter<SqsProcessRequest, Response> instrumenter,
-      ExecutionAttributes request,
-      Response response,
-      TracingExecutionInterceptor config,
-      Context receiveContext) {
-    return new TracingList(list, instrumenter, request, response, config, receiveContext);
+    this.processParentContext = processParentContext;
   }
 
   public void disableTracing() {
@@ -65,9 +66,7 @@ public final class TracingList extends ArrayList<Message> {
     // However, this is not thread-safe, but usually the first (hopefully only) traversal of
     // List is performed in the same thread that called receiveMessage()
     if (firstIterator) {
-      it =
-          TracingIterator.wrap(
-              super.iterator(), instrumenter, request, response, config, receiveContext);
+      it = TracingIterator.wrap(super.iterator(), this);
       firstIterator = false;
     } else {
       it = super.iterator();
@@ -99,7 +98,8 @@ public final class TracingList extends ArrayList<Message> {
     return config;
   }
 
-  public Context getReceiveContext() {
-    return receiveContext;
+  @Nullable
+  public Context getProcessParentContext() {
+    return processParentContext;
   }
 }

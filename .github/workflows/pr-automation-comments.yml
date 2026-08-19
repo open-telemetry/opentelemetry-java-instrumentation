@@ -1,11 +1,12 @@
 name: PR Automation Comments
 on:
-  # Required to comment on labeled fork PRs; no PR code is checked out or executed.
-  pull_request_target: # zizmor: ignore[dangerous-triggers]
+  pull_request_target:
+    # zizmor: ignore[dangerous-triggers] Required to comment on labeled fork PRs;
+    # no PR code is checked out or executed.
     types: [labeled]
 
 permissions:
-  pull-requests: write # zizmor: ignore[excessive-permissions]
+  pull-requests: write # zizmor: ignore[excessive-permissions] Required to inspect and create PR comments.
 
 jobs:
   comment-on-breaking-change:

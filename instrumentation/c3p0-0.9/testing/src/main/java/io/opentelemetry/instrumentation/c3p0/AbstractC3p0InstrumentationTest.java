@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.c3p0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import com.mchange.v2.c3p0.PooledDataSource;
@@ -35,26 +34,35 @@ public abstract class AbstractC3p0InstrumentationTest {
 
   @Test
   void shouldReportMetrics() throws Exception {
-    // given
-    ComboPooledDataSource c3p0DataSource = new ComboPooledDataSource();
-    c3p0DataSource.setDriverClass(MockDriver.class.getName());
-    c3p0DataSource.setJdbcUrl("jdbc:mock:testDatabase");
+    ComboPooledDataSource dataSource = createDataSource("jdbc:mock:testDatabase");
+    dataSource.setDataSourceName("testPool");
 
-    // when
-    try (Connection connection = c3p0DataSource.getConnection()) {
-      configure(c3p0DataSource);
+    try (Connection ignored = dataSource.getConnection()) {
+      configure(dataSource);
+
+      assertDataSourceMetrics("testPool");
+    } finally {
+      close(dataSource);
     }
 
-    // then
-    assertDataSourceMetrics(c3p0DataSource);
+    assertNoMetrics();
+  }
 
-    // when
-    shutdown(c3p0DataSource);
-    c3p0DataSource.close();
+  protected void assertDataSourceMetrics(String dataSourceName) {
+    DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, dataSourceName)
+        .disableMinIdleConnections()
+        .disableMaxIdleConnections()
+        .disableMaxConnections()
+        .disableConnectionTimeouts()
+        .disableCreateTime()
+        .disableWaitTime()
+        .disableUseTime()
+        .assertConnectionPoolEmitsMetrics();
+  }
 
+  protected void assertNoMetrics() {
     testing().clearData();
 
-    // then
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -71,20 +79,15 @@ public abstract class AbstractC3p0InstrumentationTest {
             AbstractIterableAssert::isEmpty);
   }
 
-  private void assertDataSourceMetrics(PooledDataSource dataSource) {
-    String dataSourceName = dataSource.getDataSourceName();
+  protected static ComboPooledDataSource createDataSource(String jdbcUrl) throws Exception {
+    ComboPooledDataSource dataSource = new ComboPooledDataSource();
+    dataSource.setDriverClass(MockDriver.class.getName());
+    dataSource.setJdbcUrl(jdbcUrl);
+    return dataSource;
+  }
 
-    assertThat(dataSourceName).isNotEmpty();
-
-    DbConnectionPoolMetricsAssertions.create(
-            testing(), INSTRUMENTATION_NAME, dataSource.getDataSourceName())
-        .disableMinIdleConnections()
-        .disableMaxIdleConnections()
-        .disableMaxConnections()
-        .disableConnectionTimeouts()
-        .disableCreateTime()
-        .disableWaitTime()
-        .disableUseTime()
-        .assertConnectionPoolEmitsMetrics();
+  protected void close(PooledDataSource dataSource) throws Exception {
+    shutdown(dataSource);
+    dataSource.close();
   }
 }

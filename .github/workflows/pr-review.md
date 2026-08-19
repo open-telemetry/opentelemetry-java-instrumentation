@@ -24,7 +24,10 @@ on:
   issue_comment:
     types: [created]
 
-permissions: read-all
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
 
 concurrency:
   group: pr-review-${{ github.event.pull_request.number || github.event.issue.number }}
@@ -170,11 +173,13 @@ jobs:
       - name: Comment on PR when agent failed
         if: needs.agent.result != 'success'
         env:
+          AGENT_RESULT: ${{ needs.agent.result }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ needs.dispatch.outputs.pr_number }}
         run: |
-          gh pr comment "${{ needs.dispatch.outputs.pr_number }}" \
+          gh pr comment "$PR_NUMBER" \
             --repo "$GITHUB_REPOSITORY" \
-            --body "Automated review did not complete (agent_result=${{ needs.agent.result }}). See workflow run for details."
+            --body "Automated review did not complete (agent_result=${AGENT_RESULT}). See workflow run for details."
 
   # ---- agent job ----
   # The implicit gh-aw agent job is configured by the top-level frontmatter

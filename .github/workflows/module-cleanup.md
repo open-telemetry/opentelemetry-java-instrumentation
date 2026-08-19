@@ -31,7 +31,8 @@ description: |
 on:
   workflow_dispatch:
   schedule:
-    - cron: "every 1h"
+    # hourly at minute 26
+    - cron: "26 */1 * * *"
 
 permissions:
   contents: read
@@ -94,7 +95,7 @@ jobs:
       module_dir: ${{ steps.pick.outputs.module_dir }}
       queue_remaining: ${{ steps.pick.outputs.queue_remaining }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -123,14 +124,14 @@ jobs:
       contents: read
       actions: write # to trigger next iteration
     steps:
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      - uses: actions/create-github-app-token@v3.2.0
         id: otelbot-token
         with:
           client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
           permission-contents: write
           permission-pull-requests: write
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@v6.0.2
         with:
           # Full history is required: finalize computes
           # `origin/main..origin/otelbot/module-cleanup-wip` to build the PR
@@ -167,7 +168,7 @@ jobs:
 if: ${{ needs.dispatch.outputs.has_work == 'true' }}
 
 steps:
-  - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+  - uses: actions/checkout@v6.0.2
     with:
       persist-credentials: false
   - name: Export module identifiers to env

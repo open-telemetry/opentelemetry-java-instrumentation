@@ -60,7 +60,6 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
     syncCommands.set("TESTKEY", "TESTVAL");
 
     testing.waitForTraces(connectionTelemetryEnabled() ? 2 : 1);
-    testing.clearData();
   }
 
   @AfterAll
