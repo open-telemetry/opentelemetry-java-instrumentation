@@ -132,6 +132,36 @@ class WrapperTest extends AbstractWrapperTest {
     assertTotalConsumedMessages(testing, instrumentationName, batchSize);
   }
 
+  @Test
+  void batchProcessDoesNotTreatMissingOffsetAsFailed() {
+    assumeTrue(emitStableMessagingSemconv());
+    String instrumentationName = "test-kafka-sparse-batch";
+    Instrumenter<KafkaReceiveRequest, Void> instrumenter =
+        new KafkaInstrumenterFactory(testing.getOpenTelemetry(), instrumentationName)
+            .createBatchProcessInstrumenter();
+    DeliveryTracker deliveryTracker = new DeliveryTracker();
+
+    ConsumerRecords<String, String> failedRecords = records("sparse-batch", 10L, 12L);
+    KafkaReceiveRequest failedRequest =
+        KafkaReceiveRequest.create(failedRecords, "group", "client", deliveryTracker);
+    Context failedContext = instrumenter.start(Context.root(), failedRequest);
+    instrumenter.end(failedContext, failedRequest, null, new RuntimeException("test"));
+
+    ConsumerRecords<String, String> missingOffsetRecords = records("sparse-batch", 11L);
+    KafkaReceiveRequest missingOffsetRequest =
+        KafkaReceiveRequest.create(missingOffsetRecords, "group", "client", deliveryTracker);
+    Context missingOffsetContext = instrumenter.start(Context.root(), missingOffsetRequest);
+    instrumenter.end(missingOffsetContext, missingOffsetRequest, null, null);
+
+    ConsumerRecords<String, String> retryRecords = records("sparse-batch", 10L, 12L);
+    KafkaReceiveRequest retryRequest =
+        KafkaReceiveRequest.create(retryRecords, "group", "client", deliveryTracker);
+    Context retryContext = instrumenter.start(Context.root(), retryRequest);
+    instrumenter.end(retryContext, retryRequest, null, null);
+
+    assertTotalConsumedMessages(testing, instrumentationName, 3);
+  }
+
   @Override
   void configure(KafkaTelemetryBuilder builder) {
     builder.setMessagingReceiveTelemetryEnabled(true);
@@ -242,6 +272,15 @@ class WrapperTest extends AbstractWrapperTest {
   private static ConsumerRecords<String, String> records(String topic, int count) {
     List<ConsumerRecord<String, String>> records = new ArrayList<>();
     for (int offset = 0; offset < count; offset++) {
+      records.add(new ConsumerRecord<>(topic, 0, offset, "key", "value"));
+    }
+    TopicPartition partition = new TopicPartition(topic, 0);
+    return new ConsumerRecords<>(singletonMap(partition, records));
+  }
+
+  private static ConsumerRecords<String, String> records(String topic, long... offsets) {
+    List<ConsumerRecord<String, String>> records = new ArrayList<>();
+    for (long offset : offsets) {
       records.add(new ConsumerRecord<>(topic, 0, offset, "key", "value"));
     }
     TopicPartition partition = new TopicPartition(topic, 0);

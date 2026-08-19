@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -142,21 +143,36 @@ public class DeliveryTracker {
     }
 
     private static PendingFailure create(List<DeliveryKey> deliveryKeys) {
-      Map<TopicPartition, OffsetRange> boundsByPartition = new HashMap<>();
+      Map<TopicPartition, List<Long>> offsetsByPartition = new HashMap<>();
       for (DeliveryKey deliveryKey : deliveryKeys) {
-        OffsetRange range = boundsByPartition.get(deliveryKey.topicPartition);
-        if (range == null) {
-          boundsByPartition.put(
-              deliveryKey.topicPartition, new OffsetRange(deliveryKey.offset, deliveryKey.offset));
-        } else {
-          range.include(deliveryKey.offset);
+        List<Long> offsets = offsetsByPartition.get(deliveryKey.topicPartition);
+        if (offsets == null) {
+          offsets = new ArrayList<>();
+          offsetsByPartition.put(deliveryKey.topicPartition, offsets);
         }
+        offsets.add(deliveryKey.offset);
       }
 
       Map<TopicPartition, List<OffsetRange>> rangesByPartition = new HashMap<>();
-      for (Map.Entry<TopicPartition, OffsetRange> entry : boundsByPartition.entrySet()) {
+      for (Map.Entry<TopicPartition, List<Long>> entry : offsetsByPartition.entrySet()) {
+        List<Long> offsets = entry.getValue();
+        Collections.sort(offsets);
         List<OffsetRange> ranges = new ArrayList<>();
-        ranges.add(entry.getValue());
+        for (long offset : offsets) {
+          if (ranges.isEmpty()) {
+            ranges.add(new OffsetRange(offset, offset));
+            continue;
+          }
+          OffsetRange range = ranges.get(ranges.size() - 1);
+          if (offset == range.end) {
+            continue;
+          }
+          if (range.end != Long.MAX_VALUE && offset == range.end + 1) {
+            range.end = offset;
+          } else {
+            ranges.add(new OffsetRange(offset, offset));
+          }
+        }
         rangesByPartition.put(entry.getKey(), ranges);
       }
       return new PendingFailure(rangesByPartition);
@@ -216,11 +232,6 @@ public class DeliveryTracker {
     private OffsetRange(long start, long end) {
       this.start = start;
       this.end = end;
-    }
-
-    private void include(long offset) {
-      start = Math.min(start, offset);
-      end = Math.max(end, offset);
     }
 
     private boolean contains(long offset) {
