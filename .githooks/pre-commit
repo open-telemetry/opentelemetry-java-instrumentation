@@ -20,7 +20,7 @@ if ! mise run lint || { [[ "$run_spotless" == true ]] && ! ./gradlew spotlessChe
   if [[ "$run_spotless" == true ]]; then
     ./gradlew spotlessApply
   fi
-  mise run lint:fix
+  mise run lint:fix --allow-fixed
   echo ""
   echo ""
   echo -e "\033[0;33mCode has been formatted; please git diff/add and recommit."
