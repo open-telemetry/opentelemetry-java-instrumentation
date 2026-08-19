@@ -4,6 +4,18 @@ plugins {
   id("com.diffplug.spotless")
 }
 
+val spotlessApplyRequested = gradle.startParameter.taskNames.any { requestedTask ->
+  val taskName = requestedTask.substringAfterLast(':')
+  taskName.startsWith("spotless") && taskName.endsWith("Apply")
+}
+
+if (project == rootProject && spotlessApplyRequested) {
+  logger.lifecycle(
+    "Spotless formatting requested. Use `mise run lint:fix` for Java, Kotlin, Markdown, and other " +
+      "Flint-managed files; Spotless remains mainly for Scala, Groovy, and miscellaneous files."
+  )
+}
+
 spotless {
   // Match .gitattributes without probing source files during configuration.
   lineEndings = LineEnding.UNIX
