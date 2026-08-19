@@ -69,5 +69,6 @@ class JmsCamelStandaloneTest {
 
     assertThat(received.await(1, MINUTES)).isTrue();
     assertSendAndProcessMetrics(testing, "jms", "standalone");
+    testing.waitForTraces(1);
   }
 }

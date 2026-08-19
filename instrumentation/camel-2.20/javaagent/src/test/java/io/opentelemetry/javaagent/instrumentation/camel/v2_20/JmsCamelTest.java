@@ -113,6 +113,7 @@ class JmsCamelTest {
     assertThat(errorProcessed.await(1, MINUTES)).isTrue();
     assertSendAndProcessMetrics(
         testing, "jms", "errorQueue", IllegalStateException.class.getName());
+    testing.waitForTraces(emitStableMessagingSemconv() ? 2 : 1);
   }
 
   private static void assertJmsReceiveTrace(TraceAssert trace) {
