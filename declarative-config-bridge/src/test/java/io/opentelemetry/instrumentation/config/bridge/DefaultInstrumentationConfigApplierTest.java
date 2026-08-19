@@ -93,6 +93,57 @@ class DefaultInstrumentationConfigApplierTest {
   }
 
   @Test
+  void applyToModelAppliesGeneralDefaults() {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults
+        .get("general")
+        .get("http")
+        .get("client")
+        .setDefault("request_captured_headers", asList("X-Request-Id"));
+
+    OpenTelemetryConfigurationModel model = newModel();
+    defaults.applyToModel(model);
+
+    assertThat(
+            model
+                .getInstrumentationDevelopment()
+                .getGeneral()
+                .getHttp()
+                .getClient()
+                .getRequestCapturedHeaders())
+        .containsExactly("X-Request-Id");
+    assertThat(model.getInstrumentationDevelopment().getJava()).isNull();
+  }
+
+  @Test
+  void applyToModelDoesNotOverrideExistingGeneralDefault() {
+    OpenTelemetryConfigurationModel model = newModel();
+    DefaultInstrumentationConfig seed = new DefaultInstrumentationConfig();
+    seed.get("general")
+        .get("http")
+        .get("client")
+        .setDefault("request_captured_headers", asList("Existing"));
+    seed.applyToModel(model);
+
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults
+        .get("general")
+        .get("http")
+        .get("client")
+        .setDefault("request_captured_headers", asList("Default"));
+    defaults.applyToModel(model);
+
+    assertThat(
+            model
+                .getInstrumentationDevelopment()
+                .getGeneral()
+                .getHttp()
+                .getClient()
+                .getRequestCapturedHeaders())
+        .containsExactly("Existing");
+  }
+
+  @Test
   void applyToModelSupportsNestedPaths() {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
     defaults.get("acme").get("full_name").setDefault("preserved", "true");

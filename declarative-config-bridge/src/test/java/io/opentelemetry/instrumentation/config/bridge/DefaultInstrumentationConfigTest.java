@@ -70,7 +70,18 @@ class DefaultInstrumentationConfigTest {
                         .get("http")
                         .setDefault("known_methods", asList("GET", "POST")),
             "otel.instrumentation.http.known-methods",
-            "GET,POST"));
+            "GET,POST"),
+        Arguments.of(
+            "general default",
+            (Consumer<DefaultInstrumentationConfig>)
+                defaults ->
+                    defaults
+                        .get("general")
+                        .get("http")
+                        .get("client")
+                        .setDefault("request_captured_headers", asList("X-Request-Id")),
+            "otel.instrumentation.http.client.capture-request-headers",
+            "X-Request-Id"));
   }
 
   @ParameterizedTest
@@ -122,6 +133,28 @@ class DefaultInstrumentationConfigTest {
                 .getStructured("http")
                 .getScalarList("known_methods", String.class))
         .containsExactly("GET", "POST");
+  }
+
+  @Test
+  void toConfigPropertiesRoundTripsGeneralDefaultThroughBridge() {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults
+        .get("general")
+        .get("http")
+        .get("client")
+        .setDefault("request_captured_headers", asList("X-Request-Id"));
+
+    DeclarativeConfigProperties config =
+        ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
+            DefaultConfigProperties.createFromMap(defaults.toConfigProperties()));
+
+    assertThat(
+            config
+                .getStructured("general")
+                .getStructured("http")
+                .getStructured("client")
+                .getScalarList("request_captured_headers", String.class))
+        .containsExactly("X-Request-Id");
   }
 
   @Test

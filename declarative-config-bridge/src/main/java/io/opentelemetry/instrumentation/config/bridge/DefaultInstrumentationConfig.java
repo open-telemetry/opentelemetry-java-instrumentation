@@ -176,7 +176,7 @@ public final class DefaultInstrumentationConfig {
 
     if (propertyPrefix == null) {
       return ConfigPropertiesBackedDeclarativeConfigProperties.toPropertyKey(
-          "java." + declarativePath);
+          declarativePath.startsWith("general.") ? declarativePath : "java." + declarativePath);
     }
     if (declarativePrefix == null) {
       throw new IllegalStateException("missing declarative prefix for property mapping");
