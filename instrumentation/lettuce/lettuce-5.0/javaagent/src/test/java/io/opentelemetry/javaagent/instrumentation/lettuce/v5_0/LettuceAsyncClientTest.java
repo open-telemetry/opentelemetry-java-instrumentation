@@ -275,6 +275,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                               equalTo(maybeStable(DB_OPERATION), "SET"))));
     } finally {
       connection.sync().select(0);
+      testing.waitForTraces(3);
       testing.clearData();
     }
   }

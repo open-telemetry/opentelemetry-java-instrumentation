@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.ExperimentalHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -147,9 +148,9 @@ class LettuceAsyncClientTest {
 
     // 1 set + 1 SELECT issued while connecting to the non-default database
     // (+ 1 connect trace per client when connection telemetry is enabled). Older lettuce connects
-    // synchronously and nests the SELECT under CONNECT, newer lettuce connects asynchronously and
-    // starts a new trace for it, so this is the minimum number of traces.
-    testing.waitForTraces(connectionTelemetryEnabled() ? 3 : 2);
+    // synchronously and nests the SELECT under CONNECT, while newer lettuce connects asynchronously
+    // and starts a new trace for it.
+    testing.waitForTraces(connectionTelemetryEnabled() ? (testLatestDeps() ? 4 : 3) : 2);
   }
 
   private static boolean connectionTelemetryEnabled() {
@@ -275,6 +276,7 @@ class LettuceAsyncClientTest {
                               equalTo(SERVER_PORT, port))));
     } finally {
       connection.sync().select(0);
+      testing.waitForTraces(3);
       testing.clearData();
     }
   }
