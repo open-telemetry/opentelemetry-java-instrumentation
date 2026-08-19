@@ -88,7 +88,6 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   private RedisAsyncCommands<String, String> nonDefaultDbCommands;
 
   private static final int NON_DEFAULT_DB_INDEX = 1;
-  private static final int SELECTED_DB_INDEX = 2;
 
   @BeforeAll
   void setUp() throws UnknownHostException {
@@ -237,6 +236,47 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))));
+  }
+
+  @Test
+  void testSelectDoesNotChangeEstablishedDatabaseIndex()
+      throws ExecutionException, InterruptedException, TimeoutException {
+    try {
+      connection.sync().select(1);
+      asyncCommands.set("SELECT_TEST_KEY", "SELECT_TEST_VALUE").get(3, SECONDS);
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName(
+                              emitStableDatabaseSemconv()
+                                  ? "SELECT " + host + ":" + port
+                                  : "SELECT")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(SERVER_ADDRESS, host),
+                              equalTo(SERVER_PORT, port),
+                              equalTo(maybeStable(DB_SYSTEM), REDIS),
+                              equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                              equalTo(maybeStable(DB_STATEMENT), "SELECT 1"),
+                              equalTo(maybeStable(DB_OPERATION), "SELECT"))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(SERVER_ADDRESS, host),
+                              equalTo(SERVER_PORT, port),
+                              equalTo(maybeStable(DB_SYSTEM), REDIS),
+                              equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                              equalTo(maybeStable(DB_STATEMENT), "SET SELECT_TEST_KEY ?"),
+                              equalTo(maybeStable(DB_OPERATION), "SET"))));
+    } finally {
+      connection.sync().select(0);
+      testing.clearData();
+    }
   }
 
   @Test
@@ -659,69 +699,6 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   }
 
   @Test
-  void testDatabaseIndexAfterSelect() throws Exception {
-    StatefulRedisConnection<String, String> selectedConnection = redisClient.connect();
-    cleanup.deferCleanup(selectedConnection);
-    RedisAsyncCommands<String, String> selectedCommands = selectedConnection.async();
-
-    selectedCommands.select(SELECTED_DB_INDEX);
-    testing.waitForTraces(connectionTelemetryEnabled() ? 2 : 1);
-    testing.clearData();
-
-    selectedCommands.set("SELECTEDKEY", "SELECTEDVAL").get(10, SECONDS);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, expectedNamespace(SELECTED_DB_INDEX)),
-                            equalTo(maybeStable(DB_STATEMENT), "SET SELECTEDKEY ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
-    testing.clearData();
-
-    selectedConnection.setAutoFlushCommands(false);
-    cleanup.deferCleanup(() -> selectedConnection.setAutoFlushCommands(true));
-    List<RedisFuture<String>> futures =
-        asList(
-            selectedCommands.set("SELECTEDBATCH1", "v1"),
-            selectedCommands.set("SELECTEDBATCH2", "v2"));
-    selectedConnection.flushCommands();
-    for (RedisFuture<String> future : futures) {
-      future.get(10, SECONDS);
-    }
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "PIPELINE SET " + host + ":" + port
-                                : "PIPELINE SET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, expectedNamespace(SELECTED_DB_INDEX)),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                emitStableDatabaseSemconv()
-                                    ? "SET SELECTEDBATCH1 ?; SET SELECTEDBATCH2 ?"
-                                    : "SET SELECTEDBATCH1 ?;SET SELECTEDBATCH2 ?"),
-                            equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(
-                                DB_OPERATION_BATCH_SIZE,
-                                emitStableDatabaseSemconv() ? 2L : null))));
-  }
-
-  @Test
   void testNonDefaultDatabaseIndexOnConnect() {
     RedisClient client =
         RedisClient.create("redis://" + host + ":" + port + "/" + NON_DEFAULT_DB_INDEX);
@@ -756,11 +733,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   }
 
   private static String expectedNonDefaultNamespace() {
-    return expectedNamespace(NON_DEFAULT_DB_INDEX);
-  }
-
-  private static String expectedNamespace(int database) {
-    return emitStableDatabaseSemconv() ? String.valueOf(database) : null;
+    return emitStableDatabaseSemconv() ? String.valueOf(NON_DEFAULT_DB_INDEX) : null;
   }
 
   private static Stream<Arguments> deferredFlushScenarios() {

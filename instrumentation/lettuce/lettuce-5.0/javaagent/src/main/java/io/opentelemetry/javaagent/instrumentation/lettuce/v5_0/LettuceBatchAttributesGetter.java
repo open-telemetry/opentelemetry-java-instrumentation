@@ -20,8 +20,8 @@ class LettuceBatchAttributesGetter implements DbClientAttributesGetter<LettuceBa
   @Override
   @Nullable
   public String getDbNamespace(LettuceBatchRequest request) {
-    Integer database = request.getDatabase();
-    return database == null ? null : String.valueOf(database);
+    RedisURI redisUri = request.getRedisUri();
+    return redisUri != null ? String.valueOf(redisUri.getDatabase()) : null;
   }
 
   @Deprecated // to be removed in 3.0

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.updateDatabase;
 
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
@@ -36,7 +35,6 @@ public class LettuceMonoDualConsumer<R, T> implements Consumer<R>, BiConsumer<T,
 
   @Override
   public void accept(T t, Throwable throwable) {
-    updateDatabase(command, throwable == null);
     if (context != null) {
       instrumenter().end(context, command, null, throwable);
     } else {

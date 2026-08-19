@@ -11,8 +11,6 @@ import com.lambdaworks.redis.ReactiveCommandDispatcher;
 import com.lambdaworks.redis.RedisChannelHandler;
 import com.lambdaworks.redis.RedisURI;
 import com.lambdaworks.redis.api.StatefulConnection;
-import com.lambdaworks.redis.protocol.AsyncCommand;
-import com.lambdaworks.redis.protocol.CommandType;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -58,15 +56,6 @@ public class LettuceSingletons {
 
   public static final VirtualField<RedisCommand<?, ?, ?>, RedisURI> COMMAND_URI =
       VirtualField.find(RedisCommand.class, RedisURI.class);
-
-  public static final VirtualField<RedisCommand<?, ?, ?>, Integer> COMMAND_DATABASE =
-      VirtualField.find(RedisCommand.class, Integer.class);
-
-  private static final VirtualField<RedisChannelHandler<?, ?>, DatabaseState> CONNECTION_DATABASE =
-      VirtualField.find(RedisChannelHandler.class, DatabaseState.class);
-
-  private static final VirtualField<RedisCommand<?, ?, ?>, DatabaseState> COMMAND_DATABASE_STATE =
-      VirtualField.find(RedisCommand.class, DatabaseState.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
@@ -145,68 +134,6 @@ public class LettuceSingletons {
       RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
     COMMAND_ADDRESS.set(command, serverAddress(connection));
     COMMAND_URI.set(command, redisUri(connection));
-    if (connection instanceof RedisChannelHandler) {
-      attachDatabase(command, CONNECTION_DATABASE.get((RedisChannelHandler<?, ?>) connection));
-    }
-  }
-
-  public static void attachConnection(RedisChannelHandler<?, ?> connection, RedisURI redisUri) {
-    CONNECTION_URI.set(connection, redisUri);
-    CONNECTION_DATABASE.set(connection, new DatabaseState(redisUri.getDatabase()));
-  }
-
-  public static void copyDatabaseState(RedisCommand<?, ?, ?> source, RedisCommand<?, ?, ?> target) {
-    COMMAND_DATABASE.set(target, COMMAND_DATABASE.get(source));
-    COMMAND_DATABASE_STATE.set(target, COMMAND_DATABASE_STATE.get(source));
-  }
-
-  public static void trackDatabaseSelection(
-      RedisCommand<?, ?, ?> command, @Nullable AsyncCommand<?, ?, ?> asyncCommand) {
-    DatabaseState state = COMMAND_DATABASE_STATE.get(command);
-    Integer database = selectedDatabase(command);
-    if (state == null || database == null || asyncCommand == null) {
-      return;
-    }
-    asyncCommand.handle(
-        (value, throwable) -> {
-          if (throwable == null && "OK".equals(value)) {
-            state.set(database);
-          }
-          return null;
-        });
-  }
-
-  public static void updateDatabase(RedisCommand<?, ?, ?> command, boolean successful) {
-    DatabaseState state = COMMAND_DATABASE_STATE.get(command);
-    Integer database = selectedDatabase(command);
-    if (successful && state != null && database != null) {
-      state.set(database);
-    }
-  }
-
-  @Nullable
-  static Integer databaseIndex(StatefulConnection<?, ?> connection) {
-    if (!(connection instanceof RedisChannelHandler)) {
-      return null;
-    }
-    DatabaseState state = CONNECTION_DATABASE.get((RedisChannelHandler<?, ?>) connection);
-    return state == null ? null : state.get();
-  }
-
-  private static void attachDatabase(RedisCommand<?, ?, ?> command, @Nullable DatabaseState state) {
-    if (state != null) {
-      COMMAND_DATABASE.set(command, state.get());
-      COMMAND_DATABASE_STATE.set(command, state);
-    }
-  }
-
-  @Nullable
-  private static Integer selectedDatabase(RedisCommand<?, ?, ?> command) {
-    if (!command.getType().equals(CommandType.SELECT) || command.getArgs() == null) {
-      return null;
-    }
-    Long database = command.getArgs().getFirstInteger();
-    return database == null ? null : database.intValue();
   }
 
   @Nullable
@@ -221,22 +148,6 @@ public class LettuceSingletons {
     return connection instanceof RedisChannelHandler
         ? CONNECTION_URI.get((RedisChannelHandler<?, ?>) connection)
         : null;
-  }
-
-  private static final class DatabaseState {
-    private volatile int database;
-
-    private DatabaseState(int database) {
-      this.database = database;
-    }
-
-    private int get() {
-      return database;
-    }
-
-    private void set(int database) {
-      this.database = database;
-    }
   }
 
   private LettuceSingletons() {}
