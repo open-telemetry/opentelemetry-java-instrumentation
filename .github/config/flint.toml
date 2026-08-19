@@ -25,6 +25,8 @@ off_on_markers = [
   { off = "// spotless:off", on = "// spotless:on" },
 ]
 exclude = [
+  "examples/distro/spotless.license.java",
+  "examples/extension/spotless.license.java",
   "gradle-plugins/**",
   "instrumentation/quarkus-resteasy-reactive-1.11/quarkus-2.0-plugin/**",
   "instrumentation/quarkus-resteasy-reactive-1.11/quarkus-3.0-plugin/**",
