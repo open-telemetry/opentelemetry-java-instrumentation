@@ -85,7 +85,7 @@ tasks {
     filter {
       includeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
     }
-    systemProperty("metadataConfig", "otel.instrumentation.common.db.query-sanitization.enabled=false")
+    systemProperty("metadataConfig", "otel.instrumentation.common.db.query-sanitization.enabled=false,otel.semconv-stability.opt-in=database")
     jvmArgs("-Dotel.instrumentation.common.db.query-sanitization.enabled=false")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
