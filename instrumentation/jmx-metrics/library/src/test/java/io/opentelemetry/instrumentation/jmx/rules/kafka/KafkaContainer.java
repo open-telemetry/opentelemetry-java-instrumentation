@@ -71,7 +71,7 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
         break;
     }
 
-super.doStart();
+    super.doStart();
     if (mode != Mode.CONNECT) {
       // send sample message to ensure we get log flush metrics
       sendSampleMessage();
