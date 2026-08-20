@@ -7,8 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HttpRequestMethodValues.POST;
@@ -231,5 +233,45 @@ class AwsSqsTest {
                                 MESSAGING_BATCH_MESSAGE_COUNT,
                                 emitStableMessagingSemconv() ? Long.valueOf(1) : null),
                             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)))));
+    assertConsumedMessages();
+  }
+
+  private static void assertConsumedMessages() {
+    if (!emitStableMessagingSemconv()) {
+      assertThat(testing.metrics())
+          .filteredOn(
+              metric ->
+                  metric
+                          .getInstrumentationScopeInfo()
+                          .getName()
+                          .equals("io.opentelemetry.aws-sdk-2.2")
+                      && metric.getName().startsWith("messaging."))
+          .isEmpty();
+      return;
+    }
+
+    // Receive telemetry is disabled by default, so the process operation owns this counter.
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.aws-sdk-2.2",
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                                equalTo(ERROR_TYPE, null),
+                                                equalTo(MESSAGING_DESTINATION_NAME, "test-queue"),
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(
+                                                    SERVER_PORT,
+                                                    AwsSqsTestApplication.sqsPort))))));
   }
 }

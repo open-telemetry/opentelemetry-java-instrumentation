@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
-import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.ATTR_GC_ACTION;
-import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.ATTR_GC_NAME;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.END_OF_MAJOR_GC;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.END_OF_MINOR_GC;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.METRIC_DESCRIPTION_GC_DURATION;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.METRIC_NAME_GC_DURATION;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.SECONDS;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_ACTION;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -33,9 +33,9 @@ class SerialGcMemoryMetricTest {
     // Generate some JFR events
     System.gc();
     Attributes minorGcAttributes =
-        Attributes.of(ATTR_GC_NAME, "Copy", ATTR_GC_ACTION, END_OF_MINOR_GC);
+        Attributes.of(JVM_GC_NAME, "Copy", JVM_GC_ACTION, END_OF_MINOR_GC);
     Attributes majorGcAttributes =
-        Attributes.of(ATTR_GC_NAME, "MarkSweepCompact", ATTR_GC_ACTION, END_OF_MAJOR_GC);
+        Attributes.of(JVM_GC_NAME, "MarkSweepCompact", JVM_GC_ACTION, END_OF_MAJOR_GC);
     jfrExtension.waitAndAssertMetrics(
         metric ->
             metric

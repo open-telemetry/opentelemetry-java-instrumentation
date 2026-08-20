@@ -60,6 +60,7 @@ abstract class AbstractConfig {
     ClientSessionFactory sf = serverLocator.createSessionFactory();
     ClientSession clientSession = sf.createSession(false, false, false);
     clientSession.createQueue("jms.queue.SpringListenerJms2", "jms.queue.SpringListenerJms2", true);
+    clientSession.createQueue("jms.topic.SpringListenerJms2", "jms.topic.SpringListenerJms2", true);
     clientSession.close();
     sf.close();
     serverLocator.close();
@@ -72,6 +73,9 @@ abstract class AbstractConfig {
   JmsListenerContainerFactory<?> jmsListenerContainerFactory(ConnectionFactory connectionFactory) {
     DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
     factory.setConnectionFactory(connectionFactory);
+    factory.setPubSubDomain(true);
+    factory.setSubscriptionDurable(true);
+    factory.setClientId("spring-jms-2-test");
     return factory;
   }
 

@@ -29,8 +29,13 @@ Some declarative configs are **lists of objects** even though their flat form is
 flat `type` describes the flat system property; `declarative_type: structured_list` plus a
 `declarative_schema` describe the per-item object shape for the declarative builder. The schema
 mirrors the JSON-schema style used by opentelemetry-configuration: `type: object`, a `required`
-list, and named `properties` (each with `type`, optional `description`, optional `default`). The
-`required` keys must be a subset of `properties`.
+list, and named `properties` (each with `type`, optional `description`, optional `default`, and
+optional `example`). The `required` keys must be a subset of `properties`.
+
+`example` is the sample value used for that property in the generated
+`docs/declarative-configuration-example.yaml` entry; without it the generator falls back to the
+property's `default`, then to a `<property-name>` placeholder. Set it on every property whose
+placeholder would not be self-explanatory.
 
 `service_peer_mapping` — flat form is a `host=service` map, declarative form is a list of
 `{peer, service_name}`:
@@ -46,8 +51,14 @@ list, and named `properties` (each with `type`, optional `description`, optional
     type: object
     required: [peer, service_name]
     properties:
-      peer: { type: string, description: Host name or IP address to match against. }
-      service_name: { type: string, description: Peer service name to record for matching peers. }
+      peer:
+        type: string
+        description: Host name or IP address to match against.
+        example: host
+      service_name:
+        type: string
+        description: Peer service name to record for matching peers.
+        example: serviceName
 ```
 
 `url_template_rules` is **declarative-only** (no flat property) — it omits `name`:
@@ -62,9 +73,18 @@ list, and named `properties` (each with `type`, optional `description`, optional
     type: object
     required: [pattern, template]
     properties:
-      pattern: { type: string }
-      template: { type: string }
-      override: { type: boolean, default: false }
+      pattern:
+        type: string
+        description: Regular expression matched against the request URL.
+        example: '/users/\d+'
+      template:
+        type: string
+        description: Template used to derive the low-cardinality route.
+        example: '/users/{id}'
+      override:
+        type: boolean
+        default: false
+        description: Whether this rule overrides an already-applied template.
 ```
 
 ## Scalar Overrides

@@ -24,6 +24,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -80,6 +81,9 @@ public final class SpringIntegrationTelemetryBuilder {
   /**
    * Configures the messaging headers that will be captured as span attributes.
    *
+   * <p>The header names are matched literally. Names containing {@code *} or {@code ?} are ignored
+   * and logged, since this setting never supported wildcards.
+   *
    * @param capturedHeaders A list of messaging header names.
    * @deprecated Use {@link #setHeaders(IncludeExclude)} instead. May be removed in the next minor
    *     release.
@@ -87,7 +91,11 @@ public final class SpringIntegrationTelemetryBuilder {
   @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public SpringIntegrationTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
-    return setHeaders(IncludeExclude.builder().setIncluded(capturedHeaders).build());
+    return setHeaders(
+        DeprecatedCaptureNames.toSelectorOrEmpty(
+            capturedHeaders,
+            "SpringIntegrationTelemetryBuilder.setCapturedHeaders()",
+            "setHeaders(IncludeExclude)"));
   }
 
   /**

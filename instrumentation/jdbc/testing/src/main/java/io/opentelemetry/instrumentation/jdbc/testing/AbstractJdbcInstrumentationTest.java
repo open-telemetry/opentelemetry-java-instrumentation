@@ -104,10 +104,6 @@ public abstract class AbstractJdbcInstrumentationTest {
     return dataSource;
   }
 
-  protected boolean hasServicePeerName() {
-    return true;
-  }
-
   private static final String DATABASE_NAME = "jdbcUnitTest";
   private static final String DATABASE_NAME_LOWER = DATABASE_NAME.toLowerCase(Locale.ROOT);
   private static final Map<String, String> JDBC_URLS =
@@ -1570,9 +1566,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     DB_CONNECTION_STRING,
                                     emitStableDatabaseSemconv() ? null : "testdb://localhost"),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    hasServicePeerName() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1670,9 +1664,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     maybeStable(DB_SQL_TABLE),
                                     emitStableDatabaseSemconv() ? null : table),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    hasServicePeerName() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1818,9 +1810,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     maybeStable(DB_SQL_TABLE),
                                     emitStableDatabaseSemconv() ? null : "table"),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    hasServicePeerName() ? "test-peer-service" : null),
+                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 

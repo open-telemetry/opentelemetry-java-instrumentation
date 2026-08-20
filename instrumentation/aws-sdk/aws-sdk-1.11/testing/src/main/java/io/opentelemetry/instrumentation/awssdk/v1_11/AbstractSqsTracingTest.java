@@ -999,6 +999,64 @@ public abstract class AbstractSqsTracingTest {
     assertThat(receive.getAttributeNames()).containsExactly("AWSTraceHeader");
   }
 
+  @Test
+  void testProducerMetrics() {
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+    testing().clearData();
+
+    sqsClient.sendMessage(new SendMessageRequest(queueUrl, "single"));
+    sqsClient.sendMessageBatch(
+        new SendMessageBatchRequest()
+            .withQueueUrl(queueUrl)
+            .withEntries(
+                new SendMessageBatchRequestEntry("i1", "e1"),
+                new SendMessageBatchRequestEntry("i2", "e2"),
+                new SendMessageBatchRequestEntry("i3", "e3")));
+
+    SqsMetricsAssertions.assertProducerMetrics(testing(), sqsPort, 2, 4);
+  }
+
+  @Test
+  void testReceiveAndProcessMetrics() {
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    sqsClient.createQueue("testSdkSqs");
+    sqsClient.sendMessageBatch(
+        new SendMessageBatchRequest()
+            .withQueueUrl(queueUrl)
+            .withEntries(
+                new SendMessageBatchRequestEntry("i1", "e1"),
+                new SendMessageBatchRequestEntry("i2", "e2"),
+                new SendMessageBatchRequestEntry("i3", "e3")));
+    testing().clearData();
+
+    ReceiveMessageResult response =
+        sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl).withMaxNumberOfMessages(10));
+    response.getMessages().forEach(message -> {});
+    ReceiveMessageResult emptyResponse =
+        sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl).withMaxNumberOfMessages(10));
+
+    assertThat(response.getMessages()).hasSize(3);
+    assertThat(emptyResponse.getMessages()).isEmpty();
+    // the poll that returned no messages is not instrumented, so only one receive operation is
+    // recorded
+    SqsMetricsAssertions.assertReceiveAndProcessMetrics(testing(), sqsPort, 1, 3);
+  }
+
+  @Test
+  void testSettleMetrics() {
+    String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+    List<String> receiptHandles = createMessages(queueUrl, 2);
+
+    sqsClient.deleteMessage(new DeleteMessageRequest(queueUrl, receiptHandles.get(0)));
+    sqsClient.deleteMessageBatch(
+        new DeleteMessageBatchRequest()
+            .withQueueUrl(queueUrl)
+            .withEntries(new DeleteMessageBatchRequestEntry("i1", receiptHandles.get(1))));
+
+    SqsMetricsAssertions.assertSettleMetrics(testing(), sqsPort, 2);
+  }
+
   static void assertAwsRequestId(AbstractStringAssert<?> val) {
     if (testLatestDeps()) {
       val.isNull();

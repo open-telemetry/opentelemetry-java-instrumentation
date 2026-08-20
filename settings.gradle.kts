@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.4.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.1"
-    id("org.graalvm.buildtools.native") version "1.1.8"
+    id("org.graalvm.buildtools.native") version "1.1.9"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
@@ -200,6 +200,9 @@ include(":instrumentation:akka:akka-http-10.0:javaagent")
 include(":instrumentation:alibaba-druid-1.0:javaagent")
 include(":instrumentation:alibaba-druid-1.0:library")
 include(":instrumentation:alibaba-druid-1.0:testing")
+include(":instrumentation:apache-commons-pool-2.0:javaagent")
+include(":instrumentation:apache-commons-pool-2.0:library")
+include(":instrumentation:apache-commons-pool-2.0:testing")
 include(":instrumentation:apache-dbcp-2.0:javaagent")
 include(":instrumentation:apache-dbcp-2.0:library")
 include(":instrumentation:apache-dbcp-2.0:testing")
@@ -452,6 +455,7 @@ include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:testing")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library")
 include(":instrumentation:kafka:kafka-connect-2.6:javaagent")
+include(":instrumentation:kafka:kafka-connect-2.6:javaagent-unit-tests")
 include(":instrumentation:kafka:kafka-connect-2.6:testing")
 include(":instrumentation:kafka:kafka-streams-0.11:javaagent")
 include(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent")

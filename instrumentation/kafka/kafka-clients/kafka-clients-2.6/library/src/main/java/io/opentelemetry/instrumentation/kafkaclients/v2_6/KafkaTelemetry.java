@@ -47,6 +47,8 @@ public final class KafkaTelemetry {
   private final OpenTelemetry openTelemetry;
   private final KafkaProducerTelemetry producerTelemetry;
   private final KafkaConsumerTelemetry consumerTelemetry;
+  private final KafkaProducerTelemetry producerInterceptorTelemetry;
+  private final KafkaConsumerTelemetry consumerInterceptorTelemetry;
 
   /** Returns a new {@link KafkaTelemetry} configured with the given {@link OpenTelemetry}. */
   public static KafkaTelemetry create(OpenTelemetry openTelemetry) {
@@ -65,6 +67,8 @@ public final class KafkaTelemetry {
       Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter,
       Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter,
       Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter,
+      Instrumenter<KafkaProducerRequest, RecordMetadata> producerInterceptorInstrumenter,
+      Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInterceptorInstrumenter,
       boolean producerPropagationEnabled) {
     this.openTelemetry = openTelemetry;
     this.producerTelemetry =
@@ -74,6 +78,14 @@ public final class KafkaTelemetry {
             producerPropagationEnabled);
     this.consumerTelemetry =
         new KafkaConsumerTelemetry(consumerReceiveInstrumenter, consumerProcessInstrumenter);
+    this.producerInterceptorTelemetry =
+        new KafkaProducerTelemetry(
+            openTelemetry.getPropagators().getTextMapPropagator(),
+            producerInterceptorInstrumenter,
+            producerPropagationEnabled);
+    this.consumerInterceptorTelemetry =
+        new KafkaConsumerTelemetry(
+            consumerReceiveInterceptorInstrumenter, consumerProcessInstrumenter);
   }
 
   /** Returns a decorated {@link Producer} that emits spans for each sent message. */
@@ -208,7 +220,7 @@ public final class KafkaTelemetry {
         OpenTelemetryProducerInterceptor.class.getName());
     config.put(
         OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_PRODUCER_TELEMETRY_SUPPLIER,
-        new KafkaProducerTelemetrySupplier(producerTelemetry));
+        new KafkaProducerTelemetrySupplier(producerInterceptorTelemetry));
     return Collections.unmodifiableMap(config);
   }
 
@@ -236,7 +248,7 @@ public final class KafkaTelemetry {
         OpenTelemetryConsumerInterceptor.class.getName());
     config.put(
         OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_CONSUMER_TELEMETRY_SUPPLIER,
-        new KafkaConsumerTelemetrySupplier(consumerTelemetry));
+        new KafkaConsumerTelemetrySupplier(consumerInterceptorTelemetry));
     return Collections.unmodifiableMap(config);
   }
 }

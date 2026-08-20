@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.servlet.v5_0.internal;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.instrumentation.api.internal.EnumerationUtil;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletAsyncListener;
 import jakarta.servlet.AsyncEvent;
@@ -108,8 +109,7 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
 
   @Override
   public Iterable<String> getRequestHeaderNames(HttpServletRequest httpServletRequest) {
-    Enumeration<String> names = httpServletRequest.getHeaderNames();
-    return names == null ? emptyList() : Collections.list(names);
+    return () -> EnumerationUtil.asIterator(httpServletRequest.getHeaderNames());
   }
 
   @Override
@@ -169,6 +169,12 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
       return (List<String>) values;
     }
     return new ArrayList<>(values);
+  }
+
+  @Override
+  public Collection<String> getResponseHeaderNames(HttpServletResponse response) {
+    Collection<String> names = response.getHeaderNames();
+    return names == null ? emptyList() : names;
   }
 
   @Override
