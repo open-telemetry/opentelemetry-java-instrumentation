@@ -131,6 +131,7 @@
   [#19507](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19507),
   [#19508](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19508),
   [#19535](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19535),
+  [#19565](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19565),
   [#19639](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19639),
   [#19640](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19640))
 - Log4j context data now includes `baggage.*` entries even when there is no current span.
@@ -141,10 +142,6 @@
 - Add the `IncludeExclude` selector API for matching strings against included and excluded glob
   patterns.
   ([#19451](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19451))
-- Kafka consumer receive telemetry is now disabled by default; enable
-  `otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true` to emit receive
-  spans.
-  ([#19565](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19565))
 - Emit Cassandra driver 3 consistency, coordinator, page size, idempotence, and speculative
   execution attributes.
   ([#19629](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19629))
