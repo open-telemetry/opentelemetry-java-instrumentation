@@ -30,5 +30,7 @@ exclude = [
   '^http://www.slf4j.org.*',
   '^https://logback.qos.ch/.*',
   '^https://vaadin.com/$',
-  '^https://camel.apache.org/$'
+  '^https://camel.apache.org/$',
+  # SSL certificate error.
+  '^https://lettuce\.io/$'
 ]
