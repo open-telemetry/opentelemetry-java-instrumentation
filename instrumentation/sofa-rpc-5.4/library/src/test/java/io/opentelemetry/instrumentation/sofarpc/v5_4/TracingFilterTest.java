@@ -122,6 +122,15 @@ class TracingFilterTest {
   }
 
   @Test
+  void publicApiCompletionFallsBackToLibraryFilter() {
+    startAsyncRequest();
+
+    SofaRpcTelemetry.completeAsyncResponse(request, response, null);
+
+    verify(instrumenter, times(1)).end(eq(Context.root()), any(), same(response), isNull());
+  }
+
+  @Test
   void callbackBeforeInvokeReturnsCompletesRequest() {
     when(instrumenter.shouldStart(any(), any())).thenReturn(true);
     when(instrumenter.start(any(), any())).thenReturn(Context.root());
