@@ -1,19 +1,19 @@
 groups:
   - id: attributes.kafka.connect
     type: attribute_group
-    brief: Kafka Connect attributes
+    brief: Kafka Connect attributes.
     attributes:
       - id: kafka.connect.connector
         type: string
         stability: development
-        brief: Kafka Connect connector name
+        brief: Kafka Connect connector name.
         examples:
           - "file-source"
           - "file-sink"
       - id: kafka.connect.task.id
         type: string
         stability: development
-        brief: Kafka Connect task ID
+        brief: Kafka Connect task ID.
         examples:
           - "0"
       - id: kafka.connect.worker.connector.startup.result
@@ -21,14 +21,14 @@ groups:
           members:
             - id: success
               value: "success"
-              brief: Connector started successfully
+              brief: Connector started successfully.
               stability: development
             - id: failure
               value: "failure"
-              brief: Connector start failed
+              brief: Connector start failed.
               stability: development
         stability: development
-        brief: The result of a connector startup attempt
+        brief: The result of a connector startup attempt.
         examples:
           - "success"
           - "failure"
@@ -37,14 +37,14 @@ groups:
           members:
             - id: success
               value: "success"
-              brief: Task started successfully
+              brief: Task started successfully.
               stability: development
             - id: failure
               value: "failure"
-              brief: Task start failed
+              brief: Task start failed.
               stability: development
         stability: development
-        brief: The result of a task startup attempt
+        brief: The result of a task startup attempt.
         examples:
           - "success"
           - "failure"
@@ -53,30 +53,30 @@ groups:
           members:
             - id: destroyed
               value: "destroyed"
-              brief: Task is destroyed
+              brief: Task is destroyed.
               stability: development
             - id: failed
               value: "failed"
-              brief: Task has failed
+              brief: Task has failed.
               stability: development
             - id: paused
               value: "paused"
-              brief: Task is paused
+              brief: Task is paused.
               stability: development
             - id: restarting
               value: "restarting"
-              brief: Task is restarting
+              brief: Task is restarting.
               stability: development
             - id: running
               value: "running"
-              brief: Task is running
+              brief: Task is running.
               stability: development
             - id: unassigned
               value: "unassigned"
-              brief: Task is unassigned
+              brief: Task is unassigned.
               stability: development
         stability: development
-        brief: The state of a connector task on the worker
+        brief: The state of a connector task on the worker.
         examples:
           - "running"
       - id: kafka.connect.protocol.state
@@ -84,18 +84,18 @@ groups:
           members:
             - id: eager
               value: "eager"
-              brief: Eager rebalancing protocol
+              brief: Eager rebalancing protocol.
               stability: development
             - id: cooperative
               value: "cooperative"
-              brief: Cooperative rebalancing protocol
+              brief: Cooperative rebalancing protocol.
               stability: development
             - id: unknown
               value: "unknown"
-              brief: Unknown protocol
+              brief: Unknown protocol.
               stability: development
         stability: development
-        brief: The Connect rebalancing protocol used by the cluster
+        brief: The Connect rebalancing protocol used by the cluster.
         examples:
           - "eager"
           - "cooperative"
@@ -104,18 +104,18 @@ groups:
           members:
             - id: rebalancing
               value: "rebalancing"
-              brief: Worker is currently rebalancing
+              brief: Worker is currently rebalancing.
               stability: development
             - id: idle
               value: "idle"
-              brief: Worker is not rebalancing
+              brief: Worker is not rebalancing.
               stability: development
             - id: unknown
               value: "unknown"
-              brief: Unknown rebalance state
+              brief: Unknown rebalance state.
               stability: development
         stability: development
-        brief: Whether the worker is currently rebalancing
+        brief: Whether the worker is currently rebalancing.
         examples:
           - "rebalancing"
           - "idle"
@@ -124,38 +124,38 @@ groups:
           members:
             - id: running
               value: "running"
-              brief: Connector is running
+              brief: Connector is running.
               stability: development
             - id: failed
               value: "failed"
-              brief: Connector has failed
+              brief: Connector has failed.
               stability: development
             - id: paused
               value: "paused"
-              brief: Connector is paused
+              brief: Connector is paused.
               stability: development
             - id: unassigned
               value: "unassigned"
-              brief: Connector is unassigned
+              brief: Connector is unassigned.
               stability: development
             - id: restarting
               value: "restarting"
-              brief: Connector is restarting
+              brief: Connector is restarting.
               stability: development
             - id: degraded
               value: "degraded"
-              brief: Connector is degraded (Confluent)
+              brief: Connector is degraded (Confluent).
               stability: development
             - id: stopped
               value: "stopped"
-              brief: Connector is stopped
+              brief: Connector is stopped.
               stability: development
             - id: unknown
               value: "unknown"
-              brief: Connector state is unknown
+              brief: Connector state is unknown.
               stability: development
         stability: development
-        brief: The lifecycle state of the connector
+        brief: The lifecycle state of the connector.
         examples:
           - "running"
       - id: kafka.connect.task.state
@@ -163,34 +163,34 @@ groups:
           members:
             - id: running
               value: "running"
-              brief: Task is running
+              brief: Task is running.
               stability: development
             - id: failed
               value: "failed"
-              brief: Task has failed
+              brief: Task has failed.
               stability: development
             - id: paused
               value: "paused"
-              brief: Task is paused
+              brief: Task is paused.
               stability: development
             - id: unassigned
               value: "unassigned"
-              brief: Task is unassigned
+              brief: Task is unassigned.
               stability: development
             - id: restarting
               value: "restarting"
-              brief: Task is restarting
+              brief: Task is restarting.
               stability: development
             - id: destroyed
               value: "destroyed"
-              brief: Task is destroyed (Confluent)
+              brief: Task is destroyed (Confluent).
               stability: development
             - id: unknown
               value: "unknown"
-              brief: Task state is unknown
+              brief: Task state is unknown.
               stability: development
         stability: development
-        brief: The state of the connector task
+        brief: The state of the connector task.
         examples:
           - "running"
 
