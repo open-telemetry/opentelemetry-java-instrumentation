@@ -11,12 +11,10 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.module.SimpleSerializers;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.linecorp.armeria.common.HttpData;
 import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.MediaType;
-import com.linecorp.armeria.server.HttpService;
 import com.linecorp.armeria.server.Server;
 import com.linecorp.armeria.server.grpc.GrpcService;
 import com.linecorp.armeria.server.healthcheck.HealthCheckService;
@@ -24,7 +22,6 @@ import io.netty.buffer.ByteBufOutputStream;
 import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
-import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import org.curioswitch.common.protobuf.json.MessageMarshaller;
@@ -82,20 +79,14 @@ public class FakeBackendMain {
     var grpcMetricsService = new FakeMetricsCollectorServiceGrpc(storage);
     var grpcLogsService = new FakeLogsCollectorServiceGrpc(storage);
     var httpTraceService = new FakeTraceCollectorServiceHttp(storage);
+    var httpMetricsService = new FakeMetricsCollectorServiceHttp(storage);
+    var httpLogsService = new FakeLogsCollectorServiceHttp(storage);
     var server =
         Server.builder()
             .http(8080)
             .service("/v1/traces", httpTraceService)
-            .service(
-                "/v1/metrics",
-                (ctx, req) -> {
-                  return HttpResponse.of(HttpStatus.OK);
-                })
-            .service(
-                "/v1/logs",
-                (ctx, req) -> {
-                  return HttpResponse.of(HttpStatus.OK);
-                })
+            .service("/v1/metrics", httpMetricsService)
+            .service("/v1/logs", httpLogsService)
             .service(
                 GrpcService.builder()
                     .addService(grpcTraceService)
@@ -143,7 +134,6 @@ public class FakeBackendMain {
     server.start().join();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> server.stop().join()));
   }
-
 
   private FakeBackendMain() {}
 }

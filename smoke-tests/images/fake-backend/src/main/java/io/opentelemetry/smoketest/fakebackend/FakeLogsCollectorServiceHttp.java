@@ -12,14 +12,14 @@ import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.MediaType;
 import com.linecorp.armeria.server.HttpService;
 import com.linecorp.armeria.server.ServiceRequestContext;
-import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
-import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceResponse;
+import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest;
+import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceResponse;
 
-public class FakeTraceCollectorServiceHttp implements HttpService {
+public class FakeLogsCollectorServiceHttp implements HttpService {
 
   private final RequestsStorage storage;
 
-  public FakeTraceCollectorServiceHttp(RequestsStorage storage) {
+  public FakeLogsCollectorServiceHttp(RequestsStorage storage) {
     this.storage = storage;
   }
 
@@ -31,12 +31,12 @@ public class FakeTraceCollectorServiceHttp implements HttpService {
             .thenApply(
                 aggregatedRequest -> {
                   try {
-                    storage.addTrace(
-                        ExportTraceServiceRequest.parseFrom(aggregatedRequest.content().array()));
+                    storage.addLogsRequest(
+                        ExportLogsServiceRequest.parseFrom(aggregatedRequest.content().array()));
                     return HttpResponse.of(
                         HttpStatus.OK,
                         MediaType.X_PROTOBUF,
-                        ExportTraceServiceResponse.getDefaultInstance().toByteArray());
+                        ExportLogsServiceResponse.getDefaultInstance().toByteArray());
                   } catch (InvalidProtocolBufferException e) {
                     return HttpResponse.of(
                         HttpStatus.BAD_REQUEST, MediaType.PLAIN_TEXT_UTF_8, e.getMessage());
