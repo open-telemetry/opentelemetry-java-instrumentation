@@ -182,9 +182,9 @@ class JedisClientTest {
   @Test
   void nonDefaultDatabaseIndex() {
     jedis.select(1);
-    // jedis 2.0.0 records the new database index before it sends SELECT, while later 2.x versions
-    // record it after reading the reply, so the index on the SELECT span itself is not stable
-    // across the supported version range
+    // jedis 2.0.0 through 2.6.x record the new database index before sending SELECT, while jedis
+    // 2.7.0 onwards record it after reading the reply, so the index on the SELECT span itself is
+    // not stable across the supported version range
     testing.waitForTraces(1);
     testing.clearData();
 

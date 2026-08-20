@@ -224,8 +224,8 @@ class Jedis30ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SELECT 1"),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            // jedis records the new database index only after SELECT succeeds, so
-                            // the SELECT span still reports the database it was sent on
+                            // jedis 3.x updates the database index only after SELECT succeeds, so
+                            // this span still reports the database it was sent on
                             equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
