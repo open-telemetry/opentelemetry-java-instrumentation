@@ -119,16 +119,6 @@ testing {
 }
 
 tasks {
-  if (!otelProps.testLatestDeps) {
-    check {
-      dependsOn(testing.suites)
-    }
-  } else {
-    check {
-      dependsOn(testing.suites.named("testSqs"), testing.suites.named("testSqsNoReceiveTelemetry"))
-    }
-  }
-
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     // TODO run tests both with and without experimental span attributes
@@ -137,12 +127,31 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .associate { suite ->
+      suite.name to register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+        jvmArgs("-Dotel.semconv-stability.opt-in=database")
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+      }
+    }
+
+  if (!otelProps.testLatestDeps) {
+    check {
+      dependsOn(testing.suites, stableSemconvSuites.values)
+    }
+  } else {
+    check {
+      dependsOn(
+        testing.suites.named("testSqs"),
+        testing.suites.named("testSqsNoReceiveTelemetry"),
+        stableSemconvSuites.getValue("test"),
+        stableSemconvSuites.getValue("testSqs"),
+        stableSemconvSuites.getValue("testSqsNoReceiveTelemetry")
+      )
+    }
   }
 
   val testMessagingPreview = register<Test>("testMessagingPreview") {
@@ -174,7 +183,6 @@ tasks {
 
   check {
     dependsOn(
-      testStableSemconv,
       testMessagingPreview,
       testMessagingPreviewNoReceiveTelemetry,
       testBothSemconv

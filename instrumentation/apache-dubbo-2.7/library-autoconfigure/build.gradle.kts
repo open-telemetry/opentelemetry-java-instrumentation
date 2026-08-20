@@ -34,23 +34,29 @@ tasks.withType<Test>().configureEach {
 }
 
 tasks {
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val testSuites = testing.suites.withType(JvmTestSuite::class)
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
+  val stableSemconvSuites = testSuites.map { suite ->
+    register<Test>("${suite.name}StableSemconv") {
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
+
+      jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
+    }
   }
 
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val bothSemconvSuites = testSuites.map { suite ->
+    register<Test>("${suite.name}BothSemconv") {
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")
+      jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")
+    }
   }
 
   check {
-    dependsOn(testing.suites, testStableSemconv, testBothSemconv)
+    dependsOn(testing.suites, stableSemconvSuites, bothSemconvSuites)
   }
 }
