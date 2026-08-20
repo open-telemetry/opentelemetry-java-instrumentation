@@ -104,10 +104,10 @@
   in-flight Cassandra compactions.
   ([#19290](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19290))
 - Preview the upcoming 3.0 messaging semantic conventions behind
-  `otel.semconv-stability.opt-in=messaging`, including updated span names, attributes, links, and
-  operations across AWS SQS and Lambda, JMS, Kafka, NATS, Pulsar, RabbitMQ, RocketMQ, Spring
-  Integration, and Spring messaging instrumentations.
+  `otel.semconv-stability.opt-in=messaging` across AWS SQS and Lambda, JMS, Kafka, NATS, Pulsar,
+  RabbitMQ, RocketMQ, Spring Integration, and Spring messaging instrumentations.
   ([#19347](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19347),
+  [#19348](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19348),
   [#19349](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19349),
   [#19350](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19350),
   [#19351](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19351),
@@ -116,24 +116,21 @@
   [#19355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19355),
   [#19356](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19356),
   [#19476](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19476),
+  [#19477](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19477),
   [#19478](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19478),
+  [#19479](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19479),
   [#19480](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19480),
   [#19481](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19481),
   [#19482](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19482),
-  [#19487](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19487),
-  [#19504](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19504),
-  [#19507](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19507),
-  [#19535](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19535))
-- Preview the upcoming 3.0 messaging metrics across AWS SQS and Lambda, JMS, Kafka, NATS, RabbitMQ,
-  RocketMQ, and Spring messaging instrumentations.
-  ([#19348](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19348),
-  [#19477](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19477),
-  [#19479](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19479),
   [#19486](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19486),
+  [#19487](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19487),
   [#19499](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19499),
   [#19500](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19500),
+  [#19504](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19504),
   [#19505](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19505),
+  [#19507](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19507),
   [#19508](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19508),
+  [#19535](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19535),
   [#19639](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19639),
   [#19640](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19640))
 - Log4j context data now includes `baggage.*` entries even when there is no current span.
