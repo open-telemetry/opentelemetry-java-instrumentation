@@ -138,7 +138,8 @@ class KafkaConnectTest extends TargetSystemTest {
     GenericContainer<?> kafka = KafkaContainer.create(KAFKA_IMAGE);
 
     GenericContainer<?> kafkaConnect =
-        KafkaContainer.create(KAFKA_IMAGE).withKafkaConnect()
+        KafkaContainer.create(KAFKA_IMAGE)
+            .withKafkaConnect()
             .withEnv("JAVA_TOOL_OPTIONS", String.join(" ", jvmArgs))
             .withCopyToContainer(Transferable.of("first\nsecond\nthird\n"), SOURCE_FILE_PATH)
             .withLogConsumer(frame -> recordMetricRegistrations(frame, registeredMetrics));

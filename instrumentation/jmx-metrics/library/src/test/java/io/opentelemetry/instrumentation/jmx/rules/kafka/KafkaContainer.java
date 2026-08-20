@@ -1,12 +1,16 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.jmx.rules.kafka;
 
+import java.time.Duration;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.builder.Transferable;
-import java.time.Duration;
 
 public class KafkaContainer extends GenericContainer<KafkaContainer> {
-
 
   private static final int KAFKA_CONTROLLER_PORT = 9093;
 
@@ -72,13 +76,15 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
     sendSampleMessage();
   }
 
-  private  void sendSampleMessage() {
+  private void sendSampleMessage() {
     try {
       execInContainer(
           "/bin/sh",
           "-c",
           // we have to force empty JAVA_TOOL_OPTIONS to prevent agent being loaded on producer
-          "echo 'my message' | JAVA_TOOL_OPTIONS='' "+basePath + "/bin/kafka-console-producer.sh"
+          "echo 'my message' | JAVA_TOOL_OPTIONS='' "
+              + basePath
+              + "/bin/kafka-console-producer.sh"
               + " --bootstrap-server localhost:"
               + KAFKA_PORT
               + " --topic my-topic");
@@ -93,9 +99,14 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
   private void configureKRaft() {
     String serverPropertiesPath = basePath + "/config/kraft/server.properties";
     String kafkaCommand =
-        basePath + "/bin/kafka-storage.sh format -t $("+ basePath +"/bin/kafka-storage.sh random-uuid) -c "
+        basePath
+            + "/bin/kafka-storage.sh format -t $("
+            + basePath
+            + "/bin/kafka-storage.sh random-uuid) -c "
             + serverPropertiesPath
-            + " && " + basePath + "/bin/kafka-server-start.sh "
+            + " && "
+            + basePath
+            + "/bin/kafka-server-start.sh "
             + serverPropertiesPath;
 
     this.withNetworkAliases(KAFKA_ALIAS)
@@ -126,8 +137,7 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
 
   private void configureKafkaConnect() {
     String connectPropertiesPath = basePath + "/config/connect-distributed.properties";
-    this
-        .withNetworkAliases(CONNECT_ALIAS)
+    this.withNetworkAliases(CONNECT_ALIAS)
         .withCopyToContainer(Transferable.of(connectWorkerProperties()), connectPropertiesPath)
         .withExposedPorts(CONNECT_PORT)
         .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint("/bin/sh"))
@@ -182,5 +192,4 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
         "log.flush.interval.messages=1", // force flush quickly to get flush metrics
         "auto.create.topics.enable=true");
   }
-
 }
