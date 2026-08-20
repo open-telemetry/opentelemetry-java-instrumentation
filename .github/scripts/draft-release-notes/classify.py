@@ -126,18 +126,6 @@ def iter_bundles() -> list[PrBundle]:
 # --- preclassifier ---------------------------------------------------------
 
 
-def changed_paths(bundle: PrBundle) -> list[str]:
-    paths = []
-    for item in bundle.meta.get("files", []):
-        if isinstance(item, dict):
-            path = item.get("path")
-        else:
-            path = item
-        if isinstance(path, str):
-            paths.append(path)
-    return paths
-
-
 def preclassify(bundle: PrBundle) -> dict | None:
     """Return a decision dict if we can decide without the LLM, else None."""
     labels = bundle.meta.get("labels") or []
@@ -151,18 +139,8 @@ def preclassify(bundle: PrBundle) -> dict | None:
             "evidence": "PR labeled 'module cleanup'",
             "source": "preclassify",
         }
-    files = changed_paths(bundle)
-    if bundle.meta.get("changes_unreleased"):
-        return {
-            "decision": "omit",
-            "section": None,
-            "surface": "hand-written changelog entry",
-            "user_visible_effect": "preserved from CHANGELOG.md",
-            "bullet": None,
-            "evidence": "PR changes the Unreleased block; merge.py preserves the existing entry",
-            "source": "preclassify",
-        }
     if not bundle.meta.get("touches_src_main"):
+        files = [f["path"] for f in bundle.meta.get("files", [])]
         return {
             "decision": "omit",
             "section": None,

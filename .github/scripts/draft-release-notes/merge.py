@@ -2,23 +2,20 @@
 """Merge per-PR decision.json files into a CHANGELOG Unreleased section.
 
 Reads build/changelog-bundle/prs/<N>/decision.json for every PR that has
-one, groups kept entries by section, sorts new entries by ascending PR
+one, groups kept entries by section, sorts each section by ascending PR
 number, and prints the Unreleased markdown block to stdout.
 
 The output contains only the `## Unreleased` heading and section bullets;
 the SDK-version preamble is inserted at release time by
 .github/scripts/update-changelog-for-release.sh.
 
-With --splice, existing Unreleased content is preserved. Generated entries
-whose PR is already linked from that block are skipped, and the remaining
-entries are appended to their sections. This keeps hand-written breaking and
-deprecation notes authoritative and makes reruns idempotent.
-
-By default writes to stdout. Use --splice to rewrite CHANGELOG.md in
-place. Use --replace-existing with --splice to discard the existing block.
-
 Any entry in state other than `include`/`omit`, or `include` without a
 section and bullet, is reported on stderr and excluded.
+
+By default writes to stdout. Use --splice to rewrite CHANGELOG.md in
+place, replacing the entire `## Unreleased` block. Any hand-written
+content in that block is discarded; review the resulting diff to recover
+anything worth keeping.
 """
 
 from __future__ import annotations
@@ -43,11 +40,6 @@ SECTION_ORDER = [
 ]
 
 PR_URL = "https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/{pr}"
-PR_LINK_RE = re.compile(
-    r"^  \(?\[#(\d+)\]\("
-    r"https://github\.com/open-telemetry/opentelemetry-java-instrumentation/pull/\1\)",
-    re.MULTILINE,
-)
 
 
 def load_decisions() -> list[dict]:
@@ -99,69 +91,6 @@ def format_bullet(bullet: str, pr: int) -> str:
     return f"{wrapped}\n  ([#{pr}]({PR_URL.format(pr=pr)}))"
 
 
-def render_generated_block(grouped: dict[str, list[dict]]) -> str:
-    out_lines = [
-        "## Unreleased",
-        "",
-    ]
-    for key, header in SECTION_ORDER:
-        items = sorted(grouped[key], key=lambda d: d["pr"])
-        if not items:
-            continue
-        out_lines.append(header)
-        out_lines.append("")
-        for d in items:
-            out_lines.append(format_bullet(d["bullet"], d["pr"]))
-        out_lines.append("")
-    return "\n".join(out_lines).rstrip() + "\n"
-
-
-def merge_with_existing(
-    existing_block: str, grouped: dict[str, list[dict]]
-) -> tuple[str, int, int]:
-    covered_prs = {int(match) for match in PR_LINK_RE.findall(existing_block)}
-    pending = {
-        key: [d for d in values if d["pr"] not in covered_prs]
-        for key, values in grouped.items()
-    }
-    skipped = sum(len(values) - len(pending[key]) for key, values in grouped.items())
-
-    block = existing_block.rstrip() + "\n"
-    for index, (key, header) in enumerate(SECTION_ORDER):
-        items = sorted(pending[key], key=lambda d: d["pr"])
-        if not items:
-            continue
-        bullets = "\n".join(format_bullet(d["bullet"], d["pr"]) for d in items)
-        header_match = re.search(rf"^{re.escape(header)}\n", block, re.MULTILINE)
-        if header_match:
-            body_start = header_match.end()
-            next_heading = re.search(r"^(?:### |## )", block[body_start:], re.MULTILINE)
-            body_end = (
-                body_start + next_heading.start()
-                if next_heading is not None
-                else len(block)
-            )
-            body = block[body_start:body_end].strip("\n")
-            replacement = f"\n{body}\n{bullets}\n\n" if body else f"\n{bullets}\n\n"
-            block = block[:body_start] + replacement + block[body_end:]
-            continue
-
-        insert_at = len(block)
-        for _, later_header in SECTION_ORDER[index + 1:]:
-            later_match = re.search(rf"^{re.escape(later_header)}$", block, re.MULTILINE)
-            if later_match:
-                insert_at = later_match.start()
-                break
-        section = f"{header}\n\n{bullets}\n\n"
-        if insert_at == len(block):
-            block = block.rstrip() + "\n\n" + section
-        else:
-            block = block[:insert_at] + section + block[insert_at:]
-
-    added = sum(len(values) for values in pending.values())
-    return block.rstrip() + "\n", added, skipped
-
-
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--missing-ok", action="store_true",
@@ -169,15 +98,8 @@ def main() -> int:
     ap.add_argument("--report", action="store_true",
                     help="also print a section-count summary on stderr")
     ap.add_argument("--splice", action="store_true",
-                    help="merge into CHANGELOG.md in place (otherwise write to stdout)")
-    ap.add_argument(
-        "--replace-existing",
-        action="store_true",
-        help="with --splice, replace rather than preserve the existing Unreleased block",
-    )
+                    help="rewrite CHANGELOG.md in place (otherwise write to stdout)")
     args = ap.parse_args()
-    if args.replace_existing and not args.splice:
-        ap.error("--replace-existing requires --splice")
 
     decisions = load_decisions()
 
@@ -215,9 +137,24 @@ def main() -> int:
             continue
         grouped[section].append(d)
 
-    block = render_generated_block(grouped)
-    added = sum(len(values) for values in grouped.values())
-    skipped = 0
+    out_lines = [
+        "## Unreleased",
+        "",
+    ]
+
+    for key, header in SECTION_ORDER:
+        items = sorted(grouped[key], key=lambda d: d["pr"])
+        if not items:
+            continue
+        out_lines.append(header)
+        out_lines.append("")
+        for d in items:
+            out_lines.append(format_bullet(d["bullet"], d["pr"]))
+        out_lines.append("")
+
+    block = "\n".join(out_lines)
+    if not block.endswith("\n"):
+        block += "\n"
 
     if args.splice:
         if not CHANGELOG.exists():
@@ -228,16 +165,10 @@ def main() -> int:
         m = re.search(r"^## Unreleased\n.*?(?=^## |\Z)", text, re.S | re.M)
         if not m:
             sys.exit("## Unreleased section not found in CHANGELOG.md")
-        if not args.replace_existing:
-            block, added, skipped = merge_with_existing(m.group(0), grouped)
         new_text = text[: m.start()] + block + "\n" + text[m.end():]
         CHANGELOG.write_text(new_text, encoding="utf-8")
-        print(
-            f"Updated {CHANGELOG} ({added} PR-linked bullets added"
-            + (f", {skipped} existing PR links preserved" if skipped else "")
-            + ")",
-            file=sys.stderr,
-        )
+        bullet_count = sum(len(v) for v in grouped.values())
+        print(f"Rewrote {CHANGELOG} ({bullet_count} PR-linked bullets)", file=sys.stderr)
     else:
         sys.stdout.write(block)
 

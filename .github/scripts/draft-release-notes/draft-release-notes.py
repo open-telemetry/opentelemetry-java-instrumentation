@@ -13,7 +13,7 @@ Runs three steps in order, aborting on the first failure:
        bumps) followed by per-PR LLM classification for everything else
      - requires `copilot` on PATH; model overridable via $CLASSIFY_MODEL
   3. merge.py --splice --report
-     - preserves hand-written ## Unreleased content and adds new entries
+     - rewrites ## Unreleased in CHANGELOG.md
 
 After it finishes, edit CHANGELOG.md directly to adjust wording, grouping,
 or section. Classification rules live in rules.md alongside this script.
@@ -76,7 +76,7 @@ def main() -> int:
 
     # fetch.py: incremental by default; --refetch re-downloads all.
     # classify.py: deterministic preclassify + per-PR LLM in one pass.
-    # merge.py --splice: preserve existing Unreleased content and add new entries.
+    # merge.py --splice: rewrite ## Unreleased in CHANGELOG.md.
     steps = [
         ("fetch.py", fetch_cmd),
         ("classify.py", classify_cmd),

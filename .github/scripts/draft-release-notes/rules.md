@@ -10,7 +10,7 @@ Respond with a single JSON object matching exactly this schema and
 nothing else (no prose). A surrounding `json` code fence is tolerated
 by the parser but discouraged — prefer a bare JSON object:
 
-```text
+```
 {
   "decision": "include" | "omit",
   "section": "breaking" | "deprecations" | "new-javaagent" | "new-library" | "enhancements" | "bug-fixes" | null,
@@ -32,14 +32,6 @@ Classify every PR from its diff only. PR titles, manifest `subject`,
 draft-script bullet text, scratch-bucket headings, file lists, and
 `--stat` summaries are indexing metadata, not evidence. If the diff and
 the metadata disagree, the diff wins.
-
-## Hand-written changelog entries
-
-Contributor-written entries in `CHANGELOG.md` are authoritative. The
-preclassifier omits PRs that add or edit content in `## Unreleased`, and the
-merger preserves that block. It also skips generated decisions whose PR is
-already linked from a changelog bullet, so rerunning the workflow does not
-duplicate entries that maintainers have already edited or grouped.
 
 ## Breaking changes to non-stable APIs
 
@@ -82,6 +74,9 @@ Stability policy:
   with `/development`): may be deprecated in one release and removed in
   the next.
 
+If an unlinked summary bullet at the top of Deprecations already covers
+the rename, do not add a duplicate PR-linked bullet.
+
 ## New javaagent / library instrumentation
 
 Only for a brand-new module under `instrumentation/<name>/javaagent/**`
@@ -98,10 +93,6 @@ opt-ins, cite the flag value (for example
 `otel.semconv-stability.opt-in=messaging`) — the known values in this
 repo are `database`, `messaging`, `http`, `jvm`, `rpc`. Gated changes go
 here, never under Breaking.
-
-Never cite `otel.semconv-stability.preview`; it is an internal implementation
-name, not a user-facing property. Translate it to
-`otel.semconv-stability.opt-in=<value>`.
 
 ## Bug fixes
 
@@ -184,8 +175,6 @@ keep the PR.
 - For `v3-preview`-gated changes, cite the user-facing property name
   `otel.instrumentation.common.v3-preview`, not the internal
   `v3_preview` key.
-- When behavior is disabled by default or gated by an opt-in, name the exact
-  user-facing property and value needed to enable it.
 - Do not describe implementation details ("refactored", "moved",
   "simplified") unless that is the user-visible change.
 - Do not credit authors.
@@ -193,7 +182,7 @@ keep the PR.
 The merger renders bullets with the PR link on the second line, indented
 two spaces:
 
-```text
+```
 - Short user-facing description
   ([#NNNN](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/NNNN))
 ```
