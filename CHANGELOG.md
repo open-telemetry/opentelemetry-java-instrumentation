@@ -131,7 +131,9 @@
   [#19507](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19507),
   [#19508](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19508),
   [#19535](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19535),
+  [#19544](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19544),
   [#19565](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19565),
+  [#19567](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19567),
   [#19639](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19639),
   [#19640](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19640))
 - Under the upcoming 3.0 RPC semantic conventions behind `otel.semconv-stability.opt-in=rpc`,
@@ -221,11 +223,9 @@
   [#19541](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19541))
 - IPv6 addresses in `Host` headers are now parsed correctly, including bracketed ports.
   ([#19540](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19540))
-- Fix messaging destination naming and context parenting across stable and legacy modes for Pulsar
-  and Spring JMS.
-  ([#19544](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19544),
-  [#19567](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19567),
-  [#19592](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19592))
+- Fix Pulsar receive spans under legacy messaging semantic conventions to evaluate suppression against
+  the extracted producer context when receive telemetry is disabled.
+  ([#19592](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19592))
 - Preserve `ClusterInvoker` when capturing the consumer registry address.
   ([#19568](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19568))
 - Stop warning when `capture_<selector>/development` is ignored because `<selector>.included` or
