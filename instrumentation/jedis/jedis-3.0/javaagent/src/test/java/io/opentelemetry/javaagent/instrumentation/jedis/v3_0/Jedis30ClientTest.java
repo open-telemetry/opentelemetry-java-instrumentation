@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -100,6 +101,7 @@ class Jedis30ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -112,6 +114,7 @@ class Jedis30ClientTest {
         "io.opentelemetry.jedis-3.0",
         DB_OPERATION_NAME,
         DB_SYSTEM_NAME,
+        DB_NAMESPACE,
         SERVER_ADDRESS,
         SERVER_PORT,
         NETWORK_PEER_ADDRESS,
@@ -135,6 +138,7 @@ class Jedis30ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -150,6 +154,7 @@ class Jedis30ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "GET foo"),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -175,6 +180,7 @@ class Jedis30ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -193,6 +199,50 @@ class Jedis30ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+  }
+
+  @Test
+  void nonDefaultDatabaseIndex() {
+    jedis.select(1);
+    jedis.set("foo", "bar");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "SELECT " + host + ":" + port : "SELECT")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SELECT 1"),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            // jedis 3.x updates the database index only after SELECT succeeds, so
+                            // this span still reports the database it was sent on
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "1" : null),
                             equalTo(maybeStablePeerService(), "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
@@ -226,6 +276,7 @@ class Jedis30ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
                             equalTo(maybeStable(DB_OPERATION), scenario.operationName),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? scenario.batchSize : null),
@@ -265,6 +316,7 @@ class Jedis30ClientTest {
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
                             equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
                             equalTo(maybeStable(DB_OPERATION), scenario.operationName),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
                             equalTo(
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? scenario.batchSize : null),

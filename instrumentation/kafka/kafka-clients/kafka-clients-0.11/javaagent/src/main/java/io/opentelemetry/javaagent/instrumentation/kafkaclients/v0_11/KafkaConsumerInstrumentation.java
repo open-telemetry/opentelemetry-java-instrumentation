@@ -17,6 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
@@ -75,6 +76,7 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
       boolean previousValue = KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
       try {
         Context receiveContext = null;
+        boolean receiveOperationStarted = false;
         if (consumerReceiveInstrumenter().shouldStart(parentContext, request)) {
           receiveContext =
               InstrumenterUtil.startAndEnd(
@@ -85,16 +87,22 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
                   error,
                   timer.startTime(),
                   timer.now());
+          receiveOperationStarted = true;
         }
 
         Context processParentContext =
-            emitStableMessagingSemconv() ? parentContext : receiveContext;
+            emitStableMessagingSemconv()
+                ? KafkaConsumerContextUtil.withReceiveOperation(
+                    parentContext, receiveOperationStarted)
+                : receiveContext;
+        KafkaConsumerContext consumerContext =
+            KafkaConsumerContextUtil.create(processParentContext, consumer);
         // we're attaching the consumer to the records to be able to retrieve things like consumer
         // group or clientId later
-        KafkaConsumerContextUtil.set(records, processParentContext, consumer);
+        KafkaConsumerContextUtil.set(records, consumerContext);
 
         for (ConsumerRecord<?, ?> record : records) {
-          KafkaConsumerContextUtil.set(record, processParentContext, consumer);
+          KafkaConsumerContextUtil.set(record, consumerContext);
         }
       } finally {
         KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);

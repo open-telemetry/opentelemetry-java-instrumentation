@@ -214,6 +214,94 @@ class RediscalaClientTest {
     })
   }
 
+  @Test def testContainerCommand(): Unit = {
+    val value = testing.runWithSpan(
+      "parent",
+      new ThrowingSupplier[Future[_], Exception] {
+        override def get(): Future[_] = redisClient.configGet("maxmemory")
+      }
+    )
+
+    Await.result(value, Duration.apply("3 second"))
+
+    // CONFIG GET is a container command, so the stable operation name is only the container token
+    assertCommandSpan(
+      if (emitStableDatabaseSemconv()) "CONFIG" else "CONFIGGET"
+    )
+  }
+
+  @Test def testSingleTokenCommand(): Unit = {
+    val value = testing.runWithSpan(
+      "parent",
+      new ThrowingSupplier[Future[_], Exception] {
+        override def get(): Future[_] =
+          redisClient.publish("channel", "message")
+      }
+    )
+
+    Await.result(value, Duration.apply("3 second"))
+
+    // PUBLISH is a single command, so it is reported unchanged in both modes
+    assertCommandSpan("PUBLISH")
+  }
+
+  @Test def testCommandWithOption(): Unit = {
+    val value = testing.runWithSpan(
+      "parent",
+      new ThrowingSupplier[Future[_], Exception] {
+        override def get(): Future[_] =
+          redisClient.zrangeWithscores[String]("sorted-set", 0, -1)
+      }
+    )
+
+    Await.result(value, Duration.apply("3 second"))
+
+    // ZrangeWithscores sends ZRANGE with the WITHSCORES option
+    assertCommandSpan(
+      if (emitStableDatabaseSemconv()) "ZRANGE" else "ZRANGEWITHSCORES"
+    )
+  }
+
+  @Test def testCommandWithoutArguments(): Unit = {
+    val value = testing.runWithSpan(
+      "parent",
+      new ThrowingSupplier[Future[_], Exception] {
+        override def get(): Future[_] = redisClient.ping()
+      }
+    )
+
+    Await.result(value, Duration.apply("3 second"))
+
+    // commands without arguments are scala objects, whose class name ends with $
+    assertCommandSpan(if (emitStableDatabaseSemconv()) "PING" else "PING$")
+  }
+
+  private def assertCommandSpan(operationName: String): Unit =
+    testing.waitAndAssertTraces(new Consumer[TraceAssert] {
+      override def accept(trace: TraceAssert): Unit =
+        trace.hasSpansSatisfyingExactly(
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit = {
+              span.hasName("parent").hasNoParent
+            }
+          },
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit = {
+              span
+                .hasName(spanName(operationName))
+                .hasKind(CLIENT)
+                .hasParent(trace.getSpan(0))
+                .hasAttributesSatisfyingExactly(
+                  equalTo(maybeStable(DB_SYSTEM), REDIS),
+                  equalTo(maybeStable(DB_OPERATION), operationName),
+                  equalTo(SERVER_ADDRESS, host),
+                  equalTo(SERVER_PORT, port)
+                )
+            }
+          }
+        )
+    })
+
   @ParameterizedTest
   @MethodSource(Array("transactionScenarios"))
   def testTransaction(scenario: BatchScenario): Unit = {
@@ -285,6 +373,20 @@ class RediscalaClientTest {
             _.set("transaction-same-2", "value")
           ),
           operationName = "MULTI SET",
+          batchSize = 2L
+        )
+      ),
+      Arguments.argumentSet(
+        "twoSameStableOperation",
+        BatchScenario(
+          commands = Seq(
+            _.zrange[String]("transaction-same-stable", 0, -1),
+            _.zrangeWithscores[String]("transaction-same-stable", 0, -1)
+          ),
+          // Zrange and ZrangeWithscores both send ZRANGE, so they group together only when the
+          // stable operation name is used
+          operationName =
+            if (emitStableDatabaseSemconv()) "MULTI ZRANGE" else "MULTI",
           batchSize = 2L
         )
       ),

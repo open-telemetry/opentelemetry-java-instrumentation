@@ -9,12 +9,18 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertCounter;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
@@ -255,6 +261,22 @@ class SpringListenerTest extends AbstractJmsTest {
                         false,
                         null,
                         "durable-subscription")));
+
+    // the jms instrumentation that would create the receive operation is disabled, so the process
+    // operation counts the consumed message
+    Attributes processAttributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, "process")
+            .put(MESSAGING_SYSTEM, "jms")
+            .put(MESSAGING_DESTINATION_NAME, "SpringListenerJms2")
+            .put(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription")
+            .build();
+    assertCounter(
+        testing,
+        "io.opentelemetry.spring-jms-2.0",
+        "messaging.client.consumed.messages",
+        1,
+        processAttributes);
   }
 
   @TestConfiguration

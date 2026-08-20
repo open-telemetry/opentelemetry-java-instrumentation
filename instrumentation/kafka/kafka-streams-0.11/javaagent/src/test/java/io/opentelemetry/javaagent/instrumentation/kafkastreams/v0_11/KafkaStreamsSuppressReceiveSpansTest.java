@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -147,6 +148,15 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                                   "test",
                                   val -> val.startsWith("consumer"),
                                   equalTo(longKey("testing"), 123)))));
+      assertProcessMetricsWithConsumedMessages(
+          testing,
+          "io.opentelemetry.kafka-streams-0.11",
+          STREAM_PENDING,
+          testLatestDeps() ? "test-application" : null,
+          "0",
+          1,
+          1,
+          null);
       return;
     }
 
@@ -260,6 +270,15 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                       .hasParent(trace.getSpan(2))
                       .hasAttributesSatisfyingExactly(assertions);
                 }));
+    assertProcessMetricsWithConsumedMessages(
+        testing,
+        "io.opentelemetry.kafka-streams-0.11",
+        STREAM_PENDING,
+        testLatestDeps() ? "test-application" : null,
+        "0",
+        1,
+        1,
+        null);
   }
 
   private static List<AttributeAssertion> producerAttributes(

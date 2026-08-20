@@ -16,6 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContextHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -55,11 +56,17 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
   public static class MessageListenerAdvice {
 
     public static class AdviceScope {
+      private final Instrumenter<MessageWithDestination, Void> instrumenter;
       private final MessageWithDestination request;
       private final Context context;
       private final Scope scope;
 
-      private AdviceScope(MessageWithDestination request, Context context, Scope scope) {
+      private AdviceScope(
+          Instrumenter<MessageWithDestination, Void> instrumenter,
+          MessageWithDestination request,
+          Context context,
+          Scope scope) {
+        this.instrumenter = instrumenter;
         this.request = request;
         this.context = context;
         this.scope = scope;
@@ -79,16 +86,18 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
             MessageWithDestination.create(
                 JavaxMessageAdapter.create(message), null, JmsSubscriptionNames.get(message));
 
-        if (!listenerInstrumenter().shouldStart(parentContext, request)) {
+        Instrumenter<MessageWithDestination, Void> instrumenter =
+            listenerInstrumenter(request.message().wasReceiveTelemetryRecorded());
+        if (!instrumenter.shouldStart(parentContext, request)) {
           return null;
         }
-        Context context = listenerInstrumenter().start(parentContext, request);
-        return new AdviceScope(request, context, context.makeCurrent());
+        Context context = instrumenter.start(parentContext, request);
+        return new AdviceScope(instrumenter, request, context, context.makeCurrent());
       }
 
       public void exit(@Nullable Throwable throwable) {
         scope.close();
-        listenerInstrumenter().end(context, request, null, throwable);
+        instrumenter.end(context, request, null, throwable);
       }
     }
 
