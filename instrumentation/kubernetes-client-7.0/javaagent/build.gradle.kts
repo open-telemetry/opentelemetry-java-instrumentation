@@ -68,15 +68,25 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.kubernetes-client.experimental-span-attributes=true")
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+        jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+      }
+    }
+
+  // client-java-api 22.0.0+ requires Java 11+
+  if (testJavaVersion.isJava8) {
+    named<Test>("version22TestStableSemconv") {
+      enabled = false
+    }
   }
 
   check {
-    dependsOn(testExperimental, testStableSemconv)
+    dependsOn(testExperimental, stableSemconvSuites)
   }
 }

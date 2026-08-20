@@ -40,7 +40,10 @@ Database, code, and service-peer domains do not need a `testBothSemconv` task â€
 `testStableSemconv` (and the default `test` task for the legacy/unset mode).
 
 See [gradle-conventions.md](gradle-conventions.md) for `testClassesDirs`, `classpath`,
-`collectMetadata`, `metadataConfig`, and `check` wiring requirements.
+`collectMetadata`, `metadataConfig`, and `check` wiring requirements. In a module that also
+registers custom `JvmTestSuite`s, derive one task per suite from
+`testing.suites.withType(JvmTestSuite::class)` rather than binding to `sourceSets.test`, so the
+custom suites run under the opt-in too.
 
 Database domain example (stable-only task):
 

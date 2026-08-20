@@ -192,6 +192,48 @@ check {
 }
 ```
 
+### Variant tasks in modules with custom `JvmTestSuite`s
+
+`testing.suites` includes the built-in `test` suite alongside any suite the module registers
+with `register<JvmTestSuite>(...)`. A variant task bound to `sourceSets.test` therefore covers
+only the default source set, and the custom suites never run under that variant's
+configuration — a silent gap, because the suites themselves still run in their default mode.
+
+When a module registers custom `JvmTestSuite`s **and** declares variant test tasks (semconv
+stability, experimental attributes, and so on), derive one task per suite and make `check`
+depend on the derived list:
+
+```kotlin
+val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+  .map { suite ->
+    register<Test>("${suite.name}StableSemconv") {
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
+
+      jvmArgs("-Dotel.semconv-stability.opt-in=database")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    }
+  }
+
+check {
+  dependsOn(testing.suites, stableSemconvSuites)
+}
+```
+
+The map produces `testStableSemconv` for the built-in suite, so the conventional task name is
+preserved. Declare a separate map per variant when a module has more than one — for example
+`${suite.name}StableSemconv` and `${suite.name}BothSemconv` for RPC modules.
+
+Points to watch:
+
+- The `testing { suites { … } }` block must appear **before** the `tasks { }` block that maps
+  over it. `.map` realizes the container, so suites registered afterwards are silently missed.
+- A suite whose test task is conditionally disabled needs the same condition on its derived
+  task, applied with a `named(...)` block after the map.
+- Keep a variant task bound to a single source set when it is deliberately narrow — one bound
+  to a specific suite, or narrowed with `includeTestsMatching(...)`. Fanning such a task across
+  every suite fails the build, because Gradle fails a `Test` task whose filter matches nothing.
+
 ## `testcontainersBuildService` for Testcontainers Tests
 
 The convention plugin (`otel.java-conventions`) registers a shared build service called
