@@ -151,9 +151,14 @@
   execution attributes.
   ([#19629](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19629))
 - Expand the upcoming 3.0 database semantic conventions behind
-  `otel.semconv-stability.opt-in=database`, including operation names, namespaces, and operation
-  parameters for Couchbase, Redis clients, and Elasticsearch.
-  ([#19665](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19665),
+  `otel.semconv-stability.opt-in=database`, including operation names, namespaces, collection names,
+  operation parameters, batch telemetry, and error types for Couchbase, Redis clients, Elasticsearch,
+  R2DBC, JDBC, ClickHouse, MongoDB, and HBase.
+  ([#19616](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19616),
+  [#19623](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19623),
+  [#19664](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19664),
+  [#19665](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19665),
+  [#19668](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19668),
   [#19670](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19670),
   [#19704](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19704),
   [#19705](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19705),
@@ -232,9 +237,6 @@
   ([#19571](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19571))
 - Preserve the configured database name's original case in `db.namespace` for R2DBC spans.
   ([#19615](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19615))
-- Preserve legacy R2DBC batch attributes when stable and legacy database semantic conventions are
-  emitted together with `otel.semconv-stability.opt-in=database/dup`.
-  ([#19616](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19616))
 - Capture spans for explicit prepared queries in Vert.x SQL client so `PreparedStatement.query()`
   execution keeps the correct `db.system` and connection options.
   ([#19619](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19619))
@@ -246,20 +248,12 @@
 - Clear JDBC batch telemetry state after `executeBatch()` and `executeLargeBatch()` so subsequent
   batch spans no longer report stale batch contents.
   ([#19622](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19622))
-- Treat zero database error codes as unavailable so `error.type` falls back to the exception class
-  instead of `0` for JDBC and ClickHouse failures.
-  ([#19623](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19623))
 - Keep `server.address` and `server.port` for failed Cassandra 3 operations by extracting the
   coordinator from `CoordinatorException`.
   ([#19627](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19627))
 - SQL query text is now sanitized with `db.system.name`, so double-quoted identifiers stay intact
   for databases that treat them as identifiers.
   ([#19632](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19632))
-- MongoDB client-side errors now fall back to the exception class name instead of emitting negative
-  `error.type` values.
-  ([#19664](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19664))
-- Fix HBase `db.collection.name` so it no longer includes the namespace prefix.
-  ([#19668](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19668))
 - Fix AWS Lambda `RequestHandler` instrumentation so `void`-returning `handleRequest` methods are
   handled correctly.
   ([#19714](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19714))
