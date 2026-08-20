@@ -21,26 +21,25 @@
   ([#19612](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19612))
 ### 🚫 Deprecations
 
-- Deprecate configuring span suppression with the
-  `otel.instrumentation.experimental.span-suppression-strategy` system property in favor of
-  `Experimental.setSpanSuppressionStrategy(...)`; the Java agent still bridges the property through
-  declarative config.
+- Deprecate the `otel.instrumentation.experimental.span-suppression-strategy` system property for
+  library instrumentation in favor of `Experimental.setSpanSuppressionStrategy(...)`. The Java
+  agent continues to support the property through its declarative config bridge.
   ([#19180](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19180))
-- Deprecate the legacy `MessageOperation`-based messaging helpers and
+- Deprecate the `MessageOperation`-based messaging helpers and
   `MessagingProducerMetrics.get()` / `MessagingConsumerMetrics.get()` in favor of
   `MessagingOperationType` and `getForOperationType()`.
   ([#19357](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19357))
 - Deprecate the `opentelemetry-zipkin-spring-boot-starter` artifact and Zipkin exporter
-  configuration; use `opentelemetry-spring-boot-starter` with the OTLP exporter instead.
+  configuration in favor of `opentelemetry-spring-boot-starter` with the OTLP exporter.
   ([#19400](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19400))
 - Deprecate `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)` in the
   Micrometer 1.5 library in favor of
   `io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder, boolean)`.
   ([#19404](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19404))
 - Deprecate the gRPC `capture-metadata.client.request` and `capture-metadata.server.request`
-  configuration properties and `GrpcTelemetryBuilder` captured request metadata methods in favor of
-  `otel.instrumentation.grpc.client.request-metadata.included`/`excluded` and
-  `otel.instrumentation.grpc.server.request-metadata.included`/`excluded`.
+  configuration properties and the `GrpcTelemetryBuilder` captured request metadata methods in
+  favor of the `otel.instrumentation.grpc.client.request-metadata.{included,excluded}` and
+  `otel.instrumentation.grpc.server.request-metadata.{included,excluded}` selectors.
   ([#19494](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19494))
 - Deprecate `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` and
   `Experimental#setPreferJfrMetrics(RuntimeTelemetryBuilder, boolean)` in favor of
@@ -49,17 +48,17 @@
   ([#19495](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19495))
 - Deprecate `otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes` in favor of
   the `otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.{included,excluded}`
-  selector.
+  selectors.
   ([#19519](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19519))
 - Deprecate the Logback appender `experimental.capture-mdc-attributes` configuration property and
-  `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of the new
+  `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of
   `experimental.mdc-attributes.included` and `experimental.mdc-attributes.excluded` selectors, which
   are also available in `logback.xml` as `mdcAttributesIncluded` and `mdcAttributesExcluded` and
   programmatically as `OpenTelemetryAppender#setMdcAttributes(IncludeExclude)`.
   ([#19520](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19520))
 - Deprecate the Log4j appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender.Builder#setCaptureContextDataAttributes(String)` in favor of
-  include/exclude context data selectors and
+  the include/exclude context data selectors and
   `OpenTelemetryAppender.Builder#setContextDataAttributes(IncludeExclude)`.
   ([#19521](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19521))
 - Deprecate `otel.instrumentation.servlet.experimental.capture-request-parameters` and
@@ -72,10 +71,9 @@
   `otel.instrumentation.messaging.experimental.headers.included` /
   `otel.instrumentation.messaging.experimental.headers.excluded` and `setHeaders(IncludeExclude)`.
   ([#19523](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19523))
-- Rename the declarative config keys for `otel.semconv-stability.opt-in` and
-  `otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters` to
-  `general.stability_opt_in_list` and `general.sanitization.url.sensitive_query_parameters`, while
-  keeping the old names working.
+- Deprecate the previous declarative config keys for `otel.semconv-stability.opt-in` and
+  `otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters` in favor of
+  `general.stability_opt_in_list` and `general.sanitization.url.sensitive_query_parameters`.
   ([#19561](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19561))
 - Deprecate the `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods on
   `HttpClientAttributesExtractorBuilder` and `HttpServerAttributesExtractorBuilder` in favor of
@@ -84,11 +82,11 @@
   ([#19598](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19598))
 - Deprecate the Log4j appender `experimental.capture-map-message-attributes` configuration property
   and `OpenTelemetryAppender.Builder#setCaptureMapMessageAttributes(boolean)` in favor of
-  include/exclude `MapMessage` attribute selectors and
+  the include/exclude `MapMessage` attribute selectors and
   `OpenTelemetryAppender.Builder#setMapMessageAttributes(IncludeExclude)`.
   ([#19599](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19599))
 - Deprecate the Logback appender `experimental.capture-key-value-pair-attributes` configuration
-  property and `OpenTelemetryAppender#setCaptureKeyValuePairAttributes(boolean)` in favor of the new
+  property and `OpenTelemetryAppender#setCaptureKeyValuePairAttributes(boolean)` in favor of
   `experimental.key-value-pair-attributes.included` and
   `experimental.key-value-pair-attributes.excluded` selectors, which are also available in
   `logback.xml` as `keyValuePairAttributesIncluded` and `keyValuePairAttributesExcluded` and
@@ -100,11 +98,11 @@
   favor of `setRequestHeaders(IncludeExclude)` and `setResponseHeaders(IncludeExclude)`, which
   select HTTP headers by glob pattern instead of by exact name only.
   ([#19601](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19601))
-- Deprecate `setCapturedRequestHeaders` and `setCapturedResponseHeaders` on the Apache HttpClient
-  and Helidon telemetry builders in favor of `setRequestHeaders(IncludeExclude)` and
+- Deprecate the `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods on the Apache
+  HttpClient and Helidon telemetry builders in favor of `setRequestHeaders(IncludeExclude)` and
   `setResponseHeaders(IncludeExclude)` glob selectors.
   ([#19602](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19602))
-- Deprecate `setCapturedRequestHeaders` and `setCapturedResponseHeaders` on
+- Deprecate the `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods on
   `JettyClientTelemetryBuilder` (Jetty HTTP client 9.2 and 12.0), `ArmeriaClientTelemetryBuilder`
   and `ArmeriaServerTelemetryBuilder` in favor of `setRequestHeaders(IncludeExclude)` and
   `setResponseHeaders(IncludeExclude)`, which select HTTP headers by glob pattern instead of by
@@ -117,7 +115,7 @@
   exact name only.
   ([#19604](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19604))
 - Deprecate the Logback appender `experimental.capture-logger-context-attributes` configuration
-  property and `OpenTelemetryAppender#setCaptureLoggerContext(boolean)` in favor of the new
+  property and `OpenTelemetryAppender#setCaptureLoggerContext(boolean)` in favor of
   `experimental.logger-context-attributes.included` and
   `experimental.logger-context-attributes.excluded` selectors, which are also available in
   `logback.xml` as `loggerContextAttributesIncluded` and `loggerContextAttributesExcluded` and
@@ -130,21 +128,21 @@
   exact name only.
   ([#19606](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19606))
 - Deprecate the `setCapturedRequestHeaders` and `setCapturedResponseHeaders` methods on the Spring
-  Web, Spring WebFlux, and Spring Web MVC telemetry builders in favor of
+  Web, Spring WebFlux and Spring Web MVC telemetry builders in favor of
   `setRequestHeaders(IncludeExclude)` and `setResponseHeaders(IncludeExclude)`, which match header
   names by glob pattern instead of exact name only.
   ([#19607](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19607))
 - Deprecate the Ktor `capturedRequestHeaders` and `capturedResponseHeaders` configuration functions
   in the `KtorClientTelemetry` and `KtorServerTelemetry` plugin configuration blocks (Ktor 2.0 and
   3.0) and the `setCapturedRequestHeaders` and `setCapturedResponseHeaders` functions on the Ktor
-  1.0 `KtorServerTelemetry` configuration, in favor of `requestHeaders(IncludeExclude)` /
-  `responseHeaders(IncludeExclude)` and `setRequestHeaders(IncludeExclude)` /
+  1.0 `KtorServerTelemetry` configuration in favor of `requestHeaders(IncludeExclude)` and
+  `responseHeaders(IncludeExclude)`, and `setRequestHeaders(IncludeExclude)` and
   `setResponseHeaders(IncludeExclude)`, which select HTTP headers by glob pattern instead of by
   exact name only.
   ([#19608](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19608))
 - Deprecate the Logback appender `experimental.capture-logstash-marker-attributes` configuration
-  property and `OpenTelemetryAppender#setCaptureLogstashMarkerAttributes(boolean)` in favor of the
-  new `experimental.logstash-marker-attributes.included` and
+  property and `OpenTelemetryAppender#setCaptureLogstashMarkerAttributes(boolean)` in favor of
+  `experimental.logstash-marker-attributes.included` and
   `experimental.logstash-marker-attributes.excluded` selectors, which are also available in
   `logback.xml` as `logstashMarkerAttributesIncluded` and `logstashMarkerAttributesExcluded` and
   programmatically as `OpenTelemetryAppender#setLogstashMarkerAttributes(IncludeExclude)`. The
@@ -152,7 +150,7 @@
   ([#19609](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19609))
 - Deprecate the Logback appender `experimental.capture-logstash-structured-arguments` configuration
   property and `OpenTelemetryAppender#setCaptureLogstashStructuredArguments(boolean)` in favor of
-  the new `experimental.logstash-structured-argument-attributes.included` and
+  `experimental.logstash-structured-argument-attributes.included` and
   `experimental.logstash-structured-argument-attributes.excluded` selectors, which are also
   available in `logback.xml` as `logstashStructuredArgumentAttributesIncluded` and
   `logstashStructuredArgumentAttributesExcluded` and programmatically as
