@@ -15,8 +15,6 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.Collection;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -25,6 +23,8 @@ import org.redisson.Redisson;
 import org.redisson.client.codec.StringCodec;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
+import org.redisson.connection.ConnectionManager;
+import org.redisson.connection.MasterSlaveEntry;
 import org.testcontainers.containers.GenericContainer;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -253,30 +253,19 @@ public abstract class AbstractRedissonConnectionPoolMetricsTest {
                                                         subscriptionPool))))));
   }
 
-  protected static Object getMasterSlaveEntry(Redisson redisson)
+  protected static MasterSlaveEntry getMasterSlaveEntry(Redisson redisson)
       throws ReflectiveOperationException {
     Field connectionManagerField = Redisson.class.getDeclaredField("connectionManager");
     connectionManagerField.setAccessible(true);
-    Object connectionManager = connectionManagerField.get(redisson);
-    Method getEntrySet = connectionManager.getClass().getMethod("getEntrySet");
-    getEntrySet.setAccessible(true);
-    Collection<?> entries = (Collection<?>) getEntrySet.invoke(connectionManager);
-    return entries.iterator().next();
+    ConnectionManager connectionManager = (ConnectionManager) connectionManagerField.get(redisson);
+    return connectionManager.getEntrySet().iterator().next();
   }
 
   protected static Object getMasterConnectionsEntry(Object masterSlaveEntry)
       throws ReflectiveOperationException {
-    Class<?> type = masterSlaveEntry.getClass();
-    while (type != null) {
-      try {
-        Field masterEntryField = type.getDeclaredField("masterEntry");
-        masterEntryField.setAccessible(true);
-        return masterEntryField.get(masterSlaveEntry);
-      } catch (NoSuchFieldException ignored) {
-        type = type.getSuperclass();
-      }
-    }
-    throw new NoSuchFieldException("masterEntry");
+    Field masterEntryField = MasterSlaveEntry.class.getDeclaredField("masterEntry");
+    masterEntryField.setAccessible(true);
+    return masterEntryField.get(masterSlaveEntry);
   }
 
   private void assertMetricNotEmitted(String metricName) {

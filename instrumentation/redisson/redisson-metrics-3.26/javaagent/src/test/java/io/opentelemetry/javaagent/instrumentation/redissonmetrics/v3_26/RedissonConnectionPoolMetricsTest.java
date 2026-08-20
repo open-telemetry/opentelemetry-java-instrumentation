@@ -28,7 +28,7 @@ class RedissonConnectionPoolMetricsTest extends AbstractRedissonConnectionPoolMe
   protected void assertDynamicPoolMetrics(
       Redisson redisson, String regularPool, String subscriptionPool)
       throws ReflectiveOperationException {
-    MasterSlaveEntry entry = (MasterSlaveEntry) getMasterSlaveEntry(redisson);
+    MasterSlaveEntry entry = getMasterSlaveEntry(redisson);
     ClientConnectionsEntry masterEntry = (ClientConnectionsEntry) getMasterConnectionsEntry(entry);
     ConnectionsHolder<RedisConnection> holder = masterEntry.getConnectionsHolder();
     AsyncSemaphore semaphore = holder.getFreeConnectionsCounter();
