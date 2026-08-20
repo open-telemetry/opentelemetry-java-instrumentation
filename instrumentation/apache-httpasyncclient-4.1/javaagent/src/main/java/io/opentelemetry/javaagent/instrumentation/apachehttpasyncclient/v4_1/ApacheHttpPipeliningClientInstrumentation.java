@@ -15,11 +15,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.IOException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -101,8 +99,7 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
           return new Object[] {requestProducers, responseConsumers, futureCallback};
         }
 
-        PipeliningRequestState state =
-            new PipeliningRequestState(parentContext, target, requestProducer);
+        PipeliningRequestState state = new PipeliningRequestState(parentContext, target);
         requestStates.add(state);
         modifiedRequestProducers.add(new DelegatingRequestProducer(requestProducer, state));
         modifiedResponseConsumers.add(new DelegatingResponseConsumer<>(responseConsumer, state));
@@ -114,28 +111,12 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
         new ContextPropagatingFutureCallback<>(parentContext, futureCallback, requestStates)
       };
     }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.Enter @Nullable Object[] enterResult, @Advice.Thrown @Nullable Throwable error) {
-      if (error == null || enterResult == null) {
-        return;
-      }
-
-      Object callback = enterResult[2];
-      if (callback instanceof ContextPropagatingFutureCallback) {
-        ((ContextPropagatingFutureCallback<?>) callback).endRequestStates(error);
-      }
-    }
   }
 
   public static class PipeliningRequestState {
     private final Context parentContext;
     @Nullable private final HttpHost target;
-    private final HttpAsyncRequestProducer requestProducer;
-    private final Instant startTime;
 
-    // True after Apache invokes the wrapped producer, even if it returns null or throws.
     private boolean started;
     private boolean ended;
 
@@ -143,25 +124,16 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
     @Nullable private ApacheHttpClientRequest request;
     @Nullable private HttpResponse response;
 
-    public PipeliningRequestState(
-        Context parentContext,
-        @Nullable HttpHost target,
-        HttpAsyncRequestProducer requestProducer) {
+    public PipeliningRequestState(Context parentContext, @Nullable HttpHost target) {
       this.parentContext = parentContext;
       this.target = target;
-      this.requestProducer = requestProducer;
-      startTime = Instant.now();
     }
 
-    public synchronized void start(@Nullable HttpRequest httpRequest) {
+    public synchronized void start(HttpRequest httpRequest) {
       if (started || ended) {
         return;
       }
       started = true;
-
-      if (httpRequest == null) {
-        return;
-      }
 
       ApacheHttpClientRequest request = new ApacheHttpClientRequest(target, httpRequest);
       if (instrumenter().shouldStart(parentContext, request)) {
@@ -184,7 +156,6 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
       Context context;
       ApacheHttpClientRequest request;
       HttpResponse response;
-      boolean started;
 
       synchronized (this) {
         if (ended) {
@@ -194,30 +165,10 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
         context = this.context;
         request = this.request;
         response = this.response;
-        started = this.started;
       }
 
       if (context != null && request != null) {
         instrumenter().end(context, request, response, error);
-      } else if (!started && error != null) {
-        startAndEnd(error);
-      }
-    }
-
-    private void startAndEnd(Throwable error) {
-      try {
-        HttpRequest httpRequest = requestProducer.generateRequest();
-        if (httpRequest == null) {
-          return;
-        }
-
-        ApacheHttpClientRequest request = new ApacheHttpClientRequest(target, httpRequest);
-        if (instrumenter().shouldStart(parentContext, request)) {
-          InstrumenterUtil.startAndEnd(
-              instrumenter(), parentContext, request, null, error, startTime, Instant.now());
-        }
-      } catch (Throwable ignored) {
-        // Instrumentation must not replace the original pipeline failure.
       }
     }
   }
@@ -239,13 +190,11 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public HttpRequest generateRequest() throws IOException, HttpException {
-      HttpRequest request = null;
-      try {
-        request = delegate.generateRequest();
-        return request;
-      } finally {
+      HttpRequest request = delegate.generateRequest();
+      if (request != null) {
         state.start(request);
       }
+      return request;
     }
 
     @Override
@@ -401,7 +350,7 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
       }
     }
 
-    public void endRequestStates(@Nullable Throwable error) {
+    private void endRequestStates(@Nullable Throwable error) {
       try {
         for (PipeliningRequestState state : requestStates) {
           state.end(error);
