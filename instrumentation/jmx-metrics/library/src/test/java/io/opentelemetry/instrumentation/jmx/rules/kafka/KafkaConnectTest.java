@@ -149,8 +149,6 @@ class KafkaConnectTest extends TargetSystemTest {
     copyAgentToTarget(kafkaConnect);
     copyYamlFilesToTarget(kafkaConnect, yamlFiles);
 
-    // TODO : add weaver validation here
-
     startWeaverValidation(
         "kafka-connect.yaml",
         result ->
@@ -198,13 +196,7 @@ class KafkaConnectTest extends TargetSystemTest {
                         "kafka.connect.task.error.record.failure.count",
                         "kafka.connect.task.error.record.skipped.count",
                         "kafka.connect.task.error.retry.count"),
-                    asList(
-                        "kafka.connect.sink.record.lag.max",
-                        "kafka.connect.task.offset.commit.time.average",
-                        "kafka.connect.task.offset.commit.time.max",
-                        "kafka.connect.source.transaction.size.average",
-                        "kafka.connect.source.transaction.size.max",
-                        "kafka.connect.source.transaction.size.min"))
+                    OPTIONAL_APACHE_METRICS)
                 .checkRegisteredAttributes(
                     "kafka.connect.",
                     asList(
