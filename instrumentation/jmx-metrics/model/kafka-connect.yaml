@@ -1,0 +1,669 @@
+groups:
+  - id: attributes.kafka.connect
+    type: attribute_group
+    brief: Kafka Connect attributes
+    attributes:
+      - id: kafka.connect.connector
+        type: string
+        stability: development
+        brief: Kafka Connect connector name
+        examples:
+          - "file-source"
+          - "file-sink"
+      - id: kafka.connect.task.id
+        type: string
+        stability: development
+        brief: Kafka Connect task ID
+        examples:
+          - "0"
+      - id: kafka.connect.worker.connector.startup.result
+        type:
+          members:
+            - id: success
+              value: "success"
+              brief: Connector started successfully
+              stability: development
+            - id: failure
+              value: "failure"
+              brief: Connector start failed
+              stability: development
+        stability: development
+        brief: The result of a connector startup attempt
+        examples:
+          - "success"
+          - "failure"
+      - id: kafka.connect.worker.task.startup.result
+        type:
+          members:
+            - id: success
+              value: "success"
+              brief: Task started successfully
+              stability: development
+            - id: failure
+              value: "failure"
+              brief: Task start failed
+              stability: development
+        stability: development
+        brief: The result of a task startup attempt
+        examples:
+          - "success"
+          - "failure"
+      - id: kafka.connect.worker.connector.task.state
+        type:
+          members:
+            - id: destroyed
+              value: "destroyed"
+              brief: Task is destroyed
+              stability: development
+            - id: failed
+              value: "failed"
+              brief: Task has failed
+              stability: development
+            - id: paused
+              value: "paused"
+              brief: Task is paused
+              stability: development
+            - id: restarting
+              value: "restarting"
+              brief: Task is restarting
+              stability: development
+            - id: running
+              value: "running"
+              brief: Task is running
+              stability: development
+            - id: unassigned
+              value: "unassigned"
+              brief: Task is unassigned
+              stability: development
+        stability: development
+        brief: The state of a connector task on the worker
+        examples:
+          - "running"
+      - id: kafka.connect.protocol.state
+        type:
+          members:
+            - id: eager
+              value: "eager"
+              brief: Eager rebalancing protocol
+              stability: development
+            - id: cooperative
+              value: "cooperative"
+              brief: Cooperative rebalancing protocol
+              stability: development
+            - id: unknown
+              value: "unknown"
+              brief: Unknown protocol
+              stability: development
+        stability: development
+        brief: The Connect rebalancing protocol used by the cluster
+        examples:
+          - "eager"
+          - "cooperative"
+      - id: kafka.connect.worker.rebalance.state
+        type:
+          members:
+            - id: rebalancing
+              value: "rebalancing"
+              brief: Worker is currently rebalancing
+              stability: development
+            - id: idle
+              value: "idle"
+              brief: Worker is not rebalancing
+              stability: development
+            - id: unknown
+              value: "unknown"
+              brief: Unknown rebalance state
+              stability: development
+        stability: development
+        brief: Whether the worker is currently rebalancing
+        examples:
+          - "rebalancing"
+          - "idle"
+      - id: kafka.connect.connector.state
+        type:
+          members:
+            - id: running
+              value: "running"
+              brief: Connector is running
+              stability: development
+            - id: failed
+              value: "failed"
+              brief: Connector has failed
+              stability: development
+            - id: paused
+              value: "paused"
+              brief: Connector is paused
+              stability: development
+            - id: unassigned
+              value: "unassigned"
+              brief: Connector is unassigned
+              stability: development
+            - id: restarting
+              value: "restarting"
+              brief: Connector is restarting
+              stability: development
+            - id: degraded
+              value: "degraded"
+              brief: Connector is degraded (Confluent)
+              stability: development
+            - id: stopped
+              value: "stopped"
+              brief: Connector is stopped
+              stability: development
+            - id: unknown
+              value: "unknown"
+              brief: Connector state is unknown
+              stability: development
+        stability: development
+        brief: The lifecycle state of the connector
+        examples:
+          - "running"
+      - id: kafka.connect.task.state
+        type:
+          members:
+            - id: running
+              value: "running"
+              brief: Task is running
+              stability: development
+            - id: failed
+              value: "failed"
+              brief: Task has failed
+              stability: development
+            - id: paused
+              value: "paused"
+              brief: Task is paused
+              stability: development
+            - id: unassigned
+              value: "unassigned"
+              brief: Task is unassigned
+              stability: development
+            - id: restarting
+              value: "restarting"
+              brief: Task is restarting
+              stability: development
+            - id: destroyed
+              value: "destroyed"
+              brief: Task is destroyed (Confluent)
+              stability: development
+            - id: unknown
+              value: "unknown"
+              brief: Task state is unknown
+              stability: development
+        stability: development
+        brief: The state of the connector task
+        examples:
+          - "running"
+
+  - id: metric.kafka.connect.worker.connector.count
+    metric_name: kafka.connect.worker.connector.count
+    type: metric
+    stability: development
+    brief: The number of connectors run in this worker.
+    unit: "{connector}"
+    instrument: updowncounter
+
+  - id: metric.kafka.connect.worker.connector.startup.count
+    metric_name: kafka.connect.worker.connector.startup.count
+    type: metric
+    stability: development
+    brief: The number of connector starts for this worker.
+    unit: "{startup}"
+    instrument: counter
+    attributes:
+      - ref: kafka.connect.worker.connector.startup.result
+
+  - id: metric.kafka.connect.worker.task.count
+    metric_name: kafka.connect.worker.task.count
+    type: metric
+    stability: development
+    brief: The number of currently running tasks for this worker.
+    unit: "{task}"
+    instrument: updowncounter
+
+  - id: metric.kafka.connect.worker.task.startup.count
+    metric_name: kafka.connect.worker.task.startup.count
+    type: metric
+    stability: development
+    brief: The number of task starts for this worker.
+    unit: "{startup}"
+    instrument: counter
+    attributes:
+      - ref: kafka.connect.worker.task.startup.result
+
+  - id: metric.kafka.connect.worker.connector.task.count
+    metric_name: kafka.connect.worker.connector.task.count
+    type: metric
+    stability: development
+    brief: The number of tasks of the connector on the worker by state.
+    unit: "{task}"
+    instrument: updowncounter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.worker.connector.task.state
+
+  - id: metric.kafka.connect.worker.rebalance.completed.count
+    metric_name: kafka.connect.worker.rebalance.completed.count
+    type: metric
+    stability: development
+    brief: The number of rebalances completed by this worker.
+    unit: "{rebalance}"
+    instrument: counter
+
+  - id: metric.kafka.connect.worker.rebalance.protocol
+    metric_name: kafka.connect.worker.rebalance.protocol
+    type: metric
+    stability: development
+    brief: The Connect protocol used by this cluster.
+    unit: "1"
+    instrument: updowncounter
+    attributes:
+      - ref: kafka.connect.protocol.state
+
+  - id: metric.kafka.connect.worker.rebalance.epoch
+    metric_name: kafka.connect.worker.rebalance.epoch
+    type: metric
+    stability: development
+    brief: The epoch or generation number of this worker.
+    unit: "{epoch}"
+    instrument: counter
+
+  - id: metric.kafka.connect.worker.rebalance.time.average
+    metric_name: kafka.connect.worker.rebalance.time.average
+    type: metric
+    stability: development
+    brief: The average time in seconds spent by this worker to rebalance.
+    unit: s
+    instrument: gauge
+
+  - id: metric.kafka.connect.worker.rebalance.time.max
+    metric_name: kafka.connect.worker.rebalance.time.max
+    type: metric
+    stability: development
+    brief: The maximum time in seconds spent by this worker to rebalance.
+    unit: s
+    instrument: gauge
+
+  - id: metric.kafka.connect.worker.rebalance.active
+    metric_name: kafka.connect.worker.rebalance.active
+    type: metric
+    stability: development
+    brief: Whether this worker is currently rebalancing.
+    unit: "1"
+    instrument: updowncounter
+    attributes:
+      - ref: kafka.connect.worker.rebalance.state
+
+  - id: metric.kafka.connect.connector.status
+    metric_name: kafka.connect.connector.status
+    type: metric
+    stability: development
+    brief: Connector lifecycle state indicator (1 when the state matches the attribute value). Supports Apache and Confluent status values.
+    unit: "1"
+    instrument: updowncounter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.connector.state
+
+  - id: metric.kafka.connect.task.batch.size.average
+    metric_name: kafka.connect.task.batch.size.average
+    type: metric
+    stability: development
+    brief: The average number of records in the batches the task has processed so far.
+    unit: "{record}"
+    instrument: gauge
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.task.batch.size.max
+    metric_name: kafka.connect.task.batch.size.max
+    type: metric
+    stability: development
+    brief: The number of records in the largest batch the task has processed so far.
+    unit: "{record}"
+    instrument: gauge
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.task.offset.commit.time.average
+    metric_name: kafka.connect.task.offset.commit.time.average
+    type: metric
+    stability: development
+    brief: The average time in seconds taken by this task to commit offsets.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.task.offset.commit.failure.ratio
+    metric_name: kafka.connect.task.offset.commit.failure.ratio
+    type: metric
+    stability: development
+    brief: The average ratio of this task's offset commit attempts that failed.
+    unit: "1"
+    instrument: gauge
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.task.offset.commit.time.max
+    metric_name: kafka.connect.task.offset.commit.time.max
+    type: metric
+    stability: development
+    brief: The maximum time in seconds taken by this task to commit offsets.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.task.running.ratio
+    metric_name: kafka.connect.task.running.ratio
+    type: metric
+    stability: development
+    brief: The fraction of time this task has spent in the running state.
+    unit: "1"
+    instrument: gauge
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.task.status
+    metric_name: kafka.connect.task.status
+    type: metric
+    stability: development
+    brief: The status of the connector task. Supports Apache (unassigned, running, paused, failed, restarting) and Confluent (unassigned, running, paused, failed, destroyed) values.
+    unit: "1"
+    instrument: updowncounter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+      - ref: kafka.connect.task.state
+
+  - id: metric.kafka.connect.sink.offset.commit.completed.count
+    metric_name: kafka.connect.sink.offset.commit.completed.count
+    type: metric
+    stability: development
+    brief: The number of offset commit completions that were completed successfully.
+    unit: "{commit}"
+    instrument: counter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.sink.offset.commit.seq
+    metric_name: kafka.connect.sink.offset.commit.seq
+    type: metric
+    stability: development
+    brief: The current sequence number for offset commits.
+    unit: "{sequence}"
+    instrument: counter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.sink.offset.commit.skipped.count
+    metric_name: kafka.connect.sink.offset.commit.skipped.count
+    type: metric
+    stability: development
+    brief: The number of offset commit completions that were received too late and skipped/ignored.
+    unit: "{commit}"
+    instrument: counter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.sink.partition.count
+    metric_name: kafka.connect.sink.partition.count
+    type: metric
+    stability: development
+    brief: The number of topic partitions assigned to this task belonging to the named sink connector in this worker.
+    unit: "{partition}"
+    instrument: updowncounter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.sink.put.batch.time.average
+    metric_name: kafka.connect.sink.put.batch.time.average
+    type: metric
+    stability: development
+    brief: The average time taken by this task to put a batch of sinks records.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.sink.put.batch.time.max
+    metric_name: kafka.connect.sink.put.batch.time.max
+    type: metric
+    stability: development
+    brief: The maximum time taken by this task to put a batch of sinks records.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.sink.record.active.count
+    metric_name: kafka.connect.sink.record.active.count
+    type: metric
+    stability: development
+    brief: The number of records that have been read from Kafka but not yet completely committed/flushed/acknowledged by the sink task.
+    unit: "{record}"
+    instrument: updowncounter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.sink.record.lag.max
+    metric_name: kafka.connect.sink.record.lag.max
+    type: metric
+    stability: development
+    brief: The maximum lag in terms of number of records that the sink task is behind the consumer's position for any topic partitions.
+    unit: "{record}"
+    instrument: gauge
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.sink.record.read.count
+    metric_name: kafka.connect.sink.record.read.count
+    type: metric
+    stability: development
+    brief: The count number of records read from Kafka by this task belonging to the named sink connector in this worker, since the task was last restarted.
+    unit: "{record}"
+    instrument: counter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.sink.record.send.count
+    metric_name: kafka.connect.sink.record.send.count
+    type: metric
+    stability: development
+    brief: The number of records output from the transformations and sent/put to this task belonging to the named sink connector in this worker, since the task was last restarted.
+    unit: "{record}"
+    instrument: counter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.source.poll.batch.time.average
+    metric_name: kafka.connect.source.poll.batch.time.average
+    type: metric
+    stability: development
+    brief: The average time in seconds taken by this task to poll for a batch of source records.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.source.poll.batch.time.max
+    metric_name: kafka.connect.source.poll.batch.time.max
+    type: metric
+    stability: development
+    brief: The maximum time in seconds taken by this task to poll for a batch of source records.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.source.record.active.count
+    metric_name: kafka.connect.source.record.active.count
+    type: metric
+    stability: development
+    brief: The number of records that have been produced by this task but not yet completely written to Kafka.
+    unit: "{record}"
+    instrument: updowncounter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.source.record.poll.count
+    metric_name: kafka.connect.source.record.poll.count
+    type: metric
+    stability: development
+    brief: The number of records produced/polled (before transformation) by this task belonging to the named source connector in this worker.
+    unit: "{record}"
+    instrument: counter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.source.record.write.count
+    metric_name: kafka.connect.source.record.write.count
+    type: metric
+    stability: development
+    brief: The number of records output written to Kafka for this task belonging to the named source connector in this worker, since the task was last restarted. This is after transformations are applied, and excludes any records filtered out by the transformations.
+    unit: "{record}"
+    instrument: counter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.source.transaction.size.average
+    metric_name: kafka.connect.source.transaction.size.average
+    type: metric
+    stability: development
+    brief: The average number of records in the transactions the task has committed so far.
+    unit: "{record}"
+    instrument: gauge
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.source.transaction.size.max
+    metric_name: kafka.connect.source.transaction.size.max
+    type: metric
+    stability: development
+    brief: The number of records in the largest transaction the task has committed so far.
+    unit: "{record}"
+    instrument: gauge
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.source.transaction.size.min
+    metric_name: kafka.connect.source.transaction.size.min
+    type: metric
+    stability: development
+    brief: The number of records in the smallest transaction the task has committed so far.
+    unit: "{record}"
+    instrument: gauge
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.task.error.deadletterqueue.produce.failure.count
+    metric_name: kafka.connect.task.error.deadletterqueue.produce.failure.count
+    type: metric
+    stability: development
+    brief: The number of failed writes to the dead letter queue.
+    unit: "{failure}"
+    instrument: counter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.task.error.deadletterqueue.produce.request.count
+    metric_name: kafka.connect.task.error.deadletterqueue.produce.request.count
+    type: metric
+    stability: development
+    brief: The number of attempted writes to the dead letter queue.
+    unit: "{request}"
+    instrument: counter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.task.error.last.error.timestamp
+    metric_name: kafka.connect.task.error.last.error.timestamp
+    type: metric
+    stability: development
+    brief: The epoch timestamp when this task last encountered an error.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.task.error.logged.count
+    metric_name: kafka.connect.task.error.logged.count
+    type: metric
+    stability: development
+    brief: The number of errors that were logged.
+    unit: "{error}"
+    instrument: counter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.task.error.record.error.count
+    metric_name: kafka.connect.task.error.record.error.count
+    type: metric
+    stability: development
+    brief: The number of record processing errors in this task.
+    unit: "{record}"
+    instrument: counter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.task.error.record.failure.count
+    metric_name: kafka.connect.task.error.record.failure.count
+    type: metric
+    stability: development
+    brief: The number of record processing failures in this task.
+    unit: "{record}"
+    instrument: counter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.task.error.record.skipped.count
+    metric_name: kafka.connect.task.error.record.skipped.count
+    type: metric
+    stability: development
+    brief: The number of records skipped due to errors.
+    unit: "{record}"
+    instrument: counter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
+
+  - id: metric.kafka.connect.task.error.retry.count
+    metric_name: kafka.connect.task.error.retry.count
+    type: metric
+    stability: development
+    brief: The number of operations retried.
+    unit: "{retry}"
+    instrument: counter
+    attributes:
+      - ref: kafka.connect.connector
+      - ref: kafka.connect.task.id
