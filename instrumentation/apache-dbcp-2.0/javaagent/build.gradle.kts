@@ -17,14 +17,17 @@ dependencies {
   implementation(project(":instrumentation:apache-dbcp-2.0:library"))
   implementation(project(":instrumentation:jdbc:javaagent-common"))
 
+  bootstrap(project(":instrumentation:apache-commons-pool-2.0:bootstrap"))
   bootstrap(project(":instrumentation:jdbc:bootstrap"))
 
   testImplementation(project(":instrumentation:apache-dbcp-2.0:testing"))
+  testInstrumentation(project(":instrumentation:apache-commons-pool-2.0:javaagent"))
 }
 
 tasks {
   withType<Test>().configureEach {
     systemProperty("collectMetadata", otelProps.collectMetadata)
+    jvmArgs("-Dotel.instrumentation.apache-commons-pool.enabled=true")
   }
 
   val testStableSemconv = register<Test>("testStableSemconv") {

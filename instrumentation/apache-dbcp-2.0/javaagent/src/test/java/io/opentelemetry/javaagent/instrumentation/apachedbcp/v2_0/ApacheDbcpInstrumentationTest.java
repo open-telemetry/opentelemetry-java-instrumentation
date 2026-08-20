@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.opentelemetry.instrumentation.apachedbcp.AbstractApacheDbcpInstrumentationTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -16,6 +18,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTest {
+  private static final String COMMONS_POOL_INSTRUMENTATION_NAME =
+      "io.opentelemetry.apache-commons-pool-2.0";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -80,6 +84,22 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
     BasicDataSource dataSource = createDataSource();
 
     assertDataSourceName(dataSource, "apache-dbcp2");
+  }
+
+  @Test
+  void shouldNotReportCommonsPoolMetricsForInternalPool() throws Exception {
+    BasicDataSource dataSource = createDataSource();
+
+    try {
+      dataSource.getConnection().close();
+
+      assertDataSourceMetrics("apache-dbcp2");
+      assertNoCommonsPoolMetrics();
+    } finally {
+      dataSource.close();
+    }
+
+    assertNoMetrics();
   }
 
   @Test
@@ -188,5 +208,16 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
     }
 
     assertNoMetrics();
+  }
+
+  private static void assertNoCommonsPoolMetrics() {
+    assertThat(testing.metrics())
+        .filteredOn(
+            metricData ->
+                metricData
+                    .getInstrumentationScopeInfo()
+                    .getName()
+                    .equals(COMMONS_POOL_INSTRUMENTATION_NAME))
+        .isEmpty();
   }
 }
