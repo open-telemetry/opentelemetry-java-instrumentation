@@ -17,18 +17,17 @@ import java.lang.reflect.Method;
  * org.elasticsearch.action.Action} in 7.0 and 7.2, and {@code org.elasticsearch.action.ActionType}
  * from 7.3 on. Each release removed its predecessor, so there is no type to compile against and the
  * lookup is reflective. Action instances are effectively singletons, so caching the resolved name
- * per action class keeps the cache small and the reflective lookup to once per class.
+ * per action instance keeps the cache small and the reflective lookup to once per action.
  */
 final class ElasticsearchActionNames {
 
-  private static final Cache<Class<?>, String> namesByActionClass = Cache.weak();
+  private static final Cache<Object, String> namesByAction = Cache.weak();
 
   static String wireName(Object action) {
-    Class<?> actionClass = action.getClass();
-    String name = namesByActionClass.get(actionClass);
+    String name = namesByAction.get(action);
     if (name == null) {
-      name = resolve(action, actionClass);
-      namesByActionClass.put(actionClass, name);
+      name = resolve(action, action.getClass());
+      namesByAction.put(action, name);
     }
     return name;
   }
