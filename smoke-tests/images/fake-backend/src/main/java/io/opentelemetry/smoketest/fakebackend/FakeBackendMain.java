@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.module.SimpleSerializers;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.linecorp.armeria.common.HttpData;
 import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.HttpStatus;
@@ -23,6 +24,7 @@ import io.netty.buffer.ByteBufOutputStream;
 import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
+import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import org.curioswitch.common.protobuf.json.MessageMarshaller;
@@ -76,45 +78,42 @@ public class FakeBackendMain {
 
   public static void main(String[] args) {
     RequestsStorage storage = new RequestsStorage();
-    var traceCollector = new FakeTraceCollectorService(storage);
-    var metricsCollector = new FakeMetricsCollectorService(storage);
-    var logsCollector = new FakeLogsCollectorService(storage);
+    var grpcTraceService = new FakeTraceCollectorServiceGrpc(storage);
+    var grpcMetricsService = new FakeMetricsCollectorServiceGrpc(storage);
+    var grpcLogsService = new FakeLogsCollectorServiceGrpc(storage);
+    var httpTraceService = new FakeTraceCollectorServiceHttp(storage);
     var server =
         Server.builder()
             .http(8080)
+            .service("/v1/traces", httpTraceService)
             .service(
-                "/v1/traces", (ctx,req) -> {
+                "/v1/metrics",
+                (ctx, req) -> {
                   return HttpResponse.of(HttpStatus.OK);
-                }
-            )
+                })
             .service(
-                "/v1/metrics", (ctx,req) -> {
+                "/v1/logs",
+                (ctx, req) -> {
                   return HttpResponse.of(HttpStatus.OK);
-                }
-            )
-            .service(
-                "/v1/logs", (ctx,req) -> {
-                  return HttpResponse.of(HttpStatus.OK);
-                }
-            )
+                })
             .service(
                 GrpcService.builder()
-                    .addService(traceCollector)
-                    .addService(metricsCollector)
-                    .addService(logsCollector)
+                    .addService(grpcTraceService)
+                    .addService(grpcMetricsService)
+                    .addService(grpcLogsService)
                     .build())
             .service(
                 "/clear",
                 (ctx, req) -> {
-                  traceCollector.clearRequests();
-                  metricsCollector.clearRequests();
-                  logsCollector.clearRequests();
+                  grpcTraceService.clearRequests();
+                  grpcMetricsService.clearRequests();
+                  grpcLogsService.clearRequests();
                   return HttpResponse.of(HttpStatus.OK);
                 })
             .service(
                 "/get-traces",
                 (ctx, req) -> {
-                  var requests = traceCollector.getRequests();
+                  var requests = grpcTraceService.getRequests();
                   var buf = new ByteBufOutputStream(ctx.alloc().buffer());
                   OBJECT_MAPPER.writeValue((OutputStream) buf, requests);
                   return HttpResponse.of(
@@ -123,7 +122,7 @@ public class FakeBackendMain {
             .service(
                 "/get-metrics",
                 (ctx, req) -> {
-                  var requests = metricsCollector.getRequests();
+                  var requests = grpcMetricsService.getRequests();
                   var buf = new ByteBufOutputStream(ctx.alloc().buffer());
                   OBJECT_MAPPER.writeValue((OutputStream) buf, requests);
                   return HttpResponse.of(
@@ -132,7 +131,7 @@ public class FakeBackendMain {
             .service(
                 "/get-logs",
                 (ctx, req) -> {
-                  var requests = logsCollector.getRequests();
+                  var requests = grpcLogsService.getRequests();
                   var buf = new ByteBufOutputStream(ctx.alloc().buffer());
                   OBJECT_MAPPER.writeValue((OutputStream) buf, requests);
                   return HttpResponse.of(
@@ -144,6 +143,7 @@ public class FakeBackendMain {
     server.start().join();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> server.stop().join()));
   }
+
 
   private FakeBackendMain() {}
 }

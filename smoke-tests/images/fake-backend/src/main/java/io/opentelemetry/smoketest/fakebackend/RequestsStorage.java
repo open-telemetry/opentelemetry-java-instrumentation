@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.smoketest.fakebackend;
 
 import com.google.common.collect.ImmutableList;
@@ -31,7 +36,6 @@ public class RequestsStorage {
 
   public List<ExportTraceServiceRequest> getTraceRequests() {
     return ImmutableList.copyOf(traceExportRequests);
-
   }
 
   public List<ExportMetricsServiceRequest> getMetricsRequests() {

@@ -5,20 +5,17 @@
 
 package io.opentelemetry.smoketest.fakebackend;
 
-import com.google.common.collect.ImmutableList;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest;
 import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceResponse;
 import io.opentelemetry.proto.collector.logs.v1.LogsServiceGrpc;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
 
-public class FakeLogsCollectorService extends LogsServiceGrpc.LogsServiceImplBase {
+public class FakeLogsCollectorServiceGrpc extends LogsServiceGrpc.LogsServiceImplBase {
 
   private final RequestsStorage storage;
 
-  public FakeLogsCollectorService(RequestsStorage storage) {
+  public FakeLogsCollectorServiceGrpc(RequestsStorage storage) {
     this.storage = storage;
   }
 

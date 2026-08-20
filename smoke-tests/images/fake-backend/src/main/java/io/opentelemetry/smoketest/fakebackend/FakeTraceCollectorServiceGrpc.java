@@ -11,12 +11,13 @@ import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceResponse;
 import io.opentelemetry.proto.collector.trace.v1.TraceServiceGrpc;
 import java.util.List;
 
-class FakeTraceCollectorService extends TraceServiceGrpc.TraceServiceImplBase {
+class FakeTraceCollectorServiceGrpc extends TraceServiceGrpc.TraceServiceImplBase {
 
   private final RequestsStorage requestsStorage;
 
-  FakeTraceCollectorService(
-      RequestsStorage requestsStorage) {this.requestsStorage = requestsStorage;}
+  FakeTraceCollectorServiceGrpc(RequestsStorage requestsStorage) {
+    this.requestsStorage = requestsStorage;
+  }
 
   List<ExportTraceServiceRequest> getRequests() {
     return requestsStorage.getTraceRequests();
