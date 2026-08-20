@@ -137,6 +137,31 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
+  void testMessagingHeadersSelectorMapping() {
+    Map<String, String> properties = new HashMap<>();
+    properties.put("otel.instrumentation.messaging.experimental.headers.included", "a,b");
+    properties.put("otel.instrumentation.messaging.experimental.headers.excluded", "c");
+    properties.put("otel.instrumentation.messaging.experimental.capture-headers", "legacy");
+
+    DeclarativeConfigProperties messaging =
+        DeclarativeConfigBridge.createInstrumentationConfig(
+                DefaultConfigProperties.createFromMap(properties))
+            .getInstrumentationConfig()
+            .getStructured("java")
+            .getStructured("common")
+            .getStructured("messaging");
+
+    assertThat(
+            messaging.getStructured("headers/development").getScalarList("included", String.class))
+        .containsExactly("a", "b");
+    assertThat(
+            messaging.getStructured("headers/development").getScalarList("excluded", String.class))
+        .containsExactly("c");
+    assertThat(messaging.getScalarList("capture_headers/development", String.class))
+        .containsExactly("legacy");
+  }
+
+  @Test
   void testCommonDbQuerySanitizationMapping() {
     DeclarativeConfigProperties config =
         createConfig("otel.instrumentation.common.db.query-sanitization.enabled", "false");

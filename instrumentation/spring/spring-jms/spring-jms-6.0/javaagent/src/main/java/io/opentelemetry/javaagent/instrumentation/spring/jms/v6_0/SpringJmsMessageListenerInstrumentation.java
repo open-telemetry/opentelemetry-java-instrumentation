@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0.SpringJmsSingletons.listenerInstrumenter;
@@ -66,9 +67,11 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(Message message) {
         Context parentContext = Context.current();
-        Context receiveContext = JmsReceiveContextHolder.getReceiveContext(parentContext);
-        if (receiveContext != null) {
-          parentContext = receiveContext;
+        if (!emitStableMessagingSemconv()) {
+          Context receiveContext = JmsReceiveContextHolder.getReceiveContext(parentContext);
+          if (receiveContext != null) {
+            parentContext = receiveContext;
+          }
         }
         MessageWithDestination request =
             MessageWithDestination.create(JakartaMessageAdapter.create(message), null);

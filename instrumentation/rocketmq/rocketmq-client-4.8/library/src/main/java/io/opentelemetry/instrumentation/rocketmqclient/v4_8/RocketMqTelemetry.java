@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import java.util.List;
 import org.apache.rocketmq.client.hook.ConsumeMessageHook;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageHook;
@@ -31,14 +31,14 @@ public final class RocketMqTelemetry {
 
   RocketMqTelemetry(
       OpenTelemetry openTelemetry,
-      List<String> capturedHeaders,
+      IncludeExclude headers,
       boolean captureExperimentalSpanAttributes) {
     rocketMqConsumerInstrumenter =
         RocketMqInstrumenterFactory.createConsumerInstrumenter(
-            openTelemetry, capturedHeaders, captureExperimentalSpanAttributes);
+            openTelemetry, headers, captureExperimentalSpanAttributes);
     rocketMqProducerInstrumenter =
         RocketMqInstrumenterFactory.createProducerInstrumenter(
-            openTelemetry, capturedHeaders, captureExperimentalSpanAttributes);
+            openTelemetry, headers, captureExperimentalSpanAttributes);
   }
 
   /**

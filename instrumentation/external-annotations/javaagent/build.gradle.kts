@@ -12,8 +12,6 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  compileOnly(project(":javaagent-tooling"))
-
   testImplementation("com.newrelic.agent.java:newrelic-api:5.14.0")
   testImplementation("io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2") {
     isTransitive = false

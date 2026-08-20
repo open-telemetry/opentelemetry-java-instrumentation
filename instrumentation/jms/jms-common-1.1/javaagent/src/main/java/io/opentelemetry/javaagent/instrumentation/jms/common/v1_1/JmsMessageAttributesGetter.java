@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -103,5 +104,15 @@ final class JmsMessageAttributesGetter
       logger.log(FINE, "Failure getting JMS message header", e);
     }
     return emptyList();
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(MessageWithDestination messageWithDestination) {
+    try {
+      return messageWithDestination.message().getPropertyNames();
+    } catch (Exception e) {
+      logger.log(FINE, "Failure getting JMS message header names", e);
+      return emptyList();
+    }
   }
 }

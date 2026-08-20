@@ -102,8 +102,6 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                           .hasUnit("{message}")
                           .hasDescription(
                               "Number of messages that were delivered to the application.")
-                          .satisfies(
-                              data -> assertThat(data.getLongSumData().getPoints()).hasSize(1))
                           .hasLongSumSatisfying(
                               sum ->
                                   sum.hasPointsSatisfying(

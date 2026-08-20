@@ -12,6 +12,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry;
 import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistryBuilder;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental;
@@ -22,9 +23,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 public class MicrometerSingletons {
+
+  private static final Logger logger = Logger.getLogger(MicrometerSingletons.class.getName());
 
   private static final MeterRegistry meterRegistry;
 
@@ -35,13 +39,34 @@ public class MicrometerSingletons {
         OpenTelemetryMeterRegistry.builder(GlobalOpenTelemetry.get())
             .setPrometheusMode(config.get("prometheus_mode").getBoolean("enabled", false))
             .setBaseTimeUnit(TimeUnitParser.parseConfigValue(config.getString("base_time_unit")));
-    Experimental.setMicrometerHistogramGaugesEnabled(
-        builder, config.get("histogram_gauges").getBoolean("enabled", false));
+    Experimental.setMicrometerHistogramGaugesEnabled(builder, getHistogramGaugesEnabled(config));
     meterRegistry = builder.build();
   }
 
   public static MeterRegistry meterRegistry() {
     return meterRegistry;
+  }
+
+  private static boolean getHistogramGaugesEnabled(DeclarativeConfigProperties config) {
+    Boolean enabled = config.get("histogram_gauges/development").getBoolean("enabled");
+    if (enabled != null) {
+      return enabled;
+    }
+
+    // Support the deprecated config key until 3.0.
+    if (!SemconvStability.v3Preview()) {
+      Boolean deprecatedEnabled = config.get("histogram_gauges").getBoolean("enabled");
+      if (deprecatedEnabled != null) {
+        logger.warning(
+            "The otel.instrumentation.micrometer.histogram-gauges.enabled setting or equivalent"
+                + " declarative configuration is deprecated and will be removed in 3.0. Use "
+                + "otel.instrumentation.micrometer.experimental.histogram-gauges.enabled or"
+                + " equivalent declarative configuration instead.");
+        return deprecatedEnabled;
+      }
+    }
+
+    return false;
   }
 
   // called from CompositeMeterRegistryInstrumentation

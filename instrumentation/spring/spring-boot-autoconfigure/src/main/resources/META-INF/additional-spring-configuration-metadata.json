@@ -351,9 +351,22 @@
       "defaultValue": false
     },
     {
+      "name": "otel.instrumentation.messaging.experimental.headers.included",
+      "type": "java.util.List<java.lang.String>",
+      "description": "A comma-separated list of message header name patterns to capture as span attributes. Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters."
+    },
+    {
+      "name": "otel.instrumentation.messaging.experimental.headers.excluded",
+      "type": "java.util.List<java.lang.String>",
+      "description": "A comma-separated list of message header name patterns to exclude from span attributes. Excluded patterns take precedence over included patterns. Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters. If included is not configured, all non-excluded headers are captured, which may expose sensitive information."
+    },
+    {
       "name": "otel.instrumentation.messaging.experimental.capture-headers",
       "type": "java.util.List<java.lang.String>",
-      "description": "A comma-separated list of header names to capture as span attributes."
+      "description": "Deprecated: use otel.instrumentation.messaging.experimental.headers.included instead. A comma-separated list of header names to capture as span attributes.",
+      "deprecation": {
+        "replacement": "otel.instrumentation.messaging.experimental.headers.included"
+      }
     },
     {
       "name": "otel.instrumentation.jdbc.enabled",

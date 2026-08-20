@@ -115,7 +115,26 @@ definitions:
     messaging.capture-headers:
       name: otel.instrumentation.messaging.experimental.capture-headers
       declarative_name: java.common.messaging.capture_headers/development
-      description: A comma-separated list of header names to capture as span attributes.
+      description: 'Deprecated: use `otel.instrumentation.messaging.experimental.headers.included`
+        instead. A comma-separated list of header names to capture as span attributes.'
+      type: list
+      default: ''
+    messaging.headers.excluded:
+      name: otel.instrumentation.messaging.experimental.headers.excluded
+      declarative_name: java.common.messaging.headers/development.excluded
+      description: A comma-separated list of message header name patterns to exclude
+        from span attributes. Excluded patterns take precedence over included patterns.
+        Matching is case-sensitive. `?` matches one character and `*` matches zero
+        or more characters. If included is not configured, all non-excluded headers
+        are captured, which may expose sensitive information.
+      type: list
+      default: ''
+    messaging.headers.included:
+      name: otel.instrumentation.messaging.experimental.headers.included
+      declarative_name: java.common.messaging.headers/development.included
+      description: A comma-separated list of message header name patterns to capture
+        as span attributes. Matching is case-sensitive. `?` matches one character
+        and `*` matches zero or more characters.
       type: list
       default: ''
     otel.experimental.javascript-snippet-ad834761:
@@ -878,11 +897,11 @@ definitions:
         Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
       type: boolean
       default: false
-    otel.instrumentation.messaging.experimental.receive-telemetry.enabled-59c44ca8:
+    otel.instrumentation.messaging.experimental.receive-telemetry.enabled-be0c3627:
       name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
       declarative_name: java.common.messaging.receive_telemetry/development.enabled
       description: |
-        Enables the creation of consumer spans on messaging receive operations. These spans will measure the time between receiving a message and the consumer processing that message.
+        Enables consumer spans for RabbitMQ `basicGet` receive operations when legacy messaging semantic conventions are emitted. Stable messaging semantic conventions emit these spans regardless of this setting.
       type: boolean
       default: false
     otel.instrumentation.methods.include:
@@ -905,11 +924,18 @@ definitions:
       examples:
       - ns
       - milliseconds
+    otel.instrumentation.micrometer.experimental.histogram-gauges.enabled:
+      name: otel.instrumentation.micrometer.experimental.histogram-gauges.enabled
+      declarative_name: java.micrometer.histogram_gauges/development.enabled
+      description: |
+        Enables gauge-based Micrometer histograms for DistributionSummary and Timer instruments.
+      type: boolean
+      default: false
     otel.instrumentation.micrometer.histogram-gauges.enabled:
       name: otel.instrumentation.micrometer.histogram-gauges.enabled
       declarative_name: java.micrometer.histogram_gauges.enabled
       description: |
-        Enables gauge-based Micrometer histograms for DistributionSummary and Timer instruments.
+        Deprecated alias for `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled`. It will be removed in 3.0.
       type: boolean
       default: false
     otel.instrumentation.micrometer.prometheus-mode.enabled:
@@ -1059,18 +1085,6 @@ definitions:
       description: Enables the capture of experimental JMX-based JVM runtime metrics.
       type: boolean
       default: false
-    otel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled:
-      name: otel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled
-      declarative_name: java.runtime_telemetry.package_emitter/development.enabled
-      description: Enables creating events for JAR libraries used by the application.
-      type: boolean
-      default: false
-    otel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second:
-      name: otel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second
-      declarative_name: java.runtime_telemetry.package_emitter/development.jars_per_second
-      description: The number of JAR files processed per second by the package emitter.
-      type: int
-      default: 10
     otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded:
       name: otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded
       declarative_name: java.runtime_telemetry.jfr_metrics/development.excluded
@@ -1089,6 +1103,18 @@ definitions:
       default: ''
       examples:
       - jvm.memory.*,jvm.cpu.longlock
+    otel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled:
+      name: otel.instrumentation.runtime-telemetry.experimental.package-emitter.enabled
+      declarative_name: java.runtime_telemetry.package_emitter/development.enabled
+      description: Enables creating events for JAR libraries used by the application.
+      type: boolean
+      default: false
+    otel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second:
+      name: otel.instrumentation.runtime-telemetry.experimental.package-emitter.jars-per-second
+      declarative_name: java.runtime_telemetry.package_emitter/development.jars_per_second
+      description: The number of JAR files processed per second by the package emitter.
+      type: int
+      default: 10
     otel.instrumentation.runtime-telemetry.experimental.prefer-jfr:
       name: otel.instrumentation.runtime-telemetry.experimental.prefer-jfr
       declarative_name: java.runtime_telemetry.prefer_jfr/development
@@ -1266,7 +1292,7 @@ definitions:
       description: List of predefined JMX target systems to collect metrics for.
       type: list
       default: ''
-    otel.semconv-stability.opt-in:
+    otel.semconv-stability.opt-in-a415433b:
       name: otel.semconv-stability.opt-in
       declarative_name: general.stability_opt_in_list
       description: |
@@ -1274,6 +1300,13 @@ definitions:
       type: list
       default: ''
       declarative_type: string
+    otel.semconv-stability.opt-in-b3deb0c6:
+      name: otel.semconv-stability.opt-in
+      declarative_name: general.stability_opt_in_list
+      description: |
+        Opt-in to emit stable semantic conventions instead of the old experimental semantic conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`, `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously. Stable semantic conventions will become the default in version 3.0 of the agent.
+      type: list
+      default: ''
     sanitization.url.sensitive-query-parameters:
       name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
       declarative_name: general.sanitization.url.sensitive_query_parameters
@@ -2064,6 +2097,15 @@ definitions:
         type: STRING
       - name: jvm.gc.name
         type: STRING
+    jvm.memory.allocation-5c3a1661:
+      name: jvm.memory.allocation
+      description: Measure of memory allocations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: By
+      attributes:
+      - name: arena
+        type: STRING
     jvm.memory.committed-75750f2f:
       name: jvm.memory.committed
       description: Measure of memory committed.
@@ -2136,6 +2178,15 @@ definitions:
       data_type: DOUBLE_GAUGE
       unit: '1'
       attributes: []
+    jvm.thread.count-8bf9a8cb:
+      name: jvm.thread.count
+      description: Number of executing platform threads.
+      instrument: updowncounter
+      data_type: LONG_SUM
+      unit: '{thread}'
+      attributes:
+      - name: jvm.thread.daemon
+        type: BOOLEAN
     jvm.thread.count-dd0efc0c:
       name: jvm.thread.count
       description: Number of executing platform threads.
@@ -2154,6 +2205,21 @@ definitions:
       data_type: HISTOGRAM
       unit: s
       attributes: []
+    messaging.client.consumed.messages-2353494f:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.consumed.messages-5c21579f:
       name: messaging.client.consumed.messages
       description: Number of messages that were delivered to the application.
@@ -2173,7 +2239,70 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    messaging.client.operation.duration-df200871:
+    messaging.client.consumed.messages-73097de6:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.client.consumed.messages-bda2d99f:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    messaging.client.consumed.messages-e8268bc3:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.client.operation.duration-4afb25bc:
+      name: messaging.client.operation.duration
+      description: Duration of messaging operation initiated by a producer or consumer
+        client.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    messaging.client.operation.duration-68138657:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
         client.
@@ -2183,7 +2312,21 @@ definitions:
       attributes:
       - name: messaging.destination.name
         type: STRING
-      - name: messaging.destination.subscription.name
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.client.operation.duration-dab7c60a:
+      name: messaging.client.operation.duration
+      description: Duration of messaging operation initiated by a producer or consumer
+        client.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: messaging.destination.name
         type: STRING
       - name: messaging.operation.name
         type: STRING
@@ -2212,6 +2355,51 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    messaging.client.sent.messages-a16c8de0:
+      name: messaging.client.sent.messages
+      description: Number of messages producer attempted to send to the broker.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.process.duration-45bdc9e6:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    messaging.process.duration-800050f8:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.process.duration-9ee3dd0a:
       name: messaging.process.duration
       description: Duration of processing operation.
@@ -2234,6 +2422,23 @@ definitions:
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.process.duration-b45860c7:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.consumer.group.name
+        type: STRING
       - name: messaging.destination.name
         type: STRING
       - name: messaging.operation.name
@@ -2875,7 +3080,7 @@ libraries:
   javaagent_target_versions:
   - com.alibaba:druid:(,)
   configuration_refs:
-  - otel.semconv-stability.opt-in
+  - otel.semconv-stability.opt-in-a415433b
   telemetry:
   - when: default
     metric_refs:
@@ -2907,7 +3112,7 @@ libraries:
   javaagent_target_versions:
   - org.apache.commons:commons-dbcp2:[2,)
   configuration_refs:
-  - otel.semconv-stability.opt-in
+  - otel.semconv-stability.opt-in-a415433b
   telemetry:
   - when: default
     metric_refs:
@@ -2978,6 +3183,8 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: error.type
+        type: STRING
       - name: rpc.method
         type: STRING
       - name: rpc.system.name
@@ -2990,11 +3197,17 @@ libraries:
         type: STRING
     - span_kind: SERVER
       attributes:
+      - name: error.type
+        type: STRING
       - name: network.peer.address
         type: STRING
       - name: network.peer.port
         type: LONG
+      - name: network.type
+        type: STRING
       - name: rpc.method
+        type: STRING
+      - name: rpc.method_original
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -3925,6 +4138,101 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
+  - when: otel.instrumentation.common.v3-preview=true
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.process.duration-ab13a22e
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: faas.invocation_id
+        type: STRING
+      - name: faas.trigger
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: url.full
+        type: STRING
+      - name: user_agent.original
+        type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.process.duration-ab13a22e
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: faas.invocation_id
+        type: STRING
+      - name: faas.trigger
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: url.full
+        type: STRING
+      - name: user_agent.original
+        type: STRING
+  - when: otel.semconv-stability.preview=messaging/dup
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.process.duration-ab13a22e
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: faas.invocation_id
+        type: STRING
+      - name: faas.trigger
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: url.full
+        type: STRING
+      - name: user_agent.original
+        type: STRING
 - name: aws-lambda-events-3.11
   display_name: AWS Lambda Events
   description: |
@@ -3970,6 +4278,119 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
+  - when: otel.instrumentation.common.v3-preview=true
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.process.duration-ab13a22e
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: cloud.account.id
+        type: STRING
+      - name: cloud.resource_id
+        type: STRING
+      - name: faas.invocation_id
+        type: STRING
+      - name: faas.trigger
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: url.full
+        type: STRING
+      - name: user_agent.original
+        type: STRING
+  - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.process.duration-ab13a22e
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: cloud.account.id
+        type: STRING
+      - name: cloud.resource_id
+        type: STRING
+      - name: faas.invocation_id
+        type: STRING
+      - name: faas.trigger
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: url.full
+        type: STRING
+      - name: user_agent.original
+        type: STRING
+  - when: otel.semconv-stability.preview=messaging/dup
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.process.duration-ab13a22e
+    spans:
+    - span_kind: CONSUMER
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: cloud.account.id
+        type: STRING
+      - name: cloud.resource_id
+        type: STRING
+      - name: faas.invocation_id
+        type: STRING
+      - name: faas.trigger
+        type: STRING
+      - name: http.request.method
+        type: STRING
+      - name: http.response.status_code
+        type: LONG
+      - name: url.full
+        type: STRING
+      - name: user_agent.original
+        type: STRING
 - name: aws-sdk-1.11
   display_name: AWS SDK
   description: |
@@ -3992,6 +4413,8 @@ libraries:
   - com.amazonaws:aws-java-sdk-sqs:[1.10.33,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.aws-sdk.experimental-span-attributes-f30ad240
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
@@ -4229,6 +4652,8 @@ libraries:
         type: STRING
       - name: aws.sqs.queue.url
         type: STRING
+      - name: error.type
+        type: STRING
       - name: http.request.method
         type: STRING
       - name: http.response.status_code
@@ -4356,6 +4781,8 @@ libraries:
   - software.amazon.awssdk:sqs:[2.2.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.aws-sdk.experimental-record-individual-http-error
   - otel.instrumentation.aws-sdk.experimental-span-attributes-0c4c01de
   - otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging
@@ -4674,6 +5101,8 @@ libraries:
       - name: aws.request_id
         type: STRING
       - name: aws.sqs.queue.url
+        type: STRING
+      - name: error.type
         type: STRING
       - name: http.request.method
         type: STRING
@@ -8723,6 +9152,8 @@ libraries:
   - javax.jms:jms-api:(,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
   - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
@@ -8811,6 +9242,8 @@ libraries:
   - jakarta.jms:jakarta.jms-api:[3.0.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
   - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
@@ -9083,6 +9516,8 @@ libraries:
   - org.apache.kafka:kafka-clients:[0.11.0.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.kafka.experimental-span-attributes-5d2fc7d4
   - otel.instrumentation.kafka.producer-propagation.enabled
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
@@ -9388,6 +9823,8 @@ libraries:
   - org.apache.kafka:kafka-streams:[0.11.0.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.kafka.experimental-span-attributes-5d2fc7d4
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
@@ -10378,6 +10815,7 @@ libraries:
   - io.micrometer:micrometer-core:[1.5.0,)
   configuration_refs:
   - otel.instrumentation.micrometer.base-time-unit
+  - otel.instrumentation.micrometer.experimental.histogram-gauges.enabled
   - otel.instrumentation.micrometer.histogram-gauges.enabled
   - otel.instrumentation.micrometer.prometheus-mode.enabled
 - name: mongo-3.1
@@ -10650,6 +11088,8 @@ libraries:
   - io.nats:jnats:[2.17.2,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   telemetry:
   - when: default
     spans:
@@ -10682,6 +11122,11 @@ libraries:
       - name: messaging.system
         type: STRING
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-2353494f
+    - messaging.client.operation.duration-68138657
+    - messaging.client.sent.messages-a16c8de0
+    - messaging.process.duration-800050f8
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -11936,6 +12381,8 @@ libraries:
   - org.apache.pulsar:pulsar-client:[2.8.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   - otel.instrumentation.pulsar.experimental-span-attributes-5ac8c0d9
   telemetry:
@@ -12032,7 +12479,7 @@ libraries:
   - when: otel.semconv-stability.preview=messaging
     metric_refs:
     - messaging.client.consumed.messages-5c21579f
-    - messaging.client.operation.duration-df200871
+    - messaging.client.operation.duration-dab7c60a
     - messaging.client.sent.messages-38a90199
     - messaging.process.duration-9ee3dd0a
     spans:
@@ -12222,7 +12669,9 @@ libraries:
   - com.rabbitmq:amqp-client:[2.7.0,)
   configuration_refs:
   - messaging.capture-headers
-  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-59c44ca8
+  - messaging.headers.excluded
+  - messaging.headers.included
+  - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-be0c3627
   - otel.instrumentation.rabbitmq.experimental-span-attributes
   telemetry:
   - when: default
@@ -12334,6 +12783,11 @@ libraries:
       - name: rabbitmq.delivery_mode
         type: LONG
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-bda2d99f
+    - messaging.client.operation.duration-4afb25bc
+    - messaging.client.sent.messages-38a90199
+    - messaging.process.duration-45bdc9e6
     spans:
     - span_kind: CLIENT
       attributes:
@@ -12613,6 +13067,8 @@ libraries:
   - io.projectreactor.kafka:reactor-kafka:[1.0.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.kafka.experimental-span-attributes-956cabd8
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
@@ -12940,6 +13396,33 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+- name: redisson-metrics-3.26
+  display_name: Redisson
+  description: This instrumentation enables database connection pool metrics for Redisson.
+  semantic_conventions:
+  - DATABASE_POOL_METRICS
+  library_link: https://github.com/redisson/redisson
+  source_path: instrumentation/redisson/redisson-metrics-3.26
+  scope:
+    name: io.opentelemetry.redisson-metrics-3.26
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.redisson:redisson:[3.26.0,)
+  configuration_refs:
+  - otel.semconv-stability.opt-in-b3deb0c6
+  telemetry:
+  - when: default
+    metric_refs:
+    - db.client.connections.idle.min-f04d4083
+    - db.client.connections.max-ddde65fe
+    - db.client.connections.pending_requests-a0698f55
+    - db.client.connections.usage-5ef1d5ef
+  - when: otel.semconv-stability.opt-in=database
+    metric_refs:
+    - db.client.connection.count-2e6ba9b7
+    - db.client.connection.idle.min-73bdafbc
+    - db.client.connection.max-c7917942
+    - db.client.connection.pending_requests-a0f41111
 - name: resources
   display_name: Resource Detectors
   description: |
@@ -13121,6 +13604,8 @@ libraries:
   - org.apache.rocketmq:rocketmq-client:[4.0.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.rocketmq-client.experimental-span-attributes
   telemetry:
   - when: default
@@ -13238,6 +13723,8 @@ libraries:
   - org.apache.rocketmq:rocketmq-client-java:[5.0.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
   - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
@@ -13289,9 +13776,16 @@ libraries:
       - name: messaging.system
         type: STRING
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-73097de6
+    - messaging.client.operation.duration-68138657
+    - messaging.client.sent.messages-a16c8de0
+    - messaging.process.duration-b45860c7
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: error.type
+        type: STRING
       - name: messaging.batch.message_count
         type: LONG
       - name: messaging.consumer.group.name
@@ -13301,6 +13795,14 @@ libraries:
       - name: messaging.operation.name
         type: STRING
       - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rocketmq.message.delivery_timestamp
+        type: LONG
+      - name: messaging.rocketmq.message.group
+        type: STRING
+      - name: messaging.rocketmq.message.keys
+        type: STRING_ARRAY
+      - name: messaging.rocketmq.message.tag
         type: STRING
       - name: messaging.rocketmq.namespace
         type: STRING
@@ -13385,31 +13887,19 @@ libraries:
     - jvm.class.count-fbd5266d
     - jvm.class.loaded-c66b1b5e
     - jvm.class.unloaded-242a2605
-    - jvm.cpu.count-ae176c2b
     - jvm.cpu.longlock-601fafbc
     - jvm.cpu.recent_utilization-6056df51
-    - jvm.cpu.time-e00d5c75
     - jvm.gc.duration-e20d0032
+    - jvm.memory.allocation-5c3a1661
     - jvm.memory.committed-75750f2f
     - jvm.memory.init-45bc6025
     - jvm.memory.limit-13513f5f
     - jvm.memory.used-0d769189
     - jvm.memory.used_after_last_gc-f583d266
     - jvm.system.cpu.utilization-323f730d
-    - jvm.thread.count-dd0efc0c
+    - jvm.thread.count-8bf9a8cb
   - when: Java21
     metric_refs:
-    - jvm.class.count-fbd5266d
-    - jvm.class.loaded-c66b1b5e
-    - jvm.class.unloaded-242a2605
-    - jvm.cpu.count-ae176c2b
-    - jvm.cpu.recent_utilization-6056df51
-    - jvm.cpu.time-e00d5c75
-    - jvm.memory.committed-75750f2f
-    - jvm.memory.limit-13513f5f
-    - jvm.memory.used-0d769189
-    - jvm.memory.used_after_last_gc-f583d266
-    - jvm.thread.count-dd0efc0c
     - jvm.thread.virtual.pinned-3a1656ff
   - when: default
     metric_refs:
@@ -13902,6 +14392,8 @@ libraries:
   - org.springframework.integration:spring-integration-core:[4.1.0.RELEASE,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.spring-integration.global-channel-interceptor-patterns
   - otel.instrumentation.spring-integration.producer.enabled
   telemetry:
@@ -13922,6 +14414,11 @@ libraries:
       - name: messaging.operation
         type: STRING
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-e8268bc3
+    - messaging.client.operation.duration-68138657
+    - messaging.client.sent.messages-a16c8de0
+    - messaging.process.duration-ab13a22e
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -13958,6 +14455,8 @@ libraries:
   - org.springframework:spring-jms:[2.0,6)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
   - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
@@ -14002,6 +14501,8 @@ libraries:
   - org.springframework:spring-jms:[6.0.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
   - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
@@ -14046,6 +14547,8 @@ libraries:
   - org.springframework.kafka:spring-kafka:[2.7.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.kafka.experimental-span-attributes-6596b308
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   telemetry:
@@ -14141,6 +14644,8 @@ libraries:
   - org.springframework.pulsar:spring-pulsar:[1.0.0,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
   - otel.instrumentation.pulsar.experimental-span-attributes-1d77bf4d
   telemetry:
@@ -14189,6 +14694,8 @@ libraries:
   - org.springframework.amqp:spring-rabbit:(,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   telemetry:
   - when: default
     spans:
@@ -14203,6 +14710,8 @@ libraries:
       - name: messaging.system
         type: STRING
   - when: otel.semconv-stability.preview=messaging
+    metric_refs:
+    - messaging.process.duration-800050f8
     spans:
     - span_kind: CONSUMER
       attributes:
@@ -15080,6 +15589,35 @@ libraries:
         type: STRING
       - name: user_agent.original
         type: STRING
+- name: tomcat-dbcp-8.0
+  display_name: Tomcat DBCP
+  description: |
+    This instrumentation enables database connection pool metrics for Tomcat DBCP.
+    The auto-instrumentation registers metrics when the connection pool is initialized (`BasicDataSource.startPoolMaintenance()`) or when `BasicDataSource.preRegister(...)` is invoked during MBean registration, whichever comes first, and unregisters them when the `BasicDataSource` is closed. JMX registration is not required. When a JMX `ObjectName` is available, its `name` property is used as the pool name; if the property is absent, the full `ObjectName` is used. Otherwise, the JDBC URL and connection properties are used to derive `server.address[:server.port][/db.namespace]`. If neither server address nor database namespace is available, `tomcat-dbcp` is used. A pool registered as an MBean after it has already started switches from the derived name to the `ObjectName`-based name.
+  semantic_conventions:
+  - DATABASE_POOL_METRICS
+  library_link: https://tomcat.apache.org/tomcat-8.5-doc/api/org/apache/tomcat/dbcp/dbcp2/BasicDataSource.html
+  source_path: instrumentation/tomcat/tomcat-dbcp-8.0
+  scope:
+    name: io.opentelemetry.tomcat-dbcp-8.0
+  has_javaagent: true
+  javaagent_target_versions:
+  - org.apache.tomcat:tomcat-dbcp:[8.0.3,)
+  configuration_refs:
+  - otel.semconv-stability.opt-in-a415433b
+  telemetry:
+  - when: default
+    metric_refs:
+    - db.client.connections.idle.max-f9946dd5
+    - db.client.connections.idle.min-f04d4083
+    - db.client.connections.max-ddde65fe
+    - db.client.connections.usage-5ef1d5ef
+  - when: otel.semconv-stability.opt-in=database
+    metric_refs:
+    - db.client.connection.count-2e6ba9b7
+    - db.client.connection.idle.max-b95e4f5c
+    - db.client.connection.idle.min-73bdafbc
+    - db.client.connection.max-c7917942
 - name: tomcat-jdbc-8.5
   display_name: Tomcat JDBC
   description: |
@@ -15094,7 +15632,7 @@ libraries:
   javaagent_target_versions:
   - org.apache.tomcat:tomcat-jdbc:[8.5.0,)
   configuration_refs:
-  - otel.semconv-stability.opt-in
+  - otel.semconv-stability.opt-in-a415433b
   telemetry:
   - when: default
     metric_refs:
@@ -15453,6 +15991,8 @@ libraries:
   - io.vertx:vertx-kafka-client:[3.5.1,)
   configuration_refs:
   - messaging.capture-headers
+  - messaging.headers.excluded
+  - messaging.headers.included
   - otel.instrumentation.kafka.experimental-span-attributes-5d2fc7d4
   - otel.instrumentation.kafka.producer-propagation.enabled
   - otel.instrumentation.messaging.experimental.receive-telemetry.enabled-469576a6
@@ -15745,7 +16285,7 @@ libraries:
 - name: vibur-dbcp-11.0
   display_name: Vibur DBCP
   description: |
-    This instrumentation enables database connection pool metrics for Vibur DBCP data sources.
+    This instrumentation enables database connection pool metrics for Vibur DBCP data sources. When no pool name is explicitly configured, the JDBC URL and connection properties are used to derive `server.address[:server.port][/db.namespace]`. If no server address or database namespace is available, `vibur-dbcp` is used.
   semantic_conventions:
   - DATABASE_POOL_METRICS
   library_link: https://www.vibur.org/

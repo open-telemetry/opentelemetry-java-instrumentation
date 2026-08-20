@@ -83,9 +83,7 @@ public final class DbExecution {
             : OTHER_SQL;
     this.user = factoryOptions.hasOption(USER) ? (String) factoryOptions.getValue(USER) : null;
     this.namespace =
-        factoryOptions.hasOption(DATABASE)
-            ? ((String) factoryOptions.getValue(DATABASE)).toLowerCase(Locale.ROOT)
-            : null;
+        factoryOptions.hasOption(DATABASE) ? (String) factoryOptions.getValue(DATABASE) : null;
     String driver =
         factoryOptions.hasOption(DRIVER) ? (String) factoryOptions.getValue(DRIVER) : null;
     String protocol =

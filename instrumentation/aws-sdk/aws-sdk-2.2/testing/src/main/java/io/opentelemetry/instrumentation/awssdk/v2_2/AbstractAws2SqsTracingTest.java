@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -31,14 +32,19 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SE
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,7 +55,15 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.SqsClientBuilder;
+import software.amazon.awssdk.services.sqs.model.ChangeMessageVisibilityBatchRequest;
+import software.amazon.awssdk.services.sqs.model.ChangeMessageVisibilityBatchRequestEntry;
+import software.amazon.awssdk.services.sqs.model.ChangeMessageVisibilityRequest;
+import software.amazon.awssdk.services.sqs.model.DeleteMessageBatchRequest;
+import software.amazon.awssdk.services.sqs.model.DeleteMessageBatchRequestEntry;
+import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
+import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
+import software.amazon.awssdk.services.sqs.model.QueueDoesNotExistException;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
@@ -349,7 +363,10 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
 
     client.createQueue(createQueueRequest);
     client.sendMessage(sendMessageRequest);
-    client.receiveMessage(receiveMessageRequest);
+    ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest);
+    String messageId = response.messages().get(0).messageId();
+    // iterating the returned message list is what starts the process spans
+    response.messages().forEach(unused -> {});
 
     AtomicReference<SpanData> publishSpan = new AtomicReference<>();
     getTesting()
@@ -362,7 +379,19 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                     span -> {
                       publishSpan.set(trace.getSpan(0));
                       span.hasName("send testSdkSqs").hasKind(SpanKind.PRODUCER);
-                    }),
+                    },
+                    // the process span accounts for a single message, so its link carries no
+                    // per-message attributes
+                    span ->
+                        span.hasName("process testSdkSqs")
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasParent(trace.getSpan(0))
+                            .hasLinksSatisfying(
+                                links ->
+                                    assertThat(links)
+                                        .singleElement()
+                                        .satisfies(
+                                            link -> assertBareLink(link, publishSpan.get())))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -375,8 +404,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                         .singleElement()
                                         .satisfies(
                                             link ->
-                                                assertThat(link.getSpanContext().getSpanId())
-                                                    .isEqualTo(publishSpan.get().getSpanId())))));
+                                                assertMessageLink(
+                                                    link, publishSpan.get(), messageId)))));
   }
 
   @Test
@@ -428,6 +457,298 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
   }
 
   @Test
+  void testDeleteMessage() {
+    SqsClientBuilder builder = SqsClient.builder();
+    configureSdkClient(builder);
+    SqsClient client = configureSqsClient(builder.build());
+    String receiptHandle = createMessages(client, 1).get(0);
+
+    client.deleteMessage(
+        DeleteMessageRequest.builder().queueUrl(queueUrl).receiptHandle(receiptHandle).build());
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> {
+                      List<AttributeAssertion> attributes =
+                          new ArrayList<>(
+                              asList(
+                                  equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                  equalTo(AWS_SQS_QUEUE_URL, queueUrl),
+                                  satisfies(
+                                      AWS_REQUEST_ID,
+                                      val ->
+                                          val.matches(
+                                              "\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
+                                  equalTo(RPC_SYSTEM, "aws-api"),
+                                  equalTo(RPC_SERVICE, "Sqs"),
+                                  equalTo(RPC_METHOD, "DeleteMessage"),
+                                  equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                  satisfies(
+                                      URL_FULL,
+                                      val -> val.startsWith("http://localhost:" + sqsPort)),
+                                  equalTo(SERVER_ADDRESS, "localhost"),
+                                  equalTo(SERVER_PORT, sqsPort)));
+                      if (emitStableMessagingSemconv()) {
+                        attributes.add(equalTo(MESSAGING_SYSTEM, AWS_SQS));
+                        attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
+                        attributes.add(equalTo(MESSAGING_OPERATION_NAME, "delete"));
+                        attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
+                        attributes.add(
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "settle" : null));
+                      }
+
+                      span.hasName(
+                              emitStableMessagingSemconv()
+                                  ? "delete testSdkSqs"
+                                  : "Sqs.DeleteMessage")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(attributes);
+                    }));
+  }
+
+  @Test
+  void testDeleteMessageBatch() {
+    SqsClientBuilder builder = SqsClient.builder();
+    configureSdkClient(builder);
+    SqsClient client = configureSqsClient(builder.build());
+    List<String> receiptHandles = createMessages(client, 2);
+
+    client.deleteMessageBatch(
+        DeleteMessageBatchRequest.builder()
+            .queueUrl(queueUrl)
+            .entries(
+                asList(
+                    DeleteMessageBatchRequestEntry.builder()
+                        .id("i1")
+                        .receiptHandle(receiptHandles.get(0))
+                        .build(),
+                    DeleteMessageBatchRequestEntry.builder()
+                        .id("i2")
+                        .receiptHandle(receiptHandles.get(1))
+                        .build()))
+            .build());
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> {
+                      List<AttributeAssertion> attributes =
+                          new ArrayList<>(
+                              asList(
+                                  equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                  equalTo(AWS_SQS_QUEUE_URL, queueUrl),
+                                  satisfies(
+                                      AWS_REQUEST_ID,
+                                      val ->
+                                          val.matches(
+                                              "\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
+                                  equalTo(RPC_SYSTEM, "aws-api"),
+                                  equalTo(RPC_SERVICE, "Sqs"),
+                                  equalTo(RPC_METHOD, "DeleteMessageBatch"),
+                                  equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                  satisfies(
+                                      URL_FULL,
+                                      val -> val.startsWith("http://localhost:" + sqsPort)),
+                                  equalTo(SERVER_ADDRESS, "localhost"),
+                                  equalTo(SERVER_PORT, sqsPort)));
+                      if (emitStableMessagingSemconv()) {
+                        attributes.add(equalTo(MESSAGING_SYSTEM, AWS_SQS));
+                        attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
+                        attributes.add(equalTo(MESSAGING_OPERATION_NAME, "delete"));
+                        attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
+                        attributes.add(
+                            equalTo(
+                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "settle" : null));
+                        attributes.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2));
+                      }
+
+                      span.hasName(
+                              emitStableMessagingSemconv()
+                                  ? "delete testSdkSqs"
+                                  : "Sqs.DeleteMessageBatch")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(attributes);
+                    }));
+  }
+
+  @Test
+  void testChangeMessageVisibilityUsesGenericRpcSpan() {
+    SqsClientBuilder builder = SqsClient.builder();
+    configureSdkClient(builder);
+    SqsClient client = configureSqsClient(builder.build());
+    String receiptHandle = createMessages(client, 1).get(0);
+
+    client.changeMessageVisibility(
+        ChangeMessageVisibilityRequest.builder()
+            .queueUrl(queueUrl)
+            .receiptHandle(receiptHandle)
+            .visibilityTimeout(1)
+            .build());
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> {
+                      List<AttributeAssertion> attributes =
+                          new ArrayList<>(
+                              asList(
+                                  equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                  equalTo(AWS_SQS_QUEUE_URL, queueUrl),
+                                  satisfies(
+                                      AWS_REQUEST_ID,
+                                      val ->
+                                          val.matches(
+                                              "\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
+                                  equalTo(RPC_SYSTEM, "aws-api"),
+                                  equalTo(RPC_SERVICE, "Sqs"),
+                                  equalTo(RPC_METHOD, "ChangeMessageVisibility"),
+                                  equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                  satisfies(
+                                      URL_FULL,
+                                      val -> val.startsWith("http://localhost:" + sqsPort)),
+                                  equalTo(SERVER_ADDRESS, "localhost"),
+                                  equalTo(SERVER_PORT, sqsPort)));
+
+                      span.hasName("Sqs.ChangeMessageVisibility")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(attributes);
+                    }));
+  }
+
+  @Test
+  void testChangeMessageVisibilityBatchUsesGenericRpcSpan() {
+    SqsClientBuilder builder = SqsClient.builder();
+    configureSdkClient(builder);
+    SqsClient client = configureSqsClient(builder.build());
+    List<String> receiptHandles = createMessages(client, 2);
+
+    client.changeMessageVisibilityBatch(
+        ChangeMessageVisibilityBatchRequest.builder()
+            .queueUrl(queueUrl)
+            .entries(
+                asList(
+                    ChangeMessageVisibilityBatchRequestEntry.builder()
+                        .id("i1")
+                        .receiptHandle(receiptHandles.get(0))
+                        .visibilityTimeout(1)
+                        .build(),
+                    ChangeMessageVisibilityBatchRequestEntry.builder()
+                        .id("i2")
+                        .receiptHandle(receiptHandles.get(1))
+                        .visibilityTimeout(1)
+                        .build()))
+            .build());
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> {
+                      List<AttributeAssertion> attributes =
+                          new ArrayList<>(
+                              asList(
+                                  equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                  equalTo(AWS_SQS_QUEUE_URL, queueUrl),
+                                  satisfies(
+                                      AWS_REQUEST_ID,
+                                      val ->
+                                          val.matches(
+                                              "\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
+                                  equalTo(RPC_SYSTEM, "aws-api"),
+                                  equalTo(RPC_SERVICE, "Sqs"),
+                                  equalTo(RPC_METHOD, "ChangeMessageVisibilityBatch"),
+                                  equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                  satisfies(
+                                      URL_FULL,
+                                      val -> val.startsWith("http://localhost:" + sqsPort)),
+                                  equalTo(SERVER_ADDRESS, "localhost"),
+                                  equalTo(SERVER_PORT, sqsPort)));
+
+                      span.hasName("Sqs.ChangeMessageVisibilityBatch")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(attributes);
+                    }));
+  }
+
+  @Test
+  void testDeleteMessageError() {
+    assumeTrue(emitStableMessagingSemconv());
+    SqsClientBuilder builder = SqsClient.builder();
+    configureSdkClient(builder);
+    SqsClient client = configureSqsClient(builder.build());
+    String missingQueueUrl = "http://localhost:" + sqsPort + "/000000000000/missing";
+
+    Throwable error =
+        catchThrowable(
+            () ->
+                client.deleteMessage(
+                    DeleteMessageRequest.builder()
+                        .queueUrl(missingQueueUrl)
+                        .receiptHandle("receipt-handle")
+                        .build()));
+
+    assertThat(error).isInstanceOf(QueueDoesNotExistException.class);
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("delete missing")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                equalTo(AWS_SQS_QUEUE_URL, missingQueueUrl),
+                                equalTo(RPC_SYSTEM, "aws-api"),
+                                equalTo(RPC_SERVICE, "Sqs"),
+                                equalTo(RPC_METHOD, "DeleteMessage"),
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                satisfies(
+                                    URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, sqsPort),
+                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                equalTo(MESSAGING_DESTINATION_NAME, "missing"),
+                                equalTo(MESSAGING_OPERATION_NAME, "delete"),
+                                equalTo(MESSAGING_OPERATION_TYPE, "settle"),
+                                equalTo(
+                                    MESSAGING_OPERATION,
+                                    emitOldMessagingSemconv() ? "settle" : null),
+                                equalTo(ERROR_TYPE, QueueDoesNotExistException.class.getName()))));
+  }
+
+  private List<String> createMessages(SqsClient client, int count) {
+    client.createQueue(createQueueRequest);
+    for (int i = 0; i < count; i++) {
+      client.sendMessage(sendMessageRequest.toBuilder().messageBody("message-" + i).build());
+    }
+    List<String> receiptHandles =
+        client
+            .receiveMessage(receiveMessageRequest.toBuilder().maxNumberOfMessages(count).build())
+            .messages()
+            .stream()
+            .map(message -> message.receiptHandle())
+            .collect(toList());
+    assertThat(receiptHandles).hasSize(count);
+    getTesting().clearData();
+    return receiptHandles;
+  }
+
+  @Test
   void testBatchSqsProducerConsumerServicesSync() {
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
@@ -437,6 +758,16 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
     client.sendMessageBatch(sendMessageBatchRequest);
 
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageBatchRequest);
+    // ids of the messages that carry a creation context, in the order they were received, which is
+    // the order the receive span links them in. indexed access avoids the tracing iterator, which
+    // would start the process spans too early
+    List<String> propagatedMessageIds = new ArrayList<>();
+    for (int i = 0; i < response.messages().size(); i++) {
+      Message message = response.messages().get(i);
+      if (isXrayInjectionEnabled() || message.messageAttributes().containsKey("traceparent")) {
+        propagatedMessageIds.add(message.messageId());
+      }
+    }
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
 
     int totalAttrs =
@@ -449,6 +780,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
 
     // the last message in the batch has too many attributes for the tracing header to be injected
     int propagatedMessages = isXrayInjectionEnabled() ? 3 : 2;
+    assertThat(propagatedMessageIds).hasSize(propagatedMessages);
     // without an ambient span the process spans are parented to the message creation context, which
     // puts them in the same trace as the publish span
     boolean processInPublishTrace = emitStableMessagingSemconv();
@@ -515,13 +847,13 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                 if (emitStableMessagingSemconv()) {
                   // one link per message whose creation context could be propagated
                   span.hasLinksSatisfying(
-                      links ->
-                          assertThat(links)
-                              .hasSize(propagatedMessages)
-                              .allSatisfy(
-                                  link ->
-                                      assertThat(link.getSpanContext().getSpanId())
-                                          .isEqualTo(publishSpan.get().getSpanId())));
+                      links -> {
+                        assertThat(links).hasSize(propagatedMessages);
+                        for (int i = 0; i < links.size(); i++) {
+                          assertMessageLink(
+                              links.get(i), publishSpan.get(), propagatedMessageIds.get(i));
+                        }
+                      });
                 } else {
                   span.hasTotalRecordedLinks(0);
                 }
@@ -562,5 +894,15 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
     }
 
     getTesting().waitAndAssertTraces(traceAsserts);
+  }
+
+  private static void assertMessageLink(LinkData link, SpanData creationContext, String messageId) {
+    assertThat(link.getSpanContext().getSpanId()).isEqualTo(creationContext.getSpanId());
+    assertThat(link.getAttributes()).isEqualTo(Attributes.of(MESSAGING_MESSAGE_ID, messageId));
+  }
+
+  private static void assertBareLink(LinkData link, SpanData creationContext) {
+    assertThat(link.getSpanContext().getSpanId()).isEqualTo(creationContext.getSpanId());
+    assertThat(link.getAttributes()).isEqualTo(Attributes.empty());
   }
 }

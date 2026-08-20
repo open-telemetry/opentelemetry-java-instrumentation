@@ -72,6 +72,12 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
         "java.common.messaging.receive_telemetry/development.enabled",
         "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
     SPECIAL_MAPPINGS.put(
+        "java.common.messaging.headers/development.included",
+        "otel.instrumentation.messaging.experimental.headers.included");
+    SPECIAL_MAPPINGS.put(
+        "java.common.messaging.headers/development.excluded",
+        "otel.instrumentation.messaging.experimental.headers.excluded");
+    SPECIAL_MAPPINGS.put(
         "java.common.messaging.capture_headers/development",
         "otel.instrumentation.messaging.experimental.capture-headers");
     SPECIAL_MAPPINGS.put(

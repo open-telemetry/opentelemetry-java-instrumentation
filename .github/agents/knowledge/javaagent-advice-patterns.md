@@ -2,8 +2,10 @@
 
 ## Quick Reference
 
-- Use when: reviewing ByteBuddy advice classes/methods (`@Advice.OnMethodEnter` / `@Advice.OnMethodExit`)
-- Review focus: nested advice classes, static advice methods, `suppress = Throwable.class`, no-throw behavior
+- Use when: reviewing ByteBuddy advice classes/methods (`@Advice.OnMethodEnter` /
+  `@Advice.OnMethodExit`), helpers called by advice, or `Java8BytecodeBridge` usage
+- Review focus: nested advice classes, static advice methods, advice-called helpers,
+  `suppress = Throwable.class`, no-throw behavior
 
 ## Advice Classes as Nested Classes
 
@@ -63,10 +65,18 @@ Advice classes should also have **no instance fields** — they are never instan
 
 ## `Java8BytecodeBridge`
 
-Use the bridge only for supported OpenTelemetry API calls written directly in annotated advice
-methods, which classic mode may copy into pre-Java-8 bytecode. Helpers called by advice are not
-copied, so use direct APIs such as `Context.current()` and `Span.fromContext()` there. Ignore
-source-level `inline = false`; the transformer controls inlining.
+When building or reviewing advice, inspect both the annotated advice bodies and every helper they
+call for `Java8BytecodeBridge` usage.
+
+Use the bridge only for supported OpenTelemetry API calls written directly in
+`@Advice.OnMethodEnter` or `@Advice.OnMethodExit` methods, which classic mode may copy into
+pre-Java-8 bytecode. Everywhere else, use the direct OpenTelemetry API, for example
+`Context.current()` instead of `Java8BytecodeBridge.currentContext()` and
+`Span.fromContext(context)` instead of `Java8BytecodeBridge.spanFromContext(context)`.
+
+Helpers called by advice are ordinary compiled methods and are not copied into the instrumented
+method, even when the helper is nested in an advice class. Source-level `inline = false` does not
+create an exception; the transformer controls inlining.
 
 ## Use `suppress = Throwable.class` by Default
 

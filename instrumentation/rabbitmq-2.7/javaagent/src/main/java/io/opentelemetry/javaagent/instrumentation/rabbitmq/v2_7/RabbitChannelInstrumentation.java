@@ -421,6 +421,9 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         if (callDepth.decrementAndGet() > 0) {
           return;
         }
+        if (throwable == null && response == null) {
+          return;
+        }
 
         Context parentContext = Context.current();
         ReceiveRequest request = ReceiveRequest.create(queue, response, channel.getConnection());

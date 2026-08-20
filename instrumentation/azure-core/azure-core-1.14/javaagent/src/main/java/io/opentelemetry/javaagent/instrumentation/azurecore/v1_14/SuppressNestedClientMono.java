@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.azurecore.v1_14;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -24,7 +22,7 @@ public class SuppressNestedClientMono<T> extends Mono<T> {
 
   @Override
   public void subscribe(CoreSubscriber<? super T> actual) {
-    Context parentContext = currentContext();
+    Context parentContext = Context.current();
     if (SpanKey.HTTP_CLIENT.fromContextOrNull(parentContext) == null) {
       try (Scope ignored =
           SpanKey.HTTP_CLIENT.storeInContext(parentContext, Span.getInvalid()).makeCurrent()) {

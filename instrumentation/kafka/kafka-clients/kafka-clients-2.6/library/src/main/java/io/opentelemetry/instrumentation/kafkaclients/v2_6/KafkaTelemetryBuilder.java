@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
-import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
@@ -30,7 +30,7 @@ public final class KafkaTelemetryBuilder {
       consumerProcessAttributesExtractors = new ArrayList<>();
   private final List<AttributesExtractor<KafkaReceiveRequest, Void>>
       consumerReceiveAttributesExtractors = new ArrayList<>();
-  private List<String> capturedHeaders = emptyList();
+  private IncludeExclude headers = IncludeExclude.builder().build();
   private boolean captureExperimentalSpanAttributes = false;
   private boolean propagationEnabled = true;
   private boolean messagingReceiveInstrumentationEnabled = false;
@@ -62,14 +62,35 @@ public final class KafkaTelemetryBuilder {
   }
 
   /**
+   * Configures which message headers are captured as span attributes.
+   *
+   * <p>Header values are captured under the {@code messaging.header.<name>} attribute key. The
+   * {@code <name>} part in the attribute key is the header name with dashes replaced by underscores
+   * unless {@code otel.instrumentation.common.v3-preview} is enabled, in which case dashes are
+   * preserved.
+   *
+   * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
+   * of characters, including none. Excluded patterns take precedence over included patterns. A
+   * selector with no included patterns captures every header that is not excluded, and an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
+   */
+  @CanIgnoreReturnValue
+  public KafkaTelemetryBuilder setHeaders(IncludeExclude headers) {
+    this.headers = headers;
+    return this;
+  }
+
+  /**
    * Configures the messaging headers that will be captured as span attributes.
    *
    * @param capturedHeaders A list of messaging header names.
+   * @deprecated Use {@link #setHeaders(IncludeExclude)} instead. May be removed in the next minor
+   *     release.
    */
+  @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public KafkaTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
-    this.capturedHeaders = new ArrayList<>(capturedHeaders);
-    return this;
+    return setHeaders(IncludeExclude.builder().setIncluded(capturedHeaders).build());
   }
 
   /**
@@ -114,7 +135,7 @@ public final class KafkaTelemetryBuilder {
   public KafkaTelemetry build() {
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
-            .setCapturedHeaders(capturedHeaders)
+            .setHeaders(headers)
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes);
     if (messagingReceiveInstrumentationConfigured) {
       instrumenterFactory.setMessagingReceiveTelemetryEnabled(

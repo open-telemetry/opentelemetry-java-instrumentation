@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -35,7 +36,10 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -50,6 +54,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
@@ -85,6 +90,7 @@ abstract class AbstractRocketMqClientTest {
 
   private final ClientServiceProvider provider = ClientServiceProvider.loadService();
   private final AtomicBoolean failurePending = new AtomicBoolean();
+  private final AtomicReference<CountDownLatch> failureRetryGate = new AtomicReference<>();
   private PushConsumer consumer;
   private Producer producer;
 
@@ -112,10 +118,22 @@ abstract class AbstractRocketMqClientTest {
             .setSubscriptionExpressions(subscriptionExpressions)
             .setMessageListener(
                 messageView -> {
-                  testing().runWithSpan("messageListener", () -> {});
                   if (failurePending.compareAndSet(true, false)) {
+                    testing().runWithSpan("messageListener", () -> {});
                     return ConsumeResult.FAILURE;
                   }
+                  CountDownLatch retryGate = failureRetryGate.get();
+                  if (retryGate != null) {
+                    try {
+                      if (!retryGate.await(45, SECONDS)) {
+                        return ConsumeResult.FAILURE;
+                      }
+                    } catch (InterruptedException e) {
+                      Thread.currentThread().interrupt();
+                      return ConsumeResult.FAILURE;
+                    }
+                  }
+                  testing().runWithSpan("messageListener", () -> {});
                   return ConsumeResult.SUCCESS;
                 })
             .build();
@@ -210,6 +228,9 @@ abstract class AbstractRocketMqClientTest {
                           .hasKind(SpanKind.INTERNAL)
                           .hasParent(trace.getSpan(1)));
             });
+    if (emitStableMessagingSemconv()) {
+      assertMetrics();
+    }
   }
 
   @Test
@@ -225,73 +246,87 @@ abstract class AbstractRocketMqClientTest {
             .setBody(body)
             .build();
 
+    CountDownLatch retryGate = new CountDownLatch(1);
+    failureRetryGate.set(retryGate);
     failurePending.set(true);
-    SendReceipt sendReceipt =
-        testing()
-            .runWithSpan(
-                "parent",
-                (ThrowingSupplier<SendReceipt, ClientException>) () -> producer.send(message));
+    SendReceipt sendReceipt;
     AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
-    testing()
-        .waitAndAssertSortedTraces(
-            orderByRootSpanKind(
-                SpanKind.INTERNAL, emitStableMessagingSemconv() ? CLIENT : CONSUMER),
-            trace -> {
-              if (emitStableMessagingSemconv()) {
+    try {
+      sendReceipt =
+          testing()
+              .runWithSpan(
+                  "parent",
+                  (ThrowingSupplier<SendReceipt, ClientException>) () -> producer.send(message));
+      testing()
+          .waitAndAssertSortedTraces(
+              orderByRootSpanKind(
+                  SpanKind.INTERNAL, emitStableMessagingSemconv() ? CLIENT : CONSUMER),
+              trace -> {
+                if (emitStableMessagingSemconv()) {
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                      span ->
+                          assertProducerSpan(span, NORMAL_TOPIC, TAG, keys, body, sendReceipt)
+                              .hasParent(trace.getSpan(0)),
+                      span ->
+                          assertFailedProcessSpan(
+                                  span,
+                                  trace.getSpan(1),
+                                  NORMAL_TOPIC,
+                                  CONSUMER_GROUP,
+                                  TAG,
+                                  keys,
+                                  body,
+                                  sendReceipt)
+                              .hasParent(trace.getSpan(1)),
+                      span ->
+                          span.hasName("messageListener")
+                              .hasKind(SpanKind.INTERNAL)
+                              .hasParent(trace.getSpan(2)));
+                } else {
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                      span ->
+                          assertProducerSpan(span, NORMAL_TOPIC, TAG, keys, body, sendReceipt)
+                              .hasParent(trace.getSpan(0)));
+                }
+                sendSpanData.set(trace.getSpan(1));
+              },
+              trace -> {
+                if (emitStableMessagingSemconv()) {
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          assertReceiveSpan(
+                              span, NORMAL_TOPIC, CONSUMER_GROUP, sendSpanData.get()));
+                  return;
+                }
                 trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        assertProducerSpan(span, NORMAL_TOPIC, TAG, keys, body, sendReceipt)
-                            .hasParent(trace.getSpan(0)),
+                    span -> assertReceiveSpan(span, NORMAL_TOPIC, CONSUMER_GROUP),
                     span ->
                         assertFailedProcessSpan(
                                 span,
-                                trace.getSpan(1),
+                                sendSpanData.get(),
                                 NORMAL_TOPIC,
                                 CONSUMER_GROUP,
                                 TAG,
                                 keys,
                                 body,
                                 sendReceipt)
-                            .hasParent(trace.getSpan(1)),
+                            .hasParent(trace.getSpan(0)),
                     span ->
                         span.hasName("messageListener")
                             .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(2)));
-              } else {
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        assertProducerSpan(span, NORMAL_TOPIC, TAG, keys, body, sendReceipt)
-                            .hasParent(trace.getSpan(0)));
-              }
-              sendSpanData.set(trace.getSpan(1));
-            },
-            trace -> {
-              if (emitStableMessagingSemconv()) {
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        assertReceiveSpan(span, NORMAL_TOPIC, CONSUMER_GROUP, sendSpanData.get()));
-                return;
-              }
-              trace.hasSpansSatisfyingExactly(
-                  span -> assertReceiveSpan(span, NORMAL_TOPIC, CONSUMER_GROUP),
-                  span ->
-                      assertFailedProcessSpan(
-                              span,
-                              sendSpanData.get(),
-                              NORMAL_TOPIC,
-                              CONSUMER_GROUP,
-                              TAG,
-                              keys,
-                              body,
-                              sendReceipt)
-                          .hasParent(trace.getSpan(0)),
-                  span ->
-                      span.hasName("messageListener")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(1)));
-            });
+                            .hasParent(trace.getSpan(1)));
+              });
+      if (emitStableMessagingSemconv()) {
+        assertFailureMetrics();
+      }
+      testing().clearData();
+    } finally {
+      retryGate.countDown();
+      failureRetryGate.compareAndSet(retryGate, null);
+    }
+    waitForSuccessfulRedelivery(sendReceipt);
   }
 
   @Test
@@ -769,6 +804,8 @@ abstract class AbstractRocketMqClientTest {
 
   private static SpanDataAssert assertReceiveSpan(
       SpanDataAssert span, String topic, String consumerGroup, SpanData linkedSpan) {
+    Attributes linkedAttributes =
+        linkedSpan == null ? Attributes.empty() : linkedSpan.getAttributes();
     SpanDataAssert result =
         span.hasKind(emitStableMessagingSemconv() ? CLIENT : CONSUMER)
             .hasName(emitStableMessagingSemconv() ? "receive " + topic : topic + " receive")
@@ -786,10 +823,27 @@ abstract class AbstractRocketMqClientTest {
                 oldOperation("receive"),
                 operationName("receive"),
                 operationType("receive"),
-                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
+                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
+                // receiving is a batching operation, so the message id is on the link instead
+                equalTo(MESSAGING_MESSAGE_ID, null),
+                equalTo(
+                    MESSAGING_ROCKETMQ_MESSAGE_TAG,
+                    linkedAttributes.get(MESSAGING_ROCKETMQ_MESSAGE_TAG)),
+                equalTo(
+                    MESSAGING_ROCKETMQ_MESSAGE_GROUP,
+                    linkedAttributes.get(MESSAGING_ROCKETMQ_MESSAGE_GROUP)),
+                equalTo(
+                    MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP,
+                    linkedAttributes.get(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP)),
+                equalTo(
+                    MESSAGING_ROCKETMQ_MESSAGE_KEYS,
+                    linkedAttributes.get(MESSAGING_ROCKETMQ_MESSAGE_KEYS)));
     if (linkedSpan != null) {
-      // one link per received message
-      result.hasLinks(LinkData.create(linkedSpan.getSpanContext()));
+      // one link per received message, carrying the attributes of that message
+      result.hasLinks(
+          LinkData.create(
+              linkedSpan.getSpanContext(),
+              Attributes.of(MESSAGING_MESSAGE_ID, linkedAttributes.get(MESSAGING_MESSAGE_ID))));
     }
     return result;
   }
@@ -959,6 +1013,168 @@ abstract class AbstractRocketMqClientTest {
             .hasStatus(StatusData.unset())
             .hasAttributesSatisfyingExactly(attributeAssertions);
     return result.hasLinks(LinkData.create(linkedSpan.getSpanContext()));
+  }
+
+  private void assertFailureMetrics() {
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.rocketmq-client-5.0",
+            "messaging.process.duration",
+            metrics ->
+                metrics.satisfiesExactly(
+                    metric ->
+                        assertThat(metric)
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasCount(1)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                    equalTo(
+                                                        ERROR_TYPE, ConsumeResult.FAILURE.name()),
+                                                    equalTo(
+                                                        MESSAGING_CONSUMER_GROUP_NAME,
+                                                        CONSUMER_GROUP),
+                                                    equalTo(
+                                                        MESSAGING_DESTINATION_NAME,
+                                                        NORMAL_TOPIC))))));
+    // messaging.client.consumed.messages is owned by the receive operation here, which the retry
+    // gate cannot hold back, so the redelivery would race this assertion; the counter is asserted
+    // in testSendAndConsumeNormalMessage instead
+  }
+
+  private void waitForSuccessfulRedelivery(SendReceipt sendReceipt) {
+    await()
+        .atMost(Duration.ofSeconds(45))
+        .untilAsserted(
+            () ->
+                assertThat(testing().spans())
+                    .filteredOn(
+                        span ->
+                            sendReceipt
+                                    .getMessageId()
+                                    .toString()
+                                    .equals(span.getAttributes().get(MESSAGING_MESSAGE_ID))
+                                && span.getStatus().equals(StatusData.unset())
+                                && ("process"
+                                        .equals(span.getAttributes().get(MESSAGING_OPERATION_NAME))
+                                    || "process"
+                                        .equals(span.getAttributes().get(MESSAGING_OPERATION))))
+                    .hasSize(1));
+  }
+
+  private void assertMetrics() {
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.rocketmq-client-5.0",
+            "messaging.client.sent.messages",
+            metrics ->
+                metrics.satisfiesExactly(
+                    metric ->
+                        assertThat(metric)
+                            .hasLongSumSatisfying(
+                                sum ->
+                                    sum.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(1)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                    equalTo(
+                                                        MESSAGING_DESTINATION_NAME,
+                                                        NORMAL_TOPIC))))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.rocketmq-client-5.0",
+            "messaging.client.operation.duration",
+            metrics ->
+                metrics.satisfiesExactly(
+                    metric ->
+                        assertThat(metric)
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasCount(1)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                    equalTo(
+                                                        MESSAGING_DESTINATION_NAME, NORMAL_TOPIC),
+                                                    equalTo(MESSAGING_OPERATION_TYPE, "send")),
+                                        // the consumer keeps polling, so the number of recorded
+                                        // receives is not deterministic
+                                        point ->
+                                            point.hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                equalTo(
+                                                    MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
+                                                equalTo(MESSAGING_DESTINATION_NAME, NORMAL_TOPIC),
+                                                equalTo(MESSAGING_OPERATION_TYPE, "receive"))))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.rocketmq-client-5.0",
+            "messaging.process.duration",
+            metrics ->
+                metrics.satisfiesExactly(
+                    metric ->
+                        assertThat(metric)
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasCount(1)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                    equalTo(
+                                                        MESSAGING_CONSUMER_GROUP_NAME,
+                                                        CONSUMER_GROUP),
+                                                    equalTo(
+                                                        MESSAGING_DESTINATION_NAME,
+                                                        NORMAL_TOPIC))))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.rocketmq-client-5.0",
+            "messaging.client.consumed.messages",
+            metrics ->
+                metrics.satisfiesExactly(
+                    metric ->
+                        assertThat(metric)
+                            .satisfies(
+                                data -> assertThat(data.getLongSumData().getPoints()).hasSize(1))
+                            .hasLongSumSatisfying(
+                                sum ->
+                                    sum.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(1)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                    equalTo(
+                                                        MESSAGING_CONSUMER_GROUP_NAME,
+                                                        CONSUMER_GROUP),
+                                                    equalTo(
+                                                        MESSAGING_DESTINATION_NAME,
+                                                        NORMAL_TOPIC))))));
+    assertThat(testing().metrics())
+        .noneMatch(
+            metric ->
+                metric
+                        .getInstrumentationScopeInfo()
+                        .getName()
+                        .equals("io.opentelemetry.rocketmq-client-5.0")
+                    && (metric.getName().equals("messaging.publish.duration")
+                        || metric.getName().equals("messaging.receive.duration")
+                        || metric.getName().equals("messaging.receive.messages")));
   }
 
   private static AttributeAssertion bodySize(byte[] body) {

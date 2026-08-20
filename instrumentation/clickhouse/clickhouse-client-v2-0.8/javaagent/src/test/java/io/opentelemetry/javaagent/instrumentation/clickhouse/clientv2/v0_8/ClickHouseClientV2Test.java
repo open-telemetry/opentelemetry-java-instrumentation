@@ -87,9 +87,8 @@ class ClickHouseClientV2Test {
             .join();
     response.close();
 
-    // wait for CREATE operation and clear
+    // wait for CREATE operation
     testing.waitForTraces(1);
-    testing.clearData();
   }
 
   @Test
@@ -271,6 +270,27 @@ class ClickHouseClientV2Test {
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),
                             equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "60" : null))));
+
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.clickhouse-client-v2-0.8",
+        DB_SYSTEM_NAME,
+        DB_QUERY_SUMMARY,
+        DB_NAMESPACE,
+        ERROR_TYPE,
+        SERVER_ADDRESS,
+        SERVER_PORT);
+    if (emitStableDatabaseSemconv()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.clickhouse-client-v2-0.8",
+          metric ->
+              metric
+                  .hasName("db.client.operation.duration")
+                  .hasHistogramSatisfying(
+                      histogram ->
+                          histogram.hasPointsSatisfying(
+                              point -> point.hasAttribute(ERROR_TYPE, "60"))));
+    }
   }
 
   @Test

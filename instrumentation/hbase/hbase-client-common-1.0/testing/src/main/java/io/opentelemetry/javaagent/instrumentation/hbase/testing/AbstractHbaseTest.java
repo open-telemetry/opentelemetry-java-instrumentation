@@ -207,7 +207,6 @@ public abstract class AbstractHbaseTest {
               seedRows();
             });
     testing().waitForTraces(1);
-    testing().clearData();
   }
 
   private void createNamespaceAndTable() throws IOException {
