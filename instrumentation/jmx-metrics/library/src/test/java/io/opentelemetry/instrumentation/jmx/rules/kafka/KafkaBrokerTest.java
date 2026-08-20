@@ -29,6 +29,7 @@ class KafkaBrokerTest extends TargetSystemTest {
 
   @Test
   void kafkaBrokerZookeeper() {
+    // intentionally testing a rather old kafka version to ensure common metrics are still reported
     doTest("bitnamilegacy/kafka:2.8.1", "zookeeper:3.5");
   }
 
