@@ -181,9 +181,6 @@
 - Fix Jetty JMX metrics to emit `jetty.select.count` instead of `jetty.io.select.count` for
   select-call counts.
   ([#19249](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19249))
-- Fix duplicate Maven publication coordinates by publishing
-  `instrumentation/sofa-rpc-5.4/library-autoconfigure` as a distinct `*-autoconfigure` artifact.
-  ([#19294](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19294))
 - Fix Redisson connection pool permits leaking when a waiting async command is cancelled.
   ([#19340](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19340))
 - Fix Spring WebFlux route detection so controller spans keep a readable route name on JDK 21+.
