@@ -138,6 +138,10 @@ tasks {
       }
     }
 
+  named<Test>("testSqsStableSemconv") {
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+  }
+
   if (!otelProps.testLatestDeps) {
     check {
       dependsOn(testing.suites, stableSemconvSuites.values)

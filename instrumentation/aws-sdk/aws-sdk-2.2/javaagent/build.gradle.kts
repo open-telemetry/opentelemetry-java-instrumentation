@@ -205,6 +205,15 @@ tasks {
       }
     }
 
+  named<Test>("s3CrtTestStableSemconv") {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+
+  named<Test>("testBedrockRuntimeStableSemconv") {
+    // TODO run tests both with and without genai message capture
+    systemProperty("otel.instrumentation.genai.capture-message-content", "true")
+  }
+
   val testMessagingPreview = register<Test>("testMessagingPreview") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
