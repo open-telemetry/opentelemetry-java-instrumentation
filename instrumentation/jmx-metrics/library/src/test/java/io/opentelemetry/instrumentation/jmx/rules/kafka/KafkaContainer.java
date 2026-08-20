@@ -15,14 +15,11 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
 
   private static final String CONNECT_ALIAS = "kafka-connect";
   private static final int CONNECT_PORT = 8083;
-  private static final String CONNECT_PROPERTIES_PATH =
-      "/opt/kafka/config/connect-distributed.properties";
-
-  private static final String KAFKA_SERVER_PROPERTIES_PATH =
-      "/opt/kafka/config/kraft/server.properties";
+  private final boolean bitnamiImage;
 
   private Mode mode;
   private String zookeeperAddress;
+  private final String basePath;
 
   private enum Mode {
     // default mode for new kafka versions
@@ -41,6 +38,8 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
     super(image);
     this.withStartupTimeout(Duration.ofMinutes(1));
     this.mode = Mode.KRAFT;
+    this.bitnamiImage = image.startsWith("bitnami");
+    this.basePath = bitnamiImage ? "/opt/bitnami/kafka" : "/opt/kafka";
   }
 
   public KafkaContainer withZookeeper(String host, int port) {
@@ -69,7 +68,7 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
     }
 
     super.doStart();
-    // send sample message to enable log flush metrics
+    // send sample message to ensure we get log flush metrics
     sendSampleMessage();
   }
 
@@ -78,7 +77,8 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
       execInContainer(
           "/bin/sh",
           "-c",
-          "echo 'my message' | /opt/kafka/bin/kafka-console-producer.sh"
+          // we have to force empty JAVA_TOOL_OPTIONS to prevent agent being loaded on producer
+          "echo 'my message' | JAVA_TOOL_OPTIONS='' "+basePath + "/bin/kafka-console-producer.sh"
               + " --bootstrap-server localhost:"
               + KAFKA_PORT
               + " --topic my-topic");
@@ -91,14 +91,15 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
   }
 
   private void configureKRaft() {
+    String serverPropertiesPath = basePath + "/config/kraft/server.properties";
     String kafkaCommand =
-        "/opt/kafka/bin/kafka-storage.sh format -t $(/opt/kafka/bin/kafka-storage.sh random-uuid) -c "
-            + KAFKA_SERVER_PROPERTIES_PATH
-            + " && /opt/kafka/bin/kafka-server-start.sh "
-            + KAFKA_SERVER_PROPERTIES_PATH;
+        basePath + "/bin/kafka-storage.sh format -t $("+ basePath +"/bin/kafka-storage.sh random-uuid) -c "
+            + serverPropertiesPath
+            + " && " + basePath + "/bin/kafka-server-start.sh "
+            + serverPropertiesPath;
 
     this.withNetworkAliases(KAFKA_ALIAS)
-        .withCopyToContainer(Transferable.of(kafkaServerProperties()), KAFKA_SERVER_PROPERTIES_PATH)
+        .withCopyToContainer(Transferable.of(kafkaServerProperties()), serverPropertiesPath)
         .withExposedPorts(KAFKA_PORT)
         .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint("/bin/sh"))
         .withCommand("-c", kafkaCommand)
@@ -106,22 +107,31 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
   }
 
   public void configureZookeeper(String zookeeperAddress) {
-    this
-        .withEnv("KAFKA_CFG_ZOOKEEPER_CONNECT", zookeeperAddress)
-        .withEnv("ALLOW_PLAINTEXT_LISTENER", "yes") // Removed in 3.5.1
-        .withEnv("KAFKA_LOG_FLUSH_INTERVAL_MESSAGES", "1") // makes flush metrics available quickly
-        .withExposedPorts(KAFKA_PORT)
+    if (bitnamiImage) {
+      // bitnami images use different environment variable names
+      this.withEnv("KAFKA_CFG_ZOOKEEPER_CONNECT", zookeeperAddress)
+          // makes flush metrics available quickly
+          .withEnv("KAFKA_CFG_LOG_FLUSH_INTERVAL_MESSAGES", "1")
+          .withEnv("KAFKA_CFG_LOG_FLUSH_INTERVAL_MS", "100")
+          // Removed in 3.5.1
+          .withEnv("ALLOW_PLAINTEXT_LISTENER", "yes");
+    } else {
+      // this is more a to-do than a lack of support
+      throw new IllegalStateException("not supported yet for non-bitnami images");
+    }
+    this.withExposedPorts(KAFKA_PORT)
         .waitingFor(
             Wait.forLogMessage(".*KafkaServer.*started \\(kafka.server.KafkaServer\\).*", 1));
   }
 
   private void configureKafkaConnect() {
+    String connectPropertiesPath = basePath + "/config/connect-distributed.properties";
     this
         .withNetworkAliases(CONNECT_ALIAS)
-        .withCopyToContainer(Transferable.of(connectWorkerProperties()), CONNECT_PROPERTIES_PATH)
+        .withCopyToContainer(Transferable.of(connectWorkerProperties()), connectPropertiesPath)
         .withExposedPorts(CONNECT_PORT)
         .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint("/bin/sh"))
-        .withCommand("-c", "/opt/kafka/bin/connect-distributed.sh " + CONNECT_PROPERTIES_PATH)
+        .withCommand("-c", basePath + "/bin/connect-distributed.sh " + connectPropertiesPath)
         .waitingFor(
             Wait.forHttp("/connectors")
                 .forPort(CONNECT_PORT)
