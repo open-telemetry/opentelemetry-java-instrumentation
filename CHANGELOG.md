@@ -234,7 +234,8 @@
 - Stop warning about deprecated selector-based capture settings when the corresponding `.included`
   or `.excluded` replacement is also configured.
   ([#19571](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19571))
-- Preserve the configured database name's original case in `db.namespace` for R2DBC spans.
+- Preserve the configured database name's original case in legacy `db.name` and stable
+  `db.namespace` for R2DBC spans.
   ([#19615](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19615))
 - Capture spans for explicit prepared queries in Vert.x SQL client so `PreparedStatement.query()`
   execution keeps the correct `db.system` and connection options.
