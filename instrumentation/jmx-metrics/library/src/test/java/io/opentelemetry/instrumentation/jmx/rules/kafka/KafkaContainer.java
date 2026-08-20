@@ -79,22 +79,28 @@ super.doStart();
   }
 
   private void sendSampleMessage() {
+    ExecResult execResult;
     try {
-      execInContainer(
-          "/bin/sh",
-          "-c",
-          // we have to force empty JAVA_TOOL_OPTIONS to prevent agent being loaded on producer
-          "echo 'my message' | JAVA_TOOL_OPTIONS='' "
-              + basePath
-              + "/bin/kafka-console-producer.sh"
-              + " --bootstrap-server localhost:"
-              + KAFKA_PORT
-              + " --topic my-topic");
+      execResult =
+          execInContainer(
+              "/bin/sh",
+              "-c",
+              // we have to force empty JAVA_TOOL_OPTIONS to prevent agent being loaded on producer
+              "echo 'my message' | JAVA_TOOL_OPTIONS='' "
+                  + basePath
+                  + "/bin/kafka-console-producer.sh"
+                  + " --bootstrap-server localhost:"
+                  + KAFKA_PORT
+                  + " --topic my-topic");
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new IllegalStateException("Failed to send sample message to Kafka", e);
     } catch (Exception e) {
       throw new IllegalStateException("Failed to send sample message to Kafka", e);
+    }
+    if (execResult.getExitCode() != 0) {
+      throw new IllegalStateException(
+          "unable to send sample message to kafka: " + execResult.getStderr());
     }
   }
 
