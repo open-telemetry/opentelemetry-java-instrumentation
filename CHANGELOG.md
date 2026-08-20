@@ -19,10 +19,6 @@
   on consumers' compile classpaths, so consumers using its APIs must add the corresponding
   dependency directly.
   ([#19612](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19612))
-- Change `HttpCommonAttributesGetter` and `MessagingAttributesGetter` header-name accessors to
-  return `Iterable<String>` instead of `Collection<String>`.
-  ([#19689](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19689))
-
 ### 🚫 Deprecations
 
 - Deprecate configuring span suppression with the
