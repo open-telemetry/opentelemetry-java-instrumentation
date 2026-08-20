@@ -264,6 +264,9 @@ targets:
       target: ':instrumentation:r2dbc-1.0:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:rabbitmq-2.7:bootstrap'
+    - type: gradle
+      path: ./
       target: ':instrumentation:rabbitmq-2.7:javaagent'
     - type: gradle
       path: ./
