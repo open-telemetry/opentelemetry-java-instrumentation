@@ -34,6 +34,13 @@ public final class SofaRpcTelemetry {
     return new SofaRpcTelemetryBuilder(openTelemetry);
   }
 
+  SofaRpcTelemetry(
+      Instrumenter<SofaRpcRequest, SofaResponse> serverInstrumenter,
+      Instrumenter<SofaRpcRequest, SofaResponse> clientInstrumenter) {
+    this.serverInstrumenter = serverInstrumenter;
+    this.clientInstrumenter = clientInstrumenter;
+  }
+
   /**
    * Completes telemetry for an asynchronous client request when a custom transport bypasses the
    * standard SOFARPC callback path.
@@ -46,17 +53,11 @@ public final class SofaRpcTelemetry {
       SofaRequest request, @Nullable SofaResponse response, @Nullable Throwable exception) {
     ExtensionLoader<Filter> loader = ExtensionLoaderFactory.getExtensionLoader(Filter.class);
     if (loader.getExtensionClass(CLIENT_FILTER_NAME) == null) {
+      TracingFilter.completeAsyncRequest(request, response, exception);
       return;
     }
     Filter filter = loader.getExtension(CLIENT_FILTER_NAME);
     filter.onAsyncResponse(null, request, response, exception);
-  }
-
-  SofaRpcTelemetry(
-      Instrumenter<SofaRpcRequest, SofaResponse> serverInstrumenter,
-      Instrumenter<SofaRpcRequest, SofaResponse> clientInstrumenter) {
-    this.serverInstrumenter = serverInstrumenter;
-    this.clientInstrumenter = clientInstrumenter;
   }
 
   /**
