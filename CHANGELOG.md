@@ -134,6 +134,10 @@
   [#19565](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19565),
   [#19639](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19639),
   [#19640](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19640))
+- Under the upcoming 3.0 RPC semantic conventions behind `otel.semconv-stability.opt-in=rpc`,
+  Dubbo requests to unknown services emit server spans even when decoding fails before
+  `DubboProtocol.getInvoker()`, and record the original method in `rpc.method_original`.
+  ([#16668](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16668))
 - Log4j context data now includes `baggage.*` entries even when there is no current span.
   ([#19378](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19378))
 - When `otel.instrumentation.common.v3-preview=true`, the Micrometer bridge no longer exports `.max`
@@ -161,10 +165,6 @@
 
 ### 🛠️ Bug fixes
 
-- Dubbo requests to unknown services now emit server spans even when decode fails before
-  `DubboProtocol.getInvoker()`, and stable RPC semconv records the original method in
-  `rpc.method_original`.
-  ([#16668](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16668))
 - Use stable database-derived metric names for unnamed Alibaba Druid, c3p0, Tomcat JDBC, HikariCP,
   and Vibur connection pools.
   ([#19108](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19108),
