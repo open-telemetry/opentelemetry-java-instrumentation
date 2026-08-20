@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
+import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchOperationNames.operationName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -82,7 +83,7 @@ public abstract class AbstractElasticsearchTransportClientTest
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("ClusterHealthAction")
+                    span.hasName(CLUSTER_HEALTH_OPERATION)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -90,7 +91,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(NETWORK_PEER_ADDRESS, getAddress()),
                                 equalTo(NETWORK_PEER_PORT, getPort()),
                                 equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                                equalTo(maybeStable(DB_OPERATION), "ClusterHealthAction"),
+                                equalTo(maybeStable(DB_OPERATION), CLUSTER_HEALTH_OPERATION),
                                 equalTo(
                                     stringKey("elasticsearch.action"),
                                     experimental("ClusterHealthAction")),
@@ -136,7 +137,7 @@ public abstract class AbstractElasticsearchTransportClientTest
         new ArrayList<>(
             asList(
                 equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                equalTo(maybeStable(DB_OPERATION), "GetAction"),
+                equalTo(maybeStable(DB_OPERATION), GET_OPERATION),
                 equalTo(stringKey("elasticsearch.action"), experimental("GetAction")),
                 equalTo(stringKey("elasticsearch.request"), experimental("GetRequest")),
                 equalTo(
@@ -156,7 +157,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                         .hasStatus(StatusData.error())
                         .hasException(expectedException),
                 span ->
-                    span.hasName("GetAction")
+                    span.hasName(GET_OPERATION)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
@@ -183,6 +184,14 @@ public abstract class AbstractElasticsearchTransportClientTest
 
   protected String getPutMappingActionName() {
     return "PutMappingAction";
+  }
+
+  protected String getPutMappingWireActionName() {
+    return "indices:admin/mapping/put";
+  }
+
+  private String putMappingOperation() {
+    return operationName(getPutMappingActionName(), getPutMappingWireActionName());
   }
 
   @Test
@@ -218,11 +227,11 @@ public abstract class AbstractElasticsearchTransportClientTest
     // PutMappingAction and IndexAction run in separate threads so their order can vary
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName(
-            "CreateIndexAction", getPutMappingActionName(), "IndexAction", "GetAction"),
+            CREATE_INDEX_OPERATION, putMappingOperation(), INDEX_OPERATION, GET_OPERATION),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("CreateIndexAction")
+                    span.hasName(CREATE_INDEX_OPERATION)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -230,7 +239,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(NETWORK_PEER_ADDRESS, getAddress()),
                                 equalTo(NETWORK_PEER_PORT, getPort()),
                                 equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                                equalTo(maybeStable(DB_OPERATION), "CreateIndexAction"),
+                                equalTo(maybeStable(DB_OPERATION), CREATE_INDEX_OPERATION),
                                 equalTo(
                                     stringKey("elasticsearch.action"),
                                     experimental("CreateIndexAction")),
@@ -243,12 +252,12 @@ public abstract class AbstractElasticsearchTransportClientTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(getPutMappingActionName())
+                    span.hasName(putMappingOperation())
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), getPutMappingActionName()),
+                            equalTo(maybeStable(DB_OPERATION), putMappingOperation()),
                             equalTo(
                                 stringKey("elasticsearch.action"),
                                 experimental(getPutMappingActionName())),
@@ -258,7 +267,7 @@ public abstract class AbstractElasticsearchTransportClientTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("IndexAction")
+                    span.hasName(INDEX_OPERATION)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -266,7 +275,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(NETWORK_PEER_ADDRESS, getAddress()),
                                 equalTo(NETWORK_PEER_PORT, getPort()),
                                 equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-                                equalTo(maybeStable(DB_OPERATION), "IndexAction"),
+                                equalTo(maybeStable(DB_OPERATION), INDEX_OPERATION),
                                 equalTo(
                                     stringKey("elasticsearch.action"), experimental("IndexAction")),
                                 equalTo(
@@ -296,7 +305,7 @@ public abstract class AbstractElasticsearchTransportClientTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GetAction")
+                    span.hasName(GET_OPERATION)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -304,7 +313,7 @@ public abstract class AbstractElasticsearchTransportClientTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GetAction")
+                    span.hasName(GET_OPERATION)
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -318,7 +327,7 @@ public abstract class AbstractElasticsearchTransportClientTest
             equalTo(NETWORK_PEER_ADDRESS, getAddress()),
             equalTo(NETWORK_PEER_PORT, getPort()),
             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
-            equalTo(maybeStable(DB_OPERATION), "GetAction"),
+            equalTo(maybeStable(DB_OPERATION), GET_OPERATION),
             equalTo(stringKey("elasticsearch.action"), experimental("GetAction")),
             equalTo(stringKey("elasticsearch.request"), experimental("GetRequest")),
             equalTo(stringKey("elasticsearch.request.indices"), experimental(indexName)),
