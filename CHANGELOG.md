@@ -4,8 +4,8 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
-- Remove `ConfigPropertiesBackedConfigProvider` and its `create(ConfigProperties)` compatibility
-  API.
+- Remove the deprecated `ConfigPropertiesBackedConfigProvider` and its `create(ConfigProperties)`
+  compatibility API from the declarative config bridge.
   ([#19305](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19305))
 - Redact sensitive query parameters from `url.full` in AWS Lambda API Gateway and Elasticsearch REST
   spans.
@@ -56,7 +56,8 @@
   [#19605](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19605),
   [#19609](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19609),
   [#19610](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19610))
-- Deprecate `general.semconv_stability.opt_in` in favor of `general.stability_opt_in_list`, and
+- Deprecate the declarative configuration field `general.semconv_stability.opt_in` in favor of
+  `general.stability_opt_in_list`, and
   `general.sanitization.url.sensitive_query_parameters/development` in favor of
   `general.sanitization.url.sensitive_query_parameters`.
   ([#19561](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19561))
@@ -79,8 +80,6 @@
 - Deprecate `otel.instrumentation.micrometer.histogram-gauges.enabled` in favor of
   `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled`.
   ([#19613](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19613))
-- Deprecate `getRawQueryTextsForOldSemconv()` in favor of `getRawQueryTexts()`.
-  ([#19616](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19616))
 
 ### 🌟 New javaagent instrumentation
 
@@ -145,8 +144,8 @@
 - When `otel.instrumentation.common.v3-preview=true`, the Micrometer bridge no longer exports `.max`
   gauges for `Timer` and `DistributionSummary`.
   ([#19397](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19397))
-- Add the `IncludeExclude` selector API for matching strings against included and excluded glob
-  patterns.
+- Add the `IncludeExclude` selector API to `opentelemetry-instrumentation-api` for matching strings
+  against included and excluded glob patterns.
   ([#19451](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19451))
 - Emit Cassandra driver 3 consistency, coordinator, page size, idempotence, and speculative
   execution attributes.
@@ -226,13 +225,16 @@
 - Fix Pulsar receive spans under legacy messaging semantic conventions to evaluate suppression against
   the extracted producer context when receive telemetry is disabled.
   ([#19592](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19592))
-- Preserve `ClusterInvoker` when capturing the consumer registry address.
+- Preserve Dubbo's `ClusterInvoker` type when capturing the consumer registry address.
   ([#19568](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19568))
-- Stop warning when `capture_<selector>/development` is ignored because `<selector>.included` or
-  `<selector>.excluded` is already configured.
+- Stop warning about deprecated selector-based capture settings when the corresponding `.included`
+  or `.excluded` replacement is also configured.
   ([#19571](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19571))
 - Preserve the configured database name's original case in `db.namespace` for R2DBC spans.
   ([#19615](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19615))
+- Preserve legacy R2DBC batch attributes when stable and legacy database semantic conventions are
+  emitted together with `otel.semconv-stability.opt-in=database/dup`.
+  ([#19616](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19616))
 - Capture spans for explicit prepared queries in Vert.x SQL client so `PreparedStatement.query()`
   execution keeps the correct `db.system` and connection options.
   ([#19619](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19619))
