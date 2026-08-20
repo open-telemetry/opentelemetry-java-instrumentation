@@ -23,8 +23,8 @@
 
 - Deprecate configuring span suppression with the
   `otel.instrumentation.experimental.span-suppression-strategy` system property in favor of
-  `Experimental.setSpanSuppressionStrategy(...)` or declarative instrumentation configuration; the
-  Java agent still bridges the property through declarative config.
+  `Experimental.setSpanSuppressionStrategy(...)`; the Java agent still bridges the property through
+  declarative config.
   ([#19180](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19180))
 - Deprecate the legacy `MessageOperation`-based messaging helpers and
   `MessagingProducerMetrics.get()` / `MessagingConsumerMetrics.get()` in favor of
@@ -49,8 +49,7 @@
   ([#19495](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19495))
 - Deprecate `otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes` in favor of
   the `otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.{included,excluded}`
-  selector. The deprecated property keeps its exact-key matching and may be removed in the next
-  minor release.
+  selector.
   ([#19519](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19519))
 - Deprecate the Logback appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender#setCaptureMdcAttributes(String)` in favor of the new
@@ -61,25 +60,18 @@
 - Deprecate the Log4j appender `experimental.capture-mdc-attributes` configuration property and
   `OpenTelemetryAppender.Builder#setCaptureContextDataAttributes(String)` in favor of
   include/exclude context data selectors and
-  `OpenTelemetryAppender.Builder#setContextDataAttributes(IncludeExclude)`. The deprecated property
-  and method keep their existing behavior, which matches keys literally unless the list contains
-  only `*`, and may be removed in the next minor release.
+  `OpenTelemetryAppender.Builder#setContextDataAttributes(IncludeExclude)`.
   ([#19521](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19521))
 - Deprecate `otel.instrumentation.servlet.experimental.capture-request-parameters` and
   `Experimental#setCaptureRequestParameters(...)` in favor of the
   `otel.instrumentation.servlet.experimental.request-parameters.{included,excluded}` properties and
-  `Experimental#setRequestParameters(ServletTelemetryBuilder, IncludeExclude)`. The deprecated
-  property and method remain as include-only aliases.
+  `Experimental#setRequestParameters(ServletTelemetryBuilder, IncludeExclude)`.
   ([#19522](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19522))
 - Deprecate `otel.instrumentation.messaging.experimental.capture-headers` and
   `setCapturedHeaders(Collection<String>)` in favor of
   `otel.instrumentation.messaging.experimental.headers.included` /
   `otel.instrumentation.messaging.experimental.headers.excluded` and `setHeaders(IncludeExclude)`.
   ([#19523](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19523))
-- Mark the legacy `MessageOperation`-based messaging helpers and
-  `OpenTelemetryMeterRegistryBuilder#setMicrometerHistogramGaugesEnabled(boolean)` as removable in
-  the next minor release.
-  ([#19534](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19534))
 - Rename the declarative config keys for `otel.semconv-stability.opt-in` and
   `otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters` to
   `general.stability_opt_in_list` and `general.sanitization.url.sensitive_query_parameters`, while
