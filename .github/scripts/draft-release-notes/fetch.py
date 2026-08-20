@@ -46,6 +46,7 @@ class Candidate:
     touches_src_main: bool
     deprecated_added: bool
     deprecated_removed: bool
+    changes_unreleased: bool
 
     @property
     def bundle_name(self) -> str:
@@ -261,6 +262,56 @@ def count_deprecated_deltas(commit_hash: str) -> tuple[int, int]:
     return added_count, removed_count
 
 
+def patch_adds_lines_in_range(patch: str, start_line: int, end_line: int) -> bool:
+    new_line: int | None = None
+    for line in patch.splitlines():
+        hunk = re.match(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@", line)
+        if hunk is not None:
+            new_line = int(hunk.group(1))
+            continue
+        if new_line is None:
+            continue
+        if line.startswith("+") and not line.startswith("+++"):
+            if start_line <= new_line < end_line:
+                return True
+            new_line += 1
+        elif line.startswith("-") and not line.startswith("---"):
+            continue
+        elif line.startswith(" "):
+            new_line += 1
+    return False
+
+
+def changes_unreleased_changelog(commit_hash: str, files: list[str]) -> bool:
+    if "CHANGELOG.md" not in files:
+        return False
+    content = run_command(
+        ["git", "show", f"{commit_hash}:CHANGELOG.md"], check=False
+    )
+    if content.returncode != 0:
+        return False
+    lines = content.stdout.splitlines()
+    try:
+        start_line = lines.index("## Unreleased") + 1
+    except ValueError:
+        return False
+    end_line = next(
+        (
+            index
+            for index, line in enumerate(lines[start_line:], start=start_line + 1)
+            if line.startswith("## ")
+        ),
+        len(lines) + 1,
+    )
+    patch = run_command(
+        ["git", "diff-tree", "-p", commit_hash, "--", "CHANGELOG.md"],
+        check=False,
+    )
+    return patch.returncode == 0 and patch_adds_lines_in_range(
+        patch.stdout, start_line, end_line
+    )
+
+
 def build_candidates(range_spec: str) -> list[Candidate]:
     candidates: list[Candidate] = []
     hashes = get_commit_hashes(range_spec)
@@ -281,6 +332,7 @@ def build_candidates(range_spec: str) -> list[Candidate]:
                 touches_src_main=touches_user_facing_src_main(files),
                 deprecated_added=added_count > removed_count,
                 deprecated_removed=removed_count > added_count,
+                changes_unreleased=changes_unreleased_changelog(commit_hash, files),
             )
         )
     return candidates
@@ -481,7 +533,10 @@ def _is_candidate_fresh(candidate_dir: Path, candidate: Candidate) -> bool:
     existing = _load_existing_meta(meta_path)
     if not isinstance(existing, dict):
         return False
-    return existing.get("commit_hash") == candidate.commit_hash
+    return (
+        existing.get("commit_hash") == candidate.commit_hash
+        and "changes_unreleased" in existing
+    )
 
 
 def prepare_bundle(
@@ -657,6 +712,7 @@ def _fetch_candidate(
         "author": get_author_name(pr_data.get("author")) if pr_data else None,
         "bundle_dir": f"{candidate.bundle_group}/{candidate.bundle_name}",
         "commit_hash": candidate.commit_hash,
+        "changes_unreleased": candidate.changes_unreleased,
         "deprecated_added": candidate.deprecated_added,
         "deprecated_removed": candidate.deprecated_removed,
         "files": gh_files or candidate.files,
