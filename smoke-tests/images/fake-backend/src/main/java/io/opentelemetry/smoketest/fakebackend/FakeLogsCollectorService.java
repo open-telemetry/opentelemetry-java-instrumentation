@@ -16,22 +16,25 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 public class FakeLogsCollectorService extends LogsServiceGrpc.LogsServiceImplBase {
 
-  private final BlockingQueue<ExportLogsServiceRequest> exportRequests =
-      new LinkedBlockingDeque<>();
+  private final RequestsStorage storage;
+
+  public FakeLogsCollectorService(RequestsStorage storage) {
+    this.storage = storage;
+  }
 
   List<ExportLogsServiceRequest> getRequests() {
-    return ImmutableList.copyOf(exportRequests);
+    return storage.getLogsRequests();
   }
 
   void clearRequests() {
-    exportRequests.clear();
+    storage.clearLogs();
   }
 
   @Override
   public void export(
       ExportLogsServiceRequest request,
       StreamObserver<ExportLogsServiceResponse> responseObserver) {
-    exportRequests.add(request);
+    storage.addLogsRequest(request);
     responseObserver.onNext(ExportLogsServiceResponse.getDefaultInstance());
     responseObserver.onCompleted();
   }

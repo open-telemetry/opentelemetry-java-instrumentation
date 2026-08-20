@@ -15,6 +15,7 @@ import com.linecorp.armeria.common.HttpData;
 import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.MediaType;
+import com.linecorp.armeria.server.HttpService;
 import com.linecorp.armeria.server.Server;
 import com.linecorp.armeria.server.grpc.GrpcService;
 import com.linecorp.armeria.server.healthcheck.HealthCheckService;
@@ -74,12 +75,28 @@ public class FakeBackendMain {
   }
 
   public static void main(String[] args) {
-    var traceCollector = new FakeTraceCollectorService();
-    var metricsCollector = new FakeMetricsCollectorService();
-    var logsCollector = new FakeLogsCollectorService();
+    RequestsStorage storage = new RequestsStorage();
+    var traceCollector = new FakeTraceCollectorService(storage);
+    var metricsCollector = new FakeMetricsCollectorService(storage);
+    var logsCollector = new FakeLogsCollectorService(storage);
     var server =
         Server.builder()
             .http(8080)
+            .service(
+                "/v1/traces", (ctx,req) -> {
+                  return HttpResponse.of(HttpStatus.OK);
+                }
+            )
+            .service(
+                "/v1/metrics", (ctx,req) -> {
+                  return HttpResponse.of(HttpStatus.OK);
+                }
+            )
+            .service(
+                "/v1/logs", (ctx,req) -> {
+                  return HttpResponse.of(HttpStatus.OK);
+                }
+            )
             .service(
                 GrpcService.builder()
                     .addService(traceCollector)

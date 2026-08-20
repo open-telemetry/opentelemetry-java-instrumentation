@@ -16,22 +16,25 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 class FakeMetricsCollectorService extends MetricsServiceGrpc.MetricsServiceImplBase {
 
-  private final BlockingQueue<ExportMetricsServiceRequest> exportRequests =
-      new LinkedBlockingDeque<>();
+  private final RequestsStorage storage;
+
+  public FakeMetricsCollectorService(RequestsStorage storage) {
+    this.storage = storage;
+  }
 
   List<ExportMetricsServiceRequest> getRequests() {
-    return ImmutableList.copyOf(exportRequests);
+    return storage.getMetricsRequests();
   }
 
   void clearRequests() {
-    exportRequests.clear();
+    storage.clearMetrics();
   }
 
   @Override
   public void export(
       ExportMetricsServiceRequest request,
       StreamObserver<ExportMetricsServiceResponse> responseObserver) {
-    exportRequests.add(request);
+    storage.addMetricsRequest(request);
     responseObserver.onNext(ExportMetricsServiceResponse.getDefaultInstance());
     responseObserver.onCompleted();
   }
