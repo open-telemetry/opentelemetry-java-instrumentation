@@ -50,15 +50,59 @@ tasks {
     }
   }
 
+  test {
+    filter {
+      excludeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
+    }
+  }
+
   val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
+    filter {
+      excludeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
+    }
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
+  val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
+    }
+    systemProperty("metadataConfig", "otel.instrumentation.common.db.query-sanitization.enabled=false")
+    jvmArgs("-Dotel.instrumentation.common.db.query-sanitization.enabled=false")
+  }
+
+  val testQuerySanitizationEnabledOverride = register<Test>("testQuerySanitizationEnabledOverride") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("InfluxDbClientTest.testQueryWithTwoArguments")
+    }
+    systemProperty("metadataConfig", "otel.instrumentation.common.db.query-sanitization.enabled=false,otel.instrumentation.influxdb.query-sanitization.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.db.query-sanitization.enabled=false")
+    jvmArgs("-Dotel.instrumentation.influxdb.query-sanitization.enabled=true")
+  }
+
+  val testQuerySanitizationDisabledStableSemconv = register<Test>("testQuerySanitizationDisabledStableSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
+    }
+    systemProperty("metadataConfig", "otel.instrumentation.common.db.query-sanitization.enabled=false,otel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.instrumentation.common.db.query-sanitization.enabled=false")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testStableSemconv, testQuerySanitizationDisabled, testQuerySanitizationDisabledStableSemconv, testQuerySanitizationEnabledOverride)
   }
 }
