@@ -7,9 +7,6 @@
 - Remove the deprecated `ConfigPropertiesBackedConfigProvider` and its `create(ConfigProperties)`
   compatibility API from the declarative config bridge.
   ([#19305](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19305))
-- Redact sensitive query parameters from `url.full` in AWS Lambda API Gateway and Elasticsearch REST
-  spans.
-  ([#19424](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19424))
 - Stop exposing `opentelemetry-instrumentation-api-incubator` on library instrumentation compile
   classpaths.
   ([#19612](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19612))
@@ -208,8 +205,10 @@
 - Preload `MethodHandle$1` during agent startup to avoid `ClassCircularityError` on JDK 17 that can
   break invokedynamic call site linking.
   ([#19398](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19398))
-- Redact AWS SigV4 query parameters, embedded URL credentials, and secrets in process command lines.
+- Redact sensitive data from AWS SigV4 query parameters, AWS Lambda API Gateway and Elasticsearch REST
+  URLs, embedded URL credentials, and process command lines.
   ([#19422](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19422),
+  [#19424](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19424),
   [#19425](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19425),
   [#19514](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19514))
 - Fix Micrometer custom meter naming and prevent metric descriptions from leaking between related
