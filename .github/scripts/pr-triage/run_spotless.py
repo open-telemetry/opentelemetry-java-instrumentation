@@ -35,7 +35,7 @@ def main() -> int:
         progress("Running Spotless for Scala, Groovy, and miscellaneous files")
         run(gradlew_cmd("spotlessApply"), summary, stream_output=True)
         progress("Running Flint lint fixes")
-        run(["mise", "run", "lint:fix"], summary, stream_output=True)
+        run(["mise", "run", "lint:fix", "--allow-fixed"], summary, stream_output=True)
         progress("Checking lint changes")
         diff_check(summary)
 
