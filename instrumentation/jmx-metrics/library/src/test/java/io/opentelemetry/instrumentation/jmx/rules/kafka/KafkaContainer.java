@@ -125,7 +125,7 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
         .waitingFor(Wait.forListeningPort());
   }
 
-  public void configureZookeeper(String zookeeperAddress) {
+  private void configureZookeeper(String zookeeperAddress) {
     if (bitnamiImage) {
       // bitnami images use different environment variable names
       this.withEnv("KAFKA_CFG_ZOOKEEPER_CONNECT", zookeeperAddress)
