@@ -195,13 +195,11 @@ check {
 ### Variant tasks in modules with custom `JvmTestSuite`s
 
 `testing.suites` includes the built-in `test` suite alongside any suite the module registers
-with `register<JvmTestSuite>(...)`. A variant task bound to `sourceSets.test` therefore covers
-only the default source set, and the custom suites never run under that variant's
-configuration — a silent gap, because the suites themselves still run in their default mode.
+with `register<JvmTestSuite>(...)`. A variant task bound to `sourceSets.test` covers only the
+default source set.
 
-When a module registers custom `JvmTestSuite`s **and** declares variant test tasks (semconv
-stability, experimental attributes, and so on), derive one task per suite and make `check`
-depend on the derived list:
+Derive one variant task per suite only when every suite exercises behavior affected by the
+variant and the same task configuration applies to all of them:
 
 ```kotlin
 val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
@@ -221,15 +219,21 @@ check {
 ```
 
 The map produces `testStableSemconv` for the built-in suite, so the conventional task name is
-preserved. Declare a separate map per variant when a module has more than one — for example
+preserved. Declare a separate map per variant when a module has more than one, for example
 `${suite.name}StableSemconv` and `${suite.name}BothSemconv` for RPC modules.
 
 Points to watch:
 
+- Do not fan a variant out merely because custom suites exist. Keep it bound to
+  `sourceSets.test` when the custom suites do not exercise the affected behavior.
+- Prefer the uniform map above when every suite is relevant. If only a few custom suites are
+  relevant, select those suites explicitly. Per-suite repair blocks are justified only when
+  the extra coverage is worth the additional build-script complexity.
 - The `testing { suites { … } }` block must appear **before** the `tasks { }` block that maps
   over it. `.map` realizes the container, so suites registered afterwards are silently missed.
-- A suite whose test task is conditionally disabled needs the same condition on its derived
-  task, applied with a `named(...)` block after the map.
+- When a source suite task is conditionally disabled, inherit its state in the derived task
+  with `isEnabled = project.tasks.named(suite.name).get().enabled` instead of repeating the
+  condition in a separate `named(...)` block.
 - Keep a variant task bound to a single source set when it is deliberately narrow — one bound
   to a specific suite, or narrowed with `includeTestsMatching(...)`. Fanning such a task across
   every suite fails the build, because Gradle fails a `Test` task whose filter matches nothing.

@@ -79,15 +79,13 @@ tasks {
 
         jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
         systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
+        isEnabled = project.tasks.named(suite.name).get().enabled
       }
     }
 
   // client-java-api 22.0.0+ requires Java 11+
   if (testJavaVersion.isJava8) {
     named<Test>("version22TestExperimental") {
-      enabled = false
-    }
-    named<Test>("version22TestStableSemconv") {
       enabled = false
     }
   }
