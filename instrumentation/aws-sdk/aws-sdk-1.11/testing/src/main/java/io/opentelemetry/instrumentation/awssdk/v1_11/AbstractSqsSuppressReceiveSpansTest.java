@@ -156,6 +156,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("send testSdkSqs").hasNoParent(),
                     span -> span.hasName("process testSdkSqs").hasParent(trace.getSpan(0))));
+
+    SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 2);
   }
 
   @Test

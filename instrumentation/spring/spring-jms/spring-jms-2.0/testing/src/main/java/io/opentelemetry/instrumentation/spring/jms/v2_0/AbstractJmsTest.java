@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -78,6 +79,19 @@ public abstract class AbstractJmsTest {
       String operation,
       boolean testHeaders,
       String msgId) {
+    assertConsumerSpan(
+        span, producer, parent, destinationName, operation, testHeaders, msgId, null);
+  }
+
+  protected void assertConsumerSpan(
+      SpanDataAssert span,
+      SpanData producer,
+      SpanData parent,
+      String destinationName,
+      String operation,
+      boolean testHeaders,
+      String msgId,
+      String subscriptionName) {
     span.hasName(
             emitStableMessagingSemconv()
                 ? destinationName.equals("(temporary)")
@@ -94,11 +108,21 @@ public abstract class AbstractJmsTest {
       span.hasLinks(LinkData.create(producer.getSpanContext()));
     }
     span.hasAttributesSatisfyingExactly(
-        consumerAttributeAssertions(destinationName, testHeaders, operation, msgId));
+        consumerAttributeAssertions(
+            destinationName, testHeaders, operation, msgId, subscriptionName));
   }
 
   protected List<AttributeAssertion> consumerAttributeAssertions(
       String destinationName, boolean testHeaders, String operation, String msgId) {
+    return consumerAttributeAssertions(destinationName, testHeaders, operation, msgId, null);
+  }
+
+  protected List<AttributeAssertion> consumerAttributeAssertions(
+      String destinationName,
+      boolean testHeaders,
+      String operation,
+      String msgId,
+      String subscriptionName) {
     List<AttributeAssertion> attributeAssertions =
         new ArrayList<>(
             asList(
@@ -122,6 +146,12 @@ public abstract class AbstractJmsTest {
       attributeAssertions.add(
           equalTo(
               stringArrayKey("messaging.header.Test_Message_Int_Header"), singletonList("1234")));
+    }
+    if (subscriptionName != null) {
+      attributeAssertions.add(
+          equalTo(
+              MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+              emitStableMessagingSemconv() ? subscriptionName : null));
     }
     return attributeAssertions;
   }

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
@@ -35,6 +36,8 @@ public class InfluxDbSingletons {
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(queryAttributesGetter)
                     .setTableAttribute(null)
+                    .setQuerySanitizationEnabled(
+                        DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "influxdb"))
                     .build())
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(queryBuilder);

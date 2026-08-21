@@ -12,6 +12,7 @@ import static java.util.Collections.singletonList;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -92,5 +93,10 @@ class SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Respo
   public List<String> getMessageHeader(Request<?> request, String name) {
     String value = SqsAccess.getMessageAttribute(request, name);
     return value != null ? singletonList(value) : emptyList();
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(Request<?> request) {
+    return SqsAccess.getMessageAttributeNames(request);
   }
 }

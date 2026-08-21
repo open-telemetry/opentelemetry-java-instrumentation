@@ -19,4 +19,6 @@ configurations:
       regardless of this setting.
     type: boolean
     default: false
+  - ref: messaging.headers.included
+  - ref: messaging.headers.excluded
   - ref: messaging.capture-headers

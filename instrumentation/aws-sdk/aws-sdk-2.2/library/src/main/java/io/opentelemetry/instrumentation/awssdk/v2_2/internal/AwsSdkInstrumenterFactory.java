@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.inter
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Arrays.asList;
@@ -25,13 +26,17 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessContextCustomizer;
@@ -42,6 +47,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -60,6 +66,7 @@ public final class AwsSdkInstrumenterFactory {
   private static final String SEND_OPERATION_NAME = "send";
   private static final String RECEIVE_OPERATION_NAME = "receive";
   private static final String PROCESS_OPERATION_NAME = "process";
+  private static final String DELETE_OPERATION_NAME = "delete";
 
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<String> MESSAGING_MESSAGE_ID =
@@ -73,6 +80,27 @@ public final class AwsSdkInstrumenterFactory {
   static final AwsSdkHttpAttributesGetter httpAttributesGetter = new AwsSdkHttpAttributesGetter();
   static final AttributesExtractor<ExecutionAttributes, Response> httpAttributesExtractor =
       HttpClientAttributesExtractor.create(httpAttributesGetter);
+  private static final AttributesExtractor<ExecutionAttributes, Response>
+      lateServerAttributesExtractor =
+          new AttributesExtractor<ExecutionAttributes, Response>() {
+            private final AttributesExtractor<ExecutionAttributes, Response> delegate =
+                ServerAttributesExtractor.create(httpAttributesGetter);
+
+            @Override
+            public void onStart(
+                AttributesBuilder attributes, Context context, ExecutionAttributes request) {}
+
+            @Override
+            public void onEnd(
+                AttributesBuilder attributes,
+                Context context,
+                ExecutionAttributes request,
+                @Nullable Response response,
+                @Nullable Throwable error) {
+              // The finalized HTTP request is not available when the producer instrumenter starts.
+              delegate.onStart(attributes, context, request);
+            }
+          };
 
   private static final AttributesExtractor<ExecutionAttributes, Response>
       httpClientSuppressionAttributesExtractor =
@@ -98,7 +126,7 @@ public final class AwsSdkInstrumenterFactory {
 
   private final OpenTelemetry openTelemetry;
   @Nullable private final TextMapPropagator messagingPropagator;
-  private final List<String> capturedHeaders;
+  private final IncludeExclude headers;
   private final boolean captureExperimentalSpanAttributes;
   private final boolean messagingReceiveInstrumentationEnabled;
   private final boolean useXrayPropagator;
@@ -106,13 +134,13 @@ public final class AwsSdkInstrumenterFactory {
   public AwsSdkInstrumenterFactory(
       OpenTelemetry openTelemetry,
       @Nullable TextMapPropagator messagingPropagator,
-      List<String> capturedHeaders,
+      IncludeExclude headers,
       boolean captureExperimentalSpanAttributes,
       boolean messagingReceiveInstrumentationEnabled,
       boolean useXrayPropagator) {
     this.openTelemetry = openTelemetry;
     this.messagingPropagator = messagingPropagator;
-    this.capturedHeaders = capturedHeaders;
+    this.headers = headers;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
     this.useXrayPropagator = useXrayPropagator;
@@ -134,6 +162,14 @@ public final class AwsSdkInstrumenterFactory {
         : defaultAttributesExtractors;
   }
 
+  private List<AttributesExtractor<ExecutionAttributes, Response>>
+      attributesExtractorsWithLateServerAttributes() {
+    List<AttributesExtractor<ExecutionAttributes, Response>> extractors =
+        new ArrayList<>(attributesExtractors());
+    extractors.add(lateServerAttributesExtractor);
+    return extractors;
+  }
+
   private List<AttributesExtractor<ExecutionAttributes, Response>> consumerAttributesExtractors() {
     return captureExperimentalSpanAttributes
         ? extendedConsumerAttributesExtractors
@@ -145,7 +181,7 @@ public final class AwsSdkInstrumenterFactory {
       MessagingOperationType operationType,
       String operationName) {
     return MessagingAttributesExtractor.builder(getter, operationType, operationName)
-        .setCapturedHeaders(capturedHeaders)
+        .setHeaders(headers)
         .build();
   }
 
@@ -162,6 +198,7 @@ public final class AwsSdkInstrumenterFactory {
         toSqsRequestExtractors(consumerAttributesExtractors()),
         singletonList(messagingAttributeExtractor),
         builder -> {
+          builder.addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
           setMessagingReceiveExceptionEventExtractor(builder);
           if (emitStableMessagingSemconv()) {
             builder.addSpanLinksExtractor(
@@ -190,7 +227,11 @@ public final class AwsSdkInstrumenterFactory {
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractors(toSqsRequestExtractors(consumerAttributesExtractors()))
             .addAttributesExtractor(
-                messagingAttributesExtractor(getter, operationType, PROCESS_OPERATION_NAME));
+                messagingAttributesExtractor(getter, operationType, PROCESS_OPERATION_NAME))
+            .addOperationMetrics(MessagingProcessMetrics.get());
+    if (!messagingReceiveInstrumentationEnabled && emitStableMessagingSemconv()) {
+      builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
+    }
     setMessagingProcessExceptionEventExtractor(builder);
 
     if (emitStableMessagingSemconv() || messagingReceiveInstrumentationEnabled) {
@@ -266,9 +307,31 @@ public final class AwsSdkInstrumenterFactory {
         openTelemetry,
         MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME),
         SpanKindExtractor.alwaysProducer(),
-        attributesExtractors(),
+        attributesExtractorsWithLateServerAttributes(),
         singletonList(messagingAttributeExtractor),
-        builder -> setMessagingSendExceptionEventExtractor(builder),
+        builder -> {
+          builder.addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+          setMessagingSendExceptionEventExtractor(builder);
+        },
+        true);
+  }
+
+  public Instrumenter<ExecutionAttributes, Response> settleInstrumenter() {
+    MessagingOperationType operationType = MessagingOperationType.SETTLE;
+    SqsAttributesGetter getter = new SqsAttributesGetter();
+    AttributesExtractor<ExecutionAttributes, Response> messagingAttributeExtractor =
+        messagingAttributesExtractor(getter, operationType, DELETE_OPERATION_NAME);
+
+    return createInstrumenter(
+        openTelemetry,
+        MessagingSpanNameExtractor.create(getter, operationType, DELETE_OPERATION_NAME),
+        MessagingSpanKindExtractor.create(operationType),
+        attributesExtractorsWithLateServerAttributes(),
+        singletonList(messagingAttributeExtractor),
+        builder -> {
+          builder.addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
+          setMessagingSettleExceptionEventExtractor(builder);
+        },
         true);
   }
 

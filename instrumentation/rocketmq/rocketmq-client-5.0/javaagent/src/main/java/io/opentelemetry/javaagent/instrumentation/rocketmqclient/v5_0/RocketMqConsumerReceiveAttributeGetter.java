@@ -5,7 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.message.MessageView;
@@ -19,8 +23,11 @@ class RocketMqConsumerReceiveAttributeGetter
   }
 
   @Override
+  @Nullable
   public String getDestination(RocketMqReceiveRequest request) {
-    return request.getRequest().getMessageQueue().getTopic().getName();
+    return emitStableMessagingSemconv()
+        ? request.getDestination()
+        : request.getRequestDestination();
   }
 
   @Nullable
@@ -60,6 +67,8 @@ class RocketMqConsumerReceiveAttributeGetter
   @Nullable
   @Override
   public String getMessageId(RocketMqReceiveRequest request, @Nullable List<MessageView> unused) {
+    // receiving is a batching operation, so the message id always goes on the links describing the
+    // individual messages
     return null;
   }
 
@@ -74,5 +83,12 @@ class RocketMqConsumerReceiveAttributeGetter
   public Long getBatchMessageCount(
       RocketMqReceiveRequest request, @Nullable List<MessageView> messages) {
     return messages != null ? (long) messages.size() : null;
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(RocketMqReceiveRequest request) {
+    // per-message headers that vary across a batch belong on the span links, so the receive span
+    // does not capture any headers
+    return emptyList();
   }
 }

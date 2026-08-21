@@ -10,7 +10,10 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 final class RabbitChannelAttributesGetter
@@ -97,5 +100,11 @@ final class RabbitChannelAttributesGetter
       }
     }
     return emptyList();
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(ChannelAndMethod channelAndMethod) {
+    Map<String, Object> headers = channelAndMethod.getHeaders();
+    return headers == null ? emptyList() : new ArrayList<>(headers.keySet());
   }
 }

@@ -30,6 +30,12 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
 
   @Override
   public String getDbOperationName(RediscalaRequest request) {
+    return request.getStableOperationName();
+  }
+
+  @Override
+  @SuppressWarnings("deprecation") // old database semconv still use db.operation
+  public String getDbOperation(RediscalaRequest request) {
     return request.getOperationName();
   }
 
