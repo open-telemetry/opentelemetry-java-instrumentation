@@ -40,7 +40,6 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
 
   private KafkaContainer(String image) {
     super(image);
-    this.withStartupTimeout(Duration.ofMinutes(1));
     this.mode = Mode.KRAFT;
     this.bitnamiImage = image.startsWith("bitnami");
     this.basePath = bitnamiImage ? "/opt/bitnami/kafka" : "/opt/kafka";
@@ -122,7 +121,7 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
         .withExposedPorts(KAFKA_PORT)
         .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint("/bin/sh"))
         .withCommand("-c", kafkaCommand)
-        .waitingFor(Wait.forListeningPort());
+        .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(1)));
   }
 
   private void configureZookeeper(String zookeeperAddress) {
@@ -140,7 +139,8 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
     }
     this.withExposedPorts(KAFKA_PORT)
         .waitingFor(
-            Wait.forLogMessage(".*KafkaServer.*started \\(kafka.server.KafkaServer\\).*", 1));
+            Wait.forLogMessage(".*KafkaServer.*started \\(kafka.server.KafkaServer\\).*", 1)
+                .withStartupTimeout(Duration.ofMinutes(1)));
   }
 
   private void configureKafkaConnect() {
@@ -153,7 +153,7 @@ public class KafkaContainer extends GenericContainer<KafkaContainer> {
         .waitingFor(
             Wait.forHttp("/connectors")
                 .forPort(CONNECT_PORT)
-                .withStartupTimeout(Duration.ofMinutes(5)));
+                .withStartupTimeout(Duration.ofMinutes(1)));
   }
 
   private static String connectWorkerProperties() {
