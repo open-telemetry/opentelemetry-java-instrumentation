@@ -17,7 +17,11 @@ import io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS
-import io.opentelemetry.semconv.DbAttributes.{DB_OPERATION_NAME, DB_SYSTEM_NAME}
+import io.opentelemetry.semconv.DbAttributes.{
+  DB_NAMESPACE,
+  DB_OPERATION_NAME,
+  DB_SYSTEM_NAME
+}
 import io.opentelemetry.semconv.ServerAttributes.{SERVER_ADDRESS, SERVER_PORT}
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{AfterAll, BeforeAll, Test, TestInstance}
@@ -39,9 +43,12 @@ class RediscalaClientTest {
 
   @RegisterExtension val testing = AgentInstrumentationExtension.create
 
+  private val nonDefaultDbIndex = 1
+
   var system: Object = null
   var redisServer: GenericContainer[_] = null
   var redisClient: RedisClient = null
+  var nonDefaultDbClient: RedisClient = null
   var host: String = null
   var port: JLong = null
 
@@ -63,17 +70,22 @@ class RediscalaClientTest {
         system = clazz.getMethod("create").invoke(null)
     }
 
+    redisClient = createClient(None)
+    nonDefaultDbClient = createClient(Some(nonDefaultDbIndex))
+  }
+
+  private def createClient(db: Option[Int]): RedisClient =
     try {
       // latest RedisClient constructor takes username as argument
       classOf[RedisClient].getMethod("username")
-      redisClient = classOf[RedisClient]
+      classOf[RedisClient]
         .getConstructors()(0)
         .newInstance(
           host,
           Integer.valueOf(port.intValue()),
           Option.apply(null),
           Option.apply(null),
-          Option.apply(null),
+          db,
           "RedisClient",
           Option.apply(null),
           system,
@@ -82,13 +94,13 @@ class RediscalaClientTest {
         .asInstanceOf[RedisClient]
     } catch {
       case _: Exception =>
-        redisClient = classOf[RedisClient]
+        classOf[RedisClient]
           .getConstructors()(0)
           .newInstance(
             host,
             Integer.valueOf(port.intValue()),
             Option.apply(null),
-            Option.apply(null),
+            db,
             "RedisClient",
             Option.apply(null),
             system,
@@ -96,7 +108,6 @@ class RediscalaClientTest {
           )
           .asInstanceOf[RedisClient]
     }
-  }
 
   @AfterAll
   def tearDown(): Unit = {
@@ -351,6 +362,93 @@ class RediscalaClientTest {
 
   private def spanName(operation: String): String =
     if (emitStableDatabaseSemconv()) s"$operation $host:$port" else operation
+
+  @Test def testNonDefaultDatabaseIndex(): Unit = {
+    val value = testing.runWithSpan(
+      "parent",
+      new ThrowingSupplier[Future[Boolean], Exception] {
+        override def get(): Future[Boolean] =
+          nonDefaultDbClient.set("non-default-db", "value")
+      }
+    )
+
+    assertThat(Await.result(value, Duration.apply("3 second"))).isTrue
+    testing.waitAndAssertTraces(new Consumer[TraceAssert] {
+      override def accept(trace: TraceAssert): Unit =
+        trace.hasSpansSatisfyingExactly(
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit = {
+              span.hasName("parent").hasNoParent
+            }
+          },
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit = {
+              span
+                // the database index is deliberately not part of the span name
+                .hasName(spanName("SET"))
+                .hasKind(CLIENT)
+                .hasParent(trace.getSpan(0))
+                .hasAttributesSatisfyingExactly(
+                  equalTo(maybeStable(DB_SYSTEM), REDIS),
+                  equalTo(maybeStable(DB_OPERATION), "SET"),
+                  equalTo(DB_NAMESPACE, nonDefaultNamespace),
+                  equalTo(SERVER_ADDRESS, host),
+                  equalTo(SERVER_PORT, port)
+                )
+            }
+          }
+        )
+    })
+  }
+
+  @Test def testNonDefaultDatabaseIndexTransaction(): Unit = {
+    val result = testing.runWithSpan(
+      "parent",
+      new ThrowingSupplier[Future[_], Exception] {
+        override def get(): Future[_] = {
+          val transaction = nonDefaultDbClient.multi()
+          transaction.set("non-default-db-transaction-1", "value")
+          transaction.set("non-default-db-transaction-2", "value")
+          transaction.exec()
+        }
+      }
+    )
+
+    Await.result(result, Duration("3 second"))
+    testing.waitAndAssertTraces(new Consumer[TraceAssert] {
+      override def accept(trace: TraceAssert): Unit =
+        trace.hasSpansSatisfyingExactly(
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit = {
+              span.hasName("parent").hasNoParent
+            }
+          },
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit = {
+              span
+                // the database index is deliberately not part of the span name
+                .hasName(spanName("MULTI SET"))
+                .hasKind(CLIENT)
+                .hasParent(trace.getSpan(0))
+                .hasAttributesSatisfyingExactly(
+                  equalTo(maybeStable(DB_SYSTEM), REDIS),
+                  equalTo(maybeStable(DB_OPERATION), "MULTI SET"),
+                  equalTo(DB_NAMESPACE, nonDefaultNamespace),
+                  equalTo(SERVER_ADDRESS, host),
+                  equalTo(SERVER_PORT, port),
+                  equalTo(
+                    DB_OPERATION_BATCH_SIZE,
+                    if (emitStableDatabaseSemconv()) JLong.valueOf(2) else null
+                  )
+                )
+            }
+          }
+        )
+    })
+  }
+
+  private def nonDefaultNamespace: String =
+    if (emitStableDatabaseSemconv()) nonDefaultDbIndex.toString else null
 
   private def transactionScenarios(): Stream[Arguments] =
     Stream.of(
