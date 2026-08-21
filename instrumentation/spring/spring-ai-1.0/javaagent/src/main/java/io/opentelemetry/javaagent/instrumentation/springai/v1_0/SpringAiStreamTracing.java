@@ -51,8 +51,7 @@ public class SpringAiStreamTracing {
           || !chatInstrumenter.shouldStart(parentContext, request)) {
         return source;
       }
-      context =
-          suppressNestedChatModelInstrumentation(chatInstrumenter.start(parentContext, request));
+      context = chatInstrumenter.start(parentContext, request);
     } catch (Throwable ignored) {
       // This method runs outside of Byte Buddy advice when the publisher is subscribed.
       return source;
@@ -69,6 +68,13 @@ public class SpringAiStreamTracing {
               messageContentSpanAttributeMaxLength());
       Flux<ChatResponse> traced =
           source
+              // The suppression marker is needed only while subscribing to a deferred delegate.
+              // Keeping it in the context propagated to downstream callbacks would suppress a
+              // legitimate ChatModel.stream() call made by a downstream operator.
+              .contextWrite(
+                  contextView ->
+                      ContextPropagationOperator.storeOpenTelemetryContext(
+                          contextView, suppressNestedChatModelInstrumentation(context)))
               .doOnNext(state::add)
               .doOnError(error -> end(chatInstrumenter, context, request, state, error, ended))
               .doOnComplete(() -> end(chatInstrumenter, context, request, state, null, ended))

@@ -188,6 +188,19 @@ class ChatModelTest {
   }
 
   @Test
+  void streamNestedInDownstreamCallbackIsInstrumented() {
+    chatModel.stream(prompt())
+        .flatMap(response -> chatModel.stream(new Prompt("Tell me more about traces")))
+        .blockLast();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasNoParent(),
+                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
   void streamAggregatesChunksForEachChoice() {
     ChatResponse firstChunk =
         response(
