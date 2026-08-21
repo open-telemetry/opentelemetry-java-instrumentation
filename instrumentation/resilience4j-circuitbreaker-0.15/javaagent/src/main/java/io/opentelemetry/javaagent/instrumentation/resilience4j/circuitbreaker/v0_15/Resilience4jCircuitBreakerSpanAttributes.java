@@ -31,6 +31,10 @@ public class Resilience4jCircuitBreakerSpanAttributes {
     }
 
     Span current = Span.current();
+    if (!current.isRecording()) {
+      return;
+    }
+
     current.setAttribute(CIRCUIT_BREAKER_NAME, circuitBreaker.getName());
     current.setAttribute(
         CIRCUIT_BREAKER_STATE, circuitBreaker.getState().name().toLowerCase(Locale.ROOT));
