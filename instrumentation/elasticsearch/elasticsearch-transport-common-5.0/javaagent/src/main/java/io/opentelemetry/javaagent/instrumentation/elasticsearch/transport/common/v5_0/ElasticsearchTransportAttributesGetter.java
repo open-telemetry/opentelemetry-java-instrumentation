@@ -10,6 +10,7 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIn
 import javax.annotation.Nullable;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionResponse;
+import org.elasticsearch.transport.TransportException;
 
 public class ElasticsearchTransportAttributesGetter
     implements DbClientAttributesGetter<ElasticTransportRequest, ActionResponse> {
@@ -42,6 +43,11 @@ public class ElasticsearchTransportAttributesGetter
       ElasticTransportRequest request,
       @Nullable ActionResponse response,
       @Nullable Throwable error) {
+    // TransportException.status() synthesizes 500 when there is no remote cause to unwrap.
+    if (error instanceof TransportException
+        && ((TransportException) error).unwrapCause() == error) {
+      return null;
+    }
     if (error instanceof ElasticsearchException) {
       int statusCode = ((ElasticsearchException) error).status().getStatus();
       if (statusCode >= 400 || statusCode < 100) {
