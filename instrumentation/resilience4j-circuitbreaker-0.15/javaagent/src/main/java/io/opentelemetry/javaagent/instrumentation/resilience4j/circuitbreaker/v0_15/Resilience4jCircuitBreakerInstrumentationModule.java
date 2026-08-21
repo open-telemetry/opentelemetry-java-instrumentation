@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v0_15;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -21,6 +21,8 @@ public class Resilience4jCircuitBreakerInstrumentationModule extends Instrumenta
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new CircuitBreakerStateMachineInstrumentation());
+    return asList(
+        new CircuitBreakerDecoratorsInstrumentation(),
+        new CircuitBreakerStateMachineInstrumentation());
   }
 }
