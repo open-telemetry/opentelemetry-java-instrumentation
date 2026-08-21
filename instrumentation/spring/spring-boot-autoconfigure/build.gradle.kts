@@ -80,6 +80,7 @@ dependencies {
   library("org.springframework.boot:spring-boot-starter-data-r2dbc:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-data-jdbc:$springBootVersion")
 
+  api("io.opentelemetry.semconv:opentelemetry-semconv")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-declarative-config")
   implementation(project(":sdk-autoconfigure-support"))

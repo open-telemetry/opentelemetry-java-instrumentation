@@ -5,6 +5,7 @@ plugins {
 description = "smoke-tests-otel-starter-spring-boot-2"
 
 val springBootVersion = if (otelProps.testLatestDeps) "2.+" else "2.6.15"
+val testStableStarterCompileClasspath by sourceSets.creating
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-web")
@@ -24,6 +25,11 @@ dependencies {
   testImplementation("org.testcontainers:testcontainers-mongodb")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation(project(":instrumentation:spring:spring-boot-autoconfigure"))
+
+  add(
+    testStableStarterCompileClasspath.compileOnlyConfigurationName,
+    project(":instrumentation:spring:starters:spring-boot-starter")
+  )
 }
 
 configurations.configureEach {
@@ -49,6 +55,6 @@ testing {
 
 tasks {
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, testStableStarterCompileClasspath.compileJavaTaskName)
   }
 }
