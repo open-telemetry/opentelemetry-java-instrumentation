@@ -66,6 +66,9 @@ public class DocSynchronization {
       }
 
       if (hasErrors) {
+        if (hasDrift) {
+          logger.warning("Partial drift detected (audit did not complete):\n" + driftMessage);
+        }
         logger.severe("Audit execution errors:\n" + errorMessage);
         exit(1);
       } else if (hasDrift) {
