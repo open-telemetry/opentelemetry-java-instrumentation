@@ -121,7 +121,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                     stringKey("elasticsearch.request.indices"), experimental("invalid-index"))));
 
     if (emitStableDatabaseSemconv()) {
-      assertions.add(equalTo(ERROR_TYPE, "org.elasticsearch.index.IndexNotFoundException"));
+      assertions.add(equalTo(ERROR_TYPE, "404"));
     }
 
     testing.waitAndAssertTraces(
