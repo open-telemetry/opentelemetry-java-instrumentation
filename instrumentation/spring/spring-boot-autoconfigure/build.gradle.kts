@@ -362,7 +362,7 @@ tasks {
     from(sourceSets["javaSpring4"].java)
   }
 
-  val databaseSemconvSuiteNames = setOf("test", "testSpring2", "testSpring4")
+  val databaseSemconvSuiteNames = setOf("test", "testSpring2", "testSpring3", "testSpring4")
   val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
     .matching { it.name in databaseSemconvSuiteNames }
     .map { suite ->
