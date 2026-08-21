@@ -14,14 +14,14 @@ public class ServerEndpoint {
   private final int port;
   @Nullable private final Integer databaseIndex;
 
+  public static ServerEndpoint create(RedisClientActorLike client) {
+    return new ServerEndpoint(client.host(), client.port(), databaseIndex(client));
+  }
+
   private ServerEndpoint(String host, int port, @Nullable Integer databaseIndex) {
     this.host = host;
     this.port = port;
     this.databaseIndex = databaseIndex;
-  }
-
-  public static ServerEndpoint create(RedisClientActorLike client) {
-    return new ServerEndpoint(client.host(), client.port(), databaseIndex(client));
   }
 
   String getHost() {
