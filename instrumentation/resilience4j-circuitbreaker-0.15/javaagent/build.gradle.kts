@@ -16,12 +16,20 @@ dependencies {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs(
       "-Dotel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes=true"
+    )
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes=true"
     )
   }
 
