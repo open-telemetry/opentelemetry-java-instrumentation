@@ -31,25 +31,15 @@ snapshot_tracked_diffs() {
 }
 
 spotless_files="$temp_dir/spotless-files"
-if ! mise exec -- flint changed-files --null \
-  --include '*.scala' \
-  --include '*.groovy' \
-  --include '.gitignore' \
-  --include '.gitattributes' \
-  --include '.gitconfig' \
-  --include '.editorconfig' \
-  --include 'gradle.properties' \
-  --include '.github/**/*.sh' \
-  --include 'examples/**/gradle.properties' \
-  >"$spotless_files"; then
+if ! mise exec -- flint changed-files --null >"$spotless_files"; then
   echo "Unable to determine Spotless-owned changed files with Flint." >&2
   exit 1
 fi
 
-# Flint's globs intentionally match repository-relative paths by basename, so
-# filter the broad dot-files and gradle.properties results here to match the
-# exact root-level and nested Spotless targets. Keep the NUL-delimited output in
-# a file rather than putting paths in a shell variable.
+# Keep the NUL-delimited output in a file rather than putting paths in a shell
+# variable. Spotless ownership is deliberately kept here rather than in Flint:
+# this exact path list mirrors the Spotless configuration, including root-level
+# misc files and nested examples/gradle.properties targets.
 run_spotless=false
 while IFS= read -r -d '' file; do
   if [[ "$file" == *.scala || "$file" == *.groovy \
