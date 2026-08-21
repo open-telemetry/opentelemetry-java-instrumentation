@@ -9,6 +9,9 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -200,6 +203,7 @@ public abstract class AbstractReactorKafkaTest {
                           .hasNoParent()
                           .hasLinks(receiveRecordLink(producerSpan.get()))
                           .hasAttributesSatisfyingExactly(receiveAttributes("testTopic"))));
+      assertReceiveAndProcessMetrics();
       return;
     }
 
@@ -230,6 +234,7 @@ public abstract class AbstractReactorKafkaTest {
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(processAttributes(record)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
+    assertReceiveAndProcessMetrics();
   }
 
   private static void assertWithoutReceiveTelemetry(SenderRecord<String, String, Object> record) {
@@ -252,6 +257,23 @@ public abstract class AbstractReactorKafkaTest {
                   }
                 },
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+    assertProcessMetricsWithConsumedMessages(
+        testing,
+        "io.opentelemetry.reactor-kafka-1.0",
+        "testTopic",
+        HAS_CONSUMER_GROUP ? "test" : null,
+        "0",
+        1,
+        1,
+        null);
+  }
+
+  private static void assertReceiveAndProcessMetrics() {
+    String group = HAS_CONSUMER_GROUP ? "test" : null;
+    assertReceiveMetrics(
+        testing, "io.opentelemetry.kafka-clients-0.11", "testTopic", group, "0", 1, 1, null);
+    assertProcessMetrics(
+        testing, "io.opentelemetry.reactor-kafka-1.0", "testTopic", group, "0", 1, null);
   }
 
   private static List<AttributeAssertion> sendAttributes(ProducerRecord<String, String> record) {

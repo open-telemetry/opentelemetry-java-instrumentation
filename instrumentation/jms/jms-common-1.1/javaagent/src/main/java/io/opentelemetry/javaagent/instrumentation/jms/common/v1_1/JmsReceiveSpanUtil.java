@@ -48,6 +48,7 @@ public class JmsReceiveSpanUtil {
               timer.startTime(),
               timer.now());
       JmsReceiveContextHolder.set(receiveContext);
+      request.message().markReceiveTelemetryRecorded();
     }
   }
 
