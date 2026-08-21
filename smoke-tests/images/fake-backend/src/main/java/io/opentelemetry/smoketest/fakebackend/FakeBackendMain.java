@@ -16,6 +16,7 @@ import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.MediaType;
 import com.linecorp.armeria.server.Server;
+import com.linecorp.armeria.server.encoding.DecodingService;
 import com.linecorp.armeria.server.grpc.GrpcService;
 import com.linecorp.armeria.server.healthcheck.HealthCheckService;
 import io.netty.buffer.ByteBufOutputStream;
@@ -129,6 +130,7 @@ public class FakeBackendMain {
                       HttpStatus.OK, MediaType.JSON, HttpData.wrap(buf.buffer()));
                 })
             .service("/health", HealthCheckService.of())
+            .decorator(DecodingService.newDecorator())
             .build();
 
     server.start().join();
