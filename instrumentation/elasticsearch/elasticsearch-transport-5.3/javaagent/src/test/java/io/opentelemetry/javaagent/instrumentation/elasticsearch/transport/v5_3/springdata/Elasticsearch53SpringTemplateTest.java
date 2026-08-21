@@ -166,7 +166,7 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
 
     List<AttributeAssertion> assertions = refreshActionAttributes(indexName);
     if (emitStableDatabaseSemconv()) {
-      assertions.add(equalTo(ERROR_TYPE, "404"));
+      assertions.add(equalTo(ERROR_TYPE, "org.elasticsearch.index.IndexNotFoundException"));
     }
 
     IndexNotFoundException expectedException = new IndexNotFoundException("no such index");

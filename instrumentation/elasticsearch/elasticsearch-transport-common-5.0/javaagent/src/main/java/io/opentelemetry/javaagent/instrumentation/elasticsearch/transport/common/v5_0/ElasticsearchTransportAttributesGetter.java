@@ -10,7 +10,6 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIn
 import javax.annotation.Nullable;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionResponse;
-import org.elasticsearch.transport.TransportException;
 
 public class ElasticsearchTransportAttributesGetter
     implements DbClientAttributesGetter<ElasticTransportRequest, ActionResponse> {
@@ -46,30 +45,11 @@ public class ElasticsearchTransportAttributesGetter
     if (!(error instanceof ElasticsearchException)) {
       return null;
     }
-    ElasticsearchException esError = (ElasticsearchException) error;
-    if (esError instanceof TransportException) {
-      // TransportException.status() derives its value from unwrapCause(); only use the status
-      // when the unwrapped cause is itself a status-bearing ElasticsearchException.
-      Throwable cause = esError.unwrapCause();
-      if (cause == error || !(cause instanceof ElasticsearchException)) {
-        return null;
-      }
-      esError = (ElasticsearchException) cause;
-    }
-    // Only use the status when this class explicitly declares status() rather than inheriting
-    // the base class default, which always synthesizes INTERNAL_SERVER_ERROR.
-    try {
-      if (esError.getClass().getMethod("status").getDeclaringClass()
-          == ElasticsearchException.class) {
-        return null;
-      }
-    } catch (NoSuchMethodException ignored) {
-      return null;
-    }
-    int statusCode = esError.status().getStatus();
-    if (statusCode >= 400 || statusCode < 100) {
-      return Integer.toString(statusCode);
-    }
-    return null;
+    // Elasticsearch wraps the failure that actually occurred, such as IndexNotFoundException, in a
+    // generic wrapper such as RemoteTransportException. unwrapCause() peels off the classes that
+    // Elasticsearch itself marks as wrappers, leaving the exception that identifies the failure.
+    Throwable cause = ((ElasticsearchException) error).unwrapCause();
+    // Returning null lets DbClientAttributesExtractor fall back to the exception class name.
+    return cause != error ? cause.getClass().getName() : null;
   }
 }
