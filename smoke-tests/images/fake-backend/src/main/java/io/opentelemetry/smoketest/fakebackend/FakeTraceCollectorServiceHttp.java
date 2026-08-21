@@ -31,7 +31,7 @@ class FakeTraceCollectorServiceHttp implements HttpService {
             .thenApply(
                 aggregatedRequest -> {
                   try {
-                    storage.addTrace(
+                    storage.addTraceRequest(
                         ExportTraceServiceRequest.parseFrom(aggregatedRequest.content().array()));
                     return HttpResponse.of(
                         HttpStatus.OK,

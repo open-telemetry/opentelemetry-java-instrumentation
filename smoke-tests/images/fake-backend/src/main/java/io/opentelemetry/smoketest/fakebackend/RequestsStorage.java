@@ -22,7 +22,7 @@ class RequestsStorage {
   private final BlockingQueue<ExportLogsServiceRequest> logsExportRequests =
       new LinkedBlockingDeque<>();
 
-  void addTrace(ExportTraceServiceRequest request) {
+  void addTraceRequest(ExportTraceServiceRequest request) {
     traceExportRequests.add(request);
   }
 

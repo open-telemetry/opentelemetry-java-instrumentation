@@ -22,7 +22,7 @@ class FakeTraceCollectorServiceGrpc extends TraceServiceGrpc.TraceServiceImplBas
   public void export(
       ExportTraceServiceRequest request,
       StreamObserver<ExportTraceServiceResponse> responseObserver) {
-    requestsStorage.addTrace(request);
+    requestsStorage.addTraceRequest(request);
     responseObserver.onNext(ExportTraceServiceResponse.getDefaultInstance());
     responseObserver.onCompleted();
   }
