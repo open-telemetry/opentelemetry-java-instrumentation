@@ -189,29 +189,17 @@ tasks {
     include("**/Aws2SqsSuppressReceiveSpansTest.*")
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
+  val testStableSemconv = register<Test>("testStableSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
 
-        filter {
-          excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-        }
-        systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
-        jvmArgs("-Dotel.semconv-stability.opt-in=database")
-
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-      }
+    filter {
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
+    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
 
-  named<Test>("s3CrtTestStableSemconv") {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
-  named<Test>("testBedrockRuntimeStableSemconv") {
-    // TODO run tests both with and without genai message capture
-    systemProperty("otel.instrumentation.genai.capture-message-content", "true")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   val testMessagingPreview = register<Test>("testMessagingPreview") {
@@ -266,7 +254,7 @@ tasks {
     dependsOn(
       testing.suites,
       testExperimentalSqs,
-      stableSemconvSuites,
+      testStableSemconv,
       testReceiveSpansDisabled,
       testMessagingPreview,
       testMessagingPreviewReceiveSpansDisabled,

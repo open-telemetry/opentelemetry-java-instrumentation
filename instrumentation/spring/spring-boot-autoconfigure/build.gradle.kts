@@ -362,27 +362,20 @@ tasks {
     from(sourceSets["javaSpring4"].java)
   }
 
+  val databaseSemconvSuiteNames = setOf("test", "testSpring2", "testSpring4")
   val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .matching { it.name in databaseSemconvSuiteNames }
     .map { suite ->
       register<Test>("${suite.name}StableSemconv") {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
 
         jvmArgs("-Dotel.semconv-stability.opt-in=database")
+        if (suite.name != "test") {
+          isEnabled = testSpring3
+        }
       }
     }
-
-  named<Test>("testSpring2StableSemconv") {
-    isEnabled = testSpring3
-  }
-
-  named<Test>("testSpring3StableSemconv") {
-    isEnabled = testSpring3
-  }
-
-  named<Test>("testSpring4StableSemconv") {
-    isEnabled = testSpring3 // same condition as Spring 3 (requires Java 17+)
-  }
 
   check {
     dependsOn(testing.suites, stableSemconvSuites)

@@ -41,9 +41,11 @@ Database, code, and service-peer domains do not need a `testBothSemconv` task â€
 
 See [gradle-conventions.md](gradle-conventions.md) for `testClassesDirs`, `classpath`,
 `collectMetadata`, `metadataConfig`, and `check` wiring requirements. In a module that also
-registers custom `JvmTestSuite`s, derive one task per suite from
-`testing.suites.withType(JvmTestSuite::class)` rather than binding to `sourceSets.test`, so the
-custom suites run under the opt-in too.
+registers custom `JvmTestSuite`s, add opt-in tasks only for suites whose tests exercise the
+affected semconv attributes. Use `testing.suites.withType(JvmTestSuite::class)` when every suite
+is relevant and shares the same configuration. Otherwise keep the task bound to
+`sourceSets.test`, or select the relevant suites explicitly when the added coverage justifies
+the extra build-script complexity.
 
 Database domain example (stable-only task):
 
