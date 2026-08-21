@@ -231,8 +231,9 @@ Points to watch:
   the extra coverage is worth the additional build-script complexity.
 - The `testing { suites { … } }` block must appear **before** the `tasks { }` block that maps
   over it. `.map` realizes the container, so suites registered afterwards are silently missed.
-- A suite whose test task is conditionally disabled needs the same condition on its derived
-  task.
+- When a source suite task is conditionally disabled, inherit its state in the derived task
+  with `isEnabled = project.tasks.named(suite.name).get().enabled` instead of repeating the
+  condition in a separate `named(...)` block.
 - Keep a variant task bound to a single source set when it is deliberately narrow — one bound
   to a specific suite, or narrowed with `includeTestsMatching(...)`. Fanning such a task across
   every suite fails the build, because Gradle fails a `Test` task whose filter matches nothing.
