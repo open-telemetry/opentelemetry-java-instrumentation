@@ -53,27 +53,36 @@ while IFS= read -r -d '' file; do
   fi
 done <"$spotless_files"
 
-lint_status=0
-if mise run lint; then
-  lint_status=0
+# Flint's fix mode has strict exit semantics: it returns nonzero when it found
+# and fixed a problem. Keep that status; the commit must be retried so that the
+# index contains the fixes. Spotless runs independently below, even when Flint
+# reports changes.
+flint_status=0
+if mise run lint:fix; then
+  flint_status=0
 else
-  lint_status=$?
+  flint_status=$?
 fi
 
+spotless_status=0
 spotless_failed=false
 spotless_changed=false
 if [[ "$run_spotless" == true ]]; then
   before_diff="$temp_dir/before.diff"
   after_diff="$temp_dir/after.diff"
 
-  # Capture the complete tracked worktree state, including both staged and
-  # unstaged changes. Spotless must not change the index, and any worktree
-  # changes it makes are reported so the commit can be retried explicitly.
+  # Flint may have changed tracked files. Capture the complete tracked worktree
+  # state after Flint so those changes are not attributed to Spotless. Spotless
+  # must not change the index, and any worktree changes it makes are reported so
+  # the commit can be retried explicitly.
   if ! snapshot_tracked_diffs "$before_diff"; then
     echo "Unable to snapshot tracked changes before Spotless." >&2
     exit 1
   fi
-  if ! ./gradlew spotlessApply; then
+  if ./gradlew spotlessApply; then
+    spotless_status=0
+  else
+    spotless_status=$?
     spotless_failed=true
   fi
   if ! snapshot_tracked_diffs "$after_diff"; then
@@ -82,31 +91,27 @@ if [[ "$run_spotless" == true ]]; then
   fi
   if ! cmp -s "$before_diff" "$after_diff"; then
     spotless_changed=true
+    if [[ "$spotless_status" -eq 0 ]]; then
+      spotless_status=1
+    fi
   fi
 fi
 
-if [[ "$lint_status" -ne 0 || "$spotless_failed" == true || "$spotless_changed" == true ]]; then
-  # Keep the existing automatic-fix behavior, but do not replace Flint's
-  # status with the status of this best-effort follow-up command.
-  mise run lint:fix --allow-fixed || true
-fi
-
-if [[ "$spotless_failed" == true || "$spotless_changed" == true ]]; then
+if [[ "$spotless_status" -ne 0 ]]; then
   echo ""
   echo ""
-  if [[ "$spotless_changed" == true ]]; then
+  if [[ "$spotless_failed" == false && "$spotless_changed" == true ]]; then
     echo -e "\033[0;33mSpotless formatted tracked files; please git diff/add and recommit."
   else
-    echo -e "\033[0;33mCode has been formatted; please git diff/add and recommit."
+    echo -e "\033[0;33mSpotless failed; please fix the formatting and recommit."
   fi
   echo ""
   echo ""
-  exit 1
 fi
 
-# Spotless succeeded without changing any tracked files. Preserve Flint's
-# status directly: a clean Flint run allows the commit, while a Flint finding
-# keeps the hook's strict "format, then recommit" behavior. The fix pass above
-# is still run before returning so the user gets the same automatic fixes and
-# diagnostics as when Spotless reports a problem.
-exit "$lint_status"
+# Flint's strict status takes precedence over Spotless. This preserves the
+# formatter that made the change as the primary reason for retrying the commit.
+if [[ "$flint_status" -ne 0 ]]; then
+  exit "$flint_status"
+fi
+exit "$spotless_status"
