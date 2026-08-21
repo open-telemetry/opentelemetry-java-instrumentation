@@ -81,8 +81,7 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.This CircuitBreaker circuitBreaker, @Advice.Argument(0) long durationNanos) {
-      Resilience4jCircuitBreakerSpans.end(
-          circuitBreaker, "success", durationNanos, null);
+      Resilience4jCircuitBreakerSpans.end(circuitBreaker, "success", durationNanos, null);
     }
   }
 
@@ -94,8 +93,7 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
         @Advice.This CircuitBreaker circuitBreaker,
         @Advice.Argument(0) long durationNanos,
         @Advice.Argument(1) Throwable throwable) {
-      Resilience4jCircuitBreakerSpans.end(
-          circuitBreaker, "failure", durationNanos, throwable);
+      Resilience4jCircuitBreakerSpans.end(circuitBreaker, "failure", durationNanos, throwable);
     }
   }
 }

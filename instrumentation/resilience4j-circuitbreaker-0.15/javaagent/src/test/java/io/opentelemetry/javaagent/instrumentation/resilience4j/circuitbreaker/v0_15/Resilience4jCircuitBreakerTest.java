@@ -107,8 +107,7 @@ class Resilience4jCircuitBreakerTest {
                               stringKey("resilience.policy.name"),
                               experimental("test-circuit-breaker")),
                           equalTo(
-                              stringKey("resilience.circuit_breaker.state"),
-                              experimental(state)),
+                              stringKey("resilience.circuit_breaker.state"), experimental(state)),
                           equalTo(
                               stringKey("resilience.circuit_breaker.outcome"),
                               experimental(outcome)));
