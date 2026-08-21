@@ -97,7 +97,7 @@ public class FakeBackendMain {
                 "/clear",
                 (ctx, req) -> {
                   storage.clearTraces();
-                  storage.clearTraces();
+                  storage.clearMetrics();
                   storage.clearLogs();
                   return HttpResponse.of(HttpStatus.OK);
                 })
