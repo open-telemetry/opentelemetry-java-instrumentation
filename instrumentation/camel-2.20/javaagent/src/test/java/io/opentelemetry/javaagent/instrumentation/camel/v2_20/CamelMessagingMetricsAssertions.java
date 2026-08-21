@@ -95,6 +95,12 @@ public class CamelMessagingMetricsAssertions {
         processErrorType,
         processDestinationPartitionId);
     assertNoDeprecatedMetrics(testing);
+    assertNoDuplicateMessagingMetrics(
+        testing,
+        "messaging.client.sent.messages",
+        "messaging.client.operation.duration",
+        "messaging.client.consumed.messages",
+        "messaging.process.duration");
   }
 
   public static void assertSendMetrics(
@@ -124,6 +130,8 @@ public class CamelMessagingMetricsAssertions {
         errorType,
         null);
     assertNoDeprecatedMetrics(testing);
+    assertNoDuplicateMessagingMetrics(
+        testing, "messaging.client.sent.messages", "messaging.client.operation.duration");
   }
 
   public static void assertProcessMetrics(
@@ -163,6 +171,8 @@ public class CamelMessagingMetricsAssertions {
                 metric.getName().equals("messaging.client.operation.duration")
                     || metric.getName().equals("messaging.client.sent.messages"));
     assertNoDeprecatedMetrics(testing);
+    assertNoDuplicateMessagingMetrics(
+        testing, "messaging.client.consumed.messages", "messaging.process.duration");
   }
 
   public static void assertNoCamelMessagingMetrics(InstrumentationExtension testing) {
@@ -276,6 +286,18 @@ public class CamelMessagingMetricsAssertions {
                                     }
                                   }));
                 }));
+  }
+
+  private static void assertNoDuplicateMessagingMetrics(
+      InstrumentationExtension testing, String... metricNames) {
+    Set<String> metricNameSet = new HashSet<>(asList(metricNames));
+    Set<MetricData> matchingMetrics =
+        testing.metrics().stream()
+            .filter(metric -> metricNameSet.contains(metric.getName()))
+            .collect(toSet());
+    assertThat(matchingMetrics)
+        .noneMatch(
+            metric -> !INSTRUMENTATION_NAME.equals(metric.getInstrumentationScopeInfo().getName()));
   }
 
   private static void assertNoDeprecatedMetrics(InstrumentationExtension testing) {
