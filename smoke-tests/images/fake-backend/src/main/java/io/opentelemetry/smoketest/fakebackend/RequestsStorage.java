@@ -26,35 +26,35 @@ class RequestsStorage {
     traceExportRequests.add(request);
   }
 
-  public void addMetricsRequest(ExportMetricsServiceRequest request) {
+  void addMetricsRequest(ExportMetricsServiceRequest request) {
     metricsExportRequests.add(request);
   }
 
-  public void addLogsRequest(ExportLogsServiceRequest request) {
+  void addLogsRequest(ExportLogsServiceRequest request) {
     logsExportRequests.add(request);
   }
 
-  public List<ExportTraceServiceRequest> getTraceRequests() {
+  List<ExportTraceServiceRequest> getTraceRequests() {
     return ImmutableList.copyOf(traceExportRequests);
   }
 
-  public List<ExportMetricsServiceRequest> getMetricsRequests() {
+  List<ExportMetricsServiceRequest> getMetricsRequests() {
     return ImmutableList.copyOf(metricsExportRequests);
   }
 
-  public List<ExportLogsServiceRequest> getLogsRequests() {
+  List<ExportLogsServiceRequest> getLogsRequests() {
     return ImmutableList.copyOf(logsExportRequests);
   }
 
-  public void clearTraces() {
+  void clearTraces() {
     traceExportRequests.clear();
   }
 
-  public void clearMetrics() {
+  void clearMetrics() {
     metricsExportRequests.clear();
   }
 
-  public void clearLogs() {
+  void clearLogs() {
     logsExportRequests.clear();
   }
 }
