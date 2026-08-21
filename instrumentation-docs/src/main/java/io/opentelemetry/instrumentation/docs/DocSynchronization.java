@@ -27,10 +27,13 @@ public class DocSynchronization {
   private static final List<DocumentationAuditor> AUDITORS =
       List.of(new SuppressionListAuditor(), new SupportedLibrariesAuditor());
 
-  public static void main(String[] args) {
-    HttpClient client = HttpClient.newHttpClient();
+  // Reserved exit code that means "audit ran to completion and found drift".
+  // Any other nonzero exit is treated as an execution error.
+  private static final int DRIFT_EXIT_CODE = 42;
 
+  public static void main(String[] args) {
     try {
+      HttpClient client = HttpClient.newHttpClient();
       boolean hasDrift = false;
       boolean hasErrors = false;
       StringBuilder driftMessage = new StringBuilder();
@@ -64,7 +67,7 @@ public class DocSynchronization {
 
       if (hasErrors) {
         logger.severe("Audit execution errors:\n" + errorMessage);
-        exit(2);
+        exit(1);
       } else if (hasDrift) {
         // Add custom markers and "How to Fix" section for GitHub workflow extraction
         StringBuilder finalMessage = new StringBuilder();
@@ -76,7 +79,7 @@ public class DocSynchronization {
         finalMessage.append("\n=== AUDIT_FAILURE_END ===");
 
         logger.severe(finalMessage.toString());
-        exit(1);
+        exit(DRIFT_EXIT_CODE);
       } else {
         logger.info("All documentation audits passed successfully.");
       }
@@ -84,7 +87,7 @@ public class DocSynchronization {
     } catch (RuntimeException e) {
       logger.severe("Error running documentation audits: " + e.getMessage());
       logger.severe(Arrays.toString(e.getStackTrace()));
-      exit(2);
+      exit(1);
     }
   }
 

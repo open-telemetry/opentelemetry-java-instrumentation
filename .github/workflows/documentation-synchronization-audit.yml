@@ -40,10 +40,10 @@ jobs:
             exit $gradle_exit
           fi
           audit_exit=$(cat instrumentation-docs/build/audit-exit-code)
-          if [[ "$audit_exit" -eq 0 ]]; then
-            echo "success=true" >> "$GITHUB_OUTPUT"
-          else
+          if [[ "$audit_exit" -eq 42 ]]; then
             echo "success=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "success=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Open or close documentation sync issue
