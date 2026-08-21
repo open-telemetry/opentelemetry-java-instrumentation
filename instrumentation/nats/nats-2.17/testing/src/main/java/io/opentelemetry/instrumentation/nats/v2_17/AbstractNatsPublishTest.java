@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.assertTraceparentHeader;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;

@@ -36,14 +36,12 @@ public final class NatsInstrumenterFactory {
 
   public static Instrumenter<NatsRequest, NatsRequest> createPublishInstrumenter(
       OpenTelemetry openTelemetry, IncludeExclude headers) {
-    return createProducerInstrumenter(
-        openTelemetry, headers, PUBLISH_OPERATION_NAME, false);
+    return createProducerInstrumenter(openTelemetry, headers, PUBLISH_OPERATION_NAME, false);
   }
 
   public static Instrumenter<NatsRequest, NatsRequest> createRequestInstrumenter(
       OpenTelemetry openTelemetry, IncludeExclude headers) {
-    return createProducerInstrumenter(
-        openTelemetry, headers, REQUEST_OPERATION_NAME, false);
+    return createProducerInstrumenter(openTelemetry, headers, REQUEST_OPERATION_NAME, false);
   }
 
   private static Instrumenter<NatsRequest, NatsRequest> createProducerInstrumenter(
@@ -57,7 +55,8 @@ public final class NatsInstrumenterFactory {
         Instrumenter.<NatsRequest, NatsRequest>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, MessagingOperationType.SEND, operationName))
+                MessagingSpanNameExtractor.create(
+                    getter, MessagingOperationType.SEND, operationName))
             .addAttributesExtractor(
                 messagingAttributesExtractor(
                     getter, MessagingOperationType.SEND, operationName, headers))
@@ -75,7 +74,8 @@ public final class NatsInstrumenterFactory {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, MessagingOperationType.SETTLE, "settle"))
             .addAttributesExtractor(
-                messagingAttributesExtractor(getter, MessagingOperationType.SETTLE, "settle", headers));
+                messagingAttributesExtractor(
+                    getter, MessagingOperationType.SETTLE, "settle", headers));
     setMessagingSettleExceptionEventExtractor(builder);
     return builder.buildClientInstrumenter(new NatsRequestTextMapSetter());
   }
@@ -88,9 +88,7 @@ public final class NatsInstrumenterFactory {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
-                    getter,
-                    MessagingOperationType.PROCESS,
-                    PROCESS_OPERATION_NAME))
+                    getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
                 messagingAttributesExtractor(
                     getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME, headers))
