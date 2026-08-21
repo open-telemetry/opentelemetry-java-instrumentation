@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertSendAndProcessMetrics;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -82,5 +83,6 @@ class KafkaCamelTest {
 
     assertSendAndProcessMetrics(
         testing, "kafka", TOPIC, IllegalStateException.class.getName(), "0");
+    testing.waitForTraces(emitStableMessagingSemconv() ? 2 : 1);
   }
 }
