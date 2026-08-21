@@ -137,6 +137,76 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
+  val testV1_3_3ReceiveSpansDisabled = register<Test>("testV1_3_3ReceiveSpansDisabled") {
+    testClassesDirs = sourceSets["testV1_3_3"].output.classesDirs
+    classpath = sourceSets["testV1_3_3"].runtimeClasspath
+    systemProperty("hasConsumerGroup", true)
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+  }
+
+  val testV1_3_3MessagingPreview = register<Test>("testV1_3_3MessagingPreview") {
+    testClassesDirs = sourceSets["testV1_3_3"].output.classesDirs
+    classpath = sourceSets["testV1_3_3"].runtimeClasspath
+    systemProperty("hasConsumerGroup", true)
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
+  val testV1_3_3BothSemconv = register<Test>("testV1_3_3BothSemconv") {
+    testClassesDirs = sourceSets["testV1_3_3"].output.classesDirs
+    classpath = sourceSets["testV1_3_3"].runtimeClasspath
+    systemProperty("hasConsumerGroup", true)
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+  }
+
+  val testV1_3_3MessagingPreviewReceiveSpansDisabled =
+    register<Test>("testV1_3_3MessagingPreviewReceiveSpansDisabled") {
+      testClassesDirs = sourceSets["testV1_3_3"].output.classesDirs
+      classpath = sourceSets["testV1_3_3"].runtimeClasspath
+      systemProperty("hasConsumerGroup", true)
+      jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+      jvmArgs("-Dotel.semconv-stability.preview=messaging")
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+    }
+
+  val testV1_3_21ReceiveSpansDisabled = register<Test>("testV1_3_21ReceiveSpansDisabled") {
+    testClassesDirs = sourceSets["testV1_3_21"].output.classesDirs
+    classpath = sourceSets["testV1_3_21"].runtimeClasspath
+    systemProperty("hasConsumerGroup", true)
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+  }
+
+  val testV1_3_21MessagingPreview = register<Test>("testV1_3_21MessagingPreview") {
+    testClassesDirs = sourceSets["testV1_3_21"].output.classesDirs
+    classpath = sourceSets["testV1_3_21"].runtimeClasspath
+    systemProperty("hasConsumerGroup", true)
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
+  val testV1_3_21BothSemconv = register<Test>("testV1_3_21BothSemconv") {
+    testClassesDirs = sourceSets["testV1_3_21"].output.classesDirs
+    classpath = sourceSets["testV1_3_21"].runtimeClasspath
+    systemProperty("hasConsumerGroup", true)
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+  }
+
+  val testV1_3_21MessagingPreviewReceiveSpansDisabled =
+    register<Test>("testV1_3_21MessagingPreviewReceiveSpansDisabled") {
+      testClassesDirs = sourceSets["testV1_3_21"].output.classesDirs
+      classpath = sourceSets["testV1_3_21"].runtimeClasspath
+      systemProperty("hasConsumerGroup", true)
+      jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+      jvmArgs("-Dotel.semconv-stability.preview=messaging")
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+    }
+
   test {
     systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
@@ -154,6 +224,14 @@ tasks {
       testMessagingPreview,
       testBothSemconv,
       testMessagingPreviewReceiveSpansDisabled,
+      testV1_3_3ReceiveSpansDisabled,
+      testV1_3_3MessagingPreview,
+      testV1_3_3BothSemconv,
+      testV1_3_3MessagingPreviewReceiveSpansDisabled,
+      testV1_3_21ReceiveSpansDisabled,
+      testV1_3_21MessagingPreview,
+      testV1_3_21BothSemconv,
+      testV1_3_21MessagingPreviewReceiveSpansDisabled,
     )
   }
 }
