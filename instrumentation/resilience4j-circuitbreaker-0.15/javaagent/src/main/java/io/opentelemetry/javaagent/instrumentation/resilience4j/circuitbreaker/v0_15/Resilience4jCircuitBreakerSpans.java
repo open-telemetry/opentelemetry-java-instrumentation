@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Iterator;
 import java.util.Locale;
 import javax.annotation.Nullable;
 
@@ -66,7 +67,9 @@ public class Resilience4jCircuitBreakerSpans {
       return;
     }
 
-    pendingSpans.get().push(new PendingSpan(startSpan(circuitBreaker, parentContext)));
+    pendingSpans
+        .get()
+        .push(new PendingSpan(circuitBreaker, startSpan(circuitBreaker, parentContext)));
   }
 
   public static void reject(CircuitBreaker circuitBreaker, @Nullable Throwable throwable) {
@@ -87,17 +90,58 @@ public class Resilience4jCircuitBreakerSpans {
     span.end();
   }
 
-  public static void end(String outcome, @Nullable Throwable throwable) {
-    PendingSpan pendingSpan = pollPendingSpan();
+  public static void end(
+      CircuitBreaker circuitBreaker, String outcome, @Nullable Throwable throwable) {
+    PendingSpan pendingSpan = pollPendingSpan(circuitBreaker);
+    if (pendingSpan != null) {
+      pendingSpan.end(outcome, throwable);
+    }
+  }
+
+  public static void endAfter(
+      @Nullable PendingSpan baseline, String outcome, @Nullable Throwable throwable) {
+    PendingSpan pendingSpan = pollPendingSpanAfter(baseline);
     if (pendingSpan != null) {
       pendingSpan.end(outcome, throwable);
     }
   }
 
   @Nullable
-  public static PendingSpan pollPendingSpan() {
+  public static PendingSpan currentPendingSpan() {
+    return pendingSpans.get().peek();
+  }
+
+  @Nullable
+  private static PendingSpan pollPendingSpan(CircuitBreaker circuitBreaker) {
     Deque<PendingSpan> spans = pendingSpans.get();
-    PendingSpan span = spans.poll();
+    Iterator<PendingSpan> iterator = spans.iterator();
+    while (iterator.hasNext()) {
+      PendingSpan span = iterator.next();
+      if (span.circuitBreaker == circuitBreaker) {
+        iterator.remove();
+        if (spans.isEmpty()) {
+          pendingSpans.remove();
+        }
+        return span;
+      }
+    }
+    if (spans.isEmpty()) {
+      pendingSpans.remove();
+    }
+    return null;
+  }
+
+  @Nullable
+  public static PendingSpan pollPendingSpanAfter(@Nullable PendingSpan baseline) {
+    Deque<PendingSpan> spans = pendingSpans.get();
+    PendingSpan span = spans.peek();
+    if (span == null || span == baseline) {
+      if (spans.isEmpty()) {
+        pendingSpans.remove();
+      }
+      return null;
+    }
+    span = spans.poll();
     if (spans.isEmpty()) {
       pendingSpans.remove();
     }
@@ -131,10 +175,12 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   public static final class PendingSpan {
+    private final CircuitBreaker circuitBreaker;
     private final Span span;
     private boolean ended;
 
-    private PendingSpan(Span span) {
+    private PendingSpan(CircuitBreaker circuitBreaker, Span span) {
+      this.circuitBreaker = circuitBreaker;
       this.span = span;
     }
 

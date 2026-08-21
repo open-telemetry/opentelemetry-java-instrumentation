@@ -80,6 +80,20 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
+  void createsCircuitBreakerSpanWhenPermissionReleased() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          assertThat(circuitBreaker.tryAcquirePermission()).isTrue();
+          circuitBreaker.releasePermission();
+        });
+
+    assertCircuitBreakerSpan("closed", "cancelled", null);
+  }
+
+  @Test
   void doesNotCreateSpanWithoutActiveSpan() {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
 
@@ -111,7 +125,7 @@ class Resilience4jCircuitBreakerTest {
                           equalTo(
                               stringKey("resilience.circuit_breaker.outcome"),
                               experimental(outcome)));
-                  if ("success".equals(outcome)) {
+                  if ("success".equals(outcome) || "cancelled".equals(outcome)) {
                     return;
                   }
                   span.hasStatus(StatusData.error());

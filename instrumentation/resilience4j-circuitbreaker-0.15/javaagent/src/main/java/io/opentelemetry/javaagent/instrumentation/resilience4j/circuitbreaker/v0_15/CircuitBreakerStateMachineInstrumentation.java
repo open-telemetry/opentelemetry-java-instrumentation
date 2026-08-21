@@ -40,6 +40,9 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
         isMethod().and(named("tryAcquirePermission")).and(takesArguments(0)),
         getClass().getName() + "$TryAcquirePermissionAdvice");
     transformer.applyAdviceToMethod(
+        isMethod().and(named("releasePermission")).and(takesArguments(0)),
+        getClass().getName() + "$ReleasePermissionAdvice");
+    transformer.applyAdviceToMethod(
         isMethod().and(named("onSuccess")).and(takesArguments(1)),
         getClass().getName() + "$OnSuccessAdvice");
     transformer.applyAdviceToMethod(
@@ -76,11 +79,20 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
+  public static class ReleasePermissionAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    public static void onExit(@Advice.This CircuitBreaker circuitBreaker) {
+      Resilience4jCircuitBreakerSpans.end(circuitBreaker, "cancelled", null);
+    }
+  }
+
+  @SuppressWarnings("unused")
   public static class OnSuccessAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void onExit() {
-      Resilience4jCircuitBreakerSpans.end("success", null);
+    public static void onExit(@Advice.This CircuitBreaker circuitBreaker) {
+      Resilience4jCircuitBreakerSpans.end(circuitBreaker, "success", null);
     }
   }
 
@@ -88,8 +100,9 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
   public static class OnErrorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void onExit(@Advice.Argument(1) Throwable throwable) {
-      Resilience4jCircuitBreakerSpans.end("failure", throwable);
+    public static void onExit(
+        @Advice.This CircuitBreaker circuitBreaker, @Advice.Argument(1) Throwable throwable) {
+      Resilience4jCircuitBreakerSpans.end(circuitBreaker, "failure", throwable);
     }
   }
 }

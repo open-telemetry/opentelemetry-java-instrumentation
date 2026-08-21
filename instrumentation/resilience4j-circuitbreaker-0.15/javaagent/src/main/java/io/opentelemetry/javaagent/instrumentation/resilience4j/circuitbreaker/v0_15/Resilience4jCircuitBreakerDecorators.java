@@ -5,10 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v0_15;
 
-import io.vavr.CheckedConsumer;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
@@ -43,23 +39,6 @@ public class Resilience4jCircuitBreakerDecorators {
     return new ConsumerWrapper<>(delegate);
   }
 
-  public static <T> CheckedFunction0<T> wrapCheckedFunction0(CheckedFunction0<T> delegate) {
-    return new CheckedFunction0Wrapper<>(delegate);
-  }
-
-  public static CheckedRunnable wrapCheckedRunnable(CheckedRunnable delegate) {
-    return new CheckedRunnableWrapper(delegate);
-  }
-
-  public static <T, R> CheckedFunction1<T, R> wrapCheckedFunction1(
-      CheckedFunction1<T, R> delegate) {
-    return new CheckedFunction1Wrapper<>(delegate);
-  }
-
-  public static <T> CheckedConsumer<T> wrapCheckedConsumer(CheckedConsumer<T> delegate) {
-    return new CheckedConsumerWrapper<>(delegate);
-  }
-
   private static final class SupplierWrapper<T> implements Supplier<T> {
 
     private final Supplier<T> delegate;
@@ -70,12 +49,14 @@ public class Resilience4jCircuitBreakerDecorators {
 
     @Override
     public T get() {
+      Resilience4jCircuitBreakerSpans.PendingSpan baseline =
+          Resilience4jCircuitBreakerSpans.currentPendingSpan();
       try {
         T result = delegate.get();
-        Resilience4jCircuitBreakerSpans.end("success", null);
+        Resilience4jCircuitBreakerSpans.endAfter(baseline, "success", null);
         return result;
       } catch (Throwable t) {
-        Resilience4jCircuitBreakerSpans.end("failure", t);
+        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
         throw t;
       }
     }
@@ -91,13 +72,18 @@ public class Resilience4jCircuitBreakerDecorators {
 
     @Override
     public T call() throws Exception {
+      Resilience4jCircuitBreakerSpans.PendingSpan baseline =
+          Resilience4jCircuitBreakerSpans.currentPendingSpan();
       try {
         T result = delegate.call();
-        Resilience4jCircuitBreakerSpans.end("success", null);
+        Resilience4jCircuitBreakerSpans.endAfter(baseline, "success", null);
         return result;
       } catch (Exception e) {
-        Resilience4jCircuitBreakerSpans.end("failure", e);
+        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", e);
         throw e;
+      } catch (Error error) {
+        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", error);
+        throw error;
       }
     }
   }
@@ -112,11 +98,13 @@ public class Resilience4jCircuitBreakerDecorators {
 
     @Override
     public void run() {
+      Resilience4jCircuitBreakerSpans.PendingSpan baseline =
+          Resilience4jCircuitBreakerSpans.currentPendingSpan();
       try {
         delegate.run();
-        Resilience4jCircuitBreakerSpans.end("success", null);
+        Resilience4jCircuitBreakerSpans.endAfter(baseline, "success", null);
       } catch (Throwable t) {
-        Resilience4jCircuitBreakerSpans.end("failure", t);
+        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
         throw t;
       }
     }
@@ -133,17 +121,19 @@ public class Resilience4jCircuitBreakerDecorators {
 
     @Override
     public CompletionStage<T> get() {
+      Resilience4jCircuitBreakerSpans.PendingSpan baseline =
+          Resilience4jCircuitBreakerSpans.currentPendingSpan();
       try {
         CompletionStage<T> result = delegate.get();
         Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
-            Resilience4jCircuitBreakerSpans.pollPendingSpan();
+            Resilience4jCircuitBreakerSpans.pollPendingSpanAfter(baseline);
         if (pendingSpan != null) {
           result.whenComplete(
               (unused, throwable) -> pendingSpan.end(outcome(throwable), throwable));
         }
         return result;
       } catch (Throwable t) {
-        Resilience4jCircuitBreakerSpans.end("failure", t);
+        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
         throw t;
       }
     }
@@ -159,12 +149,14 @@ public class Resilience4jCircuitBreakerDecorators {
 
     @Override
     public R apply(T value) {
+      Resilience4jCircuitBreakerSpans.PendingSpan baseline =
+          Resilience4jCircuitBreakerSpans.currentPendingSpan();
       try {
         R result = delegate.apply(value);
-        Resilience4jCircuitBreakerSpans.end("success", null);
+        Resilience4jCircuitBreakerSpans.endAfter(baseline, "success", null);
         return result;
       } catch (Throwable t) {
-        Resilience4jCircuitBreakerSpans.end("failure", t);
+        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
         throw t;
       }
     }
@@ -180,93 +172,13 @@ public class Resilience4jCircuitBreakerDecorators {
 
     @Override
     public void accept(T value) {
+      Resilience4jCircuitBreakerSpans.PendingSpan baseline =
+          Resilience4jCircuitBreakerSpans.currentPendingSpan();
       try {
         delegate.accept(value);
-        Resilience4jCircuitBreakerSpans.end("success", null);
+        Resilience4jCircuitBreakerSpans.endAfter(baseline, "success", null);
       } catch (Throwable t) {
-        Resilience4jCircuitBreakerSpans.end("failure", t);
-        throw t;
-      }
-    }
-  }
-
-  private static final class CheckedFunction0Wrapper<T> implements CheckedFunction0<T> {
-
-    private final CheckedFunction0<T> delegate;
-
-    private CheckedFunction0Wrapper(CheckedFunction0<T> delegate) {
-      this.delegate = delegate;
-    }
-
-    @Override
-    public T apply() throws Throwable {
-      try {
-        T result = delegate.apply();
-        Resilience4jCircuitBreakerSpans.end("success", null);
-        return result;
-      } catch (Throwable t) {
-        Resilience4jCircuitBreakerSpans.end("failure", t);
-        throw t;
-      }
-    }
-  }
-
-  private static final class CheckedRunnableWrapper implements CheckedRunnable {
-
-    private final CheckedRunnable delegate;
-
-    private CheckedRunnableWrapper(CheckedRunnable delegate) {
-      this.delegate = delegate;
-    }
-
-    @Override
-    public void run() throws Throwable {
-      try {
-        delegate.run();
-        Resilience4jCircuitBreakerSpans.end("success", null);
-      } catch (Throwable t) {
-        Resilience4jCircuitBreakerSpans.end("failure", t);
-        throw t;
-      }
-    }
-  }
-
-  private static final class CheckedFunction1Wrapper<T, R> implements CheckedFunction1<T, R> {
-
-    private final CheckedFunction1<T, R> delegate;
-
-    private CheckedFunction1Wrapper(CheckedFunction1<T, R> delegate) {
-      this.delegate = delegate;
-    }
-
-    @Override
-    public R apply(T value) throws Throwable {
-      try {
-        R result = delegate.apply(value);
-        Resilience4jCircuitBreakerSpans.end("success", null);
-        return result;
-      } catch (Throwable t) {
-        Resilience4jCircuitBreakerSpans.end("failure", t);
-        throw t;
-      }
-    }
-  }
-
-  private static final class CheckedConsumerWrapper<T> implements CheckedConsumer<T> {
-
-    private final CheckedConsumer<T> delegate;
-
-    private CheckedConsumerWrapper(CheckedConsumer<T> delegate) {
-      this.delegate = delegate;
-    }
-
-    @Override
-    public void accept(T value) throws Throwable {
-      try {
-        delegate.accept(value);
-        Resilience4jCircuitBreakerSpans.end("success", null);
-      } catch (Throwable t) {
-        Resilience4jCircuitBreakerSpans.end("failure", t);
+        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
         throw t;
       }
     }

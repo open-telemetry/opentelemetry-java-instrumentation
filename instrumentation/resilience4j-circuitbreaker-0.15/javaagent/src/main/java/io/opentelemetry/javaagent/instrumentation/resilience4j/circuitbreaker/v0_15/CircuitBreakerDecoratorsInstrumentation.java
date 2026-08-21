@@ -12,10 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.vavr.CheckedConsumer;
-import io.vavr.CheckedFunction0;
-import io.vavr.CheckedFunction1;
-import io.vavr.CheckedRunnable;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
@@ -58,18 +54,6 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod().and(isStatic()).and(named("decorateConsumer")),
         getClass().getName() + "$ConsumerAdvice");
-    transformer.applyAdviceToMethod(
-        isMethod().and(isStatic()).and(named("decorateCheckedSupplier")),
-        getClass().getName() + "$CheckedSupplierAdvice");
-    transformer.applyAdviceToMethod(
-        isMethod().and(isStatic()).and(named("decorateCheckedRunnable")),
-        getClass().getName() + "$CheckedRunnableAdvice");
-    transformer.applyAdviceToMethod(
-        isMethod().and(isStatic()).and(named("decorateCheckedFunction")),
-        getClass().getName() + "$CheckedFunctionAdvice");
-    transformer.applyAdviceToMethod(
-        isMethod().and(isStatic()).and(named("decorateCheckedConsumer")),
-        getClass().getName() + "$CheckedConsumerAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -130,47 +114,6 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static <T> Consumer<T> onExit(@Advice.Return Consumer<T> result) {
       return Resilience4jCircuitBreakerDecorators.wrapConsumer(result);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class CheckedSupplierAdvice {
-
-    @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <T> CheckedFunction0<T> onExit(@Advice.Return CheckedFunction0<T> result) {
-      return Resilience4jCircuitBreakerDecorators.wrapCheckedFunction0(result);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class CheckedRunnableAdvice {
-
-    @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static CheckedRunnable onExit(@Advice.Return CheckedRunnable result) {
-      return Resilience4jCircuitBreakerDecorators.wrapCheckedRunnable(result);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class CheckedFunctionAdvice {
-
-    @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <T, R> CheckedFunction1<T, R> onExit(
-        @Advice.Return CheckedFunction1<T, R> result) {
-      return Resilience4jCircuitBreakerDecorators.wrapCheckedFunction1(result);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class CheckedConsumerAdvice {
-
-    @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <T> CheckedConsumer<T> onExit(@Advice.Return CheckedConsumer<T> result) {
-      return Resilience4jCircuitBreakerDecorators.wrapCheckedConsumer(result);
     }
   }
 }
