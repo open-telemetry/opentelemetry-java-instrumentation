@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
-public class RequestsStorage {
+class RequestsStorage {
 
   private final BlockingQueue<ExportTraceServiceRequest> traceExportRequests =
       new LinkedBlockingDeque<>();
@@ -22,7 +22,7 @@ public class RequestsStorage {
   private final BlockingQueue<ExportLogsServiceRequest> logsExportRequests =
       new LinkedBlockingDeque<>();
 
-  public void addTrace(ExportTraceServiceRequest request) {
+  void addTrace(ExportTraceServiceRequest request) {
     traceExportRequests.add(request);
   }
 

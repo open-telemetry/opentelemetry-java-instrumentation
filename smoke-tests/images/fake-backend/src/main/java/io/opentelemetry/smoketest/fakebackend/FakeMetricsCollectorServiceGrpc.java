@@ -14,7 +14,7 @@ class FakeMetricsCollectorServiceGrpc extends MetricsServiceGrpc.MetricsServiceI
 
   private final RequestsStorage storage;
 
-  public FakeMetricsCollectorServiceGrpc(RequestsStorage storage) {
+  FakeMetricsCollectorServiceGrpc(RequestsStorage storage) {
     this.storage = storage;
   }
 

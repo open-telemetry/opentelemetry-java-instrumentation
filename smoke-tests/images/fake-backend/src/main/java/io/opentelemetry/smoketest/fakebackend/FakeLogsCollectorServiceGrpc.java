@@ -10,11 +10,11 @@ import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest;
 import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceResponse;
 import io.opentelemetry.proto.collector.logs.v1.LogsServiceGrpc;
 
-public class FakeLogsCollectorServiceGrpc extends LogsServiceGrpc.LogsServiceImplBase {
+class FakeLogsCollectorServiceGrpc extends LogsServiceGrpc.LogsServiceImplBase {
 
   private final RequestsStorage storage;
 
-  public FakeLogsCollectorServiceGrpc(RequestsStorage storage) {
+  FakeLogsCollectorServiceGrpc(RequestsStorage storage) {
     this.storage = storage;
   }
 

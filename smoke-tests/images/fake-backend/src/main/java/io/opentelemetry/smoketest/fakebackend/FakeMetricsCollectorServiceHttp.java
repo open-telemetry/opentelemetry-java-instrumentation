@@ -15,11 +15,11 @@ import com.linecorp.armeria.server.ServiceRequestContext;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceResponse;
 
-public class FakeMetricsCollectorServiceHttp implements HttpService {
+class FakeMetricsCollectorServiceHttp implements HttpService {
 
   private final RequestsStorage storage;
 
-  public FakeMetricsCollectorServiceHttp(RequestsStorage storage) {
+  FakeMetricsCollectorServiceHttp(RequestsStorage storage) {
     this.storage = storage;
   }
 
