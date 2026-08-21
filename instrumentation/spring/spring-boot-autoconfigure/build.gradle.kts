@@ -362,9 +362,8 @@ tasks {
     from(sourceSets["javaSpring4"].java)
   }
 
-  val databaseSemconvSuiteNames = setOf("test", "testSpring2", "testSpring3", "testSpring4")
   val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .matching { it.name in databaseSemconvSuiteNames }
+    .matching { it.name == "test" || it.name.startsWith("testSpring") }
     .map { suite ->
       register<Test>("${suite.name}StableSemconv") {
         testClassesDirs = suite.sources.output.classesDirs
