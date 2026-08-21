@@ -370,9 +370,7 @@ tasks {
         classpath = suite.sources.runtimeClasspath
 
         jvmArgs("-Dotel.semconv-stability.opt-in=database")
-        if (suite.name != "test") {
-          isEnabled = testSpring3
-        }
+        isEnabled = project.tasks.named(suite.name).get().enabled
       }
     }
 
