@@ -144,7 +144,7 @@ groups:
               stability: development
             - id: degraded
               value: "degraded"
-              brief: Connector is degraded (Confluent).
+              brief: Connector is degraded.
               stability: development
             - id: stopped
               value: "stopped"
@@ -183,7 +183,7 @@ groups:
               stability: development
             - id: destroyed
               value: "destroyed"
-              brief: Task is destroyed (Confluent).
+              brief: Task is destroyed.
               stability: development
             - id: unknown
               value: "unknown"
@@ -297,7 +297,7 @@ groups:
     metric_name: kafka.connect.connector.status
     type: metric
     stability: development
-    brief: Connector lifecycle state indicator (1 when the state matches the attribute value). Supports Apache and Confluent status values.
+    brief: Connector lifecycle state indicator.
     unit: "1"
     instrument: updowncounter
     attributes:
@@ -374,7 +374,7 @@ groups:
     metric_name: kafka.connect.task.status
     type: metric
     stability: development
-    brief: The status of the connector task. Supports Apache (unassigned, running, paused, failed, restarting) and Confluent (unassigned, running, paused, failed, destroyed) values.
+    brief: The status of the connector task.
     unit: "1"
     instrument: updowncounter
     attributes:
