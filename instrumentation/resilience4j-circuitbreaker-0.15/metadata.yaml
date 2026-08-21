@@ -1,10 +1,11 @@
 display_name: Resilience4j CircuitBreaker
-description: This instrumentation adds Resilience4j circuit breaker information to active spans.
+description: This instrumentation emits spans for Resilience4j CircuitBreaker protected calls.
 library_link: https://resilience4j.readme.io/docs/circuitbreaker
 configurations:
   - name: otel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes
     declarative_name: java.resilience4j_circuitbreaker.experimental_span_attributes/development
     description: >
-      Enable the capture of experimental Resilience4j CircuitBreaker span attributes.
+      Enable the capture of experimental Resilience4j CircuitBreaker span attributes on
+      protected-call spans.
     type: boolean
     default: false
