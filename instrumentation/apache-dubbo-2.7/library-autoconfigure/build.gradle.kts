@@ -35,6 +35,7 @@ tasks.withType<Test>().configureEach {
 
 tasks {
   val testSuites = testing.suites.withType(JvmTestSuite::class)
+    .matching { it.name == "test" }
 
   val stableSemconvSuites = testSuites.map { suite ->
     register<Test>("${suite.name}StableSemconv") {

@@ -174,6 +174,7 @@ testing {
 tasks {
 
   val testSuites = testing.suites.withType(JvmTestSuite::class)
+    .matching { it.name == "test" || it.name == "slf4j2ApiTest" }
 
   val stableSemconvSuites = testSuites.map { suite ->
     register<Test>("${suite.name}StableSemconv") {
