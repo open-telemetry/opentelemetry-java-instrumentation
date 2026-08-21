@@ -4466,6 +4466,14 @@ definitions:
       attributes:
       - name: error.type
         type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.process.duration-43b43ca1:
       name: messaging.process.duration
       description: Duration of processing operation.
