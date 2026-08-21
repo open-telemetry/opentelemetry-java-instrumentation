@@ -1,7 +1,7 @@
 [tools]
 
 # Linters
-"aqua:grafana/flint" = "0.22.10"
+"aqua:grafana/flint" = "0.22.11"
 google-java-format = "1.35.0"
 ktlint = "1.8.0"
 lychee = "0.24.2"
