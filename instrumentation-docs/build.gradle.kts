@@ -43,9 +43,24 @@ tasks {
 
   register<JavaExec>("docSiteAudit") {
     dependsOn(classes)
+    isIgnoreExitValue = true
 
     systemProperty("basePath", project.rootDir)
     mainClass.set("io.opentelemetry.instrumentation.docs.DocSynchronization")
     classpath(sourceSets["main"].runtimeClasspath)
+
+    doLast {
+      val exitValue = executionResult.get().exitValue
+      // Write the Java process exit code so the CI workflow can distinguish
+      // drift (exit 1) from execution errors (exit 2+).
+      layout.buildDirectory.file("audit-exit-code").get().asFile.also {
+        it.parentFile.mkdirs()
+        it.writeText(exitValue.toString())
+      }
+      // Execution errors should still fail the Gradle task.
+      if (exitValue > 1) {
+        error("Audit execution failed with exit code $exitValue")
+      }
+    }
   }
 }

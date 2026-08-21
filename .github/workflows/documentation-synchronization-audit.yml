@@ -32,7 +32,15 @@ jobs:
       - name: Run doc site audit
         id: doc-site-audit
         run: |
-          if ./gradlew :instrumentation-docs:docSiteAudit; then
+          set +e
+          ./gradlew :instrumentation-docs:docSiteAudit
+          gradle_exit=$?
+          set -e
+          if [[ $gradle_exit -ne 0 ]]; then
+            exit $gradle_exit
+          fi
+          audit_exit=$(cat instrumentation-docs/build/audit-exit-code)
+          if [[ "$audit_exit" -eq 0 ]]; then
             echo "success=true" >> "$GITHUB_OUTPUT"
           else
             echo "success=false" >> "$GITHUB_OUTPUT"

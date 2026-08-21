@@ -31,8 +31,10 @@ public class DocSynchronization {
     HttpClient client = HttpClient.newHttpClient();
 
     try {
-      boolean hasFailures = false;
-      StringBuilder combinedMessage = new StringBuilder();
+      boolean hasDrift = false;
+      boolean hasErrors = false;
+      StringBuilder driftMessage = new StringBuilder();
+      StringBuilder errorMessage = new StringBuilder();
 
       for (DocumentationAuditor auditor : AUDITORS) {
         try {
@@ -40,19 +42,19 @@ public class DocSynchronization {
           Optional<String> result = auditor.performAudit(client);
 
           if (result.isPresent()) {
-            hasFailures = true;
-            if (!combinedMessage.isEmpty()) {
-              combinedMessage.append("\n\n");
+            hasDrift = true;
+            if (!driftMessage.isEmpty()) {
+              driftMessage.append("\n\n");
             }
-            combinedMessage.append(result.get());
+            driftMessage.append(result.get());
           }
         } catch (IOException | InterruptedException | RuntimeException e) {
           logger.severe("Error running " + auditor.getAuditorName() + ": " + e.getMessage());
-          hasFailures = true;
-          if (!combinedMessage.isEmpty()) {
-            combinedMessage.append("\n\n");
+          hasErrors = true;
+          if (!errorMessage.isEmpty()) {
+            errorMessage.append("\n\n");
           }
-          combinedMessage
+          errorMessage
               .append("Error in ")
               .append(auditor.getAuditorName())
               .append(": ")
@@ -60,11 +62,14 @@ public class DocSynchronization {
         }
       }
 
-      if (hasFailures) {
+      if (hasErrors) {
+        logger.severe("Audit execution errors:\n" + errorMessage);
+        exit(2);
+      } else if (hasDrift) {
         // Add custom markers and "How to Fix" section for GitHub workflow extraction
         StringBuilder finalMessage = new StringBuilder();
         finalMessage.append("=== AUDIT_FAILURE_START ===\n");
-        finalMessage.append(combinedMessage.toString());
+        finalMessage.append(driftMessage.toString());
         finalMessage.append("\n\n## How to Fix\n\n");
         finalMessage.append(
             "For guidance on updating the OpenTelemetry.io documentation, see: [Documenting Instrumentation](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/documenting-instrumentation.md#opentelemetryio)");
@@ -79,7 +84,7 @@ public class DocSynchronization {
     } catch (RuntimeException e) {
       logger.severe("Error running documentation audits: " + e.getMessage());
       logger.severe(Arrays.toString(e.getStackTrace()));
-      exit(1);
+      exit(2);
     }
   }
 
