@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.lang.reflect.Proxy;
 import java.util.UUID;
 import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.Version;
 import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
@@ -35,6 +36,7 @@ import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.internal.InternalSettingsPreparer;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.transport.Netty3Plugin;
 import org.elasticsearch.transport.NodeDisconnectedException;
 import org.elasticsearch.transport.TransportException;
@@ -157,6 +159,15 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
 
     assertThat(attributes.get(ERROR_TYPE))
         .isEqualTo(emitStableDatabaseSemconv() ? TransportException.class.getName() : null);
+  }
+
+  @Test
+  void elasticsearchStatusExceptionWithInternalServerErrorUsesStatus() {
+    Attributes attributes =
+        extractEndAttributes(
+            new ElasticsearchStatusException("status error", RestStatus.INTERNAL_SERVER_ERROR));
+
+    assertThat(attributes.get(ERROR_TYPE)).isEqualTo(emitStableDatabaseSemconv() ? "500" : null);
   }
 
   @SuppressWarnings("unchecked")
