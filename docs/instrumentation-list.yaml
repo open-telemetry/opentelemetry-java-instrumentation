@@ -7645,6 +7645,18 @@ libraries:
     - messaging.client.operation.duration-d165a8db
     - messaging.client.sent.messages-4c72bd1e
     - messaging.process.duration-0ca61f76
+  - when: otel.semconv-stability.opt-in=messaging/dup
+    metric_refs:
+    - messaging.client.consumed.messages-c0fc17f6
+    - messaging.client.operation.duration-d165a8db
+    - messaging.client.sent.messages-4c72bd1e
+    - messaging.process.duration-0ca61f76
+  - when: otel.instrumentation.common.v3-preview=true
+    metric_refs:
+    - messaging.client.consumed.messages-c0fc17f6
+    - messaging.client.operation.duration-d165a8db
+    - messaging.client.sent.messages-4c72bd1e
+    - messaging.process.duration-0ca61f76
 - name: cassandra-3.0
   display_name: Cassandra Driver
   description: |
