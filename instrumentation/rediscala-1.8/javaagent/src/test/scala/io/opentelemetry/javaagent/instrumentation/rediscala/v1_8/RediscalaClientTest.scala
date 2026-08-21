@@ -399,6 +399,16 @@ class RediscalaClientTest {
           }
         )
     })
+
+    assertDurationMetric(
+      testing,
+      "io.opentelemetry.rediscala-1.8",
+      DB_SYSTEM_NAME,
+      DB_OPERATION_NAME,
+      DB_NAMESPACE,
+      SERVER_ADDRESS,
+      SERVER_PORT
+    )
   }
 
   @Test def testNonDefaultDatabaseIndexTransaction(): Unit = {
@@ -445,6 +455,16 @@ class RediscalaClientTest {
           }
         )
     })
+
+    assertDurationMetric(
+      testing,
+      "io.opentelemetry.rediscala-1.8",
+      DB_SYSTEM_NAME,
+      DB_OPERATION_NAME,
+      DB_NAMESPACE,
+      SERVER_ADDRESS,
+      SERVER_PORT
+    )
   }
 
   private def nonDefaultNamespace: String =
