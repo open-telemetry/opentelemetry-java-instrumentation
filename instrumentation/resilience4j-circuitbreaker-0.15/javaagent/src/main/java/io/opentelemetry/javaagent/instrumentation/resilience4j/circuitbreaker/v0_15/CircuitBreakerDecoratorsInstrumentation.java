@@ -14,6 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -49,11 +50,23 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
         isMethod().and(isStatic()).and(named("decorateCompletionStage")),
         getClass().getName() + "$CompletionStageSupplierAdvice");
     transformer.applyAdviceToMethod(
+        isMethod().and(isStatic()).and(named("decorateFuture")),
+        getClass().getName() + "$FutureSupplierAdvice");
+    transformer.applyAdviceToMethod(
         isMethod().and(isStatic()).and(named("decorateFunction")),
         getClass().getName() + "$FunctionAdvice");
     transformer.applyAdviceToMethod(
         isMethod().and(isStatic()).and(named("decorateConsumer")),
         getClass().getName() + "$ConsumerAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod()
+            .and(isStatic())
+            .and(
+                named("decorateCheckedSupplier")
+                    .or(named("decorateCheckedRunnable"))
+                    .or(named("decorateCheckedFunction"))
+                    .or(named("decorateCheckedConsumer"))),
+        getClass().getName() + "$CheckedDecoratorAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -98,6 +111,16 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
+  public static class FutureSupplierAdvice {
+
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static <T> Supplier<Future<T>> onExit(@Advice.Return Supplier<Future<T>> result) {
+      return Resilience4jCircuitBreakerDecorators.wrapFutureSupplier(result);
+    }
+  }
+
+  @SuppressWarnings("unused")
   public static class FunctionAdvice {
 
     @AssignReturned.ToReturned
@@ -114,6 +137,16 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static <T> Consumer<T> onExit(@Advice.Return Consumer<T> result) {
       return Resilience4jCircuitBreakerDecorators.wrapConsumer(result);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class CheckedDecoratorAdvice {
+
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static Object onExit(@Advice.Return Object result) {
+      return Resilience4jCircuitBreakerDecorators.wrapChecked(result);
     }
   }
 }

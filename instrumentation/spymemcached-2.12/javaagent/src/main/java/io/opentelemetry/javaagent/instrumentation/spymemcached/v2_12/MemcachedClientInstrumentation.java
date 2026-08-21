@@ -3,233 +3,145 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
+package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v0_15;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.CallDepth;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.spy.memcached.MemcachedClient;
-import net.spy.memcached.MemcachedConnection;
-import net.spy.memcached.internal.BulkFuture;
-import net.spy.memcached.internal.GetFuture;
-import net.spy.memcached.internal.OperationFuture;
 
-class MemcachedClientInstrumentation implements TypeInstrumentation {
+class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed(
+        "io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine");
+  }
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("net.spy.memcached.MemcachedClient");
+    return named("io.github.resilience4j.circuitbreaker.internal.CircuitBreakerStateMachine");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
-            .and(returns(named("net.spy.memcached.internal.OperationFuture")))
-            // Flush seems to have a bug when listeners may not be always called.
-            // Also tracing flush is probably of a very limited value.
-            .and(not(named("flush"))),
-        getClass().getName() + "$AsyncOperationAdvice");
+        isMethod().and(named("acquirePermission")).and(takesArguments(0)),
+        getClass().getName() + "$AcquirePermissionAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(returns(named("net.spy.memcached.internal.GetFuture"))),
-        getClass().getName() + "$AsyncGetAdvice");
+        isMethod().and(named("tryAcquirePermission")).and(takesArguments(0)),
+        getClass().getName() + "$TryAcquirePermissionAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(returns(named("net.spy.memcached.internal.BulkFuture"))),
-        getClass().getName() + "$AsyncBulkAdvice");
+        isMethod().and(named("releasePermission")).and(takesArguments(0)),
+        getClass().getName() + "$ReleasePermissionAdvice");
     transformer.applyAdviceToMethod(
-        isPublic().and(namedOneOf("incr", "decr")), getClass().getName() + "$SyncOperationAdvice");
+        isMethod().and(named("onSuccess")).and(takesArguments(1).or(takesArguments(2))),
+        getClass().getName() + "$OnSuccessAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod().and(named("onError")).and(takesArguments(2)),
+        getClass().getName() + "$OnErrorAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod().and(named("onError")).and(takesArguments(3)),
+        getClass().getName() + "$NewOnErrorAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod().and(named("onResult")).and(takesArguments(3)),
+        getClass().getName() + "$OnResultAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class AsyncOperationAdvice {
+  public static class AcquirePermissionAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope<OperationFuture<?>, OperationCompletionListener> methodEnter(
-        @Advice.This MemcachedClient client, @Advice.Origin("#m") String methodName) {
-      return AdviceScope.start(AsyncOperationHandler.INSTANCE, client, methodName);
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void methodExit(
-        @Advice.Return @Nullable OperationFuture<?> future,
-        @Advice.Thrown @Nullable Throwable thrown,
-        @Advice.Enter AdviceScope<OperationFuture<?>, OperationCompletionListener> adviceScope) {
-      adviceScope.end(future, thrown);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class AsyncGetAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope<GetFuture<?>, GetCompletionListener> methodEnter(
-        @Advice.This MemcachedClient client, @Advice.Origin("#m") String methodName) {
-      return AdviceScope.start(AsyncGetHandler.INSTANCE, client, methodName);
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void methodExit(
-        @Advice.Return @Nullable GetFuture<?> future,
-        @Advice.Thrown @Nullable Throwable thrown,
-        @Advice.Enter AdviceScope<GetFuture<?>, GetCompletionListener> adviceScope) {
-      adviceScope.end(future, thrown);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class AsyncBulkAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope<BulkFuture<?>, BulkGetCompletionListener> methodEnter(
-        @Advice.This MemcachedClient client, @Advice.Origin("#m") String methodName) {
-      return AdviceScope.start(AsyncBulkHandler.INSTANCE, client, methodName);
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void methodExit(
-        @Advice.Return @Nullable BulkFuture<?> future,
-        @Advice.Thrown @Nullable Throwable thrown,
-        @Advice.Enter AdviceScope<BulkFuture<?>, BulkGetCompletionListener> adviceScope) {
-      adviceScope.end(future, thrown);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SyncOperationAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope<Void, SyncCompletionListener> methodEnter(
-        @Advice.This MemcachedClient client, @Advice.Origin("#m") String methodName) {
-      return AdviceScope.start(SyncHandler.INSTANCE, client, methodName);
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void methodExit(
-        @Advice.Thrown @Nullable Throwable thrown,
-        @Advice.Enter AdviceScope<Void, SyncCompletionListener> adviceScope) {
-      adviceScope.end(null, thrown);
-    }
-  }
-
-  public static class AdviceScope<F, T extends CompletionListener<?>> {
-    private final CallDepth callDepth;
-    private final Handler<F, T> handler;
-    @Nullable private final T listener;
-    @Nullable private final Scope scope;
-
-    private AdviceScope(Handler<F, T> handler, CallDepth callDepth, @Nullable T listener) {
-      this.handler = handler;
-      this.callDepth = callDepth;
-      this.listener = listener;
-      this.scope = listener != null ? listener.getContext().makeCurrent() : null;
-    }
-
-    public static <F, T extends CompletionListener<?>> AdviceScope<F, T> start(
-        Handler<F, T> handler, MemcachedClient client, String methodName) {
-      CallDepth callDepth = CallDepth.forClass(MemcachedClient.class);
-      if (callDepth.getAndIncrement() > 0) {
-        return new AdviceScope<>(handler, callDepth, null);
-      }
-
-      return new AdviceScope<>(
-          handler,
-          callDepth,
-          handler.create(Context.current(), client.getConnection(), methodName));
-    }
-
-    public void end(@Nullable F future, @Nullable Throwable throwable) {
-      if (callDepth.decrementAndGet() > 0 || listener == null || scope == null) {
-        return;
-      }
-      scope.close();
-
-      // when throwable is set then future is always null as it is the return value of the
-      // instrumented method
-      if (future == null) {
-        listener.done(throwable);
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    public static void onExit(
+        @Advice.This CircuitBreaker circuitBreaker, @Advice.Thrown @Nullable Throwable throwable) {
+      if (throwable == null) {
+        Resilience4jCircuitBreakerSpans.start(circuitBreaker);
       } else {
-        handler.addListener(future, listener);
+        Resilience4jCircuitBreakerSpans.reject(circuitBreaker, throwable);
       }
     }
   }
 
-  public interface Handler<F, T extends CompletionListener<?>> {
-    @Nullable
-    T create(Context parentContext, MemcachedConnection connection, String methodName);
+  @SuppressWarnings("unused")
+  public static class TryAcquirePermissionAdvice {
 
-    default void addListener(F future, T listener) {}
-  }
-
-  public enum AsyncOperationHandler
-      implements Handler<OperationFuture<?>, OperationCompletionListener> {
-    INSTANCE;
-
-    @Override
-    @Nullable
-    public OperationCompletionListener create(
-        Context parentContext, MemcachedConnection connection, String methodName) {
-      return OperationCompletionListener.create(parentContext, connection, methodName);
-    }
-
-    @Override
-    public void addListener(OperationFuture<?> future, OperationCompletionListener listener) {
-      future.addListener(listener);
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.This CircuitBreaker circuitBreaker, @Advice.Return boolean permitted) {
+      if (permitted) {
+        Resilience4jCircuitBreakerSpans.start(circuitBreaker);
+      } else {
+        Resilience4jCircuitBreakerSpans.reject(circuitBreaker, null);
+      }
     }
   }
 
-  public enum AsyncGetHandler implements Handler<GetFuture<?>, GetCompletionListener> {
-    INSTANCE;
+  @SuppressWarnings("unused")
+  public static class ReleasePermissionAdvice {
 
-    @Override
-    @Nullable
-    public GetCompletionListener create(
-        Context parentContext, MemcachedConnection connection, String methodName) {
-      return GetCompletionListener.create(parentContext, connection, methodName);
-    }
-
-    @Override
-    public void addListener(GetFuture<?> future, GetCompletionListener listener) {
-      future.addListener(listener);
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    public static void onExit(@Advice.This CircuitBreaker circuitBreaker) {
+      if (!Resilience4jCircuitBreakerSpans.isInCircuitBreakerCallback()) {
+        Resilience4jCircuitBreakerSpans.end(circuitBreaker, "cancelled", null);
+      }
     }
   }
 
-  public enum AsyncBulkHandler implements Handler<BulkFuture<?>, BulkGetCompletionListener> {
-    INSTANCE;
+  @SuppressWarnings("unused")
+  public static class OnSuccessAdvice {
 
-    @Override
-    @Nullable
-    public BulkGetCompletionListener create(
-        Context parentContext, MemcachedConnection connection, String methodName) {
-      return BulkGetCompletionListener.create(parentContext, connection, methodName);
-    }
-
-    @Override
-    public void addListener(BulkFuture<?> future, BulkGetCompletionListener listener) {
-      future.addListener(listener);
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    public static void onExit(@Advice.This CircuitBreaker circuitBreaker) {
+      Resilience4jCircuitBreakerSpans.end(circuitBreaker, "success", null);
     }
   }
 
-  public enum SyncHandler implements Handler<Void, SyncCompletionListener> {
-    INSTANCE;
+  @SuppressWarnings("unused")
+  public static class OnErrorAdvice {
 
-    @Override
-    @Nullable
-    public SyncCompletionListener create(
-        Context parentContext, MemcachedConnection connection, String methodName) {
-      return SyncCompletionListener.create(parentContext, connection, methodName);
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter() {
+      Resilience4jCircuitBreakerSpans.enterCircuitBreakerCallback();
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    public static void onExit(
+        @Advice.This CircuitBreaker circuitBreaker, @Advice.Argument(1) Throwable throwable) {
+      Resilience4jCircuitBreakerSpans.exitCircuitBreakerCallback();
+      Resilience4jCircuitBreakerSpans.end(circuitBreaker, "failure", throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class NewOnErrorAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter() {
+      Resilience4jCircuitBreakerSpans.enterCircuitBreakerCallback();
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    public static void onExit(
+        @Advice.This CircuitBreaker circuitBreaker, @Advice.Argument(2) Throwable throwable) {
+      Resilience4jCircuitBreakerSpans.exitCircuitBreakerCallback();
+      Resilience4jCircuitBreakerSpans.end(circuitBreaker, "failure", throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class OnResultAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    public static void onExit(@Advice.This CircuitBreaker circuitBreaker) {
+      Resilience4jCircuitBreakerSpans.end(circuitBreaker, "success", null);
     }
   }
 }

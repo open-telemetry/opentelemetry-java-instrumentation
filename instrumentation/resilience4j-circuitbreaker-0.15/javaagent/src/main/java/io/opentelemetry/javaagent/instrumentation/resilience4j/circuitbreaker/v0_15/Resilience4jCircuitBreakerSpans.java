@@ -48,8 +48,8 @@ public class Resilience4jCircuitBreakerSpans {
     tracer = tracerBuilder.build();
   }
 
-  private static final ThreadLocal<Deque<PendingSpan>> pendingSpans =
-      ThreadLocal.withInitial(ArrayDeque::new);
+  private static final ThreadLocal<Deque<PendingSpan>> pendingSpans = new ThreadLocal<>();
+  private static final ThreadLocal<Boolean> inCircuitBreakerCallback = new ThreadLocal<>();
 
   private static final AttributeKey<String> CIRCUIT_BREAKER_NAME =
       stringKey("resilience.policy.name");
@@ -67,9 +67,12 @@ public class Resilience4jCircuitBreakerSpans {
       return;
     }
 
-    pendingSpans
-        .get()
-        .push(new PendingSpan(circuitBreaker, startSpan(circuitBreaker, parentContext)));
+    Deque<PendingSpan> spans = pendingSpans.get();
+    if (spans == null) {
+      spans = new ArrayDeque<>();
+      pendingSpans.set(spans);
+    }
+    spans.push(new PendingSpan(circuitBreaker, startSpan(circuitBreaker, parentContext)));
   }
 
   public static void reject(CircuitBreaker circuitBreaker, @Nullable Throwable throwable) {
@@ -90,6 +93,18 @@ public class Resilience4jCircuitBreakerSpans {
     span.end();
   }
 
+  public static void enterCircuitBreakerCallback() {
+    inCircuitBreakerCallback.set(Boolean.TRUE);
+  }
+
+  public static void exitCircuitBreakerCallback() {
+    inCircuitBreakerCallback.remove();
+  }
+
+  public static boolean isInCircuitBreakerCallback() {
+    return Boolean.TRUE.equals(inCircuitBreakerCallback.get());
+  }
+
   public static void end(
       CircuitBreaker circuitBreaker, String outcome, @Nullable Throwable throwable) {
     PendingSpan pendingSpan = pollPendingSpan(circuitBreaker);
@@ -108,12 +123,16 @@ public class Resilience4jCircuitBreakerSpans {
 
   @Nullable
   public static PendingSpan currentPendingSpan() {
-    return pendingSpans.get().peek();
+    Deque<PendingSpan> spans = pendingSpans.get();
+    return spans == null ? null : spans.peek();
   }
 
   @Nullable
   private static PendingSpan pollPendingSpan(CircuitBreaker circuitBreaker) {
     Deque<PendingSpan> spans = pendingSpans.get();
+    if (spans == null) {
+      return null;
+    }
     Iterator<PendingSpan> iterator = spans.iterator();
     while (iterator.hasNext()) {
       PendingSpan span = iterator.next();
@@ -134,6 +153,9 @@ public class Resilience4jCircuitBreakerSpans {
   @Nullable
   public static PendingSpan pollPendingSpanAfter(@Nullable PendingSpan baseline) {
     Deque<PendingSpan> spans = pendingSpans.get();
+    if (spans == null) {
+      return null;
+    }
     PendingSpan span = spans.peek();
     if (span == null || span == baseline) {
       if (spans.isEmpty()) {

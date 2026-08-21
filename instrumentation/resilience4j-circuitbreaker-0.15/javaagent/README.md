@@ -13,4 +13,4 @@ When experimental span attributes are enabled, each CircuitBreaker span records:
 - `resilience.policy.name`
 - `resilience.circuit_breaker.state`: Resilience4j `CircuitBreaker.State` lowercased, for
   example `closed`, `open`, `half_open`, `disabled`, `forced_open`, or `metrics_only`
-- `resilience.circuit_breaker.outcome`: `success`, `failure`, or `rejected`
+- `resilience.circuit_breaker.outcome`: `success`, `failure`, `rejected`, or `cancelled`

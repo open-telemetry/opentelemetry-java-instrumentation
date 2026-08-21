@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -77,6 +78,28 @@ class Resilience4jCircuitBreakerTest {
 
     assertThat(permitted).isFalse();
     assertCircuitBreakerSpan("open", "rejected", null);
+  }
+
+  @Test
+  void createsCircuitBreakerSpanWhenIgnoredCallFails() {
+    CircuitBreakerConfig config =
+        CircuitBreakerConfig.custom().ignoreExceptions(IllegalArgumentException.class).build();
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", config);
+    IllegalArgumentException exception = new IllegalArgumentException("boom");
+
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                testing.runWithSpan(
+                    "parent",
+                    () ->
+                        circuitBreaker.executeSupplier(
+                            () -> {
+                              throw exception;
+                            })));
+
+    assertThat(thrown).isSameAs(exception);
+    assertCircuitBreakerSpan("closed", "failure", exception);
   }
 
   @Test
