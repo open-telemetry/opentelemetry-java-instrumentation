@@ -56,6 +56,12 @@ final class CamelPropagationUtil {
         .inject(context, exchangeHeaders, MapSetter.INSTANCE);
   }
 
+  static void clearPropagationFields(Map<String, Object> exchangeHeaders) {
+    for (String field : GlobalOpenTelemetry.getPropagators().getTextMapPropagator().fields()) {
+      exchangeHeaders.remove(field);
+    }
+  }
+
   static TextMapPropagator messagingPropagator() {
     return messagingPropagator;
   }
