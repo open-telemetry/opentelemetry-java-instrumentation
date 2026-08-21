@@ -21,8 +21,10 @@ import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticTransportRequest;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportAttributesGetter;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Proxy;
 import java.util.UUID;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.Version;
 import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
@@ -35,6 +37,7 @@ import org.elasticsearch.node.Node;
 import org.elasticsearch.node.internal.InternalSettingsPreparer;
 import org.elasticsearch.transport.Netty3Plugin;
 import org.elasticsearch.transport.NodeDisconnectedException;
+import org.elasticsearch.transport.TransportException;
 import org.elasticsearch.transport.TransportService;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.junit.jupiter.api.BeforeAll;
@@ -136,6 +139,24 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
         extractEndAttributes(new NoNodeAvailableException("no nodes are available"));
 
     assertThat(attributes.get(ERROR_TYPE)).isEqualTo(emitStableDatabaseSemconv() ? "503" : null);
+  }
+
+  @Test
+  void plainElasticsearchExceptionUsesExceptionClassErrorType() {
+    Attributes attributes = extractEndAttributes(new ElasticsearchException("plain error"));
+
+    assertThat(attributes.get(ERROR_TYPE))
+        .isEqualTo(emitStableDatabaseSemconv() ? ElasticsearchException.class.getName() : null);
+  }
+
+  @Test
+  void transportExceptionWithGenericCauseUsesExceptionClassErrorType() {
+    Attributes attributes =
+        extractEndAttributes(
+            new TransportException("transport error", new IOException("connection refused")));
+
+    assertThat(attributes.get(ERROR_TYPE))
+        .isEqualTo(emitStableDatabaseSemconv() ? TransportException.class.getName() : null);
   }
 
   @SuppressWarnings("unchecked")
