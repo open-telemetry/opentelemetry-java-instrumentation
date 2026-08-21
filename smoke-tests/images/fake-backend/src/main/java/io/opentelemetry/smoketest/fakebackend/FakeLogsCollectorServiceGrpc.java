@@ -9,7 +9,6 @@ import io.grpc.stub.StreamObserver;
 import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest;
 import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceResponse;
 import io.opentelemetry.proto.collector.logs.v1.LogsServiceGrpc;
-import java.util.List;
 
 public class FakeLogsCollectorServiceGrpc extends LogsServiceGrpc.LogsServiceImplBase {
 
@@ -17,14 +16,6 @@ public class FakeLogsCollectorServiceGrpc extends LogsServiceGrpc.LogsServiceImp
 
   public FakeLogsCollectorServiceGrpc(RequestsStorage storage) {
     this.storage = storage;
-  }
-
-  List<ExportLogsServiceRequest> getRequests() {
-    return storage.getLogsRequests();
-  }
-
-  void clearRequests() {
-    storage.clearLogs();
   }
 
   @Override

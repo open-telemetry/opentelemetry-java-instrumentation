@@ -9,7 +9,6 @@ import io.grpc.stub.StreamObserver;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceResponse;
 import io.opentelemetry.proto.collector.trace.v1.TraceServiceGrpc;
-import java.util.List;
 
 class FakeTraceCollectorServiceGrpc extends TraceServiceGrpc.TraceServiceImplBase {
 
@@ -17,14 +16,6 @@ class FakeTraceCollectorServiceGrpc extends TraceServiceGrpc.TraceServiceImplBas
 
   FakeTraceCollectorServiceGrpc(RequestsStorage requestsStorage) {
     this.requestsStorage = requestsStorage;
-  }
-
-  List<ExportTraceServiceRequest> getRequests() {
-    return requestsStorage.getTraceRequests();
-  }
-
-  void clearRequests() {
-    requestsStorage.clearTraces();
   }
 
   @Override

@@ -96,15 +96,15 @@ public class FakeBackendMain {
             .service(
                 "/clear",
                 (ctx, req) -> {
-                  grpcTraceService.clearRequests();
-                  grpcMetricsService.clearRequests();
-                  grpcLogsService.clearRequests();
+                  storage.clearTraces();
+                  storage.clearTraces();
+                  storage.clearLogs();
                   return HttpResponse.of(HttpStatus.OK);
                 })
             .service(
                 "/get-traces",
                 (ctx, req) -> {
-                  var requests = grpcTraceService.getRequests();
+                  var requests = storage.getTraceRequests();
                   var buf = new ByteBufOutputStream(ctx.alloc().buffer());
                   OBJECT_MAPPER.writeValue((OutputStream) buf, requests);
                   return HttpResponse.of(
@@ -113,7 +113,7 @@ public class FakeBackendMain {
             .service(
                 "/get-metrics",
                 (ctx, req) -> {
-                  var requests = grpcMetricsService.getRequests();
+                  var requests = storage.getMetricsRequests();
                   var buf = new ByteBufOutputStream(ctx.alloc().buffer());
                   OBJECT_MAPPER.writeValue((OutputStream) buf, requests);
                   return HttpResponse.of(
@@ -122,7 +122,7 @@ public class FakeBackendMain {
             .service(
                 "/get-logs",
                 (ctx, req) -> {
-                  var requests = grpcLogsService.getRequests();
+                  var requests = storage.getLogsRequests();
                   var buf = new ByteBufOutputStream(ctx.alloc().buffer());
                   OBJECT_MAPPER.writeValue((OutputStream) buf, requests);
                   return HttpResponse.of(

@@ -9,7 +9,6 @@ import io.grpc.stub.StreamObserver;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceResponse;
 import io.opentelemetry.proto.collector.metrics.v1.MetricsServiceGrpc;
-import java.util.List;
 
 class FakeMetricsCollectorServiceGrpc extends MetricsServiceGrpc.MetricsServiceImplBase {
 
@@ -17,14 +16,6 @@ class FakeMetricsCollectorServiceGrpc extends MetricsServiceGrpc.MetricsServiceI
 
   public FakeMetricsCollectorServiceGrpc(RequestsStorage storage) {
     this.storage = storage;
-  }
-
-  List<ExportMetricsServiceRequest> getRequests() {
-    return storage.getMetricsRequests();
-  }
-
-  void clearRequests() {
-    storage.clearMetrics();
   }
 
   @Override
