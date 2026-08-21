@@ -129,7 +129,11 @@ public class ActiveContextManager {
     }
 
     private synchronized void addActivated(ContextWithScope contextWithScope) {
-      scopes.add(0, contextWithScope);
+      if (complete) {
+        contextWithScope.closeScope();
+      } else {
+        scopes.add(0, contextWithScope);
+      }
     }
 
     private synchronized void finish(boolean closeScopes) {
