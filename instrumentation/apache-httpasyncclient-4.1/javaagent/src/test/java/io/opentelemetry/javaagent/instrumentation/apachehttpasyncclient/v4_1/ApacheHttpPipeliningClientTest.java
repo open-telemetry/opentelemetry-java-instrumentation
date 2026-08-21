@@ -284,7 +284,7 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
   }
 
   @Test
-  void pipelinedContentFailureEndsCurrentSpanWithError() throws Exception {
+  void pipelinedContentFailureEndsCurrentSpanWithError() {
     URI uri = resolveAddress("/success");
     HttpHost target = target(uri);
     HttpGet request = new HttpGet(uri.getRawPath());
@@ -418,7 +418,7 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
   }
 
   @Test
-  void pipelinedConsumerCloseFailureEndsSpanWithError() throws Exception {
+  void pipelinedConsumerCloseFailureEndsSpanWithError() {
     URI uri = resolveAddress("/success");
     HttpHost target = target(uri);
     HttpGet request = new HttpGet(uri.getRawPath());
@@ -550,7 +550,7 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
   }
 
   @Test
-  void nullGeneratedRequestUsesApacheValidation() throws Exception {
+  void nullGeneratedRequestUsesApacheValidation() {
     URI uri = resolveAddress("/success");
     HttpHost target = target(uri);
     AtomicInteger generateCalls = new AtomicInteger();
