@@ -16,14 +16,14 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyze
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
-// the old database semconv hooks are deprecated, as is SqlQuery.getOperationName()
+// the old database semconv hooks are deprecated
 @SuppressWarnings("deprecation")
 final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeRequest, Void> {
 
   // Region.query(String), Region.existsValue(String) and Region.selectValue(String) all run a
   // select: either the OQL query they are given, or "SELECT * FROM <region> this WHERE <predicate>"
   // when they are given a bare query predicate
-  private static final String FALLBACK_OPERATION_NAME = "SELECT";
+  private static final String QUERY_OPERATION_NAME = "SELECT";
 
   private static final SqlQueryAnalyzer analyzer =
       SqlQueryAnalyzer.create(
@@ -75,8 +75,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
     if (sqlQuery == null) {
       return request.getOperationName();
     }
-    String operationName = sqlQuery.getOperationName();
-    return FALLBACK_OPERATION_NAME.equals(operationName) ? operationName : FALLBACK_OPERATION_NAME;
+    return QUERY_OPERATION_NAME;
   }
 
   @Override

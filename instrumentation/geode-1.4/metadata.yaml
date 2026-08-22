@@ -1,8 +1,8 @@
 display_name: Apache Geode
 description: >
   This instrumentation enables database client spans and database client metrics for Apache Geode
-  cache operations. Under stable database semantic conventions, OQL query spans derive
-  `db.operation.name` from the query text, for example `SELECT`.
+  cache operations. Under stable database semantic conventions, OQL query spans set
+  `db.operation.name` to `SELECT`.
 library_link: https://geode.apache.org/
 semantic_conventions:
   - DATABASE_CLIENT_SPANS
