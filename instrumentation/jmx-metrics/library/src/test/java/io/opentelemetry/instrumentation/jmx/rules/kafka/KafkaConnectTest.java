@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.rules;
+package io.opentelemetry.instrumentation.jmx.rules.kafka;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -17,6 +19,8 @@ import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.Metric;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.StateMapping;
+import io.opentelemetry.instrumentation.jmx.rules.MetricsVerifier;
+import io.opentelemetry.instrumentation.jmx.rules.TargetSystemTest;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
@@ -35,20 +39,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.OutputFrame;
-import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.builder.Transferable;
 
 class KafkaConnectTest extends TargetSystemTest {
-  private static final String APACHE_KAFKA_IMAGE = "apache/kafka:3.8.0";
-  private static final int KAFKA_PORT = 9092;
-  private static final int KAFKA_CONTROLLER_PORT = 9093;
-  private static final int CONNECT_PORT = 8083;
-  private static final String KAFKA_ALIAS = "kafka";
-  private static final String CONNECT_ALIAS = "kafka-connect";
-  private static final String KAFKA_SERVER_PROPERTIES_PATH =
-      "/opt/kafka/config/kraft/server.properties";
-  private static final String CONNECT_PROPERTIES_PATH =
-      "/opt/kafka/config/connect-distributed.properties";
+  private static final String KAFKA_IMAGE = "apache/kafka:3.8.0";
   private static final String SOURCE_CONNECTOR = "file-source";
   private static final String SINK_CONNECTOR = "file-sink";
   private static final String SOURCE_FILE_PATH = "/tmp/source.txt";
@@ -143,42 +137,79 @@ class KafkaConnectTest extends TargetSystemTest {
     Set<String> expectedCreatedMetrics = loadKafkaConnectMetricNames(false);
     Set<String> registeredMetrics = ConcurrentHashMap.newKeySet();
 
-    String kafkaCommand =
-        "/opt/kafka/bin/kafka-storage.sh format -t $(/opt/kafka/bin/kafka-storage.sh random-uuid) -c "
-            + KAFKA_SERVER_PROPERTIES_PATH
-            + " && /opt/kafka/bin/kafka-server-start.sh "
-            + KAFKA_SERVER_PROPERTIES_PATH;
-
-    GenericContainer<?> kafka =
-        new GenericContainer<>(APACHE_KAFKA_IMAGE)
-            .withNetworkAliases(KAFKA_ALIAS)
-            .withCopyToContainer(
-                Transferable.of(kafkaServerProperties()), KAFKA_SERVER_PROPERTIES_PATH)
-            .withExposedPorts(KAFKA_PORT)
-            .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint("/bin/sh"))
-            .withCommand("-c", kafkaCommand)
-            .withStartupTimeout(Duration.ofMinutes(3))
-            .waitingFor(Wait.forListeningPort());
+    GenericContainer<?> kafka = KafkaContainer.create(KAFKA_IMAGE);
 
     GenericContainer<?> kafkaConnect =
-        new GenericContainer<>(APACHE_KAFKA_IMAGE)
-            .withNetworkAliases(CONNECT_ALIAS)
+        KafkaContainer.create(KAFKA_IMAGE)
+            .withKafkaConnect()
             .withEnv("JAVA_TOOL_OPTIONS", String.join(" ", jvmArgs))
-            .withCopyToContainer(
-                Transferable.of(connectWorkerProperties()), CONNECT_PROPERTIES_PATH)
             .withCopyToContainer(Transferable.of("first\nsecond\nthird\n"), SOURCE_FILE_PATH)
-            .withExposedPorts(CONNECT_PORT)
-            .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint("/bin/sh"))
-            .withCommand("-c", "/opt/kafka/bin/connect-distributed.sh " + CONNECT_PROPERTIES_PATH)
-            .withStartupTimeout(Duration.ofMinutes(5))
-            .withLogConsumer(frame -> recordMetricRegistrations(frame, registeredMetrics))
-            .waitingFor(
-                Wait.forHttp("/connectors")
-                    .forPort(CONNECT_PORT)
-                    .withStartupTimeout(Duration.ofMinutes(5)));
+            .withLogConsumer(frame -> recordMetricRegistrations(frame, registeredMetrics));
 
     copyAgentToTarget(kafkaConnect);
     copyYamlFilesToTarget(kafkaConnect, yamlFiles);
+
+    startWeaverValidation(
+        "kafka-connect.yaml",
+        result ->
+            result
+                .checkNothingUnregisteredWithPrefix("kafka.connect.")
+                .checkRegisteredMetrics(
+                    "kafka.connect.",
+                    asList(
+                        "kafka.connect.worker.connector.count",
+                        "kafka.connect.worker.connector.startup.count",
+                        "kafka.connect.worker.task.count",
+                        "kafka.connect.worker.task.startup.count",
+                        "kafka.connect.worker.connector.task.count",
+                        "kafka.connect.worker.rebalance.completed.count",
+                        "kafka.connect.worker.rebalance.protocol",
+                        "kafka.connect.worker.rebalance.epoch",
+                        "kafka.connect.worker.rebalance.time.average",
+                        "kafka.connect.worker.rebalance.time.max",
+                        "kafka.connect.worker.rebalance.active",
+                        "kafka.connect.connector.status",
+                        "kafka.connect.task.batch.size.average",
+                        "kafka.connect.task.batch.size.max",
+                        "kafka.connect.task.offset.commit.failure.ratio",
+                        "kafka.connect.task.running.ratio",
+                        "kafka.connect.task.status",
+                        "kafka.connect.sink.offset.commit.completed.count",
+                        "kafka.connect.sink.offset.commit.seq",
+                        "kafka.connect.sink.offset.commit.skipped.count",
+                        "kafka.connect.sink.partition.count",
+                        "kafka.connect.sink.put.batch.time.average",
+                        "kafka.connect.sink.put.batch.time.max",
+                        "kafka.connect.sink.record.active.count",
+                        "kafka.connect.sink.record.read.count",
+                        "kafka.connect.sink.record.send.count",
+                        "kafka.connect.source.poll.batch.time.average",
+                        "kafka.connect.source.poll.batch.time.max",
+                        "kafka.connect.source.record.active.count",
+                        "kafka.connect.source.record.poll.count",
+                        "kafka.connect.source.record.write.count",
+                        "kafka.connect.task.error.deadletterqueue.produce.failure.count",
+                        "kafka.connect.task.error.deadletterqueue.produce.request.count",
+                        "kafka.connect.task.error.last.error.timestamp",
+                        "kafka.connect.task.error.logged.count",
+                        "kafka.connect.task.error.record.error.count",
+                        "kafka.connect.task.error.record.failure.count",
+                        "kafka.connect.task.error.record.skipped.count",
+                        "kafka.connect.task.error.retry.count"),
+                    OPTIONAL_APACHE_METRICS)
+                .checkRegisteredAttributes(
+                    "kafka.connect.",
+                    asList(
+                        "kafka.connect.connector",
+                        "kafka.connect.task.id",
+                        "kafka.connect.worker.connector.startup.result",
+                        "kafka.connect.worker.task.startup.result",
+                        "kafka.connect.worker.connector.task.state",
+                        "kafka.connect.protocol.state",
+                        "kafka.connect.worker.rebalance.state",
+                        "kafka.connect.connector.state",
+                        "kafka.connect.task.state"),
+                    emptyList()));
 
     startTarget(kafkaConnect, singletonList(kafka));
 
@@ -254,50 +285,6 @@ class KafkaConnectTest extends TargetSystemTest {
         registeredMetrics.add(metricName);
       }
     }
-  }
-
-  private static String kafkaServerProperties() {
-    return String.join(
-        "\n",
-        "process.roles=broker,controller",
-        "node.id=1",
-        "controller.quorum.voters=1@" + KAFKA_ALIAS + ":" + KAFKA_CONTROLLER_PORT,
-        "listeners=PLAINTEXT://0.0.0.0:"
-            + KAFKA_PORT
-            + ",CONTROLLER://0.0.0.0:"
-            + KAFKA_CONTROLLER_PORT,
-        "listener.security.protocol.map=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT",
-        "inter.broker.listener.name=PLAINTEXT",
-        "controller.listener.names=CONTROLLER",
-        "advertised.listeners=PLAINTEXT://" + KAFKA_ALIAS + ":" + KAFKA_PORT,
-        "log.dirs=/tmp/kraft-combined-logs",
-        "num.partitions=1",
-        "offsets.topic.replication.factor=1",
-        "transaction.state.log.replication.factor=1",
-        "transaction.state.log.min.isr=1",
-        "group.initial.rebalance.delay.ms=0",
-        "auto.create.topics.enable=true");
-  }
-
-  private static String connectWorkerProperties() {
-    return String.join(
-        "\n",
-        "bootstrap.servers=" + KAFKA_ALIAS + ":" + KAFKA_PORT,
-        "group.id=connect-cluster",
-        "key.converter=org.apache.kafka.connect.storage.StringConverter",
-        "value.converter=org.apache.kafka.connect.storage.StringConverter",
-        "key.converter.schemas.enable=false",
-        "value.converter.schemas.enable=false",
-        "offset.storage.topic=connect-offsets",
-        "config.storage.topic=connect-configs",
-        "status.storage.topic=connect-status",
-        "offset.storage.replication.factor=1",
-        "config.storage.replication.factor=1",
-        "status.storage.replication.factor=1",
-        "plugin.path=/opt/kafka/libs",
-        "rest.host.name=0.0.0.0",
-        "rest.advertised.host.name=" + CONNECT_ALIAS,
-        "listeners=http://0.0.0.0:" + CONNECT_PORT);
   }
 
   private static MetricsVerifier createKafkaConnectMetricsVerifier() {
@@ -751,7 +738,7 @@ class KafkaConnectTest extends TargetSystemTest {
   }
 
   private static String connectUrl(GenericContainer<?> container) {
-    return "http://" + container.getHost() + ":" + container.getMappedPort(CONNECT_PORT);
+    return "http://" + container.getHost() + ":" + container.getFirstMappedPort();
   }
 
   private static void createConnector(String connectUrl, String connectorConfigJson) {
