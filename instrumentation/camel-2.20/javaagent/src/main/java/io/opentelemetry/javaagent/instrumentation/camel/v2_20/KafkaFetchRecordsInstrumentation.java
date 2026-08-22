@@ -5,11 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -30,13 +32,19 @@ class KafkaFetchRecordsInstrumentation implements TypeInstrumentation {
   public static class RunAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static boolean onEnter() {
+    @Nullable
+    public static Boolean onEnter() {
+      if (!emitStableMessagingSemconv()) {
+        return null;
+      }
       return KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter boolean previousValue) {
-      KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
+    public static void onExit(@Advice.Enter @Nullable Boolean previousValue) {
+      if (previousValue != null) {
+        KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
+      }
     }
   }
 }
