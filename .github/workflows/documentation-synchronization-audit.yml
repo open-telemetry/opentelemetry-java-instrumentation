@@ -9,6 +9,9 @@ permissions:
 
 jobs:
   crawl:
+    permissions:
+      contents: read
+      issues: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -27,16 +30,47 @@ jobs:
         run: ./gradlew :instrumentation-docs:runAnalysis
 
       - name: Run doc site audit
-        run: ./gradlew :instrumentation-docs:docSiteAudit
+        id: doc-site-audit
+        run: |
+          set +e
+          ./gradlew :instrumentation-docs:docSiteAudit
+          gradle_exit=$?
+          set -e
+          if [[ $gradle_exit -ne 0 ]]; then
+            exit $gradle_exit
+          fi
+          audit_exit=$(cat instrumentation-docs/build/audit-exit-code)
+          if [[ "$audit_exit" -eq 42 ]]; then
+            echo "success=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "success=true" >> "$GITHUB_OUTPUT"
+          fi
 
-  workflow-notification:
-    permissions:
-      contents: read
-      issues: write
-    needs:
-      - crawl
-    if: always()
-    uses: ./.github/workflows/reusable-workflow-notification.yml
-    with:
-      success: ${{ needs.crawl.result == 'success' }}
-      title: "Documentation sync needed: opentelemetry.io site out of sync"
+      - name: Open or close documentation sync issue
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AUDIT_SUCCESS: ${{ steps.doc-site-audit.outputs.success }}
+        run: |
+          set -euo pipefail
+
+          issue_title="Documentation sync needed: opentelemetry.io site out of sync"
+          number=$(
+            gh issue list \
+              --state open \
+              --search "in:title $issue_title" \
+              --limit 100 \
+              --json number,title \
+              --jq "map(select(.title | startswith(\"$issue_title (#\")))[0].number // empty"
+          )
+          issue_body="See [$GITHUB_WORKFLOW #$GITHUB_RUN_NUMBER](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."
+
+          if [[ -n "$number" ]]; then
+            if [[ "$AUDIT_SUCCESS" == "true" ]]; then
+              gh issue close "$number"
+            else
+              gh issue comment "$number" --body "$issue_body"
+            fi
+          elif [[ "$AUDIT_SUCCESS" == "false" ]]; then
+            gh issue create --title "$issue_title (#$GITHUB_RUN_NUMBER)" --body "$issue_body"
+          fi
