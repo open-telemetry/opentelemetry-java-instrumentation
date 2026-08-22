@@ -9,7 +9,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import org.opensearch.client.Response;
+import org.opensearch.client.ResponseException;
 import org.opensearch.client.ResponseListener;
 
 public class RestResponseListener implements ResponseListener {
@@ -46,9 +48,20 @@ public class RestResponseListener implements ResponseListener {
 
   @Override
   public void onFailure(Exception e) {
-    instrumenter.end(context, request, null, e);
+    instrumenter.end(context, request, responseConverter.apply(getResponse(null, e)), e);
     try (Scope ignored = parentContext.makeCurrent()) {
       listener.onFailure(e);
     }
+  }
+
+  @Nullable
+  public static Response getResponse(@Nullable Response response, @Nullable Throwable error) {
+    if (response != null) {
+      return response;
+    }
+    if (error instanceof ResponseException) {
+      return ((ResponseException) error).getResponse();
+    }
+    return null;
   }
 }

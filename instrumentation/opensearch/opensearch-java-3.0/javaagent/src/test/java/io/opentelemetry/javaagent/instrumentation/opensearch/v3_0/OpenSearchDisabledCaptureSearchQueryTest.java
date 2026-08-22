@@ -59,7 +59,7 @@ class OpenSearchDisabledCaptureSearchQueryTest extends AbstractOpenSearchQueryTe
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName(databaseSpanName("POST"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), "opensearch"),
@@ -68,7 +68,9 @@ class OpenSearchDisabledCaptureSearchQueryTest extends AbstractOpenSearchQueryTe
                                     maybeStable(DB_STATEMENT),
                                     val ->
                                         val.asString()
-                                            .startsWith("POST /" + INDEX_NAME + "/_search"))),
+                                            .startsWith("POST /" + INDEX_NAME + "/_search")),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, httpHost.getPort())),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)

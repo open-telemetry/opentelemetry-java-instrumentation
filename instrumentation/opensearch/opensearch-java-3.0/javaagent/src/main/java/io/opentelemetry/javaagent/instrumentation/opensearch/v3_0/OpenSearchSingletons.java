@@ -15,9 +15,16 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import javax.annotation.Nullable;
+import org.opensearch.client.transport.OpenSearchTransport;
 
-class OpenSearchSingletons {
+public class OpenSearchSingletons {
   private static final Instrumenter<OpenSearchRequest, Void> instrumenter = createInstrumenter();
+  private static final VirtualField<OpenSearchTransport, OpenSearchServerAddress> SERVER_ADDRESS =
+      VirtualField.find(OpenSearchTransport.class, OpenSearchServerAddress.class);
+  private static final VirtualField<OpenSearchTransport, Object> REST_CLIENT =
+      VirtualField.find(OpenSearchTransport.class, Object.class);
 
   public static final boolean CAPTURE_SEARCH_QUERY =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "opensearch")
@@ -25,6 +32,25 @@ class OpenSearchSingletons {
 
   public static Instrumenter<OpenSearchRequest, Void> instrumenter() {
     return instrumenter;
+  }
+
+  static void setServerAddress(
+      OpenSearchTransport transport, OpenSearchServerAddress addressAndPort) {
+    SERVER_ADDRESS.set(transport, addressAndPort);
+  }
+
+  @Nullable
+  static OpenSearchServerAddress serverAddress(OpenSearchTransport transport) {
+    return SERVER_ADDRESS.get(transport);
+  }
+
+  public static void setRestClient(OpenSearchTransport transport, Object restClient) {
+    REST_CLIENT.set(transport, restClient);
+  }
+
+  @Nullable
+  static Object restClient(OpenSearchTransport transport) {
+    return REST_CLIENT.get(transport);
   }
 
   private static Instrumenter<OpenSearchRequest, Void> createInstrumenter() {

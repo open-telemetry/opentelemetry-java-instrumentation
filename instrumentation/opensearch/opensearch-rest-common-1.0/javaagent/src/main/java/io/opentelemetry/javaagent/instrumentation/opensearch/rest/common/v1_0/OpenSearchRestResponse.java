@@ -11,6 +11,10 @@ import javax.annotation.Nullable;
 public interface OpenSearchRestResponse {
   int getStatusCode();
 
+  String getServerAddress();
+
+  int getServerPort();
+
   @Nullable
   InetAddress getAddress();
 }

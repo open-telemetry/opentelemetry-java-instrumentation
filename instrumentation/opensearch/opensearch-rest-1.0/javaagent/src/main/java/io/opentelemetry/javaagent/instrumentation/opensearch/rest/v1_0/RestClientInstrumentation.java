@@ -86,7 +86,12 @@ class RestClientInstrumentation implements TypeInstrumentation {
     public void endWithResponse(@Nullable Response response, @Nullable Throwable throwable) {
       scope.close();
       instrumenter()
-          .end(context, otelRequest, OpenSearchRestSingletons.convertResponse(response), throwable);
+          .end(
+              context,
+              otelRequest,
+              OpenSearchRestSingletons.convertResponse(
+                  RestResponseListener.getResponse(response, throwable)),
+              throwable);
     }
 
     public void endWithListener(@Nullable Throwable throwable) {

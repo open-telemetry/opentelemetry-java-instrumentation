@@ -5,14 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ActionResponse;
 
 public class ElasticsearchTransportAttributesGetter
-    implements DbClientAttributesGetter<ElasticTransportRequest, ActionResponse> {
+    implements DbClientAttributesGetter<ElasticTransportRequest, ActionResponse>,
+        AttributesExtractor<ElasticTransportRequest, ActionResponse> {
 
   @Override
   public String getDbSystemName(ElasticTransportRequest request) {
@@ -51,5 +58,27 @@ public class ElasticsearchTransportAttributesGetter
     Throwable cause = ((ElasticsearchException) error).unwrapCause();
     // Returning null lets DbClientAttributesExtractor fall back to the exception class name.
     return cause != error ? cause.getClass().getName() : null;
+  }
+
+  @Override
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, ElasticTransportRequest request) {}
+
+  @Override
+  public void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      ElasticTransportRequest request,
+      @Nullable ActionResponse response,
+      @Nullable Throwable error) {}
+
+  protected void updateStableSpanName(
+      Context context, ElasticTransportRequest request, String serverAddress, int serverPort) {
+    if (!emitStableDatabaseSemconv()) {
+      return;
+    }
+    String target = serverPort > 0 ? serverAddress + ":" + serverPort : serverAddress;
+    String operation = getDbOperationName(request);
+    Span.fromContext(context).updateName(operation != null ? operation + " " + target : target);
   }
 }
