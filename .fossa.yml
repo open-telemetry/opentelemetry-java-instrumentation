@@ -108,6 +108,12 @@ targets:
       target: ':instrumentation:executors:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:executors-metrics:bootstrap'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:executors-metrics:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:external-annotations:javaagent'
     - type: gradle
       path: ./
