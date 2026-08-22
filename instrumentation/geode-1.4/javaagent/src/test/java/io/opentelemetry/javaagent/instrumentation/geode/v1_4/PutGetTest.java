@@ -170,7 +170,7 @@ class PutGetTest {
           region.put(key, value);
           region.remove(key);
         });
-    assertThat(region).isEmpty();
+    assertThat(region.isEmptyOnServer()).isTrue();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
