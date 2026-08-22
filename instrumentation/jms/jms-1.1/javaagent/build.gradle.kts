@@ -104,6 +104,14 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
   }
 
+  val testJms2BothSemconv = register<Test>("testJms2BothSemconv") {
+    testClassesDirs = sourceSets["jms2Test"].output.classesDirs
+    classpath = sourceSets["jms2Test"].runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+  }
+
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -136,6 +144,7 @@ tasks {
       testMessagingPreview,
       testMessagingPreviewReceiveSpansDisabled,
       testJms2MessagingPreview,
+      testJms2BothSemconv,
       testBothSemconv,
     )
   }
