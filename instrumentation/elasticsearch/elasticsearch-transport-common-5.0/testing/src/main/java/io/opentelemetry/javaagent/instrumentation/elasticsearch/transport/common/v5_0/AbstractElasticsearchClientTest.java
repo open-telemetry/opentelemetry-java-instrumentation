@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchOperationNames.operationName;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,6 +32,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 abstract class AbstractElasticsearchClientTest {
 
   protected static final long TIMEOUT = SECONDS.toMillis(10);
+
+  protected static final String CLUSTER_HEALTH_OPERATION =
+      operationName("ClusterHealthAction", "cluster:monitor/health");
+  protected static final String CREATE_INDEX_OPERATION =
+      operationName("CreateIndexAction", "indices:admin/create");
+  protected static final String GET_OPERATION = operationName("GetAction", "indices:data/read/get");
+  protected static final String INDEX_OPERATION =
+      operationName("IndexAction", "indices:data/write/index");
 
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.elasticsearch.experimental-span-attributes");
