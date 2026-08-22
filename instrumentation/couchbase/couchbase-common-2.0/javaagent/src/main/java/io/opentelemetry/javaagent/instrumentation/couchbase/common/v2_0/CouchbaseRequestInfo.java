@@ -35,8 +35,7 @@ public abstract class CouchbaseRequestInfo {
 
   @Nullable private String localAddress;
   @Nullable private String operationId;
-  @Nullable private SocketAddress peerAddress;
-  private boolean peerAddressAmbiguous;
+  @Nullable private volatile Endpoint endpoint;
 
   public static CouchbaseRequestInfo create(
       @Nullable String bucket, Class<?> declaringClass, String methodName) {
@@ -122,19 +121,45 @@ public abstract class CouchbaseRequestInfo {
   }
 
   @Nullable
-  public synchronized SocketAddress getPeerAddress() {
-    return peerAddressAmbiguous ? null : peerAddress;
+  public Endpoint getEndpoint() {
+    return endpoint;
   }
 
-  public synchronized void setPeerAddress(@Nullable SocketAddress peerAddress) {
-    if (peerAddress == null || peerAddressAmbiguous) {
+  public void setEndpoint(@Nullable SocketAddress peerAddress, String remoteAddress) {
+    if (peerAddress == null) {
       return;
     }
-    if (this.peerAddress == null) {
+
+    int portSeparator = remoteAddress.lastIndexOf(':');
+    String serverAddress = remoteAddress.substring(0, portSeparator);
+    if (serverAddress.startsWith("[") && serverAddress.endsWith("]")) {
+      serverAddress = serverAddress.substring(1, serverAddress.length() - 1);
+    }
+    int serverPort = Integer.parseInt(remoteAddress.substring(portSeparator + 1));
+    endpoint = new Endpoint(peerAddress, serverAddress, serverPort);
+  }
+
+  public static final class Endpoint {
+    private final SocketAddress peerAddress;
+    private final String serverAddress;
+    private final int serverPort;
+
+    private Endpoint(SocketAddress peerAddress, String serverAddress, int serverPort) {
       this.peerAddress = peerAddress;
-    } else if (!this.peerAddress.equals(peerAddress)) {
-      this.peerAddress = null;
-      peerAddressAmbiguous = true;
+      this.serverAddress = serverAddress;
+      this.serverPort = serverPort;
+    }
+
+    public SocketAddress getPeerAddress() {
+      return peerAddress;
+    }
+
+    public String getServerAddress() {
+      return serverAddress;
+    }
+
+    public int getServerPort() {
+      return serverPort;
     }
   }
 }

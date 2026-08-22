@@ -19,45 +19,57 @@ import org.junit.jupiter.api.Test;
 class CouchbaseAttributesGetterTest {
 
   @Test
-  void omitsServerWhenOperationTargetsMultipleServers() {
+  void usesCanonicalServerAddressAndActualPeerAddress() {
     CouchbaseRequestInfo request = CouchbaseRequestInfo.create("bucket", getClass(), "operation");
-    InetSocketAddress first = InetSocketAddress.createUnresolved("first.example", 11210);
-    InetSocketAddress second = InetSocketAddress.createUnresolved("second.example", 11210);
-
-    request.setPeerAddress(first);
-    request.setPeerAddress(first);
-    assertThat(request.getPeerAddress()).isEqualTo(first);
-
-    request.setPeerAddress(second);
-    request.setPeerAddress(first);
-    assertThat(request.getPeerAddress()).isNull();
+    InetSocketAddress peerAddress = new InetSocketAddress("192.0.2.1", 32768);
+    request.setEndpoint(peerAddress, "node.example:11210");
 
     CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
-    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isEqualTo(peerAddress);
+    assertThat(extractServerAttributes(request))
+        .isEqualTo(Attributes.of(SERVER_ADDRESS, "node.example", SERVER_PORT, 11210L));
+  }
 
-    AttributesBuilder attributes = Attributes.builder();
-    getter.onEnd(attributes, Context.root(), request, null, null);
+  @Test
+  void retainsLastContactedEndpointAsAPair() {
+    CouchbaseRequestInfo request = CouchbaseRequestInfo.create("bucket", getClass(), "operation");
+    InetSocketAddress firstPeer = new InetSocketAddress("192.0.2.1", 32768);
+    InetSocketAddress secondPeer = new InetSocketAddress("192.0.2.2", 32769);
 
-    assertThat(attributes.build().asMap()).doesNotContainKeys(SERVER_ADDRESS, SERVER_PORT);
+    request.setEndpoint(firstPeer, "2001:db8::1:11210");
+    assertThat(extractServerAttributes(request))
+        .isEqualTo(Attributes.of(SERVER_ADDRESS, "2001:db8::1", SERVER_PORT, 11210L));
+
+    request.setEndpoint(secondPeer, "[2001:db8::2]:11211");
+
+    CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
+    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isEqualTo(secondPeer);
+    assertThat(extractServerAttributes(request))
+        .isEqualTo(Attributes.of(SERVER_ADDRESS, "2001:db8::2", SERVER_PORT, 11211L));
   }
 
   @Test
   void copyResetsPerSubscriptionState() {
     CouchbaseRequestInfo request = CouchbaseRequestInfo.create("bucket", getClass(), "operation");
-    InetSocketAddress first = InetSocketAddress.createUnresolved("first.example", 11210);
-    InetSocketAddress second = InetSocketAddress.createUnresolved("second.example", 11210);
+    InetSocketAddress firstPeer = new InetSocketAddress("192.0.2.1", 32768);
+    InetSocketAddress secondPeer = new InetSocketAddress("192.0.2.2", 32769);
+    request.setEndpoint(secondPeer, "second.example:11211");
 
-    // Drive the original into an ambiguous state
-    request.setPeerAddress(first);
-    request.setPeerAddress(second);
-    assertThat(request.getPeerAddress()).isNull();
-
-    // A copy should start with clean mutable state
     CouchbaseRequestInfo copy = request.copySupplier().get();
-    copy.setPeerAddress(first);
-    assertThat(copy.getPeerAddress()).isEqualTo(first);
+    copy.setEndpoint(firstPeer, "first.example:11210");
 
-    // Original remains ambiguous and is unaffected by the copy
-    assertThat(request.getPeerAddress()).isNull();
+    CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
+    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isEqualTo(secondPeer);
+    assertThat(extractServerAttributes(request))
+        .isEqualTo(Attributes.of(SERVER_ADDRESS, "second.example", SERVER_PORT, 11211L));
+    assertThat(getter.getNetworkPeerInetSocketAddress(copy, null)).isEqualTo(firstPeer);
+    assertThat(extractServerAttributes(copy))
+        .isEqualTo(Attributes.of(SERVER_ADDRESS, "first.example", SERVER_PORT, 11210L));
+  }
+
+  private static Attributes extractServerAttributes(CouchbaseRequestInfo request) {
+    AttributesBuilder attributes = Attributes.builder();
+    new CouchbaseAttributesGetter().onEnd(attributes, Context.root(), request, null, null);
+    return attributes.build();
   }
 }

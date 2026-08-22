@@ -13,8 +13,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo.Endpoint;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
@@ -65,7 +65,11 @@ final class CouchbaseAttributesGetter
   @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       CouchbaseRequestInfo request, @Nullable Void unused) {
-    SocketAddress address = request.getPeerAddress();
+    Endpoint endpoint = request.getEndpoint();
+    if (endpoint == null) {
+      return null;
+    }
+    SocketAddress address = endpoint.getPeerAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
     }
@@ -83,16 +87,13 @@ final class CouchbaseAttributesGetter
       CouchbaseRequestInfo request,
       @Nullable Void unused,
       @Nullable Throwable error) {
-    SocketAddress peerAddress = request.getPeerAddress();
-    if (!(peerAddress instanceof InetSocketAddress)) {
+    Endpoint endpoint = request.getEndpoint();
+    if (endpoint == null) {
       return;
     }
 
-    InetSocketAddress serverAddress = (InetSocketAddress) peerAddress;
-    InetAddress address = serverAddress.getAddress();
-    attributes.put(
-        SERVER_ADDRESS, address != null ? address.getHostAddress() : serverAddress.getHostString());
-    int serverPort = serverAddress.getPort();
+    attributes.put(SERVER_ADDRESS, endpoint.getServerAddress());
+    int serverPort = endpoint.getServerPort();
     if (serverPort > 0) {
       attributes.put(SERVER_PORT, serverPort);
     }
