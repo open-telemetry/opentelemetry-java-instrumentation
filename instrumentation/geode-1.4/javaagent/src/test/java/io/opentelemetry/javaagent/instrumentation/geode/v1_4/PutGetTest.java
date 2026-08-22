@@ -333,6 +333,59 @@ class PutGetTest {
   }
 
   @Test
+  void testSelectValueWithQueryPredicate() throws QueryException {
+    Object cacheValue =
+        testing.runWithSpan(
+            "someTrace",
+            () -> {
+              region.clear();
+              region.put("Hello", "World");
+              return region.selectValue("this = 'World'");
+            });
+    assertThat(cacheValue).isEqualTo("World");
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName("clear test-region")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
+                            equalTo(
+                                DB_COLLECTION_NAME,
+                                emitStableDatabaseSemconv() ? "test-region" : null),
+                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
+                            equalTo(maybeStable(DB_OPERATION), "clear")),
+                span ->
+                    span.hasName("put test-region")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
+                            equalTo(
+                                DB_COLLECTION_NAME,
+                                emitStableDatabaseSemconv() ? "test-region" : null),
+                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
+                            equalTo(maybeStable(DB_OPERATION), "put")),
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT test-region"
+                                : "selectValue test-region")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
+                            equalTo(
+                                DB_COLLECTION_NAME,
+                                emitStableDatabaseSemconv() ? "test-region" : null),
+                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? "SELECT" : "selectValue"),
+                            equalTo(maybeStable(DB_STATEMENT), "this = ?"))));
+  }
+
+  @Test
   void shouldSanitizeGeodeQuery() throws QueryException {
     Card value = new Card("1234432156788765", "10/2020");
     SelectResults<Object> results =
