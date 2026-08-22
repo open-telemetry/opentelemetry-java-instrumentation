@@ -32,6 +32,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:aws-sdk:aws-sdk-1.11:javaagent"))
+  testInstrumentation(project(":instrumentation:jms:jms-1.1:javaagent"))
 
   testInstrumentation(project(":instrumentation:cassandra:cassandra-3.0:javaagent"))
 
@@ -96,12 +97,22 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,messaging")
+  }
+
+  val testV3Preview = register<Test>("testV3Preview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=semconv")
+    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
   }
 
   check {
-    dependsOn(testStableSemconv, testExperimental)
+    dependsOn(testStableSemconv, testExperimental, testV3Preview)
   }
 
   if (otelProps.denyUnsafe) {
