@@ -54,6 +54,9 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod().and(named("onResult")).and(takesArguments(3)),
         getClass().getName() + "$OnResultAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod().and(named("publishCircuitErrorEvent")).and(takesArguments(4)),
+        getClass().getName() + "$PublishCircuitErrorEventAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -137,14 +140,33 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
+  public static class PublishCircuitErrorEventAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    public static void onExit(
+        @Advice.This CircuitBreaker circuitBreaker,
+        @Advice.Argument(3) @Nullable Throwable throwable) {
+      Resilience4jCircuitBreakerSpans.endIfResultRecordedAsFailure(circuitBreaker, throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
   public static class OnResultAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter() {
+      Resilience4jCircuitBreakerSpans.enterOnResult();
+    }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.This CircuitBreaker circuitBreaker,
         @Advice.Argument(2) @Nullable Object result,
         @Advice.Thrown @Nullable Throwable throwable) {
-      Resilience4jCircuitBreakerSpans.endResult(circuitBreaker, result, throwable);
+      boolean ended = Resilience4jCircuitBreakerSpans.exitOnResult();
+      if (!ended) {
+        Resilience4jCircuitBreakerSpans.endResult(circuitBreaker, result, throwable);
+      }
     }
   }
 }

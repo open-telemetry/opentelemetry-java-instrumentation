@@ -63,14 +63,14 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void createsCircuitBreakerSpanWhenOnSuccessCalledDirectly() {
+  void createsCircuitBreakerSpanWhenOnSuccessCalledDirectly() throws Exception {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
 
     testing.runWithSpan(
         "parent",
         () -> {
           circuitBreaker.acquirePermission();
-          circuitBreaker.onSuccess(1);
+          invokeOnSuccess(circuitBreaker);
         });
 
     assertCircuitBreakerSpan("closed", "success");
@@ -89,6 +89,8 @@ class Resilience4jCircuitBreakerTest {
         "parent",
         () -> {
           circuitBreaker.acquirePermission();
+          // Verifies the recordResultPredicate -> ResultRecordedAsFailureException ->
+          // publishCircuitErrorEvent path is captured as a failure span.
           onResult.invoke(circuitBreaker, 1L, MILLISECONDS, 500);
         });
 
@@ -96,7 +98,7 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
-  void createsCircuitBreakerSpanWhenOnErrorCalledDirectly() {
+  void createsCircuitBreakerSpanWhenOnErrorCalledDirectly() throws Exception {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     IllegalStateException exception = new IllegalStateException("boom");
 
@@ -104,7 +106,7 @@ class Resilience4jCircuitBreakerTest {
         "parent",
         () -> {
           circuitBreaker.acquirePermission();
-          circuitBreaker.onError(1, exception);
+          invokeOnError(circuitBreaker, exception);
         });
 
     assertCircuitBreakerSpan("closed", "failure", exception);
@@ -207,6 +209,31 @@ class Resilience4jCircuitBreakerTest {
     assertThat(circuitBreaker.executeSupplier(() -> "ok")).isEqualTo("ok");
 
     assertThat(testing.spans()).isEmpty();
+  }
+
+  private static void invokeOnSuccess(CircuitBreaker circuitBreaker) throws Exception {
+    // Support the onSuccess signatures exposed by the supported Resilience4j versions.
+    try {
+      CircuitBreaker.class
+          .getMethod("onSuccess", long.class, TimeUnit.class)
+          .invoke(circuitBreaker, 1L, MILLISECONDS);
+    } catch (NoSuchMethodException e) {
+      CircuitBreaker.class.getMethod("onSuccess", long.class).invoke(circuitBreaker, 1L);
+    }
+  }
+
+  private static void invokeOnError(CircuitBreaker circuitBreaker, Throwable throwable)
+      throws Exception {
+    // Support the onError signatures exposed by the supported Resilience4j versions.
+    try {
+      CircuitBreaker.class
+          .getMethod("onError", long.class, TimeUnit.class, Throwable.class)
+          .invoke(circuitBreaker, 1L, MILLISECONDS, throwable);
+    } catch (NoSuchMethodException e) {
+      CircuitBreaker.class
+          .getMethod("onError", long.class, Throwable.class)
+          .invoke(circuitBreaker, 1L, throwable);
+    }
   }
 
   private static Method recordResultPredicateMethod() throws NoSuchMethodException {

@@ -19,13 +19,10 @@ import io.opentelemetry.api.trace.TracerBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.Locale;
-import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 public class Resilience4jCircuitBreakerSpans {
@@ -53,6 +50,7 @@ public class Resilience4jCircuitBreakerSpans {
 
   private static final ThreadLocal<Deque<PendingSpan>> pendingSpans = new ThreadLocal<>();
   private static final ThreadLocal<Boolean> inCircuitBreakerCallback = new ThreadLocal<>();
+  private static final ThreadLocal<Deque<Boolean>> onResultEnded = new ThreadLocal<>();
 
   private static final AttributeKey<String> CIRCUIT_BREAKER_NAME =
       stringKey("resilience.policy.name");
@@ -108,6 +106,27 @@ public class Resilience4jCircuitBreakerSpans {
     return Boolean.TRUE.equals(inCircuitBreakerCallback.get());
   }
 
+  public static void enterOnResult() {
+    Deque<Boolean> ended = onResultEnded.get();
+    if (ended == null) {
+      ended = new ArrayDeque<>();
+      onResultEnded.set(ended);
+    }
+    ended.push(Boolean.FALSE);
+  }
+
+  public static boolean exitOnResult() {
+    Deque<Boolean> ended = onResultEnded.get();
+    if (ended == null) {
+      return false;
+    }
+    Boolean result = ended.poll();
+    if (ended.isEmpty()) {
+      onResultEnded.remove();
+    }
+    return Boolean.TRUE.equals(result);
+  }
+
   public static void end(
       CircuitBreaker circuitBreaker, String outcome, @Nullable Throwable throwable) {
     PendingSpan pendingSpan = pollPendingSpan(circuitBreaker);
@@ -122,15 +141,27 @@ public class Resilience4jCircuitBreakerSpans {
       end(circuitBreaker, "failure", throwable);
       return;
     }
-    boolean failure;
-    try {
-      failure = isFailureResult(circuitBreaker, result);
-    } catch (RuntimeException ignored) {
-      // If instrumentation cannot inspect the result predicate, do not manufacture an
-      // application-level circuit breaker failure.
-      failure = false;
+    // Do not invoke Resilience4j's recordResultPredicate from instrumentation. Result predicate
+    // failures are handled when Resilience4j publishes its synthetic circuit error event.
+    // Otherwise, treat onResult() completion as success.
+    end(circuitBreaker, "success", null);
+  }
+
+  public static void endIfResultRecordedAsFailure(
+      CircuitBreaker circuitBreaker, @Nullable Throwable throwable) {
+    Deque<Boolean> ended = onResultEnded.get();
+    if (ended != null
+        && !ended.isEmpty()
+        && throwable != null
+        // ResultRecordedAsFailureException was added in newer Resilience4j versions and is not
+        // present across the full supported range, so avoid a hard reference that would break
+        // muzzle on older versions.
+        && "io.github.resilience4j.circuitbreaker.ResultRecordedAsFailureException"
+            .equals(throwable.getClass().getName())) {
+      end(circuitBreaker, "failure", null);
+      ended.pop();
+      ended.push(Boolean.TRUE);
     }
-    end(circuitBreaker, failure ? "failure" : "success", null);
   }
 
   public static void endAfter(
@@ -223,33 +254,6 @@ public class Resilience4jCircuitBreakerSpans {
     span.setAttribute(CIRCUIT_BREAKER_NAME, circuitBreaker.getName());
     span.setAttribute(
         CIRCUIT_BREAKER_STATE, circuitBreaker.getState().name().toLowerCase(Locale.ROOT));
-  }
-
-  @SuppressWarnings("unchecked") // getRecordResultPredicate returns Predicate<Object> when present.
-  private static boolean isFailureResult(CircuitBreaker circuitBreaker, @Nullable Object result) {
-    Method method;
-    try {
-      method =
-          circuitBreaker.getCircuitBreakerConfig().getClass().getMethod("getRecordResultPredicate");
-    } catch (NoSuchMethodException ignored) {
-      return false;
-    }
-    try {
-      Predicate<Object> predicate =
-          (Predicate<Object>) method.invoke(circuitBreaker.getCircuitBreakerConfig());
-      return predicate.test(result);
-    } catch (IllegalAccessException e) {
-      throw new IllegalStateException(e);
-    } catch (InvocationTargetException e) {
-      Throwable cause = e.getCause();
-      if (cause instanceof RuntimeException) {
-        throw (RuntimeException) cause;
-      }
-      if (cause instanceof Error) {
-        throw (Error) cause;
-      }
-      throw new IllegalStateException(cause);
-    }
   }
 
   @SuppressWarnings({"ReturnValueIgnored", "unused"})
