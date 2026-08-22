@@ -88,7 +88,7 @@ public abstract class CouchbaseRequestInfo {
 
   public abstract boolean isMethodCall();
 
-  public CouchbaseRequestInfo copy() {
+  private CouchbaseRequestInfo copy() {
     return new AutoValue_CouchbaseRequestInfo(
         getBucket(), getSqlQuery(), getSqlQueryWithSummary(), getOperation(), isMethodCall());
   }
