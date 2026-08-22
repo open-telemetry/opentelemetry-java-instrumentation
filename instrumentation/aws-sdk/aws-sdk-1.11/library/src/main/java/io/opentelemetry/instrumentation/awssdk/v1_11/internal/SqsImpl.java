@@ -17,15 +17,21 @@ import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageBatchRequest;
+import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -128,15 +134,100 @@ public final class SqsImpl {
     }
   }
 
-  static boolean beforeMarshalling(AmazonWebServiceRequest rawRequest) {
+  static AmazonWebServiceRequest beforeMarshalling(
+      AmazonWebServiceRequest rawRequest,
+      Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter,
+      boolean messageCreateSpansEnabled) {
     if (rawRequest instanceof ReceiveMessageRequest) {
       ReceiveMessageRequest request = (ReceiveMessageRequest) rawRequest;
       if (!request.getAttributeNames().contains(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE)) {
         request.withAttributeNames(SqsParentContext.AWS_TRACE_SYSTEM_ATTRIBUTE);
       }
-      return true;
+      if (emitStableMessagingSemconv()
+          && !request
+              .getMessageAttributeNames()
+              .contains(SqsParentContext.AWS_TRACE_MESSAGE_ATTRIBUTE)) {
+        request.withMessageAttributeNames(SqsParentContext.AWS_TRACE_MESSAGE_ATTRIBUTE);
+      }
+      return request;
     }
-    return false;
+    if (rawRequest instanceof SendMessageBatchRequest
+        && emitStableMessagingSemconv()
+        && messageCreateSpansEnabled) {
+      return injectBatchCreationContexts(
+          (SendMessageBatchRequest) rawRequest, producerCreateInstrumenter);
+    }
+    return rawRequest;
+  }
+
+  private static SendMessageBatchRequest injectBatchCreationContexts(
+      SendMessageBatchRequest request,
+      Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter) {
+    SendMessageBatchRequest preparedRequest = request.clone();
+    List<SendMessageBatchRequestEntry> preparedEntries = new ArrayList<>();
+    Context parentContext = Context.current().with(Span.getInvalid());
+    TextMapPropagator xrayPropagator = AwsXrayPropagator.getInstance();
+    for (SendMessageBatchRequestEntry entry : request.getEntries()) {
+      SendMessageBatchRequestEntry preparedEntry = entry.clone();
+      Map<String, MessageAttributeValue> attributes = entry.getMessageAttributes();
+      Context customCreationContext = SqsParentContext.ofMessageAttributes(toStringMap(attributes));
+      if (Span.fromContext(customCreationContext).getSpanContext().isValid()) {
+        preparedEntries.add(preparedEntry);
+        continue;
+      }
+      if (attributes.containsKey(SqsParentContext.AWS_TRACE_MESSAGE_ATTRIBUTE)
+          || attributes.size() >= 10) {
+        preparedEntries.add(preparedEntry);
+        continue;
+      }
+
+      SqsCreateRequest createRequest =
+          new SqsCreateRequest(request.getQueueUrl(), toStringMap(attributes));
+      if (!producerCreateInstrumenter.shouldStart(parentContext, createRequest)) {
+        preparedEntries.add(preparedEntry);
+        continue;
+      }
+      Context creationContext = producerCreateInstrumenter.start(parentContext, createRequest);
+      Map<String, MessageAttributeValue> updatedAttributes = new HashMap<>(attributes);
+      xrayPropagator.inject(
+          creationContext,
+          updatedAttributes,
+          (carrier, key, value) ->
+              carrier.put(
+                  key, new MessageAttributeValue().withDataType("String").withStringValue(value)));
+      preparedEntry.setMessageAttributes(updatedAttributes);
+      producerCreateInstrumenter.end(creationContext, createRequest, null, null);
+      preparedEntries.add(preparedEntry);
+    }
+    preparedRequest.setEntries(preparedEntries);
+    return preparedRequest;
+  }
+
+  static boolean isBatchRequest(Request<?> request) {
+    return request.getOriginalRequest() instanceof SendMessageBatchRequest;
+  }
+
+  static List<Context> getBatchMessageContexts(Request<?> request) {
+    if (!(request.getOriginalRequest() instanceof SendMessageBatchRequest)) {
+      return new ArrayList<>();
+    }
+    List<Context> contexts = new ArrayList<>();
+    SendMessageBatchRequest batchRequest = (SendMessageBatchRequest) request.getOriginalRequest();
+    for (SendMessageBatchRequestEntry entry : batchRequest.getEntries()) {
+      Context context =
+          SqsParentContext.ofMessageAttributes(toStringMap(entry.getMessageAttributes()));
+      if (Span.fromContext(context).getSpanContext().isValid()) {
+        contexts.add(context);
+      }
+    }
+    return contexts;
+  }
+
+  private static Map<String, String> toStringMap(
+      Map<String, MessageAttributeValue> messageAttributes) {
+    Map<String, String> result = new HashMap<>();
+    messageAttributes.forEach((key, value) -> result.put(key, value.getStringValue()));
+    return result;
   }
 
   @Nullable

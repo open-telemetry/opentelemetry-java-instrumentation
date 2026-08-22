@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.singletonMap;
 
 import io.opentelemetry.api.trace.Span;
@@ -63,10 +64,25 @@ public final class SqsParentContext {
   }
 
   static final String AWS_TRACE_SYSTEM_ATTRIBUTE = "AWSTraceHeader";
+  static final String AWS_TRACE_MESSAGE_ATTRIBUTE = "X-Amzn-Trace-Id";
 
   static Context ofMessageAttributes(
       Map<String, MessageAttributeValue> messageAttributes, TextMapPropagator propagator) {
     return ofMessageAttributes(Context.root(), messageAttributes, propagator);
+  }
+
+  static Context ofMessageAttributes(
+      Map<String, MessageAttributeValue> messageAttributes,
+      TextMapPropagator messagingPropagator,
+      boolean shouldUseXrayPropagator) {
+    Context context = Context.root();
+    if (messagingPropagator != null) {
+      context = ofMessageAttributes(context, messageAttributes, messagingPropagator);
+    }
+    if (shouldUseXrayPropagator && !hasSpan(context)) {
+      context = ofMessageAttributes(context, messageAttributes, AwsXrayPropagator.getInstance());
+    }
+    return context;
   }
 
   static Context ofMessageAttributes(
@@ -85,7 +101,9 @@ public final class SqsParentContext {
     String traceHeader = systemAttributes.get(AWS_TRACE_SYSTEM_ATTRIBUTE);
     return AwsXrayPropagator.getInstance()
         .extract(
-            parentContext, singletonMap("X-Amzn-Trace-Id", traceHeader), StringMapGetter.INSTANCE);
+            parentContext,
+            singletonMap(AWS_TRACE_MESSAGE_ATTRIBUTE, traceHeader),
+            StringMapGetter.INSTANCE);
   }
 
   public static Context ofMessage(SqsMessage message, TracingExecutionInterceptor config) {
@@ -95,7 +113,11 @@ public final class SqsParentContext {
   public static Context ofMessage(
       Context parentContext, SqsMessage message, TracingExecutionInterceptor config) {
     return ofMessage(
-        parentContext, message, config.getMessagingPropagator(), config.shouldUseXrayPropagator());
+        parentContext,
+        message,
+        config.getMessagingPropagator(),
+        config.shouldUseXrayPropagator(),
+        emitStableMessagingSemconv() && config.shouldUseXrayPropagator());
   }
 
   static Context ofMessage(
@@ -108,6 +130,15 @@ public final class SqsParentContext {
       SqsMessage message,
       TextMapPropagator messagingPropagator,
       boolean shouldUseXrayPropagator) {
+    return ofMessage(parentContext, message, messagingPropagator, shouldUseXrayPropagator, false);
+  }
+
+  static Context ofMessage(
+      Context parentContext,
+      SqsMessage message,
+      TextMapPropagator messagingPropagator,
+      boolean shouldUseXrayPropagator,
+      boolean shouldUseXrayMessageAttribute) {
     // extract against a context without the ambient span, so that a span in the extracted context
     // is known to have come from the message instead of being inherited from parentContext. an
     // ambient span is not a creation context and must not suppress the X-Ray fallback
@@ -117,6 +148,12 @@ public final class SqsParentContext {
     if (messagingPropagator != null) {
       extractedContext =
           ofMessageAttributes(extractedContext, message.messageAttributes(), messagingPropagator);
+    }
+
+    if (shouldUseXrayMessageAttribute && !hasSpan(extractedContext)) {
+      extractedContext =
+          ofMessageAttributes(
+              extractedContext, message.messageAttributes(), AwsXrayPropagator.getInstance());
     }
 
     if (shouldUseXrayPropagator && !hasSpan(extractedContext)) {

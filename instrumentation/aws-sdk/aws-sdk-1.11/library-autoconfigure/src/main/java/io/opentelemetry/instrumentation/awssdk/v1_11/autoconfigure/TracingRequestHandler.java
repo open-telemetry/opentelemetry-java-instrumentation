@@ -27,16 +27,25 @@ public final class TracingRequestHandler extends RequestHandler2 {
   private static RequestHandler2 buildDelegate(OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties messaging =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
+    DeclarativeConfigProperties awsSdk =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "aws_sdk");
     return AwsSdkTelemetry.builder(openTelemetry)
         .setCaptureExperimentalSpanAttributes(
-            DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "aws_sdk")
+            awsSdk.getBoolean(
+                "experimental_span_attributes/development",
+                // The library-autoconfigure module has no programmatic configuration API,
+                // and declarative instrumentation configuration is not stable, so it is
+                // necessary to support configuration via system properties.
+                SystemProperty.getBoolean(
+                    "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
+        .setMessageCreateSpansEnabled(
+            awsSdk
+                .get("message_create_spans/development")
                 .getBoolean(
-                    "experimental_span_attributes/development",
-                    // The library-autoconfigure module has no programmatic configuration API,
-                    // and declarative instrumentation configuration is not stable, so it is
-                    // necessary to support configuration via system properties.
+                    "enabled",
                     SystemProperty.getBoolean(
-                        "otel.instrumentation.aws-sdk.experimental-span-attributes", false)))
+                        "otel.instrumentation.aws-sdk.experimental.message-create-spans.enabled",
+                        true)))
         .setMessagingReceiveTelemetryEnabled(
             messaging
                 .get("receive_telemetry/development")

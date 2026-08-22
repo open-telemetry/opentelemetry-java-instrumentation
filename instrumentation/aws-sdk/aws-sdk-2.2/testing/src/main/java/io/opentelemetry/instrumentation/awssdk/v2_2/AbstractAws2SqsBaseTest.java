@@ -151,10 +151,9 @@ public abstract class AbstractAws2SqsBaseTest {
             .queueUrl(queueUrl)
             .entries(
                 e -> e.messageBody("e1").id("i1"),
-                // 8 attributes, injection always possible
-                e -> e.messageBody("e2").id("i2").messageAttributes(dummyMessageAttributes(8)),
-                // 10 attributes, injection with custom propagator never possible
-                e -> e.messageBody("e3").id("i3").messageAttributes(dummyMessageAttributes(10)))
+                // 5 attributes leave room for X-Ray and composite configured propagation
+                e -> e.messageBody("e2").id("i2").messageAttributes(dummyMessageAttributes(5)),
+                e -> e.messageBody("e3").id("i3").messageAttributes(dummyMessageAttributes(5)))
             .build();
     sendMessageBatchRequest = batch;
   }
@@ -306,7 +305,10 @@ public abstract class AbstractAws2SqsBaseTest {
   SpanDataAssert publishSpan(
       SpanDataAssert span, String queueUrl, String rpcMethod, Long batchMessageCount) {
     return span.hasName(emitStableMessagingSemconv() ? "send testSdkSqs" : "testSdkSqs publish")
-        .hasKind(SpanKind.PRODUCER)
+        .hasKind(
+            emitStableMessagingSemconv() && batchMessageCount != null
+                ? SpanKind.CLIENT
+                : SpanKind.PRODUCER)
         .hasNoParent()
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),

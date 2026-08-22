@@ -33,6 +33,12 @@ final class SqsParentContext {
   }
 
   static final String AWS_TRACE_SYSTEM_ATTRIBUTE = "AWSTraceHeader";
+  static final String AWS_TRACE_MESSAGE_ATTRIBUTE = "X-Amzn-Trace-Id";
+
+  static Context ofMessageAttributes(Map<String, String> messageAttributes) {
+    return AwsXrayPropagator.getInstance()
+        .extract(Context.root(), messageAttributes, new MapGetter());
+  }
 
   static Context ofSystemAttributes(Map<String, String> systemAttributes) {
     return ofSystemAttributes(Context.root(), systemAttributes);
@@ -41,7 +47,8 @@ final class SqsParentContext {
   static Context ofSystemAttributes(Context parentContext, Map<String, String> systemAttributes) {
     String traceHeader = systemAttributes.get(AWS_TRACE_SYSTEM_ATTRIBUTE);
     return AwsXrayPropagator.getInstance()
-        .extract(parentContext, singletonMap("X-Amzn-Trace-Id", traceHeader), new MapGetter());
+        .extract(
+            parentContext, singletonMap(AWS_TRACE_MESSAGE_ATTRIBUTE, traceHeader), new MapGetter());
   }
 
   private SqsParentContext() {}

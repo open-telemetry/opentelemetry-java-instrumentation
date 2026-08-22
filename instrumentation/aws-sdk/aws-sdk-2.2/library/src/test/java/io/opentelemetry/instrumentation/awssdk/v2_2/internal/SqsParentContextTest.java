@@ -5,10 +5,12 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -25,7 +27,9 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 
 class SqsParentContextTest {
 
@@ -114,6 +118,25 @@ class SqsParentContextTest {
     SpanContext extracted = Span.fromContext(extractedContext).getSpanContext();
     assertThat(extracted.getTraceId()).isEqualTo(ambient.getTraceId());
     assertThat(extracted.getSpanId()).isEqualTo(ambient.getSpanId());
+  }
+
+  @Test
+  void receivesCreationContextWhenCreateSpanEmissionIsDisabled() {
+    assumeTrue(emitStableMessagingSemconv());
+    ReceiveMessageRequest request =
+        ReceiveMessageRequest.builder().queueUrl("https://example.com/queue").build();
+
+    SdkRequest modifiedRequest =
+        SqsImpl.modifyRequest(
+            request,
+            Context.root(),
+            /* useXrayPropagator= */ true,
+            /* messagingPropagator= */ null,
+            /* messageCreateSpansEnabled= */ false);
+
+    assertThat(modifiedRequest).isInstanceOf(ReceiveMessageRequest.class);
+    assertThat(((ReceiveMessageRequest) modifiedRequest).messageAttributeNames())
+        .contains(SqsParentContext.AWS_TRACE_MESSAGE_ATTRIBUTE);
   }
 
   private static String traceParent(SpanContext spanContext) {

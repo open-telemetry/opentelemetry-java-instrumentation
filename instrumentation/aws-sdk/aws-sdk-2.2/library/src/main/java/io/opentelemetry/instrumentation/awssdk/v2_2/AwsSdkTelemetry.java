@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkInstrumenterFactory;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.BedrockRuntimeImpl;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.Response;
+import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsCreateRequest;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsImpl;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsProcessRequest;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsReceiveRequest;
@@ -51,6 +52,7 @@ public class AwsSdkTelemetry {
   private final Instrumenter<ExecutionAttributes, Response> requestInstrumenter;
   private final Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter;
+  private final Instrumenter<SqsCreateRequest, Void> producerCreateInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> settleInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter;
@@ -61,6 +63,7 @@ public class AwsSdkTelemetry {
   private final boolean useXrayPropagator;
   private final boolean recordIndividualHttpError;
   private final boolean genAiCaptureMessageContent;
+  private final boolean messageCreateSpansEnabled;
 
   /** Returns a new {@link AwsSdkTelemetry} configured with the given {@link OpenTelemetry}. */
   public static AwsSdkTelemetry create(OpenTelemetry openTelemetry) {
@@ -82,7 +85,8 @@ public class AwsSdkTelemetry {
       boolean useXrayPropagator,
       boolean recordIndividualHttpError,
       boolean messagingReceiveInstrumentationEnabled,
-      boolean genAiCaptureMessageContent) {
+      boolean genAiCaptureMessageContent,
+      boolean messageCreateSpansEnabled) {
     this.useXrayPropagator = useXrayPropagator;
     this.messagingPropagator =
         useMessagingPropagator ? openTelemetry.getPropagators().getTextMapPropagator() : null;
@@ -94,11 +98,13 @@ public class AwsSdkTelemetry {
             headers,
             captureExperimentalSpanAttributes,
             messagingReceiveInstrumentationEnabled,
-            useXrayPropagator);
+            useXrayPropagator,
+            messageCreateSpansEnabled);
 
     this.requestInstrumenter = instrumenterFactory.requestInstrumenter();
     this.consumerReceiveInstrumenter = instrumenterFactory.consumerReceiveInstrumenter();
     this.consumerProcessInstrumenter = instrumenterFactory.consumerProcessInstrumenter();
+    this.producerCreateInstrumenter = instrumenterFactory.producerCreateInstrumenter();
     this.producerInstrumenter = instrumenterFactory.producerInstrumenter();
     this.settleInstrumenter = instrumenterFactory.settleInstrumenter();
     this.dynamoDbInstrumenter = instrumenterFactory.dynamoDbInstrumenter();
@@ -107,6 +113,7 @@ public class AwsSdkTelemetry {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.recordIndividualHttpError = recordIndividualHttpError;
     this.genAiCaptureMessageContent = genAiCaptureMessageContent;
+    this.messageCreateSpansEnabled = messageCreateSpansEnabled;
   }
 
   /**
@@ -118,6 +125,7 @@ public class AwsSdkTelemetry {
         requestInstrumenter,
         consumerReceiveInstrumenter,
         consumerProcessInstrumenter,
+        producerCreateInstrumenter,
         producerInstrumenter,
         settleInstrumenter,
         dynamoDbInstrumenter,
@@ -127,7 +135,8 @@ public class AwsSdkTelemetry {
         messagingPropagator,
         useXrayPropagator,
         recordIndividualHttpError,
-        genAiCaptureMessageContent);
+        genAiCaptureMessageContent,
+        messageCreateSpansEnabled);
   }
 
   /**
