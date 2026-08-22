@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAtt
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
@@ -19,7 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.time.Duration;
-import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -31,9 +30,7 @@ class HadoopTest extends TargetSystemTest {
 
   @Test
   void testMetrics_Hadoop2x() throws IOException {
-    List<String> yamlFiles = singletonList("hadoop.yaml");
-
-    yamlFiles.forEach(this::validateYamlSyntax);
+    Set<String> yamlFiles = getAndValidateYamlFilesForSystem("hadoop");
 
     // Hadoop startup script does not propagate env vars to launched hadoop daemons,
     // so all the env vars needs to be embedded inside the hadoop-env.sh file
@@ -89,9 +86,7 @@ class HadoopTest extends TargetSystemTest {
 
   @Test
   void testMetrics_Hadoop3x() throws IOException {
-    List<String> yamlFiles = singletonList("hadoop.yaml");
-
-    yamlFiles.forEach(this::validateYamlSyntax);
+    Set<String> yamlFiles = getAndValidateYamlFilesForSystem("hadoop");
 
     // Hadoop startup script does not propagate env vars to launched hadoop daemons,
     // so all the env vars needs to be embedded inside the hadoop-env.sh file

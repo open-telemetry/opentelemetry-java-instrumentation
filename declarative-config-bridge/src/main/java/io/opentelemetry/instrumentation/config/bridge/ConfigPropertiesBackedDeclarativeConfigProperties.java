@@ -102,6 +102,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     // it consistent with the rest of the jmx.* properties.
     SPECIAL_MAPPINGS.put("java.jmx.discovery.delay", "otel.jmx.discovery.delay");
     SPECIAL_MAPPINGS.put("java.jmx.target.system", "otel.jmx.target.system");
+    SPECIAL_MAPPINGS.put("java.jmx.auto.enabled", "otel.jmx.auto.enabled");
   }
 
   private final ConfigProperties configProperties;

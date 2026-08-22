@@ -132,13 +132,11 @@ class KafkaConnectTest extends TargetSystemTest {
 
   @Test
   void metricsAreReportedFromKafkaConnectContainer() throws Exception {
-    List<String> yamlFiles = singletonList("experimental-kafka-connect.yaml");
-
-    yamlFiles.forEach(this::validateYamlSyntax);
+    Set<String> yamlFiles = getAndValidateYamlFilesForSystem("experimental-kafka-connect");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
-    jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
+    jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties()));
 
     Set<String> expectedCreatedMetrics = loadKafkaConnectMetricNames(false);
     Set<String> registeredMetrics = ConcurrentHashMap.newKeySet();

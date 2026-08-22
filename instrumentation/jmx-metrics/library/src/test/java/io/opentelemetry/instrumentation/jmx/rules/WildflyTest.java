@@ -10,13 +10,13 @@ import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAtt
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
@@ -35,13 +35,11 @@ class WildflyTest extends TargetSystemTest {
         "quay.io/wildfly/wildfly:36.0.1.Final-jdk21"
       })
   void testWildflyMetrics(String dockerImage) {
-    List<String> yamlFiles = singletonList("wildfly.yaml");
-
-    yamlFiles.forEach(this::validateYamlSyntax);
+    Set<String> yamlFiles = getAndValidateYamlFilesForSystem("wildfly");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
-    jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
+    jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties()));
 
     GenericContainer<?> target =
         new GenericContainer<>(dockerImage)

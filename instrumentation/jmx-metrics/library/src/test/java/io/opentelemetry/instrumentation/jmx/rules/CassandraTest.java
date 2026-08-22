@@ -10,13 +10,13 @@ import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAtt
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -39,13 +39,11 @@ class CassandraTest extends TargetSystemTest {
 
   @Test
   void testCassandraMetrics() {
-    List<String> yamlFiles = singletonList("experimental-cassandra.yaml");
-
-    yamlFiles.forEach(this::validateYamlSyntax);
+    Set<String> yamlFiles = getAndValidateYamlFilesForSystem("experimental-cassandra");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
-    jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
+    jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties()));
 
     GenericContainer<?> target =
         new GenericContainer<>("cassandra:5.0.2")

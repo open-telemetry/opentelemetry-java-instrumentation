@@ -432,6 +432,6 @@ export JAVA_AGENT_OPTS="$JAVA_AGENT_OPTS -Dotel.logs.exporter=none -Dotel.traces
 export JAVA_AGENT_OPTS="$JAVA_AGENT_OPTS -Dotel.exporter.otlp.endpoint=<<ENDPOINT_PLACEHOLDER>> -Dotel.exporter.otlp.protocol=grpc"
 export JAVA_AGENT_OPTS="$JAVA_AGENT_OPTS -Dotel.metric.export.interval=5s"
 export JAVA_AGENT_OPTS="$JAVA_AGENT_OPTS -Dotel.javaagent.experimental.initializer.jar=/opentelemetry-jmx-instrumentation.jar"
-export JAVA_AGENT_OPTS="$JAVA_AGENT_OPTS -Dotel.jmx.config=/hadoop.yaml"
+export JAVA_AGENT_OPTS="$JAVA_AGENT_OPTS -Dotel.jmx.auto.enabled=true"
 
 export HDFS_NAMENODE_OPTS="$HDFS_NAMENODE_OPTS $JAVA_AGENT_OPTS"

@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.jmx.rules;
 
+import static io.opentelemetry.instrumentation.jmx.internal.JmxTelemetryRules.locateRulesForSystem;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -39,6 +39,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -181,10 +182,9 @@ class TargetSystemTest {
   /**
    * Generates otel configuration for JMX testing with instrumentation agent
    *
-   * @param yamlFiles JMX metrics definitions in YAML
    * @return map of otel configuration properties for JMX testing
    */
-  protected static Map<String, String> otelConfigProperties(List<String> yamlFiles) {
+  protected static Map<String, String> otelConfigProperties() {
     Map<String, String> config = new HashMap<>();
     // only export metrics
     config.put("otel.logs.exporter", "none");
@@ -197,10 +197,8 @@ class TargetSystemTest {
     config.put("otel.metric.export.interval", "5s");
     // the agent only provides the machinery, the JMX instrumentation is added on top of it
     config.put("otel.javaagent.experimental.initializer.jar", JMX_INSTRUMENTATION_PATH);
-    // set yaml config files to test
-    config.put(
-        "otel.jmx.config",
-        yamlFiles.stream().map(TargetSystemTest::containerYamlPath).collect(joining(",")));
+    // enable JMX auto metrics to capture all available metrics
+    config.put("otel.jmx.auto.enabled", "true");
     return config;
   }
 
@@ -246,10 +244,10 @@ class TargetSystemTest {
         MountableFile.forHostPath(jmxInstrumentationPath), JMX_INSTRUMENTATION_PATH);
   }
 
-  protected static void copyYamlFilesToTarget(GenericContainer<?> target, List<String> yamlFiles) {
-    for (String file : yamlFiles) {
-      String resourcePath = yamlResourcePath(file);
-      String destPath = containerYamlPath(file);
+  protected static void copyYamlFilesToTarget(
+      GenericContainer<?> target, Collection<String> yamlFiles) {
+    for (String resourcePath : yamlFiles) {
+      String destPath = "/" + resourcePath;
       logger.info("copying yaml from resources {} to container {}", resourcePath, destPath);
       target.withCopyFileToContainer(MountableFile.forClasspathResource(resourcePath), destPath);
     }
@@ -265,21 +263,12 @@ class TargetSystemTest {
     copyTestAppToTarget(testWebAppPath, target, targetPath);
   }
 
-  private static String yamlResourcePath(String yaml) {
-    return "jmx/rules/" + yaml;
-  }
-
-  private static String containerYamlPath(String yaml) {
-    return "/" + yaml;
-  }
-
   /**
    * Validates YAML definition by parsing it to check for syntax errors
    *
-   * @param yaml path to YAML resource (in classpath)
+   * @param path path to YAML resource (in classpath)
    */
-  protected void validateYamlSyntax(String yaml) {
-    String path = yamlResourcePath(yaml);
+  protected void validateYamlSyntax(String path) {
     try (InputStream input = TargetSystemTest.class.getClassLoader().getResourceAsStream(path)) {
       JmxConfig config;
       // try-catch to provide a slightly better error
@@ -404,5 +393,13 @@ class TargetSystemTest {
               .build());
       sb.http(0);
     }
+  }
+
+  protected Set<String> getAndValidateYamlFilesForSystem(String system) {
+    Set<String> rulesForSystem =
+        locateRulesForSystem(TargetSystemTest.class.getClassLoader(), system, true);
+    assertThat(rulesForSystem).isNotEmpty();
+    rulesForSystem.forEach(this::validateYamlSyntax);
+    return rulesForSystem;
   }
 }

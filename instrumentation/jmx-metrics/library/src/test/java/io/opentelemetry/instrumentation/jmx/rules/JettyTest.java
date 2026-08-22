@@ -28,14 +28,11 @@ class JettyTest extends TargetSystemTest {
   @ParameterizedTest(name = "jetty:{arguments}")
   @ValueSource(ints = {9, 10, 11, 12})
   void testCollectedMetrics(int jettyMajorVersion) {
-
-    List<String> yamlFiles = singletonList("jetty.yaml");
-
-    yamlFiles.forEach(this::validateYamlSyntax);
+    Set<String> yamlFiles = getAndValidateYamlFilesForSystem("jetty");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
-    jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
+    jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties()));
 
     Set<String> jettyModules = new HashSet<>(asList("jmx", "http"));
     if (jettyMajorVersion >= 12) {
