@@ -9,6 +9,8 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -148,7 +150,9 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
             asList(
                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                 equalTo(maybeStable(DB_OPERATION), "GET"),
-                equalTo(maybeStable(DB_STATEMENT), "GET /invalid-index/_doc/1")));
+                equalTo(maybeStable(DB_STATEMENT), "GET /invalid-index/_doc/1"),
+                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                equalTo(SERVER_PORT, httpHost.getPort())));
     if (emitStableDatabaseSemconv()) {
       assertions.add(equalTo(ERROR_TYPE, "404"));
     }

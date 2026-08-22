@@ -54,14 +54,16 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName(databaseSpanName("POST"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), "opensearch"),
                                 equalTo(maybeStable(DB_OPERATION), "POST"),
                                 equalTo(
                                     maybeStable(DB_STATEMENT),
-                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}")),
+                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, httpHost.getPort())),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
@@ -128,14 +130,16 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName(databaseSpanName("POST"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), "opensearch"),
                                 equalTo(maybeStable(DB_OPERATION), "POST"),
                                 equalTo(
                                     maybeStable(DB_STATEMENT),
-                                    "{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message2\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message3\":{\"value\":\"?\"}}}}")),
+                                    "{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message2\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message3\":{\"value\":\"?\"}}}}"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, httpHost.getPort())),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
@@ -168,12 +172,14 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName(databaseSpanName("POST"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), "opensearch"),
                                 equalTo(maybeStable(DB_OPERATION), "POST"),
-                                equalTo(maybeStable(DB_STATEMENT), "POST /test-search-index/_doc")),
+                                equalTo(maybeStable(DB_STATEMENT), "POST /test-search-index/_doc"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, httpHost.getPort())),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
@@ -61,6 +62,12 @@ abstract class AbstractOpenSearchTest {
     return testing;
   }
 
+  protected String databaseSpanName(String operation) {
+    return emitStableDatabaseSemconv()
+        ? operation + " " + httpHost.getHost() + ":" + httpHost.getPort()
+        : operation;
+  }
+
   @BeforeAll
   void setUp() throws Exception {
     opensearch =
@@ -91,12 +98,14 @@ abstract class AbstractOpenSearchTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("GET")
+                        span.hasName(databaseSpanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health")),
+                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, httpHost.getPort())),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -137,13 +146,15 @@ abstract class AbstractOpenSearchTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("GET")
+                        span.hasName(databaseSpanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health")),
+                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, httpHost.getPort())),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -170,6 +181,11 @@ abstract class AbstractOpenSearchTest {
     getTesting().waitForTraces(1);
 
     assertDurationMetric(
-        getTesting(), "io.opentelemetry.opensearch-java-3.0", DB_OPERATION_NAME, DB_SYSTEM_NAME);
+        getTesting(),
+        "io.opentelemetry.opensearch-java-3.0",
+        DB_OPERATION_NAME,
+        DB_SYSTEM_NAME,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 }

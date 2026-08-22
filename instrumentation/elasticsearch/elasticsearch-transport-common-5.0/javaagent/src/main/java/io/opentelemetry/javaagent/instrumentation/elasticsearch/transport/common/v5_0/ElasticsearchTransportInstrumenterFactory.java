@@ -34,6 +34,7 @@ public class ElasticsearchTransportInstrumenterFactory {
                 instrumentationName,
                 DbClientSpanNameExtractor.create(dbClientAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
+            .addAttributesExtractor(dbClientAttributesGetter)
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(instrumenterBuilder);
 

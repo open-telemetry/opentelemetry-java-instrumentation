@@ -19,6 +19,8 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
@@ -89,6 +91,8 @@ public abstract class AbstractElasticsearchTransportClientTest
                             addNetworkTypeAttribute(
                                 equalTo(NETWORK_PEER_ADDRESS, getAddress()),
                                 equalTo(NETWORK_PEER_PORT, getPort()),
+                                equalTo(SERVER_ADDRESS, getAddress()),
+                                equalTo(SERVER_PORT, getPort()),
                                 equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "ClusterHealthAction"),
                                 equalTo(
@@ -229,6 +233,8 @@ public abstract class AbstractElasticsearchTransportClientTest
                             addNetworkTypeAttribute(
                                 equalTo(NETWORK_PEER_ADDRESS, getAddress()),
                                 equalTo(NETWORK_PEER_PORT, getPort()),
+                                equalTo(SERVER_ADDRESS, getAddress()),
+                                equalTo(SERVER_PORT, getPort()),
                                 equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "CreateIndexAction"),
                                 equalTo(
@@ -265,6 +271,8 @@ public abstract class AbstractElasticsearchTransportClientTest
                             addNetworkTypeAttribute(
                                 equalTo(NETWORK_PEER_ADDRESS, getAddress()),
                                 equalTo(NETWORK_PEER_PORT, getPort()),
+                                equalTo(SERVER_ADDRESS, getAddress()),
+                                equalTo(SERVER_PORT, getPort()),
                                 equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "IndexAction"),
                                 equalTo(
@@ -317,6 +325,8 @@ public abstract class AbstractElasticsearchTransportClientTest
         addNetworkTypeAttribute(
             equalTo(NETWORK_PEER_ADDRESS, getAddress()),
             equalTo(NETWORK_PEER_PORT, getPort()),
+            equalTo(SERVER_ADDRESS, getAddress()),
+            equalTo(SERVER_PORT, getPort()),
             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
             equalTo(maybeStable(DB_OPERATION), "GetAction"),
             equalTo(stringKey("elasticsearch.action"), experimental("GetAction")),

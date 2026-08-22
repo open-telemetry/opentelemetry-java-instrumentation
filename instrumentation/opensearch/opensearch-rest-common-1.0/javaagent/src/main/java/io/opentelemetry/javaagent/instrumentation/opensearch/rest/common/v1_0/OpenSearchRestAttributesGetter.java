@@ -5,7 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0;
 
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -13,7 +19,8 @@ import java.net.InetAddress;
 import javax.annotation.Nullable;
 
 final class OpenSearchRestAttributesGetter
-    implements DbClientAttributesGetter<OpenSearchRestRequest, OpenSearchRestResponse> {
+    implements DbClientAttributesGetter<OpenSearchRestRequest, OpenSearchRestResponse>,
+        AttributesExtractor<OpenSearchRestRequest, OpenSearchRestResponse> {
 
   @Override
   public String getDbSystemName(OpenSearchRestRequest request) {
@@ -79,5 +86,27 @@ final class OpenSearchRestAttributesGetter
       }
     }
     return null;
+  }
+
+  @Override
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, OpenSearchRestRequest request) {}
+
+  @Override
+  public void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      OpenSearchRestRequest request,
+      @Nullable OpenSearchRestResponse response,
+      @Nullable Throwable error) {
+    if (response == null) {
+      return;
+    }
+
+    attributes.put(SERVER_ADDRESS, response.getServerAddress());
+    int serverPort = response.getServerPort();
+    if (serverPort > 0) {
+      attributes.put(SERVER_PORT, serverPort);
+    }
   }
 }
