@@ -81,8 +81,8 @@ class KafkaCamelTest {
     assertThat(sender.submit(Context::current).get()).isEqualTo(Context.root());
     assertThat(received.await(1, MINUTES)).isTrue();
 
+    testing.waitForTraces(emitStableMessagingSemconv() ? 2 : 1);
     assertSendAndProcessMetrics(
         testing, "kafka", TOPIC, IllegalStateException.class.getName(), "0");
-    testing.waitForTraces(emitStableMessagingSemconv() ? 2 : 1);
   }
 }

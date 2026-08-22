@@ -111,9 +111,9 @@ class JmsCamelTest {
     template.sendBody("direct:errorInput", "test message");
 
     assertThat(errorProcessed.await(1, MINUTES)).isTrue();
+    testing.waitForTraces(emitStableMessagingSemconv() ? 2 : 1);
     assertSendAndProcessMetrics(
         testing, "jms", "errorQueue", IllegalStateException.class.getName());
-    testing.waitForTraces(emitStableMessagingSemconv() ? 2 : 1);
   }
 
   private static void assertJmsReceiveTrace(TraceAssert trace) {
