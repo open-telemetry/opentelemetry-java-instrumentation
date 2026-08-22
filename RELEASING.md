@@ -61,19 +61,60 @@ and deadlocks.
 
 ## Making the release
 
+- Create and push the release tag from the head of the release branch:
+
+  ```bash
+  git fetch upstream release/vX.Y.x
+  git tag vX.Y.Z upstream/release/vX.Y.x
+  git push upstream vX.Y.Z
+  ```
+
 - Run the [Release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release.yml).
-  - Press the "Run workflow" button, then select the release branch from the dropdown list,
-    e.g. `release/v1.9.x`, and click the "Run workflow" button below that.
+  - Press the "Run workflow" button, select the release tag from the dropdown list, e.g. `v1.9.0`,
+    and click the "Run workflow" button below that.
   - This workflow will:
     - Publish the artifacts to Maven Central
+    - Sign the Java agent jar and SBOM bundle with Sigstore Cosign
     - Generate [GitHub Artifact Attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations) for the Java agent jar and SBOM bundle
-    - Publish a GitHub release with release notes, Java agent jar, and SBOM bundle
+    - Publish a GitHub release with release notes, the Java agent jar and SBOM bundle, and their
+      Sigstore bundles
   - Review and merge the pull request that it creates for updating the apidiff baseline version
     to the newly released version (note that this pull request won't be made until after the release
     is available in maven central).
   - Review and merge the pull request that it creates for updating the change log in main
     (note that if this is not a patch release then the change log on main may already be up-to-date,
     in which case no pull request will be created).
+
+## Verifying release artifacts
+
+Install [Cosign](https://docs.sigstore.dev/cosign/system_config/installation/) and the
+[GitHub CLI](https://cli.github.com/), then replace the version below with the release to verify:
+
+```bash
+VERSION=2.XX.0
+REPOSITORY=open-telemetry/opentelemetry-java-instrumentation
+
+gh release download "v${VERSION}" --repo "${REPOSITORY}" \
+  --pattern opentelemetry-javaagent.jar \
+  --pattern opentelemetry-javaagent.jar.sigstore.json \
+  --pattern opentelemetry-java-instrumentation-SBOM.zip \
+  --pattern opentelemetry-java-instrumentation-SBOM.zip.sigstore.json
+
+CERTIFICATE_IDENTITY="https://github.com/${REPOSITORY}/.github/workflows/release.yml@refs/tags/v${VERSION}"
+CERTIFICATE_OIDC_ISSUER=https://token.actions.githubusercontent.com
+
+cosign verify-blob opentelemetry-javaagent.jar \
+  --bundle opentelemetry-javaagent.jar.sigstore.json \
+  --certificate-identity "${CERTIFICATE_IDENTITY}" \
+  --certificate-oidc-issuer "${CERTIFICATE_OIDC_ISSUER}"
+
+cosign verify-blob opentelemetry-java-instrumentation-SBOM.zip \
+  --bundle opentelemetry-java-instrumentation-SBOM.zip.sigstore.json \
+  --certificate-identity "${CERTIFICATE_IDENTITY}" \
+  --certificate-oidc-issuer "${CERTIFICATE_OIDC_ISSUER}"
+```
+
+If verification fails, do not run, deploy, or otherwise use the artifact.
 
 ## Credentials
 
