@@ -162,7 +162,7 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("GET")
+                        span.hasName(databaseSpanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(assertions),
                     span ->
