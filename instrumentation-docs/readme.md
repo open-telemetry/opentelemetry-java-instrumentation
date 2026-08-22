@@ -247,14 +247,17 @@ disabled_by_default: true                         # Defaults to `false`
 classification: internal                          # instrumentation classification: library | internal | custom
 library_link: https://...                         # URL to the library or framework's main website or documentation
 configurations:
+  # Do not add a general enabled/disabled config for the whole module here (for example
+  # `otel.instrumentation.my-module.enabled`) — modules are assumed enabled unless
+  # `disabled_by_default: true` is set above.
   # Reference a shared definition instead of hand-copying a common config block. The id must exist
   # in instrumentation-docs/src/main/resources/shared-config-definitions.yaml (an unknown ref fails
   # the build). See "Shared configuration definitions" below.
   - ref: common.db.query-sanitization.enabled
   # Module-specific configs are still defined inline:
-  - name: otel.instrumentation.my-module.enabled
-    declarative_name: java.my_module.enabled    # Optional: YAML config path
-    description: Enables the my-module feature.
+  - name: otel.instrumentation.my-module.some-feature
+    declarative_name: java.my_module.some_feature    # Optional: YAML config path
+    description: Enables the some-feature capability.
     type: boolean               # boolean | string | list | map (the flat form)
     default: true
     examples:                   # Optional: Example values for this configuration
