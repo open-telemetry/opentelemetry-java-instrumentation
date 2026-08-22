@@ -82,6 +82,12 @@ public abstract class AbstractOpenSearchRestTest {
     cleanup.deferAfterAll(client);
   }
 
+  protected String databaseSpanName(String operation) {
+    return emitStableDatabaseSemconv()
+        ? operation + " " + httpHost.getHost() + ":" + httpHost.getPort()
+        : operation;
+  }
+
   @Test
   void shouldGetStatusWithTraces() throws IOException {
     Response response = client.performRequest(new Request("GET", "_cluster/health"));
@@ -92,7 +98,7 @@ public abstract class AbstractOpenSearchRestTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("GET")
+                        span.hasName(databaseSpanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
@@ -164,7 +170,7 @@ public abstract class AbstractOpenSearchRestTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("GET")
+                        span.hasName(databaseSpanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -225,7 +231,7 @@ public abstract class AbstractOpenSearchRestTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("GET")
+                        span.hasName(databaseSpanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
@@ -233,7 +239,7 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(maybeStable(DB_STATEMENT), "GET _not_found"),
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, httpHost.getPort()),
-                                equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "404" : null)),
+                                equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "400" : null)),
                     span ->
                         span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
@@ -266,7 +272,7 @@ public abstract class AbstractOpenSearchRestTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("GET")
+                        span.hasName(databaseSpanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
@@ -274,7 +280,7 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(maybeStable(DB_STATEMENT), "GET _not_found"),
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, httpHost.getPort()),
-                                equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "404" : null)),
+                                equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "400" : null)),
                     span ->
                         span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
