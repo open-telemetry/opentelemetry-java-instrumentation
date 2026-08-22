@@ -40,7 +40,7 @@ class KafkaFetchRecordsInstrumentation implements TypeInstrumentation {
       return KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable Boolean previousValue) {
       if (previousValue != null) {
         KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
