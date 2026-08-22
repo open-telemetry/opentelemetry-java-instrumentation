@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -20,13 +21,11 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
+import java.time.Duration;
 import java.util.stream.Stream;
-import org.apache.geode.DataSerializable;
 import org.apache.geode.cache.Region;
 import org.apache.geode.cache.client.ClientCache;
 import org.apache.geode.cache.client.ClientCacheFactory;
@@ -34,26 +33,65 @@ import org.apache.geode.cache.client.ClientRegionFactory;
 import org.apache.geode.cache.client.ClientRegionShortcut;
 import org.apache.geode.cache.query.QueryException;
 import org.apache.geode.cache.query.SelectResults;
-import org.junit.jupiter.api.AfterAll;
+import org.apache.geode.pdx.PdxReader;
+import org.apache.geode.pdx.PdxSerializable;
+import org.apache.geode.pdx.PdxWriter;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.utility.MountableFile;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class PutGetTest {
+  private static final int GEODE_PORT = 40404;
+
+  private static final GenericContainer<?> geodeServer =
+      new GenericContainer<>(
+              testLatestDeps() ? "apachegeode/geode:1.15.1" : "apachegeode/geode:1.4.0")
+          .withExposedPorts(GEODE_PORT)
+          .withCopyFileToContainer(
+              MountableFile.forClasspathResource("geode-cache.xml"), "/geode-cache.xml")
+          .withCommand(
+              "sh",
+              "-c",
+              "gfsh -e \"start server --name=test-server"
+                  + " --cache-xml-file=/geode-cache.xml"
+                  + " --mcast-port=0 --use-cluster-configuration=false"
+                  + " --server-port="
+                  + GEODE_PORT
+                  + " --max-heap=256m\""
+                  + " && tail -F test-server/server.log")
+          .waitingFor(Wait.forListeningPort())
+          .withStartupTimeout(Duration.ofMinutes(2));
+
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final ClientCache cache = new ClientCacheFactory().create();
-  private static final ClientRegionFactory<Object, Object> regionFactory =
-      cache.createClientRegionFactory(ClientRegionShortcut.LOCAL);
-  private static final Region<Object, Object> region = regionFactory.create("test-region");
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  @AfterAll
-  static void closeCache() {
-    cache.close();
+  private static ClientCache cache;
+  private static Region<Object, Object> region;
+
+  @BeforeAll
+  static void setUp() {
+    cleanup.deferAfterAll(geodeServer::stop);
+    geodeServer.start();
+
+    cache =
+        new ClientCacheFactory()
+            .addPoolServer(geodeServer.getHost(), geodeServer.getMappedPort(GEODE_PORT))
+            .create();
+    cleanup.deferAfterAll(cache);
+
+    ClientRegionFactory<Object, Object> regionFactory =
+        cache.createClientRegionFactory(ClientRegionShortcut.PROXY);
+    region = regionFactory.create("test-region");
   }
 
   private static Stream<Arguments> provideParameters() {
@@ -134,7 +172,7 @@ class PutGetTest {
           region.put(key, value);
           region.remove(key);
         });
-    assertThat(region).isEmpty();
+    assertThat(region.isEmptyOnServer()).isTrue();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -281,7 +319,7 @@ class PutGetTest {
               return region.query("SELECT * FROM /test-region p WHERE p.expDate = '10/2020'");
             });
 
-    assertThat(results.asList().get(0)).isEqualTo(value);
+    assertThat(results.asList()).singleElement().usingRecursiveComparison().isEqualTo(value);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -321,9 +359,11 @@ class PutGetTest {
                                 "SELECT * FROM /test-region p WHERE p.expDate = ?"))));
   }
 
-  static class Card implements DataSerializable {
+  public static class Card implements PdxSerializable {
     private String cardNumber;
     private String expDate;
+
+    public Card() {}
 
     public Card(String cardNumber, String expDate) {
       this.cardNumber = cardNumber;
@@ -347,15 +387,15 @@ class PutGetTest {
     }
 
     @Override
-    public void toData(DataOutput dataOutput) throws IOException {
-      dataOutput.writeUTF(cardNumber);
-      dataOutput.writeUTF(expDate);
+    public void toData(PdxWriter writer) {
+      writer.writeString("cardNumber", cardNumber);
+      writer.writeString("expDate", expDate);
     }
 
     @Override
-    public void fromData(DataInput dataInput) throws IOException, ClassNotFoundException {
-      cardNumber = dataInput.readUTF();
-      expDate = dataInput.readUTF();
+    public void fromData(PdxReader reader) {
+      cardNumber = reader.readString("cardNumber");
+      expDate = reader.readString("expDate");
     }
   }
 }
