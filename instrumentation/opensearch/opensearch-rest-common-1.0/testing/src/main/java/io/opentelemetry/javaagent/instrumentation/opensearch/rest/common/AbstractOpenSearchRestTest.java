@@ -5,12 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
@@ -225,8 +227,13 @@ public abstract class AbstractOpenSearchRestTest {
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttribute(equalTo(SERVER_ADDRESS, httpHost.getHost()))
-                            .hasAttribute(equalTo(SERVER_PORT, httpHost.getPort())),
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+                                equalTo(maybeStable(DB_OPERATION), "GET"),
+                                equalTo(maybeStable(DB_STATEMENT), "GET _not_found"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, httpHost.getPort()),
+                                equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "404" : null)),
                     span ->
                         span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
@@ -261,8 +268,13 @@ public abstract class AbstractOpenSearchRestTest {
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttribute(equalTo(SERVER_ADDRESS, httpHost.getHost()))
-                            .hasAttribute(equalTo(SERVER_PORT, httpHost.getPort())),
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+                                equalTo(maybeStable(DB_OPERATION), "GET"),
+                                equalTo(maybeStable(DB_STATEMENT), "GET _not_found"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, httpHost.getPort()),
+                                equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "404" : null)),
                     span ->
                         span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
