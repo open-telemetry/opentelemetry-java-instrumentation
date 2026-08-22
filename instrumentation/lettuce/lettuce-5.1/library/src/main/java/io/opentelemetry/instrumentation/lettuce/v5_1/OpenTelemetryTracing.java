@@ -199,6 +199,14 @@ final class OpenTelemetryTracing implements Tracing {
     @CanIgnoreReturnValue
     @SuppressWarnings({"UnusedMethod", "EffectivelyPrivate"})
     public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
+      // In Lettuce 6.0.0-6.0.2 the command name is missing when start() runs,
+      // so take name from the command. Later versions already sets the name correctly,
+      // so only fill it in when it is still null.
+      // getType.name() removed in  6.5.0+.
+      if (request.getCommand() == null && command.getType() != null) {
+        request.setCommand(String.valueOf(command.getType()));
+      }
+
       // Extract args BEFORE calling start() so db.query.text can include them
       if (command.getArgs() != null) {
         request.setArgsList(OtelCommandArgsUtil.getCommandArgs(command.getArgs()));
