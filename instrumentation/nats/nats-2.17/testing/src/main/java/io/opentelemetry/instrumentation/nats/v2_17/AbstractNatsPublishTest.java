@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.assertTraceparentHeader;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.nats.client.Subscription;
 import io.nats.client.impl.Headers;
@@ -95,6 +97,52 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
     // then
     assertPublishSpan();
     assertTraceparentHeader(subscription);
+  }
+
+  @Test
+  void testSettleJetStreamAckSubjects() {
+    String firstAckSubject =
+        "$JS.ACK.ingestion-stream.partition-a.1.18822351.18675175.1785834929935121483.14757";
+    String secondAckSubject =
+        "$JS.ACK.ingestion-stream.partition-a.2.18822352.18675176.1785834929935121484.14756";
+
+    // ACK and NACK operations use generated subjects with per-message values in them.
+    testing()
+        .runWithSpan(
+            "parent",
+            () -> {
+              connection.publish(firstAckSubject, new byte[] {0});
+              connection.publish(secondAckSubject, new byte[] {0});
+            });
+
+    int clientId = connection.getServerInfo().getClientId();
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasNoParent(),
+                    span ->
+                        span.hasName("$JS.ACK settle")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                messagingAttributes(
+                                    "settle",
+                                    "$JS.ACK",
+                                    clientId,
+                                    equalTo(
+                                        stringKey("messaging.destination.template"), "$JS.ACK"))),
+                    span ->
+                        span.hasName("$JS.ACK settle")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                messagingAttributes(
+                                    "settle",
+                                    "$JS.ACK",
+                                    clientId,
+                                    equalTo(
+                                        stringKey("messaging.destination.template"), "$JS.ACK")))));
   }
 
   private void assertPublishSpan() {
