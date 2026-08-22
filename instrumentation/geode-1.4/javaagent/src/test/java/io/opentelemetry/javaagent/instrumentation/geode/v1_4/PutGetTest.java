@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -50,7 +51,8 @@ class PutGetTest {
   private static final int GEODE_PORT = 40404;
 
   private static final GenericContainer<?> geodeServer =
-      new GenericContainer<>("apachegeode/geode:1.4.0")
+      new GenericContainer<>(
+              testLatestDeps() ? "apachegeode/geode:1.15.1" : "apachegeode/geode:1.4.0")
           .withExposedPorts(GEODE_PORT)
           .withCopyFileToContainer(
               MountableFile.forClasspathResource("geode-cache.xml"), "/geode-cache.xml")
