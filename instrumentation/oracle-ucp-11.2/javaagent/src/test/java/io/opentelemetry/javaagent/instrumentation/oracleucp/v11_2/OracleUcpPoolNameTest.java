@@ -6,9 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.oracleucp.v11_2;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -81,6 +83,47 @@ class OracleUcpPoolNameTest {
   }
 
   @Test
+  void shouldDerivePoolNameFromConnectionPropertiesWithoutJdbcUrl() throws Exception {
+    assumeFalse(testLatestDeps(), "UCP latest requires a JDBC URL");
+
+    PoolDataSource connectionPool = createPoolWithoutJdbcUrl();
+    connectionPool.setConnectionProperty("serverName", "properties.example");
+    connectionPool.setConnectionProperty("portNumber", "1523");
+    connectionPool.setConnectionProperty("databaseName", "inventory");
+    UniversalConnectionPool universalConnectionPool = startPool(connectionPool);
+
+    try {
+      assertPoolMetrics("properties.example:1523/inventory");
+    } finally {
+      universalConnectionPool.stop();
+    }
+
+    assertNoConnectionPoolMetrics();
+  }
+
+  @Test
+  void shouldDerivePoolNameFromPoolDataSourcePropertiesWithoutJdbcUrl() throws Exception {
+    assumeFalse(testLatestDeps(), "UCP latest requires a JDBC URL");
+
+    PoolDataSource connectionPool = createPoolWithoutJdbcUrl();
+    connectionPool.setConnectionProperty("serverName", "properties.example");
+    connectionPool.setConnectionProperty("portNumber", "1523");
+    connectionPool.setConnectionProperty("databaseName", "inventory");
+    connectionPool.setServerName("setters.example");
+    connectionPool.setPortNumber(1524);
+    connectionPool.setDatabaseName("billing");
+    UniversalConnectionPool universalConnectionPool = startPool(connectionPool);
+
+    try {
+      assertPoolMetrics("setters.example:1524/billing");
+    } finally {
+      universalConnectionPool.stop();
+    }
+
+    assertNoConnectionPoolMetrics();
+  }
+
+  @Test
   void shouldRetainDerivedPoolNameAfterRestart() throws Exception {
     PoolDataSource connectionPool = createPool("jdbc:oracle:thin:@//db.example:1522/orders");
     UniversalConnectionPool universalConnectionPool = startPool(connectionPool);
@@ -139,6 +182,14 @@ class OracleUcpPoolNameTest {
     }
 
     assertNoConnectionPoolMetrics();
+  }
+
+  private static PoolDataSource createPoolWithoutJdbcUrl() throws Exception {
+    PoolDataSource connectionPool = PoolDataSourceFactory.getPoolDataSource();
+    connectionPool.setConnectionFactoryClassName(TestOracleDataSource.class.getName());
+    connectionPool.setInitialPoolSize(0);
+    connectionPool.setMinPoolSize(0);
+    return connectionPool;
   }
 
   private static PoolDataSource createPool(String jdbcUrl) throws Exception {
