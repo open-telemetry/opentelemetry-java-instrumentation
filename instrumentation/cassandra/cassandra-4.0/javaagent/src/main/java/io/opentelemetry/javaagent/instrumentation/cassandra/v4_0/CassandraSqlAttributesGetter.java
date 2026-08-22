@@ -6,9 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraEndPoints.isSniEndPoint;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
+import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
@@ -61,10 +64,20 @@ final class CassandraSqlAttributesGetter
     if (coordinator == null) {
       return null;
     }
-    // resolve() returns an existing InetSocketAddress, it does not do a dns resolve,
-    // at least in the only current EndPoint implementation (DefaultEndPoint)
-    SocketAddress address = coordinator.getEndPoint().resolve();
-    return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
+    EndPoint endPoint = coordinator.getEndPoint();
+    if (!emitStableDatabaseSemconv() || !isSniEndPoint(endPoint)) {
+      // The old database semantic conventions are frozen, so keep the pre-existing behavior, which
+      // records the proxy as the peer under SNI. Custom endpoints may represent direct connections,
+      // so preserve their resolved addresses under both old and stable conventions.
+      SocketAddress address = endPoint.resolve();
+      return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
+    }
+    // Under SNI, resolve() performs a dns lookup on every call and round-robins across the resolved
+    // addresses using a shared static counter that the driver also uses to pick a connection.
+    // Calling
+    // it here would add a per-span dns lookup, record a rotating address that may not match the
+    // connection, and perturb the driver's own rotation, so network.peer.* is left unset.
+    return null;
   }
 
   @Override
