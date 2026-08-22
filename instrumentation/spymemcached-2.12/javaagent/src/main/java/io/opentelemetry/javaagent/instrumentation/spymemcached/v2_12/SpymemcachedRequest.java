@@ -52,6 +52,20 @@ public abstract class SpymemcachedRequest {
     return handlingNodeAddress;
   }
 
+  /** Returns the memcached command that corresponds to the client method. */
+  String getStableOperationName() {
+    String operationName = getOperationName();
+    switch (operationName) {
+      case "getBulk":
+        // a multi-key get is sent as one or more memcached get commands
+        return "get";
+      case "getAndTouch":
+        return "gat";
+      default:
+        return operationName;
+    }
+  }
+
   public String getOperationName() {
     String queryText = getQueryText();
     if (queryText.startsWith("async")) {
@@ -66,19 +80,5 @@ public abstract class SpymemcachedRequest {
     // Lowercase first letter
     chars[0] = Character.toLowerCase(chars[0]);
     return new String(chars);
-  }
-
-  /** Returns the memcached command that corresponds to the client method. */
-  String getStableOperationName() {
-    String operationName = getOperationName();
-    switch (operationName) {
-      case "getBulk":
-        // a multi-key get is sent as one or more memcached get commands
-        return "get";
-      case "getAndTouch":
-        return "gat";
-      default:
-        return operationName;
-    }
   }
 }
