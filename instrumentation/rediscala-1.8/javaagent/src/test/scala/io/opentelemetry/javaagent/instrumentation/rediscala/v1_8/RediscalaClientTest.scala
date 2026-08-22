@@ -43,6 +43,7 @@ class RediscalaClientTest {
 
   @RegisterExtension val testing = AgentInstrumentationExtension.create
 
+  private val defaultDbIndex = 0
   private val nonDefaultDbIndex = 1
 
   var system: Object = null
@@ -145,6 +146,7 @@ class RediscalaClientTest {
                 .hasAttributesSatisfyingExactly(
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                   equalTo(maybeStable(DB_OPERATION), "SET"),
+                  equalTo(DB_NAMESPACE, namespace(defaultDbIndex)),
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port)
                 )
@@ -158,6 +160,7 @@ class RediscalaClientTest {
       "io.opentelemetry.rediscala-1.8",
       DB_SYSTEM_NAME,
       DB_OPERATION_NAME,
+      DB_NAMESPACE,
       SERVER_ADDRESS,
       SERVER_PORT
     )
@@ -202,6 +205,7 @@ class RediscalaClientTest {
                 .hasAttributesSatisfyingExactly(
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                   equalTo(maybeStable(DB_OPERATION), "SET"),
+                  equalTo(DB_NAMESPACE, namespace(defaultDbIndex)),
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port)
                 )
@@ -216,6 +220,7 @@ class RediscalaClientTest {
                 .hasAttributesSatisfyingExactly(
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                   equalTo(maybeStable(DB_OPERATION), "GET"),
+                  equalTo(DB_NAMESPACE, namespace(defaultDbIndex)),
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port)
                 )
@@ -305,6 +310,7 @@ class RediscalaClientTest {
                 .hasAttributesSatisfyingExactly(
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                   equalTo(maybeStable(DB_OPERATION), operationName),
+                  equalTo(DB_NAMESPACE, namespace(defaultDbIndex)),
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port)
                 )
@@ -346,6 +352,7 @@ class RediscalaClientTest {
                 .hasAttributesSatisfyingExactly(
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                   equalTo(maybeStable(DB_OPERATION), scenario.operationName),
+                  equalTo(DB_NAMESPACE, namespace(defaultDbIndex)),
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port),
                   equalTo(
@@ -391,7 +398,7 @@ class RediscalaClientTest {
                 .hasAttributesSatisfyingExactly(
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                   equalTo(maybeStable(DB_OPERATION), "SET"),
-                  equalTo(DB_NAMESPACE, nonDefaultNamespace),
+                  equalTo(DB_NAMESPACE, namespace(nonDefaultDbIndex)),
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port)
                 )
@@ -443,7 +450,7 @@ class RediscalaClientTest {
                 .hasAttributesSatisfyingExactly(
                   equalTo(maybeStable(DB_SYSTEM), REDIS),
                   equalTo(maybeStable(DB_OPERATION), "MULTI SET"),
-                  equalTo(DB_NAMESPACE, nonDefaultNamespace),
+                  equalTo(DB_NAMESPACE, namespace(nonDefaultDbIndex)),
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, port),
                   equalTo(
@@ -467,8 +474,8 @@ class RediscalaClientTest {
     )
   }
 
-  private def nonDefaultNamespace: String =
-    if (emitStableDatabaseSemconv()) nonDefaultDbIndex.toString else null
+  private def namespace(databaseIndex: Int): String =
+    if (emitStableDatabaseSemconv()) databaseIndex.toString else null
 
   private def transactionScenarios(): Stream[Arguments] =
     Stream.of(
