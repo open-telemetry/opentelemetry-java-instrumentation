@@ -21,6 +21,11 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.reflect.Method;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -77,6 +82,33 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
+  void createsCircuitBreakerSpanWhenOnSuccessCalledOnDifferentThread() throws Exception {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    try {
+      testing.runWithSpan(
+          "parent",
+          () -> {
+            circuitBreaker.acquirePermission();
+            executor
+                .submit(
+                    () -> {
+                      try {
+                        invokeOnSuccess(circuitBreaker);
+                      } catch (Exception e) {
+                        throw new IllegalStateException(e);
+                      }
+                    })
+                .get();
+          });
+    } finally {
+      executor.shutdownNow();
+    }
+
+    assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
   void createsCircuitBreakerSpanWhenOnResultMatchesRecordResultPredicate() throws Exception {
     Method recordResultPredicate = recordResultPredicateMethod();
     Method onResult = onResultMethod();
@@ -94,6 +126,50 @@ class Resilience4jCircuitBreakerTest {
           onResult.invoke(circuitBreaker, 1L, MILLISECONDS, 500);
         });
 
+    assertCircuitBreakerSpan("closed", "failure", null);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void createsCircuitBreakerSpanWhenDecoratedCompletionStageResultMatchesRecordResultPredicate()
+      throws Exception {
+    Method recordResultPredicate = recordResultPredicateMethod();
+    Method decorateCompletionStage = decorateCompletionStageMethod();
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    recordResultPredicate.invoke(
+        builder, (Predicate<Object>) result -> Integer.valueOf(500).equals(result));
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
+    CompletableFuture<Integer> future = new CompletableFuture<>();
+    Supplier<CompletionStage<Integer>> supplier = () -> future;
+    Supplier<CompletionStage<Integer>> decoratedSupplier =
+        (Supplier<CompletionStage<Integer>>)
+            decorateCompletionStage.invoke(null, circuitBreaker, supplier);
+
+    CompletionStage<Integer> stage = testing.runWithSpan("parent", decoratedSupplier::get);
+    future.complete(500);
+
+    assertThat(stage.toCompletableFuture().get()).isEqualTo(500);
+    assertCircuitBreakerSpan("closed", "failure", null);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void createsCircuitBreakerSpanWhenDecoratedFutureResultMatchesRecordResultPredicate()
+      throws Exception {
+    Method recordResultPredicate = recordResultPredicateMethod();
+    Method decorateFuture = decorateFutureMethod();
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    recordResultPredicate.invoke(
+        builder, (Predicate<Object>) result -> Integer.valueOf(500).equals(result));
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
+    CompletableFuture<Integer> future = CompletableFuture.completedFuture(500);
+    Supplier<Future<Integer>> supplier = () -> future;
+    Supplier<Future<Integer>> decoratedSupplier =
+        (Supplier<Future<Integer>>) decorateFuture.invoke(null, circuitBreaker, supplier);
+
+    Future<Integer> decoratedFuture = testing.runWithSpan("parent", decoratedSupplier::get);
+
+    assertThat(decoratedFuture.get()).isEqualTo(500);
     assertCircuitBreakerSpan("closed", "failure", null);
   }
 
@@ -241,6 +317,25 @@ class Resilience4jCircuitBreakerTest {
       return CircuitBreakerConfig.Builder.class.getMethod("recordResultPredicate", Predicate.class);
     } catch (NoSuchMethodException e) {
       assumeTrue(false, "recordResultPredicate is not available in this Resilience4j version");
+      throw e;
+    }
+  }
+
+  private static Method decorateFutureMethod() throws NoSuchMethodException {
+    try {
+      return CircuitBreaker.class.getMethod("decorateFuture", CircuitBreaker.class, Supplier.class);
+    } catch (NoSuchMethodException e) {
+      assumeTrue(false, "decorateFuture is not available in this Resilience4j version");
+      throw e;
+    }
+  }
+
+  private static Method decorateCompletionStageMethod() throws NoSuchMethodException {
+    try {
+      return CircuitBreaker.class.getMethod(
+          "decorateCompletionStage", CircuitBreaker.class, Supplier.class);
+    } catch (NoSuchMethodException e) {
+      assumeTrue(false, "decorateCompletionStage is not available in this Resilience4j version");
       throw e;
     }
   }

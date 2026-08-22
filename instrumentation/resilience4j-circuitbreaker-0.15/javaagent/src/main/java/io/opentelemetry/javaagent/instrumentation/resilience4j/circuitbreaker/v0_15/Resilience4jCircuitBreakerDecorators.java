@@ -16,6 +16,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -148,16 +149,7 @@ public class Resilience4jCircuitBreakerDecorators {
         CompletionStage<T> result = delegate.get();
         Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
             Resilience4jCircuitBreakerSpans.pollPendingSpanAfter(baseline);
-        if (pendingSpan != null) {
-          try {
-            result.whenComplete(
-                (unused, throwable) -> pendingSpan.end(outcome(throwable), throwable));
-          } catch (Throwable t) {
-            pendingSpan.end("failure", t);
-            throw t;
-          }
-        }
-        return result;
+        return pendingSpan == null ? result : wrapCompletionStage(result, pendingSpan);
       } catch (Throwable t) {
         Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
         throw t;
@@ -221,6 +213,7 @@ public class Resilience4jCircuitBreakerDecorators {
 
     @Override
     public T get() throws InterruptedException, ExecutionException {
+      Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
       try {
         T result = delegate.get();
         pendingSpan.end("success", null);
@@ -231,12 +224,15 @@ public class Resilience4jCircuitBreakerDecorators {
       } catch (ExecutionException e) {
         pendingSpan.end("failure", e.getCause() == null ? e : e.getCause());
         throw e;
+      } finally {
+        Resilience4jCircuitBreakerSpans.detachPendingSpan(pendingSpan);
       }
     }
 
     @Override
     public T get(long timeout, TimeUnit unit)
         throws InterruptedException, ExecutionException, TimeoutException {
+      Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
       try {
         T result = delegate.get(timeout, unit);
         pendingSpan.end("success", null);
@@ -250,6 +246,8 @@ public class Resilience4jCircuitBreakerDecorators {
       } catch (TimeoutException e) {
         pendingSpan.end("failure", e);
         throw e;
+      } finally {
+        Resilience4jCircuitBreakerSpans.detachPendingSpan(pendingSpan);
       }
     }
   }
@@ -335,8 +333,68 @@ public class Resilience4jCircuitBreakerDecorators {
     }
   }
 
-  private static String outcome(@Nullable Throwable throwable) {
-    return throwable == null ? "success" : "failure";
+  @SuppressWarnings("unchecked") // Dynamic proxy implements CompletionStage<T> at runtime.
+  private static <T> CompletionStage<T> wrapCompletionStage(
+      CompletionStage<T> delegate, Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan) {
+    return (CompletionStage<T>)
+        Proxy.newProxyInstance(
+            delegate.getClass().getClassLoader(),
+            new Class<?>[] {CompletionStage.class},
+            new CompletionStageInvocationHandler(delegate, pendingSpan));
+  }
+
+  private static final class CompletionStageInvocationHandler implements InvocationHandler {
+
+    private final CompletionStage<?> delegate;
+    private final Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan;
+
+    private CompletionStageInvocationHandler(
+        CompletionStage<?> delegate, Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan) {
+      this.delegate = delegate;
+      this.pendingSpan = pendingSpan;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+      if (method.getDeclaringClass() == Object.class) {
+        String methodName = method.getName();
+        if ("equals".equals(methodName)) {
+          return proxy == args[0];
+        } else if ("hashCode".equals(methodName)) {
+          return System.identityHashCode(proxy);
+        }
+        return method.invoke(delegate, args);
+      }
+      Object[] invokedArgs = args;
+      if ("whenComplete".equals(method.getName())
+          && args != null
+          && args.length == 1
+          && args[0] instanceof BiConsumer) {
+        invokedArgs = new Object[] {wrapWhenComplete((BiConsumer<?, ?>) args[0])};
+      }
+      try {
+        return method.invoke(delegate, invokedArgs);
+      } catch (InvocationTargetException e) {
+        throw e.getCause();
+      }
+    }
+
+    private BiConsumer<Object, Throwable> wrapWhenComplete(BiConsumer<?, ?> callback) {
+      return (result, throwable) -> {
+        Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
+        try {
+          invokeWhenComplete(callback, result, throwable);
+        } finally {
+          Resilience4jCircuitBreakerSpans.detachPendingSpan(pendingSpan);
+        }
+      };
+    }
+  }
+
+  @SuppressWarnings("unchecked") // Callback argument types are erased by CompletionStage.
+  private static void invokeWhenComplete(
+      BiConsumer<?, ?> callback, @Nullable Object result, @Nullable Throwable throwable) {
+    ((BiConsumer<Object, Throwable>) callback).accept(result, throwable);
   }
 
   private Resilience4jCircuitBreakerDecorators() {}

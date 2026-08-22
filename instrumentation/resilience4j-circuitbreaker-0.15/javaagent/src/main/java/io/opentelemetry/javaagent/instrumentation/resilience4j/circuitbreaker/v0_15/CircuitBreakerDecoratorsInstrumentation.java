@@ -102,11 +102,10 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CompletionStageSupplierAdvice {
 
-    @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <T> Supplier<CompletionStage<T>> onExit(
-        @Advice.Return Supplier<CompletionStage<T>> result) {
-      return Resilience4jCircuitBreakerDecorators.wrapCompletionStageSupplier(result);
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static <T> void onEnter(
+        @Advice.Argument(value = 1, readOnly = false) Supplier<CompletionStage<T>> supplier) {
+      supplier = Resilience4jCircuitBreakerDecorators.wrapCompletionStageSupplier(supplier);
     }
   }
 

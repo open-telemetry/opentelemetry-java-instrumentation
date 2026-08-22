@@ -20,9 +20,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import java.util.ArrayDeque;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.Locale;
+import java.util.Map;
+import java.util.WeakHashMap;
 import javax.annotation.Nullable;
 
 public class Resilience4jCircuitBreakerSpans {
@@ -49,6 +52,11 @@ public class Resilience4jCircuitBreakerSpans {
   }
 
   private static final ThreadLocal<Deque<PendingSpan>> pendingSpans = new ThreadLocal<>();
+  // Resilience4j's raw acquirePermission/onSuccess/onError API does not expose an attempt token.
+  // Keep a weak per-breaker fallback so callbacks on a different thread can still close the
+  // oldest pending attempt without retaining circuit breakers indefinitely.
+  private static final Map<CircuitBreaker, Deque<PendingSpan>> pendingSpansByCircuitBreaker =
+      Collections.synchronizedMap(new WeakHashMap<>());
   private static final ThreadLocal<Boolean> inCircuitBreakerCallback = new ThreadLocal<>();
   private static final ThreadLocal<Deque<Boolean>> onResultEnded = new ThreadLocal<>();
 
@@ -68,12 +76,15 @@ public class Resilience4jCircuitBreakerSpans {
       return;
     }
 
+    PendingSpan pendingSpan =
+        new PendingSpan(circuitBreaker, startSpan(circuitBreaker, parentContext));
     Deque<PendingSpan> spans = pendingSpans.get();
     if (spans == null) {
       spans = new ArrayDeque<>();
       pendingSpans.set(spans);
     }
-    spans.push(new PendingSpan(circuitBreaker, startSpan(circuitBreaker, parentContext)));
+    spans.push(pendingSpan);
+    addGlobalPendingSpan(pendingSpan);
   }
 
   public static void reject(CircuitBreaker circuitBreaker, @Nullable Throwable throwable) {
@@ -186,24 +197,41 @@ public class Resilience4jCircuitBreakerSpans {
   private static PendingSpan pollPendingSpan(CircuitBreaker circuitBreaker) {
     Deque<PendingSpan> spans = pendingSpans.get();
     if (spans == null) {
-      return null;
+      return pollGlobalPendingSpan(circuitBreaker);
     }
     removeEnded(spans);
+    PendingSpan span = pollLocalPendingSpan(circuitBreaker, spans);
+    if (span != null) {
+      removeGlobalPendingSpan(span);
+      return span;
+    }
+    return pollGlobalPendingSpan(circuitBreaker);
+  }
+
+  public static void attachPendingSpan(PendingSpan pendingSpan) {
+    Deque<PendingSpan> spans = pendingSpans.get();
+    if (spans == null) {
+      spans = new ArrayDeque<>();
+      pendingSpans.set(spans);
+    }
+    spans.push(pendingSpan);
+  }
+
+  public static void detachPendingSpan(PendingSpan pendingSpan) {
+    Deque<PendingSpan> spans = pendingSpans.get();
+    if (spans == null) {
+      return;
+    }
     Iterator<PendingSpan> iterator = spans.iterator();
     while (iterator.hasNext()) {
-      PendingSpan span = iterator.next();
-      if (span.circuitBreaker == circuitBreaker) {
+      if (iterator.next() == pendingSpan) {
         iterator.remove();
-        if (spans.isEmpty()) {
-          pendingSpans.remove();
-        }
-        return span;
+        break;
       }
     }
     if (spans.isEmpty()) {
       pendingSpans.remove();
     }
-    return null;
   }
 
   @Nullable
@@ -224,7 +252,72 @@ public class Resilience4jCircuitBreakerSpans {
     if (spans.isEmpty()) {
       pendingSpans.remove();
     }
+    removeGlobalPendingSpan(span);
     return span;
+  }
+
+  @Nullable
+  private static PendingSpan pollLocalPendingSpan(
+      CircuitBreaker circuitBreaker, Deque<PendingSpan> spans) {
+    Iterator<PendingSpan> iterator = spans.iterator();
+    while (iterator.hasNext()) {
+      PendingSpan span = iterator.next();
+      if (span.ended) {
+        iterator.remove();
+      } else if (span.circuitBreaker == circuitBreaker) {
+        iterator.remove();
+        if (spans.isEmpty()) {
+          pendingSpans.remove();
+        }
+        return span;
+      }
+    }
+    if (spans.isEmpty()) {
+      pendingSpans.remove();
+    }
+    return null;
+  }
+
+  private static void addGlobalPendingSpan(PendingSpan pendingSpan) {
+    synchronized (pendingSpansByCircuitBreaker) {
+      pendingSpansByCircuitBreaker
+          .computeIfAbsent(pendingSpan.circuitBreaker, unused -> new ArrayDeque<>())
+          .push(pendingSpan);
+    }
+  }
+
+  @Nullable
+  private static PendingSpan pollGlobalPendingSpan(CircuitBreaker circuitBreaker) {
+    synchronized (pendingSpansByCircuitBreaker) {
+      Deque<PendingSpan> spans = pendingSpansByCircuitBreaker.get(circuitBreaker);
+      if (spans == null) {
+        return null;
+      }
+      while (!spans.isEmpty()) {
+        PendingSpan span = spans.pollLast();
+        if (!span.ended) {
+          if (spans.isEmpty()) {
+            pendingSpansByCircuitBreaker.remove(circuitBreaker);
+          }
+          return span;
+        }
+      }
+      pendingSpansByCircuitBreaker.remove(circuitBreaker);
+      return null;
+    }
+  }
+
+  private static void removeGlobalPendingSpan(PendingSpan pendingSpan) {
+    synchronized (pendingSpansByCircuitBreaker) {
+      Deque<PendingSpan> spans = pendingSpansByCircuitBreaker.get(pendingSpan.circuitBreaker);
+      if (spans == null) {
+        return;
+      }
+      spans.remove(pendingSpan);
+      if (spans.isEmpty()) {
+        pendingSpansByCircuitBreaker.remove(pendingSpan.circuitBreaker);
+      }
+    }
   }
 
   private static void removeEnded(Deque<PendingSpan> spans) {
