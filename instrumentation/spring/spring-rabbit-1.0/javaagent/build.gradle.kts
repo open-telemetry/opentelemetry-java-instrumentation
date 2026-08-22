@@ -12,6 +12,8 @@ muzzle {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:rabbitmq-2.7:bootstrap"))
+
   library("org.springframework.amqp:spring-rabbit:1.0.0.RELEASE")
 
   testInstrumentation(project(":instrumentation:rabbitmq-2.7:javaagent"))

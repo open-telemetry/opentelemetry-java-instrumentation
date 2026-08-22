@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import com.rabbitmq.client.Channel;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
@@ -45,33 +46,34 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
     public static class AdviceScope {
       private final Context context;
       private final Scope scope;
-      private final Message message;
+      private final SpringRabbitRequest request;
 
-      public AdviceScope(Context context, Message message) {
+      public AdviceScope(Context context, SpringRabbitRequest request) {
         this.context = context;
         this.scope = context.makeCurrent();
-        this.message = message;
+        this.request = request;
       }
 
       public void end(@Nullable Throwable throwable) {
         scope.close();
-        instrumenter().end(context, message, null, throwable);
+        instrumenter().end(context, request, null, throwable);
       }
     }
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope onEnter(@Advice.Argument(1) Object data) {
+    public static AdviceScope onEnter(
+        @Advice.Argument(0) Channel channel, @Advice.Argument(1) Object data) {
       if (!(data instanceof Message)) {
         return null;
       }
       Context parentContext = Java8BytecodeBridge.currentContext();
-      Message message = (Message) data;
-      if (!instrumenter().shouldStart(parentContext, message)) {
+      SpringRabbitRequest request = new SpringRabbitRequest(channel, (Message) data);
+      if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }
-      Context context = instrumenter().start(parentContext, message);
-      return new AdviceScope(context, message);
+      Context context = instrumenter().start(parentContext, request);
+      return new AdviceScope(context, request);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)

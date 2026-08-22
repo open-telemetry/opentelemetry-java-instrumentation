@@ -108,46 +108,8 @@ class SpringIntegrationAndRabbitTest {
                             satisfies(
                                 MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
                                 val -> val.isInstanceOf(String.class))),
-                // spring-cloud-stream-binder-rabbit listener puts all messages into a BlockingQueue
-                // immediately after receiving
-                // that's why the rabbitmq CONSUMER span will never have any child span (and
-                // propagate context, actually)
-                span ->
-                    span.satisfies(
-                            spanData ->
-                                assertThat(spanData.getName())
-                                    .matches(
-                                        emitStableMessagingSemconv()
-                                            ? "process"
-                                            : "testTopic.anonymous.[-\\w]+ process"))
-                        .hasParent(trace.getSpan(6))
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasAttributesSatisfyingExactly(
-                            satisfies(
-                                NETWORK_PEER_ADDRESS,
-                                val -> val.isIn("127.0.0.1", "0:0:0:0:0:0:0:1", null)),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
-                            serverAddress(),
-                            serverPort(),
-                            equalTo(MESSAGING_SYSTEM, "rabbitmq"),
-                            consumerDestinationName(),
-                            anonymousDestination(),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            bodySize(),
-                            satisfies(
-                                MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
-                                val -> val.isInstanceOf(String.class)),
-                            deliveryTag()),
-                // spring-integration will detect that spring-rabbit has already created a consumer
-                // span and back off
+                // the rabbitmq CONSUMER span is suppressed for Spring listener containers (see
+                // RabbitMqConsumerProcessTracing), so spring-rabbit creates the single process span
                 span ->
                     span.satisfies(
                             spanData ->
@@ -159,6 +121,8 @@ class SpringIntegrationAndRabbitTest {
                         .hasParent(trace.getSpan(6))
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
+                            serverAddress(),
+                            serverPort(),
                             equalTo(MESSAGING_SYSTEM, "rabbitmq"),
                             consumerDestinationName(),
                             anonymousDestination(),
@@ -177,7 +141,7 @@ class SpringIntegrationAndRabbitTest {
                                 emitStableMessagingSemconv() ? "testTopic" : null),
                             deliveryTag()),
                 span ->
-                    span.hasName("consumer").hasParent(trace.getSpan(8)).hasTotalAttributeCount(0)),
+                    span.hasName("consumer").hasParent(trace.getSpan(7)).hasTotalAttributeCount(0)),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
