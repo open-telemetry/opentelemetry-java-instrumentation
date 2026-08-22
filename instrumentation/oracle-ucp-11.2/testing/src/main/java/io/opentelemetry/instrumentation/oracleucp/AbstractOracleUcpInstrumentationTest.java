@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import java.sql.Connection;
 import java.time.Duration;
+import java.util.Locale;
 import oracle.ucp.admin.UniversalConnectionPoolManagerImpl;
 import oracle.ucp.jdbc.PoolDataSource;
 import oracle.ucp.jdbc.PoolDataSourceFactory;
@@ -40,6 +41,9 @@ public abstract class AbstractOracleUcpInstrumentationTest {
   protected abstract void configure(PoolDataSource connectionPool) throws Exception;
 
   protected abstract void shutdown(PoolDataSource connectionPool) throws Exception;
+
+  protected abstract String expectedPoolName(
+      PoolDataSource connectionPool, boolean explicitPoolName);
 
   @BeforeAll
   static void setUp() {
@@ -73,7 +77,7 @@ public abstract class AbstractOracleUcpInstrumentationTest {
 
     // then
     DbConnectionPoolMetricsAssertions.create(
-            testing(), INSTRUMENTATION_NAME, connectionPool.getConnectionPoolName())
+            testing(), INSTRUMENTATION_NAME, expectedPoolName(connectionPool, setExplicitPoolName))
         .disableMinIdleConnections()
         .disableMaxIdleConnections()
         .disableConnectionTimeouts()
@@ -95,9 +99,20 @@ public abstract class AbstractOracleUcpInstrumentationTest {
     UniversalConnectionPoolManagerImpl.getUniversalConnectionPoolManager()
         .destroyConnectionPool(connectionPool.getConnectionPoolName());
 
+    assertNoConnectionPoolMetrics();
+  }
+
+  protected static String expectedDefaultMetricPoolName() {
+    return oracle.getHost().toLowerCase(Locale.ROOT)
+        + ":"
+        + oracle.getOraclePort()
+        + "/"
+        + oracle.getDatabaseName().toLowerCase(Locale.ROOT);
+  }
+
+  protected void assertNoConnectionPoolMetrics() {
     testing().clearData();
 
-    // then
     await()
         .untilAsserted(
             () ->
