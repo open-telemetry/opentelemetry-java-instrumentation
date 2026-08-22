@@ -126,6 +126,14 @@ public abstract class AbstractCouchbaseTest {
     return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
   }
 
+  protected String serverAddress() {
+    return includesNetworkAttributes() ? "127.0.0.1" : null;
+  }
+
+  protected LongAssertConsumer serverPort() {
+    return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
+  }
+
   protected StringAssertConsumer experimentalAttribute() {
     return includesExperimentalAttributes() ? val -> val.isNotNull() : val -> val.isNull();
   }
