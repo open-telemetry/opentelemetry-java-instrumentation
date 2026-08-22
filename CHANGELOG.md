@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### 🛠️ Bug fixes
+
+- Restore stable semantic convention APIs to the compile classpaths of the Spring Boot
+  autoconfigure and starter artifacts.
+  ([#19754](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19754))
+
 ## Version 2.31.0 (2026-08-20)
 
 This release targets the OpenTelemetry SDK 1.65.0.
