@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
+import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.concurrent.ExecutionException;
@@ -18,14 +19,14 @@ final class DefaultErrorCauseExtractor implements ErrorCauseExtractor {
 
   @Override
   public Throwable extract(Throwable error) {
-    if (error.getCause() != null
-        && (error instanceof ExecutionException
-            || isInstanceOfCompletionException(error)
-            || error instanceof InvocationTargetException
-            || error instanceof UndeclaredThrowableException)) {
-      return extract(error.getCause());
-    }
-    return error;
+    return CauseUnwrapper.unwrapCause(error, DefaultErrorCauseExtractor::isUnwrappableWrapper);
+  }
+
+  private static boolean isUnwrappableWrapper(Throwable error) {
+    return error instanceof ExecutionException
+        || isInstanceOfCompletionException(error)
+        || error instanceof InvocationTargetException
+        || error instanceof UndeclaredThrowableException;
   }
 
   private static boolean isInstanceOfCompletionException(Throwable error) {

@@ -13,11 +13,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.lang.reflect.InvocationTargetException;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.wicket.WicketRuntimeException;
 
 class DefaultExceptionMapperInstrumentation implements TypeInstrumentation {
 
@@ -41,12 +39,9 @@ class DefaultExceptionMapperInstrumentation implements TypeInstrumentation {
       Span serverSpan = LocalRootSpan.fromContextOrNull(Java8BytecodeBridge.currentContext());
       if (serverSpan != null) {
         // unwrap exception
-        Throwable throwable = exception;
-        while (throwable.getCause() != null
-            && (throwable instanceof WicketRuntimeException
-                || throwable instanceof InvocationTargetException)) {
-          throwable = throwable.getCause();
-        }
+        // this must be delegated to a helper class: advice is inlined into the instrumented class,
+        // where the synthetic lambda methods of this class would not be accessible
+        Throwable throwable = WicketErrorUnwrapper.unwrap(exception);
         // as we don't create a span for wicket we record exception on server span
         serverSpan.recordException(throwable);
       }
