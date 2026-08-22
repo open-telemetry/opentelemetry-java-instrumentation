@@ -88,11 +88,6 @@ public abstract class CouchbaseRequestInfo {
 
   public abstract boolean isMethodCall();
 
-  private CouchbaseRequestInfo copy() {
-    return new AutoValue_CouchbaseRequestInfo(
-        getBucket(), getSqlQuery(), getSqlQueryWithSummary(), getOperation(), isMethodCall());
-  }
-
   public Supplier<CouchbaseRequestInfo> copySupplier() {
     return new Supplier<CouchbaseRequestInfo>() {
       @Override
@@ -100,6 +95,11 @@ public abstract class CouchbaseRequestInfo {
         return copy();
       }
     };
+  }
+
+  private CouchbaseRequestInfo copy() {
+    return new AutoValue_CouchbaseRequestInfo(
+        getBucket(), getSqlQuery(), getSqlQueryWithSummary(), getOperation(), isMethodCall());
   }
 
   @Nullable
