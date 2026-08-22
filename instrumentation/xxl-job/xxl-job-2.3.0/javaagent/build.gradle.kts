@@ -51,13 +51,16 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}Experimental") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.instrumentation.xxl-job.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.xxl-job.experimental-span-attributes=true")
-  }
+        jvmArgs("-Dotel.instrumentation.xxl-job.experimental-span-attributes=true")
+        systemProperty("metadataConfig", "otel.instrumentation.xxl-job.experimental-span-attributes=true")
+      }
+    }
 
   named("compileXxlJob33TestJava", JavaCompile::class).configure {
     options.release.set(17)
@@ -67,10 +70,12 @@ tasks {
     named("xxlJob33Test", Test::class).configure {
       enabled = false
     }
+    named("xxlJob33TestExperimental", Test::class).configure {
+      enabled = false
+    }
   }
 
   check {
-    dependsOn(testing.suites)
-    dependsOn(testExperimental)
+    dependsOn(testing.suites, experimentalSuites)
   }
 }

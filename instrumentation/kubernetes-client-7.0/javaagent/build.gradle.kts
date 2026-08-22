@@ -60,13 +60,16 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}Experimental") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.instrumentation.kubernetes-client.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.kubernetes-client.experimental-span-attributes=true")
-  }
+        jvmArgs("-Dotel.instrumentation.kubernetes-client.experimental-span-attributes=true")
+        systemProperty("metadataConfig", "otel.instrumentation.kubernetes-client.experimental-span-attributes=true")
+      }
+    }
 
   val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
     .map { suite ->
@@ -80,7 +83,14 @@ tasks {
       }
     }
 
+  // client-java-api 22.0.0+ requires Java 11+
+  if (testJavaVersion.isJava8) {
+    named<Test>("version22TestExperimental") {
+      enabled = false
+    }
+  }
+
   check {
-    dependsOn(testExperimental, stableSemconvSuites)
+    dependsOn(experimentalSuites, stableSemconvSuites)
   }
 }
