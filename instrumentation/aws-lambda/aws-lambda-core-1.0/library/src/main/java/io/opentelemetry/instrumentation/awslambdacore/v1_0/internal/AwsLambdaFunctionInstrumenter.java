@@ -11,6 +11,8 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -22,6 +24,8 @@ import javax.annotation.Nullable;
  */
 public class AwsLambdaFunctionInstrumenter {
 
+  private static final String AWS_TRACE_HEADER_PROP = "com.amazonaws.xray.traceHeader";
+  private static final String GET_XRAY_TRACE_ID_METHOD = "getXrayTraceId";
   private static final MapGetter mapGetter = new MapGetter();
 
   private final OpenTelemetry openTelemetry;
@@ -53,11 +57,19 @@ public class AwsLambdaFunctionInstrumenter {
     ContextPropagationDebug.debugContextLeakIfEnabled();
     // Look in both the http headers and the custom client context
     Map<String, String> headers = input.getHeaders();
-    if (input.getAwsContext() != null && input.getAwsContext().getClientContext() != null) {
-      Map<String, String> customContext = input.getAwsContext().getClientContext().getCustom();
+    com.amazonaws.services.lambda.runtime.Context awsContext = input.getAwsContext();
+    Map<String, String> customContext = null;
+    if (awsContext != null && awsContext.getClientContext() != null) {
+      customContext = awsContext.getClientContext().getCustom();
+    }
+    String xrayTraceId = getXrayTraceId(awsContext);
+    if (customContext != null || !isEmptyOrNull(xrayTraceId)) {
+      headers = new HashMap<>(headers);
       if (customContext != null) {
-        headers = new HashMap<>(headers);
         headers.putAll(customContext);
+      }
+      if (!isEmptyOrNull(xrayTraceId)) {
+        headers.put(AWS_TRACE_HEADER_PROP, xrayTraceId);
       }
     }
 
@@ -65,6 +77,28 @@ public class AwsLambdaFunctionInstrumenter {
         .getPropagators()
         .getTextMapPropagator()
         .extract(Context.root(), headers, mapGetter);
+  }
+
+  @Nullable
+  private static String getXrayTraceId(
+      @Nullable com.amazonaws.services.lambda.runtime.Context awsContext) {
+    if (awsContext == null) {
+      return null;
+    }
+    try {
+      Method getXrayTraceId = awsContext.getClass().getMethod(GET_XRAY_TRACE_ID_METHOD);
+      getXrayTraceId.setAccessible(true);
+      Object traceId = getXrayTraceId.invoke(awsContext);
+      return traceId instanceof String ? (String) traceId : null;
+    } catch (NoSuchMethodException ignored) {
+      return null;
+    } catch (IllegalAccessException | InvocationTargetException | SecurityException ignored) {
+      return null;
+    }
+  }
+
+  private static boolean isEmptyOrNull(@Nullable String value) {
+    return value == null || value.isEmpty();
   }
 
   private static class MapGetter implements TextMapGetter<Map<String, String>> {
@@ -80,7 +114,8 @@ public class AwsLambdaFunctionInstrumenter {
       if (map == null) {
         return null;
       }
-      return map.get(s.toLowerCase(Locale.ROOT));
+      String value = map.get(s);
+      return value != null ? value : map.get(s.toLowerCase(Locale.ROOT));
     }
   }
 }
