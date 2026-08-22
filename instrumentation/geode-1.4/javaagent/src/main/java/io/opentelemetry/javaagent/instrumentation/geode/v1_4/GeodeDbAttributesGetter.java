@@ -56,17 +56,8 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   @Override
   @Nullable
   public String getDbQueryText(GeodeRequest request) {
-    // Geode query language (OQL) is very different from SQL
-    // but SQL sanitization is still useful to mask literals
-    if (emitStableDatabaseSemconv()) {
-      // even though not using the summary, this will use the same
-      // sanitization logic that will be the default under 3.0
-      return analyzeWithSummary(request).getQueryText();
-    } else {
-      // "String literals are delimited by single quotation marks."
-      // https://geode.apache.org/docs/guide/114/developing/query_additional/literals.html
-      return analyzer.analyze(request.getQueryText(), DOUBLE_QUOTES_ARE_IDENTIFIERS).getQueryText();
-    }
+    SqlQuery sqlQuery = request.getSqlQuery();
+    return sqlQuery != null ? sqlQuery.getQueryText() : null;
   }
 
   @Override
@@ -80,10 +71,11 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   @Override
   @Nullable
   public String getDbOperationName(GeodeRequest request) {
-    if (request.getQueryText() == null) {
+    SqlQuery sqlQuery = request.getSqlQuery();
+    if (sqlQuery == null) {
       return request.getOperationName();
     }
-    String operationName = analyzeWithSummary(request).getOperationName();
+    String operationName = sqlQuery.getOperationName();
     return operationName != null ? operationName : FALLBACK_OPERATION_NAME;
   }
 
@@ -94,11 +86,13 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
     return request.getOperationName();
   }
 
-  // the analyzer caches its results for queries below its large-query threshold, so callers can
-  // analyze the same query more than once
-  private static SqlQuery analyzeWithSummary(GeodeRequest request) {
+  static SqlQuery analyzeQuery(String queryText) {
     // "String literals are delimited by single quotation marks."
     // https://geode.apache.org/docs/guide/114/developing/query_additional/literals.html
-    return analyzer.analyzeWithSummary(request.getQueryText(), DOUBLE_QUOTES_ARE_IDENTIFIERS);
+    if (emitStableDatabaseSemconv()) {
+      // Use the sanitization logic that will be the default under 3.0.
+      return analyzer.analyzeWithSummary(queryText, DOUBLE_QUOTES_ARE_IDENTIFIERS);
+    }
+    return analyzer.analyze(queryText, DOUBLE_QUOTES_ARE_IDENTIFIERS);
   }
 }
