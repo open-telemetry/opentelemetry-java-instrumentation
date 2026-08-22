@@ -61,6 +61,7 @@ tasks {
 
     val smokeTestSuite = project.findProperty("smokeTestSuite") as String?
     val skipOpenJ9SmokeTests = (findProperty("skipOpenJ9SmokeTests") as String?) == "true"
+    systemProperty("reducedAppServerTests", findProperty("reducedAppServerTests") == "true")
     if (smokeTestSuite != null) {
       val suite = suites[smokeTestSuite]
       if (suite != null) {

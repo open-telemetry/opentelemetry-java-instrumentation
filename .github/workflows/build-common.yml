@@ -15,6 +15,9 @@ on:
       skip-windows-smoke-tests:
         type: boolean
         required: false
+      reduced-appserver-tests:
+        type: boolean
+        required: false
     secrets:
       DEVELOCITY_ACCESS_KEY:
         required: false
@@ -462,11 +465,13 @@ jobs:
       - name: Test
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+        # Reduced app-server mode owns the OpenJ9 policy; disabling it here would make the TomEE suite run no tests.
         run: >
           ./gradlew
           :smoke-tests:test
           -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
-          ${{ inputs.skip-openj9-tests && matrix.smoke-test-suite != 'websphere' && '-PskipOpenJ9SmokeTests=true' || '' }}
+          ${{ inputs.reduced-appserver-tests && matrix.os != 'windows-latest' && '-PreducedAppServerTests=true' || '' }}
+          ${{ inputs.skip-openj9-tests && !inputs.reduced-appserver-tests && matrix.smoke-test-suite != 'websphere' && '-PskipOpenJ9SmokeTests=true' || '' }}
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Build scan
