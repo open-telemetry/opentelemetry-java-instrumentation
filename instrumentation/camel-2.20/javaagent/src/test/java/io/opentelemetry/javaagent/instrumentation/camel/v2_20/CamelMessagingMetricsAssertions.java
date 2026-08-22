@@ -95,6 +95,9 @@ public class CamelMessagingMetricsAssertions {
         processErrorType,
         processDestinationPartitionId);
     assertNoDeprecatedMetrics(testing);
+    if (system.equals("jms") || system.equals("kafka")) {
+      assertNoDuplicateMessagingMetrics(testing, system, destination);
+    }
   }
 
   public static void assertSendMetrics(
@@ -278,12 +281,37 @@ public class CamelMessagingMetricsAssertions {
                 }));
   }
 
-  static void assertNoDuplicateMessagingMetrics(
-      InstrumentationExtension testing, String... metricNames) {
-    Set<String> metricNameSet = new HashSet<>(asList(metricNames));
+  private static void assertNoDuplicateMessagingMetrics(
+      InstrumentationExtension testing, String system, String destination) {
+    assertNoDuplicateMessagingMetric(
+        testing, "messaging.client.sent.messages", "send", system, destination);
+    assertNoDuplicateMessagingMetric(
+        testing, "messaging.client.operation.duration", "send", system, destination);
+    assertNoDuplicateMessagingMetric(
+        testing, "messaging.client.consumed.messages", "process", system, destination);
+    assertNoDuplicateMessagingMetric(
+        testing, "messaging.process.duration", "process", system, destination);
+  }
+
+  private static void assertNoDuplicateMessagingMetric(
+      InstrumentationExtension testing,
+      String metricName,
+      String operationName,
+      String system,
+      String destination) {
     Set<MetricData> matchingMetrics =
         testing.metrics().stream()
-            .filter(metric -> metricNameSet.contains(metric.getName()))
+            .filter(metric -> metricName.equals(metric.getName()))
+            .filter(
+                metric ->
+                    metric.getData().getPoints().stream()
+                        .anyMatch(
+                            point ->
+                                operationName.equals(
+                                        point.getAttributes().get(MESSAGING_OPERATION_NAME))
+                                    && system.equals(point.getAttributes().get(MESSAGING_SYSTEM))
+                                    && destination.equals(
+                                        point.getAttributes().get(MESSAGING_DESTINATION_NAME))))
             .collect(toSet());
     assertThat(matchingMetrics)
         .noneMatch(
