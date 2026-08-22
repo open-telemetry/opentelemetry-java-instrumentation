@@ -5,10 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0;
 
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticTransportRequest;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportAttributesGetter;
 import javax.annotation.Nullable;
 import org.elasticsearch.action.ActionResponse;
+import org.elasticsearch.common.transport.TransportAddress;
 
 final class Elasticsearch5TransportAttributesGetter extends ElasticsearchTransportAttributesGetter {
 
@@ -30,5 +36,28 @@ final class Elasticsearch5TransportAttributesGetter extends ElasticsearchTranspo
       return response.remoteAddress().getPort();
     }
     return null;
+  }
+
+  @Override
+  public void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      ElasticTransportRequest request,
+      @Nullable ActionResponse response,
+      @Nullable Throwable error) {
+    if (response == null) {
+      return;
+    }
+
+    TransportAddress remoteAddress = response.remoteAddress();
+    if (remoteAddress == null) {
+      return;
+    }
+
+    attributes.put(SERVER_ADDRESS, remoteAddress.getAddress());
+    int serverPort = remoteAddress.getPort();
+    if (serverPort > 0) {
+      attributes.put(SERVER_PORT, serverPort);
+    }
   }
 }

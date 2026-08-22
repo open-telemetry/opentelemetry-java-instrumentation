@@ -34,7 +34,7 @@ class OpenSearchRest3Test extends AbstractOpenSearchRestTest {
   }
 
   @Override
-  protected RestClient buildRestClient() throws Exception {
+  protected RestClient buildRestClient(String hostAddress) throws Exception {
     BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
     credentialsProvider.setCredentials(
         new AuthScope(null, -1),
@@ -54,7 +54,7 @@ class OpenSearchRest3Test extends AbstractOpenSearchRestTest {
     PoolingAsyncClientConnectionManager connectionManager =
         PoolingAsyncClientConnectionManagerBuilder.create().setTlsStrategy(tlsStrategy).build();
 
-    HttpHost httpHost = HttpHost.create(opensearch.getHttpHostAddress());
+    HttpHost httpHost = HttpHost.create(hostAddress);
     return RestClient.builder(httpHost)
         .setHttpClientConfigCallback(
             httpClientBuilder ->
