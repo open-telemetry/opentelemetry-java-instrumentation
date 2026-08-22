@@ -83,6 +83,12 @@ class KafkaCamelTest {
 
     assertSendAndProcessMetrics(
         testing, "kafka", TOPIC, IllegalStateException.class.getName(), "0");
+    CamelMessagingMetricsAssertions.assertNoDuplicateMessagingMetrics(
+        testing,
+        "messaging.client.sent.messages",
+        "messaging.client.operation.duration",
+        "messaging.client.consumed.messages",
+        "messaging.process.duration");
     testing.waitForTraces(emitStableMessagingSemconv() ? 2 : 1);
   }
 }
