@@ -67,4 +67,18 @@ public abstract class SpymemcachedRequest {
     chars[0] = Character.toLowerCase(chars[0]);
     return new String(chars);
   }
+
+  /** Returns the memcached command that corresponds to the client method. */
+  public String getStableOperationName() {
+    String operationName = getOperationName();
+    switch (operationName) {
+      case "getBulk":
+        // a multi-key get is sent as a single get carrying all of the keys
+        return "get";
+      case "getAndTouch":
+        return "gat";
+      default:
+        return operationName;
+    }
+  }
 }

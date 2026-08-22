@@ -1,6 +1,8 @@
 description: >
   This instrumentation enables database client spans and database client metrics for Memcached
-  operations using the Spymemcached client.
+  operations using the Spymemcached client. Under stable database semantic conventions,
+  `db.operation.name` is the memcached command the client sends, so `getBulk` is reported as `get`
+  and `getAndTouch` as `gat`.
 display_name: Spymemcached
 semantic_conventions:
   - DATABASE_CLIENT_SPANS
