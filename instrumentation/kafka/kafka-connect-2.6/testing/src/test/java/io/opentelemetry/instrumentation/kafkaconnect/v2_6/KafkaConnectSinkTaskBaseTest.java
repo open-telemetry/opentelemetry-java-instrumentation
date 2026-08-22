@@ -7,6 +7,9 @@ package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.groupTraces;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -188,6 +191,10 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
                   trace ->
                       trace.stream()
                           .anyMatch(span -> span.getName().contains("kafka-connect-status")));
+              // Kafka Connect polls its own REST API on a schedule that is not deterministic
+              // relative to the test, so these traces are not relevant to the assertions here.
+              traces.removeIf(
+                  trace -> trace.size() == 1 && trace.get(0).getName().equals("GET /connectors"));
               TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(asList(assertions));
             });
   }
@@ -470,13 +477,16 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
             // Disable test exporter and force OTLP exporter
             .withEnv("OTEL_TESTING_EXPORTER_ENABLED", "false")
             .withEnv("OTEL_TRACES_EXPORTER", "otlp")
-            .withEnv("OTEL_METRICS_EXPORTER", "none")
+            .withEnv("OTEL_METRICS_EXPORTER", "otlp")
             .withEnv("OTEL_LOGS_EXPORTER", "none")
             .withEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://" + BACKEND_ALIAS + ":" + BACKEND_PORT)
             .withEnv("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
             .withEnv("OTEL_BSP_MAX_EXPORT_BATCH_SIZE", "1")
             .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10ms")
-            .withEnv("OTEL_METRIC_EXPORT_INTERVAL", "1000")
+            // the fake backend accumulates metric payloads instead of replacing them, so a longer
+            // interval keeps each test run's assertions looking at a small, predictable number of
+            // exports
+            .withEnv("OTEL_METRIC_EXPORT_INTERVAL", "10000")
             .withEnv(
                 "OTEL_SEMCONV_STABILITY_OPT_IN",
                 emitStableMessagingSemconv()
@@ -516,6 +526,8 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
     StringBuilder options =
         new StringBuilder("-javaagent:/opentelemetry-javaagent.jar -Dotel.javaagent.debug=true");
     appendSystemProperty(options, "otel.semconv-stability.preview");
+    appendSystemProperty(
+        options, "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
     return options.toString();
   }
 
@@ -523,6 +535,37 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
     String value = System.getProperty(propertyName);
     if (value != null) {
       options.append(" -D").append(propertyName).append('=').append(value);
+    }
+  }
+
+  // whether the kafka-clients receive operation is enabled for the consumer that Kafka Connect
+  // uses internally: when it is, that receive operation owns the consumed-messages count for
+  // each delivery, and the Connect process operation must not count it again.
+  protected static boolean isReceiveTelemetryEnabled() {
+    return Boolean.getBoolean(
+        "otel.instrumentation.messaging.experimental.receive-telemetry.enabled");
+  }
+
+  // asserts the messaging metrics for a single-message delivery through the given destination,
+  // covering both the default configuration, where the Connect process operation is the only
+  // operation that observes the delivery, and the receive-telemetry-enabled configuration, where
+  // the kafka-clients receive operation on the sink connector's own consumer owns the count.
+  protected void assertConnectMessagingMetrics(String destination) {
+    if (isReceiveTelemetryEnabled()) {
+      assertProcessMetrics(
+          testing, "io.opentelemetry.kafka-connect-2.6", destination, null, "0", 1, null);
+      assertReceiveMetrics(
+          testing,
+          "io.opentelemetry.kafka-clients-0.11",
+          destination,
+          "connect-" + getConnectorName(),
+          "0",
+          1,
+          1,
+          null);
+    } else {
+      assertProcessMetricsWithConsumedMessages(
+          testing, "io.opentelemetry.kafka-connect-2.6", destination, null, "0", 1, 1, null);
     }
   }
 
