@@ -5,15 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class CouchbaseAttributesGetter
-    implements DbClientAttributesGetter<CouchbaseRequestInfo, Void> {
+    implements DbClientAttributesGetter<CouchbaseRequestInfo, Void>,
+        AttributesExtractor<CouchbaseRequestInfo, Void> {
 
   @Override
   public String getDbSystemName(CouchbaseRequestInfo couchbaseRequest) {
@@ -62,5 +70,31 @@ final class CouchbaseAttributesGetter
       return (InetSocketAddress) address;
     }
     return null;
+  }
+
+  @Override
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, CouchbaseRequestInfo request) {}
+
+  @Override
+  public void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      CouchbaseRequestInfo request,
+      @Nullable Void unused,
+      @Nullable Throwable error) {
+    SocketAddress peerAddress = request.getPeerAddress();
+    if (!(peerAddress instanceof InetSocketAddress)) {
+      return;
+    }
+
+    InetSocketAddress serverAddress = (InetSocketAddress) peerAddress;
+    InetAddress address = serverAddress.getAddress();
+    attributes.put(
+        SERVER_ADDRESS, address != null ? address.getHostAddress() : serverAddress.getHostString());
+    int serverPort = serverAddress.getPort();
+    if (serverPort > 0) {
+      attributes.put(SERVER_PORT, serverPort);
+    }
   }
 }

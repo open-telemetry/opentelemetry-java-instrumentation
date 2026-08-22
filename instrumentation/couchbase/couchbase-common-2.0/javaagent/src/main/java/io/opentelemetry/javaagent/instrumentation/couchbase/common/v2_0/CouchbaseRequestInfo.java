@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 @AutoValue
@@ -35,6 +36,7 @@ public abstract class CouchbaseRequestInfo {
   @Nullable private String localAddress;
   @Nullable private String operationId;
   @Nullable private SocketAddress peerAddress;
+  private boolean peerAddressAmbiguous;
 
   public static CouchbaseRequestInfo create(
       @Nullable String bucket, Class<?> declaringClass, String methodName) {
@@ -87,6 +89,20 @@ public abstract class CouchbaseRequestInfo {
 
   public abstract boolean isMethodCall();
 
+  public CouchbaseRequestInfo copy() {
+    return new AutoValue_CouchbaseRequestInfo(
+        getBucket(), getSqlQuery(), getSqlQueryWithSummary(), getOperation(), isMethodCall());
+  }
+
+  public Supplier<CouchbaseRequestInfo> copySupplier() {
+    return new Supplier<CouchbaseRequestInfo>() {
+      @Override
+      public CouchbaseRequestInfo get() {
+        return copy();
+      }
+    };
+  }
+
   @Nullable
   public String getLocalAddress() {
     return localAddress;
@@ -106,11 +122,19 @@ public abstract class CouchbaseRequestInfo {
   }
 
   @Nullable
-  public SocketAddress getPeerAddress() {
-    return peerAddress;
+  public synchronized SocketAddress getPeerAddress() {
+    return peerAddressAmbiguous ? null : peerAddress;
   }
 
-  public void setPeerAddress(@Nullable SocketAddress peerAddress) {
-    this.peerAddress = peerAddress;
+  public synchronized void setPeerAddress(@Nullable SocketAddress peerAddress) {
+    if (peerAddress == null || peerAddressAmbiguous) {
+      return;
+    }
+    if (this.peerAddress == null) {
+      this.peerAddress = peerAddress;
+    } else if (!this.peerAddress.equals(peerAddress)) {
+      this.peerAddress = null;
+      peerAddressAmbiguous = true;
+    }
   }
 }
