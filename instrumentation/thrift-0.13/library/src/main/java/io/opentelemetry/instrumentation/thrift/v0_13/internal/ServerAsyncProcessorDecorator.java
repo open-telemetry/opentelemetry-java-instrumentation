@@ -41,6 +41,7 @@ public final class ServerAsyncProcessorDecorator implements TAsyncProcessor, TPr
     ServerOutProtocolDecorator serverOutProtocolDecorator =
         (ServerOutProtocolDecorator) fb.getOutputProtocol();
 
+    serverOutProtocolDecorator.resetExceptionState();
     serverInProtocolDecorator.setServiceName(serviceName);
     ServerCallContext serverCallContext = ServerCallContext.start(transport);
     Throwable error = null;
