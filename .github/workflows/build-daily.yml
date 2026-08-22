@@ -25,6 +25,8 @@ jobs:
 
   lint:
     uses: ./.github/workflows/reusable-lint-check.yml
+    with:
+      full: true
 
   publish-snapshots:
     environment: protected

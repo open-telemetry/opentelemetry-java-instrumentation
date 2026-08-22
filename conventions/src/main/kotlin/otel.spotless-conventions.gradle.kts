@@ -1,82 +1,32 @@
 import com.diffplug.spotless.LineEnding
-import io.opentelemetry.instrumentation.gradle.StaticImportFormatter
 
 plugins {
   id("com.diffplug.spotless")
+}
+
+val spotlessApplyRequested = gradle.startParameter.taskNames.any { requestedTask ->
+  val taskName = requestedTask.substringAfterLast(':')
+  taskName.startsWith("spotless") && taskName.endsWith("Apply")
+}
+
+if (project == rootProject && spotlessApplyRequested) {
+  logger.lifecycle(
+    "Spotless formatting requested. Use `mise run lint:fix` for Java, Kotlin, Markdown, and other " +
+      "Flint-managed files; Spotless remains mainly for Scala, Groovy, and miscellaneous files."
+  )
 }
 
 spotless {
   // Match .gitattributes without probing source files during configuration.
   lineEndings = LineEnding.UNIX
 
-  java {
-    custom("staticImports", StaticImportFormatter())
-    googleJavaFormat()
-    licenseHeaderFile(
-      rootProject.file("buildscripts/spotless.license.java"),
-      "(package|import|public|// Includes work from:)"
-    )
-    toggleOffOn()
-    target("src/**/*.java")
-  }
+  // Kotlin has broad usage and ktlint support in Flint. Keep the much smaller Scala source set
+  // in Spotless rather than adding a separate Flint integration for it.
   plugins.withId("scala") {
     scala {
       scalafmt()
-      licenseHeaderFile(
-        rootProject.file("buildscripts/spotless.license.java"),
-        "(package|import|public)"
-      )
       target("src/**/*.scala")
     }
-  }
-  plugins.withId("org.jetbrains.kotlin.jvm") {
-    kotlin {
-      // not sure why it's not using the indent settings from .editorconfig
-      ktlint().editorConfigOverride(
-        mapOf(
-          "indent_size" to "2",
-          "continuation_indent_size" to "2",
-          "max_line_length" to "160",
-          "ktlint_standard_no-wildcard-imports" to "disabled",
-          "ktlint_standard_package-name" to "disabled",
-          // ktlint does not break up long lines, it just fails on them
-          "ktlint_standard_max-line-length" to "disabled",
-          // ktlint makes it *very* hard to locate where this actually happened
-          "ktlint_standard_trailing-comma-on-call-site" to "disabled",
-          // depends on ktlint_standard_wrapping
-          "ktlint_standard_trailing-comma-on-declaration-site" to "disabled",
-          // also very hard to find out where this happens
-          "ktlint_standard_wrapping" to "disabled"
-        )
-      )
-      licenseHeaderFile(
-        rootProject.file("buildscripts/spotless.license.java"),
-        "(package|import|class|// Includes work from:)"
-      )
-    }
-  }
-  kotlinGradle {
-    // not sure why it's not using the indent settings from .editorconfig
-    ktlint().editorConfigOverride(
-      mapOf(
-        "indent_size" to "2",
-        "continuation_indent_size" to "2",
-        "max_line_length" to "160",
-        "ktlint_standard_no-wildcard-imports" to "disabled",
-        // ktlint does not break up long lines, it just fails on them
-        "ktlint_standard_max-line-length" to "disabled",
-        // ktlint makes it *very* hard to locate where this actually happened
-        "ktlint_standard_trailing-comma-on-call-site" to "disabled",
-        // depends on ktlint_standard_wrapping
-        "ktlint_standard_trailing-comma-on-declaration-site" to "disabled",
-        // also very hard to find out where this happens
-        "ktlint_standard_wrapping" to "disabled",
-        // we use variable names like v1_10Deps
-        "ktlint_standard_property-naming" to "disabled",
-        // prevent moving comment to next line in latestDepTestLibrary("xxx") { // see xxx module
-        "ktlint_standard_function-literal" to "disabled"
-      )
-    )
   }
 }
 

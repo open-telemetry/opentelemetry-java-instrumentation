@@ -26,4 +26,4 @@ for file in $(find instrumentation instrumentation-api -name '*Test.java'); do
   done
 done
 
-./gradlew spotlessApply
+mise run lint:fix

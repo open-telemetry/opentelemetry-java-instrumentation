@@ -447,13 +447,15 @@ Execute these steps strictly in order — do not reorder:
    any re-runs after fixes or reverts, has fully completed and you have observed the final
    exit status for each run.
 
-3. **Last, after all validation is done**, run `./gradlew spotlessApply` to fix formatting
-   across all modified files.
-   `spotlessApply` must be the final build command — never run it before tests or muzzle.
-   Before running it, confirm that no earlier Gradle validation command is still running.
+3. **Last, after all validation is done**, run `./gradlew spotlessApply` for Scala and
+   miscellaneous Spotless-managed files, then run `mise run lint:fix` for Java, Kotlin,
+   Markdown, and the other Flint-managed files.
+   These formatting commands must be the final commands — never run them before tests or
+   muzzle. Before running them, confirm that no earlier Gradle validation command is still
+   running.
 
-   Do not move on to Phase 5 until `spotlessApply` has fully completed and you have
-   observed its final exit status.
+   Do not move on to Phase 5 until both formatting commands have fully completed and you
+   have observed the final exit status for each.
 
 ### Phase 5: Finalize and Report
 

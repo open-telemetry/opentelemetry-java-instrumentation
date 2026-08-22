@@ -9,24 +9,22 @@ This project follows the
 
 One of the CI checks will fail if source code is not formatted according to Google Java Style.
 
-Run the following command to reformat all files:
-
-```bash
-./gradlew spotlessApply
-```
-
-In addition to Google Java Style formatting, spotless applies
-[custom static importing rules](../../conventions/src/main/kotlin/io/opentelemetry/instrumentation/gradle/StaticImportFormatter.kt)
-(e.g. rewriting `Objects.requireNonNull` to a static import).
-
-Markdown files are formatted and linted separately through
-[flint](https://github.com/grafana/flint), run via [mise](https://mise.jdx.dev/):
+Run the following command to format Java and Kotlin files and run the configured linters:
 
 ```bash
 mise run lint:fix
 ```
 
-flint also checks that links in markdown files resolve.
+In addition to Google Java Style formatting, Flint applies the repository's
+configured regular-expression import rules (for example, rewriting
+`Objects.requireNonNull` to a static import).
+
+The same Flint command formats and lints Markdown files, checks links, and verifies
+license headers. The `license-header` check is check-only; it does not insert a missing header.
+Flint runs via [mise](https://mise.jdx.dev/).
+
+Java and Kotlin source files use Flint. Groovy and Scala source files continue to use Spotless;
+run `./gradlew spotlessApply` to format them or `./gradlew spotlessCheck` to check them.
 
 #### Pre-commit hook
 

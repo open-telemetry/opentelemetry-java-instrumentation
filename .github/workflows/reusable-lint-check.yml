@@ -2,6 +2,11 @@ name: Reusable - Lint check
 
 on:
   workflow_call:
+    inputs:
+      full:
+        description: Run lint checks against the full repository
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -28,7 +33,13 @@ jobs:
         run: mise run lint
 
       - name: Lint for pushes and scheduled workflows
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && !inputs.full
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: mise run lint
+
+      - name: Lint full repository
+        if: inputs.full
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: mise run lint:full

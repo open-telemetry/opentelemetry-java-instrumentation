@@ -5,9 +5,8 @@
 
 package io.opentelemetry;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
@@ -29,7 +28,6 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -145,15 +143,15 @@ public class OverheadTests {
     };
     petclinic.execInContainer(startCommand);
 
-    long deadline =
-        System.currentTimeMillis() + SECONDS.toMillis(testConfig.getWarmupSeconds());
+    long deadline = System.currentTimeMillis() + SECONDS.toMillis(testConfig.getWarmupSeconds());
     while (System.currentTimeMillis() < deadline) {
       GenericContainer<?> k6 =
           new GenericContainer<>(DockerImageName.parse("grafana/k6"))
               .withNetwork(NETWORK)
               .withCopyFileToContainer(MountableFile.forHostPath("./k6"), "/app")
               .withCommand("run", "-u", "5", "-i", "200", "/app/basic.js")
-              .withStartupCheckStrategy(new OneShotStartupCheckStrategy().withTimeout(Duration.ofMinutes(5)));
+              .withStartupCheckStrategy(
+                  new OneShotStartupCheckStrategy().withTimeout(Duration.ofMinutes(5)));
       k6.start();
     }
 

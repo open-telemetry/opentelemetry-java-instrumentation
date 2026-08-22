@@ -13,10 +13,12 @@ repositories {
   }
 }
 
+// Spotless keeps this example self-contained when it is copied out of this repository.
+// Copied projects may optionally use Flint instead.
 spotless {
   java {
     googleJavaFormat()
-    licenseHeaderFile(rootProject.file("../../buildscripts/spotless.license.java"), "(package|import|public)")
+    licenseHeaderFile(rootProject.file("spotless.license.java"), "(package|import|public)")
     target("src/**/*.java")
   }
 }

@@ -1,7 +1,9 @@
 [tools]
 
 # Linters
-"aqua:grafana/flint" = "0.22.10"
+"aqua:grafana/flint" = "0.22.11"
+google-java-format = "1.35.0"
+ktlint = "1.8.0"
 lychee = "0.24.2"
 rumdl = "0.2.55"
 
@@ -15,3 +17,7 @@ run = "flint run"
 [tasks."lint:fix"]
 description = "Auto-fix lint issues"
 run = "flint run --fix"
+
+[tasks."lint:full"]
+description = "Run all lints against the full repository"
+run = "flint run --full"
