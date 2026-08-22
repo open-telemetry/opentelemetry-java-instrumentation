@@ -73,7 +73,7 @@ public abstract class SpymemcachedRequest {
     String operationName = getOperationName();
     switch (operationName) {
       case "getBulk":
-        // a multi-key get is sent as a single get carrying all of the keys
+        // a multi-key get is sent as one or more memcached get commands
         return "get";
       case "getAndTouch":
         return "gat";
