@@ -16,6 +16,7 @@ import com.linecorp.armeria.common.HttpResponse;
 import com.linecorp.armeria.common.HttpStatus;
 import com.linecorp.armeria.common.MediaType;
 import com.linecorp.armeria.server.Server;
+import com.linecorp.armeria.server.encoding.DecodingService;
 import com.linecorp.armeria.server.grpc.GrpcService;
 import com.linecorp.armeria.server.healthcheck.HealthCheckService;
 import io.netty.buffer.ByteBufOutputStream;
@@ -74,30 +75,37 @@ public class FakeBackendMain {
   }
 
   public static void main(String[] args) {
-    var traceCollector = new FakeTraceCollectorService();
-    var metricsCollector = new FakeMetricsCollectorService();
-    var logsCollector = new FakeLogsCollectorService();
+    RequestsStorage storage = new RequestsStorage();
+    var grpcTraceService = new FakeTraceCollectorServiceGrpc(storage);
+    var grpcMetricsService = new FakeMetricsCollectorServiceGrpc(storage);
+    var grpcLogsService = new FakeLogsCollectorServiceGrpc(storage);
+    var httpTraceService = new FakeTraceCollectorServiceHttp(storage);
+    var httpMetricsService = new FakeMetricsCollectorServiceHttp(storage);
+    var httpLogsService = new FakeLogsCollectorServiceHttp(storage);
     var server =
         Server.builder()
             .http(8080)
+            .service("/v1/traces", httpTraceService)
+            .service("/v1/metrics", httpMetricsService)
+            .service("/v1/logs", httpLogsService)
             .service(
                 GrpcService.builder()
-                    .addService(traceCollector)
-                    .addService(metricsCollector)
-                    .addService(logsCollector)
+                    .addService(grpcTraceService)
+                    .addService(grpcMetricsService)
+                    .addService(grpcLogsService)
                     .build())
             .service(
                 "/clear",
                 (ctx, req) -> {
-                  traceCollector.clearRequests();
-                  metricsCollector.clearRequests();
-                  logsCollector.clearRequests();
+                  storage.clearTraces();
+                  storage.clearMetrics();
+                  storage.clearLogs();
                   return HttpResponse.of(HttpStatus.OK);
                 })
             .service(
                 "/get-traces",
                 (ctx, req) -> {
-                  var requests = traceCollector.getRequests();
+                  var requests = storage.getTraceRequests();
                   var buf = new ByteBufOutputStream(ctx.alloc().buffer());
                   OBJECT_MAPPER.writeValue((OutputStream) buf, requests);
                   return HttpResponse.of(
@@ -106,7 +114,7 @@ public class FakeBackendMain {
             .service(
                 "/get-metrics",
                 (ctx, req) -> {
-                  var requests = metricsCollector.getRequests();
+                  var requests = storage.getMetricsRequests();
                   var buf = new ByteBufOutputStream(ctx.alloc().buffer());
                   OBJECT_MAPPER.writeValue((OutputStream) buf, requests);
                   return HttpResponse.of(
@@ -115,13 +123,14 @@ public class FakeBackendMain {
             .service(
                 "/get-logs",
                 (ctx, req) -> {
-                  var requests = logsCollector.getRequests();
+                  var requests = storage.getLogsRequests();
                   var buf = new ByteBufOutputStream(ctx.alloc().buffer());
                   OBJECT_MAPPER.writeValue((OutputStream) buf, requests);
                   return HttpResponse.of(
                       HttpStatus.OK, MediaType.JSON, HttpData.wrap(buf.buffer()));
                 })
             .service("/health", HealthCheckService.of())
+            .decorator(DecodingService.newDecorator())
             .build();
 
     server.start().join();
