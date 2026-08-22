@@ -10,6 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -215,11 +216,7 @@ public class Resilience4jCircuitBreakerDecorators {
 
     @Override
     public boolean isDone() {
-      boolean done = delegate.isDone();
-      if (done) {
-        pendingSpan.end(outcome(null), null);
-      }
-      return done;
+      return delegate.isDone();
     }
 
     @Override
@@ -228,6 +225,9 @@ public class Resilience4jCircuitBreakerDecorators {
         T result = delegate.get();
         pendingSpan.end("success", null);
         return result;
+      } catch (CancellationException | InterruptedException e) {
+        pendingSpan.end("cancelled", null);
+        throw e;
       } catch (ExecutionException e) {
         pendingSpan.end("failure", e.getCause() == null ? e : e.getCause());
         throw e;
@@ -241,8 +241,14 @@ public class Resilience4jCircuitBreakerDecorators {
         T result = delegate.get(timeout, unit);
         pendingSpan.end("success", null);
         return result;
+      } catch (CancellationException | InterruptedException e) {
+        pendingSpan.end("cancelled", null);
+        throw e;
       } catch (ExecutionException e) {
         pendingSpan.end("failure", e.getCause() == null ? e : e.getCause());
+        throw e;
+      } catch (TimeoutException e) {
+        pendingSpan.end("failure", e);
         throw e;
       }
     }

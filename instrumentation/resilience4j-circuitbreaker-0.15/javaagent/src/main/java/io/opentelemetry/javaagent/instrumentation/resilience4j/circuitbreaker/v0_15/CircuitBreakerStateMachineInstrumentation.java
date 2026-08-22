@@ -43,11 +43,17 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
         isMethod().and(named("releasePermission")).and(takesArguments(0)),
         getClass().getName() + "$ReleasePermissionAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("onSuccess")).and(takesArguments(1)),
+        isMethod().and(named("onSuccess")).and(takesArguments(1).or(takesArguments(2))),
         getClass().getName() + "$OnSuccessAdvice");
     transformer.applyAdviceToMethod(
         isMethod().and(named("onError")).and(takesArguments(2)),
         getClass().getName() + "$OnErrorAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod().and(named("onError")).and(takesArguments(3)),
+        getClass().getName() + "$NewOnErrorAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod().and(named("onResult")).and(takesArguments(3)),
+        getClass().getName() + "$OnResultAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -83,7 +89,9 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(@Advice.This CircuitBreaker circuitBreaker) {
-      Resilience4jCircuitBreakerSpans.end(circuitBreaker, "cancelled", null);
+      if (!Resilience4jCircuitBreakerSpans.isInCircuitBreakerCallback()) {
+        Resilience4jCircuitBreakerSpans.end(circuitBreaker, "cancelled", null);
+      }
     }
   }
 
@@ -99,10 +107,41 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class OnErrorAdvice {
 
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter() {
+      Resilience4jCircuitBreakerSpans.enterCircuitBreakerCallback();
+    }
+
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.This CircuitBreaker circuitBreaker, @Advice.Argument(1) Throwable throwable) {
+      Resilience4jCircuitBreakerSpans.exitCircuitBreakerCallback();
       Resilience4jCircuitBreakerSpans.end(circuitBreaker, "failure", throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class NewOnErrorAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter() {
+      Resilience4jCircuitBreakerSpans.enterCircuitBreakerCallback();
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    public static void onExit(
+        @Advice.This CircuitBreaker circuitBreaker, @Advice.Argument(2) Throwable throwable) {
+      Resilience4jCircuitBreakerSpans.exitCircuitBreakerCallback();
+      Resilience4jCircuitBreakerSpans.end(circuitBreaker, "failure", throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class OnResultAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    public static void onExit(@Advice.This CircuitBreaker circuitBreaker) {
+      Resilience4jCircuitBreakerSpans.end(circuitBreaker, "success", null);
     }
   }
 }
