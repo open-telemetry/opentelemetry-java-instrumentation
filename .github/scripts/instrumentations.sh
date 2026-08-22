@@ -290,6 +290,8 @@ readonly INSTRUMENTATIONS=(
   "redisson:redisson-3.17:javaagent:testStableSemconv"
   "redisson:redisson-metrics-3.26:javaagent:test"
   "redisson:redisson-metrics-3.26:javaagent:testStableSemconv"
+  "resilience4j-circuitbreaker-0.15:javaagent:test"
+  "resilience4j-circuitbreaker-0.15:javaagent:testExperimental"
   "restlet:restlet-1.1:library:test"
   "restlet:restlet-2.0:library:test"
   "rmi:javaagent:test"
