@@ -60,7 +60,18 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
   }
 
+  val exceptionSignalLogsSuites = testing.suites.withType(JvmTestSuite::class)
+    .matching { it.name == "http2Test" }
+    .map { suite ->
+      register<Test>("${suite.name}ExceptionSignalLogs") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+        jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+        systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+      }
+    }
+
   check {
-    dependsOn(testing.suites, stableSemconvSuites, testExceptionSignalLogs)
+    dependsOn(testing.suites, stableSemconvSuites, testExceptionSignalLogs, exceptionSignalLogsSuites)
   }
 }
