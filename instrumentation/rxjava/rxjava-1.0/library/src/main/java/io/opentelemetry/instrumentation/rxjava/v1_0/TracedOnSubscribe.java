@@ -20,6 +20,13 @@ public final class TracedOnSubscribe<T, REQUEST> implements Observable.OnSubscri
   private final Supplier<REQUEST> requestFactory;
   private final Context parentContext;
 
+  public static <T, REQUEST> TracedOnSubscribe<T, REQUEST> perSubscription(
+      Observable<T> originalObservable,
+      Instrumenter<REQUEST, ?> instrumenter,
+      Supplier<REQUEST> requestFactory) {
+    return new TracedOnSubscribe<>(originalObservable, instrumenter, requestFactory);
+  }
+
   public TracedOnSubscribe(
       Observable<T> originalObservable, Instrumenter<REQUEST, ?> instrumenter, REQUEST request) {
     delegate = OpenTelemetryTracingUtil.extractOnSubscribe(originalObservable);
@@ -36,13 +43,6 @@ public final class TracedOnSubscribe<T, REQUEST> implements Observable.OnSubscri
     this.instrumenter = instrumenter;
     this.requestFactory = requestFactory;
     parentContext = Context.current();
-  }
-
-  public static <T, REQUEST> TracedOnSubscribe<T, REQUEST> perSubscription(
-      Observable<T> originalObservable,
-      Instrumenter<REQUEST, ?> instrumenter,
-      Supplier<REQUEST> requestFactory) {
-    return new TracedOnSubscribe<>(originalObservable, instrumenter, requestFactory);
   }
 
   @Override
