@@ -94,7 +94,8 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
     return request.getOperationName();
   }
 
-  // the analyzer caches its results, so callers can analyze the same query more than once
+  // the analyzer caches its results for queries below its large-query threshold, so callers can
+  // analyze the same query more than once
   private static SqlQuery analyzeWithSummary(GeodeRequest request) {
     // "String literals are delimited by single quotation marks."
     // https://geode.apache.org/docs/guide/114/developing/query_additional/literals.html
