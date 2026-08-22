@@ -165,7 +165,7 @@ public class CamelMessagingMetricsAssertions {
     assertNoDeprecatedMetrics(testing);
   }
 
-  public static void assertNoCamelMessagingMetrics(InstrumentationExtension testing) {
+  private static void assertNoCamelMessagingMetrics(InstrumentationExtension testing) {
     assertThat(camelMetrics(testing))
         .noneMatch(metric -> metric.getName().startsWith("messaging."));
   }
