@@ -69,7 +69,7 @@ public abstract class SpymemcachedRequest {
   }
 
   /** Returns the memcached command that corresponds to the client method. */
-  public String getStableOperationName() {
+  String getStableOperationName() {
     String operationName = getOperationName();
     switch (operationName) {
       case "getBulk":
