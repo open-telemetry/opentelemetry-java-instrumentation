@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20.aws;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -45,6 +46,9 @@ class CamelSpanAssertions {
                         "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=1000")),
                 equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "aws_sqs" : null),
                 equalTo(MESSAGING_DESTINATION_NAME, queueName),
+                equalTo(
+                    stringKey("messaging.operation"),
+                    emitStableMessagingSemconv() && emitOldMessagingSemconv() ? "publish" : null),
                 equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
                 equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null)));
     if (emitStableMessagingSemconv()) {
@@ -71,6 +75,9 @@ class CamelSpanAssertions {
                     "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=" + delay)),
             equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "aws_sqs" : null),
             equalTo(MESSAGING_DESTINATION_NAME, queueName),
+            equalTo(
+                stringKey("messaging.operation"),
+                emitStableMessagingSemconv() && emitOldMessagingSemconv() ? "process" : null),
             equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
             equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
@@ -85,6 +92,9 @@ class CamelSpanAssertions {
                     experimental("aws-sns://" + topicName + "?amazonSNSClient=%23snsClient")),
                 equalTo(MESSAGING_SYSTEM, emitStableMessagingSemconv() ? "aws.sns" : null),
                 equalTo(MESSAGING_DESTINATION_NAME, topicName),
+                equalTo(
+                    stringKey("messaging.operation"),
+                    emitStableMessagingSemconv() && emitOldMessagingSemconv() ? "publish" : null),
                 equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
                 equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null)));
     if (emitStableMessagingSemconv()) {

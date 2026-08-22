@@ -4237,6 +4237,23 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    messaging.client.consumed.messages-c0fc17f6:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.consumed.messages-e8268bc3:
       name: messaging.client.consumed.messages
       description: Number of messages that were delivered to the application.
@@ -4295,6 +4312,24 @@ definitions:
       - name: messaging.destination.name
         type: STRING
       - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.client.operation.duration-d165a8db:
+      name: messaging.client.operation.duration
+      description: Duration of messaging operation initiated by a producer or consumer
+        client.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
         type: STRING
       - name: messaging.operation.name
         type: STRING
@@ -4379,6 +4414,21 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    messaging.client.sent.messages-4c72bd1e:
+      name: messaging.client.sent.messages
+      description: Number of messages producer attempted to send to the broker.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
     messaging.client.sent.messages-a16c8de0:
       name: messaging.client.sent.messages
       description: Number of messages producer attempted to send to the broker.
@@ -4399,6 +4449,23 @@ definitions:
       data_type: LONG_SUM
       unit: '{message}'
       attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system
+        type: STRING
+    messaging.process.duration-0ca61f76:
+      name: messaging.process.duration
+      description: Duration of processing operation.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
       - name: messaging.destination.name
         type: STRING
       - name: messaging.destination.partition.id
@@ -7418,7 +7485,7 @@ libraries:
 - name: camel-2.20
   display_name: Apache Camel
   description: |
-    This instrumentation enables tracing for Apache Camel 2.x applications by generating spans for each route execution. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
+    This instrumentation enables tracing and messaging metrics for Apache Camel 2.x applications. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
   semantic_conventions:
   - HTTP_CLIENT_SPANS
   - HTTP_SERVER_SPANS
@@ -7572,6 +7639,24 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
+  - when: otel.semconv-stability.opt-in=messaging
+    metric_refs:
+    - messaging.client.consumed.messages-c0fc17f6
+    - messaging.client.operation.duration-d165a8db
+    - messaging.client.sent.messages-4c72bd1e
+    - messaging.process.duration-0ca61f76
+  - when: otel.semconv-stability.opt-in=messaging/dup
+    metric_refs:
+    - messaging.client.consumed.messages-c0fc17f6
+    - messaging.client.operation.duration-d165a8db
+    - messaging.client.sent.messages-4c72bd1e
+    - messaging.process.duration-0ca61f76
+  - when: otel.instrumentation.common.v3-preview=true
+    metric_refs:
+    - messaging.client.consumed.messages-c0fc17f6
+    - messaging.client.operation.duration-d165a8db
+    - messaging.client.sent.messages-4c72bd1e
+    - messaging.process.duration-0ca61f76
 - name: cassandra-3.0
   display_name: Cassandra Driver
   description: |

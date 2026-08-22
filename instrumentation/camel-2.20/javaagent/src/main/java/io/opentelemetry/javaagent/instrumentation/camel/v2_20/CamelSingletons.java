@@ -15,7 +15,10 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
@@ -39,7 +42,8 @@ class CamelSingletons {
       createMessagingInstrumenter(SEND, "send", true);
   private static final Instrumenter<CamelRequest, Void> messagingPublishInstrumenter =
       createMessagingInstrumenter(SEND, "publish", true);
-  // AWS SQS sends rely on the nested AWS SDK producer span to inject propagation.
+  // AWS SQS sends rely on the nested AWS SDK producer span to inject propagation, while Camel owns
+  // the messaging operation metrics.
   private static final Instrumenter<CamelRequest, Void> keylessMessagingSendInstrumenter =
       createMessagingInstrumenter(SEND, "send", false);
   private static final Instrumenter<CamelRequest, Void> messagingProcessInstrumenter =
@@ -81,7 +85,12 @@ class CamelSingletons {
               : new KeylessAttributesExtractor(attributesExtractor));
     }
 
+    if (operationType == SEND) {
+      builder.addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+    }
     if (operationType == PROCESS && emitStableMessagingSemconv()) {
+      builder.addOperationMetrics(MessagingProcessMetrics.get());
+      builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
       return MessagingProcessInstrumenterFactory.create(
           builder,
           CamelPropagationUtil.messagingPropagator(),

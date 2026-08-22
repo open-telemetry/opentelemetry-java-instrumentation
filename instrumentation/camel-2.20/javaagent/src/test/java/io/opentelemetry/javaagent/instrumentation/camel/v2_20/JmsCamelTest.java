@@ -6,7 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertSendAndProcessMetrics;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -15,6 +17,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -26,6 +30,7 @@ import io.opentelemetry.sdk.trace.data.LinkData;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import javax.jms.ConnectionFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -48,6 +53,7 @@ class JmsCamelTest {
 
   private static BrokerService broker;
   private static CamelContext camelContext;
+  private static final CountDownLatch errorProcessed = new CountDownLatch(1);
 
   @BeforeAll
   static void setUp() throws Exception {
@@ -68,6 +74,13 @@ class JmsCamelTest {
           public void configure() {
             from("direct:input").to("jms:queue:testQueue");
             from("jms:queue:testQueue").to("mock:result");
+            from("direct:errorInput").to("jms:queue:errorQueue");
+            from("jms:queue:errorQueue")
+                .process(
+                    exchange -> {
+                      errorProcessed.countDown();
+                      throw new IllegalStateException("test");
+                    });
           }
         });
 
@@ -89,6 +102,18 @@ class JmsCamelTest {
     if (!emitStableMessagingSemconv()) {
       testing.waitAndAssertTraces(JmsCamelTest::assertCamelTrace);
     }
+    assertSendAndProcessMetrics(testing, "jms", "testQueue");
+  }
+
+  @Test
+  void failedCamelProcessCountsDeliveredMessage() throws Exception {
+    ProducerTemplate template = camelContext.createProducerTemplate();
+    template.sendBody("direct:errorInput", "test message");
+
+    assertThat(errorProcessed.await(1, MINUTES)).isTrue();
+    testing.waitForTraces(emitStableMessagingSemconv() ? 2 : 1);
+    assertSendAndProcessMetrics(
+        testing, "jms", "errorQueue", IllegalStateException.class.getName());
   }
 
   private static void assertJmsReceiveTrace(TraceAssert trace) {
@@ -101,6 +126,9 @@ class JmsCamelTest {
                 .hasAttributesSatisfyingExactly(
                     equalTo(MESSAGING_SYSTEM, "jms"),
                     equalTo(MESSAGING_DESTINATION_NAME, "testQueue"),
+                    equalTo(
+                        stringKey("messaging.operation"),
+                        emitOldMessagingSemconv() ? "receive" : null),
                     equalTo(MESSAGING_OPERATION_NAME, "receive"),
                     equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                     satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))));
@@ -119,6 +147,11 @@ class JmsCamelTest {
                     equalTo(
                         MESSAGING_DESTINATION_NAME,
                         emitStableMessagingSemconv() ? "testQueue" : "queue:testQueue"),
+                    equalTo(
+                        stringKey("messaging.operation"),
+                        emitStableMessagingSemconv() && emitOldMessagingSemconv()
+                            ? "publish"
+                            : null),
                     equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "send" : null),
                     equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "send" : null),
                     equalTo(stringKey("camel.uri"), experimental("jms://queue:testQueue"))));
@@ -146,6 +179,9 @@ class JmsCamelTest {
                   equalTo(
                       MESSAGING_DESTINATION_NAME,
                       emitStableMessagingSemconv() ? "testQueue" : "queue:testQueue"),
+                  equalTo(
+                      stringKey("messaging.operation"),
+                      emitStableMessagingSemconv() && emitOldMessagingSemconv() ? "process" : null),
                   equalTo(
                       MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
                   equalTo(

@@ -22,6 +22,7 @@ import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingMetricsState;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
@@ -144,9 +145,14 @@ public final class MessagingConsumerMetrics implements OperationListener {
     if (!enabled) {
       return context;
     }
-    return context.with(
-        MESSAGING_CONSUMER_METRICS_STATE,
-        new AutoValue_MessagingConsumerMetrics_State(startAttributes, startNanos));
+    Context contextWithState =
+        context.with(
+            MESSAGING_CONSUMER_METRICS_STATE,
+            new AutoValue_MessagingConsumerMetrics_State(startAttributes, startNanos));
+    return consumedMessagesCounter != null
+            && recordsConsumedMessages(startAttributes.get(MESSAGING_OPERATION_TYPE))
+        ? MessagingMetricsState.markConsumedMessages(contextWithState)
+        : contextWithState;
   }
 
   @Override
@@ -192,14 +198,17 @@ public final class MessagingConsumerMetrics implements OperationListener {
         receiveMessageCount.add(receiveMessagesCount, attributes, context);
       }
     }
-    if (consumedMessagesCounter != null
-        && (consumedMessagesOnly || MessagingOperationType.RECEIVE.value().equals(operationType))) {
+    if (consumedMessagesCounter != null && recordsConsumedMessages(operationType)) {
       long consumedMessagesCount =
           getConsumedMessagesCount(attributes, batchMessageCount, consumedMessagesOnly);
       if (consumedMessagesCount > 0) {
         consumedMessagesCounter.add(consumedMessagesCount, filteredAttributes, context);
       }
     }
+  }
+
+  private boolean recordsConsumedMessages(@Nullable String operationType) {
+    return consumedMessagesOnly || MessagingOperationType.RECEIVE.value().equals(operationType);
   }
 
   private static long getConsumedMessagesCount(
