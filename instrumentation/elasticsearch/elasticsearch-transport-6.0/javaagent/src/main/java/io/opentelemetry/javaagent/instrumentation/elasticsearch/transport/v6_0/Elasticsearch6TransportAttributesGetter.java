@@ -45,10 +45,12 @@ final class Elasticsearch6TransportAttributesGetter extends ElasticsearchTranspo
       return;
     }
 
-    attributes.put(SERVER_ADDRESS, remoteAddress.getAddress());
+    String serverAddress = remoteAddress.getAddress();
+    attributes.put(SERVER_ADDRESS, serverAddress);
     int serverPort = remoteAddress.getPort();
     if (serverPort > 0) {
       attributes.put(SERVER_PORT, serverPort);
     }
+    updateStableSpanName(context, request, serverAddress, serverPort);
   }
 }

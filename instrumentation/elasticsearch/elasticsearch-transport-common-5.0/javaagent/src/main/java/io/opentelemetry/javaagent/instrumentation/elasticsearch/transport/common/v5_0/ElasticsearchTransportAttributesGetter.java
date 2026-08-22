@@ -5,7 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -68,4 +71,14 @@ public class ElasticsearchTransportAttributesGetter
       ElasticTransportRequest request,
       @Nullable ActionResponse response,
       @Nullable Throwable error) {}
+
+  protected void updateStableSpanName(
+      Context context, ElasticTransportRequest request, String serverAddress, int serverPort) {
+    if (!emitStableDatabaseSemconv()) {
+      return;
+    }
+    String target = serverPort > 0 ? serverAddress + ":" + serverPort : serverAddress;
+    String operation = getDbOperationName(request);
+    Span.fromContext(context).updateName(operation != null ? operation + " " + target : target);
+  }
 }

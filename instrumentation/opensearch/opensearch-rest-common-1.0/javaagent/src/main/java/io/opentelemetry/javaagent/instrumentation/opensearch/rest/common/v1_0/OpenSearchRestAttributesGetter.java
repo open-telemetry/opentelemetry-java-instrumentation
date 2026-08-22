@@ -5,10 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -103,10 +105,16 @@ final class OpenSearchRestAttributesGetter
       return;
     }
 
-    attributes.put(SERVER_ADDRESS, response.getServerAddress());
+    String serverAddress = response.getServerAddress();
+    attributes.put(SERVER_ADDRESS, serverAddress);
     int serverPort = response.getServerPort();
     if (serverPort > 0) {
       attributes.put(SERVER_PORT, serverPort);
+    }
+    if (emitStableDatabaseSemconv() && serverAddress != null) {
+      String target = serverPort > 0 ? serverAddress + ":" + serverPort : serverAddress;
+      String operation = getDbOperationName(request);
+      Span.fromContext(context).updateName(operation != null ? operation + " " + target : target);
     }
   }
 }
