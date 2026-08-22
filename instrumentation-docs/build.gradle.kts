@@ -49,11 +49,15 @@ tasks {
     mainClass.set("io.opentelemetry.instrumentation.docs.DocSynchronization")
     classpath(sourceSets["main"].runtimeClasspath)
 
+    // Resolved during configuration so that the task action below captures only this value,
+    // and not the build script object, which the configuration cache cannot serialize.
+    val exitCodeFile = layout.buildDirectory.file("audit-exit-code")
+
     doLast {
       val exitValue = executionResult.get().exitValue
       // Write the Java process exit code so the CI workflow can distinguish
       // drift (exit 42) from execution errors (any other nonzero exit).
-      layout.buildDirectory.file("audit-exit-code").get().asFile.also {
+      exitCodeFile.get().asFile.also {
         it.parentFile.mkdirs()
         it.writeText(exitValue.toString())
       }
