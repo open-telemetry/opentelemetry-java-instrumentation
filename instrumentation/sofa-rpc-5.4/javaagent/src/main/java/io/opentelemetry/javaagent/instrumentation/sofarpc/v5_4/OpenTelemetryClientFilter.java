@@ -35,6 +35,6 @@ public class OpenTelemetryClientFilter extends Filter {
   @SuppressWarnings("rawtypes")
   public void onAsyncResponse(
       ConsumerConfig config, SofaRequest request, SofaResponse response, Throwable exception) {
-    delegate.onAsyncResponse(config, request, response, exception);
+    clientFilter().onAsyncResponse(config, request, response, exception);
   }
 }
