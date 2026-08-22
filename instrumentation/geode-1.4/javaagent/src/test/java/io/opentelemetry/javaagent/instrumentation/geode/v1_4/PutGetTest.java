@@ -208,7 +208,10 @@ class PutGetTest {
                             equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "put")),
                 span ->
-                    span.hasName("query test-region")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT test-region"
+                                : "query test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), GEODE),
@@ -216,7 +219,9 @@ class PutGetTest {
                                 DB_COLLECTION_NAME,
                                 emitStableDatabaseSemconv() ? "test-region" : null),
                             equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), "query"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? "SELECT" : "query"),
                             equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM /test-region"))));
   }
 
@@ -257,7 +262,10 @@ class PutGetTest {
                             equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "put")),
                 span ->
-                    span.hasName("existsValue test-region")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT test-region"
+                                : "existsValue test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), GEODE),
@@ -265,8 +273,63 @@ class PutGetTest {
                                 DB_COLLECTION_NAME,
                                 emitStableDatabaseSemconv() ? "test-region" : null),
                             equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), "existsValue"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? "SELECT" : "existsValue"),
                             equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM /test-region"))));
+  }
+
+  @Test
+  void testExistsValueWithQueryPredicate() throws QueryException {
+    boolean cacheValue =
+        testing.runWithSpan(
+            "someTrace",
+            () -> {
+              region.clear();
+              region.put("Hello", "World");
+              return region.existsValue("this = 'World'");
+            });
+    assertThat(cacheValue).isTrue();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName("clear test-region")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
+                            equalTo(
+                                DB_COLLECTION_NAME,
+                                emitStableDatabaseSemconv() ? "test-region" : null),
+                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
+                            equalTo(maybeStable(DB_OPERATION), "clear")),
+                span ->
+                    span.hasName("put test-region")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
+                            equalTo(
+                                DB_COLLECTION_NAME,
+                                emitStableDatabaseSemconv() ? "test-region" : null),
+                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
+                            equalTo(maybeStable(DB_OPERATION), "put")),
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT test-region"
+                                : "existsValue test-region")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
+                            equalTo(
+                                DB_COLLECTION_NAME,
+                                emitStableDatabaseSemconv() ? "test-region" : null),
+                            equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? "SELECT" : "existsValue"),
+                            equalTo(maybeStable(DB_STATEMENT), "this = ?"))));
   }
 
   @Test
@@ -307,7 +370,10 @@ class PutGetTest {
                             equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "put")),
                 span ->
-                    span.hasName("query test-region")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT test-region"
+                                : "query test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), GEODE),
@@ -315,7 +381,9 @@ class PutGetTest {
                                 DB_COLLECTION_NAME,
                                 emitStableDatabaseSemconv() ? "test-region" : null),
                             equalTo(DB_NAME, emitStableDatabaseSemconv() ? null : "test-region"),
-                            equalTo(maybeStable(DB_OPERATION), "query"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? "SELECT" : "query"),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "SELECT * FROM /test-region p WHERE p.expDate = ?"))));

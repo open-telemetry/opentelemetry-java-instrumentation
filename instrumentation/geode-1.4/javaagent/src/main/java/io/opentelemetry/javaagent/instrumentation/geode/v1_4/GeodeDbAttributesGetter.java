@@ -11,11 +11,19 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
+// the old database semconv hooks are deprecated, as is SqlQuery.getOperationName()
+@SuppressWarnings("deprecation")
 final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeRequest, Void> {
+
+  // Region.query(String), Region.existsValue(String) and Region.selectValue(String) all run a
+  // select: either the OQL query they are given, or "SELECT * FROM <region> this WHERE <predicate>"
+  // when they are given a bare query predicate
+  private static final String FALLBACK_OPERATION_NAME = "SELECT";
 
   private static final SqlQueryAnalyzer analyzer =
       SqlQueryAnalyzer.create(
@@ -41,7 +49,6 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   @Override
   @Nullable
   // Old database semconv still uses db.name, so we must implement the deprecated hook.
-  @SuppressWarnings("deprecation")
   public String getDbName(GeodeRequest request) {
     return request.getRegion().getName();
   }
@@ -54,12 +61,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
     if (emitStableDatabaseSemconv()) {
       // even though not using the summary, this will use the same
       // sanitization logic that will be the default under 3.0
-      //
-      // "String literals are delimited by single quotation marks."
-      // https://geode.apache.org/docs/guide/114/developing/query_additional/literals.html
-      return analyzer
-          .analyzeWithSummary(request.getQueryText(), DOUBLE_QUOTES_ARE_IDENTIFIERS)
-          .getQueryText();
+      return analyzeWithSummary(request).getQueryText();
     } else {
       // "String literals are delimited by single quotation marks."
       // https://geode.apache.org/docs/guide/114/developing/query_additional/literals.html
@@ -78,6 +80,24 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   @Override
   @Nullable
   public String getDbOperationName(GeodeRequest request) {
+    if (request.getQueryText() == null) {
+      return request.getOperationName();
+    }
+    String operationName = analyzeWithSummary(request).getOperationName();
+    return operationName != null ? operationName : FALLBACK_OPERATION_NAME;
+  }
+
+  @Override
+  @Nullable
+  // Old database semconv still uses db.operation, so we must implement the deprecated hook.
+  public String getDbOperation(GeodeRequest request) {
     return request.getOperationName();
+  }
+
+  // the analyzer caches its results, so callers can analyze the same query more than once
+  private static SqlQuery analyzeWithSummary(GeodeRequest request) {
+    // "String literals are delimited by single quotation marks."
+    // https://geode.apache.org/docs/guide/114/developing/query_additional/literals.html
+    return analyzer.analyzeWithSummary(request.getQueryText(), DOUBLE_QUOTES_ARE_IDENTIFIERS);
   }
 }

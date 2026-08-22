@@ -1,5 +1,9 @@
 display_name: Apache Geode
-description: This instrumentation enables database client spans and database client metrics for Apache Geode cache operations.
+description: >
+  This instrumentation enables database client spans and database client metrics for Apache Geode
+  cache operations. Under stable database semantic conventions, spans for `Region.query`,
+  `Region.existsValue` and `Region.selectValue` set `db.operation.name` to the operation parsed from
+  the OQL query, for example `SELECT`.
 library_link: https://geode.apache.org/
 semantic_conventions:
   - DATABASE_CLIENT_SPANS
