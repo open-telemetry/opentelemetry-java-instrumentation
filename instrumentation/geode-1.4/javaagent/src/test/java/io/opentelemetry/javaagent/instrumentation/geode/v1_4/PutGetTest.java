@@ -281,13 +281,14 @@ class PutGetTest {
 
   @Test
   void testExistsValueWithQueryPredicate() throws QueryException {
+    QueryValue value = new QueryValue(true);
     boolean cacheValue =
         testing.runWithSpan(
             "someTrace",
             () -> {
               region.clear();
-              region.put("Hello", "World");
-              return region.existsValue("this = 'World'");
+              region.put("Hello", value);
+              return region.existsValue("create = true");
             });
     assertThat(cacheValue).isTrue();
     testing.waitAndAssertTraces(
@@ -329,7 +330,7 @@ class PutGetTest {
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? "SELECT" : "existsValue"),
-                            equalTo(maybeStable(DB_STATEMENT), "this = ?"))));
+                            equalTo(maybeStable(DB_STATEMENT), "create = true"))));
   }
 
   @Test
@@ -440,6 +441,18 @@ class PutGetTest {
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "SELECT * FROM /test-region p WHERE p.expDate = ?"))));
+  }
+
+  static class QueryValue {
+    private final boolean create;
+
+    QueryValue(boolean create) {
+      this.create = create;
+    }
+
+    public boolean getCreate() {
+      return create;
+    }
   }
 
   static class Card implements DataSerializable {

@@ -76,7 +76,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
       return request.getOperationName();
     }
     String operationName = sqlQuery.getOperationName();
-    return operationName != null ? operationName : FALLBACK_OPERATION_NAME;
+    return FALLBACK_OPERATION_NAME.equals(operationName) ? operationName : FALLBACK_OPERATION_NAME;
   }
 
   @Override
