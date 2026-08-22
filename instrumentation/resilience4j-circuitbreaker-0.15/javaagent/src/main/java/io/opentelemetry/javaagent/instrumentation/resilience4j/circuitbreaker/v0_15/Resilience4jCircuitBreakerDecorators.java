@@ -310,6 +310,12 @@ public class Resilience4jCircuitBreakerDecorators {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
       if (method.getDeclaringClass() == Object.class) {
+        String methodName = method.getName();
+        if ("equals".equals(methodName)) {
+          return proxy == args[0];
+        } else if ("hashCode".equals(methodName)) {
+          return System.identityHashCode(proxy);
+        }
         return method.invoke(delegate, args);
       }
       Resilience4jCircuitBreakerSpans.PendingSpan baseline =

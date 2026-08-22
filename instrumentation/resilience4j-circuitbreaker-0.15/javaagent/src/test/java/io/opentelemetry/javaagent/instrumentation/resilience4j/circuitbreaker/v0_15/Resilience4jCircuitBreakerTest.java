@@ -8,8 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v0_15.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -18,6 +20,10 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.lang.reflect.Method;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -54,6 +60,84 @@ class Resilience4jCircuitBreakerTest {
 
     assertThat(thrown).isSameAs(exception);
     assertCircuitBreakerSpan("closed", "failure", exception);
+  }
+
+  @Test
+  void createsCircuitBreakerSpanWhenOnSuccessCalledDirectly() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          circuitBreaker.acquirePermission();
+          circuitBreaker.onSuccess(1);
+        });
+
+    assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
+  void createsCircuitBreakerSpanWhenOnResultMatchesRecordResultPredicate() throws Exception {
+    Method recordResultPredicate = recordResultPredicateMethod();
+    Method onResult = onResultMethod();
+    CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
+    recordResultPredicate.invoke(
+        builder, (Predicate<Object>) result -> Integer.valueOf(500).equals(result));
+    CircuitBreaker circuitBreaker = CircuitBreaker.of("test-circuit-breaker", builder.build());
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          circuitBreaker.acquirePermission();
+          onResult.invoke(circuitBreaker, 1L, MILLISECONDS, 500);
+        });
+
+    assertCircuitBreakerSpan("closed", "failure", null);
+  }
+
+  @Test
+  void createsCircuitBreakerSpanWhenOnErrorCalledDirectly() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    IllegalStateException exception = new IllegalStateException("boom");
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          circuitBreaker.acquirePermission();
+          circuitBreaker.onError(1, exception);
+        });
+
+    assertCircuitBreakerSpan("closed", "failure", exception);
+  }
+
+  @Test
+  void createsCircuitBreakerSpanWhenDecoratedSupplierSucceeds() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    Supplier<String> supplier = CircuitBreaker.decorateSupplier(circuitBreaker, () -> "ok");
+
+    String result = testing.runWithSpan("parent", supplier::get);
+
+    assertThat(result).isEqualTo("ok");
+    assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @Test
+  void checkedProxyObjectMethodsDoNotCreateCircuitBreakerSpans() {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    Object checkedSupplier = CircuitBreaker.decorateCheckedSupplier(circuitBreaker, () -> "ok");
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          assertThat(checkedSupplier.equals(checkedSupplier)).isTrue();
+          assertThat(checkedSupplier.hashCode())
+              .isEqualTo(System.identityHashCode(checkedSupplier));
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Test
@@ -123,6 +207,24 @@ class Resilience4jCircuitBreakerTest {
     assertThat(circuitBreaker.executeSupplier(() -> "ok")).isEqualTo("ok");
 
     assertThat(testing.spans()).isEmpty();
+  }
+
+  private static Method recordResultPredicateMethod() throws NoSuchMethodException {
+    try {
+      return CircuitBreakerConfig.Builder.class.getMethod("recordResultPredicate", Predicate.class);
+    } catch (NoSuchMethodException e) {
+      assumeTrue(false, "recordResultPredicate is not available in this Resilience4j version");
+      throw e;
+    }
+  }
+
+  private static Method onResultMethod() throws NoSuchMethodException {
+    try {
+      return CircuitBreaker.class.getMethod("onResult", long.class, TimeUnit.class, Object.class);
+    } catch (NoSuchMethodException e) {
+      assumeTrue(false, "onResult is not available in this Resilience4j version");
+      throw e;
+    }
   }
 
   private static void assertCircuitBreakerSpan(String state, String outcome) {

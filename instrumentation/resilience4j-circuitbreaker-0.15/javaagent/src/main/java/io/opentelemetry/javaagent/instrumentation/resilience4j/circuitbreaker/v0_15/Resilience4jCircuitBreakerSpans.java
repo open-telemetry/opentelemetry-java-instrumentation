@@ -19,10 +19,13 @@ import io.opentelemetry.api.trace.TracerBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.Locale;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 public class Resilience4jCircuitBreakerSpans {
@@ -113,6 +116,23 @@ public class Resilience4jCircuitBreakerSpans {
     }
   }
 
+  public static void endResult(
+      CircuitBreaker circuitBreaker, @Nullable Object result, @Nullable Throwable throwable) {
+    if (throwable != null) {
+      end(circuitBreaker, "failure", throwable);
+      return;
+    }
+    boolean failure;
+    try {
+      failure = isFailureResult(circuitBreaker, result);
+    } catch (RuntimeException ignored) {
+      // If instrumentation cannot inspect the result predicate, do not manufacture an
+      // application-level circuit breaker failure.
+      failure = false;
+    }
+    end(circuitBreaker, failure ? "failure" : "success", null);
+  }
+
   public static void endAfter(
       @Nullable PendingSpan baseline, String outcome, @Nullable Throwable throwable) {
     PendingSpan pendingSpan = pollPendingSpanAfter(baseline);
@@ -124,7 +144,11 @@ public class Resilience4jCircuitBreakerSpans {
   @Nullable
   public static PendingSpan currentPendingSpan() {
     Deque<PendingSpan> spans = pendingSpans.get();
-    return spans == null ? null : spans.peek();
+    if (spans == null) {
+      return null;
+    }
+    removeEnded(spans);
+    return spans.peek();
   }
 
   @Nullable
@@ -133,6 +157,7 @@ public class Resilience4jCircuitBreakerSpans {
     if (spans == null) {
       return null;
     }
+    removeEnded(spans);
     Iterator<PendingSpan> iterator = spans.iterator();
     while (iterator.hasNext()) {
       PendingSpan span = iterator.next();
@@ -156,6 +181,7 @@ public class Resilience4jCircuitBreakerSpans {
     if (spans == null) {
       return null;
     }
+    removeEnded(spans);
     PendingSpan span = spans.peek();
     if (span == null || span == baseline) {
       if (spans.isEmpty()) {
@@ -168,6 +194,15 @@ public class Resilience4jCircuitBreakerSpans {
       pendingSpans.remove();
     }
     return span;
+  }
+
+  private static void removeEnded(Deque<PendingSpan> spans) {
+    while (!spans.isEmpty() && spans.peek().ended) {
+      spans.poll();
+    }
+    if (spans.isEmpty()) {
+      pendingSpans.remove();
+    }
   }
 
   private static Span startSpan(CircuitBreaker circuitBreaker, Context parentContext) {
@@ -190,6 +225,33 @@ public class Resilience4jCircuitBreakerSpans {
         CIRCUIT_BREAKER_STATE, circuitBreaker.getState().name().toLowerCase(Locale.ROOT));
   }
 
+  @SuppressWarnings("unchecked") // getRecordResultPredicate returns Predicate<Object> when present.
+  private static boolean isFailureResult(CircuitBreaker circuitBreaker, @Nullable Object result) {
+    Method method;
+    try {
+      method =
+          circuitBreaker.getCircuitBreakerConfig().getClass().getMethod("getRecordResultPredicate");
+    } catch (NoSuchMethodException ignored) {
+      return false;
+    }
+    try {
+      Predicate<Object> predicate =
+          (Predicate<Object>) method.invoke(circuitBreaker.getCircuitBreakerConfig());
+      return predicate.test(result);
+    } catch (IllegalAccessException e) {
+      throw new IllegalStateException(e);
+    } catch (InvocationTargetException e) {
+      Throwable cause = e.getCause();
+      if (cause instanceof RuntimeException) {
+        throw (RuntimeException) cause;
+      }
+      if (cause instanceof Error) {
+        throw (Error) cause;
+      }
+      throw new IllegalStateException(cause);
+    }
+  }
+
   @SuppressWarnings({"ReturnValueIgnored", "unused"})
   private static void limitSupportedVersions(CircuitBreaker circuitBreaker) {
     // Keep a reference to enforce 0.15.0 as the minimum version.
@@ -199,7 +261,7 @@ public class Resilience4jCircuitBreakerSpans {
   public static final class PendingSpan {
     private final CircuitBreaker circuitBreaker;
     private final Span span;
-    private boolean ended;
+    private volatile boolean ended;
 
     private PendingSpan(CircuitBreaker circuitBreaker, Span span) {
       this.circuitBreaker = circuitBreaker;
@@ -216,6 +278,8 @@ public class Resilience4jCircuitBreakerSpans {
       }
       if (throwable != null) {
         span.recordException(throwable);
+      }
+      if (throwable != null || "failure".equals(outcome)) {
         span.setStatus(StatusCode.ERROR);
       }
       span.end();
