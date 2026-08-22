@@ -84,7 +84,7 @@ public abstract class AbstractElasticsearchTransportClientTest
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("ClusterHealthAction")
+                    span.hasName(databaseSpanName("ClusterHealthAction"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -113,6 +113,12 @@ public abstract class AbstractElasticsearchTransportClientTest
       result.add(satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6")));
     }
     return result;
+  }
+
+  protected String databaseSpanName(String operation) {
+    return emitStableDatabaseSemconv()
+        ? operation + " " + getAddress() + ":" + getPort()
+        : operation;
   }
 
   private Stream<Arguments> errorArguments() {
@@ -222,11 +228,14 @@ public abstract class AbstractElasticsearchTransportClientTest
     // PutMappingAction and IndexAction run in separate threads so their order can vary
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName(
-            "CreateIndexAction", getPutMappingActionName(), "IndexAction", "GetAction"),
+            databaseSpanName("CreateIndexAction"),
+            getPutMappingActionName(),
+            databaseSpanName("IndexAction"),
+            databaseSpanName("GetAction")),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("CreateIndexAction")
+                    span.hasName(databaseSpanName("CreateIndexAction"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -264,7 +273,7 @@ public abstract class AbstractElasticsearchTransportClientTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("IndexAction")
+                    span.hasName(databaseSpanName("IndexAction"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -304,7 +313,7 @@ public abstract class AbstractElasticsearchTransportClientTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GetAction")
+                    span.hasName(databaseSpanName("GetAction"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -312,7 +321,7 @@ public abstract class AbstractElasticsearchTransportClientTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GetAction")
+                    span.hasName(databaseSpanName("GetAction"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
