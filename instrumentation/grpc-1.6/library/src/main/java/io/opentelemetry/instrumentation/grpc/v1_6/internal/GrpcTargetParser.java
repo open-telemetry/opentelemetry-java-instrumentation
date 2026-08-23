@@ -19,8 +19,6 @@ import javax.annotation.Nullable;
  */
 public final class GrpcTargetParser {
 
-  private GrpcTargetParser() {}
-
   @Nullable
   public static ParsedTarget parse(@Nullable String target) {
     if (target == null || target.isEmpty()) {
@@ -194,4 +192,6 @@ public final class GrpcTargetParser {
         || "ipv6".equals(scheme)
         || "xds".equals(scheme);
   }
+
+  private GrpcTargetParser() {}
 }
