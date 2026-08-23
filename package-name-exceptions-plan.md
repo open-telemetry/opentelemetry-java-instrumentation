@@ -18,7 +18,7 @@ Updated on 2026-05-26 after PRs 27a, 27b, and the Spring testing-package alignme
 Updated again on 2026-05-26 after auditing remaining unversioned-allowlist entries against the documented base-version convention and planning PRs 29-30.
 Updated on 2026-05-28 after PRs 29 and 30 merged upstream together as #18854 and their `library:oshi`, `javaagent:oshi`, and `javaagent:elasticsearch-transport-common` allowlist entries were removed from the checker.
 Updated on 2026-06-02 after PR 17 merged upstream as #18772 (Akka/Scala forkjoin module renames), and after #18855 moved the `servlet-common` library internal package; both allowlist entries were removed from the checker.
-Updated again on 2026-06-02 after deciding to keep the four self-instrumentation modules' historical packages and document them as self-instrumentation in the checker instead of renaming them (PR 14 / #18747 deferred).
+Updated again on 2026-06-02 after deciding to keep the four self-instrumentation modules' historical packages and document them as self-instrumentation in the checker instead of renaming them (PR 14 / #18747 closed without merging).
 Updated on 2026-08-23 after merging `main`, which brought in `apache-dbcp-2.0`, `hbase-client-common-1.0`, `jedis-4.0`, `tomcat-dbcp-8.0`, and the versioned `opentelemetry-instrumentation-api-1.14` module; their checker exceptions were added and PR 31 was planned.
 
 ## Goal
@@ -148,7 +148,7 @@ For common-module package moves, search for downstream versioned modules importi
 
 ## Open Cleanup PRs
 
-PR 14 (#18747) and PR 22 (#18784) were closed without merging. Keep `.github/scripts/check-package-names.sh` and checker exception removals on `next` until cleanup PRs merge.
+PR 14 (#18747) and PR 22 (#18784) were closed without merging. Keep their exceptions in `.github/scripts/check-package-names.sh` because neither package rename is planned.
 
 For JDK instrumentation modules, keep the leading `java` token in package paths. For example,
 `java-util-logging` maps to `io.opentelemetry.javaagent.instrumentation.java.util.logging`, while
@@ -163,7 +163,7 @@ example, `payara-embedded-web:5.2020.2` maps to `payara-5.2020` and package suff
 would create noisy module names unless they identify a real boundary such as a muzzle range or
 sibling module split.
 
-### PR 14: OpenTelemetry annotation and instrumentation API modules (deferred, #18747 to be closed)
+### PR 14: OpenTelemetry annotation and instrumentation API modules (closed #18747; no package rename planned)
 
 Modules:
 
@@ -191,8 +191,6 @@ convention is skipped. Current packages stay as:
 The self-instrumentation case block short-circuits before the unversioned-module check, so none of these
 four modules needs an unversioned-module allowlist entry.
 
-Close #18747 once this lands on `next`.
-
 ### PR 17: Akka and Scala forkjoin module/package names (merged #18772)
 
 Modules:
@@ -216,28 +214,6 @@ Suggested verification:
 ```bash
 .github/scripts/check-package-names.sh
 ./gradlew :instrumentation:akka:akka-actor-forkjoin-2.5:javaagent:test :instrumentation:scala-forkjoin-2.8:javaagent:test :instrumentation:akka:akka-http-10.0:javaagent:compileTestJava
-```
-
-### PR 19: OpenTelemetry API package
-
-Module:
-
-- `opentelemetry-api-1.0`
-
-Expected package change:
-
-- `io.opentelemetry.javaagent.instrumentation.opentelemetryapi` -> `io.opentelemetry.javaagent.instrumentation.opentelemetry.api.v1_0`
-
-Notes:
-
-- Around 25 changed Java files.
-- Package names may be more compatibility-sensitive or user-facing than pure internal helper modules; keep this as its own PR.
-
-Suggested verification:
-
-```bash
-.github/scripts/check-package-names.sh
-./gradlew :instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent:test
 ```
 
 ### PR 22: Java util logging package (closed #18784, deferred)
@@ -466,7 +442,7 @@ These are probably not the next easiest wins:
 - `jmx-metrics`: current packages are under `jmx`, while the module says `jmx-metrics`. This touches 43 files and may be user-facing enough to deserve a dedicated PR.
 - Library-specific third-party packages: `io.grpc.override`, `io.lettuce.core.protocol`, `io.nats.client.impl`, and `rx` are likely intentional shims or package-private access points.
 - Advice-native package exceptions: packages under `com.clickhouse`, `com.twitter`, `io.netty`, `org.apache.commons.dbcp2`, `org.apache.hadoop.hbase.ipc`, `org.apache.tomcat.dbcp.dbcp2`, `org.springframework`, `reactor.netty`, `redis.clients.jedis`, and `io.vertx` should stay until each one is proven not to need native package placement.
-- OpenTelemetry API and Akka/Scala forkjoin package/module renames are planned above; AWS SDK remains deferred.
+- AWS SDK package renames remain deferred.
 - Remaining unversioned module allowlist entries split into policy buckets:
   - JDK/platform modules such as `executors`, `http-url-connection`, `jdbc`, `methods`, `rmi`, and `runtime-telemetry` probably deserve explicit checker allowances instead of version suffixes.
   - `internal-*` modules such as `internal-class-loader`, `internal-lambda`, `internal-reflection`, and `internal-url-class-loader` probably deserve explicit checker allowances; version suffixes would be misleading.
