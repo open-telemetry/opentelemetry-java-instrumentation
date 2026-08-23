@@ -16,7 +16,6 @@ import org.apache.dubbo.rpc.RpcInvocation;
 @AutoValue
 public abstract class DubboRequest {
 
-  @SuppressWarnings("deprecation") // RpcContext.getContext()
   static DubboRequest create(RpcInvocation invocation, RpcContext context) {
     // In dubbo 3 RpcContext delegates to a ThreadLocal context. We copy the url, remote address,
     // and registry address here to ensure we can access them from the thread that ends the span.
