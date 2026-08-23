@@ -125,11 +125,13 @@ public abstract class AbstractRedissonClientTest {
     // the stringCommandLazyConnection test case simulates reconnection during Redis command
     // execution, which needs an empty idle connection pool
     Integer connectionMinimumIdleSize = testInfo.getTags().contains(TEST_RECONNECT) ? 0 : null;
-    redisson = Redisson.create(createConfig(0, connectionMinimumIdleSize));
+    boolean singleConnection = testInfo.getTags().contains(TEST_SINGLE_CONNECTION);
+    redisson = Redisson.create(createConfig(0, connectionMinimumIdleSize, singleConnection));
     testing.clearData();
   }
 
-  private Config createConfig(int database, Integer connectionMinimumIdleSize)
+  private Config createConfig(
+      int database, Integer connectionMinimumIdleSize, boolean singleConnection)
       throws InvocationTargetException, IllegalAccessException {
     String newAddress = address;
     if (useRedisProtocol()) {
@@ -151,7 +153,7 @@ public abstract class AbstractRedissonClientTest {
     if (connectionMinimumIdleSize != null) {
       singleServerConfig.setConnectionMinimumIdleSize(connectionMinimumIdleSize);
     }
-    if (testInfo.getTags().contains(TEST_SINGLE_CONNECTION)) {
+    if (singleConnection) {
       singleServerConfig.setConnectionMinimumIdleSize(1);
       singleServerConfig.setConnectionPoolSize(1);
     }
@@ -260,7 +262,7 @@ public abstract class AbstractRedissonClientTest {
 
   @Test
   void configuredDatabaseIndex() throws InvocationTargetException, IllegalAccessException {
-    RedissonClient databaseOne = Redisson.create(createConfig(1, null));
+    RedissonClient databaseOne = Redisson.create(createConfig(1, null, false));
     try {
       testing.clearData();
       RBucket<String> keyObject = databaseOne.getBucket("foo");
