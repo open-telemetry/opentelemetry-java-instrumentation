@@ -74,8 +74,15 @@ and deadlocks.
   ```
 
 - Run the [Release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release.yml).
-  - Press the "Run workflow" button, select the release tag from the dropdown list, e.g. `v1.9.0`,
-    and click the "Run workflow" button below that.
+  - Dispatch the workflow from the command line because the GitHub Actions web interface only
+    offers branches in its "Use workflow from" selector:
+
+    ```bash
+    gh workflow run release.yml \
+      --repo open-telemetry/opentelemetry-java-instrumentation \
+      --ref vX.Y.Z
+    ```
+
   - This workflow will:
     - Publish the artifacts to Maven Central
     - Sign the Java agent jar and SBOM bundle with Sigstore Cosign
