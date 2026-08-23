@@ -218,7 +218,7 @@ public class DubboUnknownServiceHelper {
    * Returns {@code true} if the throwable indicates that {@code PermittedSerializationKeeper}
    * rejected the request because the service is not registered.
    */
-  static boolean isUnknownServiceDecodeFailure(Throwable throwable) {
+  private static boolean isUnknownServiceDecodeFailure(Throwable throwable) {
     if (!(throwable instanceof IOException)) {
       return false;
     }
@@ -230,7 +230,7 @@ public class DubboUnknownServiceHelper {
    * Returns {@code true} if the throwable indicates that {@code DubboProtocol.getInvoker()} could
    * not find the requested service in the exporter map.
    */
-  static boolean isUnknownServiceInvokerFailure(Throwable throwable) {
+  private static boolean isUnknownServiceInvokerFailure(Throwable throwable) {
     if (!(throwable instanceof RemotingException)) {
       return false;
     }
@@ -243,7 +243,7 @@ public class DubboUnknownServiceHelper {
    * check uses the name string because {@code HttpStatusException} is not available at compile time
    * against Dubbo 2.7.
    */
-  static boolean isTripleNotFoundFailure(Throwable throwable) {
+  private static boolean isTripleNotFoundFailure(Throwable throwable) {
     if (!"org.apache.dubbo.remoting.http12.exception.HttpStatusException"
         .equals(throwable.getClass().getName())) {
       return false;
