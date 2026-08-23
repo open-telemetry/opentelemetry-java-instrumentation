@@ -168,11 +168,21 @@ check_source_set() {
       exit 1
     fi
 
-    # deal with differences like module name elasticsearch-rest and package name elasticsearch.rest
+    # Module tokens may map to separate package segments, as in elasticsearch-rest and
+    # elasticsearch.rest. Match only after consuming a full segment so v4_10 does not match v4_1.
     expected_package_name_normalized=${expected_package_name//\//}
-    package_name_normalized=${package_name//\//}
+    package_name_prefix=
+    package_name_matches=false
+    IFS='/' read -ra package_parts <<< "$package_name"
+    for part in "${package_parts[@]}"; do
+      package_name_prefix+="$part"
+      if [[ "$package_name_prefix" == "$expected_package_name_normalized" ]]; then
+        package_name_matches=true
+        break
+      fi
+    done
 
-    if [[ "$package_name_normalized" != "$expected_package_name_normalized"* ]]; then
+    if [[ "$package_name_matches" != true ]]; then
       echo "ERROR: $dir"
       exit 1
     fi
