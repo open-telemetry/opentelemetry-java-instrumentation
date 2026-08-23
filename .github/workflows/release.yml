@@ -42,8 +42,11 @@ jobs:
       - id: release-version
         name: Set environment variables
         run: |
-          version=$(.github/scripts/get-version.sh)
-          if [[ $version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
+          # version.gradle.kts is read directly instead of through get-version.sh because
+          # get-version.sh strips the -SNAPSHOT suffix, and a release tag must only ever point
+          # at a commit whose version has already been prepared for release
+          version=$(sed -nE 's/^val stableVersion = "([^"]+)"$/\1/p' version.gradle.kts)
+          if [[ $version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
             major="${BASH_REMATCH[1]}"
             minor="${BASH_REMATCH[2]}"
             patch="${BASH_REMATCH[3]}"
