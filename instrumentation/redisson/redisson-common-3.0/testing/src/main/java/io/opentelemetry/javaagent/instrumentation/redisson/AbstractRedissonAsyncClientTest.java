@@ -355,6 +355,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                               equalTo(SERVER_ADDRESS, host),
                               equalTo(SERVER_PORT, port),
                               equalTo(DB_SYSTEM_NAME, REDIS),
+                              equalTo(DB_NAMESPACE, dbNamespace()),
                               equalTo(DB_OPERATION_NAME, "GET"),
                               equalTo(DB_QUERY_TEXT, "GET after-batch"))));
       return;
@@ -496,6 +497,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(DB_OPERATION_NAME, "GET"),
                             equalTo(DB_QUERY_TEXT, "GET callback-get"))));
   }
