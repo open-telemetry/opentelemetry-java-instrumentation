@@ -3,12 +3,7 @@
 set -o pipefail
 
 if command -v rg > /dev/null 2>&1; then
-  case "$(uname -s)" in
-    CYGWIN* | MINGW* | MSYS*) path_separator="//" ;;
-    *) path_separator="/" ;;
-  esac
-
-  source_dirs=$(rg --files --path-separator "$path_separator" instrumentation -g '*.java' \
+  source_dirs=$(MSYS2_ARG_CONV_EXCL="/" rg --files --path-separator "/" instrumentation -g '*.java' \
     | grep -E '/(library|javaagent)/src/main/java[0-9]*/' \
     | sed 's#/[^/]*$##' \
     | sort -u)
