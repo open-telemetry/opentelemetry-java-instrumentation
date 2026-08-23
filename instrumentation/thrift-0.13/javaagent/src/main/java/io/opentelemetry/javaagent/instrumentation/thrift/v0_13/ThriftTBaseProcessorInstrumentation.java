@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.thrift.v0_13;
 
 import static io.opentelemetry.javaagent.instrumentation.thrift.v0_13.ThriftSingletons.serverInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ServerInProtocolDecorator;
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ServerOutProtocolDecorator;
@@ -28,7 +29,11 @@ class ThriftTBaseProcessorInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("process"), getClass().getName() + "$ProcessAdvice");
+    transformer.applyAdviceToMethod(
+        named("process")
+            .and(takesArgument(0, named("org.apache.thrift.protocol.TProtocol")))
+            .and(takesArgument(1, named("org.apache.thrift.protocol.TProtocol"))),
+        getClass().getName() + "$ProcessAdvice");
   }
 
   @SuppressWarnings("unused")

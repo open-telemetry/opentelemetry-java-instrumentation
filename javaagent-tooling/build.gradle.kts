@@ -2,6 +2,7 @@ import net.ltgt.gradle.errorprone.errorprone
 
 plugins {
   id("otel.java-conventions")
+  id("otel.nullaway-conventions")
   id("otel.publish-conventions")
   id("otel.jmh-conventions")
 }
@@ -71,7 +72,7 @@ dependencies {
 
 testing {
   suites {
-    val testExceptionHandler by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testExceptionHandler") {
       dependencies {
         implementation(project(":javaagent-bootstrap"))
         implementation(project(":javaagent-tooling"))
@@ -82,7 +83,7 @@ testing {
       }
     }
 
-    val testMissingType by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testMissingType") {
       dependencies {
         implementation(project(":javaagent-bootstrap"))
         implementation(project(":javaagent-tooling"))
@@ -106,7 +107,7 @@ testing {
       }
     }
 
-    val testConfigFile by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testConfigFile") {
       dependencies {
         implementation(project(":javaagent-tooling"))
         // requires mockito-inline
@@ -114,7 +115,7 @@ testing {
       }
     }
 
-    val testDistributionConfig by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testDistributionConfig") {
       dependencies {
         implementation(project(":javaagent-extension-api"))
         implementation(project(":instrumentation-api-incubator"))

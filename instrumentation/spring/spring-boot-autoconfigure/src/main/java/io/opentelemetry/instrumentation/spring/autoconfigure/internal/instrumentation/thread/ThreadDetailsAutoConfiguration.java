@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.thread;
 
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
-import io.opentelemetry.instrumentation.thread.internal.AddThreadDetailsSpanProcessor;
+import io.opentelemetry.instrumentation.thread.internal.ThreadDetailsSpanProcessor;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,7 +24,7 @@ public class ThreadDetailsAutoConfiguration {
     return p ->
         p.addTracerProviderCustomizer(
             (builder, config) -> {
-              builder.addSpanProcessor(new AddThreadDetailsSpanProcessor());
+              builder.addSpanProcessor(new ThreadDetailsSpanProcessor());
               return builder;
             });
   }

@@ -72,7 +72,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
     request.agent("Jetty");
 
     request.method(method);
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       request.timeout(READ_TIMEOUT.toMillis(), MILLISECONDS);
     }
 

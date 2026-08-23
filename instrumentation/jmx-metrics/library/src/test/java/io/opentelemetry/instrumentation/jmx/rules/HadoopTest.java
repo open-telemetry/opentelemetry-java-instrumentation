@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.jmx.rules;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
@@ -42,11 +44,32 @@ class HadoopTest extends TargetSystemTest {
                 "/hadoop/etc/hadoop/hadoop-env.sh")
             .withCreateContainerCmdModifier(cmd -> cmd.withHostName("test-host"))
             .withStartupTimeout(Duration.ofMinutes(3))
-            .withExposedPorts(50070)
-            .waitingFor(Wait.forListeningPorts(50070));
+            .withExposedPorts(50070, 50090)
+            .waitingFor(Wait.forListeningPorts(50070, 50090));
 
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
+
+    startWeaverValidation(
+        "hadoop.yaml",
+        result ->
+            result
+                .checkNothingUnregisteredWithPrefix("hadoop.")
+                .checkRegisteredMetrics(
+                    "hadoop.",
+                    asList(
+                        "hadoop.dfs.capacity.limit",
+                        "hadoop.dfs.capacity.used",
+                        "hadoop.dfs.block.count",
+                        "hadoop.dfs.block.missing",
+                        "hadoop.dfs.block.corrupt",
+                        "hadoop.dfs.volume.failure.count",
+                        "hadoop.dfs.file.count",
+                        "hadoop.dfs.connection.count",
+                        "hadoop.datanode.live",
+                        "hadoop.datanode.dead"),
+                    emptyList())
+                .checkRegisteredAttributes("hadoop.", asList("hadoop.node.name"), emptyList()));
 
     startTarget(target);
 
@@ -84,6 +107,27 @@ class HadoopTest extends TargetSystemTest {
 
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
+
+    startWeaverValidation(
+        "hadoop.yaml",
+        result ->
+            result
+                .checkNothingUnregisteredWithPrefix("hadoop.")
+                .checkRegisteredMetrics(
+                    "hadoop.",
+                    asList(
+                        "hadoop.dfs.capacity.limit",
+                        "hadoop.dfs.capacity.used",
+                        "hadoop.dfs.block.count",
+                        "hadoop.dfs.block.missing",
+                        "hadoop.dfs.block.corrupt",
+                        "hadoop.dfs.volume.failure.count",
+                        "hadoop.dfs.file.count",
+                        "hadoop.dfs.connection.count",
+                        "hadoop.datanode.live",
+                        "hadoop.datanode.dead"),
+                    emptyList())
+                .checkRegisteredAttributes("hadoop.", asList("hadoop.node.name"), emptyList()));
 
     startTarget(target);
 

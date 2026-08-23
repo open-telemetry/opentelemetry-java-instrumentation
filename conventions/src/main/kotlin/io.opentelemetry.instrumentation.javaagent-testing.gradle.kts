@@ -55,7 +55,7 @@ testing {
   }
 }
 
-val testInstrumentation by configurations.creating {
+val testInstrumentation = configurations.create("testInstrumentation") {
   isCanBeConsumed = false
   isCanBeResolved = true
 }
@@ -66,7 +66,7 @@ tasks.shadowJar {
   archiveFileName.set("agent-testing.jar")
 }
 
-val agentForTesting by configurations.creating {
+val agentForTesting = configurations.create("agentForTesting") {
   isCanBeConsumed = false
   isCanBeResolved = true
 }
@@ -104,6 +104,7 @@ class JavaagentTestArgumentsProvider(
       "-Dotel.javaagent.testing.fail-on-context-leak=$failOnContextLeak",
       // prevent sporadic gradle deadlocks, see SafeLogger for more details
       "-Dotel.javaagent.testing.transform-safe-logging.enabled=true",
+      "-Dotel.javaagent.testing.check-virtual-field-usage.enabled=true",
       // Reduce noise in assertion messages since we don't need to verify this in most tests. We check
       // in smoke tests instead.
       "-Dotel.javaagent.add-thread-details=false",

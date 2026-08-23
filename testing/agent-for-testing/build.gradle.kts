@@ -6,12 +6,12 @@ plugins {
 description = "OpenTelemetry Javaagent for testing"
 group = "io.opentelemetry.javaagent"
 
-val agent by configurations.creating {
+val agent = configurations.create("agent") {
   isCanBeResolved = true
   isCanBeConsumed = false
 }
 
-val extensionLibs by configurations.creating {
+val extensionLibs = configurations.create("extensionLibs") {
   isCanBeResolved = true
   isCanBeConsumed = false
 }
@@ -37,7 +37,7 @@ abstract class ExtractJar : Copy() {
 }
 
 tasks {
-  val extractAgent by registering(ExtractJar::class) {
+  val extractAgent = register<ExtractJar>("extractAgent") {
     jarFile.from(agent)
     into(layout.buildDirectory.dir("extracted-agent"))
   }

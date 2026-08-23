@@ -95,6 +95,7 @@ public final class ElasticsearchRest7TelemetryBuilder {
             attributesExtractors,
             spanNameExtractorCustomizer,
             knownMethods,
+            HttpConstants.SENSITIVE_QUERY_PARAMETERS,
             false);
 
     return new ElasticsearchRest7Telemetry(instrumenter);

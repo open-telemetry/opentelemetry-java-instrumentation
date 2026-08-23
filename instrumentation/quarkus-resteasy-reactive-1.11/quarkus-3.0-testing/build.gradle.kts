@@ -45,12 +45,10 @@ dependencies {
 
 tasks.register("integrationTestClasses") {}
 
-val quarkusTestBaseRuntimeClasspathConfiguration by configurations.creating {
+configurations.create("quarkusTestBaseRuntimeClasspathConfiguration") {
   extendsFrom(configurations["testRuntimeClasspath"])
 }
-
-val quarkusTestCompileOnlyConfiguration by configurations.creating {
-}
+configurations.create("quarkusTestCompileOnlyConfiguration")
 
 val testModelPath = layout.buildDirectory.file("quarkus-app-test-model.dat")
 

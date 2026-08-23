@@ -25,7 +25,7 @@ dependencies {
   implementation("org.playframework:play-filters-helpers_$scalaVersion:$playVersion")
   runtimeOnly("org.playframework:play-server_$scalaVersion:$playVersion")
   runtimeOnly("org.playframework:play-pekko-http-server_$scalaVersion:$playVersion")
-  runtimeOnly("org.apache.pekko:pekko-http_$scalaVersion:1.3.0")
+  runtimeOnly("org.apache.pekko:pekko-http_$scalaVersion:1.4.0")
 }
 
 val targetJDK = (project.findProperty("targetJDK") as String?) ?: "17"

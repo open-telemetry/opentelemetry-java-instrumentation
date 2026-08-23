@@ -19,7 +19,9 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.Pool;
+import io.vertx.sqlclient.PreparedStatement;
 import io.vertx.sqlclient.SqlConnectOptions;
+import io.vertx.sqlclient.impl.QueryExecutorUtil;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -28,11 +30,14 @@ import javax.annotation.Nullable;
 public class VertxSqlClientUtil {
 
   private static final ThreadLocal<SqlConnectOptions> connectOptions = new ThreadLocal<>();
+  private static final ThreadLocal<String> dbSystem = new ThreadLocal<>();
   private static final VirtualField<Pool, SqlConnectOptions> POOL_CONNECT_OPTIONS =
       VirtualField.find(Pool.class, SqlConnectOptions.class);
   private static final Map<String, String> dbSystemNameByPackage = buildPackageDbSystemNameMap();
   private static final VirtualField<Promise<?>, RequestData> REQUEST_DATA =
       VirtualField.find(Promise.class, RequestData.class);
+  private static final VirtualField<PreparedStatement, VertxSqlClientData> PREPARED_STATEMENT_DATA =
+      VirtualField.find(PreparedStatement.class, VertxSqlClientData.class);
 
   public static void setSqlConnectOptions(@Nullable SqlConnectOptions sqlConnectOptions) {
     if (sqlConnectOptions == null) {
@@ -47,6 +52,19 @@ public class VertxSqlClientUtil {
     return connectOptions.get();
   }
 
+  public static void setDbSystem(@Nullable String value) {
+    if (value == null) {
+      dbSystem.remove();
+    } else {
+      dbSystem.set(value);
+    }
+  }
+
+  @Nullable
+  public static String getDbSystem() {
+    return dbSystem.get();
+  }
+
   public static void setPoolConnectOptions(Pool pool, SqlConnectOptions sqlConnectOptions) {
     POOL_CONNECT_OPTIONS.set(pool, sqlConnectOptions);
   }
@@ -54,6 +72,29 @@ public class VertxSqlClientUtil {
   @Nullable
   public static SqlConnectOptions getPoolSqlConnectOptions(Pool pool) {
     return POOL_CONNECT_OPTIONS.get(pool);
+  }
+
+  public static void setQueryExecutorData(Object queryExecutor, VertxSqlClientData data) {
+    QueryExecutorUtil.setData(queryExecutor, data);
+  }
+
+  @Nullable
+  public static VertxSqlClientData getQueryExecutorData(Object queryExecutor) {
+    return (VertxSqlClientData) QueryExecutorUtil.getData(queryExecutor);
+  }
+
+  public static Future<PreparedStatement> attachPreparedStatementData(
+      Future<PreparedStatement> future, VertxSqlClientData data) {
+    return future.map(
+        preparedStatement -> {
+          PREPARED_STATEMENT_DATA.set(preparedStatement, data);
+          return preparedStatement;
+        });
+  }
+
+  @Nullable
+  public static VertxSqlClientData getPreparedStatementData(PreparedStatement preparedStatement) {
+    return PREPARED_STATEMENT_DATA.get(preparedStatement);
   }
 
   public static String getDbSystemNameFromClassName(@Nullable Object instance) {

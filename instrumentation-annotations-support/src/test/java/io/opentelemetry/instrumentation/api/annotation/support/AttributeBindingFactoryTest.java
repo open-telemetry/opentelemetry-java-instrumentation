@@ -14,14 +14,20 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Arrays.asList;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.verify;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -30,158 +36,87 @@ class AttributeBindingFactoryTest {
 
   @Mock AttributesBuilder setter;
 
-  @Test
-  void createAttributeBindingForString() {
-    AttributeBindingFactory.createBinding("key", String.class).apply(setter, "value");
-    verify(setter).put(stringKey("key"), "value");
+  private static Stream<Arguments> bindingCases() {
+    return Stream.of(
+        // scalar types
+        argumentSet("String", String.class, "value", stringKey("key"), "value"),
+        argumentSet("int primitive", int.class, 1234, longKey("key"), 1234L),
+        argumentSet("Integer", Integer.class, 1234, longKey("key"), 1234L),
+        argumentSet("long primitive", long.class, 1234L, longKey("key"), 1234L),
+        argumentSet("Long", Long.class, 1234L, longKey("key"), 1234L),
+        argumentSet("float primitive", float.class, 1234.0F, doubleKey("key"), 1234.0),
+        argumentSet("Float", Float.class, 1234.0F, doubleKey("key"), 1234.0),
+        argumentSet("double primitive", double.class, 1234.0, doubleKey("key"), 1234.0),
+        argumentSet("Double", Double.class, 1234.0, doubleKey("key"), 1234.0),
+        argumentSet("boolean primitive", boolean.class, true, booleanKey("key"), true),
+        argumentSet("Boolean", Boolean.class, true, booleanKey("key"), true),
+        // array types
+        argumentSet(
+            "String[]",
+            String[].class,
+            new String[] {"x", "y", "z", null},
+            stringArrayKey("key"),
+            asList("x", "y", "z", null)),
+        argumentSet(
+            "int[]", int[].class, new int[] {1, 2, 3}, longArrayKey("key"), asList(1L, 2L, 3L)),
+        argumentSet(
+            "Integer[]",
+            Integer[].class,
+            new Integer[] {1, 2, 3},
+            longArrayKey("key"),
+            asList(1L, 2L, 3L)),
+        argumentSet(
+            "long[]", long[].class, new long[] {1, 2, 3}, longArrayKey("key"), asList(1L, 2L, 3L)),
+        argumentSet(
+            "Long[]",
+            Long[].class,
+            new Long[] {1L, 2L, 3L},
+            longArrayKey("key"),
+            asList(1L, 2L, 3L)),
+        argumentSet(
+            "float[]",
+            float[].class,
+            new float[] {1f, 2f, 3f},
+            doubleArrayKey("key"),
+            asList(1.0, 2.0, 3.0)),
+        argumentSet(
+            "Float[]",
+            Float[].class,
+            new Float[] {1f, 2f, 3f},
+            doubleArrayKey("key"),
+            asList(1.0, 2.0, 3.0)),
+        argumentSet(
+            "double[]",
+            double[].class,
+            new double[] {1, 2, 3},
+            doubleArrayKey("key"),
+            asList(1.0, 2.0, 3.0)),
+        argumentSet(
+            "Double[]",
+            Double[].class,
+            new Double[] {1.0, 2.0, 3.0},
+            doubleArrayKey("key"),
+            asList(1.0, 2.0, 3.0)),
+        argumentSet(
+            "boolean[]",
+            boolean[].class,
+            new boolean[] {true, false},
+            booleanArrayKey("key"),
+            asList(true, false)),
+        argumentSet(
+            "Boolean[]",
+            Boolean[].class,
+            new Boolean[] {true, false},
+            booleanArrayKey("key"),
+            asList(true, false)));
   }
 
-  @Test
-  void createAttributeBindingForIntPrimitive() {
-    AttributeBindingFactory.createBinding("key", int.class).apply(setter, 1234);
-    verify(setter).put(longKey("key"), 1234L);
-  }
-
-  @Test
-  void createAttributeBindingForInteger() {
-    AttributeBindingFactory.createBinding("key", Integer.class).apply(setter, 1234);
-    verify(setter).put(longKey("key"), 1234L);
-  }
-
-  @Test
-  void createAttributeBindingForLongPrimitive() {
-    AttributeBindingFactory.createBinding("key", long.class).apply(setter, 1234L);
-    verify(setter).put(longKey("key"), 1234L);
-  }
-
-  @Test
-  void createAttributeBindingForLong() {
-    AttributeBindingFactory.createBinding("key", Long.class).apply(setter, 1234L);
-    verify(setter).put(longKey("key"), 1234L);
-  }
-
-  @Test
-  void createAttributeBindingForFloatPrimitive() {
-    AttributeBindingFactory.createBinding("key", float.class).apply(setter, 1234.0F);
-    verify(setter).put(doubleKey("key"), 1234.0);
-  }
-
-  @Test
-  void createAttributeBindingForFloat() {
-    AttributeBindingFactory.createBinding("key", Float.class).apply(setter, 1234.0F);
-    verify(setter).put(doubleKey("key"), 1234.0);
-  }
-
-  @Test
-  void createAttributeBindingForDoublePrimitive() {
-    AttributeBindingFactory.createBinding("key", double.class).apply(setter, 1234.0);
-    verify(setter).put(doubleKey("key"), 1234.0);
-  }
-
-  @Test
-  void createAttributeBindingForDouble() {
-    AttributeBindingFactory.createBinding("key", Double.class).apply(setter, 1234.0);
-    verify(setter).put(doubleKey("key"), 1234.0);
-  }
-
-  @Test
-  void createAttributeBindingForBooleanPrimitive() {
-    AttributeBindingFactory.createBinding("key", boolean.class).apply(setter, true);
-    verify(setter).put(booleanKey("key"), true);
-  }
-
-  @Test
-  void createAttributeBindingForBoolean() {
-    AttributeBindingFactory.createBinding("key", Boolean.class).apply(setter, true);
-    verify(setter).put(booleanKey("key"), true);
-  }
-
-  @Test
-  void createAttributeBindingForStringArray() {
-    String[] value = {"x", "y", "z", null};
-    List<String> expected = asList(value);
-    AttributeBindingFactory.createBinding("key", String[].class).apply(setter, value);
-    verify(setter).put(stringArrayKey("key"), expected);
-  }
-
-  @Test
-  void createAttributeBindingForPrimitiveIntArray() {
-    int[] value = {1, 2, 3};
-    List<Long> expected = asList(1L, 2L, 3L);
-    AttributeBindingFactory.createBinding("key", int[].class).apply(setter, value);
-    verify(setter).put(longArrayKey("key"), expected);
-  }
-
-  @Test
-  void createAttributeBindingForIntegerArray() {
-    Integer[] value = {1, 2, 3};
-    List<Long> expected = asList(1L, 2L, 3L);
-    AttributeBindingFactory.createBinding("key", Integer[].class).apply(setter, value);
-    verify(setter).put(longArrayKey("key"), expected);
-  }
-
-  @Test
-  void createAttributeBindingForPrimitiveLongArray() {
-    long[] value = {1, 2, 3};
-    List<Long> expected = asList(1L, 2L, 3L);
-    AttributeBindingFactory.createBinding("key", long[].class).apply(setter, value);
-    verify(setter).put(longArrayKey("key"), expected);
-  }
-
-  @Test
-  void createAttributeBindingForLongArray() {
-    Long[] value = {1L, 2L, 3L};
-    List<Long> expected = asList(1L, 2L, 3L);
-    AttributeBindingFactory.createBinding("key", Long[].class).apply(setter, value);
-    verify(setter).put(longArrayKey("key"), expected);
-  }
-
-  @Test
-  void createAttributeBindingForPrimitiveFloatArray() {
-    float[] value = {1f, 2f, 3f};
-    List<Double> expected = asList(1.0, 2.0, 3.0);
-    AttributeBindingFactory.createBinding("key", float[].class).apply(setter, value);
-    verify(setter).put(doubleArrayKey("key"), expected);
-  }
-
-  @Test
-  void createAttributeBindingForFloatArray() {
-    Float[] value = {1f, 2f, 3f};
-    List<Double> expected = asList(1.0, 2.0, 3.0);
-    AttributeBindingFactory.createBinding("key", Float[].class).apply(setter, value);
-    verify(setter).put(doubleArrayKey("key"), expected);
-  }
-
-  @Test
-  void createAttributeBindingForPrimitiveDoubleArray() {
-    double[] value = {1f, 2f, 3f};
-    List<Double> expected = asList(1.0, 2.0, 3.0);
-    AttributeBindingFactory.createBinding("key", double[].class).apply(setter, value);
-    verify(setter).put(doubleArrayKey("key"), expected);
-  }
-
-  @Test
-  void createAttributeBindingForDoubleArray() {
-    Double[] value = {1.0, 2.0, 3.0};
-    List<Double> expected = asList(1.0, 2.0, 3.0);
-    AttributeBindingFactory.createBinding("key", Double[].class).apply(setter, value);
-    verify(setter).put(doubleArrayKey("key"), expected);
-  }
-
-  @Test
-  void createAttributeBindingForPrimitiveBooleanArray() {
-    boolean[] value = {true, false};
-    List<Boolean> expected = asList(true, false);
-    AttributeBindingFactory.createBinding("key", boolean[].class).apply(setter, value);
-    verify(setter).put(booleanArrayKey("key"), expected);
-  }
-
-  @Test
-  void createAttributeBindingForBooleanArray() {
-    Boolean[] value = {true, false};
-    List<Boolean> expected = asList(true, false);
-    AttributeBindingFactory.createBinding("key", Boolean[].class).apply(setter, value);
-    verify(setter).put(booleanArrayKey("key"), expected);
+  @ParameterizedTest
+  @MethodSource("bindingCases")
+  <T> void createAttributeBinding(
+      Type type, Object value, AttributeKey<T> expectedKey, T expectedValue) {
+    AttributeBindingFactory.createBinding("key", type).apply(setter, value);
+    verify(setter).put(expectedKey, expectedValue);
   }
 
   @Test

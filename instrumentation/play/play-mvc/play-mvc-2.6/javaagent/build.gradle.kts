@@ -45,16 +45,11 @@ dependencies {
 
   testLibrary("com.typesafe.play:play-java_$scalaVersion:$playVersion")
   testLibrary("com.typesafe.play:play-test_$scalaVersion:$playVersion")
-
-  // later versions are tested with suites
-  latestDepTestLibrary("com.typesafe.play:play_$scalaVersion:2.7.+") // documented limitation
-  latestDepTestLibrary("com.typesafe.play:play-java_$scalaVersion:2.7.+") // documented limitation
-  latestDepTestLibrary("com.typesafe.play:play-test_$scalaVersion:2.7.+") // documented limitation
 }
 
 testing {
   suites {
-    val play28Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("play28Test") {
       dependencies {
         val version = baseVersion("2.8.0").orLatest("2.+")
         implementation("com.typesafe.play:play-java_2.13:$version")
@@ -63,7 +58,7 @@ testing {
       }
     }
 
-    val play3Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("play3Test") {
       dependencies {
         val version = baseVersion("3.0.0").orLatest()
         implementation("org.playframework:play-java_3:$version")

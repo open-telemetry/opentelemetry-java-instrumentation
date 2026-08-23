@@ -17,6 +17,9 @@ import io.micrometer.core.instrument.config.NamingConvention;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental;
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Internal;
 import java.util.concurrent.TimeUnit;
 
 /** A builder of {@link OpenTelemetryMeterRegistry}. */
@@ -25,11 +28,19 @@ public final class OpenTelemetryMeterRegistryBuilder {
   // Visible for testing
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";
 
+  static {
+    Experimental.internalSetMicrometerHistogramGaugesEnabled(
+        (builder, enabled) -> builder.histogramGaugesEnabled = enabled);
+    Internal.internalSetMetersHiddenFromSearch(
+        (builder, hidden) -> builder.metersHiddenFromSearch = hidden);
+  }
+
   private final OpenTelemetry openTelemetry;
   private Clock clock = Clock.SYSTEM;
   private TimeUnit baseTimeUnit = SECONDS;
   private boolean prometheusMode = false;
   private boolean histogramGaugesEnabled = false;
+  private boolean metersHiddenFromSearch = false;
 
   OpenTelemetryMeterRegistryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -75,7 +86,12 @@ public final class OpenTelemetryMeterRegistryBuilder {
    *
    * <p>This is disabled by default, set this to {@code true} to enable gauge-based Micrometer
    * histograms.
+   *
+   * @deprecated Use {@link
+   *     io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental#setMicrometerHistogramGaugesEnabled(OpenTelemetryMeterRegistryBuilder,
+   *     boolean)} instead. This method may be removed in the next minor release.
    */
+  @Deprecated // may be removed in the next minor release
   @CanIgnoreReturnValue
   public OpenTelemetryMeterRegistryBuilder setMicrometerHistogramGaugesEnabled(
       boolean histogramGaugesEnabled) {
@@ -103,6 +119,12 @@ public final class OpenTelemetryMeterRegistryBuilder {
       meterBuilder.setInstrumentationVersion(version);
     }
     return new OpenTelemetryMeterRegistry(
-        clock, baseTimeUnit, namingConvention, modifier, meterBuilder.build());
+        clock,
+        baseTimeUnit,
+        namingConvention,
+        modifier,
+        SemconvStability.v3Preview(openTelemetry),
+        metersHiddenFromSearch,
+        meterBuilder.build());
   }
 }

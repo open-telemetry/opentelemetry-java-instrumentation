@@ -77,17 +77,16 @@ class SpanParserTest {
 
     try (MockedStatic<FileManager> fileManagerMock = mockStatic(FileManager.class)) {
       fileManagerMock
-          .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-1.yaml").toString()))
+          .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-1.yaml")))
           .thenReturn(file1Content);
       fileManagerMock
-          .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-2.yaml").toString()))
+          .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-2.yaml")))
           .thenReturn(file2Content);
       fileManagerMock
-          .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-3.yaml").toString()))
+          .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-3.yaml")))
           .thenReturn(file2Content);
 
-      Map<String, EmittedSpans> result =
-          EmittedSpanParser.getSpansByScopeFromFiles(tempDir.toString(), "");
+      Map<String, EmittedSpans> result = EmittedSpanParser.getSpansByScopeFromFiles(tempDir, "");
 
       EmittedSpans spans = result.get("default");
       assertThat(spans.getSpansByScope()).hasSize(2);
@@ -240,11 +239,11 @@ class SpanParserTest {
 
     try (MockedStatic<FileManager> fileManagerMock = mockStatic(FileManager.class)) {
       fileManagerMock
-          .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-1.yaml").toString()))
+          .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-1.yaml")))
           .thenReturn(file1Content);
 
       Map<String, EmittedSpans> fileContents =
-          EmittedSpanParser.getSpansByScopeFromFiles(tempDir.toString(), "");
+          EmittedSpanParser.getSpansByScopeFromFiles(tempDir, "");
 
       EmittedSpans emittedSpans = fileContents.get("default");
 

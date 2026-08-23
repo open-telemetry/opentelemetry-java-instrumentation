@@ -10,7 +10,7 @@ dependencies {
 
 val generatedThriftDir = layout.buildDirectory.dir("generated/thrift/main")
 
-val generateThriftSources by tasks.registering(Exec::class) {
+val generateThriftSources = tasks.register<Exec>("generateThriftSources") {
   val thriftFilePath =
     layout.projectDirectory.file("src/main/thrift/custom.thrift").asFile.absolutePath
   val outputDirPath = generatedThriftDir.get().asFile.also { it.mkdirs() }.absolutePath

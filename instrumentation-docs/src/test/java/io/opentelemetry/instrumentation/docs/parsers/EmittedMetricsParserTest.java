@@ -10,10 +10,12 @@ import static org.mockito.Mockito.mockStatic;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
+import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,16 +96,13 @@ class EmittedMetricsParserTest {
 
     try (MockedStatic<FileManager> fileManagerMock = mockStatic(FileManager.class)) {
       fileManagerMock
-          .when(
-              () -> FileManager.readFileToString(telemetryDir.resolve("metrics-1.yaml").toString()))
+          .when(() -> FileManager.readFileToString(telemetryDir.resolve("metrics-1.yaml")))
           .thenReturn(file1Content);
       fileManagerMock
-          .when(
-              () -> FileManager.readFileToString(telemetryDir.resolve("metrics-2.yaml").toString()))
+          .when(() -> FileManager.readFileToString(telemetryDir.resolve("metrics-2.yaml")))
           .thenReturn(file2Content);
 
-      Map<String, EmittedMetrics> result =
-          EmittedMetricsParser.getMetricsFromFiles(tempDir.toString(), "");
+      Map<String, EmittedMetrics> result = EmittedMetricsParser.getMetricsFromFiles(tempDir, "");
 
       EmittedMetrics.MetricsByScope metrics =
           result.get("default").getMetricsByScope().stream()
@@ -119,9 +118,70 @@ class EmittedMetricsParserTest {
   }
 
   @Test
+  void getMetricsFromFilesUnionsAttributesForSameMetric(@TempDir Path tempDir) throws IOException {
+    Path telemetryDir = Files.createDirectories(tempDir.resolve(".telemetry"));
+
+    String withState =
+        """
+    when: Java17
+    metrics_by_scope:
+      - scope: io.opentelemetry.runtime-telemetry
+        metrics:
+          - name: jvm.thread.count
+            type: LONG_SUM
+            attributes:
+              - name: jvm.thread.daemon
+                type: BOOLEAN
+              - name: jvm.thread.state
+                type: STRING
+    """;
+
+    String withoutState =
+        """
+    when: Java17
+    metrics_by_scope:
+      - scope: io.opentelemetry.runtime-telemetry
+        metrics:
+          - name: jvm.thread.count
+            type: LONG_SUM
+            attributes:
+              - name: jvm.thread.daemon
+                type: BOOLEAN
+    """;
+
+    Files.writeString(telemetryDir.resolve("metrics-1.yaml"), withState);
+    Files.writeString(telemetryDir.resolve("metrics-2.yaml"), withoutState);
+
+    try (MockedStatic<FileManager> fileManagerMock = mockStatic(FileManager.class)) {
+      fileManagerMock
+          .when(() -> FileManager.readFileToString(telemetryDir.resolve("metrics-1.yaml")))
+          .thenReturn(withState);
+      fileManagerMock
+          .when(() -> FileManager.readFileToString(telemetryDir.resolve("metrics-2.yaml")))
+          .thenReturn(withoutState);
+
+      Map<String, EmittedMetrics> result = EmittedMetricsParser.getMetricsFromFiles(tempDir, "");
+
+      EmittedMetrics.MetricsByScope metrics =
+          result.get("Java17").getMetricsByScope().stream()
+              .filter(scope -> scope.getScope().equals("io.opentelemetry.runtime-telemetry"))
+              .findFirst()
+              .orElseThrow();
+
+      assertThat(metrics.getMetrics()).hasSize(1);
+      List<String> attributeNames =
+          metrics.getMetrics().get(0).getAttributes().stream()
+              .map(TelemetryAttribute::getName)
+              .sorted()
+              .toList();
+      assertThat(attributeNames).containsExactly("jvm.thread.daemon", "jvm.thread.state");
+    }
+  }
+
+  @Test
   void getMetricsFromFilesHandlesNonexistentDirectory() throws JsonProcessingException {
     Map<String, EmittedMetrics> result =
-        EmittedMetricsParser.getMetricsFromFiles("/nonexistent", "path");
+        EmittedMetricsParser.getMetricsFromFiles(Paths.get("/nonexistent"), "path");
     assertThat(result).isEmpty();
   }
 }

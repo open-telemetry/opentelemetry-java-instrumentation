@@ -5,11 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.openai.v1_1;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static java.util.Collections.singletonList;
+
 import com.openai.client.OpenAIClient;
 import com.openai.client.OpenAIClientAsync;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.instrumentation.openai.v1_1.AbstractEmbeddingsTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,5 +53,19 @@ class EmbeddingsTest extends AbstractEmbeddingsTest {
     // Do a very simple assertion since the telemetry is not part of this library.
     result.add(s -> s.hasName("POST"));
     return result;
+  }
+
+  @Override
+  protected List<Consumer<LogRecordDataAssert>> transportExceptionLogs() {
+    return singletonList(
+        transportLog ->
+            transportLog
+                .hasSeverity(Severity.WARN)
+                .hasEventName("http.client.request.exception")
+                .hasAttributesSatisfyingExactly(
+                    equalTo(EXCEPTION_TYPE, "java.net.ConnectException"),
+                    satisfies(
+                        EXCEPTION_MESSAGE, val -> val.startsWith("Failed to connect to localhost")),
+                    satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
   }
 }

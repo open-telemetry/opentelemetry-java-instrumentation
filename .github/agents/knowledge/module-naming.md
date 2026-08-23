@@ -55,11 +55,11 @@ Module names use `kebab-case`.
 
 Three forms exist — pick the right one (standardised in [#16090](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16090)):
 
-| Form | When to use | Example |
-| --- | --- | --- |
-| `<lib>-common` | Pure utility / abstraction code with **no** library version dependency | `netty-common`, `ktor-common`, `hibernate-common`, `servlet-common` |
-| `<lib>-common-<major.minor>` | Shared code that **requires a minimum library version** | `rxjava-common-3.0`, `netty-common-4.0`, `ktor-common-2.0`, `graphql-java-common-12.0` |
-| `<lib>-common-<variant>` | Shared code tied to an API **variant** (not a version number) | `servlet-common-javax` (javax vs jakarta split) |
+| Form                         | When to use                                                            | Example                                                                                |
+| ---------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `<lib>-common`               | Pure utility / abstraction code with **no** library version dependency | `netty-common`, `ktor-common`, `hibernate-common`, `servlet-common`                    |
+| `<lib>-common-<major.minor>` | Shared code that **requires a minimum library version**                | `rxjava-common-3.0`, `netty-common-4.0`, `ktor-common-2.0`, `graphql-java-common-12.0` |
+| `<lib>-common-<variant>`     | Shared code tied to an API **variant** (not a version number)          | `servlet-common-javax` (javax vs jakarta split)                                        |
 
 For a module that is part of a sub-group (e.g. Spring, Hibernate), the full group name is the
 prefix: `spring-webmvc-common`, `spring-data-common`, `spring-cloud-gateway-common`.
@@ -69,15 +69,15 @@ prefix: `spring-webmvc-common`, `spring-data-common`, `spring-cloud-gateway-comm
 Library instrumentation packages follow the pattern
 `io.opentelemetry.instrumentation.<lib>.<subpackage>`:
 
-| Module type | Module name | Java package |
-| --- | --- | --- |
-| version-scoped common (library) | `rxjava-common-3.0` | `io.opentelemetry.instrumentation.rxjava.common.v3_0` |
-| version-scoped common (library) | `ktor-common-2.0` | `io.opentelemetry.instrumentation.ktor.common.v2_0` |
-| version-scoped common (javaagent) | `netty-common-4.0` | `io.opentelemetry.javaagent.instrumentation.netty.v4_0.common` |
-| non-version common (library) | `netty-common` | `io.opentelemetry.instrumentation.netty.common.internal` |
-| non-version common (library) | `ktor-common` | `io.opentelemetry.instrumentation.ktor` |
-| non-version common (javaagent) | `hibernate-common` | `io.opentelemetry.javaagent.instrumentation.hibernate` |
-| non-version common (javaagent) | `spring-webmvc-common` | `io.opentelemetry.javaagent.instrumentation.spring.webmvc` |
+| Module type                       | Module name            | Java package                                                   |
+| --------------------------------- | ---------------------- | -------------------------------------------------------------- |
+| version-scoped common (library)   | `rxjava-common-3.0`    | `io.opentelemetry.instrumentation.rxjava.common.v3_0`          |
+| version-scoped common (library)   | `ktor-common-2.0`      | `io.opentelemetry.instrumentation.ktor.common.v2_0`            |
+| version-scoped common (javaagent) | `netty-common-4.0`     | `io.opentelemetry.javaagent.instrumentation.netty.v4_0.common` |
+| non-version common (library)      | `netty-common`         | `io.opentelemetry.instrumentation.netty.common.internal`       |
+| non-version common (library)      | `ktor-common`          | `io.opentelemetry.instrumentation.ktor`                        |
+| non-version common (javaagent)    | `hibernate-common`     | `io.opentelemetry.javaagent.instrumentation.hibernate`         |
+| non-version common (javaagent)    | `spring-webmvc-common` | `io.opentelemetry.javaagent.instrumentation.spring.webmvc`     |
 
 General rules:
 

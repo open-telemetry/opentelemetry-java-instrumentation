@@ -12,10 +12,8 @@ import com.datastax.dse.driver.internal.core.cql.reactive.DefaultReactiveResultS
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.DriverException;
 import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
-import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
-import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.cql.Statement;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -83,7 +81,7 @@ final class TracingCqlSession {
   }
 
   private ResultSet execute(CqlSession session, String query) {
-    CassandraRequest request = CassandraRequest.create(session, query, false);
+    CassandraRequest request = CassandraRequest.create(session, query);
     Context context = instrumenter.start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
@@ -97,9 +95,7 @@ final class TracingCqlSession {
   }
 
   private ResultSet execute(CqlSession session, Statement<?> statement) {
-    String query = getQuery(statement);
-    CassandraRequest request =
-        CassandraRequest.create(session, query, statement instanceof BoundStatement);
+    CassandraRequest request = CassandraRequest.create(session, statement);
     Context context = instrumenter.start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
@@ -113,14 +109,12 @@ final class TracingCqlSession {
   }
 
   private CompletionStage<AsyncResultSet> executeAsync(CqlSession session, Statement<?> statement) {
-    String query = getQuery(statement);
-    CassandraRequest request =
-        CassandraRequest.create(session, query, statement instanceof BoundStatement);
+    CassandraRequest request = CassandraRequest.create(session, statement);
     return executeAsync(request, () -> session.executeAsync(statement));
   }
 
   private CompletionStage<AsyncResultSet> executeAsync(CqlSession session, String query) {
-    CassandraRequest request = CassandraRequest.create(session, query, false);
+    CassandraRequest request = CassandraRequest.create(session, query);
     return executeAsync(request, () -> session.executeAsync(query));
   }
 
@@ -161,17 +155,6 @@ final class TracingCqlSession {
         });
 
     return result;
-  }
-
-  private static String getQuery(Statement<?> statement) {
-    String query = null;
-    if (statement instanceof SimpleStatement) {
-      query = ((SimpleStatement) statement).getQuery();
-    } else if (statement instanceof BoundStatement) {
-      query = ((BoundStatement) statement).getPreparedStatement().getQuery();
-    }
-
-    return query == null ? "" : query;
   }
 
   @Nullable

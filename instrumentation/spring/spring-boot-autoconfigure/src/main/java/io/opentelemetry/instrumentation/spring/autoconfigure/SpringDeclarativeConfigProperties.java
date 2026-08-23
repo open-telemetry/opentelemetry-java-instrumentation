@@ -41,8 +41,7 @@ import javax.annotation.Nullable;
 final class SpringDeclarativeConfigProperties implements DeclarativeConfigProperties {
 
   private static final Set<Class<?>> SUPPORTED_SCALAR_TYPES =
-      Collections.unmodifiableSet(
-          new LinkedHashSet<>(asList(String.class, Boolean.class, Long.class, Double.class)));
+      new LinkedHashSet<>(asList(String.class, Boolean.class, Long.class, Double.class));
 
   /** Values are {@link #isPrimitive(Object)}, {@link List} of scalars. */
   private final Map<String, Object> simpleEntries;

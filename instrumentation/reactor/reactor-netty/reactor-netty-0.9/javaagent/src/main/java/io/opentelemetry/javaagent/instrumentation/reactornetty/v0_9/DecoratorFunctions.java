@@ -25,7 +25,7 @@ public class DecoratorFunctions {
         && callbackClass != OnResponseErrorDecorator.class;
   }
 
-  private abstract static class OnMessageDecorator<M> implements BiConsumer<M, Connection> {
+  protected abstract static class OnMessageDecorator<M> implements BiConsumer<M, Connection> {
     private final BiConsumer<? super M, ? super Connection> delegate;
     private final boolean forceParentContext;
 
@@ -80,7 +80,7 @@ public class DecoratorFunctions {
     }
   }
 
-  private abstract static class OnMessageErrorDecorator<M> implements BiConsumer<M, Throwable> {
+  protected abstract static class OnMessageErrorDecorator<M> implements BiConsumer<M, Throwable> {
     private final BiConsumer<? super M, ? super Throwable> delegate;
 
     OnMessageErrorDecorator(BiConsumer<? super M, ? super Throwable> delegate) {

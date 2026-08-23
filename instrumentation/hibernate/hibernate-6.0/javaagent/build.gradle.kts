@@ -38,7 +38,7 @@ otelJava {
 
 testing {
   suites {
-    val hibernate6Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("hibernate6Test") {
       targets.all {
         testTask.configure {
           jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
@@ -53,7 +53,7 @@ testing {
       }
     }
 
-    val hibernate7Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("hibernate7Test") {
       targets.all {
         testTask.configure {
           jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
@@ -85,7 +85,7 @@ tasks {
     }
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -93,12 +94,15 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       boolean captureQueryParameters) {
     Long batchSize = getter.getDbOperationBatchSize(request);
-    boolean isBatch = batchSize != null && batchSize > 1;
+    // db.operation.batch.size is captured for every batch execution (including an empty batch with
+    // size 0); it is only omitted for a single-statement batch, which is reported as a non-batch
+    boolean isBatch = batchSize != null && batchSize != 1;
 
     if (emitStableDatabaseSemconv()) {
       attributes.put(
           DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(getter.getDbSystemName(request)));
       attributes.put(DB_NAMESPACE, getter.getDbNamespace(request));
+      attributes.put(DB_COLLECTION_NAME, getter.getDbCollectionName(request));
       attributes.put(DB_QUERY_TEXT, getter.getDbQueryText(request));
       attributes.put(DB_OPERATION_NAME, getter.getDbOperationName(request));
       attributes.put(DB_QUERY_SUMMARY, getter.getDbQuerySummary(request));
@@ -112,7 +116,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       attributes.put(DB_NAME, getter.getDbName(request));
       attributes.put(DB_CONNECTION_STRING, getter.getConnectionString(request));
       attributes.put(DB_STATEMENT, getter.getDbQueryText(request));
-      attributes.put(DB_OPERATION, getter.getDbOperationName(request));
+      attributes.put(DB_OPERATION, getter.getDbOperation(request));
     }
 
     // Query parameters are an incubating feature and work with both old and new semconv

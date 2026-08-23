@@ -11,7 +11,12 @@ import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_INSTANCE_ID;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_NAME;
 import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_VERSION;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.SpanKind;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.junit.jupiter.api.Test;
@@ -35,10 +40,25 @@ import org.springframework.web.client.RestTemplate;
 class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
   @Autowired private RestTemplateBuilder restTemplateBuilder;
+  @Autowired private ConfigProvider configProvider;
 
   // can't use @LocalServerPort annotation since it moved packages between Spring Boot 2 and 3
   @Value("${local.server.port}")
   private int port;
+
+  @Test
+  void configProviderReflectsDeclarativeConfig() {
+    // otel.instrumentation/development.java.common.http.client.emit_experimental_telemetry
+    // in application.yaml
+    DeclarativeConfigProperties httpClientConfig =
+        configProvider
+            .getInstrumentationConfig()
+            .getStructured("java")
+            .getStructured("common")
+            .getStructured("http")
+            .getStructured("client");
+    assertThat(httpClientConfig.getBoolean("emit_experimental_telemetry/development")).isTrue();
+  }
 
   @Test
   void restTemplate() {
@@ -72,7 +92,9 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
                                         satisfies(
                                             SERVICE_INSTANCE_ID,
                                             AbstractCharSequenceAssert::isNotBlank)))
-                        .hasAttribute(HTTP_ROUTE, "/ping"),
+                        .hasAttribute(HTTP_ROUTE, "/ping")
+                        .hasAttribute(satisfies(THREAD_ID, val -> val.isNotZero()))
+                        .hasAttribute(satisfies(THREAD_NAME, val -> val.isNotBlank())),
                 AbstractSpringStarterSmokeTest::withSpanAssert));
   }
 }

@@ -41,7 +41,7 @@ dependencies {
 
 testing {
   suites {
-    val elasticsearch6Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("elasticsearch6Test") {
       dependencies {
         val version = baseVersion("6.0.0").orLatest("6.4.+")
         implementation("org.elasticsearch.client:transport:$version")
@@ -51,7 +51,7 @@ testing {
       }
     }
 
-    val elasticsearch65Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("elasticsearch65Test") {
       dependencies {
         val version = baseVersion("6.5.0").orLatest("6.+")
         implementation("org.elasticsearch.client:transport:$version")
@@ -61,7 +61,7 @@ testing {
       }
     }
 
-    val elasticsearch7Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("elasticsearch7Test") {
       dependencies {
         val version = baseVersion("7.0.0").orLatest()
         implementation("org.elasticsearch.client:transport:$version")

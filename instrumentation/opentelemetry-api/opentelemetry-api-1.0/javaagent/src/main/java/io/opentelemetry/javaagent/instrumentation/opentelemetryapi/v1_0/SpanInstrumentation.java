@@ -1,0 +1,49 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0;
+
+import static net.bytebuddy.matcher.ElementMatchers.isStatic;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace.Bridging;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+
+class SpanInstrumentation implements TypeInstrumentation {
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return named("application.io.opentelemetry.api.trace.PropagatedSpan");
+  }
+
+  @Override
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        isStatic().and(named("create")), SpanInstrumentation.class.getName() + "$CreateAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class CreateAdvice {
+
+    // We replace the return value completely so don't need to call the method.
+    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class, inline = false)
+    public static boolean methodEnter() {
+      return false;
+    }
+
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static application.io.opentelemetry.api.trace.Span methodExit(
+        @Advice.Argument(0)
+            application.io.opentelemetry.api.trace.SpanContext applicationSpanContext) {
+      return Bridging.toApplication(Span.wrap(Bridging.toAgent(applicationSpanContext)));
+    }
+  }
+}

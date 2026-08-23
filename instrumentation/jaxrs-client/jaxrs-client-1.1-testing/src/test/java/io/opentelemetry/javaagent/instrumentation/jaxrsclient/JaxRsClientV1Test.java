@@ -64,7 +64,7 @@ class JaxRsClientV1Test extends AbstractHttpClientTest<WebResource.Builder> {
   }
 
   private Client getClient(URI uri) {
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       return clientWithReadTimeout;
     }
     return client;

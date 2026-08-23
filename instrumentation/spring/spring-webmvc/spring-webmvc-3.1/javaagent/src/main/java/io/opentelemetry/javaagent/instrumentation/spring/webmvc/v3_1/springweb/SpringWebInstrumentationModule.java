@@ -13,13 +13,11 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class SpringWebInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class SpringWebInstrumentationModule extends InstrumentationModule {
   public SpringWebInstrumentationModule() {
     super("spring-webmvc", "spring-webmvc-3.1");
   }
@@ -40,12 +38,6 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
     // visible to the bean class loader
     helperResourceBuilder.register(
         "org/springframework/web/servlet/v3_1/OpenTelemetryHandlerMappingFilter.class");
-  }
-
-  @Override
-  public String getModuleGroup() {
-    // depends on OpenTelemetryHandlerMappingFilter
-    return "servlet";
   }
 
   @Override

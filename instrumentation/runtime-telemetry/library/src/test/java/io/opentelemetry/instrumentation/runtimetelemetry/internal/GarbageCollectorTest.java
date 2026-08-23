@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_ACTION;
 import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_NAME;
+import static io.opentelemetry.semconv.incubating.JvmIncubatingAttributes.JVM_GC_CAUSE;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -90,7 +90,7 @@ class GarbageCollectorTest {
                                         equalTo(JVM_GC_NAME, "G1 Young Generation"),
                                         equalTo(JVM_GC_ACTION, "end of minor GC"),
                                         equalTo(
-                                            stringKey("jvm.gc.cause"),
+                                            JVM_GC_CAUSE,
                                             captureGcCause ? "Allocation Failure" : null))
                                     .hasBucketBoundaries(GC_DURATION_BUCKETS),
                             point ->
@@ -101,8 +101,7 @@ class GarbageCollectorTest {
                                         equalTo(JVM_GC_NAME, "G1 Old Generation"),
                                         equalTo(JVM_GC_ACTION, "end of major GC"),
                                         equalTo(
-                                            stringKey("jvm.gc.cause"),
-                                            captureGcCause ? "System.gc()" : null))
+                                            JVM_GC_CAUSE, captureGcCause ? "System.gc()" : null))
                                     .hasBucketBoundaries(GC_DURATION_BUCKETS))));
   }
 

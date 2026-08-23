@@ -12,10 +12,4 @@ configurations:
       may contain personal or sensitive information.
     type: boolean
     default: false
-  - name: otel.instrumentation.http.known-methods
-    declarative_name: java.common.http.known_methods
-    description: >
-      Configures the instrumentation to recognize an alternative set of HTTP request methods. All
-      other methods will be treated as `_OTHER`.
-    type: list
-    default: "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"
+  - ref: http.known-methods

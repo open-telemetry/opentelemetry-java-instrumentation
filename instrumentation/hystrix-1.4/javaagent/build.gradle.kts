@@ -32,7 +32,7 @@ tasks {
     // jvmArgs("-Dhystrix.command.default.execution.timeout.enabled=false")
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

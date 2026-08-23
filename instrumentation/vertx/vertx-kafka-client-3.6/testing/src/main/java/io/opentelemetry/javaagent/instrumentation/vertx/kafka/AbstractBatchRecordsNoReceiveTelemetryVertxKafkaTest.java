@@ -5,6 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafka;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricPointCounts;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -64,28 +68,36 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
 
                   // first record
                   span ->
-                      span.hasName("testBatchTopic publish")
+                      span.hasName(spanName("testBatchTopic", "publish", "send"))
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(sendAttributes(record1)),
-                  span ->
-                      span.hasName("testBatchTopic process")
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(processAttributes(record1)),
+                  span -> {
+                    span.hasName(spanName("testBatchTopic", "process", "process"))
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(processAttributes(record1));
+                    if (emitStableMessagingSemconv()) {
+                      span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                    }
+                  },
                   span -> span.hasName("process testSpan1").hasParent(trace.getSpan(2)),
 
                   // second record
                   span ->
-                      span.hasName("testBatchTopic publish")
+                      span.hasName(spanName("testBatchTopic", "publish", "send"))
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(sendAttributes(record2)),
-                  span ->
-                      span.hasName("testBatchTopic process")
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasParent(trace.getSpan(4))
-                          .hasAttributesSatisfyingExactly(processAttributes(record2)),
+                  span -> {
+                    span.hasName(spanName("testBatchTopic", "process", "process"))
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(4))
+                        .hasAttributesSatisfyingExactly(processAttributes(record2));
+                    if (emitStableMessagingSemconv()) {
+                      span.hasLinks(LinkData.create(trace.getSpan(4).getSpanContext()));
+                    }
+                  },
                   span -> span.hasName("process testSpan2").hasParent(trace.getSpan(5)));
 
               producer1.set(trace.getSpan(1));
@@ -95,15 +107,28 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
                 trace.hasSpansSatisfyingExactly(
                     // batch consumer
                     span ->
-                        span.hasName("testBatchTopic process")
+                        span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
                             .hasLinks(
-                                LinkData.create(producer1.get().getSpanContext()),
-                                LinkData.create(producer2.get().getSpanContext()))
+                                batchRecordLink(producer1.get()), batchRecordLink(producer2.get()))
                             .hasAttributesSatisfyingExactly(
                                 batchProcessAttributes("testBatchTopic")),
                     span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))));
+    assertProcessDurationMetrics(
+        testing(),
+        "io.opentelemetry.vertx-kafka-client-3.6",
+        "testBatchTopic",
+        hasConsumerGroup() ? "test" : null,
+        "0",
+        3,
+        null);
+    // all of the records come from the same partition, so the batch process operation and the
+    // per-record process operations share a single duration point
+    assertProcessMetricPointCounts(testing(), "io.opentelemetry.vertx-kafka-client-3.6", 1);
+    // the per-record process operations must not also count the two deliveries the batch process
+    // operation already counted
+    assertTotalConsumedMessages(testing(), "io.opentelemetry.vertx-kafka-client-3.6", 2);
   }
 
   @Order(2)
@@ -127,15 +152,19 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("producer"),
                   span ->
-                      span.hasName("testBatchTopic publish")
+                      span.hasName(spanName("testBatchTopic", "publish", "send"))
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(sendAttributes(record)),
-                  span ->
-                      span.hasName("testBatchTopic process")
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(processAttributes(record)),
+                  span -> {
+                    span.hasName(spanName("testBatchTopic", "process", "process"))
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(processAttributes(record));
+                    if (emitStableMessagingSemconv()) {
+                      span.hasLinks(LinkData.create(trace.getSpan(1).getSpanContext()));
+                    }
+                  },
                   span -> span.hasName("process error").hasParent(trace.getSpan(2)));
 
               producer.set(trace.getSpan(1));
@@ -143,14 +172,24 @@ public abstract class AbstractBatchRecordsNoReceiveTelemetryVertxKafkaTest
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("testBatchTopic process")
+                        span.hasName(spanName("testBatchTopic", "process", "process"))
                             .hasKind(SpanKind.CONSUMER)
                             .hasNoParent()
-                            .hasLinks(LinkData.create(producer.get().getSpanContext()))
+                            .hasLinks(batchRecordLink(producer.get()))
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalArgumentException("boom"))
                             .hasAttributesSatisfyingExactly(
-                                batchProcessAttributes("testBatchTopic")),
+                                withErrorType(batchProcessAttributes("testBatchTopic"))),
                     span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))));
+    assertProcessDurationMetrics(
+        testing(),
+        "io.opentelemetry.vertx-kafka-client-3.6",
+        "testBatchTopic",
+        hasConsumerGroup() ? "test" : null,
+        "0",
+        1,
+        null);
+    assertProcessMetricPointCounts(testing(), "io.opentelemetry.vertx-kafka-client-3.6", 2);
+    assertTotalConsumedMessages(testing(), "io.opentelemetry.vertx-kafka-client-3.6", 1);
   }
 }

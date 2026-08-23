@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -34,13 +34,7 @@ public final class R2dbcSqlAttributesGetter
 
   @Override
   public SqlDialect getSqlDialect(DbExecution request) {
-    // the underlying database is unknown, use the safer default that sanitizes double-quoted
-    // fragments as string literals (note that this can lead to incorrect summarization
-    // for databases that do use double quotes as identifiers)
-    //
-    // TODO do better in
-    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16251
-    return DOUBLE_QUOTES_ARE_STRING_LITERALS;
+    return fromDbSystemName(request.getSystemName());
   }
 
   @Deprecated // to be removed in 3.0
@@ -64,7 +58,31 @@ public final class R2dbcSqlAttributesGetter
 
   @Override
   public Collection<String> getRawQueryTexts(DbExecution request) {
-    return singleton(request.getRawQueryText());
+    return request.getRawQueryTexts();
+  }
+
+  @Deprecated // to be removed in 3.0
+  @Override
+  public Collection<String> getRawQueryTextsForOldSemconv(DbExecution request) {
+    Collection<String> rawQueryTexts = request.getRawQueryTexts();
+    return rawQueryTexts.size() == 1 ? rawQueryTexts : singleton(join(";\n", rawQueryTexts));
+  }
+
+  private static String join(String delimiter, Collection<String> collection) {
+    StringBuilder builder = new StringBuilder();
+    for (String string : collection) {
+      if (builder.length() != 0) {
+        builder.append(delimiter);
+      }
+      builder.append(string);
+    }
+    return builder.toString();
+  }
+
+  @Override
+  @Nullable
+  public Long getDbOperationBatchSize(DbExecution request) {
+    return request.getBatchSize();
   }
 
   @Nullable
@@ -90,7 +108,8 @@ public final class R2dbcSqlAttributesGetter
   }
 
   @Override
-  public boolean isParameterizedQuery(DbExecution request) {
+  public boolean isParameterizedQuery(DbExecution request, int queryIndex) {
+    // R2DBC does not support mixed parameterization within a single request.
     return request.isParameterizedQuery();
   }
 }

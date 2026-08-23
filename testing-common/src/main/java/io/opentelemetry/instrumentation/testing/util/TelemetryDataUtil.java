@@ -34,12 +34,12 @@ public class TelemetryDataUtil {
 
   public static Comparator<List<SpanData>> orderByRootSpanKind(SpanKind... spanKinds) {
     List<SpanKind> list = asList(spanKinds);
-    return Comparator.comparing(span -> list.indexOf(span.get(0).getKind()));
+    return Comparator.comparingInt(span -> list.indexOf(span.get(0).getKind()));
   }
 
   public static Comparator<List<SpanData>> orderByRootSpanName(String... names) {
     List<String> list = asList(names);
-    return Comparator.comparing(span -> list.indexOf(span.get(0).getName()));
+    return Comparator.comparingInt(span -> list.indexOf(span.get(0).getName()));
   }
 
   public static <T extends Comparable<T>> Comparator<List<SpanData>> comparingRootSpanAttribute(

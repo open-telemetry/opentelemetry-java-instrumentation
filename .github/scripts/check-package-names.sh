@@ -48,6 +48,12 @@ check_source_set() {
       if [[ "$dir" == "instrumentation/elasticsearch/elasticsearch-rest-7.0/library/src/main/java/org/elasticsearch/client" ]]; then
         continue
       fi
+      if [[ "$dir" == "instrumentation/thrift-0.13/library/src/main/java/org/apache/thrift" ]]; then
+        continue
+      fi
+      if [[ "$dir" == "instrumentation/thrift-0.13/library/src/main/java/org/apache/thrift/server" ]]; then
+        continue
+      fi
       if [[ "$dir" == instrumentation/java-http-client/library/src/main/java/io/opentelemetry/instrumentation/javahttpclient* ]]; then
         continue
       fi

@@ -115,7 +115,11 @@ class OpenTelemetryConnectionTest {
 
   private static OpenTelemetryConnection getConnection(OpenTelemetry openTelemetry) {
     Instrumenter<DbRequest, Void> statementInstrumenter =
-        createStatementInstrumenter(openTelemetry);
+        createStatementInstrumenter(
+            openTelemetry,
+            /* enabled= */ true,
+            /* querySanitizationEnabled= */ true,
+            /* captureQueryParameters= */ false);
     Instrumenter<DbRequest, Void> transactionInstrumenter =
         createTransactionInstrumenter(openTelemetry, true);
     DbInfo dbInfo = getDbInfo();

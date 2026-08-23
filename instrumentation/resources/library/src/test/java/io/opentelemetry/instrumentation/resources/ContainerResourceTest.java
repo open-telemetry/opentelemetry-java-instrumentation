@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.resources;
 
-import static io.opentelemetry.semconv.incubating.ContainerIncubatingAttributes.CONTAINER_ID;
+import static io.opentelemetry.semconv.ContainerAttributes.CONTAINER_ID;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -26,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ContainerResourceTest {
 
   private static final String TEST_CONTAINER_ID = "abcdef123123deadbeef";
+
   @Mock CgroupV1ContainerIdExtractor v1;
   @Mock CgroupV2ContainerIdExtractor v2;
 

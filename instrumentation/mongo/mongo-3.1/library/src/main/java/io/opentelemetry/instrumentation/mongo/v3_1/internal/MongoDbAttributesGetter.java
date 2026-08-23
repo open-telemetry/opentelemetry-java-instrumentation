@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
+import static java.util.Arrays.asList;
+
 import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionDescription;
@@ -13,8 +15,10 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import javax.annotation.Nullable;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
@@ -29,8 +33,27 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String MONGODB = "mongodb";
 
-  @Nullable private static final Method IS_TRUNCATED_METHOD;
   private static final String HIDDEN_CHAR = "?";
+  private static final Set<String> COMMANDS_WITH_COLLECTION_NAME_AS_VALUE =
+      new HashSet<>(
+          asList(
+              "aggregate",
+              "count",
+              "distinct",
+              "mapReduce",
+              "geoSearch",
+              "delete",
+              "find",
+              "killCursors",
+              "findAndModify",
+              "insert",
+              "update",
+              "create",
+              "drop",
+              "createIndexes",
+              "listIndexes"));
+
+  @Nullable private static final Method IS_TRUNCATED_METHOD;
 
   static {
     IS_TRUNCATED_METHOD =
@@ -59,6 +82,25 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   @Nullable
   public String getDbNamespace(CommandStartedEvent event) {
     return event.getDatabaseName();
+  }
+
+  @Override
+  @Nullable
+  public String getDbCollectionName(CommandStartedEvent event) {
+    if (event.getCommandName().equals("getMore")) {
+      BsonValue collectionValue = event.getCommand().get("collection");
+      if (collectionValue != null) {
+        if (collectionValue.isString()) {
+          return collectionValue.asString().getValue();
+        }
+      }
+    } else if (COMMANDS_WITH_COLLECTION_NAME_AS_VALUE.contains(event.getCommandName())) {
+      BsonValue commandValue = event.getCommand().get(event.getCommandName());
+      if (commandValue != null && commandValue.isString()) {
+        return commandValue.asString().getValue();
+      }
+    }
+    return null;
   }
 
   @Deprecated // to be removed in 3.0
@@ -116,7 +158,14 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   public String getErrorType(
       CommandStartedEvent request, @Nullable Void response, @Nullable Throwable error) {
     if (error instanceof MongoException) {
-      return Integer.toString(((MongoException) error).getCode());
+      // MongoException.getCode() only returns a real server error code (a positive value) when the
+      // exception came from a server command error. For client-side exceptions the driver uses
+      // negative sentinels (e.g. -2, -3, -4), which are meaningless as an error.type. Returning
+      // null in that case lets the shared extractor fall back to the exception class name.
+      int code = ((MongoException) error).getCode();
+      if (code > 0) {
+        return Integer.toString(code);
+      }
     }
     return null;
   }

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jmx;
 
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.SEVERE;
+import static java.util.logging.Level.WARNING;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -14,6 +15,7 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.io.IOException;
@@ -65,7 +67,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
   private static void addClasspathRules(String target, JmxTelemetryBuilder builder) {
     ClassLoader classLoader = JmxTelemetryBuilder.class.getClassLoader();
-    String resource = String.format("jmx/rules/%s.yaml", target);
+    String resource = targetSystemResource(target, AgentCommonConfig.get().isV3Preview());
     try (InputStream input = classLoader.getResourceAsStream(resource)) {
       if (input == null) {
         logger.log(SEVERE, "JMX configuration not found on classpath " + resource);
@@ -76,5 +78,21 @@ public class JmxMetricInsightInstaller implements AgentListener {
       // for now only log JMX metric configuration errors as they do not prevent agent startup
       logger.log(SEVERE, "Error while loading JMX configuration from classpath " + resource, e);
     }
+  }
+
+  private static String targetSystemResource(String target, boolean v3Preview) {
+    if (target.equals("kafka-broker") && !v3Preview) {
+      logger.log(
+          WARNING,
+          "The kafka-broker JMX target system has been renamed to experimental-kafka-broker.");
+      return "jmx/rules/experimental-kafka-broker.yaml";
+    }
+    if (target.equals("kafka-connect") && !v3Preview) {
+      logger.log(
+          WARNING,
+          "The kafka-connect JMX target system has been renamed to experimental-kafka-connect.");
+      return "jmx/rules/experimental-kafka-connect.yaml";
+    }
+    return String.format("jmx/rules/%s.yaml", target);
   }
 }

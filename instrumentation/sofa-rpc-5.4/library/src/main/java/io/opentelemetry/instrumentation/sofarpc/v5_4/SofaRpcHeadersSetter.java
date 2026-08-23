@@ -1,0 +1,20 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.sofarpc.v5_4;
+
+import io.opentelemetry.context.propagation.TextMapSetter;
+import javax.annotation.Nullable;
+
+final class SofaRpcHeadersSetter implements TextMapSetter<SofaRpcRequest> {
+
+  @Override
+  public void set(@Nullable SofaRpcRequest request, String key, String value) {
+    if (request == null) {
+      return;
+    }
+    request.request().addRequestProp(key, value);
+  }
+}

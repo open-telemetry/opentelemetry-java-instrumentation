@@ -17,11 +17,13 @@ jobs:
     runs-on: ubuntu-latest
     environment: protected
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # need full history and tags so the release-notes script can resolve
           # the previous release tag (e.g. v2.27.0) when computing the commit range
           fetch-depth: 0
+          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
+          persist-credentials: true
 
       - name: Install Copilot CLI
         run: |
@@ -48,20 +50,21 @@ jobs:
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: otelbot-token
         with:
-          app-id: ${{ vars.OTELBOT_APP_ID }}
+          client-id: ${{ vars.OTELBOT_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          permission-pull-requests: write
 
       - name: Create pull request against main
         env:
           ARTIFACT_URL: ${{ steps.upload-diagnostics.outputs.artifact-url }}
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          # pull requests from secrets.GITHUB_TOKEN do not run workflows
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Draft release notes"
           body=$(cat <<EOF
           Automated draft of the \`## Unreleased\` section of \`CHANGELOG.md\`.
 
-          The entire \`## Unreleased\` block was regenerated from per-PR classifications. Review the diff to recover any hand-written content that should be retained.
+          The entire \`## Unreleased\` block was regenerated from per-PR classifications. Existing entries are intentionally replaced so the generated draft can be reviewed against them.
 
           [Download draft diagnostics]($ARTIFACT_URL)
           EOF
@@ -72,6 +75,7 @@ jobs:
           git add CHANGELOG.md
           git commit -m "$message"
           git push --set-upstream origin $branch
-          gh pr create --title "$message" \
-                       --body "$body" \
-                       --base main
+          gh pr create \
+            --title "$message" \
+            --body "$body" \
+            --base main

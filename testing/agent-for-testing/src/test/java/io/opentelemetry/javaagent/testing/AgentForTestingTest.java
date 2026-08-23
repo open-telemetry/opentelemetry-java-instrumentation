@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.testing;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -51,10 +52,13 @@ class AgentForTestingTest {
   @Test
   void exportAndRetrieveLogRecords() {
     Logger logger = GlobalOpenTelemetry.get().getLogsBridge().loggerBuilder("test").build();
-    logger.logRecordBuilder().setBody("testBody").emit();
+    logger.logRecordBuilder().setBody("testBody").setAttribute("testKey", "testValue").emit();
 
     List<LogRecordData> logRecords = AgentTestingExporterAccess.getExportedLogRecords();
-    assertThat(logRecords.size()).isEqualTo(1);
-    assertThat(logRecords.get(0).getBodyValue().getValue()).isEqualTo("testBody");
+    assertThat(logRecords).hasSize(1);
+    LogRecordData logRecord = logRecords.get(0);
+    assertThat(logRecord.getBodyValue().getValue()).isEqualTo("testBody");
+    assertThat(logRecord.getAttributes().get(stringKey("testKey"))).isEqualTo("testValue");
+    assertThat(logRecord.getTotalAttributeCount()).isEqualTo(1);
   }
 }

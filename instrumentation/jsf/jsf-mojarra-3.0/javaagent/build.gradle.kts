@@ -32,7 +32,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:jsf:jsf-mojarra-1.2:javaagent"))
 
   // JSF 4+ requires CDI instead of BeanManager, the test should be upgraded first
-  latestDepTestLibrary("jakarta.el:jakarta.el-api:4.+") // documented limitation
+  latestDepTestLibrary("jakarta.el:jakarta.el-api:4.+") // related dependency
   latestDepTestLibrary("jakarta.faces:jakarta.faces-api:3.+") // documented limitation
   latestDepTestLibrary("org.glassfish:jakarta.faces:3.+") // documented limitation
 }
