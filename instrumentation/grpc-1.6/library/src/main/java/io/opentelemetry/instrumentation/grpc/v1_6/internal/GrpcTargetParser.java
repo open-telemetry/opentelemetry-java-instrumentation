@@ -39,12 +39,20 @@ public class GrpcTargetParser {
         return new ParsedTarget(target, null);
       }
 
-      String scheme = target.substring(0, colonIndex).toLowerCase(Locale.ROOT);
+      String originalScheme = target.substring(0, colonIndex);
+      String scheme = originalScheme.toLowerCase(Locale.ROOT);
       if (isKnownScheme(scheme)) {
         return parseSingleColonScheme(scheme, target);
       }
 
-      // No known scheme — treat as "host:port"
+      Integer port = parsePort(target.substring(colonIndex + 1));
+      if (!originalScheme.isEmpty() && port != null) {
+        return new ParsedTarget(originalScheme, port);
+      }
+      if (isValidScheme(originalScheme)) {
+        return new ParsedTarget(target, null);
+      }
+
       return parseHostPort(target);
     }
 
@@ -192,6 +200,23 @@ public class GrpcTargetParser {
         || "ipv4".equals(scheme)
         || "ipv6".equals(scheme)
         || "xds".equals(scheme);
+  }
+
+  private static boolean isValidScheme(String scheme) {
+    if (scheme.isEmpty() || !isAsciiLetter(scheme.charAt(0))) {
+      return false;
+    }
+    for (int i = 1; i < scheme.length(); i++) {
+      char c = scheme.charAt(i);
+      if (!isAsciiLetter(c) && (c < '0' || c > '9') && c != '+' && c != '-' && c != '.') {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static boolean isAsciiLetter(char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
   }
 
   private GrpcTargetParser() {}

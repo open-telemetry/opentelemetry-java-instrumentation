@@ -76,9 +76,12 @@ class GrpcTargetParserTest {
         Arguments.of("XDS:///myservice", "XDS:///myservice", null),
         Arguments.of("xds:/myservice", "xds:/myservice", null),
 
-        // host with missing/invalid port — host preserved, port omitted
-        Arguments.of("myhost:", "myhost", null),
-        Arguments.of("myhost:abc", "myhost", null),
+        // unknown schemes are preserved
+        Arguments.of("consul:orders", "consul:orders", null),
+        Arguments.of("myhost:", "myhost:", null),
+        Arguments.of("myhost:abc", "myhost:abc", null),
+
+        // known schemes with missing/invalid ports preserve the parsed host
         Arguments.of("dns:myhost:abc", "myhost", null),
         Arguments.of("dns:///myhost:", "myhost", null));
   }
