@@ -61,6 +61,10 @@ and deadlocks.
 
 ## Making the release
 
+- Confirm that the inherited
+  [Immutable tags with maintainer bypass](https://github.com/open-telemetry/opentelemetry-java-instrumentation/rules/5576619)
+  ruleset is active. It blocks tag updates and deletions. Maintainers can bypass the ruleset, but
+  must not bypass it for release tags.
 - Create and push the release tag from the head of the release branch:
 
   ```bash
