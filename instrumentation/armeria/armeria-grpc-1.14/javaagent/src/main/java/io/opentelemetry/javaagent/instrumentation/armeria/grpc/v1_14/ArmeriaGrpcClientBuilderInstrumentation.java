@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.armeria.grpc.v1_14;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -41,7 +40,7 @@ class ArmeriaGrpcClientBuilderInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.This GrpcClientBuilder builder, @Advice.FieldValue("uri") @Nullable URI uri) {
       String target = null;
-      if (emitStableRpcSemconv() && uri != null) {
+      if (uri != null) {
         target = uri.getAuthority();
       }
       GrpcTelemetry telemetry = GrpcTelemetry.create(GlobalOpenTelemetry.get());
