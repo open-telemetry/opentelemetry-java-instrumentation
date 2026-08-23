@@ -27,7 +27,7 @@ class TrinoTest extends TargetSystemTest {
 
   @Test
   void testTrinoMetrics() throws Exception {
-    List<String> yamlFiles = singletonList("trino.yaml");
+    List<String> yamlFiles = singletonList("experimental-trino.yaml");
 
     yamlFiles.forEach(this::validateYamlSyntax);
 
@@ -52,13 +52,14 @@ class TrinoTest extends TargetSystemTest {
     copyYamlFilesToTarget(target, yamlFiles);
 
     startWeaverValidation(
-        "trino.yaml",
+        "experimental-trino.yaml",
         result ->
             result
                 .checkNothingUnregisteredWithPrefix("trino.")
                 .checkRegisteredMetrics(
                     "trino.",
                     asList(
+                        "trino.node.active.count",
                         "trino.memory.pool.free",
                         "trino.memory.query.killed.count",
                         "trino.query.running.count",
@@ -71,7 +72,7 @@ class TrinoTest extends TargetSystemTest {
                         "trino.query.waiting_for_resources.duration.max",
                         "trino.task.input.data.size",
                         "trino.task.input.row.count"),
-                    singletonList("trino.node.active.count"))
+                    emptyList())
                 .checkRegisteredAttributes(
                     "trino.",
                     asList("trino.memory.pool.name", "trino.query.failure.type"),
@@ -89,6 +90,15 @@ class TrinoTest extends TargetSystemTest {
   private static MetricsVerifier createMetricsVerifier() {
     return MetricsVerifier.create()
         .disableStrictMode()
+        .add(
+            "trino.node.active.count",
+            metric ->
+                metric
+                    .hasDescription(
+                        "The number of active Trino nodes monitored by the failure detector, excluding the reporting node.")
+                    .hasUnit("{node}")
+                    .isUpDownCounter()
+                    .hasDataPointsWithoutAttributes())
         .add(
             "trino.memory.pool.free",
             metric ->

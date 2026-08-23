@@ -24,7 +24,7 @@ groups:
     metric_name: trino.node.active.count
     stability: development
     type: metric
-    brief: The number of active Trino nodes.
+    brief: The number of active Trino nodes monitored by the failure detector, excluding the reporting node.
     unit: "{node}"
     instrument: updowncounter
 

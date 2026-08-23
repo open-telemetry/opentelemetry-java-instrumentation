@@ -8,7 +8,7 @@ rules:
         metric: active.count
         type: updowncounter
         unit: "{node}"
-        desc: The number of active Trino nodes.
+        desc: The number of active Trino nodes monitored by the failure detector, excluding the reporting node.
 
   - bean: trino.memory:type=ClusterMemoryPool,name=*
     prefix: trino.memory.pool.

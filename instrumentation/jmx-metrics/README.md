@@ -31,7 +31,7 @@ No targets are enabled by default. The supported target environments are listed 
 - [experimental-kafka-broker](javaagent/kafka-broker.md)
 - [experimental-kafka-connect](library/kafka-connect.md)
 - [tomcat](library/tomcat.md)
-- [trino](library/trino.md)
+- [experimental-trino](library/trino.md)
 - [wildfly](library/wildfly.md)
 - [hadoop](library/hadoop.md)
 - [experimental-cassandra](library/cassandra.md)
