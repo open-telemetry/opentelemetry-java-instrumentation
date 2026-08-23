@@ -138,8 +138,7 @@ none-by-default or all-by-default. Both baselines use the same shape and matchin
 
 For a none-by-default setting, the selector doubles as the on switch. An absent selector selects
 nothing, and an exclude-only selector selects everything except the excluded values. Document
-select-all as `included: ["*"]`, or `included=*` in flat configuration, because flat configuration
-cannot express a present selector that omits its included patterns:
+select-all as `included: ["*"]`, or `included=*` in flat configuration:
 
 ```yaml
 # select everything except one value
