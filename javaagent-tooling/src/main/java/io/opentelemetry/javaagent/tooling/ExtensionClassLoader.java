@@ -164,21 +164,22 @@ public class ExtensionClassLoader extends URLClassLoader {
     }
 
     File location = new File(locationName);
-    boolean loaded = false;
+    boolean found = false;
     if (isJar(location)) {
-      loaded = addFileUrl(locations, location);
+      found = true;
+      addFileUrl(locations, location);
     } else if (location.isDirectory()) {
       File[] files = location.listFiles(ExtensionClassLoader::isJar);
       if (files != null) {
         for (File file : files) {
-          if (!file.getAbsolutePath().equals(javaagentFile.getAbsolutePath())
-              && addFileUrl(locations, file)) {
-            loaded = true;
+          if (!file.getAbsolutePath().equals(javaagentFile.getAbsolutePath())) {
+            found = true;
+            addFileUrl(locations, file);
           }
         }
       }
     }
-    if (!loaded) {
+    if (!found) {
       addLog(
           WARNING,
           "Configured extensions location \""
