@@ -107,9 +107,9 @@ public final class GrpcTelemetry {
   }
 
   private Object newInterceptorFactory() {
-    // Proxies InternalManagedChannelBuilder$InternalInterceptorFactory, whose only declared
-    // method is newInterceptor(String target). Object methods get identity semantics — we have
-    // no natural delegate to forward them to.
+    // Proxies InternalManagedChannelBuilder$InternalInterceptorFactory, which inherits its only
+    // method, newInterceptor(String target), from ManagedChannelBuilder$InterceptorFactory. Object
+    // methods get identity semantics — we have no natural delegate to forward them to.
     return Proxy.newProxyInstance(
         ManagedChannelBuilder.class.getClassLoader(),
         new Class<?>[] {interceptorFactoryClass},
