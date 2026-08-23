@@ -92,7 +92,6 @@ public final class GrpcTelemetry {
    *
    * @param builder the channel builder to configure
    */
-  @SuppressWarnings("unchecked")
   public void addClientInterceptor(ManagedChannelBuilder<?> builder) {
     if (interceptWithTargetMethod != null && interceptorFactoryClass != null) {
       try {
