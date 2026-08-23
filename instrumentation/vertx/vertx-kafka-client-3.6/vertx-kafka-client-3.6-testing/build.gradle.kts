@@ -61,6 +61,7 @@ tasks {
             "otel.instrumentation.kafka.experimental-span-attributes=true"
           }
         systemProperty("metadataConfig", metadataConfig)
+        isEnabled = project.tasks.named(suite.name).get().enabled
       }
     }
 

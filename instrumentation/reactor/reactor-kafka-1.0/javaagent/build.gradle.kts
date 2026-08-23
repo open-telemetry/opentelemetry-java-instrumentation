@@ -95,6 +95,7 @@ tasks {
           "hasConsumerGroup",
           if (suite.name == "test") otelProps.testLatestDeps else true,
         )
+        isEnabled = project.tasks.named(suite.name).get().enabled
       }
     }
 

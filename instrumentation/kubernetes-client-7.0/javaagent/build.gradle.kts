@@ -68,6 +68,7 @@ tasks {
 
         jvmArgs("-Dotel.instrumentation.kubernetes-client.experimental-span-attributes=true")
         systemProperty("metadataConfig", "otel.instrumentation.kubernetes-client.experimental-span-attributes=true")
+        isEnabled = project.tasks.named(suite.name).get().enabled
       }
     }
 
@@ -82,13 +83,6 @@ tasks {
         isEnabled = project.tasks.named(suite.name).get().enabled
       }
     }
-
-  // client-java-api 22.0.0+ requires Java 11+
-  if (testJavaVersion.isJava8) {
-    named<Test>("version22TestExperimental") {
-      enabled = false
-    }
-  }
 
   check {
     dependsOn(experimentalSuites, stableSemconvSuites)

@@ -58,6 +58,7 @@ tasks {
         val receiveTelemetryEnabled = suite.name != "testNoReceiveTelemetry"
         jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=$receiveTelemetryEnabled")
         jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+        isEnabled = project.tasks.named(suite.name).get().enabled
       }
     }
 

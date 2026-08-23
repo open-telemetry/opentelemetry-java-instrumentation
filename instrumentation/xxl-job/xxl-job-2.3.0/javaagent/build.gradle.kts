@@ -59,6 +59,7 @@ tasks {
 
         jvmArgs("-Dotel.instrumentation.xxl-job.experimental-span-attributes=true")
         systemProperty("metadataConfig", "otel.instrumentation.xxl-job.experimental-span-attributes=true")
+        isEnabled = project.tasks.named(suite.name).get().enabled
       }
     }
 
@@ -68,9 +69,6 @@ tasks {
   val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
   if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
     named("xxlJob33Test", Test::class).configure {
-      enabled = false
-    }
-    named("xxlJob33TestExperimental", Test::class).configure {
       enabled = false
     }
   }
