@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsT
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -23,6 +24,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -31,8 +33,11 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeAll;
@@ -213,12 +218,28 @@ public abstract class AbstractOpenSearchRestTest {
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
-                            .satisfies(
-                                spanData ->
-                                    assertThat(spanData.getAttributes().asMap())
-                                        .doesNotContainKeys(SERVER_ADDRESS, SERVER_PORT)),
+                            .hasAttributesSatisfyingExactly(serverOmittedAttributes()),
                     span ->
                         span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
+  }
+
+  /**
+   * Attributes of the health check span when the request never reaches a server, so {@code
+   * server.address} and {@code server.port} must be absent.
+   */
+  private static List<AttributeAssertion> serverOmittedAttributes() {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+                equalTo(maybeStable(DB_OPERATION), "GET"),
+                equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health"),
+                equalTo(SERVER_ADDRESS, null),
+                equalTo(SERVER_PORT, null)));
+    if (emitStableDatabaseSemconv()) {
+      assertions.add(satisfies(ERROR_TYPE, val -> val.isNotEmpty()));
+    }
+    return assertions;
   }
 
   @Test
@@ -318,10 +339,7 @@ public abstract class AbstractOpenSearchRestTest {
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
-                            .satisfies(
-                                spanData ->
-                                    assertThat(spanData.getAttributes().asMap())
-                                        .doesNotContainKeys(SERVER_ADDRESS, SERVER_PORT)),
+                            .hasAttributesSatisfyingExactly(serverOmittedAttributes()),
                     span ->
                         span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
