@@ -111,7 +111,7 @@ final class OpenSearchRestAttributesGetter
     if (serverPort > 0) {
       attributes.put(SERVER_PORT, serverPort);
     }
-    if (emitStableDatabaseSemconv() && serverAddress != null) {
+    if (emitStableDatabaseSemconv()) {
       String target = serverPort > 0 ? serverAddress + ":" + serverPort : serverAddress;
       String operation = getDbOperationName(request);
       Span.fromContext(context).updateName(operation != null ? operation + " " + target : target);
