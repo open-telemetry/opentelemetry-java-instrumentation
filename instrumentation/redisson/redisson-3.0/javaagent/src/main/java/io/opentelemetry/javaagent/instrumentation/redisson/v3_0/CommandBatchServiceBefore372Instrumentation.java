@@ -63,7 +63,7 @@ class CommandBatchServiceBefore372Instrumentation implements TypeInstrumentation
         @Advice.Argument(2) Codec codec,
         @Advice.Argument(3) RedisCommand<?> command,
         @Advice.Argument(4) Object[] parameters) {
-      return RedissonBatchAdviceScope.captureCandidate(service, command, codec, parameters);
+      return RedissonBatchAdviceScope.capture(service, command, codec, parameters);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

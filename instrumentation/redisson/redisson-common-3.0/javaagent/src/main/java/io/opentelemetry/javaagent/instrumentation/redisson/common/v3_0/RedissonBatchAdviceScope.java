@@ -41,12 +41,6 @@ public class RedissonBatchAdviceScope {
   @Nullable
   public static Scope capture(
       CommandBatchService service, RedisCommand<?> command, Codec codec, Object[] parameters) {
-    return captureCandidate(service, command, codec, parameters);
-  }
-
-  @Nullable
-  public static Scope captureCandidate(
-      CommandBatchService service, RedisCommand<?> command, Codec codec, Object[] parameters) {
     if (!emitStableDatabaseSemconv()) {
       return null;
     }
@@ -57,7 +51,7 @@ public class RedissonBatchAdviceScope {
     if (RedissonBatchContext.isActive(currentContext())) {
       return RedissonBatchContext.startCapture();
     }
-    return RedissonBatchContext.startCandidateCapture(state, command, codec, parameters);
+    return RedissonBatchContext.startCapture(state, command, codec, parameters);
   }
 
   public static void initialize(CommandBatchService service) {

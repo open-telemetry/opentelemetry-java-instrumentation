@@ -67,19 +67,6 @@ public final class RedissonBatchContext {
     return context.makeCurrent();
   }
 
-  @Nullable
-  static Scope startCandidateCapture(
-      RedissonBatchState state, RedisCommand<?> command, Codec codec, Object[] parameters) {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
-    Context context =
-        Context.current()
-            .with(KEY, true)
-            .with(CAPTURE_KEY, new CommandCapture(state, command, codec, parameters));
-    return context.makeCurrent();
-  }
-
   public static void captureCommand(Object batchCommand, Object future, int index) {
     if (!emitStableDatabaseSemconv()) {
       return;
