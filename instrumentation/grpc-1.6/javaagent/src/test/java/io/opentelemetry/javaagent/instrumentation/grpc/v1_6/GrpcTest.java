@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.grpc.v1_6;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
-
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.ServerBuilder;
 import io.opentelemetry.instrumentation.grpc.v1_6.AbstractGrpcTest;
@@ -31,7 +29,7 @@ class GrpcTest extends AbstractGrpcTest {
 
   @Override
   protected boolean targetCaptureSupported() {
-    return emitStableRpcSemconv();
+    return true;
   }
 
   @Override

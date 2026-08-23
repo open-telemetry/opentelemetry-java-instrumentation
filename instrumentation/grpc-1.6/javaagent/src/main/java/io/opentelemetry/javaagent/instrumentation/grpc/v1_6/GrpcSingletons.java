@@ -36,8 +36,6 @@ public class GrpcSingletons {
 
   private static final GrpcTelemetry telemetry;
 
-  private static final ClientInterceptor clientInterceptor;
-
   private static final ServerInterceptor serverInterceptor;
 
   private static final AtomicReference<Context.Storage> storageReference = new AtomicReference<>();
@@ -67,12 +65,7 @@ public class GrpcSingletons {
     GrpcTelemetry configuredTelemetry = telemetryBuilder.build();
 
     telemetry = configuredTelemetry;
-    clientInterceptor = Internal.createClientInterceptor(configuredTelemetry, null);
     serverInterceptor = configuredTelemetry.createServerInterceptor();
-  }
-
-  public static ClientInterceptor clientInterceptor() {
-    return clientInterceptor;
   }
 
   public static ServerInterceptor serverInterceptor() {

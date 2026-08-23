@@ -5,11 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.grpc.v1_6;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.grpc.v1_6.GrpcSingletons.MANAGED_CHANNEL_BUILDER_INSTRUMENTED;
-import static io.opentelemetry.javaagent.instrumentation.grpc.v1_6.GrpcSingletons.clientInterceptor;
 import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -49,11 +47,7 @@ class GrpcClientBuilderBuildInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("interceptors") List<ClientInterceptor> interceptors,
         @Advice.FieldValue("target") String target) {
       if (!Boolean.TRUE.equals(MANAGED_CHANNEL_BUILDER_INSTRUMENTED.get(builder))) {
-        ClientInterceptor interceptor =
-            emitStableRpcSemconv()
-                ? GrpcSingletons.createClientInterceptor(target)
-                : clientInterceptor();
-        interceptors.add(0, interceptor);
+        interceptors.add(0, GrpcSingletons.createClientInterceptor(target));
         MANAGED_CHANNEL_BUILDER_INSTRUMENTED.set(builder, true);
       }
     }
