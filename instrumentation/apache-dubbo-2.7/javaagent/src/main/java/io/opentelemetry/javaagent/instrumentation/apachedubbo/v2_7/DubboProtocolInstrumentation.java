@@ -11,13 +11,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.net.InetSocketAddress;
 import java.time.Instant;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.dubbo.remoting.Channel;
 import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.RpcInvocation;
 
@@ -61,17 +59,8 @@ public class DubboProtocolInstrumentation implements TypeInstrumentation {
 
       Instant startTime = timer.startTime();
       Instant endTime = timer.now();
-
-      InetSocketAddress remoteAddress = null;
-      try {
-        Channel channel = (Channel) channelObj;
-        remoteAddress = channel.getRemoteAddress();
-      } catch (Throwable ignored) {
-        // channel type may not match in some versions
-      }
-
       DubboUnknownServiceHelper.createUnknownServiceSpan(
-          (RpcInvocation) inv, remoteAddress, throwable, startTime, endTime);
+          (RpcInvocation) inv, channelObj, throwable, startTime, endTime);
     }
   }
 }

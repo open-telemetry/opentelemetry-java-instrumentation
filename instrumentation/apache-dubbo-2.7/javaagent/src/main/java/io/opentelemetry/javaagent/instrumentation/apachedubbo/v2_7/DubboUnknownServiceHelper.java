@@ -97,7 +97,7 @@ public class DubboUnknownServiceHelper {
   @SuppressWarnings("deprecation") // Dubbo 2.7 API: getAttachments()
   public static void createUnknownServiceSpan(
       RpcInvocation rpcInvocation,
-      @Nullable InetSocketAddress remoteAddress,
+      Object channelObj,
       Throwable throwable,
       Instant startTime,
       Instant endTime) {
@@ -107,6 +107,8 @@ public class DubboUnknownServiceHelper {
         || isAlreadyRecorded(rpcInvocation)) {
       return;
     }
+
+    InetSocketAddress remoteAddress = resolveRemoteAddress(channelObj);
 
     DubboRequest request =
         DubboInternalHelper.createForUnknownService(
@@ -147,13 +149,7 @@ public class DubboUnknownServiceHelper {
       return;
     }
 
-    InetSocketAddress remoteAddress = null;
-    try {
-      Channel channel = (Channel) channelObj;
-      remoteAddress = channel.getRemoteAddress();
-    } catch (Throwable ignored) {
-      // channel type may not match in some versions
-    }
+    InetSocketAddress remoteAddress = resolveRemoteAddress(channelObj);
 
     DubboRequest request =
         DubboInternalHelper.createForUnknownService(
@@ -285,6 +281,17 @@ public class DubboUnknownServiceHelper {
       // address extraction is best-effort
     }
     return null;
+  }
+
+  @Nullable
+  private static InetSocketAddress resolveRemoteAddress(Object channelObj) {
+    try {
+      Channel channel = (Channel) channelObj;
+      return channel.getRemoteAddress();
+    } catch (Throwable ignored) {
+      // channel type may not match in some versions
+      return null;
+    }
   }
 
   private static boolean isAlreadyRecorded(RpcInvocation rpcInvocation) {
