@@ -32,10 +32,12 @@ class GrpcTargetParserTest {
         // dns:/// scheme (triple slash)
         Arguments.of("dns:///myhost", "myhost", null),
         Arguments.of("dns:///myhost:8080", "myhost", 8080),
+        Arguments.of("DNS:///myhost:443", "myhost", 443),
 
         // dns: scheme (single colon)
         Arguments.of("dns:myhost", "myhost", null),
         Arguments.of("dns:myhost:8080", "myhost", 8080),
+        Arguments.of("DNS:myhost:443", "myhost", 443),
         Arguments.of("dns:/myhost", "myhost", null),
         Arguments.of("dns:/myhost:8080", "myhost", 8080),
         Arguments.of("dns:///%5B2001:db8::1%5D:443", "2001:db8::1", 443),
@@ -47,14 +49,17 @@ class GrpcTargetParserTest {
 
         // unix schemes
         Arguments.of("unix:///var/run/grpc.sock", "/var/run/grpc.sock", null),
+        Arguments.of("UNIX:///var/run/grpc.sock", "/var/run/grpc.sock", null),
         Arguments.of("unix:/var/run/grpc.sock", "/var/run/grpc.sock", null),
         Arguments.of("unix-abstract:name", "name", null),
+        Arguments.of("UNIX-ABSTRACT:name", "name", null),
         Arguments.of("unix:///tmp/a%20b.sock", "/tmp/a b.sock", null),
         Arguments.of("unix:///tmp/a.sock?x", "/tmp/a.sock", null),
         Arguments.of("unix:///tmp/a%.sock", "/tmp/a%.sock", null),
 
         // ipv4 scheme
         Arguments.of("ipv4:192.168.0.1:8080", "ipv4:192.168.0.1:8080", null),
+        Arguments.of("IPV4:192.168.0.1:8080", "IPV4:192.168.0.1:8080", null),
 
         // ipv6 scheme
         Arguments.of("ipv6:[::1]:8080", "ipv6:[::1]:8080", null),
@@ -68,6 +73,7 @@ class GrpcTargetParserTest {
 
         // xds scheme is preserved
         Arguments.of("xds:///myservice", "xds:///myservice", null),
+        Arguments.of("XDS:///myservice", "XDS:///myservice", null),
         Arguments.of("xds:/myservice", "xds:/myservice", null),
 
         // host with missing/invalid port — host preserved, port omitted

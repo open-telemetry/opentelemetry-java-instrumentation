@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.grpc.v1_6.internal;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Locale;
 import javax.annotation.Nullable;
 
 /**
@@ -38,16 +39,16 @@ public class GrpcTargetParser {
         return new ParsedTarget(target, null);
       }
 
-      String potentialScheme = target.substring(0, colonIndex);
-      if (isKnownScheme(potentialScheme)) {
-        return parseSingleColonScheme(potentialScheme, target.substring(colonIndex + 1));
+      String scheme = target.substring(0, colonIndex).toLowerCase(Locale.ROOT);
+      if (isKnownScheme(scheme)) {
+        return parseSingleColonScheme(scheme, target);
       }
 
       // No known scheme — treat as "host:port"
       return parseHostPort(target);
     }
 
-    String scheme = target.substring(0, schemeEnd);
+    String scheme = target.substring(0, schemeEnd).toLowerCase(Locale.ROOT);
 
     if ("dns".equals(scheme)) {
       return parseDnsScheme(target);
@@ -78,17 +79,17 @@ public class GrpcTargetParser {
   }
 
   @Nullable
-  private static ParsedTarget parseSingleColonScheme(String scheme, String rest) {
+  private static ParsedTarget parseSingleColonScheme(String scheme, String target) {
     if ("dns".equals(scheme)) {
-      return parseDnsScheme(scheme + ":" + rest);
+      return parseDnsScheme(target);
     }
 
     if ("unix".equals(scheme) || "unix-abstract".equals(scheme)) {
-      return parseUnixScheme(scheme + ":" + rest);
+      return parseUnixScheme(target);
     }
 
     // ipv4:, ipv6:, or other — full target as address
-    return new ParsedTarget(scheme + ":" + rest, null);
+    return new ParsedTarget(target, null);
   }
 
   @Nullable
