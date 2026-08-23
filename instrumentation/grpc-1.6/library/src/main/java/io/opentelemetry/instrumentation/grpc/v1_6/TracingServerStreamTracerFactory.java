@@ -25,7 +25,11 @@ final class TracingServerStreamTracerFactory extends ServerStreamTracer.Factory 
 
   @Override
   public ServerStreamTracer newServerStreamTracer(String fullMethodName, Metadata headers) {
+    // gRPC does not allow reading the given headers after this method returns, so keep a copy that
+    // the tracer owns.
+    Metadata headersCopy = new Metadata();
+    headersCopy.merge(headers);
     return new TracingServerStreamTracer(
-        instrumenter, propagators, fullMethodName, headers, Context.current());
+        instrumenter, propagators, fullMethodName, headersCopy, Context.current());
   }
 }
