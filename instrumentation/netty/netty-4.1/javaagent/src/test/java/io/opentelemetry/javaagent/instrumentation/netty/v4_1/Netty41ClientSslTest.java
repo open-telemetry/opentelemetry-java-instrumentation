@@ -58,7 +58,7 @@ class Netty41ClientSslTest {
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @RegisterExtension
-  static InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static HttpClientTestServer server;
 

@@ -31,7 +31,7 @@ class HttpUrlConnectionResponseCodeOnlyTest extends AbstractHttpClientTest<HttpU
     try {
       connection.setRequestMethod(method);
       connection.setConnectTimeout((int) CONNECTION_TIMEOUT.toMillis());
-      if (uri.toString().contains("/read-timeout")) {
+      if (uri.getPath().endsWith("/read-timeout")) {
         connection.setReadTimeout((int) READ_TIMEOUT.toMillis());
       }
 

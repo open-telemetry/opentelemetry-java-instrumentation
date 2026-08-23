@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_RECEIVED_MESSAGE_COUNT;
@@ -65,6 +67,7 @@ import io.grpc.reflection.v1alpha.ServerReflectionResponse;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -95,6 +98,8 @@ public abstract class AbstractGrpcTest {
   protected static final String CLIENT_REQUEST_METADATA_KEY = "some-client-key";
 
   protected static final String SERVER_REQUEST_METADATA_KEY = "some-server-key";
+
+  private static final String EXCLUDED_REQUEST_METADATA_KEY = "some-excluded-key";
 
   protected abstract ServerBuilder<?> configureServer(ServerBuilder<?> server);
 
@@ -698,19 +703,33 @@ public abstract class AbstractGrpcTest {
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfying(
                                 events -> {
+                                  assertThat(events)
+                                      .hasSize(
+                                          status.getCause() != null && emitExceptionAsSpanEvents()
+                                              ? 2
+                                              : 1);
                                   assertThat(events).isNotEmpty();
                                   assertThat(events.get(0))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
                                           equalTo(MESSAGE_TYPE, "RECEIVED"),
                                           equalTo(MESSAGE_ID, 1L));
-                                  if (status.getCause() == null) {
-                                    assertThat(events).hasSize(1);
-                                  } else {
-                                    assertThat(events).hasSize(2);
-                                    span.hasException(status.getCause());
-                                  }
+                                  span.hasException(
+                                      status.getCause() != null && emitExceptionAsSpanEvents()
+                                          ? status.getCause()
+                                          : null);
                                 })));
+
+    if (emitExceptionAsLogs() && status.getCause() != null) {
+      testing()
+          .waitAndAssertLogRecords(
+              logRecord ->
+                  logRecord
+                      .hasSeverity(Severity.ERROR)
+                      .hasEventName("rpc.server.call.exception")
+                      .hasException(status.getCause())
+                      .hasTotalAttributeCount(3));
+    }
 
     assertMetrics(server, status.getCode());
   }
@@ -832,14 +851,28 @@ public abstract class AbstractGrpcTest {
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfying(
                                 events -> {
-                                  assertThat(events).hasSize(2);
+                                  assertThat(events).hasSize(emitExceptionAsSpanEvents() ? 2 : 1);
                                   assertThat(events.get(0))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
                                           equalTo(MESSAGE_TYPE, "RECEIVED"),
                                           equalTo(MESSAGE_ID, 1L));
-                                  span.hasException(status.asRuntimeException());
+                                  span.hasException(
+                                      emitExceptionAsSpanEvents()
+                                          ? status.asRuntimeException()
+                                          : null);
                                 })));
+
+    if (emitExceptionAsLogs()) {
+      testing()
+          .waitAndAssertLogRecords(
+              logRecord ->
+                  logRecord
+                      .hasSeverity(Severity.ERROR)
+                      .hasEventName("rpc.server.call.exception")
+                      .hasException(status.asRuntimeException())
+                      .hasTotalAttributeCount(3));
+    }
 
     assertMetrics(server, Status.Code.UNKNOWN);
   }
@@ -1175,7 +1208,7 @@ public abstract class AbstractGrpcTest {
                                     equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfying(
                                 events -> {
-                                  assertThat(events).hasSize(3);
+                                  assertThat(events).hasSize(emitExceptionAsSpanEvents() ? 3 : 2);
                                   assertThat(events.get(0))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
@@ -1185,7 +1218,7 @@ public abstract class AbstractGrpcTest {
                                       .hasAttributesSatisfyingExactly(
                                           equalTo(MESSAGE_TYPE, "RECEIVED"),
                                           equalTo(MESSAGE_ID, 1L));
-                                  span.hasException(thrown);
+                                  span.hasException(emitExceptionAsSpanEvents() ? thrown : null);
                                 }),
                     span ->
                         span.hasName("example.Greeter/SayMultipleHello")
@@ -1232,6 +1265,17 @@ public abstract class AbstractGrpcTest {
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGE_TYPE, "SENT"),
                                             equalTo(MESSAGE_ID, 1L)))));
+
+    if (emitExceptionAsLogs()) {
+      testing()
+          .waitAndAssertLogRecords(
+              logRecord ->
+                  logRecord
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("rpc.client.call.exception")
+                      .hasException(thrown)
+                      .hasTotalAttributeCount(3));
+    }
   }
 
   @Test
@@ -1666,6 +1710,10 @@ public abstract class AbstractGrpcTest {
         AttributeKey.stringArrayKey(oldMetadataAttributePrefix + SERVER_REQUEST_METADATA_KEY);
     AttributeKey<List<String>> stableServerAttributeKey =
         AttributeKey.stringArrayKey(stableMetadataAttributePrefix + SERVER_REQUEST_METADATA_KEY);
+    AttributeKey<List<String>> oldExcludedAttributeKey =
+        AttributeKey.stringArrayKey(oldMetadataAttributePrefix + EXCLUDED_REQUEST_METADATA_KEY);
+    AttributeKey<List<String>> stableExcludedAttributeKey =
+        AttributeKey.stringArrayKey(stableMetadataAttributePrefix + EXCLUDED_REQUEST_METADATA_KEY);
     String serverMetadataValue = "server-value";
     String clientMetadataValue = "client-value";
 
@@ -1694,6 +1742,9 @@ public abstract class AbstractGrpcTest {
     extraMetadata.put(
         Metadata.Key.of(CLIENT_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
         clientMetadataValue);
+    extraMetadata.put(
+        Metadata.Key.of(EXCLUDED_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
+        "excluded-value");
 
     GreeterGrpc.GreeterBlockingStub client =
         GreeterGrpc.newBlockingStub(channel)
@@ -1724,6 +1775,9 @@ public abstract class AbstractGrpcTest {
                         span.hasAttribute(
                             stableClientAttributeKey, singletonList(clientMetadataValue));
                       }
+                      span.hasAttributesSatisfying(
+                          equalTo(oldExcludedAttributeKey, null),
+                          equalTo(stableExcludedAttributeKey, null));
                     },
                     span -> {
                       span.hasName("example.Greeter/SayHello")
@@ -1737,6 +1791,9 @@ public abstract class AbstractGrpcTest {
                         span.hasAttribute(
                             stableServerAttributeKey, singletonList(serverMetadataValue));
                       }
+                      span.hasAttributesSatisfying(
+                          equalTo(oldExcludedAttributeKey, null),
+                          equalTo(stableExcludedAttributeKey, null));
                     }));
   }
 

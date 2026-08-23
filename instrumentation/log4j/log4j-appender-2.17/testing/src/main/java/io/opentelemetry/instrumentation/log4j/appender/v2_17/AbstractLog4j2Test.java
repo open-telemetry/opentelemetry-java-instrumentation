@@ -46,7 +46,7 @@ public abstract class AbstractLog4j2Test {
 
   private static final Logger logger = LogManager.getLogger("abc");
 
-  private static final boolean v3Preview =
+  private static final boolean V3_PREVIEW =
       Boolean.getBoolean("otel.instrumentation.common.v3-preview");
 
   protected abstract InstrumentationExtension testing();
@@ -259,7 +259,7 @@ public abstract class AbstractLog4j2Test {
         addCodeLocationAttributes("testStringMapMessageWinsOverContextData");
     assertions.addAll(threadAttributesAssertions());
     assertions.add(equalTo(mapMessageKey("key1"), "message-value"));
-    if (!v3Preview) {
+    if (!V3_PREVIEW) {
       assertions.add(equalTo(stringKey("key1"), "context-value"));
     }
 
@@ -332,7 +332,7 @@ public abstract class AbstractLog4j2Test {
   }
 
   static AttributeKey<String> mapMessageKey(String key) {
-    return stringKey(v3Preview ? key : "log4j.map_message." + key);
+    return stringKey(V3_PREVIEW ? key : "log4j.map_message." + key);
   }
 
   @FunctionalInterface

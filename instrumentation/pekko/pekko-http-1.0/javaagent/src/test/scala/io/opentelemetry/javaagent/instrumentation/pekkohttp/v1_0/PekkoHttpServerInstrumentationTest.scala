@@ -68,7 +68,7 @@ class PekkoHttpServerInstrumentationTest
     // /test1 / IntNumber / HexIntNumber / LongNumber / HexLongNumber / DoubleNumber / JavaUUID / Remaining
     val request = AggregatedHttpRequest.of(
       HttpMethod.GET,
-      address
+      h1Address
         .resolve(
           "/test1/1/a1/2/b2/3.0/e58ed763-928c-4155-bee9-fdbaaadc15f3/remaining"
         )
@@ -91,7 +91,7 @@ class PekkoHttpServerInstrumentationTest
   @Test def testConcat(): Unit = {
     val request = AggregatedHttpRequest.of(
       HttpMethod.GET,
-      address.resolve("/test2/second").toString
+      h1Address.resolve("/test2/second").toString
     )
     val response = client.execute(request).aggregate.join
     assertThat(response.status.code).isEqualTo(SUCCESS.getStatus)

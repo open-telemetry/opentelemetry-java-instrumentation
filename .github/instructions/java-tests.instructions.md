@@ -21,16 +21,34 @@ modules). Skip them on production sources.
 - Use `e` / `f` / `t` / `ignored` for catch variables (per the catch-variable
   naming rule in `.github/copilot-instructions.md`).
 
+## [Testing] Trace Clearing After Asynchronous Operations
+
+- When test setup or cleanup performs an operation that can complete or export
+  spans asynchronously, call `testing.waitForTraces(expectedTraceCount)` before
+  its captured telemetry is cleared, whether by `testing.clearData()` or an
+  `InstrumentationExtension` lifecycle clear. Keep the wait at the end of setup
+  or cleanup even when removing a redundant explicit clear. Use the total trace
+  count expected at that point so spans exported after the clear cannot leak
+  into the next assertion or test.
+- Add the wait only when the exact trace count is deterministic. Do not guess
+  when retries, concurrent/background work, timing, or external-system behavior
+  can vary the count.
+- `InstrumentationExtension` already clears captured telemetry before each
+  test. Do not add or keep a setup/cleanup `clearData()` solely for per-test
+  isolation when that lifecycle clear is sufficient. Keep explicit clears only
+  for a required mid-test reset, including to discard telemetry from a
+  preceding asynchronous operation after its exports have been drained.
+
 ## [Testing] AssertJ Idiomatic Simplifications
 
 Prefer built-in AssertJ collection/string/map assertions over manual extraction:
 
-| Anti-pattern | Idiomatic |
-| --- | --- |
-| `assertThat(list.size()).isEqualTo(N)` | `assertThat(list).hasSize(N)` |
-| `assertThat(list.isEmpty()).isTrue()` / `.hasSize(0)` | `assertThat(list).isEmpty()` |
-| `assertThat(list.contains(x)).isTrue()` | `assertThat(list).contains(x)` |
-| per-index `get(i)` checks of every element | `assertThat(list).containsExactly(a, b, ...)` |
+| Anti-pattern                                          | Idiomatic                                     |
+| ----------------------------------------------------- | --------------------------------------------- |
+| `assertThat(list.size()).isEqualTo(N)`                | `assertThat(list).hasSize(N)`                 |
+| `assertThat(list.isEmpty()).isTrue()` / `.hasSize(0)` | `assertThat(list).isEmpty()`                  |
+| `assertThat(list.contains(x)).isTrue()`               | `assertThat(list).contains(x)`                |
+| per-index `get(i)` checks of every element            | `assertThat(list).containsExactly(a, b, ...)` |
 
 `containsExactly` already verifies size, so a separate `hasSize` is redundant.
 Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
@@ -66,3 +84,11 @@ reserved). Use `v` only for a nested inner-lambda parameter.
 This guidance applies only to attribute-assertion `satisfies(...)`; for
 `span.satisfies(...)`, `point.satisfies(...)`, etc. use a descriptive name
 (`spanData`, `pointData`, `result`).
+
+It also applies only to lambdas written **directly inline** as the
+`satisfies(AttributeKey, lambda)` argument, where the attribute key already
+documents what is being asserted. Do **not** flag lambdas passed to a custom
+helper method (e.g. `assertExceptionLog(typeAssertion, messageAssertion)`),
+even though the parameter is the same `AbstractStringAssert` type. There a
+descriptive name documents which attribute each lambda asserts, and renaming
+multiple parameters to `val` loses that context.

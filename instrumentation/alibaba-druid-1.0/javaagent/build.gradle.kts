@@ -15,6 +15,8 @@ dependencies {
   library("com.alibaba:druid:1.0.0")
 
   implementation(project(":instrumentation:alibaba-druid-1.0:library"))
+  implementation(project(":instrumentation:jdbc:javaagent-common"))
+  bootstrap(project(":instrumentation:jdbc:bootstrap"))
 
   testImplementation(project(":instrumentation:alibaba-druid-1.0:testing"))
 }
@@ -24,7 +26,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database")

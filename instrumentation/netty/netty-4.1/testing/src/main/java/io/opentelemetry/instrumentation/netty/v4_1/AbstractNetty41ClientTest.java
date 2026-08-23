@@ -95,7 +95,7 @@ public abstract class AbstractNetty41ClientTest
     configureChannel(ch);
     CompletableFuture<Integer> result = new CompletableFuture<>();
     result.whenComplete((status, throwable) -> httpClientResult.complete(() -> status, throwable));
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       ch.pipeline().addLast(new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), MILLISECONDS));
     }
     ch.pipeline().addLast(new ClientHandler(result));

@@ -17,7 +17,7 @@ public class OtelSpringStarterSmokeTestController {
   public static final String PING = "/ping";
   public static final String TEST = "/test";
   public static final String TEST_HISTOGRAM = "histogram-test-otel-spring-starter";
-  public static final String METER_SCOPE_NAME = "scope";
+  public static final String METER_SCOPE_NAME = "test-scope";
   private final LongHistogram histogram;
   private final SpringComponent component;
 

@@ -5,14 +5,14 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
-import static java.util.Collections.singletonList;
-
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // testing instrumentation of deprecated class
 class RocketMqClientTest extends AbstractRocketMqClientTest {
 
   @RegisterExtension
@@ -24,26 +24,32 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
   }
 
   @Override
-  @SuppressWarnings("deprecation") // testing instrumentation of deprecated class
   void configureMqProducer(DefaultMQProducer producer) {
     producer
         .getDefaultMQProducerImpl()
         .registerSendMessageHook(
             RocketMqTelemetry.builder(testing.getOpenTelemetry())
-                .setCapturedHeaders(singletonList("Test-Message-Header"))
+                .setHeaders(
+                    IncludeExclude.builder()
+                        .setIncluded("Test-Message-*")
+                        .setExcluded("*-Excluded-Header")
+                        .build())
                 .setCaptureExperimentalSpanAttributes(true)
                 .build()
                 .createSendMessageHook());
   }
 
   @Override
-  @SuppressWarnings("deprecation") // testing instrumentation of deprecated class
   void configureMqPushConsumer(DefaultMQPushConsumer consumer) {
     consumer
         .getDefaultMQPushConsumerImpl()
         .registerConsumeMessageHook(
             RocketMqTelemetry.builder(testing.getOpenTelemetry())
-                .setCapturedHeaders(singletonList("Test-Message-Header"))
+                .setHeaders(
+                    IncludeExclude.builder()
+                        .setIncluded("Test-Message-*")
+                        .setExcluded("*-Excluded-Header")
+                        .build())
                 .setCaptureExperimentalSpanAttributes(true)
                 .build()
                 .createConsumeMessageHook());

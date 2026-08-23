@@ -28,22 +28,22 @@ import org.testcontainers.containers.wait.strategy.Wait;
 public abstract class AbstractLettuceClientTest {
   private static final Logger logger = LoggerFactory.getLogger(AbstractLettuceClientTest.class);
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected static final int DB_INDEX = 0;
 
-  protected static GenericContainer<?> redisServer =
+  protected GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine")
           .withExposedPorts(6379)
           .withLogConsumer(new Slf4jLogConsumer(logger))
           .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*", 1));
 
-  protected static RedisClient redisClient;
-  protected static StatefulRedisConnection<String, String> connection;
-  protected static String host;
-  protected static String ip;
-  protected static int port;
-  protected static String embeddedDbUri;
+  protected RedisClient redisClient;
+  protected StatefulRedisConnection<String, String> connection;
+  protected String host;
+  protected String ip;
+  protected int port;
+  protected String embeddedDbUri;
 
   protected abstract RedisClient createClient(String uri);
 
@@ -91,7 +91,7 @@ public abstract class AbstractLettuceClientTest {
             event -> event.hasName("redis.encode.end"));
   }
 
-  protected static String spanName(String operation) {
+  protected String spanName(String operation) {
     return spanName(operation, host, port);
   }
 

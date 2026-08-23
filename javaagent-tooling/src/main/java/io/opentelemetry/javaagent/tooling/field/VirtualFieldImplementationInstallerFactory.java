@@ -9,6 +9,7 @@ import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.internal.RuntimeVirtualFieldSupplier;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
@@ -31,6 +32,10 @@ public final class VirtualFieldImplementationInstallerFactory {
 
   public VirtualFieldImplementationInstaller create(InstrumentationModule instrumentationModule) {
     VirtualFieldMappingsBuilderImpl builder = new VirtualFieldMappingsBuilderImpl();
+    if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
+      ((ExperimentalInstrumentationModule) instrumentationModule)
+          .registerVirtualFields(builder::register);
+    }
     if (instrumentationModule instanceof InstrumentationModuleMuzzle) {
       ((InstrumentationModuleMuzzle) instrumentationModule).registerMuzzleVirtualFields(builder);
     } else {

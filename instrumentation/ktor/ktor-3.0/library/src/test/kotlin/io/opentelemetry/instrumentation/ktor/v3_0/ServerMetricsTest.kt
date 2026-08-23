@@ -31,5 +31,5 @@ class ServerMetricsTest : AbstractKtorServerMetricsTest() {
     }
   }
 
-  override fun instrumentationName(): String = INSTRUMENTATION_NAME
+  override fun getInstrumentationName(): String = INSTRUMENTATION_NAME
 }

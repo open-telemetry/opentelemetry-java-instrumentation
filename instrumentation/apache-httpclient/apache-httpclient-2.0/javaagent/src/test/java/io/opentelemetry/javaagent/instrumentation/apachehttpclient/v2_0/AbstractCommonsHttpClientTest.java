@@ -44,7 +44,7 @@ abstract class AbstractCommonsHttpClientTest extends AbstractHttpClientTest<Http
   }
 
   HttpClient getClient(URI uri) {
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       return clientWithReadTimeout;
     }
     return client;

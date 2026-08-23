@@ -39,7 +39,7 @@ class AkkaHttpServerRouteTest {
   implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   private def buildAddress(port: Int): URI = try
-    new URI("http://localhost:" + port + "/")
+    new URI("h1c://localhost:" + port + "/")
   catch {
     case e: URISyntaxException =>
       throw new IllegalStateException(e)

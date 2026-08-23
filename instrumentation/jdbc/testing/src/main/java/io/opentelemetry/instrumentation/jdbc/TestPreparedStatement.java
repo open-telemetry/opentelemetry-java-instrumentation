@@ -26,16 +26,12 @@ import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
 
 class TestPreparedStatement extends TestStatement implements PreparedStatement {
   private boolean hasResultSet = true;
-  private final Map<String, String> parameters;
 
   TestPreparedStatement(Connection connection) {
     super(connection);
-    this.parameters = new HashMap<>();
   }
 
   @Override
@@ -151,9 +147,7 @@ class TestPreparedStatement extends TestStatement implements PreparedStatement {
   public void setFloat(int parameterIndex, float x) throws SQLException {}
 
   @Override
-  public void setInt(int parameterIndex, int x) throws SQLException {
-    parameters.put(Integer.toString(parameterIndex), Integer.toString(x));
-  }
+  public void setInt(int parameterIndex, int x) throws SQLException {}
 
   @Override
   public void setLong(int parameterIndex, long x) throws SQLException {}

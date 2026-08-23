@@ -24,7 +24,10 @@ on:
   issue_comment:
     types: [created]
 
-permissions: read-all
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
 
 concurrency:
   group: pr-review-${{ github.event.pull_request.number || github.event.issue.number }}
@@ -40,14 +43,12 @@ engine:
   id: copilot
   model: ${{ needs.dispatch.outputs.model }}
 
-sandbox:
-  agent: false
-
 network:
   allowed:
     - defaults
 
 tools:
+  edit:
   bash:
     - "cat:*"
     - "ls:*"
@@ -58,6 +59,21 @@ tools:
     - "find:*"
     - "rg:*"
     - "grep:*"
+
+# Results are exported as an artifact and posted by finalize, not published
+# through safe outputs. The custom job prevents gh-aw from auto-injecting its
+# default `create-issue` output and is intentionally never called. `noop` remains
+# available for an explicit summary-only completion, but must not create an issue.
+# Neither configured path mutates repository content, so threat detection is unnecessary.
+safe-outputs:
+  threat-detection: false
+  noop:
+    report-as-issue: false
+  jobs:
+    suppress_default_create_issue:
+      runs-on: ubuntu-latest
+      steps:
+        - run: 'true'
 
 imports:
   - .github/agents/pr-review.agent.md
@@ -80,7 +96,7 @@ jobs:
       model_warning: ${{ steps.gate.outputs.model_warning }}
       triggered_by: ${{ steps.gate.outputs.triggered_by }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -99,8 +115,8 @@ jobs:
         id: gate
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEFAULT_MODEL: ${{ vars.PR_REVIEW_MODEL || 'gpt-5' }}
-          ALLOWED_MODELS: ${{ vars.PR_REVIEW_ALLOWED_MODELS || 'gpt-5,gpt-5.5,claude-sonnet-4.5' }}
+          DEFAULT_MODEL: ${{ vars.PR_REVIEW_MODEL || 'gpt-5.5' }}
+          ALLOWED_MODELS: ${{ vars.PR_REVIEW_ALLOWED_MODELS || 'gpt-5.5,claude-sonnet-4.6,claude-opus-4.7' }}
           EVENT_NAME: ${{ github.event_name }}
           PR_FROM_COMMENT: ${{ github.event.issue.number }}
           COMMENT_BODY: ${{ github.event.comment.body }}
@@ -117,20 +133,20 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 1
           persist-credentials: false
 
       - name: Download agent artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8.0.1
         with:
           name: agent
           path: ./agent-artifact
         continue-on-error: true
 
       - name: Download review bundle artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8.0.1
         with:
           name: review-bundle
           path: ./review-bundle
@@ -139,25 +155,31 @@ jobs:
         if: needs.agent.result == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MODEL: ${{ needs.dispatch.outputs.model }}
+          MODEL_WARNING: ${{ needs.dispatch.outputs.model_warning }}
+          PR_NUMBER: ${{ needs.dispatch.outputs.pr_number }}
+          TRIGGERED_BY: ${{ needs.dispatch.outputs.triggered_by }}
         run: |
           set -euo pipefail
           python .github/scripts/pr-review/post.py \
-            "${{ needs.dispatch.outputs.pr_number }}" \
+            "$PR_NUMBER" \
             --bundle-dir ./review-bundle \
-            --findings ./agent-artifact/findings.json \
+            --findings ./agent-artifact/agent/findings.json \
             --event COMMENT \
-            --triggered-by "${{ needs.dispatch.outputs.triggered_by }}" \
-            --model "${{ needs.dispatch.outputs.model }}" \
-            --model-warning "${{ needs.dispatch.outputs.model_warning }}"
+            --triggered-by "$TRIGGERED_BY" \
+            --model "$MODEL" \
+            --model-warning "$MODEL_WARNING"
 
       - name: Comment on PR when agent failed
         if: needs.agent.result != 'success'
         env:
+          AGENT_RESULT: ${{ needs.agent.result }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ needs.dispatch.outputs.pr_number }}
         run: |
-          gh pr comment "${{ needs.dispatch.outputs.pr_number }}" \
+          gh pr comment "$PR_NUMBER" \
             --repo "$GITHUB_REPOSITORY" \
-            --body "Automated review did not complete (agent_result=${{ needs.agent.result }}). See workflow run for details."
+            --body "Automated review did not complete (agent_result=${AGENT_RESULT}). See workflow run for details."
 
   # ---- agent job ----
   # The implicit gh-aw agent job is configured by the top-level frontmatter
@@ -218,3 +240,7 @@ a GitHub review.
 If you produce no comments (clean review), still write the JSON file with an
 empty `comments` array and a one-line `body` summary. The finalize job
 treats a missing file as an agent failure.
+
+Do not invoke the `suppress_default_create_issue` MCP tool. It is a
+placeholder that exists only to disable gh-aw's default create-issue
+auto-injection; calling it would launch a needless no-op job.

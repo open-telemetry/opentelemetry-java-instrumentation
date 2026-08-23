@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.PRODUCER_PROPAGATION_ENABLED;
+import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.PRODUCER_SPAN_CONTEXT_PROPAGATION_ENABLED;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -15,7 +17,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaPropagation;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -65,7 +66,7 @@ class KafkaProducerInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(KafkaProducerRequest request) {
-        Context parentContext = Java8BytecodeBridge.currentContext();
+        Context parentContext = Context.current();
         if (!producerInstrumenter().shouldStart(parentContext, request)) {
           return null;
         }
@@ -78,9 +79,8 @@ class KafkaProducerInstrumentation implements TypeInstrumentation {
       }
 
       public ProducerRecord<?, ?> propagateContext(
-          ApiVersions apiVersions, ProducerRecord<?, ?> record) {
-        if (KafkaSingletons.isProducerPropagationEnabled()
-            && KafkaPropagation.shouldPropagate(apiVersions)) {
+          ProducerRecord<?, ?> record, boolean shouldPropagate) {
+        if (shouldPropagate) {
           return KafkaPropagation.propagateContext(context, record);
         }
         return record;
@@ -112,13 +112,20 @@ class KafkaProducerInstrumentation implements TypeInstrumentation {
       String bootstrapServers =
           KafkaUtil.extractBootstrapServers(
               producerConfig.getList(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
+      // read the mutable api versions state once, so that both decisions below are consistent
+      boolean canPropagateHeaders = KafkaPropagation.shouldPropagate(apiVersions);
+      boolean shouldPropagate = PRODUCER_PROPAGATION_ENABLED && canPropagateHeaders;
       KafkaProducerRequest request =
-          KafkaProducerRequest.create(record, clientId, bootstrapServers);
+          KafkaProducerRequest.create(
+              record,
+              clientId,
+              bootstrapServers,
+              PRODUCER_SPAN_CONTEXT_PROPAGATION_ENABLED && canPropagateHeaders);
       AdviceScope adviceScope = AdviceScope.start(request);
       if (adviceScope == null) {
         return new Object[] {null, record, callback};
       }
-      record = adviceScope.propagateContext(apiVersions, record);
+      record = adviceScope.propagateContext(record, shouldPropagate);
       callback = adviceScope.wrapCallback(callback);
       return new Object[] {adviceScope, record, callback};
     }

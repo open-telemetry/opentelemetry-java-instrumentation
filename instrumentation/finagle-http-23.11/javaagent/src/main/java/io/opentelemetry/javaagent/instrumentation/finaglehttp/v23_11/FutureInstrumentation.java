@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.twitter.util.Future;
@@ -30,12 +29,10 @@ class FutureInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("respond")), getClass().getName() + "$RespondAdvice");
+    transformer.applyAdviceToMethod(named("respond"), getClass().getName() + "$RespondAdvice");
 
     // transformTry is documented as not being run in the scheduler, so it's not handled
-    transformer.applyAdviceToMethod(
-        isMethod().and(named("transform")), getClass().getName() + "$TransformAdvice");
+    transformer.applyAdviceToMethod(named("transform"), getClass().getName() + "$TransformAdvice");
   }
 
   @SuppressWarnings("unused")

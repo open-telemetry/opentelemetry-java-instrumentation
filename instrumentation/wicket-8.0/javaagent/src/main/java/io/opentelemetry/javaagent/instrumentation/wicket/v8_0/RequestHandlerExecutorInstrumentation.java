@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.wicket.v8_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
 import static io.opentelemetry.javaagent.instrumentation.wicket.v8_0.WicketServerSpanNaming.serverSpanName;
 import static io.opentelemetry.javaagent.instrumentation.wicket.v8_0.WicketServerSpanNaming.serverSpanNameResource;
@@ -48,7 +49,7 @@ class RequestHandlerExecutorInstrumentation implements TypeInstrumentation {
             serverSpanName(),
             (IPageClassRequestHandler) handler);
       }
-      if (handler instanceof ResourceReferenceRequestHandler) {
+      if (handler instanceof ResourceReferenceRequestHandler && v3Preview()) {
         HttpServerRoute.update(
             Java8BytecodeBridge.currentContext(),
             CONTROLLER,

@@ -45,11 +45,11 @@ broken/incompatible versions.
 
 Verify `build.gradle.kts` applies the correct plugin for the module type:
 
-| Module type | Required plugin |
-| --- | --- |
+| Module type  | Required plugin                  |
+| ------------ | -------------------------------- |
 | `javaagent/` | `otel.javaagent-instrumentation` |
-| `library/` | `otel.library-instrumentation` |
-| `testing/` | `otel.java-conventions` |
+| `library/`   | `otel.library-instrumentation`   |
+| `testing/`   | `otel.java-conventions`          |
 
 ## Shared Gradle Project Properties
 
@@ -64,16 +64,10 @@ properties that are already modeled there, including:
 - `maxTestRetries`
 - `enableStrictContext`
 
-Examples:
+Example:
 
 ```kotlin
-if (otelProps.testLatestDeps) {
-  // ...
-}
-
-tasks.withType<Test>().configureEach {
-  systemProperty("collectMetadata", otelProps.collectMetadata)
-}
+val springBootVersion = if (otelProps.testLatestDeps) "2.+" else "2.6.15"
 ```
 
 For module-local one-off properties that are not part of `otelProps`, using `findProperty(...)`
@@ -81,6 +75,18 @@ directly is still fine.
 
 `settings.gradle.kts` is the exception: it cannot use project extensions like `otelProps`, so
 direct `gradle.startParameter.projectProperties[...]` access is expected there.
+
+### `testLatestDeps` Test JVM Property
+
+Do not add `systemProperty("testLatestDeps", otelProps.testLatestDeps)` solely because a module
+has `latestDepTestLibrary(...)` declarations or sibling modules set the property. Add it only when
+the module's test JVM actually needs to read the flag, for example when an in-scope test source or
+shared testing source used by that module calls `TestLatestDeps.testLatestDeps()` / `testLatestDeps()`
+or checks the `testLatestDeps` system property directly.
+
+`latestDepTestLibrary(...)` already affects Gradle dependency resolution when
+`-PtestLatestDeps=true` is set; the system property is only for runtime test code that branches on
+that mode.
 
 ## `testInstrumentation` Dependencies
 
@@ -269,10 +275,10 @@ review**. Only verify correctness when they are already present.
 Do not add `collectMetadata` or `metadataConfig` to `javaagent-unit-tests` projects. These are
 unit tests, and metadata collection should not run there.
 
-| Property | Type | Value |
-| --- | --- | --- |
-| `collectMetadata` | System property | Pass-through of `otelProps.collectMetadata`; defaults to `false` |
-| `metadataConfig` | System property | A single `key=value` string describing the non-default configuration active during this test run |
+| Property          | Type            | Value                                                                                            |
+| ----------------- | --------------- | ------------------------------------------------------------------------------------------------ |
+| `collectMetadata` | System property | Pass-through of `otelProps.collectMetadata`; defaults to `false`                                 |
+| `metadataConfig`  | System property | A single `key=value` string describing the non-default configuration active during this test run |
 
 When already present, verify:
 

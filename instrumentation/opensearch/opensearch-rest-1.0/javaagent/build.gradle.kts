@@ -24,7 +24,7 @@ otelJava {
 dependencies {
   library("org.opensearch.client:opensearch-rest-client:1.0.0")
 
-  implementation(project(":instrumentation:opensearch:opensearch-rest-common:javaagent"))
+  implementation(project(":instrumentation:opensearch:opensearch-rest-common-1.0:javaagent"))
 
   testInstrumentation(project(":instrumentation:opensearch:opensearch-rest-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
@@ -34,7 +34,7 @@ dependencies {
   testImplementation("org.apache.logging.log4j:log4j-api:2.18.0")
   testImplementation("org.apache.commons:commons-lang3:3.12.0")
   testImplementation("commons-io:commons-io:2.11.0")
-  testImplementation(project(":instrumentation:opensearch:opensearch-rest-common:testing"))
+  testImplementation(project(":instrumentation:opensearch:opensearch-rest-common-1.0:testing"))
 
   latestDepTestLibrary("org.opensearch.client:opensearch-rest-client:2.+") // see opensearch-rest-3.0 module
 }
@@ -45,7 +45,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database")

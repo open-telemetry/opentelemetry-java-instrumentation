@@ -24,6 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import redis.ActorRequest;
 import redis.BufferedRequest;
+import redis.RedisClientActorLike;
 import redis.RedisCommand;
 import redis.Request;
 import redis.RoundRobinPoolRequest;
@@ -62,28 +63,40 @@ class RequestInstrumentation implements TypeInstrumentation {
     public static class AdviceScope {
       private final Context context;
       private final Scope scope;
+      private final RediscalaRequest request;
 
-      private AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context, Scope scope, RediscalaRequest request) {
         this.context = context;
         this.scope = scope;
+        this.request = request;
       }
 
       @Nullable
-      public static AdviceScope start(RedisCommand<?, ?> cmd) {
-        Context parentContext = Context.current();
-        if (!instrumenter().shouldStart(parentContext, cmd)) {
+      public static AdviceScope start(Object action, RedisCommand<?, ?> cmd) {
+        if (action instanceof BufferedRequest) {
+          // TransactionInstrumentation records the span when exec() sends the batch.
           return null;
         }
 
-        Context context = instrumenter().start(parentContext, cmd);
-        return new AdviceScope(context, context.makeCurrent());
+        String host = null;
+        Integer port = null;
+        if (action instanceof RedisClientActorLike) {
+          RedisClientActorLike client = (RedisClientActorLike) action;
+          host = client.host();
+          port = client.port();
+        }
+        RediscalaRequest request = RediscalaRequest.create(cmd, host, port);
+        Context parentContext = Context.current();
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+
+        Context context = instrumenter().start(parentContext, request);
+        return new AdviceScope(context, context.makeCurrent(), request);
       }
 
       public void end(
-          Object action,
-          RedisCommand<?, ?> cmd,
-          @Nullable Future<Object> responseFuture,
-          @Nullable Throwable throwable) {
+          Object action, @Nullable Future<Object> responseFuture, @Nullable Throwable throwable) {
         scope.close();
 
         ExecutionContext ctx = null;
@@ -98,17 +111,18 @@ class RequestInstrumentation implements TypeInstrumentation {
         }
 
         if (throwable != null || responseFuture == null) {
-          instrumenter().end(context, cmd, null, throwable);
+          instrumenter().end(context, request, null, throwable);
         } else {
-          responseFuture.onComplete(new OnCompleteHandler(context, cmd), ctx);
+          responseFuture.onComplete(new OnCompleteHandler(context, request), ctx);
         }
       }
     }
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static AdviceScope onEnter(@Advice.Argument(0) RedisCommand<?, ?> cmd) {
-      return AdviceScope.start(cmd);
+    public static AdviceScope onEnter(
+        @Advice.This Object action, @Advice.Argument(0) RedisCommand<?, ?> cmd) {
+      return AdviceScope.start(action, cmd);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -119,7 +133,7 @@ class RequestInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Return @Nullable Future<Object> responseFuture) {
       if (adviceScope != null) {
-        adviceScope.end(action, cmd, responseFuture, throwable);
+        adviceScope.end(action, responseFuture, throwable);
       }
     }
   }

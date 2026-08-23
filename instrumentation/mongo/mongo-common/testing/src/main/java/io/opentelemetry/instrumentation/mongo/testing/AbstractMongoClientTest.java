@@ -543,7 +543,11 @@ public abstract class AbstractMongoClientTest<T> {
       String dbName,
       SpanData parentSpan,
       List<String> statements) {
-    span.hasName(operation + " " + dbName + "." + collection).hasKind(CLIENT);
+    span.hasName(
+            emitStableDatabaseSemconv()
+                ? operation + " " + collection
+                : operation + " " + dbName + "." + collection)
+        .hasKind(CLIENT);
     if (parentSpan == null) {
       span.hasNoParent();
     } else {

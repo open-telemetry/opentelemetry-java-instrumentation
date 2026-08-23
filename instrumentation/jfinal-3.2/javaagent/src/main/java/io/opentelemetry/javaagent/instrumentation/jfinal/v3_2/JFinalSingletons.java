@@ -57,7 +57,7 @@ public class JFinalSingletons {
 
   private static void excludeOtAttrs() {
     JsonRender.addExcludedAttrs(
-        "io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper.Context",
+        "io.opentelemetry.javaagent.instrumentation.servlet.common.ServletHelper.Context",
         "trace_id",
         "span_id");
   }

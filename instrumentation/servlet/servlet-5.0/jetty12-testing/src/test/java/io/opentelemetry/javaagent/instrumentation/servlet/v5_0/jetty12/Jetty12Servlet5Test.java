@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.jetty12;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import io.opentelemetry.instrumentation.servlet.v5_0.AbstractServlet5Test;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test;
 import jakarta.servlet.Servlet;
 import java.net.InetSocketAddress;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;

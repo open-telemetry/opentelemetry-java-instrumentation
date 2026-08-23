@@ -360,7 +360,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     Set<String> metricNames = metrics.stream().map(MetricData::getName).collect(toSet());
     assertThat(metricNames).containsAll(expectedMetricNames);
 
-    assertThat(metrics)
+    assertThat(metrics.stream().filter(metric -> metric.getName().startsWith("kafka.")))
         .allSatisfy(
             metricData -> {
               Set<String> expectedKeys =
@@ -430,7 +430,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
           kafkaMetricsByGroup.get(group).stream()
               .sorted(
                   comparing(KafkaMetricId::getName)
-                      .thenComparing(kafkaMetricId -> kafkaMetricId.getAttributeKeys().size()))
+                      .thenComparingInt(kafkaMetricId -> kafkaMetricId.getAttributeKeys().size()))
               .collect(toList());
       // Iterate through metrics in alpha order by name
       for (KafkaMetricId kafkaMetricId : kafkaMetricIds) {

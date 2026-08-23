@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.viburdbcp.v11_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -30,6 +30,6 @@ public class ViburDbcpInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new ViburDbcpDataSourceInstrumentation());
+    return asList(new ViburConfigInstrumentation(), new ViburDbcpDataSourceInstrumentation());
   }
 }

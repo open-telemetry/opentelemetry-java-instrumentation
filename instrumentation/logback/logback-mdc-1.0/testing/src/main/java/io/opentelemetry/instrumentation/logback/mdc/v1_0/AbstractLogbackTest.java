@@ -18,20 +18,22 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractLogbackTest {
 
   protected static final Logger logger = LoggerFactory.getLogger("test");
 
-  protected static ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+  protected ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
 
   protected final Baggage baggage =
       Baggage.empty().toBuilder().put("baggage_key", "baggage_value").build();
 
   @BeforeAll
-  static void setUp() {
+  void setUp() {
     ch.qos.logback.classic.Logger logbackLogger = (ch.qos.logback.classic.Logger) logger;
     Appender<ILoggingEvent> topLevelListAppender = logbackLogger.getAppender("LIST");
     if (topLevelListAppender != null) {

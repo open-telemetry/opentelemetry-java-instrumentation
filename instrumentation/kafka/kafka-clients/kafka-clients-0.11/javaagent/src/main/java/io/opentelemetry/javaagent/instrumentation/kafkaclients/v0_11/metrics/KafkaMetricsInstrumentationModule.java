@@ -9,14 +9,13 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class KafkaMetricsInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class KafkaMetricsInstrumentationModule extends InstrumentationModule {
   public KafkaMetricsInstrumentationModule() {
     super(
         "kafka-clients-metrics",
@@ -36,5 +35,10 @@ public class KafkaMetricsInstrumentationModule extends InstrumentationModule
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new KafkaMetricsProducerInstrumentation(), new KafkaMetricsConsumerInstrumentation());
+  }
+
+  @Override
+  public boolean defaultEnabled() {
+    return super.defaultEnabled() && !AgentCommonConfig.get().isV3Preview();
   }
 }

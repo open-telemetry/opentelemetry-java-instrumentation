@@ -7,18 +7,14 @@ package io.opentelemetry.instrumentation.testing.junit.rpc;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
 import java.util.HashMap;
 import java.util.Map;
 
-// until old rpc semconv are dropped in 3.0
 @SuppressWarnings("deprecation") // using deprecated semconv
 public class SemconvRpcStabilityUtil {
-
-  private static final AttributeKey<String> RPC_SYSTEM_NAME =
-      AttributeKey.stringKey("rpc.system.name");
-
   private static final Map<AttributeKey<?>, AttributeKey<?>> oldToNewMap = buildMap();
 
   private static Map<AttributeKey<?>, AttributeKey<?>> buildMap() {

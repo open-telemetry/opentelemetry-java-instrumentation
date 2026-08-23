@@ -24,6 +24,7 @@ configurations.testRuntimeClasspath {
 
     // dropwizard testing is not compatible with jackson 2.16.0
     force("com.fasterxml.jackson.core:jackson-databind:2.15.3")
+    force("com.fasterxml.jackson.datatype:jackson-datatype-guava:2.15.3")
     force("com.fasterxml.jackson.module:jackson-module-afterburner:2.15.3")
   }
 }

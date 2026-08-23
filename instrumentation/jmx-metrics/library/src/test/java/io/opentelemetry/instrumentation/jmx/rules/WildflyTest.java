@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.jmx.rules;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
@@ -52,6 +54,39 @@ class WildflyTest extends TargetSystemTest {
     copyYamlFilesToTarget(target, yamlFiles);
     copyTestWebAppToTarget(target, "/opt/jboss/wildfly/standalone/deployments/testapp.war");
 
+    startWeaverValidation(
+        "wildfly.yaml",
+        result ->
+            result
+                .checkNothingUnregisteredWithPrefix("wildfly.")
+                .checkRegisteredMetrics(
+                    "wildfly.",
+                    asList(
+                        "wildfly.session.created",
+                        "wildfly.session.active.count",
+                        "wildfly.session.active.limit",
+                        "wildfly.session.expired",
+                        "wildfly.session.rejected",
+                        "wildfly.request.count",
+                        "wildfly.request.duration.sum",
+                        "wildfly.error.count",
+                        "wildfly.network.io",
+                        "wildfly.db.client.connection.count",
+                        "wildfly.db.client.connection.wait.count",
+                        "wildfly.transaction.count",
+                        "wildfly.transaction.created",
+                        "wildfly.transaction.rollback",
+                        "wildfly.transaction.committed"),
+                    emptyList())
+                .checkRegisteredAttributes(
+                    "wildfly.",
+                    asList(
+                        "wildfly.deployment",
+                        "wildfly.server",
+                        "wildfly.listener",
+                        "wildfly.rollback.cause"),
+                    emptyList()));
+
     startTarget(target);
 
     verifyMetrics(createMetricsVerifier());
@@ -73,7 +108,7 @@ class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isCounter()
-                    .hasDescription("The number of sessions created")
+                    .hasDescription("The number of sessions created.")
                     .hasUnit("{session}")
                     .hasDataPointsWithOneAttribute(deploymentAttribute))
         .add(
@@ -81,7 +116,7 @@ class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isUpDownCounter()
-                    .hasDescription("The number of active sessions")
+                    .hasDescription("The number of active sessions.")
                     .hasUnit("{session}")
                     .hasDataPointsWithOneAttribute(deploymentAttribute))
         .add(
@@ -89,7 +124,7 @@ class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isUpDownCounter()
-                    .hasDescription("The maximum number of active sessions")
+                    .hasDescription("The maximum supported number of active sessions.")
                     .hasUnit("{session}")
                     .hasDataPointsWithOneAttribute(deploymentAttribute))
         .add(
@@ -97,7 +132,7 @@ class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isCounter()
-                    .hasDescription("The number of expired sessions")
+                    .hasDescription("The number of expired sessions.")
                     .hasUnit("{session}")
                     .hasDataPointsWithOneAttribute(deploymentAttribute))
         .add(
@@ -105,7 +140,7 @@ class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isCounter()
-                    .hasDescription("The number of rejected sessions")
+                    .hasDescription("The number of rejected sessions.")
                     .hasUnit("{session}")
                     .hasDataPointsWithOneAttribute(deploymentAttribute))
         // request metrics
@@ -114,7 +149,7 @@ class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isCounter()
-                    .hasDescription("The number of requests served")
+                    .hasDescription("The number of requests served.")
                     .hasUnit("{request}")
                     .hasDataPointsWithAttributes(serverListenerAttributes))
         .add(
@@ -122,7 +157,7 @@ class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isCounter()
-                    .hasDescription("The total amount of time spent processing requests")
+                    .hasDescription("The total amount of time spent processing requests.")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(serverListenerAttributes))
         .add(
@@ -130,7 +165,7 @@ class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isCounter()
-                    .hasDescription("The number of requests that have resulted in a 5xx response")
+                    .hasDescription("The number of requests that have resulted in a 5xx response.")
                     .hasUnit("{request}")
                     .hasDataPointsWithAttributes(serverListenerAttributes))
         // network io metrics
@@ -138,7 +173,7 @@ class WildflyTest extends TargetSystemTest {
             "wildfly.network.io",
             metric ->
                 metric
-                    .hasDescription("Total number of bytes transferred")
+                    .hasDescription("Total number of bytes transferred.")
                     .hasUnit("By")
                     .isCounter()
                     .hasDataPointsWithAttributes(
@@ -156,7 +191,7 @@ class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isUpDownCounter()
-                    .hasDescription("The number of open physical database connections")
+                    .hasDescription("The number of open physical database connections.")
                     .hasUnit("{connection}")
                     .hasDataPointsWithAttributes(
                         attributeGroup(
@@ -169,7 +204,7 @@ class WildflyTest extends TargetSystemTest {
                 metric
                     .isCounter()
                     .hasDescription(
-                        "The number of connection requests that had to wait to obtain it")
+                        "The number of connection requests that had to wait to obtain it.")
                     .hasUnit("{request}")
                     .hasDataPointsWithOneAttribute(dataSourceAttribute))
         // transactions
@@ -178,7 +213,7 @@ class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isUpDownCounter()
-                    .hasDescription("The number of in-flight transactions")
+                    .hasDescription("The number of in-flight transactions.")
                     .hasUnit("{transaction}")
                     .hasDataPointsWithoutAttributes())
         .add(
@@ -186,7 +221,7 @@ class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isCounter()
-                    .hasDescription("The total number of transactions created")
+                    .hasDescription("The total number of transactions created.")
                     .hasUnit("{transaction}")
                     .hasDataPointsWithoutAttributes())
         .add(
@@ -194,7 +229,7 @@ class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isCounter()
-                    .hasDescription("The total number of transactions rolled back")
+                    .hasDescription("The total number of transactions rolled back.")
                     .hasUnit("{transaction}")
                     // older versions do not report 'system' cause, hence non-strict assertion
                     .hasDataPointsWithOneAttribute(attributeWithAnyValue("wildfly.rollback.cause")))
@@ -203,7 +238,7 @@ class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isCounter()
-                    .hasDescription("The total number of transactions committed")
+                    .hasDescription("The total number of transactions committed.")
                     .hasUnit("{transaction}")
                     .hasDataPointsWithoutAttributes());
   }

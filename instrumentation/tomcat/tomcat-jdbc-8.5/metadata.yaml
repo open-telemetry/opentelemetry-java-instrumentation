@@ -1,0 +1,21 @@
+display_name: Tomcat JDBC
+description: >
+  This instrumentation enables database connection pool metrics for Tomcat JDBC. When no pool name
+  is explicitly configured, the JDBC URL and connection properties are used to derive
+  `server.address[:server.port][/db.namespace]`. If no server address or database namespace is
+  available, `tomcat-jdbc` is used.
+library_link: https://tomcat.apache.org/tomcat-8.5-doc/jdbc-pool.html
+semantic_conventions:
+  - DATABASE_POOL_METRICS
+configurations:
+  - name: otel.semconv-stability.opt-in
+    declarative_name: general.stability_opt_in_list
+    description: >
+      Opt-in to emit stable semantic conventions instead of the old
+      experimental semantic conventions. Accepts a comma-separated list of semantic convention
+      groups (e.g., `database`, `http`, `messaging`). Use `<group>/dup` to emit both old and new
+      conventions simultaneously. Stable semantic conventions will become the default in version
+      3.0 of the agent.
+    type: list
+    declarative_type: string
+    default: ""

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_47.incubator.logs;
 
-import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_42.logs.ApplicationLogRecordBuilder142;
 
@@ -20,9 +20,10 @@ public class ApplicationLogRecordBuilder147Incubator extends ApplicationLogRecor
   }
 
   @Override
+  @CanIgnoreReturnValue
   public application.io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder setEventName(
       String eventName) {
-    ((ExtendedLogRecordBuilder) agentLogRecordBuilder).setEventName(eventName);
+    agentLogRecordBuilder.setEventName(eventName);
     return this;
   }
 }

@@ -47,14 +47,6 @@ public class ResponseSendAdvice {
       this.scope = result.getScope();
     }
 
-    public AdviceScope(
-        CallDepth callDepth, HttpServletResponseAdviceHelper.StartResult startResult) {
-      this.callDepth = callDepth;
-      this.classAndMethod = startResult.getClassAndMethod();
-      this.context = startResult.getContext();
-      this.scope = startResult.getScope();
-    }
-
     public void exit(@Nullable Throwable throwable) {
       if (callDepth.decrementAndGet() > 0) {
         return;

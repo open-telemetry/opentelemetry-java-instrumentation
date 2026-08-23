@@ -12,13 +12,13 @@ dependencies {
   testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
   testInstrumentation(project(":instrumentation:vertx:vertx-kafka-client-3.6:javaagent"))
 
-  latestDepTestLibrary("io.vertx:vertx-kafka-client:3.+") // documented limitation
-  latestDepTestLibrary("io.vertx:vertx-codegen:3.+") // documented limitation
+  latestDepTestLibrary("io.vertx:vertx-kafka-client:3.+") // see vertx-kafka-client-4-testing module
+  latestDepTestLibrary("io.vertx:vertx-codegen:3.+") // see vertx-kafka-client-4-testing module
 }
 
 testing {
   suites {
-    val testNoReceiveTelemetry by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testNoReceiveTelemetry") {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
 
@@ -45,7 +45,7 @@ tasks {
     )
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -57,7 +57,31 @@ tasks {
     )
   }
 
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+  }
+
+  val testMessagingPreviewNoReceiveTelemetry = register<Test>("testMessagingPreviewNoReceiveTelemetry") {
+    testClassesDirs = sourceSets["testNoReceiveTelemetry"].output.classesDirs
+    classpath = sourceSets["testNoReceiveTelemetry"].runtimeClasspath
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
   check {
-    dependsOn(testing.suites, testExperimental)
+    dependsOn(testing.suites, testExperimental, testMessagingPreview, testBothSemconv, testMessagingPreviewNoReceiveTelemetry)
   }
 }

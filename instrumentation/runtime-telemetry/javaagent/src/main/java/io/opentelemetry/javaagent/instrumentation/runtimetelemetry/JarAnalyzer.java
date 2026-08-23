@@ -220,9 +220,9 @@ final class JarAnalyzer implements ClassFileTransformer {
     builder.put(PACKAGE_VERSION, jarDetails.version());
     builder.put(PACKAGE_DESCRIPTION, jarDetails.packageDescription());
 
-    String packageChecksum = jarDetails.computeSha1();
+    String packageChecksum = jarDetails.computeSha256();
     builder.put(PACKAGE_CHECKSUM, packageChecksum);
-    builder.put(PACKAGE_CHECKSUM_ALGORITHM, "SHA1");
+    builder.put(PACKAGE_CHECKSUM_ALGORITHM, "SHA-256");
 
     logger
         .logRecordBuilder()

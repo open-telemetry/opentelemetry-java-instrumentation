@@ -22,6 +22,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SERVER> {
 
+  private static final boolean V3_PREVIEW =
+      Boolean.getBoolean("otel.instrumentation.common.v3-preview");
+
   @RegisterExtension
   private static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
@@ -44,7 +47,7 @@ abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SE
   @Test
   void testHello() {
     AggregatedHttpResponse response =
-        client.get(address.resolve("wicket-test/").toString()).aggregate().join();
+        client.get(h1Address.resolve("wicket-test/").toString()).aggregate().join();
     Document doc = Jsoup.parse(response.contentUtf8());
 
     assertThat(response.status().code()).isEqualTo(200);
@@ -62,7 +65,7 @@ abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SE
   @Test
   void testException() {
     AggregatedHttpResponse response =
-        client.get(address.resolve("wicket-test/exception").toString()).aggregate().join();
+        client.get(h1Address.resolve("wicket-test/exception").toString()).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(500);
 
@@ -80,7 +83,7 @@ abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SE
   @Test
   void testResource() {
     AggregatedHttpResponse response =
-        client.get(address.resolve("wicket-test/resource").toString()).aggregate().join();
+        client.get(h1Address.resolve("wicket-test/resource").toString()).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo("hello resource");
@@ -89,8 +92,15 @@ abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SE
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET " + getContextPath() + "/wicket-test/hello.HelloResource")
+                    span.hasName(expectedResourceSpanName())
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()));
+  }
+
+  private String expectedResourceSpanName() {
+    if (V3_PREVIEW) {
+      return "GET " + getContextPath() + "/wicket-test/hello.HelloResource";
+    }
+    return "GET " + getContextPath() + "/wicket-test/*";
   }
 }

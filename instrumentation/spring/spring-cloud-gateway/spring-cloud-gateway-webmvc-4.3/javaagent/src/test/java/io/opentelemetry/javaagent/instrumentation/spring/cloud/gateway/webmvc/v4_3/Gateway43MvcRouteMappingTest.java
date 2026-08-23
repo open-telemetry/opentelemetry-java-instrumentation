@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.webmvc.v
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
-import io.opentelemetry.instrumentation.spring.gateway.common.AbstractRouteMappingTest;
+import io.opentelemetry.instrumentation.spring.cloud.gateway.common.AbstractRouteMappingTest;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
 import java.util.List;

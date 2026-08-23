@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -39,7 +38,7 @@ class PromiseKInstrumentation implements TypeInstrumentation {
         isConstructor().and(takesArgument(0, named("com.twitter.util.Local$Context"))),
         getClass().getName() + "$TrapContextAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("apply").and(takesArgument(0, named("com.twitter.util.Try")))),
+        named("apply").and(takesArgument(0, named("com.twitter.util.Try"))),
         getClass().getName() + "$ApplyAdvice");
   }
 

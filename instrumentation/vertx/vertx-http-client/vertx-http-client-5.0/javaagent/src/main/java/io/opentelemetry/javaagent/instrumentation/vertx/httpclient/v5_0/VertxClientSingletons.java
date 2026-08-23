@@ -14,6 +14,7 @@ import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.V
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpConnection;
 import io.vertx.core.net.HostAndPort;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
@@ -30,6 +31,9 @@ public class VertxClientSingletons {
   public static final VirtualField<HttpClientRequest, Contexts> CONTEXTS =
       VirtualField.find(HttpClientRequest.class, Contexts.class);
 
+  private static final VirtualField<HttpClientResponse, HttpConnection> CONNECTION_FIELD =
+      VirtualField.find(HttpClientResponse.class, HttpConnection.class);
+
   public static Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter() {
     return instrumenter;
   }
@@ -41,6 +45,16 @@ public class VertxClientSingletons {
   @Nullable
   public static HostAndPort getAuthority(HttpClientRequest request) {
     return AUTHORITY_FIELD.get(request);
+  }
+
+  public static void setConnection(
+      HttpClientResponse response, @Nullable HttpConnection connection) {
+    CONNECTION_FIELD.set(response, connection);
+  }
+
+  @Nullable
+  public static HttpConnection getConnection(HttpClientResponse response) {
+    return CONNECTION_FIELD.get(response);
   }
 
   public static <T> Future<T> wrapFuture(Future<T> future) {

@@ -28,6 +28,7 @@ import io.vertx.jdbcclient.JDBCConnectOptions;
 import io.vertx.jdbcclient.JDBCPool;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.PoolOptions;
+import io.vertx.sqlclient.Tuple;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -76,13 +77,36 @@ class VertxJdbcClientTest {
         .toCompletableFuture()
         .get(30, SECONDS);
 
+    assertSelect("select * from test");
+  }
+
+  @Test
+  void testExplicitPreparedSelect() throws Exception {
+    String query = "select * from test where id = ?";
+    testing
+        .runWithSpan(
+            "parent",
+            () ->
+                pool.withConnection(
+                    connection ->
+                        connection
+                            .prepare(query)
+                            .compose(statement -> statement.query().execute(Tuple.of(1)))))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+
+    assertSelect(query);
+  }
+
+  private static void assertSelect(String query) {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() ? "SELECT test" : "SELECT " + DB + ".test")
+                            emitStableDatabaseSemconv() ? "select test" : "SELECT " + DB + ".test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -92,10 +116,10 @@ class VertxJdbcClientTest {
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
-                            equalTo(maybeStable(DB_STATEMENT), "select * from test"),
+                            equalTo(maybeStable(DB_STATEMENT), query),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT test" : null),
+                                emitStableDatabaseSemconv() ? "select test" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),

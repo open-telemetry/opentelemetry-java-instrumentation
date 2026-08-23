@@ -21,23 +21,17 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.impl.Log4jLogEvent;
 import org.apache.logging.log4j.message.FormattedMessage;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 abstract class AbstractOpenTelemetryAppenderTest {
 
   static final Logger logger = LogManager.getLogger("TestLogger");
 
-  static Resource resource;
-  static InstrumentationScopeInfo instrumentationScopeInfo;
+  static final Resource RESOURCE = Resource.getDefault();
+  static final InstrumentationScopeInfo INSTRUMENTATION_SCOPE_INFO =
+      InstrumentationScopeInfo.create("TestLogger");
 
   void executeAfterLogsExecution() {}
-
-  @BeforeAll
-  static void setupAll() {
-    resource = Resource.getDefault();
-    instrumentationScopeInfo = InstrumentationScopeInfo.create("TestLogger");
-  }
 
   static void generalBeforeEachSetup() {
     ThreadContext.clearAll();

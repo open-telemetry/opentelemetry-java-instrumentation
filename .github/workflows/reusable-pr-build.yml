@@ -14,6 +14,9 @@ on:
       skip-windows-smoke-tests:
         type: boolean
         default: false
+      skip-servlet-images:
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -32,9 +35,8 @@ jobs:
       cache-read-only: true
 
   test-native:
+    if: "!inputs.skip-native-tests"
     uses: ./.github/workflows/reusable-native-tests.yml
-    with:
-      skip-native-tests: ${{ inputs.skip-native-tests }}
 
   muzzle:
     uses: ./.github/workflows/reusable-muzzle.yml
@@ -47,12 +49,18 @@ jobs:
     if: "!startsWith(github.ref_name, 'release/') && !startsWith(github.base_ref, 'release/')"
     uses: ./.github/workflows/reusable-lint-check.yml
 
+  build-servlet-images:
+    if: "!inputs.skip-servlet-images"
+    uses: ./.github/workflows/reusable-build-servlet-images.yml
+
   required-status-check:
     needs:
       - common
       - test-latest-deps
+      - test-native
       - muzzle
       - lint
+      - build-servlet-images
     runs-on: ubuntu-latest
     if: ${{ always() }}
     steps:
@@ -60,6 +68,14 @@ jobs:
           needs.common.result != 'success' ||
           needs.test-latest-deps.result != 'success' ||
           needs.muzzle.result != 'success' ||
+          (
+            needs.test-native.result != 'success' &&
+            needs.test-native.result != 'skipped'
+          ) ||
+          (
+            needs.build-servlet-images.result != 'success' &&
+            needs.build-servlet-images.result != 'skipped'
+          ) ||
           (
             !startsWith(github.base_ref, 'release/') &&
             needs.lint.result != 'success'

@@ -21,12 +21,23 @@ public abstract class MessageWithDestination {
 
   public abstract MessageAdapter message();
 
+  @Nullable
   public abstract String destinationName();
 
   public abstract boolean isTemporaryDestination();
 
+  @Nullable
+  public abstract String destinationSubscriptionName();
+
   public static MessageWithDestination create(
       MessageAdapter message, @Nullable DestinationAdapter fallbackDestination) {
+    return create(message, fallbackDestination, null);
+  }
+
+  public static MessageWithDestination create(
+      MessageAdapter message,
+      @Nullable DestinationAdapter fallbackDestination,
+      @Nullable String destinationSubscriptionName) {
     DestinationAdapter jmsDestination = null;
     try {
       jmsDestination = message.getJmsDestination();
@@ -39,40 +50,49 @@ public abstract class MessageWithDestination {
 
     if (jmsDestination != null) {
       if (jmsDestination.isQueue()) {
-        return createMessageWithQueue(message, jmsDestination);
+        return createMessageWithQueue(message, jmsDestination, destinationSubscriptionName);
       }
       if (jmsDestination.isTopic()) {
-        return createMessageWithTopic(message, jmsDestination);
+        return createMessageWithTopic(message, jmsDestination, destinationSubscriptionName);
       }
     }
     return new AutoValue_MessageWithDestination(
-        message, "unknown", /* isTemporaryDestination= */ false);
+        message, null, /* isTemporaryDestination= */ false, destinationSubscriptionName);
   }
 
   private static MessageWithDestination createMessageWithQueue(
-      MessageAdapter message, DestinationAdapter queue) {
+      MessageAdapter message,
+      DestinationAdapter queue,
+      @Nullable String destinationSubscriptionName) {
 
     String queueName = getDestinationName(queue, DestinationAdapter::getQueueName);
-    boolean temporary = queue.isTemporaryQueue() || queueName.startsWith(TIBCO_TMP_PREFIX);
+    boolean temporary =
+        queue.isTemporaryQueue() || (queueName != null && queueName.startsWith(TIBCO_TMP_PREFIX));
 
-    return new AutoValue_MessageWithDestination(message, queueName, temporary);
+    return new AutoValue_MessageWithDestination(
+        message, queueName, temporary, destinationSubscriptionName);
   }
 
   private static MessageWithDestination createMessageWithTopic(
-      MessageAdapter message, DestinationAdapter topic) {
+      MessageAdapter message,
+      DestinationAdapter topic,
+      @Nullable String destinationSubscriptionName) {
 
     String topicName = getDestinationName(topic, DestinationAdapter::getTopicName);
-    boolean temporary = topic.isTemporaryTopic() || topicName.startsWith(TIBCO_TMP_PREFIX);
+    boolean temporary =
+        topic.isTemporaryTopic() || (topicName != null && topicName.startsWith(TIBCO_TMP_PREFIX));
 
-    return new AutoValue_MessageWithDestination(message, topicName, temporary);
+    return new AutoValue_MessageWithDestination(
+        message, topicName, temporary, destinationSubscriptionName);
   }
 
+  @Nullable
   private static String getDestinationName(DestinationAdapter destination, NameGetter nameGetter) {
     try {
       return nameGetter.getName(destination);
     } catch (Exception e) {
       logger.log(FINE, "Failure getting JMS destination name", e);
-      return "unknown";
+      return null;
     }
   }
 

@@ -58,12 +58,12 @@ class TapestryTest extends AbstractHttpServerUsingTest<Server> {
   @BeforeAll
   void setup() {
     startServer();
-    client = WebClient.builder(address).followRedirects().build();
+    client = WebClient.builder().build();
   }
 
   @Test
   void testIndexPage() {
-    AggregatedHttpResponse response = client.get("/").aggregate().join();
+    AggregatedHttpResponse response = client.get(h1Address.toString()).aggregate().join();
     Document doc = Jsoup.parse(response.contentUtf8());
 
     assertThat(response.status().code()).isEqualTo(200);
@@ -84,10 +84,20 @@ class TapestryTest extends AbstractHttpServerUsingTest<Server> {
 
   @Test
   void testStartAction() {
-    AggregatedHttpResponse response = client.get("/index.start").aggregate().join();
-    Document doc = Jsoup.parse(response.contentUtf8());
+    AggregatedHttpResponse response =
+        client.get(h1Address.resolve("index.start").toString()).aggregate().join();
+    assertThat(response.status().code()).isEqualTo(302);
 
-    assertThat(response.status().code()).isEqualTo(200);
+    // handle redirect manually because armeria 1.39.0 sends an extra OPTIONS request for http2
+    // upgrade
+    AggregatedHttpResponse response2 =
+        client
+            .get(response.headers().get("location").replace("http://", "h1c://"))
+            .aggregate()
+            .join();
+    assertThat(response2.status().code()).isEqualTo(200);
+
+    Document doc = Jsoup.parse(response2.contentUtf8());
     assertThat(doc.selectFirst("title").text()).isEqualTo("Other page");
 
     testing.waitAndAssertTraces(
@@ -123,7 +133,8 @@ class TapestryTest extends AbstractHttpServerUsingTest<Server> {
 
   @Test
   void testExceptionAction() {
-    AggregatedHttpResponse response = client.get("/index.exception").aggregate().join();
+    AggregatedHttpResponse response =
+        client.get(h1Address.resolve("index.exception").toString()).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(500);
 

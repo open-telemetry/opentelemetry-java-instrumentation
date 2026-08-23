@@ -49,10 +49,12 @@ class ActionInvocationInstrumentation implements TypeInstrumentation {
     public static class AdviceScope {
       private final Context context;
       private final Scope scope;
+      private final ActionInvocation actionInvocation;
 
-      private AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context, Scope scope, ActionInvocation actionInvocation) {
         this.context = context;
         this.scope = scope;
+        this.actionInvocation = actionInvocation;
       }
 
       @Nullable
@@ -65,10 +67,10 @@ class ActionInvocationInstrumentation implements TypeInstrumentation {
           return null;
         }
         Context context = instrumenter().start(parentContext, actionInvocation);
-        return new AdviceScope(context, context.makeCurrent());
+        return new AdviceScope(context, context.makeCurrent(), actionInvocation);
       }
 
-      public void end(ActionInvocation actionInvocation, @Nullable Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, actionInvocation, null, throwable);
       }
@@ -83,10 +85,9 @@ class ActionInvocationInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.This ActionInvocation actionInvocation,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.end(actionInvocation, throwable);
+        adviceScope.end(throwable);
       }
     }
   }

@@ -33,7 +33,7 @@ class MessageWithDestinationTest {
     MessageWithDestination result = MessageWithDestination.create(message, null);
 
     // then
-    assertMessage("unknown", /* expectedTemporary= */ false, result);
+    assertMessage(null, /* expectedTemporary= */ false, result);
   }
 
   @Test
@@ -45,7 +45,7 @@ class MessageWithDestinationTest {
     MessageWithDestination result = MessageWithDestination.create(message, destination);
 
     // then
-    assertMessage("unknown", /* expectedTemporary= */ false, result);
+    assertMessage(null, /* expectedTemporary= */ false, result);
   }
 
   @ParameterizedTest
@@ -102,10 +102,10 @@ class MessageWithDestinationTest {
     assertMessage(expectedDestinationName, expectedTemporary, result);
   }
 
-  static Stream<Arguments> destinations() {
+  private static Stream<Arguments> destinations() {
     return Stream.of(
         Arguments.of("destination", false, "destination", false),
-        Arguments.of(null, false, "unknown", false),
+        Arguments.of(null, false, null, false),
         Arguments.of(TIBCO_TMP_PREFIX + "dest", false, TIBCO_TMP_PREFIX + "dest", true),
         Arguments.of("destination", true, "destination", true));
   }

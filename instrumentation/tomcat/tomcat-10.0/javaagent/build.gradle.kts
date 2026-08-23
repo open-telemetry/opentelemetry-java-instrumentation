@@ -12,7 +12,7 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:tomcat:tomcat-common:javaagent"))
+  implementation(project(":instrumentation:tomcat:tomcat-common-7.0:javaagent"))
   implementation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
@@ -28,7 +28,7 @@ dependencies {
 
 tasks {
   test {
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 }

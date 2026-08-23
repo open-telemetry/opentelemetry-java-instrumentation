@@ -132,7 +132,7 @@ class KafkaConnectTest extends TargetSystemTest {
 
   @Test
   void metricsAreReportedFromKafkaConnectContainer() throws Exception {
-    List<String> yamlFiles = singletonList("kafka-connect.yaml");
+    List<String> yamlFiles = singletonList("experimental-kafka-connect.yaml");
 
     yamlFiles.forEach(this::validateYamlSyntax);
 
@@ -197,7 +197,9 @@ class KafkaConnectTest extends TargetSystemTest {
 
   private JmxConfig loadKafkaConnectConfig() throws Exception {
     try (InputStream input =
-        getClass().getClassLoader().getResourceAsStream("jmx/rules/kafka-connect.yaml")) {
+        getClass()
+            .getClassLoader()
+            .getResourceAsStream("jmx/rules/experimental-kafka-connect.yaml")) {
       assertThat(input).isNotNull();
       return RuleParser.get().loadConfig(input);
     }

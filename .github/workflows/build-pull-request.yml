@@ -64,10 +64,36 @@ jobs:
             echo "native=false" >> "$GITHUB_OUTPUT"
           fi
 
+  # Build the Servlet smoke-test images only when the PR touches the
+  # servlet image sources or its workflow definition.
+  resolve-servlet-images:
+    runs-on: ubuntu-latest
+    outputs:
+      build-servlet-images: ${{ steps.filter.outputs.servlet }}
+    steps:
+      - name: Detect servlet-image-relevant changes
+        id: filter
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          files=$(
+            gh api --paginate "/repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" \
+              --jq '.[].filename'
+          )
+          include='^smoke-tests/images/servlet/'
+          include+='|^\.github/workflows/reusable-build-servlet-images\.yml$'
+          if grep -Eq "$include" <<<"$files"; then
+            echo "servlet=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "servlet=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
-    needs: [resolve-native]
+    needs: [resolve-native, resolve-servlet-images]
     uses: ./.github/workflows/reusable-pr-build.yml
     with:
       skip-native-tests: ${{ !(needs.resolve-native.outputs.run-native-tests == 'true' || contains(github.event.pull_request.labels.*.name, 'test native')) }}
       skip-openj9-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test openj9') }}
       skip-windows-smoke-tests: ${{ !contains(github.event.pull_request.labels.*.name, 'test windows') }}
+      skip-servlet-images: ${{ needs.resolve-servlet-images.outputs.build-servlet-images != 'true' }}

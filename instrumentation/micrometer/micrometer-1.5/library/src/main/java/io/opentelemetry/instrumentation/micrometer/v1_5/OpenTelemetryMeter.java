@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.baseUnit;
-import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.statisticInstrumentName;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
 import static java.util.Collections.emptyList;
 
@@ -28,14 +27,16 @@ final class OpenTelemetryMeter extends AbstractMeter
       Id id,
       NamingConvention namingConvention,
       Iterable<Measurement> measurements,
-      io.opentelemetry.api.metrics.Meter otelMeter) {
+      io.opentelemetry.api.metrics.Meter otelMeter,
+      Bridging bridging) {
     super(id);
     Attributes attributes = tagsAsAttributes(id, namingConvention);
 
     List<AutoCloseable> observableInstruments = new ArrayList<>();
     for (Measurement measurement : measurements) {
-      String name = statisticInstrumentName(id, measurement.getStatistic(), namingConvention);
-      String description = Bridging.description(id);
+      String name =
+          bridging.statisticInstrumentName(id, measurement.getStatistic(), namingConvention);
+      String description = bridging.description(name, id);
       String baseUnit = baseUnit(id);
       DoubleMeasurementRecorder<Measurement> callback =
           new DoubleMeasurementRecorder<>(measurement, Measurement::getValue, attributes);

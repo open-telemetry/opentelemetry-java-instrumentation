@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.xxljob.common.v1_9_2;
 
 import com.xxl.job.core.biz.model.ReturnT;
 import java.lang.reflect.Method;
-import javax.annotation.Nullable;
 
 class ReflectiveMethodsFactory {
 
@@ -17,7 +16,6 @@ class ReflectiveMethodsFactory {
     return singletonObject;
   }
 
-  @Nullable
   static Method getMethod() {
     try {
       return ReflectObject.class.getMethod("echo", String.class);
@@ -26,7 +24,6 @@ class ReflectiveMethodsFactory {
     }
   }
 
-  @Nullable
   static Method getInitMethod() {
     try {
       return ReflectObject.class.getMethod("initMethod");
@@ -35,7 +32,6 @@ class ReflectiveMethodsFactory {
     }
   }
 
-  @Nullable
   static Method getDestroyMethod() {
     try {
       return ReflectObject.class.getMethod("destroyMethod");

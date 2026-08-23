@@ -29,6 +29,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.parser.ParseContext;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.PolardbUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.PostgresqlUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.SapUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.SqliteUrlParser;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -98,6 +99,9 @@ public final class JdbcConnectionUrlParser {
 
     // PolarDB
     typeParsers.put("polardb", PolardbUrlParser.INSTANCE);
+
+    // SQLite
+    typeParsers.put("sqlite", SqliteUrlParser.INSTANCE);
   }
 
   private JdbcConnectionUrlParser() {}
@@ -152,6 +156,14 @@ public final class JdbcConnectionUrlParser {
     if (connectionUrl.startsWith("jdbc:tracing:")) {
       // see https://github.com/opentracing-contrib/java-jdbc
       return connectionUrl.substring("jdbc:tracing:".length());
+    } else if (connectionUrl.startsWith("jdbc:aws-dsql:")) {
+      // Amazon Aurora DSQL uses jdbc:aws-dsql: prefix, see
+      // https://docs.aws.amazon.com/aurora-dsql/latest/userguide/SECTION_program-with-jdbc-connector.html
+      return connectionUrl.substring("jdbc:aws-dsql:".length());
+    } else if (connectionUrl.startsWith("jdbc:aws-wrapper:")) {
+      // Amazon Aurora uses jdbc:aws-wrapper: prefix, see
+      // https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Connecting.html#Aurora.Connecting.JDBCDriverPostgreSQL
+      return connectionUrl.substring("jdbc:aws-wrapper:".length());
     } else if (connectionUrl.startsWith("jdbc:")) {
       return connectionUrl.substring("jdbc:".length());
     } else if (connectionUrl.startsWith("jdbc-secretsmanager:tracing:")) {

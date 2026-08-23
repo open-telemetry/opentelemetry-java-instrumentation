@@ -44,3 +44,13 @@ void destroy(PooledDataSource dataSource) {
   c3p0Telemetry.unregisterMetrics(dataSource);
 }
 ```
+
+The single-argument `registerMetrics` method uses the data source name provided by c3p0. To use an
+explicit name instead:
+
+```java
+void configureWithExplicitName(OpenTelemetry openTelemetry, PooledDataSource dataSource) {
+  C3p0Telemetry telemetry = C3p0Telemetry.create(openTelemetry);
+  telemetry.registerMetrics(dataSource, "orders-pool");
+}
+```

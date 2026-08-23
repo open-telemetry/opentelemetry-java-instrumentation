@@ -11,6 +11,7 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.TaskQueueInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -32,6 +33,7 @@ public class VertxClientInstrumentationModule extends InstrumentationModule {
     return asList(
         new HttpClientImplInstrumentation(),
         new HttpRequestImplInstrumentation(),
-        new HttpRequestInstrumentation());
+        new HttpRequestInstrumentation(),
+        new TaskQueueInstrumentation());
   }
 }

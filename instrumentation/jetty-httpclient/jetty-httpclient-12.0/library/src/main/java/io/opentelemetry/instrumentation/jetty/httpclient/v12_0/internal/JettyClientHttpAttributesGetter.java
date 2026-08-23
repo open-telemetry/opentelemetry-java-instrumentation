@@ -7,10 +7,14 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal;
 
 import io.opentelemetry.instrumentation.api.internal.HttpProtocolUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
+import org.eclipse.jetty.http.HttpField;
+import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpVersion;
 
 /**
@@ -37,6 +41,11 @@ class JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Requ
   }
 
   @Override
+  public Collection<String> getHttpRequestHeaderNames(Request request) {
+    return headerNames(request.getHeaders());
+  }
+
+  @Override
   public Integer getHttpResponseStatusCode(
       Request request, Response response, @Nullable Throwable error) {
     return response.getStatus();
@@ -45,6 +54,11 @@ class JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Requ
   @Override
   public List<String> getHttpResponseHeader(Request request, Response response, String name) {
     return response.getHeaders().getValuesList(name);
+  }
+
+  @Override
+  public Collection<String> getHttpResponseHeaderNames(Request request, Response response) {
+    return headerNames(response.getHeaders());
   }
 
   @Override
@@ -77,5 +91,13 @@ class JettyClientHttpAttributesGetter implements HttpClientAttributesGetter<Requ
   @Override
   public Integer getServerPort(Request request) {
     return request.getPort();
+  }
+
+  private static Collection<String> headerNames(HttpFields headers) {
+    List<String> names = new ArrayList<>(headers.size());
+    for (HttpField header : headers) {
+      names.add(header.getName());
+    }
+    return names;
   }
 }

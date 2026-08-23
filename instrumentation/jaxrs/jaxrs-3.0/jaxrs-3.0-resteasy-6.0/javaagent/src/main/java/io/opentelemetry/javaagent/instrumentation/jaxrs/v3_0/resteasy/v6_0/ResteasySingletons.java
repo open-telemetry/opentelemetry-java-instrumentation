@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.resteasy.v6_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.HandlerData;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.HandlerData;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.JaxrsInstrumenterFactory;
 import org.jboss.resteasy.core.ResourceLocatorInvoker;
 import org.jboss.resteasy.core.ResourceMethodInvoker;
 

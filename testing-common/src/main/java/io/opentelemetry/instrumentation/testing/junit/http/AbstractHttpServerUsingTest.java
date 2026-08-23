@@ -26,6 +26,7 @@ public abstract class AbstractHttpServerUsingTest<SERVER> {
   public WebClient client;
   public int port;
   public URI address;
+  public URI h1Address;
 
   protected abstract SERVER setupServer() throws Exception;
 
@@ -39,6 +40,7 @@ public abstract class AbstractHttpServerUsingTest<SERVER> {
     if (address == null) {
       address = buildAddress();
     }
+    h1Address = toUri(address.toString().replace("http://", "h1c://"));
 
     try {
       server = setupServer();
@@ -71,8 +73,12 @@ public abstract class AbstractHttpServerUsingTest<SERVER> {
   }
 
   protected URI buildAddress() {
+    return toUri("http://localhost:" + port + getContextPath() + "/");
+  }
+
+  private static URI toUri(String string) {
     try {
-      return new URI("http://localhost:" + port + getContextPath() + "/");
+      return new URI(string);
     } catch (URISyntaxException e) {
       throw new IllegalStateException(e);
     }

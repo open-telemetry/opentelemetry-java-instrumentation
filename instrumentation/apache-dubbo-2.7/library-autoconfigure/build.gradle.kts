@@ -13,6 +13,17 @@ dependencies {
   testLibrary("org.apache.dubbo:dubbo-config-api:2.7.0")
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("testClusterInvoker") {
+      dependencies {
+        implementation(project())
+        implementation("org.apache.dubbo:dubbo:${baseVersion("2.7.14").orLatest()}")
+      }
+    }
+  }
+}
+
 tasks.withType<Test>().configureEach {
   systemProperty("testLatestDeps", otelProps.testLatestDeps)
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
@@ -23,7 +34,7 @@ tasks.withType<Test>().configureEach {
 }
 
 tasks {
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -31,7 +42,7 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
   }
 
-  val testBothSemconv by registering(Test::class) {
+  val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -40,6 +51,6 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv, testBothSemconv)
+    dependsOn(testing.suites, testStableSemconv, testBothSemconv)
   }
 }

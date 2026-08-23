@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.gateway.v4_3;
 
-import io.opentelemetry.instrumentation.spring.gateway.common.AbstractRouteMappingTest;
+import io.opentelemetry.instrumentation.spring.cloud.gateway.common.AbstractRouteMappingTest;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(

@@ -7,38 +7,47 @@ semantic_conventions:
 features:
   - HTTP_ROUTE
 configurations:
-  - name: otel.instrumentation.http.known-methods
-    declarative_name: java.common.http.known_methods
-    description: >
-      Configures the instrumentation to recognize an alternative set of HTTP request methods. All
-      other methods will be treated as `_OTHER`.
-    type: list
-    default: "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"
-  - name: otel.instrumentation.http.server.capture-request-headers
-    declarative_name: general.http.server.request_captured_headers
-    description: List of HTTP request headers to capture in HTTP server telemetry.
-    type: list
-    default: ""
-  - name: otel.instrumentation.http.server.capture-response-headers
-    declarative_name: general.http.server.response_captured_headers
-    description: List of HTTP response headers to capture in HTTP server telemetry.
-    type: list
-    default: ""
-  - name: otel.instrumentation.http.server.emit-experimental-telemetry
-    declarative_name: java.common.http.server.emit_experimental_telemetry/development
-    description: >
-      Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size`
-      and `http.response.body.size` attributes to spans, and records `http.server.request.body.size`
-      and `http.server.response.body.size` metrics.
-    type: boolean
-    default: false
+  - ref: http.known-methods
+  - ref: http.server.capture-request-headers
+  - ref: http.server.capture-response-headers
+  - ref: http.server.emit-experimental-telemetry
   - name: otel.instrumentation.servlet.experimental-span-attributes
     declarative_name: java.servlet.experimental_span_attributes/development
     description: Enables capturing the experimental `servlet.timeout` span attribute.
     type: boolean
     default: false
+  - name: otel.instrumentation.servlet.experimental.request-parameters.included
+    declarative_name: java.servlet.request_parameters/development.included
+    description: >
+      A comma-separated list of case-sensitive request parameter name patterns to capture as span
+      attributes. `?` matches one character and `*` matches zero or more characters. Excluded
+      patterns take precedence over included patterns. No request parameters are captured unless an
+      included or excluded pattern is configured; configuring only excluded patterns captures all
+      request parameters that do not match them, which may expose sensitive information.
+    type: list
+    default: ""
+    examples:
+      - "request-id"
+      - "user-*,search-?"
+  - name: otel.instrumentation.servlet.experimental.request-parameters.excluded
+    declarative_name: java.servlet.request_parameters/development.excluded
+    description: >
+      A comma-separated list of case-sensitive request parameter name patterns to exclude from span
+      attributes. `?` matches one character and `*` matches zero or more characters. Excluded
+      patterns take precedence over included patterns. No request parameters are captured unless an
+      included or excluded pattern is configured; configuring only excluded patterns captures all
+      request parameters that do not match them, which may expose sensitive information.
+    type: list
+    default: ""
+    examples:
+      - "password,*-token"
   - name: otel.instrumentation.servlet.experimental.capture-request-parameters
     declarative_name: java.servlet.capture_request_parameters/development
-    description: List of request parameter names to capture as span attributes.
+    description: >
+      Deprecated include-only alias for
+      `otel.instrumentation.servlet.experimental.request-parameters.included`. It does not support
+      glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other
+      entry is matched as a literal request parameter name. It may be removed in the next minor
+      release.
     type: list
     default: ""

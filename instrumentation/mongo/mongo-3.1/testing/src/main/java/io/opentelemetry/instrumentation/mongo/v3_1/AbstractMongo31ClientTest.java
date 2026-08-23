@@ -31,7 +31,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public abstract class AbstractMongo31ClientTest
     extends AbstractMongoClientTest<MongoCollection<Document>> {
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected abstract void configureMongoClientOptions(MongoClientOptions.Builder options);
 

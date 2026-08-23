@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import java.util.Collection;
-import javax.annotation.Nullable;
 
 /**
  * An interface for getting SQL database client attributes.
@@ -23,33 +22,65 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
     extends DbClientAttributesGetter<REQUEST, RESPONSE> {
 
   /**
-   * SqlClientAttributesExtractor will try to populate db.operation.name based on {@link
-   * #getRawQueryTexts(REQUEST)}, but this can be used to explicitly provide the operation name.
+   * SQL instrumentations must not override or call this method.
+   *
+   * <p>Provide raw query text through {@link #getRawQueryTexts(REQUEST)} instead. When the database
+   * system does not support query text with multiple operations in non-batch operations, enable
+   * {@link SqlClientAttributesExtractorBuilder#setSingleOperationAndCollection(boolean)} and {@link
+   * SqlClientAttributesExtractor} will derive {@code db.operation.name} from {@code db.query.text}.
+   *
+   * @throws UnsupportedOperationException always
    */
   @Override
-  @Nullable
   default String getDbOperationName(REQUEST request) {
-    return null;
+    throw new UnsupportedOperationException(
+        "SQL instrumentations derive db.operation.name from the raw query text");
   }
 
   /**
-   * SqlClientAttributesExtractor will try to populate db.query.text based on {@link
-   * #getRawQueryTexts(REQUEST)}, but this can be used to explicitly provide the query text.
+   * SQL instrumentations must not override or call this method.
+   *
+   * <p>Provide raw query text through {@link #getRawQueryTexts(REQUEST)} instead. {@link
+   * SqlClientAttributesExtractor} will derive {@code db.query.text} from the raw query text.
+   *
+   * @throws UnsupportedOperationException always
    */
   @Override
-  @Nullable
   default String getDbQueryText(REQUEST request) {
-    return null;
+    throw new UnsupportedOperationException(
+        "SQL instrumentations derive db.query.text from the raw query text");
   }
 
   /**
-   * SqlClientAttributesExtractor will try to populate db.query.summary based on {@link
-   * #getRawQueryTexts(REQUEST)}, but this can be used to explicitly provide the query summary.
+   * SQL instrumentations must not override or call this method.
+   *
+   * <p>Provide raw query text through {@link #getRawQueryTexts(REQUEST)} instead. {@link
+   * SqlClientAttributesExtractor} will derive {@code db.query.summary} from the raw query text.
+   *
+   * @throws UnsupportedOperationException always
    */
   @Override
-  @Nullable
   default String getDbQuerySummary(REQUEST request) {
-    return null;
+    throw new UnsupportedOperationException(
+        "SQL instrumentations derive db.query.summary from the raw query text");
+  }
+
+  /**
+   * SQL instrumentations must not override or call this method.
+   *
+   * <p>Provide raw query text through {@link #getRawQueryTexts(REQUEST)} instead. When the database
+   * system does not support query text with multiple collections in non-batch operations, enable
+   * {@link SqlClientAttributesExtractorBuilder#setSingleOperationAndCollection(boolean)} and {@link
+   * SqlClientAttributesExtractor} will derive {@code db.collection.name} from {@code
+   * db.query.text}. Do not enable that option when the database system supports query text with
+   * multiple collections in non-batch operations.
+   *
+   * @throws UnsupportedOperationException always
+   */
+  @Override
+  default String getDbCollectionName(REQUEST request) {
+    throw new UnsupportedOperationException(
+        "SQL instrumentations derive db.collection.name from the raw query text");
   }
 
   /** Returns the SQL dialect used by the database. */
@@ -65,15 +96,34 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
   Collection<String> getRawQueryTexts(REQUEST request);
 
   /**
-   * Returns whether the query is parameterized. Prepared statements are always considered
-   * parameterized even if no parameters are bound. By using a parameterized query the user is
-   * giving a strong signal that any sensitive data will be passed as parameter values, and so the
-   * query does not need to be sanitized. See <a
+   * Returns the raw SQL query texts used to derive old semantic convention attributes and span
+   * names.
+   *
+   * <p>By default, this returns {@link #getRawQueryTexts(Object)}. Instrumentations may override
+   * this method when preserving old semantic convention telemetry requires a different query
+   * representation.
+   *
+   * @deprecated This method supports old database semantic conventions and will be removed in 3.0.
+   */
+  @Deprecated // to be removed in 3.0
+  default Collection<String> getRawQueryTextsForOldSemconv(REQUEST request) {
+    return getRawQueryTexts(request);
+  }
+
+  /**
+   * Returns whether the query at {@code queryIndex} in {@link #getRawQueryTexts(Object)} is
+   * parameterized. Prepared statements are always considered parameterized even if no parameters
+   * are bound. By using a parameterized query the user is giving a strong signal that any sensitive
+   * data will be passed as parameter values, and so the query does not need to be sanitized. See <a
    * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md#sanitization-of-dbquerytext">sanitization
    * of db.query.text</a>.
+   *
+   * <p>The {@code queryIndex} is zero-based and follows the iteration order of {@link
+   * #getRawQueryTexts(Object)}. This supports batch operations where individual entries may have
+   * different parameterization.
    */
   // TODO: make this required to implement
-  default boolean isParameterizedQuery(REQUEST request) {
+  default boolean isParameterizedQuery(REQUEST request, int queryIndex) {
     return false;
   }
 }

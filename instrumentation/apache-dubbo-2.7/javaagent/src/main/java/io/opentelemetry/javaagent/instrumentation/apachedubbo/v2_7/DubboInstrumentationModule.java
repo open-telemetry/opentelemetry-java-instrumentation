@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
@@ -14,14 +13,12 @@ import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilde
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class DubboInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class DubboInstrumentationModule extends InstrumentationModule {
   public DubboInstrumentationModule() {
     super("apache-dubbo", "apache-dubbo-2.7");
   }
@@ -31,18 +28,26 @@ public class DubboInstrumentationModule extends InstrumentationModule
     helperResourceBuilder.register(
         "META-INF/services/org.apache.dubbo.rpc.Filter",
         "apache-dubbo-2.7/META-INF/services/org.apache.dubbo.rpc.Filter");
+    helperResourceBuilder.register(
+        "META-INF/services/org.apache.dubbo.rpc.cluster.Cluster",
+        "apache-dubbo-2.7/META-INF/services/org.apache.dubbo.rpc.cluster.Cluster");
   }
 
   @Override
   public List<String> exposedClassNames() {
     return asList(
         "io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7.OpenTelemetryClientFilter",
-        "io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7.OpenTelemetryServerFilter");
+        "io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7.OpenTelemetryServerFilter",
+        "io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7.RegistryCapturingClusterWrapperProxy");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new ResourceInjectingTypeInstrumentation());
+    return asList(
+        new ResourceInjectingTypeInstrumentation(),
+        new DubboProtocolInstrumentation(),
+        new DecodeableRpcInvocationInstrumentation(),
+        new GrpcRequestHandlerMappingInstrumentation());
   }
 
   // A type instrumentation is needed to trigger resource injection.

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerReceiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -16,6 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
@@ -67,15 +69,16 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Context parentContext = currentContext();
+      Context parentContext = KafkaConsumerContextUtil.withoutLeakedProcessSpan(currentContext());
       KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
 
       // disable process tracing and store the receive span for each individual record too
       boolean previousValue = KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
       try {
-        Context context = null;
+        Context receiveContext = null;
+        boolean receiveOperationStarted = false;
         if (consumerReceiveInstrumenter().shouldStart(parentContext, request)) {
-          context =
+          receiveContext =
               InstrumenterUtil.startAndEnd(
                   consumerReceiveInstrumenter(),
                   parentContext,
@@ -84,18 +87,22 @@ class KafkaConsumerInstrumentation implements TypeInstrumentation {
                   error,
                   timer.startTime(),
                   timer.now());
+          receiveOperationStarted = true;
         }
 
-        // we're storing the context of the receive span so that process spans can use it as
-        // parent context even though the span has ended
-        // this is the suggested behavior according to the spec batch receive scenario:
-        // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#batch-receiving
+        Context processParentContext =
+            emitStableMessagingSemconv()
+                ? KafkaConsumerContextUtil.withReceiveOperation(
+                    parentContext, receiveOperationStarted)
+                : receiveContext;
+        KafkaConsumerContext consumerContext =
+            KafkaConsumerContextUtil.create(processParentContext, consumer);
         // we're attaching the consumer to the records to be able to retrieve things like consumer
         // group or clientId later
-        KafkaConsumerContextUtil.set(records, context, consumer);
+        KafkaConsumerContextUtil.set(records, consumerContext);
 
         for (ConsumerRecord<?, ?> record : records) {
-          KafkaConsumerContextUtil.set(record, context, consumer);
+          KafkaConsumerContextUtil.set(record, consumerContext);
         }
       } finally {
         KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);

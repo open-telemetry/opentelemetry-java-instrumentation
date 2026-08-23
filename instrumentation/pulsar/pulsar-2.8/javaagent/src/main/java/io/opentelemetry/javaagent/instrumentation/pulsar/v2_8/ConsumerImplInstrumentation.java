@@ -19,7 +19,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -51,7 +53,7 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
         isProtected()
             .and(named("internalReceive"))
             .and(takesArguments(2))
-            .and(takesArgument(1, named("java.util.concurrent.TimeUnit"))),
+            .and(takesArgument(1, TimeUnit.class)),
         getClass().getName() + "$ConsumerInternalReceiveAdvice");
     // internalReceive will apply to Consumer#receive()
     transformer.applyAdviceToMethod(
@@ -66,6 +68,11 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isProtected().and(named("internalBatchReceiveAsync")).and(takesArguments(0)),
         getClass().getName() + "$ConsumerBatchAsyncReceiveAdvice");
+
+    // only in MultiTopicsConsumerImpl
+    transformer.applyAdviceToMethod(
+        named("receiveMessageFromConsumer"),
+        getClass().getName() + "$SuppressInstrumentationAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -158,6 +165,22 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
         @Advice.Return CompletableFuture<Messages<?>> future,
         @Advice.Enter Timer timer) {
       return wrapBatch(future, timer, consumer);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SuppressInstrumentationAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void before() {
+      // MultiTopicsConsumerImpl#receiveMessageFromConsumer is called from a background thread, we
+      // don't want to create a span for it.
+      PulsarSingletons.startSuppressingReceive();
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
+    public static void after() {
+      PulsarSingletons.endSuppressingReceive();
     }
   }
 }

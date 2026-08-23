@@ -66,7 +66,7 @@ class HttpJspPageInstrumentation implements TypeInstrumentation {
         return new AdviceScope(context);
       }
 
-      public void end(HttpServletRequest req, Throwable throwable) {
+      public void end(HttpServletRequest req, @Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, req, null, throwable);
       }

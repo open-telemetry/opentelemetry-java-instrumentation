@@ -47,8 +47,6 @@ tasks.test {
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-
-  systemProperty("testLatestDeps", otelProps.testLatestDeps)
 }
 
 configurations.testRuntimeClasspath {

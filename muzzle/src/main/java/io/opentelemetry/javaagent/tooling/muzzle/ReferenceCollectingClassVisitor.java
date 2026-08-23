@@ -275,8 +275,13 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
                 }
               }
             }
-            MethodVisitor target =
-                skip ? methodVisitor : new AdviceReferenceMethodVisitor(methodVisitor);
+            MethodVisitor target;
+            if (skip) {
+              target = methodVisitor;
+            } else {
+              target = new AdviceReferenceMethodVisitor(methodVisitor);
+              target = new VirtualFieldCollectingMethodVisitor(target);
+            }
             if (target != null) {
               accept(target);
             }
@@ -284,7 +289,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
         };
     // Additional references we could check
     // - Classes in signature (return type, params) and visible from this package
-    return new VirtualFieldCollectingMethodVisitor(methodNode);
+    return methodNode;
   }
 
   private static VisibilityFlag computeVisibilityFlag(int access) {

@@ -31,7 +31,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class TracerTest {
 
   @RegisterExtension
-  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
   void isEnabled() {

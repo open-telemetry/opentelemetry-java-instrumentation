@@ -7,18 +7,27 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
+@Deprecated // superseded by the lettuce-5.0 javaagent under v3-preview; to be removed in 3.0
 @AutoService(InstrumentationModule.class)
 public class LettuceInstrumentationModule extends InstrumentationModule {
 
   public LettuceInstrumentationModule() {
     super("lettuce", "lettuce-5.1");
+  }
+
+  @Override
+  public boolean defaultEnabled() {
+    // disabled under v3-preview, where the lettuce-5.0 javaagent module covers 5.1+
+    return super.defaultEnabled() && !AgentCommonConfig.get().isV3Preview();
   }
 
   @Override
@@ -30,6 +39,11 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
   @Override
   public boolean isHelperClass(String className) {
     return className.startsWith("io.lettuce.core.protocol.OtelCommandArgsUtil");
+  }
+
+  @Override
+  public List<String> injectedClassNames() {
+    return singletonList("io.lettuce.core.protocol.OtelCommandArgsUtil");
   }
 
   @Override

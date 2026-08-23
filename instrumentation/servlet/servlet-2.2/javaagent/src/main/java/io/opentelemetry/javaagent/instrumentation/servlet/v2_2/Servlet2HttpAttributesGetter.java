@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
-import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
-import io.opentelemetry.instrumentation.servlet.internal.ServletHttpAttributesGetter;
-import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
-import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletAccessor;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletHttpAttributesGetter;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

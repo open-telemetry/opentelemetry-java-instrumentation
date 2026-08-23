@@ -63,6 +63,12 @@ targets:
       target: ':instrumentation:alibaba-druid-1.0:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:apache-commons-pool-2.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:apache-commons-pool-2.0:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:apache-dbcp-2.0:javaagent'
     - type: gradle
       path: ./
@@ -186,6 +192,9 @@ targets:
       target: ':instrumentation:jdbc:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:jdbc:javaagent-common'
+    - type: gradle
+      path: ./
       target: ':instrumentation:jdbc:library'
     - type: gradle
       path: ./
@@ -222,28 +231,25 @@ targets:
       target: ':instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:opentelemetry-instrumentation-api:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:oracle-ucp-11.2:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:oracle-ucp-11.2:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:oshi:javaagent'
+      target: ':instrumentation:oshi-5.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:oshi:library'
+      target: ':instrumentation:oshi-5.0:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:payara:javaagent'
+      target: ':instrumentation:payara-5.2020:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:powerjob-4.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:quarkus-resteasy-reactive:javaagent'
+      target: ':instrumentation:quarkus-resteasy-reactive-1.11:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:quartz-2.0:javaagent'
@@ -279,7 +285,16 @@ targets:
       target: ':instrumentation:runtime-telemetry:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:scala-fork-join-2.8:javaagent'
+      target: ':instrumentation:scala-forkjoin-2.8:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:sofa-rpc-5.4:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:sofa-rpc-5.4:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:sofa-rpc-5.4:library-autoconfigure'
     - type: gradle
       path: ./
       target: ':instrumentation:spark-2.3:javaagent'
@@ -292,6 +307,12 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:tapestry-5.4:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:thrift-0.13:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:thrift-0.13:library'
     - type: gradle
       path: ./
       target: ':instrumentation:twilio-6.6:javaagent'
@@ -318,7 +339,7 @@ targets:
       target: ':instrumentation:akka:akka-actor-2.3:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:akka:akka-actor-fork-join-2.5:javaagent'
+      target: ':instrumentation:akka:akka-actor-forkjoin-2.5:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:akka:akka-http-10.0:javaagent'
@@ -483,7 +504,7 @@ targets:
       target: ':instrumentation:elasticsearch:elasticsearch-transport-6.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:elasticsearch:elasticsearch-transport-common:javaagent'
+      target: ':instrumentation:elasticsearch:elasticsearch-transport-common-5.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:graphql-java:graphql-java-12.0:javaagent'
@@ -499,6 +520,18 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:graphql-java:graphql-java-common-12.0:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:hbase:hbase-client-1.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:hbase:hbase-client-1.4:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:hbase:hbase-client-2.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:hbase:hbase-client-common-1.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:hibernate:hibernate-3.3:javaagent'
@@ -582,6 +615,9 @@ targets:
       target: ':instrumentation:jedis:jedis-1.4:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:jedis:jedis-2.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:jedis:jedis-3.0:javaagent'
     - type: gradle
       path: ./
@@ -600,7 +636,7 @@ targets:
       target: ':instrumentation:jetty:jetty-8.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jetty:jetty-common:javaagent'
+      target: ':instrumentation:jetty:jetty-common-8.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jetty-httpclient:jetty-httpclient-12.0:javaagent'
@@ -792,7 +828,7 @@ targets:
       target: ':instrumentation:opensearch:opensearch-rest-3.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:opensearch:opensearch-rest-common:javaagent'
+      target: ':instrumentation:opensearch:opensearch-rest-common-1.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent'
@@ -843,6 +879,15 @@ targets:
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.59:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.63:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.65:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opentelemetry-instrumentation-api:opentelemetry-instrumentation-api-1.14:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:pekko:pekko-actor-1.0:javaagent'
     - type: gradle
       path: ./
@@ -880,6 +925,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:redisson:redisson-common-3.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:redisson:redisson-metrics-3.26:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:restlet:restlet-1.1:javaagent'
@@ -1023,10 +1071,13 @@ targets:
       target: ':instrumentation:tomcat:tomcat-7.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:tomcat:tomcat-common:javaagent'
+      target: ':instrumentation:tomcat:tomcat-common-7.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:tomcat:tomcat-jdbc:javaagent'
+      target: ':instrumentation:tomcat:tomcat-dbcp-8.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:tomcat:tomcat-jdbc-8.5:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:vertx:vertx-kafka-client-3.6:javaagent'
@@ -1179,7 +1230,7 @@ targets:
       target: ':instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:spring:spring-webmvc:spring-webmvc-common:javaagent'
+      target: ':instrumentation:spring:spring-webmvc:spring-webmvc-common-3.1:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-3.0:javaagent'

@@ -8,6 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertNoMessagingMetrics;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertProducerMetrics;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertReceiveMetrics;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqMetricsAssertions.assertSettleMetrics;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -17,14 +24,23 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Consumer;
@@ -32,7 +48,12 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.ShutdownSignalException;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -42,6 +63,8 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
@@ -54,7 +77,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.assertj.core.api.AbstractAssert;
-import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,6 +85,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.aggregator.ArgumentsAccessor;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Queue;
@@ -89,12 +112,59 @@ class RabbitMqTest extends AbstractRabbitMqTest {
       if (channel != null) {
         channel.close();
       }
-      if (conn != null) {
-        conn.close();
-      }
     } catch (ShutdownSignalException ignored) {
       // ignored
+    } finally {
+      try {
+        if (conn != null) {
+          conn.close();
+        }
+      } catch (ShutdownSignalException ignored) {
+        // ignored
+      }
     }
+  }
+
+  @Test
+  void testEmptyPullReceive() throws IOException {
+    String queueName = "empty-pull-queue";
+    channel.queueDeclare(queueName, false, true, true, null);
+    testing.clearData();
+
+    GetResponse response = channel.basicGet(queueName, true);
+
+    assertThat(response).isNull();
+    assertThat(testing.spans()).isEmpty();
+    assertNoMessagingMetrics(testing);
+  }
+
+  @Test
+  void testMessagingClientMetrics() throws IOException {
+    String queueName = channel.queueDeclare("metrics", false, true, true, null).getQueue();
+
+    channel.basicPublish("", queueName, null, "Hello, world!".getBytes(Charset.defaultCharset()));
+
+    assertProducerMetrics(testing, queueName, null);
+
+    testing.clearData();
+    GetResponse response = channel.basicGet(queueName, true);
+
+    assertThat(response).isNotNull();
+    assertReceiveMetrics(testing, queueName, null, 1);
+  }
+
+  @Test
+  void testMessagingPublishErrorMetrics() throws IOException {
+    channel.abort();
+
+    Throwable error =
+        catchThrowable(
+            () ->
+                channel.basicPublish(
+                    "", "metrics", null, "Hello, world!".getBytes(Charset.defaultCharset())));
+
+    assertThat(error).isInstanceOf(AlreadyClosedException.class);
+    assertProducerMetrics(testing, "metrics", error.getClass().getName());
   }
 
   @Test
@@ -153,12 +223,145 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                         exchangeName,
                         routingKey,
                         "receive",
-                        "<generated>",
+                        queueName,
                         trace.getSpan(0),
                         producerSpan.get(),
                         null,
                         null,
                         false)));
+  }
+
+  @Test
+  void testRabbitPublishPropagatesSuppressedProducerContext() throws IOException {
+    String queueName = channel.queueDeclare().getQueue();
+    AtomicReference<SpanContext> producerContext = new AtomicReference<>();
+
+    testing.runWithSpan(
+        "outer producer",
+        () -> {
+          Span span = Span.current();
+          producerContext.set(span.getSpanContext());
+          Context context = SpanKey.PRODUCER.storeInContext(Context.current(), span);
+          try (Scope ignored = context.makeCurrent()) {
+            channel.basicPublish(
+                "", queueName, null, "Hello, world!".getBytes(Charset.defaultCharset()));
+          }
+        });
+
+    GetResponse response = channel.basicGet(queueName, true);
+    Map<String, Object> headers = response.getProps().getHeaders();
+    assertThat(headers).containsKey("traceparent");
+    assertThat(headers.get("traceparent").toString())
+        .contains(producerContext.get().getTraceId())
+        .contains(producerContext.get().getSpanId());
+  }
+
+  @Test
+  void testRabbitPublishGetWithByteBufferBody() throws Exception {
+    Method byteBufferPublish = byteBufferPublishMethod();
+    assumeTrue(
+        byteBufferPublish != null,
+        "the ByteBuffer basicPublish overload needs amqp-client 5.30.0+");
+
+    String exchangeName = "some-exchange";
+    String routingKey = "some-routing-key";
+
+    String queueName =
+        testing.runWithSpan(
+            "producer parent",
+            () -> {
+              channel.exchangeDeclare(exchangeName, "direct", false);
+              String internalQueueName = channel.queueDeclare().getQueue();
+              channel.queueBind(internalQueueName, exchangeName, routingKey);
+              byteBufferPublish.invoke(
+                  channel,
+                  exchangeName,
+                  routingKey,
+                  false,
+                  false,
+                  null,
+                  ByteBuffer.wrap("Hello, world!".getBytes(Charset.defaultCharset())),
+                  null);
+              return internalQueueName;
+            });
+    GetResponse response =
+        testing.runWithSpan("consumer parent", () -> channel.basicGet(queueName, true));
+
+    assertThat(new String(response.getBody(), Charset.defaultCharset())).isEqualTo("Hello, world!");
+
+    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("producer parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> verifySpan(trace, span, 1, "exchange.declare", trace.getSpan(0)),
+                span -> verifySpan(trace, span, 2, "queue.declare", trace.getSpan(0)),
+                span -> verifySpan(trace, span, 3, "queue.bind", trace.getSpan(0)),
+                span -> {
+                  verifySpan(
+                      trace,
+                      span,
+                      4,
+                      exchangeName,
+                      routingKey,
+                      "publish",
+                      exchangeName,
+                      trace.getSpan(0));
+                  producerSpan.set(trace.getSpan(4));
+                }),
+        // the consumer side linking back to the producer span proves that the ByteBuffer overload
+        // also injected the trace context into the message headers
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("consumer parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    verifySpan(
+                        trace,
+                        span,
+                        1,
+                        exchangeName,
+                        routingKey,
+                        "receive",
+                        queueName,
+                        trace.getSpan(0),
+                        producerSpan.get(),
+                        null,
+                        null,
+                        false)));
+  }
+
+  private static Method byteBufferPublishMethod() {
+    try {
+      return Channel.class.getMethod(
+          "basicPublish",
+          String.class,
+          String.class,
+          boolean.class,
+          boolean.class,
+          AMQP.BasicProperties.class,
+          ByteBuffer.class,
+          Class.forName("com.rabbitmq.client.WriteListener"));
+    } catch (ReflectiveOperationException ignored) {
+      return null;
+    }
+  }
+
+  @Test
+  void testReceiveSpanKind() throws IOException {
+    String queueName = channel.queueDeclare().getQueue();
+    channel.basicPublish("", queueName, null, "test".getBytes(Charset.defaultCharset()));
+    testing.clearData();
+
+    testing.runWithSpan("parent", () -> channel.basicGet(queueName, true));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasKind(emitStableMessagingSemconv() ? SpanKind.CLIENT : SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -186,7 +389,14 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                 span -> verifySpan(trace, span, 1, "queue.declare", trace.getSpan(0)),
                 span -> {
                   verifySpan(
-                      trace, span, 2, "<default>", null, "publish", "<default>", trace.getSpan(0));
+                      trace,
+                      span,
+                      2,
+                      "<default>",
+                      queueName,
+                      "publish",
+                      "<default>",
+                      trace.getSpan(0));
                   producerSpan.set(trace.getSpan(2));
                 }),
         trace ->
@@ -198,14 +408,43 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                         span,
                         1,
                         "<default>",
-                        null,
+                        queueName,
                         "receive",
-                        "<generated>",
+                        queueName,
                         trace.getSpan(0),
                         producerSpan.get(),
                         null,
                         null,
                         false)));
+  }
+
+  private static boolean isGeneratedQueueName(String queue) {
+    return queue != null && (queue.startsWith("amq.gen-") || queue.startsWith("spring.gen-"));
+  }
+
+  private static String producerDestinationName(String exchange, String routingKey) {
+    String destination = joinDestination(exchange, routingKey);
+    return destination.isEmpty() ? "amq.default" : destination;
+  }
+
+  private static String consumerDestinationName(String exchange, String routingKey, String queue) {
+    return queue == null || queue.equals(routingKey)
+        ? joinDestination(exchange, routingKey)
+        : joinDestination(exchange, routingKey, queue);
+  }
+
+  private static String joinDestination(String... parts) {
+    StringBuilder destination = new StringBuilder();
+    for (String part : parts) {
+      if (part == null || part.isEmpty()) {
+        continue;
+      }
+      if (destination.length() != 0) {
+        destination.append(':');
+      }
+      destination.append(part);
+    }
+    return destination.toString();
   }
 
   @ParameterizedTest(name = "test rabbit consume {1} messages and setTimestamp={2}")
@@ -246,7 +485,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
       }
     }
 
-    String resource = messageCount % 2 == 0 ? "<generated>" : queueName;
+    String resource = queueName;
 
     List<java.util.function.Consumer<TraceAssert>> traceAssertions = new ArrayList<>();
     traceAssertions.add(
@@ -284,6 +523,13 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     }
 
     testing.waitAndAssertTraces(traceAssertions);
+    assertProcessMetrics(
+        testing,
+        isGeneratedQueueName(resource)
+            ? null
+            : destinationName(exchangeName, null, "process", resource),
+        null,
+        messageCount);
 
     assertThat(deliveries)
         .containsExactly(
@@ -335,12 +581,13 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                         exchangeName,
                         null,
                         "process",
-                        "<generated>",
+                        queueName,
                         trace.getSpan(0),
                         null,
                         error,
                         error.getMessage(),
                         false)));
+    assertProcessMetrics(testing, null, error.getClass().getName(), 1);
   }
 
   @SuppressWarnings("unchecked")
@@ -375,6 +622,9 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                         finalThrown,
                         accessor.getString(2),
                         false)));
+    if ("receive".equals(accessor.getString(3))) {
+      assertReceiveMetrics(testing, null, finalThrown.getClass().getName(), 0);
+    }
   }
 
   @Test
@@ -472,7 +722,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  verifySpan(trace, span, 0, "<default>", null, "publish", "<default>");
+                  verifySpan(trace, span, 0, "<default>", queueName, "publish", "<default>");
                   span.hasAttributesSatisfying(
                       satisfies(
                           stringArrayKey("messaging.header.Test_Message_Header"),
@@ -484,9 +734,9 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                       span,
                       1,
                       "<default>",
-                      null,
+                      queueName,
                       "process",
-                      "<generated>",
+                      queueName,
                       trace.getSpan(0));
                   span.hasAttributesSatisfying(
                       satisfies(
@@ -495,6 +745,111 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                 }),
         trace ->
             trace.hasSpansSatisfyingExactly(span -> verifySpan(trace, span, 0, "basic.consume")));
+  }
+
+  @ParameterizedTest(name = "test rabbit {0}")
+  @ValueSource(strings = {"ack", "nack", "reject"})
+  void testRabbitSettle(String operation) throws IOException {
+    String queueName = channel.queueDeclare().getQueue();
+    channel.basicPublish("", queueName, null, "Hello, world!".getBytes(Charset.defaultCharset()));
+    GetResponse response = channel.basicGet(queueName, false);
+    long deliveryTag = response.getEnvelope().getDeliveryTag();
+    testing.clearData();
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          switch (operation) {
+            case "ack":
+              channel.basicAck(deliveryTag, false);
+              break;
+            case "nack":
+              channel.basicNack(deliveryTag, false, false);
+              break;
+            default:
+              channel.basicReject(deliveryTag, false);
+              break;
+          }
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> verifySettleSpan(span, trace.getSpan(0), operation, deliveryTag)));
+    assertSettleMetrics(testing, operation, null);
+  }
+
+  @Test
+  void testRabbitSettleErrorMetrics() throws IOException {
+    channel.abort();
+
+    Throwable error = catchThrowable(() -> channel.basicAck(1, false));
+
+    assertThat(error).isInstanceOf(AlreadyClosedException.class);
+    assertSettleMetrics(testing, "ack", error.getClass().getName());
+  }
+
+  @ParameterizedTest(name = "test rabbit {0} multiple")
+  @ValueSource(strings = {"ack", "nack"})
+  void testRabbitSettleMultiple(String operation) throws IOException {
+    String queueName = channel.queueDeclare().getQueue();
+    for (int i = 0; i < 3; i++) {
+      channel.basicPublish(
+          "", queueName, null, ("message " + i).getBytes(Charset.defaultCharset()));
+    }
+    long deliveryTag = 0;
+    for (int i = 0; i < 3; i++) {
+      GetResponse response = channel.basicGet(queueName, false);
+      deliveryTag = response.getEnvelope().getDeliveryTag();
+    }
+    testing.clearData();
+
+    long lastDeliveryTag = deliveryTag;
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          if ("ack".equals(operation)) {
+            channel.basicAck(lastDeliveryTag, true);
+          } else {
+            channel.basicNack(lastDeliveryTag, true, false);
+          }
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> verifySettleSpan(span, trace.getSpan(0), operation, lastDeliveryTag)));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private static void verifySettleSpan(
+      SpanDataAssert span, SpanData parentSpan, String operation, long deliveryTag) {
+    boolean stable = emitStableMessagingSemconv();
+    span.hasName(stable ? operation : "basic." + operation)
+        .hasKind(SpanKind.CLIENT)
+        .hasParent(parentSpan)
+        .hasAttributesSatisfyingExactly(
+            equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+            equalTo(MESSAGING_OPERATION_NAME, stable ? operation : null),
+            equalTo(MESSAGING_OPERATION_TYPE, stable ? "settle" : null),
+            equalTo(MESSAGING_OPERATION, stable && emitOldMessagingSemconv() ? "settle" : null),
+            equalTo(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, stable ? deliveryTag : null),
+            satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(rabbitMqIp, null)),
+            satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
+            satisfies(NETWORK_PEER_PORT, AbstractAssert::isNotNull),
+            equalTo(SERVER_ADDRESS, stable ? rabbitMqIp : null),
+            satisfies(
+                SERVER_PORT,
+                val -> {
+                  if (stable) {
+                    val.isNotNull();
+                  } else {
+                    val.isNull();
+                  }
+                }),
+            satisfies(stringKey("rabbitmq.command"), val -> val.isIn(null, "basic." + operation)));
   }
 
   private static Stream<Arguments> provideParametersForMessageCountAndTimestamp() {
@@ -538,7 +893,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                   }
                 }),
         Arguments.of(
-            "<generated>",
+            "amq.gen-invalid-channel",
             "IOException",
             null,
             "receive",
@@ -610,37 +965,50 @@ class RabbitMqTest extends AbstractRabbitMqTest {
       Throwable exception,
       String errorMsg,
       boolean expectTimestamp) {
-    String spanName = resource;
-    if (operation != null) {
-      spanName += " " + operation;
-    }
+    String destination = destinationName(exchange, routingKey, operation, resource);
+    String legacyResource = normalizeQueueName(resource);
+    boolean anonymousDestination =
+        emitStableMessagingSemconv()
+            && (("publish".equals(operation)
+                    && "<default>".equals(exchange)
+                    && isGeneratedQueueName(routingKey))
+                || (("receive".equals(operation) || "process".equals(operation))
+                    && isGeneratedQueueName(resource)));
+    String spanName =
+        emitStableMessagingSemconv() && operation != null
+            ? anonymousDestination ? operation : operation + " " + destination
+            : legacyResource + (operation == null ? "" : " " + operation);
 
     span.hasName(spanName);
 
     String rabbitCommand = null;
-    if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+    if (EXPERIMENTAL_ATTRIBUTES) {
       rabbitCommand = trace.getSpan(index).getAttributes().get(stringKey("rabbitmq.command"));
-
-      SpanKind spanKind = captureSpanKind(rabbitCommand);
-
-      span.hasKind(spanKind);
     }
 
-    verifyParentAndLink(span, parentSpan, linkSpan);
+    span.hasKind(expectedSpanKind(operation));
+
+    SpanData effectiveLinkSpan = linkSpan;
+    if (effectiveLinkSpan == null && emitStableMessagingSemconv() && "process".equals(operation)) {
+      // the process span links the message creation context, which is also its parent here
+      effectiveLinkSpan = parentSpan;
+    }
+
+    verifyParentAndLink(span, parentSpan, effectiveLinkSpan);
 
     if (exception != null) {
       verifyException(span, exception, errorMsg);
     }
 
-    verifyNetAttributes(span);
-    verifyMessagingAttributes(span, exchange, routingKey, operation);
+    verifyNetAttributes(span, operation);
+    verifyMessagingAttributes(span, exchange, routingKey, operation, resource, exception);
 
     if (expectTimestamp) {
       span.hasAttributesSatisfying(
           satisfies(
               longKey("rabbitmq.record.queue_time_ms"),
               val -> {
-                if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                if (EXPERIMENTAL_ATTRIBUTES) {
                   val.isNotNegative();
                 }
               }));
@@ -659,7 +1027,15 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                           v -> assertThat(v).isEqualTo("some-routing-key"),
                           v -> assertThat(v).isEqualTo("some-routing-queue"),
                           v -> assertThat(v).startsWith("amq.gen-"))),
-              satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
+              satisfies(
+                  MESSAGING_MESSAGE_BODY_SIZE,
+                  val -> {
+                    if (emitOldMessagingSemconv()) {
+                      val.isNotNegative();
+                    } else {
+                      val.isNull();
+                    }
+                  }),
               satisfies(longKey("rabbitmq.delivery_mode"), val -> val.isIn(null, 2L)));
           break;
         case "basic.get":
@@ -682,7 +1058,15 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         case "basic.deliver":
           span.hasAttributesSatisfying(
               equalTo(stringKey("rabbitmq.command"), "basic.deliver"),
-              satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative));
+              satisfies(
+                  MESSAGING_MESSAGE_BODY_SIZE,
+                  val -> {
+                    if (emitOldMessagingSemconv()) {
+                      val.isNotNegative();
+                    } else {
+                      val.isNull();
+                    }
+                  }));
           break;
         default:
           span.hasAttributesSatisfying(
@@ -696,10 +1080,19 @@ class RabbitMqTest extends AbstractRabbitMqTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static void verifyMessagingAttributes(
-      SpanDataAssert span, String exchange, String routingKey, String operation) {
+      SpanDataAssert span,
+      String exchange,
+      String routingKey,
+      String operation,
+      String resource,
+      Throwable exception) {
     span.hasAttributesSatisfying(
         equalTo(MESSAGING_SYSTEM, "rabbitmq"),
-        satisfies(MESSAGING_DESTINATION_NAME, val -> val.isIn(exchange, null)),
+        equalTo(
+            MESSAGING_DESTINATION_NAME,
+            emitStableMessagingSemconv()
+                ? destinationName(exchange, routingKey, operation, resource)
+                : exchange),
         satisfies(
             MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
             val ->
@@ -707,40 +1100,71 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                     v -> assertThat(v).isNull(),
                     v -> assertThat(v).isEqualTo(routingKey),
                     v -> assertThat(v).startsWith("amq.gen-"))),
+        equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? operation : null),
+        equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? operation : null),
+        equalTo(
+            MESSAGING_OPERATION_TYPE,
+            emitStableMessagingSemconv() ? "publish".equals(operation) ? "send" : operation : null),
+        equalTo(MESSAGING_BATCH_MESSAGE_COUNT, null),
         satisfies(
-            MESSAGING_OPERATION,
+            MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG,
             val -> {
-              if (operation != null && !operation.equals("publish")) {
-                val.isEqualTo(operation);
+              if (emitStableMessagingSemconv()
+                  && ("process".equals(operation)
+                      || ("receive".equals(operation) && exception == null))) {
+                val.isNotNegative();
+              } else {
+                val.isNull();
               }
             }));
   }
 
-  private static SpanKind captureSpanKind(String rabbitCommand) {
-    SpanKind spanKind = SpanKind.CLIENT;
-
-    if (rabbitCommand != null) {
-      switch (rabbitCommand) {
-        case "basic.publish":
-          spanKind = SpanKind.PRODUCER;
-          break;
-        case "basic.get": // fallthrough
-        case "basic.deliver":
-          spanKind = SpanKind.CONSUMER;
-          break;
-        default:
-          break;
-      }
+  private static SpanKind expectedSpanKind(String operation) {
+    if ("publish".equals(operation)) {
+      return SpanKind.PRODUCER;
     }
-
-    return spanKind;
+    if ("process".equals(operation) || "receive".equals(operation)) {
+      return emitStableMessagingSemconv() && "receive".equals(operation)
+          ? SpanKind.CLIENT
+          : SpanKind.CONSUMER;
+    }
+    return SpanKind.CLIENT;
   }
 
-  private static void verifyNetAttributes(SpanDataAssert span) {
+  private static String normalizeQueueName(String queue) {
+    if (queue == null || queue.isEmpty()) {
+      return "<default>";
+    }
+    return queue.startsWith("amq.gen-") || queue.startsWith("spring.gen-") ? "<generated>" : queue;
+  }
+
+  private static String destinationName(
+      String exchange, String routingKey, String operation, String queue) {
+    if (operation == null) {
+      return null;
+    }
+    String actualExchange = "<default>".equals(exchange) ? "" : exchange;
+    return "publish".equals(operation)
+        ? producerDestinationName(actualExchange, routingKey)
+        : consumerDestinationName(actualExchange, routingKey, queue);
+  }
+
+  private static void verifyNetAttributes(SpanDataAssert span, String operation) {
+    boolean stableMessagingOperation = emitStableMessagingSemconv() && operation != null;
     span.hasAttributesSatisfying(
         satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(rabbitMqIp, null)),
         satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
-        satisfies(NETWORK_PEER_PORT, AbstractAssert::isNotNull));
+        satisfies(NETWORK_PEER_PORT, AbstractAssert::isNotNull),
+        equalTo(SERVER_ADDRESS, stableMessagingOperation ? rabbitMqIp : null),
+        satisfies(
+            SERVER_PORT,
+            val -> {
+              if (stableMessagingOperation) {
+                val.isNotNull();
+              } else {
+                val.isNull();
+              }
+            }));
   }
 
   private static void verifyException(SpanDataAssert span, Throwable exception, String errorMsg) {

@@ -24,10 +24,12 @@ import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFac
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
@@ -64,15 +66,45 @@ public final class OpenTelemetryDriver implements Driver {
 
   private volatile OpenTelemetry openTelemetry = OpenTelemetry.noop();
 
-  @SuppressWarnings("deprecation") // library flat config fallback remains supported until 3.0
+  private static boolean captureQueryParameters(OpenTelemetry openTelemetry) {
+    return DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
+        .getBoolean(
+            "capture_query_parameters/development",
+            // The driver way (jdbc:otel: URL + OpenTelemetryDriver) has no programmatic API
+            // for these instrumentation settings. Declarative instrumentation configuration is
+            // not stable yet, so a system-property fallback is still needed.
+            SystemProperty.getBoolean(
+                "otel.instrumentation.jdbc.experimental.capture-query-parameters", false));
+  }
+
+  private static boolean querySanitizationEnabled(OpenTelemetry openTelemetry) {
+    return DbConfig.isCommonQuerySanitizationEnabled(
+        openTelemetry,
+        SystemProperty.getBoolean(
+            "otel.instrumentation.common.db.query-sanitization.enabled",
+            SemconvStability.v3Preview()
+                ? true
+                : SystemProperty.getBoolean(
+                    "otel.instrumentation.common.db-statement-sanitizer.enabled", true)));
+  }
+
+  private static boolean transactionEnabled(OpenTelemetry openTelemetry) {
+    return DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "jdbc")
+        .get("transaction/development")
+        .getBoolean(
+            "enabled",
+            SystemProperty.getBoolean(
+                "otel.instrumentation.jdbc.experimental.transaction.enabled", false));
+  }
+
   private static SqlCommenter getSqlCommenter(OpenTelemetry openTelemetry) {
     boolean enabled =
         DbConfig.isSqlCommenterEnabled(
             openTelemetry,
             "jdbc",
-            ConfigPropertiesUtil.getBoolean(
+            SystemProperty.getBoolean(
                 "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled",
-                ConfigPropertiesUtil.getBoolean(
+                SystemProperty.getBoolean(
                     "otel.instrumentation.common.db.experimental.sqlcommenter.enabled", false)));
     return SqlCommenter.builder().setEnabled(enabled).build();
   }
@@ -258,12 +290,13 @@ public final class OpenTelemetryDriver implements Driver {
 
     DbInfo dbInfo = JdbcConnectionUrlParser.parse(realUrl, info);
 
+    boolean captureQueryParameters = captureQueryParameters(openTelemetry);
     Instrumenter<DbRequest, Void> statementInstrumenter =
-        JdbcInstrumenterFactory.createStatementInstrumenter(openTelemetry);
-
-    boolean captureQueryParameters = JdbcInstrumenterFactory.captureQueryParameters(openTelemetry);
+        JdbcInstrumenterFactory.createStatementInstrumenter(
+            openTelemetry, true, querySanitizationEnabled(openTelemetry), captureQueryParameters);
     Instrumenter<DbRequest, Void> transactionInstrumenter =
-        JdbcInstrumenterFactory.createTransactionInstrumenter(openTelemetry);
+        JdbcInstrumenterFactory.createTransactionInstrumenter(
+            openTelemetry, transactionEnabled(openTelemetry));
 
     return OpenTelemetryConnection.create(
         connection,

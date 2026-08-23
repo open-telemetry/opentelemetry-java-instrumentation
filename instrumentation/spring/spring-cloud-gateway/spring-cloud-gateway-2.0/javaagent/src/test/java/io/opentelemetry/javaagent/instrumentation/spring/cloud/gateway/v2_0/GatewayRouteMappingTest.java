@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.v2_0;
 
-import io.opentelemetry.instrumentation.spring.gateway.common.AbstractRouteMappingTest;
+import io.opentelemetry.instrumentation.spring.cloud.gateway.common.AbstractRouteMappingTest;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.List;
 import org.junit.jupiter.api.extension.ExtendWith;

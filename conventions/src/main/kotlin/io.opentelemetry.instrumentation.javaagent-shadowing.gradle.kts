@@ -19,6 +19,10 @@ tasks.withType<ShadowJar>().configureEach {
   filesMatching("software/amazon/awssdk/global/handlers/**") {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
   }
+  // avoid warning about duplicate kotlin module files being silently dropped
+  filesMatching("META-INF/*.kotlin_module") {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+  }
 
   exclude("**/module-info.class")
 

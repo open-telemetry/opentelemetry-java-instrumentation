@@ -4,7 +4,7 @@ plugins {
 
 muzzle {
   pass {
-    group.set("org.hibernate")
+    group.set("org.hibernate.orm")
     module.set("hibernate-core")
     versions.set("[6.0.0.Final,)")
     assertInverse.set(true)
@@ -12,7 +12,7 @@ muzzle {
 }
 
 dependencies {
-  library("org.hibernate:hibernate-core:6.0.0.Final")
+  library("org.hibernate.orm:hibernate-core:6.0.0.Final")
 
   implementation(project(":instrumentation:hibernate:hibernate-common-3.3:javaagent"))
 
@@ -38,7 +38,7 @@ otelJava {
 
 testing {
   suites {
-    val hibernate6Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("hibernate6Test") {
       targets.all {
         testTask.configure {
           jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
@@ -49,11 +49,11 @@ testing {
         implementation("com.h2database:h2:1.4.197")
         implementation("org.hsqldb:hsqldb:2.0.0")
         implementation(project(":instrumentation:hibernate:testing"))
-        implementation("org.hibernate:hibernate-core:${baseVersion("6.0.0.Final").orLatest("6.+")}")
+        implementation("org.hibernate.orm:hibernate-core:${baseVersion("6.0.0.Final").orLatest("6.+")}")
       }
     }
 
-    val hibernate7Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("hibernate7Test") {
       targets.all {
         testTask.configure {
           jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
@@ -64,7 +64,7 @@ testing {
         implementation("com.h2database:h2:1.4.197")
         implementation("org.hsqldb:hsqldb:2.0.0")
         implementation(project(":instrumentation:hibernate:testing"))
-        implementation("org.hibernate:hibernate-core:${baseVersion("7.0.0.Final").orLatest("7.+")}")
+        implementation("org.hibernate.orm:hibernate-core:${baseVersion("7.0.0.Final").orLatest("7.+")}")
       }
     }
   }
@@ -85,7 +85,7 @@ tasks {
     }
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

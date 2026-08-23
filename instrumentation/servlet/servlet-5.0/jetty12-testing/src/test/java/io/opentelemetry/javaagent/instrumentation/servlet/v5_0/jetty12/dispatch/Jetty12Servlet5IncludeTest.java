@@ -15,9 +15,9 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
+import io.opentelemetry.instrumentation.servlet.v5_0.RequestDispatcherServlet;
+import io.opentelemetry.instrumentation.servlet.v5_0.TestServlet5;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.RequestDispatcherServlet;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.TestServlet5;
 import jakarta.servlet.Servlet;
 import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
 

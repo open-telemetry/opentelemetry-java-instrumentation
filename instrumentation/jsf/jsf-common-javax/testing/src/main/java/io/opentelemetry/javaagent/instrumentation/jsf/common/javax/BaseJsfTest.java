@@ -108,7 +108,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
   @CsvSource({"hello.jsf, *.jsf", "faces/hello.xhtml, faces/*"})
   void testPath(String path, String route) {
     AggregatedHttpResponse response =
-        client.get(address.resolve(path).toString()).aggregate().join();
+        client.get(h1Address.resolve(path).toString()).aggregate().join();
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8().trim()).isEqualTo("Hello");
 
@@ -137,7 +137,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
   void testGreeting() {
     // we need to display the page first before posting data to it
     AggregatedHttpResponse response =
-        client.get(address.resolve("greeting.jsf").toString()).aggregate().join();
+        client.get(h1Address.resolve("greeting.jsf").toString()).aggregate().join();
     Document doc = Jsoup.parse(response.contentUtf8());
 
     assertThat(response.status().code()).isEqualTo(200);
@@ -177,7 +177,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
         AggregatedHttpRequest.of(
             RequestHeaders.builder(
                     HttpMethod.POST,
-                    address.resolve("greeting.jsf;jsessionid=" + jsessionid).toString())
+                    h1Address.resolve("greeting.jsf;jsessionid=" + jsessionid).toString())
                 .contentType(MediaType.FORM_DATA)
                 .build(),
             HttpData.ofUtf8(formBody.toQueryString()));
@@ -214,7 +214,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
   void testException() {
     // we need to display the page first before posting data to it
     AggregatedHttpResponse response =
-        client.get(address.resolve("greeting.jsf").toString()).aggregate().join();
+        client.get(h1Address.resolve("greeting.jsf").toString()).aggregate().join();
     Document doc = Jsoup.parse(response.contentUtf8());
 
     assertThat(response.status().code()).isEqualTo(200);
@@ -254,7 +254,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
         AggregatedHttpRequest.of(
             RequestHeaders.builder(
                     HttpMethod.POST,
-                    address.resolve("greeting.jsf;jsessionid=" + jsessionid).toString())
+                    h1Address.resolve("greeting.jsf;jsessionid=" + jsessionid).toString())
                 .contentType(MediaType.FORM_DATA)
                 .build(),
             HttpData.ofUtf8(formBody.toQueryString()));

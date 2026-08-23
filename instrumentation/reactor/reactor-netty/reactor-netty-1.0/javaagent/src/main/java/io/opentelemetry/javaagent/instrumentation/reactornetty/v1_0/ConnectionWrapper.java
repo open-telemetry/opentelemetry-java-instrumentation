@@ -5,19 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
+import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettySingletons.CONNECTION_REQUEST_AND_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettySingletons.connectionInstrumenter;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelPromise;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 import reactor.core.publisher.Mono;
 
 public class ConnectionWrapper {
-
-  private static final VirtualField<ChannelPromise, ConnectionRequestAndContext>
-      requestAndContextField =
-          VirtualField.find(ChannelPromise.class, ConnectionRequestAndContext.class);
 
   public static Mono<Channel> wrap(Mono<Channel> mono) {
     // if we didn't attach the connection context&request then we have nothing to instrument
@@ -32,7 +28,7 @@ public class ConnectionWrapper {
   private static void end(
       Mono<Channel> mono, @Nullable Channel channel, @Nullable Throwable error) {
     ConnectionRequestAndContext requestAndContext =
-        requestAndContextField.get((ChannelPromise) mono);
+        CONNECTION_REQUEST_AND_CONTEXT.get((ChannelPromise) mono);
     if (requestAndContext == null) {
       return;
     }

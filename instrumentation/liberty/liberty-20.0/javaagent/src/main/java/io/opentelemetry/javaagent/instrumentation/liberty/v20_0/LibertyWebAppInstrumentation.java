@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;

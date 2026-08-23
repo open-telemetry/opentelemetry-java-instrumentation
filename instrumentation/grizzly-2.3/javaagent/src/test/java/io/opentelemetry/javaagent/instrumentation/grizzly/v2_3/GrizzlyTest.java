@@ -33,7 +33,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 abstract class GrizzlyTest extends AbstractHttpServerTest<HttpServer> {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+  final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   @Override
   protected HttpServer setupServer() throws Exception {

@@ -1,7 +1,8 @@
 ---
 description: |
   Walks instrumentation modules one-at-a-time, processing exactly one
-  module per run. Each successful run's commit is appended to the fixed
+  module per run. Each successful run's changes are appended as a commit
+  to the fixed
   `otelbot/module-cleanup-wip` branch. When that branch reaches FILE_THRESHOLD
   modified files (or when the unprocessed-module queue empties), the
   finalize job atomically renames wip to `otelbot/module-cleanup-batch-<run_id>`
@@ -30,7 +31,8 @@ description: |
 on:
   workflow_dispatch:
   schedule:
-    - cron: "every 1h"
+    # hourly at minute 26
+    - cron: "26 */1 * * *"
 
 permissions:
   contents: read
@@ -43,19 +45,9 @@ timeout-minutes: 30
 
 environment: protected
 
-# Disable strict mode so we can opt out of the AWF agent sandbox below.
-strict: false
-
 engine:
   id: copilot
   model: ${{ vars.MODULE_CLEANUP_MODEL || 'gpt-5' }}
-
-# Disable the AWF sandbox so copilot-cli connects directly to
-# api.githubcopilot.com. In sandboxed Copilot workflows, gh-aw enables
-# Copilot BYOK/offline mode but does not set responses wire-API routing
-# for GPT-5-family models yet. See https://github.com/github/gh-aw/issues/31241.
-sandbox:
-  agent: false
 
 network:
   allowed:
@@ -71,24 +63,16 @@ tools:
 # keeps all post-LLM logic in shell where it can run reliably regardless
 # of how the agent session ends.
 #
-# The `safe-outputs.jobs.suppress_default_create_issue` placeholder below
-# exists solely to opt out of gh-aw's default behavior, which auto-injects
-# a `create-issue` safe output whenever no non-builtin safe output is
-# configured (see https://github.github.io/gh-aw/reference/safe-outputs/
-# under "System Types"). Without this opt-out, every successful run posts
-# the agent's narration as a separate `[module-cleanup]` issue, which is
-# noise on top of the batch PR the finalize job already opens.
-#
-# The placeholder safe-job is intentionally never invoked by the agent
-# (see "What you must NOT do" in the persona). gh-aw only emits the job
-# when the corresponding MCP tool is called, so leaving it uninvoked
-# costs nothing at runtime.
+# Results are exported as an artifact and handled by finalize, not published
+# through safe outputs. The custom job prevents gh-aw from auto-injecting its
+# default `create-issue` output and is intentionally never called. `noop` remains
+# available for an explicit summary-only completion, but must not create an issue.
+# Neither configured path mutates repository content, so threat detection is unnecessary.
 
 safe-outputs:
-  # Threat detection requires the AWF agent sandbox, which we disable
-  # because of https://github.com/github/gh-aw/issues/31241. The placeholder
-  # safe-job below carries no untrusted output, so threat detection is unnecessary.
   threat-detection: false
+  noop:
+    report-as-issue: false
   jobs:
     suppress_default_create_issue:
       runs-on: ubuntu-latest
@@ -111,7 +95,7 @@ jobs:
       module_dir: ${{ steps.pick.outputs.module_dir }}
       queue_remaining: ${{ steps.pick.outputs.queue_remaining }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -140,12 +124,14 @@ jobs:
       contents: read
       actions: write # to trigger next iteration
     steps:
-      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+      - uses: actions/create-github-app-token@v3.2.0
         id: otelbot-token
         with:
-          app-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_APP_ID }}
+          client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+          permission-contents: write
+          permission-pull-requests: write
+      - uses: actions/checkout@v6.0.2
         with:
           # Full history is required: finalize computes
           # `origin/main..origin/otelbot/module-cleanup-wip` to build the PR
@@ -182,7 +168,7 @@ jobs:
 if: ${{ needs.dispatch.outputs.has_work == 'true' }}
 
 steps:
-  - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+  - uses: actions/checkout@v6.0.2
     with:
       persist-credentials: false
   - name: Export module identifiers to env
@@ -230,24 +216,22 @@ instructions imported into this prompt are yours; execute them yourself.
 1. Confirm the module directory exists:
    `test -d "$MODULE_DIR" || { echo "Module directory missing: $MODULE_DIR"; exit 1; }`
 2. Apply the imported `module-cleanup` persona's full checklist to
-   `$MODULE_DIR`. Reach the persona's commit step. The commit subject must
-   match the persona's format: `Cleanup for $MODULE_SHORT_NAME`. If the
-   persona reports it had to revert all of its changes (no substantive
-   diff remained), proceed to step 3 anyway — "no commit" is a valid
-   outcome and finalize handles it.
+   `$MODULE_DIR`. Leave any changes uncommitted. If the persona reports it
+   had to revert all of its changes (no substantive diff remained), proceed
+   to step 3 anyway — "no changes" is a valid outcome and finalize handles it.
 3. **Final mandatory action** (do not skip even on no-op):
 
    ```
    bash .github/scripts/module-cleanup/export-cleanup-patch.sh "$MODULE_SHORT_NAME"
    ```
 
-   This writes `/tmp/gh-aw/agent/cleanup.patch` (a `git format-patch` of
-   your commit range) so gh-aw's auto-uploader includes it in the
-   workflow's `agent` artifact. The finalize job downloads that artifact
-   and applies the patch to the `otelbot/module-cleanup-wip` branch. The script
-   is idempotent and exits cleanly with no patch if you produced no
-   commit. **Run it exactly once as your last action.** If you do not run
-   it, your work is lost.
+   This writes `/tmp/gh-aw/agent/cleanup.patch` (a `git diff --binary` of
+   your working-tree changes) or `/tmp/gh-aw/agent/cleanup.noop` (an explicit
+   no-op marker) so gh-aw's auto-uploader includes the result in the workflow's
+   `agent` artifact. The finalize job downloads that artifact and commits the
+   patch to the `otelbot/module-cleanup-wip` branch or records the no-op. The
+   script is idempotent. **Run it exactly once as your last action.** If you do
+   not run it, your work is lost.
 
 ## What you must NOT do
 

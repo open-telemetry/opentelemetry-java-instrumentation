@@ -171,7 +171,10 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
-                    span.hasName("Bucket.upsert")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "Bucket.upsert " + bucketSettings.name()
+                                : "Bucket.upsert")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -230,7 +233,10 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
-                    span.hasName("Bucket.upsert")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "Bucket.upsert " + bucketSettings.name()
+                                : "Bucket.upsert")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -245,7 +251,10 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             satisfies(
                                 stringKey("couchbase.operation_id"), experimentalAttribute())),
                 span ->
-                    span.hasName("Bucket.get")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "Bucket.get " + bucketSettings.name()
+                                : "Bucket.get")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
@@ -309,9 +318,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
                             equalTo(maybeStable(DB_NAME), bucketCouchbase.name()),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? null : "SELECT"),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             satisfies(
                                 maybeStable(DB_STATEMENT), val -> val.startsWith("SELECT mockrow")),
                             equalTo(
