@@ -256,7 +256,8 @@ public final class UrlParsingUtils {
    * and the database path, the query string or the fragment.
    *
    * @param url the connection string, with the {@code jdbc:} scheme already removed
-   * @return the authority, or null when the connection string has no {@code ://} separator
+   * @return the authority, or null when the connection string has no {@code ://} separator or
+   *     contains ambiguous user info that cannot be sanitized safely
    */
   @Nullable
   public static String extractAuthority(String url) {

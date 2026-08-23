@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes to non-stable APIs
+
+- Prefer the original configured logical or server-group target for `server.address` when stable
+  database semantic conventions are enabled. Multi-server targets include their endpoints in
+  `server.address` and omit `server.port`; default legacy telemetry is unchanged.
+
 ## Version 2.31.0 (2026-08-20)
 
 This release targets the OpenTelemetry SDK 1.65.0.
