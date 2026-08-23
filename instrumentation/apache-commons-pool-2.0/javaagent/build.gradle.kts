@@ -19,10 +19,8 @@ dependencies {
   testImplementation(project(":instrumentation:apache-commons-pool-2.0:testing"))
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-    jvmArgs("-Dotel.instrumentation.apache-commons-pool.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.apache-commons-pool.enabled=true")
-  }
+tasks.test {
+  systemProperty("collectMetadata", otelProps.collectMetadata)
+  jvmArgs("-Dotel.instrumentation.apache-commons-pool.enabled=true")
+  systemProperty("metadataConfig", "otel.instrumentation.apache-commons-pool.enabled=true")
 }
