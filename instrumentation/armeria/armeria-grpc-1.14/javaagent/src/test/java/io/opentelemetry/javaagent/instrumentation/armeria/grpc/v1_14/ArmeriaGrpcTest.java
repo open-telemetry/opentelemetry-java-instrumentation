@@ -146,7 +146,7 @@ class ArmeriaGrpcTest {
                             equalTo(URL_PATH, "/example.Greeter/SayHello"),
                             equalTo(URL_SCHEME, "http"),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, (long) server.httpPort()),
+                            equalTo(SERVER_PORT, server.httpPort()),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(NETWORK_PEER_PORT, port -> port.isInstanceOf(Long.class)),
@@ -224,7 +224,7 @@ class ArmeriaGrpcTest {
                                 RPC_RESPONSE_STATUS_CODE,
                                 emitStableRpcSemconv() ? Status.Code.UNIMPLEMENTED.name() : null),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, (long) serverWithoutGreeter.httpPort()))
+                            equalTo(SERVER_PORT, serverWithoutGreeter.httpPort()))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
@@ -242,7 +242,7 @@ class ArmeriaGrpcTest {
                             equalTo(URL_PATH, "/example.Greeter/SayHello"),
                             equalTo(URL_SCHEME, "http"),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, (long) serverWithoutGreeter.httpPort()),
+                            equalTo(SERVER_PORT, serverWithoutGreeter.httpPort()),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(NETWORK_PEER_PORT, port -> port.isInstanceOf(Long.class)),
