@@ -19,6 +19,7 @@ Updated again on 2026-05-26 after auditing remaining unversioned-allowlist entri
 Updated on 2026-05-28 after PRs 29 and 30 merged upstream together as #18854 and their `library:oshi`, `javaagent:oshi`, and `javaagent:elasticsearch-transport-common` allowlist entries were removed from the checker.
 Updated on 2026-06-02 after PR 17 merged upstream as #18772 (Akka/Scala forkjoin module renames), and after #18855 moved the `servlet-common` library internal package; both allowlist entries were removed from the checker.
 Updated again on 2026-06-02 after deciding to keep the four self-instrumentation modules' historical packages and document them as self-instrumentation in the checker instead of renaming them (PR 14 / #18747 deferred).
+Updated on 2026-08-23 after merging `main`, which brought in `apache-dbcp-2.0`, `hbase-client-common-1.0`, `jedis-4.0`, `tomcat-dbcp-8.0`, and the versioned `opentelemetry-instrumentation-api-1.14` module; their checker exceptions were added and PR 31 was planned.
 
 ## Goal
 
@@ -168,7 +169,7 @@ Modules:
 
 - `opentelemetry-api-1.0`
 - `opentelemetry-extension-annotations-1.0`
-- `opentelemetry-instrumentation-api`
+- `opentelemetry-instrumentation-api-1.14`
 - `opentelemetry-instrumentation-annotations-1.16`
 
 Decision: do not rename these packages. The original proposal moved them under
@@ -185,11 +186,10 @@ convention is skipped. Current packages stay as:
 - `opentelemetry-api-1.0` -> `io.opentelemetry.javaagent.instrumentation.opentelemetryapi[.*]`
 - `opentelemetry-extension-annotations-1.0` -> `io.opentelemetry.javaagent.instrumentation.extensionannotations.v1_0`
 - `opentelemetry-instrumentation-annotations-1.16` -> `io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16`
-- `opentelemetry-instrumentation-api` -> `io.opentelemetry.javaagent.instrumentation.instrumentationapi`
+- `opentelemetry-instrumentation-api-1.14` -> `io.opentelemetry.javaagent.instrumentation.instrumentationapi.v1_14`
 
-The `javaagent:opentelemetry-instrumentation-api` unversioned-module allowlist entry was removed at
-the same time because the self-instrumentation case block already short-circuits before the
-unversioned check.
+The self-instrumentation case block short-circuits before the unversioned-module check, so none of these
+four modules needs an unversioned-module allowlist entry.
 
 Close #18747 once this lands on `next`.
 
@@ -435,6 +435,29 @@ Suggested verification:
 ./gradlew :instrumentation:elasticsearch:elasticsearch-transport-common-5.0:javaagent:test :instrumentation:elasticsearch:elasticsearch-transport-5.0:javaagent:compileTestJava :instrumentation:elasticsearch:elasticsearch-transport-5.3:javaagent:compileTestJava :instrumentation:elasticsearch:elasticsearch-transport-6.0:javaagent:compileTestJava
 ```
 
+### PR 31: HBase client common package
+
+Module:
+
+- `hbase-client-common-1.0`
+
+Expected package change:
+
+- `io.opentelemetry.javaagent.instrumentation.hbase.client.common` -> `io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0`
+
+Notes:
+
+- The common javaagent module has a direct `compileOnly("org.apache.hbase:hbase-client:1.0.0")` dependency and is shared by `hbase-client-1.0`, `hbase-client-1.4`, and `hbase-client-2.0`; per #16090 this is the `<lib>-common-<major.minor>` shape, so the package should carry the same `v1_0` segment the module name already carries.
+- Keep `org.apache.hadoop.hbase.ipc.OpenTelemetryCallUtil` in HBase's own namespace; it exists to reach the package-private `Call` type.
+- The historical checker exception stays on `next` until this cleanup merges upstream.
+
+Suggested verification:
+
+```bash
+.github/scripts/check-package-names.sh
+./gradlew :instrumentation:hbase:hbase-client-common-1.0:javaagent:compileJava :instrumentation:hbase:hbase-client-1.0:javaagent:test :instrumentation:hbase:hbase-client-1.4:javaagent:test :instrumentation:hbase:hbase-client-2.0:javaagent:test
+```
+
 ## Do Later
 
 These are probably not the next easiest wins:
@@ -442,7 +465,7 @@ These are probably not the next easiest wins:
 - `java-http-client` and `java-http-server`: these have published library/testing packages, so package renames need a dedicated public API decision instead of a package-only javaagent cleanup.
 - `jmx-metrics`: current packages are under `jmx`, while the module says `jmx-metrics`. This touches 43 files and may be user-facing enough to deserve a dedicated PR.
 - Library-specific third-party packages: `io.grpc.override`, `io.lettuce.core.protocol`, `io.nats.client.impl`, and `rx` are likely intentional shims or package-private access points.
-- Advice-native package exceptions: packages under `com.clickhouse`, `com.twitter`, `io.netty`, `reactor.netty`, `org.springframework`, and `io.vertx` should stay until each one is proven not to need native package placement.
+- Advice-native package exceptions: packages under `com.clickhouse`, `com.twitter`, `io.netty`, `org.apache.commons.dbcp2`, `org.apache.hadoop.hbase.ipc`, `org.apache.tomcat.dbcp.dbcp2`, `org.springframework`, `reactor.netty`, `redis.clients.jedis`, and `io.vertx` should stay until each one is proven not to need native package placement.
 - OpenTelemetry API and Akka/Scala forkjoin package/module renames are planned above; AWS SDK remains deferred.
 - Remaining unversioned module allowlist entries split into policy buckets:
   - JDK/platform modules such as `executors`, `http-url-connection`, `jdbc`, `methods`, `rmi`, and `runtime-telemetry` probably deserve explicit checker allowances instead of version suffixes.
