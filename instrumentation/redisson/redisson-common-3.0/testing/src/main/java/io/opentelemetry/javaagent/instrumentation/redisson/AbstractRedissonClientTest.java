@@ -652,7 +652,7 @@ public abstract class AbstractRedissonClientTest {
     batch.execute();
 
     assertThat(catchThrowable(batch::execute)).isNotNull();
-    assertStableAtomicBatch("SET", null, "SET batch1 ?");
+    assertStableAtomicBatch("MULTI SET", null, "SET batch1 ?");
   }
 
   @Test
