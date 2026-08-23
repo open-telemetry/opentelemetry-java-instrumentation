@@ -24,10 +24,9 @@ public class OpenSearchNodeServerAddress {
   @Nullable
   static OpenSearchServerAddress fromRestClientNodes(Object restClient) {
     try {
-      // unchecked: getNodes() returns List<Node> at runtime, but Node is from
-      // opensearch-rest-client
-      // which must not be referenced statically in the Muzzle helper graph
-      @SuppressWarnings("unchecked")
+      // getNodes() returns a list of org.opensearch.client.Node, which comes from
+      // opensearch-rest-client and must not be referenced statically in the Muzzle helper graph,
+      // so the nodes are read reflectively
       List<?> nodes = (List<?>) restClient.getClass().getMethod("getNodes").invoke(restClient);
       if (nodes.size() != 1) {
         return null;
