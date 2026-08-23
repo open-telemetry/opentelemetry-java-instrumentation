@@ -63,15 +63,20 @@ check_source_set() {
     fi
 
     if [[ "$source_set" == "javaagent" ]]; then
-      # advice packages that must live under the instrumented library's own namespace
+      # advice and injected helper packages that must live under the instrumented library's own
+      # namespace, so that they can reach package-private library types and members
       case "$dir" in
+        instrumentation/apache-dbcp-2.0/javaagent/src/main/java/org/apache/commons/dbcp2) continue ;;
         instrumentation/clickhouse/clickhouse-client-v1-0.5/javaagent/src/main/java/com/clickhouse/client*) continue ;;
         instrumentation/finagle-http-23.11/javaagent/src/main/java/com/twitter/finagle*) continue ;;
         instrumentation/finagle-http-23.11/javaagent/src/main/java/io/netty/channel*) continue ;;
+        instrumentation/hbase/hbase-client-common-1.0/javaagent/src/main/java/org/apache/hadoop/hbase/ipc) continue ;;
+        instrumentation/jedis/jedis-4.0/javaagent/src/main/java/redis/clients/jedis) continue ;;
         instrumentation/reactor/reactor-netty/reactor-netty-1.0/javaagent/src/main/java/reactor/netty/http/client*) continue ;;
         instrumentation/spring/spring-boot-resources/javaagent/src/main/java/io/opentelemetry/instrumentation/spring/resources) continue ;;
         instrumentation/spring/spring-webmvc/spring-webmvc-3.1/javaagent/src/main/java/org/springframework/web/servlet/v3_1*) continue ;;
         instrumentation/spring/spring-webmvc/spring-webmvc-6.0/javaagent/src/main/java/org/springframework/web/servlet/v6_0*) continue ;;
+        instrumentation/tomcat/tomcat-dbcp-8.0/javaagent/src/main/java/org/apache/tomcat/dbcp/dbcp2) continue ;;
         instrumentation/vertx/vertx-redis-client-4.0/javaagent/src/main/java/io/vertx/redis/client/impl*) continue ;;
         instrumentation/vertx/vertx-sql-client/vertx-sql-client-common-4.0/javaagent/src/main/java/io/vertx/sqlclient/impl*) continue ;;
       esac
@@ -84,13 +89,14 @@ check_source_set() {
         instrumentation/opentelemetry-api/opentelemetry-api-1.0/javaagent/*) continue ;;
         instrumentation/opentelemetry-extension-annotations-1.0/javaagent/*) continue ;;
         instrumentation/opentelemetry-instrumentation-annotations-1.16/javaagent/*) continue ;;
-        instrumentation/opentelemetry-instrumentation-api/javaagent/*) continue ;;
+        instrumentation/opentelemetry-instrumentation-api/opentelemetry-instrumentation-api-1.14/javaagent/*) continue ;;
       esac
 
       # historical javaagent modules that do not follow the module-name <-> package-name convention
       case "$dir" in
         instrumentation/aws-sdk/aws-sdk-1.11/javaagent/src/main/java/io/opentelemetry/instrumentation/awssdk/v1_11) continue ;;
         instrumentation/aws-sdk/aws-sdk-2.2/javaagent/src/main/java/io/opentelemetry/instrumentation/awssdk/v2_2/internal) continue ;;
+        instrumentation/hbase/hbase-client-common-1.0/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/hbase/client/common) continue ;;
         instrumentation/java-http-client/javaagent/*) continue ;;
         instrumentation/java-http-server/javaagent/*) continue ;;
         instrumentation/java-util-logging/javaagent/*) continue ;;
