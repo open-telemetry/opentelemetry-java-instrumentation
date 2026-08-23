@@ -34,11 +34,11 @@ The remaining exceptions fall into four buckets:
 | Module-wide skips | `jmx-metrics` has 43 files | Do not start here; this needs a broader naming decision. |
 | Library packages under third-party namespaces | `grpc`, `lettuce`, `nats`, `rxjava`, and `elasticsearch-rest` have 1 file each; `thrift` has 2 | Leave for later; these are likely compatibility/shim packages. |
 | Javaagent advice under instrumented library namespaces | mostly 1 file each | Leave for later; the script already says these must live in the instrumented library namespace. |
-| Historical javaagent packages | many one-dir modules remain, usually with one source directory | Best place to keep chipping away. |
+| Historical javaagent packages | 4 module exceptions remain; only HBase common is queued | Complete HBase common; keep Java HTTP client/server and JUL deferred. |
 
 ## Completed Cleanups
 
-These PRs have merged. Remove their historical javaagent package-name exceptions from `.github/scripts/check-package-names.sh` on `next` after the corresponding cleanup lands upstream:
+These PRs have merged, and the checker no longer contains their historical javaagent package-name exceptions:
 
 - PR 1: `internal-eclipse-osgi-3.6` and `opentelemetry-extension-kotlin-1.0`.
 - PR 2: `spark-2.3`.
