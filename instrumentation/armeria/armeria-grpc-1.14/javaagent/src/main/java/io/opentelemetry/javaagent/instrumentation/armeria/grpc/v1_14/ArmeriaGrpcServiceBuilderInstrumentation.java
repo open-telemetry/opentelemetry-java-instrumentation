@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.armeria.grpc.v1_14;
 
+import static io.opentelemetry.javaagent.instrumentation.armeria.grpc.v1_14.ArmeriaGrpcSingletons.serverInterceptor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -32,7 +33,7 @@ class ArmeriaGrpcServiceBuilderInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This GrpcServiceBuilder builder) {
-      builder.intercept(ArmeriaGrpcSingletons.SERVER_INTERCEPTOR);
+      builder.intercept(serverInterceptor());
     }
   }
 }
