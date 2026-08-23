@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import java.net.SocketAddress;
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 /**
@@ -28,10 +29,9 @@ import javax.annotation.Nullable;
  */
 final class TracingServerStreamTracer extends ServerStreamTracer {
 
-  static final io.grpc.Context.Key<TracingServerStreamTracer> STREAM_TRACER_KEY =
-      io.grpc.Context.key("otel-grpc-stream-tracer");
-
   private static final String UNKNOWN_METHOD_SPAN_NAME = "_OTHER";
+  private static final io.grpc.Context.Key<CallState> STREAM_TRACER_STATE_KEY =
+      io.grpc.Context.key("otel-grpc-stream-tracer-state");
 
   private final Instrumenter<GrpcRequest, Status> instrumenter;
   private final ContextPropagators propagators;
@@ -40,7 +40,7 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
   private final Context parentContext;
   private final Instant startTime;
 
-  private volatile boolean interceptorHandled;
+  private volatile CallState callState = new CallState();
   @Nullable private volatile SocketAddress peerAddress;
 
   TracingServerStreamTracer(
@@ -57,13 +57,21 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
     this.startTime = Instant.now();
   }
 
-  void markInterceptorHandled() {
-    interceptorHandled = true;
+  static void markCurrentCallHandled() {
+    CallState callState = STREAM_TRACER_STATE_KEY.get();
+    if (callState != null) {
+      callState.markInterceptorHandled();
+    }
   }
 
   @Override
   public io.grpc.Context filterContext(io.grpc.Context context) {
-    return context.withValue(STREAM_TRACER_KEY, this);
+    CallState callState = STREAM_TRACER_STATE_KEY.get(context);
+    if (callState == null) {
+      return context.withValue(STREAM_TRACER_STATE_KEY, this.callState);
+    }
+    this.callState = callState;
+    return context;
   }
 
   @Override
@@ -81,7 +89,7 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
     // The interceptor fires only for a method that is registered on the server, and gRPC closes a
     // stream whose method it could not find with UNIMPLEMENTED. Requiring both keeps a registered
     // method that was cancelled or aborted before the interceptor ran from being reported here.
-    if (interceptorHandled || status.getCode() != Status.Code.UNIMPLEMENTED) {
+    if (status.getCode() != Status.Code.UNIMPLEMENTED || callState.isHandledOrSpanStarted()) {
       return;
     }
     GrpcRequest request = new GrpcRequest(UNKNOWN_METHOD_SPAN_NAME, fullMethodName, headers);
@@ -93,9 +101,25 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
         propagators
             .getTextMapPropagator()
             .extract(parentContext, request, GrpcRequestGetter.INSTANCE);
-    if (instrumenter.shouldStart(extracted, request)) {
+    if (instrumenter.shouldStart(extracted, request) && callState.tryMarkSpanStarted()) {
       InstrumenterUtil.startAndEnd(
           instrumenter, extracted, request, status, status.getCause(), startTime, Instant.now());
+    }
+  }
+
+  private static final class CallState {
+    private final AtomicBoolean handledOrSpanStarted = new AtomicBoolean();
+
+    void markInterceptorHandled() {
+      handledOrSpanStarted.set(true);
+    }
+
+    boolean isHandledOrSpanStarted() {
+      return handledOrSpanStarted.get();
+    }
+
+    boolean tryMarkSpanStarted() {
+      return handledOrSpanStarted.compareAndSet(false, true);
     }
   }
 }
