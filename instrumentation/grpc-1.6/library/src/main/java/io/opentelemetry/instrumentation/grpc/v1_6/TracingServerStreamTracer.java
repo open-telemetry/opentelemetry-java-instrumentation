@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
-
 import io.grpc.Grpc;
 import io.grpc.Metadata;
 import io.grpc.ServerCall;
@@ -83,9 +81,7 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
     // The interceptor fires only for a method that is registered on the server, and gRPC closes a
     // stream whose method it could not find with UNIMPLEMENTED. Requiring both keeps a registered
     // method that was cancelled or aborted before the interceptor ran from being reported here.
-    if (interceptorHandled
-        || status.getCode() != Status.Code.UNIMPLEMENTED
-        || !emitStableRpcSemconv()) {
+    if (interceptorHandled || status.getCode() != Status.Code.UNIMPLEMENTED) {
       return;
     }
     GrpcRequest request = new GrpcRequest(UNKNOWN_METHOD_SPAN_NAME, fullMethodName, headers);
