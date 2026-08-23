@@ -94,7 +94,10 @@ final class CommonsPoolMetrics {
           objects.record(idle.getAsInt(), metrics.getIdleObjectsAttributes());
 
           if (minIdle != null) {
-            minIdleObjects.record(minIdle.getAsInt(), attributes);
+            int minIdleValue = minIdle.getAsInt();
+            if (minIdleValue >= 0) {
+              minIdleObjects.record(minIdleValue, attributes);
+            }
           }
           if (maxIdle != null) {
             int maxIdleValue = maxIdle.getAsInt();

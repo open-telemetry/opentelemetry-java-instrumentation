@@ -64,6 +64,8 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
     config.setJmxEnabled(false);
     config.setJmxNamePrefix(poolName);
     config.setMaxTotal(-1);
+    // GenericObjectPool.getMinIdle() returns maxIdle when maxIdle is lower, so an unlimited
+    // maxIdle makes getMinIdle() report the unlimited sentinel as well
     config.setMaxIdle(-1);
     GenericObjectPool<Object> pool = new GenericObjectPool<>(new TestObjectFactory(), config);
     Object borrowed = null;
@@ -73,6 +75,7 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
       borrowed = pool.borrowObject();
 
       verifyObjectCount(poolName);
+      verifyMetricNotReported("apache_commons_pool.object.idle.min");
       verifyMetricNotReported("apache_commons_pool.object.idle.max");
       verifyMetricNotReported("apache_commons_pool.object.max");
     } finally {
