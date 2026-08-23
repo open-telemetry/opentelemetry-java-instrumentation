@@ -35,11 +35,8 @@ class CommandBatchServiceInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
-        named("async").and(returns(void.class)),
-        getClass().getName() + "$CaptureWithArgumentAdvice");
-    transformer.applyAdviceToMethod(
-        named("async").and(returns(isSubTypeOf(CompletionStage.class))),
-        getClass().getName() + "$CaptureWithReturnAdvice");
+        named("async").and(returns(void.class).or(returns(isSubTypeOf(CompletionStage.class)))),
+        getClass().getName() + "$CaptureAdvice");
     transformer.applyAdviceToMethod(named("discardAsync"), getClass().getName() + "$DiscardAdvice");
     transformer.applyAdviceToMethod(named("executeAsync"), getClass().getName() + "$ExecuteAdvice");
   }
@@ -53,27 +50,7 @@ class CommandBatchServiceInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class CaptureWithArgumentAdvice {
-    @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter(
-        @Advice.This CommandBatchService service,
-        @Advice.Argument(2) Codec codec,
-        @Advice.Argument(3) RedisCommand<?> command,
-        @Advice.Argument(4) Object[] parameters) {
-      return RedissonBatchAdviceScope.capture(service, command, codec, parameters);
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Scope scope) {
-      if (scope != null) {
-        scope.close();
-      }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class CaptureWithReturnAdvice {
+  public static class CaptureAdvice {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
