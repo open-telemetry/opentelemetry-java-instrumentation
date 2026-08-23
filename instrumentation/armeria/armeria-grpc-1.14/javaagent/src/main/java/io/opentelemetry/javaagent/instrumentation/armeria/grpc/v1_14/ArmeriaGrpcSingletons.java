@@ -9,7 +9,7 @@ import io.grpc.ServerInterceptor;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 
-public final class ArmeriaGrpcSingletons {
+public class ArmeriaGrpcSingletons {
 
   private static final ServerInterceptor serverInterceptor =
       GrpcTelemetry.create(GlobalOpenTelemetry.get()).createServerInterceptor();
