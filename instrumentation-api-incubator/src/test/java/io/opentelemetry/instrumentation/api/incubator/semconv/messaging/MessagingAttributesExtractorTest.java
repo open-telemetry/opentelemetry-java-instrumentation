@@ -196,9 +196,9 @@ class MessagingAttributesExtractorTest {
         argumentSet("settle", MessagingOperationType.SETTLE, SpanKey.CONSUMER_SETTLE));
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
-  void shouldSupportDeprecatedMessageOperation() {
+  void shouldSupportLegacyMessageOperation() {
     AttributesExtractor<Map<String, String>, String> underTest =
         MessagingAttributesExtractor.create(TestGetter.INSTANCE, MessageOperation.PUBLISH);
 
@@ -210,9 +210,8 @@ class MessagingAttributesExtractorTest {
             entry(MESSAGING_DESTINATION_ANONYMOUS, true), entry(MESSAGING_OPERATION, "publish"));
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
   @Test
-  void shouldRejectOperationNameForDeprecatedMessageOperation() {
+  void shouldRejectOperationNameForLegacyMessageOperation() {
     assertThatThrownBy(
             () ->
                 MessagingAttributesExtractor.builder(TestGetter.INSTANCE, MessageOperation.PUBLISH)
