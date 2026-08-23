@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+set -o pipefail
+
 if command -v rg > /dev/null 2>&1; then
   case "$(uname -s)" in
     CYGWIN* | MINGW* | MSYS*) path_separator="//" ;;
