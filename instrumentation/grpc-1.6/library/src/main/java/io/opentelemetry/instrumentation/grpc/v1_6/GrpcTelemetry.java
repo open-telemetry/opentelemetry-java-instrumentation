@@ -12,7 +12,6 @@ import io.grpc.Status;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.grpc.v1_6.internal.Internal;
 
 /** Entrypoint for instrumenting gRPC servers or clients. */
 public final class GrpcTelemetry {
@@ -21,10 +20,6 @@ public final class GrpcTelemetry {
   private final ContextPropagators propagators;
   private final boolean captureExperimentalSpanAttributes;
   private final boolean emitMessageEvents;
-
-  static {
-    Internal.setServerInterceptorFactory(GrpcTelemetry::buildServerInterceptor);
-  }
 
   /** Returns a new {@link GrpcTelemetry} configured with the given {@link OpenTelemetry}. */
   public static GrpcTelemetry create(OpenTelemetry openTelemetry) {
@@ -64,24 +59,21 @@ public final class GrpcTelemetry {
    * creates spans for requests to unregistered services that are not seen by server interceptors.
    */
   public void configureServerBuilder(ServerBuilder<?> serverBuilder) {
-    serverBuilder.intercept(buildServerInterceptor());
+    serverBuilder.intercept(createServerInterceptor());
     serverBuilder.addStreamTracerFactory(
         new TracingServerStreamTracerFactory(serverInstrumenter, propagators));
   }
 
   /**
    * Returns a new {@link ServerInterceptor} for use with methods like {@link
-   * io.grpc.ServerBuilder#intercept(ServerInterceptor)}.
+   * io.grpc.ServerBuilder#intercept(ServerInterceptor)} and {@link
+   * io.grpc.ServerInterceptors#intercept(io.grpc.ServerServiceDefinition, ServerInterceptor...)}.
    *
-   * @deprecated Use {@link #configureServerBuilder(ServerBuilder)} instead, which also registers
-   *     the stream tracer factory needed to capture requests to unregistered services.
+   * <p>An interceptor on its own does not see requests to services that are not registered on the
+   * server. Prefer {@link #configureServerBuilder(ServerBuilder)} where a {@link ServerBuilder} is
+   * available, because it also registers the stream tracer factory that captures those requests.
    */
-  @Deprecated
   public ServerInterceptor createServerInterceptor() {
-    return buildServerInterceptor();
-  }
-
-  ServerInterceptor buildServerInterceptor() {
     return new TracingServerInterceptor(
         serverInstrumenter, captureExperimentalSpanAttributes, emitMessageEvents);
   }
