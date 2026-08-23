@@ -15,6 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.lambdaworks.redis.ReactiveCommandDispatcher;
+import com.lambdaworks.redis.api.StatefulConnection;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -80,12 +81,14 @@ class LettuceReactiveCommandDispatcherInstrumentation implements TypeInstrumenta
         @Advice.This ReactiveCommandDispatcher<?, ?, ?> dispatcher,
         @Advice.FieldValue(value = "command") @Nullable RedisCommand<?, ?, ?> command,
         @Advice.FieldValue("commandSupplier")
-            Supplier<? extends RedisCommand<?, ?, ?>> commandSupplier) {
+            Supplier<? extends RedisCommand<?, ?, ?>> commandSupplier,
+        @Advice.FieldValue("connection") StatefulConnection<?, ?> connection) {
       Context parentContext = REACTIVE_DISPATCHER_CONTEXT.get(dispatcher);
       if (parentContext == null) {
         return null;
       }
       RedisCommand<?, ?, ?> otelCommand = command == null ? commandSupplier.get() : command;
+      LettuceSingletons.attachAddress(otelCommand, connection);
       if (!instrumenter().shouldStart(parentContext, otelCommand)) {
         return null;
       }

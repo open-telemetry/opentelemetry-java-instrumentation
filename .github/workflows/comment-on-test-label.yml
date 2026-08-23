@@ -13,11 +13,12 @@ name: Comment on test-* label
 
 on:
   pull_request_target:
+    # zizmor: ignore[dangerous-triggers] No PR code is checked out or executed;
+    # the workflow only posts a comment using trusted workflow code.
     types: [labeled]
 
 permissions:
-  contents: read
-  pull-requests: write
+  pull-requests: write # zizmor: ignore[excessive-permissions] Required to post the explanatory PR comment.
 
 jobs:
   comment:

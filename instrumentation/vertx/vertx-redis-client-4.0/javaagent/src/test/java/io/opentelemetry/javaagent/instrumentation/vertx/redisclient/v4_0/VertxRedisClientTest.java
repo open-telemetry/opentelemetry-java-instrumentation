@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -24,6 +25,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.nCopies;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
@@ -35,12 +37,14 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.redis.client.Command;
 import io.vertx.redis.client.Redis;
 import io.vertx.redis.client.RedisAPI;
 import io.vertx.redis.client.RedisConnection;
 import io.vertx.redis.client.Request;
+import io.vertx.redis.client.Response;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,6 +75,8 @@ class VertxRedisClientTest {
   private static Redis client;
   private static RedisConnection connection;
   private static RedisAPI redis;
+  private static Redis defaultDbClient;
+  private static RedisAPI defaultDbRedis;
 
   @BeforeAll
   static void setup() throws Exception {
@@ -88,6 +94,14 @@ class VertxRedisClientTest {
     connection = client.connect().toCompletionStage().toCompletableFuture().get(30, SECONDS);
     redis = RedisAPI.api(connection);
     cleanup.deferAfterAll(redis::close);
+
+    // a connection string without a database index connects to the default database 0
+    defaultDbClient = Redis.createClient(vertx, "redis://" + host + ":" + port);
+    cleanup.deferAfterAll(defaultDbClient::close);
+    RedisConnection defaultDbConnection =
+        defaultDbClient.connect().toCompletionStage().toCompletableFuture().get(30, SECONDS);
+    defaultDbRedis = RedisAPI.api(defaultDbConnection);
+    cleanup.deferAfterAll(defaultDbRedis::close);
   }
 
   @Test
@@ -101,6 +115,44 @@ class VertxRedisClientTest {
                     span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))));
+
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.vertx-redis-client-4.0",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        DB_NAMESPACE,
+        SERVER_ADDRESS,
+        SERVER_PORT,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT);
+  }
+
+  @Test
+  void setCommandOnDefaultDatabase() throws Exception {
+    defaultDbRedis
+        .set(asList("foo", "bar"))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(DB_REDIS_DATABASE_INDEX, null),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
 
     assertDurationMetric(
         testing,
@@ -213,11 +265,48 @@ class VertxRedisClientTest {
                             redisSpanAttributes("RANDOMKEY", "RANDOMKEY"))));
   }
 
+  @Test
+  void emptyBatch() throws Exception {
+    Future<List<Response>> future = connection.batch(emptyList());
+
+    if (isVertx40x() && !future.isComplete()) {
+      // Vert.x 4.0.x never completes an empty batch. Complete it only to clean up the test.
+      assertThat(
+              future
+                  .getClass()
+                  .getMethod("tryComplete", Object.class)
+                  .invoke(future, (Object) null))
+          .isEqualTo(true);
+    } else {
+      assertThat(future.toCompletionStage().toCompletableFuture().get(30, SECONDS)).isEmpty();
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "PIPELINE " + host + ":" + port
+                                : "PIPELINE")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(redisSpanAttributes("PIPELINE", "", 0L))));
+  }
+
+  private static boolean isVertx40x() {
+    try {
+      return Class.forName(
+                  "io.vertx.redis.client.impl.RedisConnectionManager$RedisConnectionProvider")
+              .getDeclaredMethod("init", RedisConnection.class)
+          != null;
+    } catch (ReflectiveOperationException ignored) {
+      return false;
+    }
+  }
+
   @ParameterizedTest
   @MethodSource("batchScenarios")
   void batchCommand(BatchScenario scenario) throws Exception {
-    testing.clearData();
-
     connection.batch(scenario.requests).toCompletionStage().toCompletableFuture().get(30, SECONDS);
 
     testing.waitAndAssertTraces(

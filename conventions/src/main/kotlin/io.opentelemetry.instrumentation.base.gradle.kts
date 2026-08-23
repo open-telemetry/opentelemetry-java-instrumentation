@@ -1,4 +1,4 @@
-/** Common setup for manual instrumentation of libraries and javaagent instrumentation. */
+// Common setup for manual instrumentation of libraries and javaagent instrumentation.
 
 import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
 import io.opentelemetry.javaagent.muzzle.AcceptableVersions
@@ -44,7 +44,7 @@ fun getPinnedVersions(): Map<String, String> {
   if (!rootProject.extra.has(key)) {
     val file = rootProject.file(".github/config/latest-dep-versions.json")
     if (!file.exists()) {
-      throw GradleException("Pinned latest-dep versions file is missing: ${file}.")
+      throw GradleException("Pinned latest-dep versions file is missing: $file.")
     }
     @Suppress("UNCHECKED_CAST")
     rootProject.extra[key] = groovy.json.JsonSlurper().parse(file) as Map<String, String>

@@ -30,24 +30,24 @@ class InstrumentationAnalyzerTest {
         asList(
             new InstrumentationPath(
                 "log4j-appender-2.17",
-                "instrumentation/log4j/log4j-appender-2.17/library",
+                "instrumentation/log4j/log4j-appender-2.17",
                 "log4j",
                 "log4j",
                 InstrumentationType.LIBRARY),
             new InstrumentationPath(
                 "log4j-appender-2.17",
-                "instrumentation/log4j/log4j-appender-2.17/javaagent",
+                "instrumentation/log4j/log4j-appender-2.17",
                 "log4j",
                 "log4j",
                 InstrumentationType.JAVAAGENT),
             new InstrumentationPath(
                 "spring-web",
-                "instrumentation/spring/spring-web/library",
+                "instrumentation/spring/spring-web",
                 "spring",
                 "spring",
                 InstrumentationType.LIBRARY));
 
-    List<InstrumentationModule> modules = ModuleParser.convertToModules("test", paths);
+    List<InstrumentationModule> modules = ModuleParser.convertToModules(paths);
 
     assertThat(modules.size()).isEqualTo(2);
 
@@ -83,18 +83,18 @@ class InstrumentationAnalyzerTest {
         asList(
             new InstrumentationPath(
                 "same-name",
-                "instrumentation/test1/same-name/library",
+                "instrumentation/test1/same-name",
                 "namespace1",
                 "group1",
                 InstrumentationType.LIBRARY),
             new InstrumentationPath(
                 "same-name",
-                "instrumentation/test2/same-name/library",
+                "instrumentation/test2/same-name",
                 "namespace2",
                 "group2",
                 InstrumentationType.LIBRARY));
 
-    List<InstrumentationModule> modules = ModuleParser.convertToModules("test", paths);
+    List<InstrumentationModule> modules = ModuleParser.convertToModules(paths);
 
     // Should create 2 separate modules because they have different group/namespace combinations
     assertThat(modules.size()).isEqualTo(2);
@@ -148,7 +148,7 @@ class InstrumentationAnalyzerTest {
         """);
 
     List<InstrumentationModule> modules =
-        new InstrumentationAnalyzer(new FileManager(tempDir + "/")).analyze();
+        new InstrumentationAnalyzer(new FileManager(tempDir)).analyze();
 
     assertThat(modules).hasSize(1);
     InstrumentationModule module = modules.get(0);

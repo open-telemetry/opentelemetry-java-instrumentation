@@ -17,7 +17,7 @@ dependencies {
 
   api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
-  implementation(platform("io.grpc:grpc-bom:1.82.2"))
+  implementation(platform("io.grpc:grpc-bom:1.83.1"))
   implementation("org.slf4j:slf4j-api")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
@@ -33,6 +33,12 @@ dependencies {
 }
 
 tasks {
+  // makes the generated declarative configuration example available on the test classpath, so that
+  // DeclarativeConfigurationExampleSmokeTest can verify that the agent starts up with it
+  processTestResources {
+    from(rootProject.file("docs/declarative-configuration-example.yaml"))
+  }
+
   test {
     testLogging.showStandardStreams = true
 

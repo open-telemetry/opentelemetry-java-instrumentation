@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.autoconfigure;
 
-import static java.util.Collections.emptyList;
-
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
@@ -15,6 +13,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingConfig;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
 
@@ -46,12 +45,7 @@ public final class TracingRequestHandler extends RequestHandler2 {
                     SystemProperty.getBoolean(
                         "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
                         false)))
-        .setCapturedHeaders(
-            messaging.getScalarList(
-                "capture_headers/development",
-                String.class,
-                SystemProperty.getList(
-                    "otel.instrumentation.messaging.experimental.capture-headers", emptyList())))
+        .setHeaders(MessagingConfig.getHeaders(openTelemetry, true))
         .build()
         .createRequestHandler();
   }

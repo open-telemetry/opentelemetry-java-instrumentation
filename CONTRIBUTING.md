@@ -6,12 +6,19 @@ Before submitting new features or changes to current functionality, it is recomm
 [open an issue](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/new)
 and discuss your ideas or propose the changes you wish to make.
 
+## Changelog
+
+The changelog is generated from merged pull requests. Do not add a changelog entry for normal
+changes. Add an entry only for a deprecation or breaking change, where the hand-written entry is
+useful for double-checking the generated changelog.
+
 ## Breaking Changes
 
 When your PR introduces a breaking change:
 
 - Add the `breaking change` label to your PR
   - If you can't add labels directly, post a comment containing only `/breaking-change` and the label will be added automatically
+- Add an entry to the `Unreleased` section of `CHANGELOG.md`
 - Provide migration notes in the PR description:
   - What is changing and why
   - How users should update their code/configuration
@@ -30,6 +37,7 @@ When your PR deprecates functionality:
 
 - Add the `deprecation` label to your PR
   - If you can't add labels directly, post a comment containing only `/deprecation` and the label will be added automatically
+- Add an entry to the `Unreleased` section of `CHANGELOG.md`
 - Provide deprecation details in the PR description:
   - What is being deprecated and why
   - What should be used instead (if applicable)

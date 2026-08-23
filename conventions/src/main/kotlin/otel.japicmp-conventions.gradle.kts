@@ -52,7 +52,7 @@ if (project.findProperty("otel.stable") == "true" && project.path != ":javaagent
           // the japicmp "new" version is either the user-specified one, or the locally built jar.
           val apiNewVersion = project.findProperty("apiNewVersion") as String?
           val newArtifact = apiNewVersion?.let { findArtifact(it) }
-              ?: file(getByName<Jar>("jar").archiveFile)
+            ?: file(getByName<Jar>("jar").archiveFile)
           newClasspath.from(files(newArtifact))
 
           // only output changes, not everything

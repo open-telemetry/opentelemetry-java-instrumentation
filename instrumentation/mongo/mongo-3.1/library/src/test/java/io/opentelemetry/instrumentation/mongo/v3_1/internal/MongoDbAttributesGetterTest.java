@@ -9,13 +9,21 @@ import static io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrume
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import com.mongodb.MongoException;
+import com.mongodb.MongoSocketException;
+import com.mongodb.ServerAddress;
+import java.util.stream.Stream;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
 import org.bson.BsonString;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class MongoDbAttributesGetterTest {
 
@@ -89,6 +97,32 @@ class MongoDbAttributesGetterTest {
     // This can vary because of different whitespace for different MongoDB versions
     assertThat(normalized)
         .isIn("{\"cmd\": \"c\", \"f1\": [\"?\", \"?", "{\"cmd\": \"c\", \"f1\": [\"?\",");
+  }
+
+  @ParameterizedTest
+  @MethodSource("errorTypes")
+  void getErrorTypeReturnsServerCodeOrFallsBack(Throwable error, String expectedErrorType) {
+    MongoDbAttributesGetter getter =
+        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
+
+    assertThat(getter.getErrorType(null, null, error)).isEqualTo(expectedErrorType);
+  }
+
+  private static Stream<Arguments> errorTypes() {
+    return Stream.of(
+        argumentSet("server error code", new MongoException(11000, "duplicate key"), "11000"),
+        argumentSet("zero code falls back", new MongoException(0, "boom"), null),
+        argumentSet("client message sentinel (-3)", new MongoException("boom"), null),
+        argumentSet(
+            "client message-and-cause sentinel (-4)",
+            new MongoException("boom", new RuntimeException()),
+            null),
+        argumentSet(
+            "socket exception sentinel (-2)",
+            new MongoSocketException("boom", new ServerAddress()),
+            null),
+        argumentSet("non-mongo exception", new IllegalStateException("boom"), null),
+        argumentSet("no error", null, null));
   }
 
   private static String sanitizeQueryAcrossVersions(

@@ -26,14 +26,6 @@ public interface ExperimentalInstrumentationModule {
   default void registerVirtualFields(BiConsumer<String, String> virtualFieldRegistrar) {}
 
   /**
-   * Returns a list of helper classes that will be defined in the class loader of the instrumented
-   * library.
-   */
-  default List<String> injectedClassNames() {
-    return emptyList();
-  }
-
-  /**
    * Some instrumentations need to invoke classes which are present both in the agent classloader
    * and the instrumented application classloader. By default, the classloader of the
    * instrumentation would link those against the class provided by the agent. This setting allows
@@ -55,20 +47,6 @@ public interface ExperimentalInstrumentationModule {
   // instance or a class FQN in the map entry, as it could lead to some limitations
   default Map<JavaModule, List<String>> jpmsModulesToOpen() {
     return emptyMap();
-  }
-
-  /**
-   * Returns a list of instrumentation helper classes that are exposed to the application class
-   * loader.
-   *
-   * <p>When using non-inline advice helper classes are loaded into a separate class loader. Classes
-   * from that class loader aren't visible to the instrumented application. This method can be used
-   * to expose some of the helper classes to the application class loader, so that they can be
-   * loaded through the loadClass method of the application class loader. This can for example be
-   * used to add a SPI implementation that can be loaded via the ServiceLoader.
-   */
-  default List<String> exposedClassNames() {
-    return emptyList();
   }
 
   /**

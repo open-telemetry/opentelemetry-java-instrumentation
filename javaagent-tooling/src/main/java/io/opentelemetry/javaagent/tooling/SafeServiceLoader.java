@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 public final class SafeServiceLoader {
 
@@ -30,11 +31,11 @@ public final class SafeServiceLoader {
    */
   // Because we want to catch exception per iteration
   @SuppressWarnings("ForEachIterable")
-  public static <T> List<T> load(Class<T> serviceClass, ClassLoader classLoader) {
+  public static <T> List<T> load(Class<T> serviceClass, @Nullable ClassLoader classLoader) {
     List<T> result = new ArrayList<>();
     ServiceLoader<T> services = ServiceLoader.load(serviceClass, classLoader);
-    for (Iterator<T> iterator = new SafeIterator<>(services.iterator()); iterator.hasNext(); ) {
-      T service = iterator.next();
+    for (SafeIterator<T> iterator = new SafeIterator<>(services.iterator()); iterator.hasNext(); ) {
+      T service = iterator.nextOrNull();
       if (service != null) {
         result.add(service);
       }
@@ -47,7 +48,7 @@ public final class SafeServiceLoader {
    * comparing their {@link Ordered#order()}.
    */
   public static <T extends Ordered> List<T> loadOrdered(
-      Class<T> serviceClass, ClassLoader classLoader) {
+      Class<T> serviceClass, @Nullable ClassLoader classLoader) {
     List<T> result = load(serviceClass, classLoader);
     result.sort(Comparator.comparingInt(Ordered::order));
     return result;
@@ -55,7 +56,7 @@ public final class SafeServiceLoader {
 
   private SafeServiceLoader() {}
 
-  private static class SafeIterator<T> implements Iterator<T> {
+  private static class SafeIterator<T> {
     private final Iterator<T> delegate;
 
     SafeIterator(Iterator<T> iterator) {
@@ -70,8 +71,7 @@ public final class SafeServiceLoader {
           unsupportedClassVersionError.getMessage());
     }
 
-    @Override
-    public boolean hasNext() {
+    private boolean hasNext() {
       // jdk9 and newer throw UnsupportedClassVersionError in hasNext()
       while (true) {
         try {
@@ -82,8 +82,8 @@ public final class SafeServiceLoader {
       }
     }
 
-    @Override
-    public T next() {
+    @Nullable
+    private T nextOrNull() {
       // jdk8 throws UnsupportedClassVersionError in next()
       try {
         return delegate.next();

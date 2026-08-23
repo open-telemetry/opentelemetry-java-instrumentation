@@ -15,14 +15,12 @@ import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilde
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class SofaRpcInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class SofaRpcInstrumentationModule extends InstrumentationModule {
   public SofaRpcInstrumentationModule() {
     super("sofa-rpc", "sofa-rpc-5.4");
   }

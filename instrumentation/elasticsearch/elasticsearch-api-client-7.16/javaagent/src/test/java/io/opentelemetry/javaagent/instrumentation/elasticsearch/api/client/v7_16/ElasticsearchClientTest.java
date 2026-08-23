@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.api.client.v7_16;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
@@ -19,6 +20,7 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_ELASTICSEARCH_PATH_PARTS;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_PARAMETER;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
@@ -150,8 +152,17 @@ class ElasticsearchClientTest {
                                 URL_FULL,
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
                             equalTo(
-                                DB_ELASTICSEARCH_PATH_PARTS.getAttributeKey("index"), "test-index"),
-                            equalTo(DB_ELASTICSEARCH_PATH_PARTS.getAttributeKey("id"), "test-id")),
+                                DB_ELASTICSEARCH_PATH_PARTS.getAttributeKey("index"),
+                                emitStableDatabaseSemconv() ? null : "test-index"),
+                            equalTo(
+                                DB_ELASTICSEARCH_PATH_PARTS.getAttributeKey("id"),
+                                emitStableDatabaseSemconv() ? null : "test-id"),
+                            equalTo(
+                                DB_OPERATION_PARAMETER.getAttributeKey("index"),
+                                emitStableDatabaseSemconv() ? "test-index" : null),
+                            equalTo(
+                                DB_OPERATION_PARAMETER.getAttributeKey("id"),
+                                emitStableDatabaseSemconv() ? "test-id" : null)),
                 span ->
                     span.hasName("PUT")
                         .hasKind(SpanKind.CLIENT)

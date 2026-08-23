@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.v3_17;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.redisson.v3_17.RedissonSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -22,6 +22,8 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.redisson.client.RedisClient;
+import org.redisson.client.RedisClientConfig;
 import org.redisson.client.RedisConnection;
 
 class RedisConnectionInstrumentation implements TypeInstrumentation {
@@ -51,10 +53,11 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(RedisConnection connection, Object arg) {
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         InetSocketAddress remoteAddress =
             (InetSocketAddress) connection.getChannel().remoteAddress();
-        RedissonRequest request = RedissonRequest.create(remoteAddress, arg);
+        RedissonRequest request =
+            RedissonRequest.create(remoteAddress, arg, databaseIndex(connection));
         if (RedissonBatchContext.shouldSuppress(connection, request)) {
           return null;
         }
@@ -75,6 +78,19 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
         promise.setEndOperationListener(
             new EndOperationListener<>(instrumenter(), context, request));
         return new AdviceScope(request, context, scope);
+      }
+
+      @Nullable
+      private static Long databaseIndex(RedisConnection connection) {
+        if (!emitStableDatabaseSemconv()) {
+          return null;
+        }
+        RedisClient client = connection.getRedisClient();
+        if (client == null) {
+          return null;
+        }
+        RedisClientConfig config = client.getConfig();
+        return config != null ? (long) config.getDatabase() : null;
       }
 
       public void end(@Nullable Throwable throwable) {

@@ -6,9 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONNECTION_DATABASE_INDEX;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.connectInstrumenter;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import com.lambdaworks.redis.RedisChannelHandler;
 import com.lambdaworks.redis.RedisURI;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -30,6 +34,25 @@ class LettuceConnectInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("connectStandalone"), getClass().getName() + "$ConnectAdvice");
+    // connectStateful in lettuce 4.0-4.3, connectStatefulAsync in lettuce 4.4+
+    transformer.applyAdviceToMethod(
+        nameStartsWith("connectStateful")
+            .and(takesArgument(1, named("com.lambdaworks.redis.StatefulRedisConnectionImpl")))
+            .and(takesArgument(2, named("com.lambdaworks.redis.RedisURI"))),
+        getClass().getName() + "$AttachConnectionAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class AttachConnectionAdvice {
+
+    // runs before lettuce dispatches the connection initialization commands, so that a SELECT for a
+    // non-default database can find the connection database index
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(
+        @Advice.Argument(1) RedisChannelHandler<?, ?> connection,
+        @Advice.Argument(2) RedisURI redisUri) {
+      CONNECTION_DATABASE_INDEX.set(connection, redisUri.getDatabase());
+    }
   }
 
   @SuppressWarnings("unused")

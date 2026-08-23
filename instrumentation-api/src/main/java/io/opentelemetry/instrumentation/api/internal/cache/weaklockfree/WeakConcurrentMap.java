@@ -223,6 +223,7 @@ public class WeakConcurrentMap<K, V>
     }
 
     @Override
+    @Nullable
     public V remove(K key) {
       expungeStaleEntries();
       return super.remove(key);

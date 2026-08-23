@@ -79,9 +79,20 @@ testing {
   }
 }
 
+// Vaadin's frontend tooling installs node and pnpm into the shared ~/.vaadin directory. Running two
+// test suites at once lets their npm installs clobber each other, which leaves ~/.vaadin corrupted
+// and fails every subsequent attempt with ENOTEMPTY, so only let one suite run at a time.
+abstract class VaadinBuildService : BuildService<BuildServiceParameters.None>
+
+val vaadinBuildService =
+  gradle.sharedServices.registerIfAbsent("vaadinBuildService", VaadinBuildService::class.java) {
+    maxParallelUsages.set(1)
+  }
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    usesService(vaadinBuildService)
 
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     systemProperty("collectMetadata", otelProps.collectMetadata)

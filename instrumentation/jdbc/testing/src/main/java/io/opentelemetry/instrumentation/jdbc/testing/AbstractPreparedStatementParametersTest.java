@@ -20,12 +20,14 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
@@ -376,6 +378,35 @@ public abstract class AbstractPreparedStatementParametersTest {
 
   @ParameterizedTest
   @MethodSource("preparedStatementStream")
+  void testCustomObjectPreparedStatementParameter(
+      String system,
+      Connection connection,
+      String username,
+      String query,
+      String sanitizedQuery,
+      String spanName,
+      String url,
+      String table)
+      throws SQLException {
+    // Derby and HSQLDB reject setObject() with an unknown custom type at execution time
+    Assumptions.assumeFalse(system.equalsIgnoreCase("derby"));
+    Assumptions.assumeFalse(system.equalsIgnoreCase("hsqldb"));
+
+    test(
+        system,
+        connection,
+        username,
+        query,
+        sanitizedQuery,
+        spanName,
+        url,
+        table,
+        statement -> statement.setObject(1, new IdType()),
+        "id");
+  }
+
+  @ParameterizedTest
+  @MethodSource("preparedStatementStream")
   void testObjectWithTypePreparedStatementParameter(
       String system,
       Connection connection,
@@ -656,6 +687,13 @@ public abstract class AbstractPreparedStatementParametersTest {
                                 equalTo(
                                     DB_QUERY_PARAMETER.getAttributeKey("0"),
                                     expectedParameterValue))));
+  }
+
+  private static class IdType implements Serializable {
+    @Override
+    public String toString() {
+      return "id";
+    }
   }
 
   private interface ThrowingConsumer<T, E extends Throwable> {

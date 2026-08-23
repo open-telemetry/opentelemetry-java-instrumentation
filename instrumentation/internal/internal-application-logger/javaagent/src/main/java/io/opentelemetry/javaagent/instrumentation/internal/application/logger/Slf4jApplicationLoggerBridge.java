@@ -7,14 +7,23 @@ package io.opentelemetry.javaagent.instrumentation.internal.application.logger;
 
 import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import io.opentelemetry.javaagent.bootstrap.logging.ApplicationLoggerBridge;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Slf4jApplicationLoggerBridge implements InternalLogger.Factory {
 
+  // slf4j's LoggerFactory and Spring Boot's LoggingApplicationListener instrumentation points can
+  // each call install() independently, and LoggingApplicationListener#initialize() can itself run
+  // more than once during startup - guard here so we only ever hand off a single instance to
+  // ApplicationLoggerBridge instead of relying on it to recognize repeat installs of us.
+  private static final AtomicBoolean installed = new AtomicBoolean();
+
   public static void install() {
-    ApplicationLoggerBridge.installApplicationLogger(new Slf4jApplicationLoggerBridge());
+    if (installed.compareAndSet(false, true)) {
+      ApplicationLoggerBridge.installApplicationLogger(new Slf4jApplicationLoggerBridge());
+    }
   }
 
   @Override
