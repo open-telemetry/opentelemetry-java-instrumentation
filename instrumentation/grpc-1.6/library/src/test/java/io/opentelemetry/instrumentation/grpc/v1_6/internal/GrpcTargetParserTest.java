@@ -94,7 +94,7 @@ class GrpcTargetParserTest {
 
   @Test
   void parseSyntheticDirectAddressReturnsNull() {
-    assertThat(GrpcTargetParser.parse("directaddress:////localhost/127.0.0.1:443")).isNull();
+    assertThat(GrpcTargetParser.parse("directaddress:///localhost/127.0.0.1:443")).isNull();
   }
 
   @ParameterizedTest
