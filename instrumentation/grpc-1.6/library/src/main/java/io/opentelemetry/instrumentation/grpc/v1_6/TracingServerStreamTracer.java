@@ -77,10 +77,14 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
 
   @Override
   public void streamClosed(Status status) {
-    if (interceptorHandled || !emitStableRpcSemconv()) {
+    // The interceptor fires only for a method that is registered on the server, and gRPC closes a
+    // stream whose method it could not find with UNIMPLEMENTED. Requiring both keeps a registered
+    // method that was cancelled or aborted before the interceptor ran from being reported here.
+    if (interceptorHandled
+        || status.getCode() != Status.Code.UNIMPLEMENTED
+        || !emitStableRpcSemconv()) {
       return;
     }
-    // Interceptor did not fire — this is an unregistered method
     GrpcRequest request = new GrpcRequest(UNKNOWN_METHOD_SPAN_NAME, fullMethodName, headers);
     if (peerAddress != null) {
       request.setPeerSocketAddress(peerAddress);
