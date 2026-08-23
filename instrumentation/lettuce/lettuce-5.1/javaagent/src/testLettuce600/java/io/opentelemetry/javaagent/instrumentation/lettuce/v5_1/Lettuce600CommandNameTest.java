@@ -26,7 +26,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class Lettuce600CommandNameTest extends AbstractLettuceClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -70,6 +69,7 @@ class Lettuce600CommandNameTest extends AbstractLettuceClientTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void commandNameIsPopulated() {
     String res = syncCommands.set("TESTSETKEY", "TESTSETVAL");
     assertThat(res).isEqualTo("OK");
