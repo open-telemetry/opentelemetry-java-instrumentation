@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### 🚫 Deprecations
+
+- Deprecate `GrpcRequest.getLogicalHost()` and `getLogicalPort()` in favor of
+  `getServerAddress()` and `getServerPort()`.
+  ([#16161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16161))
+
 ## Version 2.31.0 (2026-08-20)
 
 This release targets the OpenTelemetry SDK 1.65.0.
