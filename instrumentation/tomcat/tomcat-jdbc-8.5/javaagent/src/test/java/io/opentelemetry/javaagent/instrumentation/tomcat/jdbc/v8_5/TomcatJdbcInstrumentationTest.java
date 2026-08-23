@@ -7,18 +7,23 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.jdbc.v8_5;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.stream.Stream;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -38,54 +43,42 @@ class TomcatJdbcInstrumentationTest {
     when(dataSourceMock.getConnection()).thenReturn(connectionMock);
   }
 
-  @Test
-  void shouldUseJdbcUrlForDefaultPoolName() throws SQLException {
+  @ParameterizedTest
+  @MethodSource("derivedPoolNames")
+  void shouldDerivePoolName(String url, String connectionProperties, String expectedPoolName)
+      throws SQLException {
     DataSource dataSource = newDataSource();
-    dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
+    if (url != null) {
+      dataSource.setUrl(url);
+    }
+    if (connectionProperties != null) {
+      dataSource.setConnectionProperties(connectionProperties);
+    }
 
-    assertConnectionPoolMetrics(dataSource, "db.example:5432/orders");
+    assertConnectionPoolMetrics(dataSource, expectedPoolName);
   }
 
-  @Test
-  void shouldUseIpv6JdbcUrlForDefaultPoolName() throws SQLException {
-    DataSource dataSource = newDataSource();
-    dataSource.setUrl("jdbc:postgresql://[2001:db8::1]:5432/orders");
-
-    assertConnectionPoolMetrics(dataSource, "[2001:db8::1]:5432/orders");
-  }
-
-  @Test
-  void shouldUseConnectionPropertiesForDefaultPoolName() throws SQLException {
-    DataSource dataSource = newDataSource();
-    dataSource.setUrl("jdbc:postgresql:ignored");
-    dataSource.setConnectionProperties(
-        "serverName=properties.example;portNumber=5433;databaseName=inventory");
-
-    assertConnectionPoolMetrics(dataSource, "properties.example:5433/inventory");
-  }
-
-  @Test
-  void shouldUseServerAddressWhenPortAndNamespaceAreMissing() throws SQLException {
-    DataSource dataSource = newDataSource();
-    dataSource.setUrl("jdbc:custom:ignored");
-    dataSource.setConnectionProperties("serverName=address-only.example");
-
-    assertConnectionPoolMetrics(dataSource, "address-only.example");
-  }
-
-  @Test
-  void shouldUseDbNamespaceWhenServerAddressIsMissing() throws SQLException {
-    DataSource dataSource = newDataSource();
-    dataSource.setUrl("jdbc:h2:mem:orders");
-
-    assertConnectionPoolMetrics(dataSource, "orders");
-  }
-
-  @Test
-  void shouldUseFixedPoolNameWhenUrlIsMissing() throws SQLException {
-    DataSource dataSource = newDataSource();
-
-    assertConnectionPoolMetrics(dataSource, DEFAULT_POOL_NAME);
+  private static Stream<Arguments> derivedPoolNames() {
+    return Stream.of(
+        argumentSet(
+            "jdbc url", "jdbc:postgresql://db.example:5432/orders", null, "db.example:5432/orders"),
+        argumentSet(
+            "ipv6 jdbc url",
+            "jdbc:postgresql://[2001:db8::1]:5432/orders",
+            null,
+            "[2001:db8::1]:5432/orders"),
+        argumentSet(
+            "connection properties",
+            "jdbc:postgresql:ignored",
+            "serverName=properties.example;portNumber=5433;databaseName=inventory",
+            "properties.example:5433/inventory"),
+        argumentSet(
+            "port and namespace missing",
+            "jdbc:custom:ignored",
+            "serverName=address-only.example",
+            "address-only.example"),
+        argumentSet("server address missing", "jdbc:h2:mem:orders", null, "orders"),
+        argumentSet("url missing", null, null, DEFAULT_POOL_NAME));
   }
 
   @Test
