@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -24,7 +23,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.time.Duration;
 import java.util.stream.Stream;
 import org.apache.geode.cache.Region;
 import org.apache.geode.cache.client.ClientCache;
@@ -43,7 +41,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.MountableFile;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -51,8 +48,7 @@ class PutGetTest {
   private static final int GEODE_PORT = 40404;
 
   private static final GenericContainer<?> geodeServer =
-      new GenericContainer<>(
-              testLatestDeps() ? "apachegeode/geode:1.15.1" : "apachegeode/geode:1.4.0")
+      new GenericContainer<>("apachegeode/geode:1.15.1")
           .withExposedPorts(GEODE_PORT)
           .withCopyFileToContainer(
               MountableFile.forClasspathResource("geode-cache.xml"), "/geode-cache.xml")
@@ -61,13 +57,8 @@ class PutGetTest {
               "-c",
               "gfsh -e \"start server --name=test-server"
                   + " --cache-xml-file=/geode-cache.xml"
-                  + " --mcast-port=0 --use-cluster-configuration=false"
-                  + " --server-port="
-                  + GEODE_PORT
                   + " --max-heap=256m\""
-                  + " && tail -F test-server/server.log")
-          .waitingFor(Wait.forListeningPort())
-          .withStartupTimeout(Duration.ofMinutes(2));
+                  + " && tail -F /test-server/test-server.log");
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

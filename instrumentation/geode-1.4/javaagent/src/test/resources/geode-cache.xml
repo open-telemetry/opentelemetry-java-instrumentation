@@ -4,7 +4,5 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://geode.apache.org/schema/cache http://geode.apache.org/schema/cache/cache-1.0.xsd"
     version="1.0">
-  <!-- Allow queries over application values without loading their classes on the server. -->
-  <pdx read-serialized="true" />
   <region name="test-region" refid="REPLICATE" />
 </cache>
