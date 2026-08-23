@@ -57,6 +57,10 @@ public final class GrpcTelemetry {
    * Configures a {@link ServerBuilder} with both the server interceptor and the stream tracer
    * factory. The interceptor handles registered service methods, while the stream tracer factory
    * creates spans for requests to unregistered services that are not seen by server interceptors.
+   *
+   * <p>Requests to unregistered services are only recorded when stable RPC semantic conventions are
+   * enabled, through {@code otel.semconv-stability.opt-in=rpc} or {@code
+   * otel.semconv-stability.opt-in=rpc/dup}.
    */
   public void configureServerBuilder(ServerBuilder<?> serverBuilder) {
     serverBuilder.intercept(createServerInterceptor());

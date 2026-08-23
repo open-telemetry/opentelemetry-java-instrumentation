@@ -24,6 +24,9 @@ import javax.annotation.Nullable;
  * A {@link ServerStreamTracer} that detects whether a gRPC server request was handled by the {@link
  * TracingServerInterceptor}. If the interceptor does not fire (unregistered method), {@link
  * #streamClosed(Status)} creates a span for the unhandled request.
+ *
+ * <p>That span is only created when stable RPC semantic conventions are enabled, through {@code
+ * otel.semconv-stability.opt-in=rpc} or {@code otel.semconv-stability.opt-in=rpc/dup}.
  */
 final class TracingServerStreamTracer extends ServerStreamTracer {
 
