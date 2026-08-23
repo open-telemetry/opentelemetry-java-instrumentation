@@ -888,7 +888,7 @@ public abstract class AbstractGrpcTest {
                             RPC_RESPONSE_STATUS_CODE,
                             emitStableRpcSemconv() ? Status.Code.UNIMPLEMENTED.name() : null),
                         equalTo(SERVER_ADDRESS, "localhost"),
-                        equalTo(SERVER_PORT, (long) server.getPort()))));
+                        equalTo(SERVER_PORT, server.getPort()))));
 
     testing()
         .waitAndAssertTraces(
