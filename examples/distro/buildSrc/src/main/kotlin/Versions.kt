@@ -2,7 +2,7 @@
 const val opentelemetrySdkVersion = "1.65.0"
 
 // these lines are managed by .github/scripts/update-version.sh
-const val opentelemetryJavaagentVersion = "2.31.0"
-const val opentelemetryJavaagentAlphaVersion = "2.31.0-alpha"
+const val opentelemetryJavaagentVersion = "2.31.1"
+const val opentelemetryJavaagentAlphaVersion = "2.31.1-alpha"
 
 const val autoserviceVersion = "1.1.1"
