@@ -13,7 +13,6 @@ import org.apache.wicket.protocol.http.WicketFilter;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.util.resource.FileResource;
 import org.eclipse.jetty.util.resource.Resource;
 
 class WicketTest extends AbstractWicketTest<Server> {
@@ -25,7 +24,7 @@ class WicketTest extends AbstractWicketTest<Server> {
     ServletContextHandler context = new ServletContextHandler(0);
     context.setContextPath(getContextPath());
 
-    Resource resource = new FileResource(getClass().getResource("/"));
+    Resource resource = Resource.newResource(getClass().getResource("/"));
     context.setBaseResource(resource);
     server.setHandler(context);
 

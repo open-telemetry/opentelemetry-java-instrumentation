@@ -7,26 +7,41 @@ package io.opentelemetry.javaagent.tooling;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.util.Collections.emptySet;
+import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper.Handler;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import org.objectweb.asm.ClassReader;
 
 public class DefineClassHandler implements Handler {
   public static final DefineClassHandler INSTANCE = new DefineClassHandler();
   private static final ThreadLocal<DefineClassContextImpl> defineClassContext =
-      ThreadLocal.withInitial(() -> DefineClassContextImpl.NOP);
+      ThreadLocal.withInitial(() -> DefineClassContextImpl.ROOT);
+
+  private static Predicate<ClassLoader> ignoredClassLoaders = (classLoader) -> false;
 
   private DefineClassHandler() {}
 
+  static void setIgnoredClassLoadersPredicate(Predicate<ClassLoader> predicate) {
+    ignoredClassLoaders = predicate;
+  }
+
   @Override
+  @Nullable
   public DefineClassContext beforeDefineClass(
       ClassLoader classLoader, String className, byte[] classBytes, int offset, int length) {
     // with OpenJ9 class data sharing we don't get real class bytes
     if (classBytes == null
         || (classBytes.length == 40
             && new String(classBytes, ISO_8859_1).startsWith("J9ROMCLASSCOOKIE"))) {
+      return null;
+    }
+
+    // skip ignore class loaders, class is not going to be instrumented anyway
+    if (ignoredClassLoaders.test(classLoader)) {
       return null;
     }
 
@@ -84,7 +99,7 @@ public class DefineClassHandler implements Handler {
   }
 
   @Override
-  public void afterDefineClass(DefineClassContext context) {
+  public void afterDefineClass(@Nullable DefineClassContext context) {
     if (context != null) {
       context.exit();
     }
@@ -107,11 +122,11 @@ public class DefineClassHandler implements Handler {
   }
 
   private static class DefineClassContextImpl implements DefineClassContext {
-    private static final DefineClassContextImpl NOP = new DefineClassContextImpl();
+    private static final DefineClassContextImpl ROOT = new DefineClassContextImpl();
 
-    private final DefineClassContextImpl previous;
-    String failedClassDotName;
-    Set<String> superDotNames;
+    @Nullable private final DefineClassContextImpl previous;
+    @Nullable String failedClassDotName;
+    @Nullable Set<String> superDotNames;
 
     private DefineClassContextImpl() {
       previous = null;
@@ -130,7 +145,9 @@ public class DefineClassHandler implements Handler {
 
     @Override
     public void exit() {
-      defineClassContext.set(previous);
+      // ROOT itself has no previous context but is never returned to callers. Every returned
+      // context is created by enter(), which captures ROOT or an outer context as its predecessor.
+      defineClassContext.set(requireNonNull(previous));
     }
   }
 }

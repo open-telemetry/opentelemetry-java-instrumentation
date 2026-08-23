@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpCl
 
 import io.netty.channel.ChannelOption;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.function.Consumer;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -55,10 +54,7 @@ class ClientHttpConnectorFactory {
       Constructor<ReactorClientHttpConnector> constructor =
           ReactorClientHttpConnector.class.getConstructor(Consumer.class);
       return constructor.newInstance(clientOptionsConfigurer);
-    } catch (NoSuchMethodException
-        | InvocationTargetException
-        | InstantiationException
-        | IllegalAccessException e) {
+    } catch (ReflectiveOperationException e) {
       throw new LinkageError("Did not find suitable constructor", e);
     }
   }
@@ -74,10 +70,7 @@ class ClientHttpConnectorFactory {
       Constructor<ReactorClientHttpConnector> constructor =
           ReactorClientHttpConnector.class.getConstructor(HttpClient.class);
       return constructor.newInstance(httpClient);
-    } catch (NoSuchMethodException
-        | InvocationTargetException
-        | InstantiationException
-        | IllegalAccessException e) {
+    } catch (ReflectiveOperationException e) {
       throw new LinkageError("Did not find suitable constructor", e);
     }
   }

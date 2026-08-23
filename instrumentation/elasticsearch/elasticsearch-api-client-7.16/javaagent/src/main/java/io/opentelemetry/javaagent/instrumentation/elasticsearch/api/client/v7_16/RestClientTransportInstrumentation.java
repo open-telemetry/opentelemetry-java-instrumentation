@@ -1,0 +1,51 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.elasticsearch.api.client.v7_16;
+
+import static io.opentelemetry.javaagent.instrumentation.elasticsearch.api.client.v7_16.ElasticsearchApiClientSingletons.ENDPOINT_DEFINITION;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+
+import co.elastic.clients.transport.Endpoint;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+import org.elasticsearch.client.Request;
+
+// up to 8.8 (included)
+class RestClientTransportInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return named("co.elastic.clients.transport.rest_client.RestClientTransport");
+  }
+
+  @Override
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        named("prepareLowLevelRequest")
+            .and(takesArgument(1, named("co.elastic.clients.transport.Endpoint")))
+            .and(returns(named("org.elasticsearch.client.Request"))),
+        getClass().getName() + "$RestClientTransportAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class RestClientTransportAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onPrepareLowLevelRequest(
+        @Advice.Argument(1) Endpoint<?, ?, ?> endpoint, @Advice.Return Request request) {
+      String endpointId = endpoint.id();
+      if (endpointId.startsWith("es/") && endpointId.length() > 3) {
+        endpointId = endpointId.substring(3);
+      }
+      ENDPOINT_DEFINITION.set(request, ElasticsearchEndpointMap.get(endpointId));
+    }
+  }
+}

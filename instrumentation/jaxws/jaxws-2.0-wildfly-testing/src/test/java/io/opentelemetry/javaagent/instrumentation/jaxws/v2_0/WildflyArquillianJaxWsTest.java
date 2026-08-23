@@ -9,7 +9,7 @@ class WildflyArquillianJaxWsTest extends AbstractArquillianJaxWsTest {
 
   @Override
   protected String getServicePath(String service) {
-    if ("EjbHelloService".equals(service)) {
+    if (service.equals("EjbHelloService")) {
       service = "EjbHelloService/EjbHelloServiceImpl";
     }
     return service;

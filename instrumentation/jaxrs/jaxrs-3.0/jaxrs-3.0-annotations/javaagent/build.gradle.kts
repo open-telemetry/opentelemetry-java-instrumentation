@@ -23,10 +23,8 @@ dependencies {
   testImplementation("jakarta.ws.rs:jakarta.ws.rs-api:3.0.0")
 }
 
-tasks {
-  test {
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+tasks.test {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
+  systemProperty("collectMetadata", otelProps.collectMetadata)
 }

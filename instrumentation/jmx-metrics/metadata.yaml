@@ -5,3 +5,24 @@ description: >
   configured to extract JVM and application-level telemetry data from JMX MBeans such as memory
   usage, thread counts, and garbage collection statistics, and translate these measurements into
   OpenTelemetry metrics.
+configurations:
+  - name: otel.jmx.enabled
+    declarative_name: java.jmx.enabled
+    description: Enables collection of JMX metrics.
+    type: boolean
+    default: true
+  - name: otel.jmx.config
+    declarative_name: java.jmx.config
+    description: List of paths to JMX metric definition YAML files.
+    type: list
+    default: ""
+  - name: otel.jmx.discovery.delay
+    declarative_name: java.jmx.discovery.delay
+    description: Time in milliseconds between JMX MBean detection attempts.
+    type: int
+    default: 60000
+  - name: otel.jmx.target.system
+    declarative_name: java.jmx.target.system
+    description: List of predefined JMX target systems to collect metrics for.
+    type: list
+    default: ""

@@ -9,7 +9,7 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.AbstractElasticsearchNodeClientTest;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.AbstractElasticsearchNodeClientTest;
 import java.io.File;
 import java.util.UUID;
 import org.elasticsearch.action.admin.cluster.settings.ClusterUpdateSettingsRequest;
@@ -75,11 +75,10 @@ class Elasticsearch53NodeClientTest extends AbstractElasticsearchNodeClientTest 
               .updateSettings(
                   new ClusterUpdateSettingsRequest()
                       .transientSettings(
-                          singletonMap(
-                              "cluster.routing.allocation.disk.threshold_enabled", false)));
+                          singletonMap("cluster.routing.allocation.disk.threshold_enabled", false)))
+              .actionGet(TIMEOUT);
         });
     testing.waitForTraces(1);
-    testing.clearData();
   }
 
   @AfterAll

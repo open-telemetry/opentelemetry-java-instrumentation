@@ -20,7 +20,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.core.publisher.Flux;
@@ -32,10 +31,8 @@ class ContextPropagationOperatorInstrumentationTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @Nullable
   private static final MethodHandle MONO_CONTEXT_WRITE_METHOD = getContextWriteMethod(Mono.class);
 
-  @Nullable
   private static MethodHandle getContextWriteMethod(Class<?> type) {
     MethodHandles.Lookup lookup = MethodHandles.publicLookup();
     try {

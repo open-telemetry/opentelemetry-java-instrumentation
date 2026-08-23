@@ -103,7 +103,8 @@ class GraphqlTest extends AbstractGraphqlTest {
                 span ->
                     span.hasName("fetchBookById")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(spanWithName("bookById")),
+                        .hasParent(spanWithName("bookById"))
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("author")
                         .hasKind(SpanKind.INTERNAL)
@@ -167,7 +168,8 @@ class GraphqlTest extends AbstractGraphqlTest {
                 span ->
                     span.hasName("fetchBookById")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(spanWithName("bookById")),
+                        .hasParent(spanWithName("bookById"))
+                        .hasTotalAttributeCount(0),
                 span ->
                     span.hasName("name")
                         .hasKind(SpanKind.INTERNAL)
@@ -238,7 +240,8 @@ class GraphqlTest extends AbstractGraphqlTest {
                 span ->
                     span.hasName("fetchBookById")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(spanWithName("query findBookById"))));
+                        .hasParent(spanWithName("query findBookById"))
+                        .hasTotalAttributeCount(0)));
   }
 
   // test data fetcher throwing an exception
@@ -309,6 +312,7 @@ class GraphqlTest extends AbstractGraphqlTest {
                     span.hasName("fetchBookById")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(spanWithName("bookById"))
+                        .hasTotalAttributeCount(0)
                         .hasStatus(StatusData.error())
                         .hasException(new IllegalStateException("fetching book failed"))));
   }
@@ -384,7 +388,8 @@ class GraphqlTest extends AbstractGraphqlTest {
                 span ->
                     span.hasName("fetchBookById")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(spanWithName("bookById"))));
+                        .hasParent(spanWithName("bookById"))
+                        .hasTotalAttributeCount(0)));
   }
 
   private static SpanData spanWithName(String name) {

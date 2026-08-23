@@ -42,10 +42,13 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.metrics.MetricsReporter;
 
+@SuppressWarnings("unchecked") // casting Proxy.newProxyInstance result in wrap methods
 public final class KafkaTelemetry {
   private final OpenTelemetry openTelemetry;
   private final KafkaProducerTelemetry producerTelemetry;
   private final KafkaConsumerTelemetry consumerTelemetry;
+  private final KafkaProducerTelemetry producerInterceptorTelemetry;
+  private final KafkaConsumerTelemetry consumerInterceptorTelemetry;
 
   /** Returns a new {@link KafkaTelemetry} configured with the given {@link OpenTelemetry}. */
   public static KafkaTelemetry create(OpenTelemetry openTelemetry) {
@@ -64,6 +67,8 @@ public final class KafkaTelemetry {
       Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter,
       Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter,
       Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter,
+      Instrumenter<KafkaProducerRequest, RecordMetadata> producerInterceptorInstrumenter,
+      Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInterceptorInstrumenter,
       boolean producerPropagationEnabled) {
     this.openTelemetry = openTelemetry;
     this.producerTelemetry =
@@ -73,10 +78,17 @@ public final class KafkaTelemetry {
             producerPropagationEnabled);
     this.consumerTelemetry =
         new KafkaConsumerTelemetry(consumerReceiveInstrumenter, consumerProcessInstrumenter);
+    this.producerInterceptorTelemetry =
+        new KafkaProducerTelemetry(
+            openTelemetry.getPropagators().getTextMapPropagator(),
+            producerInterceptorInstrumenter,
+            producerPropagationEnabled);
+    this.consumerInterceptorTelemetry =
+        new KafkaConsumerTelemetry(
+            consumerReceiveInterceptorInstrumenter, consumerProcessInstrumenter);
   }
 
   /** Returns a decorated {@link Producer} that emits spans for each sent message. */
-  @SuppressWarnings("unchecked")
   public <K, V> Producer<K, V> wrap(Producer<K, V> producer) {
     return (Producer<K, V>)
         Proxy.newProxyInstance(
@@ -110,7 +122,6 @@ public final class KafkaTelemetry {
   }
 
   /** Returns a decorated {@link Consumer} that consumes spans for each received message. */
-  @SuppressWarnings("unchecked")
   public <K, V> Consumer<K, V> wrap(Consumer<K, V> consumer) {
     return (Consumer<K, V>)
         Proxy.newProxyInstance(
@@ -122,7 +133,11 @@ public final class KafkaTelemetry {
               try {
                 result = method.invoke(consumer, args);
               } catch (InvocationTargetException e) {
-                throw e.getCause();
+                Throwable error = e.getCause();
+                if ("poll".equals(method.getName())) {
+                  consumerTelemetry.buildAndFinishErrorSpan(consumer, timer, error);
+                }
+                throw error;
               }
               // ConsumerRecords<K, V> poll(long timeout)
               // ConsumerRecords<K, V> poll(Duration duration)
@@ -205,7 +220,7 @@ public final class KafkaTelemetry {
         OpenTelemetryProducerInterceptor.class.getName());
     config.put(
         OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_PRODUCER_TELEMETRY_SUPPLIER,
-        new KafkaProducerTelemetrySupplier(producerTelemetry));
+        new KafkaProducerTelemetrySupplier(producerInterceptorTelemetry));
     return Collections.unmodifiableMap(config);
   }
 
@@ -233,7 +248,7 @@ public final class KafkaTelemetry {
         OpenTelemetryConsumerInterceptor.class.getName());
     config.put(
         OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_CONSUMER_TELEMETRY_SUPPLIER,
-        new KafkaConsumerTelemetrySupplier(consumerTelemetry));
+        new KafkaConsumerTelemetrySupplier(consumerInterceptorTelemetry));
     return Collections.unmodifiableMap(config);
   }
 }

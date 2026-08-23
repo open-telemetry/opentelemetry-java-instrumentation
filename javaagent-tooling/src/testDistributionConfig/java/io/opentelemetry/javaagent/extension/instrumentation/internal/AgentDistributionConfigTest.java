@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.extension.instrumentation.internal;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,11 @@ class AgentDistributionConfigTest {
   }
 
   @Test
+  void testThreadDetailsEnabled() {
+    assertThat(AgentDistributionConfig.get().isThreadDetailsEnabled()).isTrue();
+  }
+
+  @Test
   void testExcludeClasses() {
     assertThat(AgentDistributionConfig.get().getExcludeClasses())
         .containsExactly("com.example.excluded.Class1", "com.example.excluded.Class2");
@@ -46,6 +52,11 @@ class AgentDistributionConfigTest {
   @Test
   void testInstrumentationDefaultEnabledByDefault() {
     assertThat(AgentDistributionConfig.get().isInstrumentationDefaultEnabled()).isTrue();
+  }
+
+  @Test
+  void testV3PreviewProperty() {
+    assertThat(AgentCommonConfig.get().isV3Preview()).isTrue();
   }
 
   @Test

@@ -22,7 +22,7 @@ import io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes._
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.extension.RegisterExtension
-import org.junit.jupiter.api.{Test, TestInstance}
+import org.junit.jupiter.api.{AfterAll, Test, TestInstance}
 import slick.jdbc.H2Profile.api._
 
 import java.util.function.Consumer
@@ -169,6 +169,11 @@ class SlickTest {
           )
       }
     )
+  }
+
+  @AfterAll
+  def closeDatabase(): Unit = {
+    database.close()
   }
 
   private def startQuery(query: String): Future[Vector[Int]] = {

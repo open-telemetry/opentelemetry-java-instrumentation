@@ -23,7 +23,7 @@ dependencies {
   testLibrary("com.jfinal:jetty-server:2019.3")
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-11.0:javaagent"))
-  testInstrumentation(project(":instrumentation:jetty:jetty-common:javaagent"))
+  testInstrumentation(project(":instrumentation:jetty:jetty-common-8.0:javaagent"))
 }
 
 tasks.test {

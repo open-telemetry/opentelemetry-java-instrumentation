@@ -10,7 +10,7 @@ Respond with a single JSON object matching exactly this schema and
 nothing else (no prose). A surrounding `json` code fence is tolerated
 by the parser but discouraged — prefer a bare JSON object:
 
-```
+```text
 {
   "decision": "include" | "omit",
   "section": "breaking" | "deprecations" | "new-javaagent" | "new-library" | "enhancements" | "bug-fixes" | null,
@@ -21,12 +21,18 @@ by the parser but discouraged — prefer a bare JSON object:
 }
 ```
 
+The response must be parseable by `json.loads`. JSON-escape every special
+character in string values, including `"` as `\"`, `\` as `\\`, and newlines
+as `\n`. Pay particular attention to Java string literals copied into
+`evidence`, and verify the complete object is valid JSON before responding.
+
 ## Core rule
 
-Classify every PR from its diff only. PR titles, manifest `subject`,
-draft-script bullet text, scratch-bucket headings, file lists, and
-`--stat` summaries are indexing metadata, not evidence. If the diff and
-the metadata disagree, the diff wins.
+Classify every PR from its diff only. The classifier removes `CHANGELOG.md`
+changes before sending the diff to the model, so existing hand-written entries
+cannot steer the generated result. PR titles, manifest `subject`, scratch-bucket
+headings, file lists, and `--stat` summaries are indexing metadata, not
+evidence. If the diff and the metadata disagree, the diff wins.
 
 ## Breaking changes to non-stable APIs
 
@@ -38,11 +44,23 @@ interface in a non-stable (`-alpha`) module or in `javaagent-extension-api`
 - removal of a `default` method from an internal interface,
 - signature change even when the method never carried `@Deprecated`.
 
+Omit compatibility changes to APIs introduced after the previous release. If
+the prompt's release context says the API-diff snapshot marks both signatures
+as new, and changing that API is the PR's only user-visible effect, the
+decision must be `omit`.
+
+Treat non-private `Experimental*` helpers in published `:library`
+artifacts as incubating public API even when their package name
+contains `.internal`; removals or binary-incompatible reshaping belong
+under Breaking.
+
 Emitted-attribute, attribute-value, or span-name changes are Breaking
 **only** when they ship unconditionally. If the change is gated behind
 `otel.instrumentation.common.v3-preview`,
 `otel.semconv-stability.opt-in=…`, or an `experimental` property, the
-entry belongs under Enhancements.
+entry belongs under Enhancements. Unconditional changes to a metric
+attribute value that fix unbounded cardinality belong under Bug fixes —
+see that section.
 
 Deprecate-then-remove across two PRs in one cycle produces two bullets —
 one under Deprecations, one under Breaking.
@@ -53,6 +71,11 @@ Adds `@Deprecated` to a user-facing API, or renames a config property /
 YAML key while keeping the old one. Name both the old and new user-facing
 flat property; include the YAML key when relevant.
 
+If a PR both adds replacement functionality and deprecates the old surface,
+classify it under Deprecations and describe the migration, not the new feature.
+Name every user-facing property, API, configuration key, and artifact that the
+PR newly deprecates, along with the replacement for each.
+
 Configuration property renames always go here, never in Enhancements.
 Stability policy:
 
@@ -62,8 +85,16 @@ Stability policy:
   with `/development`): may be deprecated in one release and removed in
   the next.
 
-If an unlinked summary bullet at the top of Deprecations already covers
-the rename, do not add a duplicate PR-linked bullet.
+Omit changes that only adjust the planned removal version or wording for APIs
+that are already deprecated.
+
+Every deprecation bullet must begin with `Deprecate` and use the form
+`Deprecate <old> in favor of <replacement>.` Do not mention when the deprecated
+surface may be removed. Do not restate how the deprecated surface behaves
+unless that behavior is needed to migrate to the replacement.
+For span suppression, name the programmatic
+`Experimental.setSpanSuppressionStrategy(...)` replacement without adding
+declarative instrumentation configuration as another alternative.
 
 ## New javaagent / library instrumentation
 
@@ -82,6 +113,10 @@ opt-ins, cite the flag value (for example
 repo are `database`, `messaging`, `http`, `jvm`, `rpc`. Gated changes go
 here, never under Breaking.
 
+Never cite `otel.semconv-stability.preview`; it is an internal implementation
+name, not a user-facing property. Translate it to
+`otel.semconv-stability.opt-in=<value>`.
+
 ## Bug fixes
 
 Wrong attributes, missing spans, NPE/leak/deadlock fixes, latest-dep
@@ -91,6 +126,22 @@ propagation, and class-loading fixes. Restoring silently broken
 behavior is a bug fix, not an enhancement — diffs that remove an
 over-restrictive condition, add a fallback branch, or invert an `&&`
 usually belong here. Describe the user-visible symptom.
+
+An unconditional change to a **metric** attribute value is a bug fix, not
+a breaking change, when the previous value caused unbounded cardinality —
+it varied per process, per instance, or per restart (a per-process
+identity hash, a VM-allocated token, a restart-varying counter), so it
+could never aggregate into a stable time series.
+
+This exception is limited to metric attribute values. Span names, span
+attributes, and log attributes are not covered: they are not aggregated
+into time series, so an unstable value there is not a cardinality defect
+and the Breaking rule applies. It also does not cover metric attribute
+values that were stable but merely inconvenient, renamed, or
+reformatted — those remain Breaking.
+
+The bullet must still state that the value changes, so readers who
+aggregated on the old series are not surprised at upgrade.
 
 ## metadata.yaml is documentation, not evidence
 
@@ -110,6 +161,10 @@ to one or more of:
 - renames of internal (not extension-API) fields, packages, or helpers,
 - new package-private, `internal`-package, or test-only methods,
 - `metadata.yaml` documentation (see section above).
+
+Do not use the internal-helper omit rule for non-private `Experimental*`
+classes in published artifacts; classify their
+removal or binary-incompatible reshaping under Breaking.
 
 Trivial omits (renovate bumps, all-test/docs/build paths, post-release
 version bumps) are handled by `classify.py --preclassify-only`.
@@ -143,6 +198,8 @@ keep the PR.
 - For `v3-preview`-gated changes, cite the user-facing property name
   `otel.instrumentation.common.v3-preview`, not the internal
   `v3_preview` key.
+- When behavior is disabled by default or gated by an opt-in, name the exact
+  user-facing property and value needed to enable it.
 - Do not describe implementation details ("refactored", "moved",
   "simplified") unless that is the user-visible change.
 - Do not credit authors.
@@ -150,12 +207,7 @@ keep the PR.
 The merger renders bullets with the PR link on the second line, indented
 two spaces:
 
-```
+```text
 - Short user-facing description
   ([#NNNN](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/NNNN))
 ```
-
-Grouping multiple PRs into one logical bullet is done by hand after
-merging — edit `CHANGELOG.md` directly to combine trailing PR links, or
-set identical `bullet` text on each `decision.json` and collapse by hand
-after running the merger.

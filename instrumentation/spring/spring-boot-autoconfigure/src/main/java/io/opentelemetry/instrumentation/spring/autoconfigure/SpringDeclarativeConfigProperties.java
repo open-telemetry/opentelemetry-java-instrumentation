@@ -13,7 +13,7 @@ import static java.util.stream.Collectors.toList;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigException;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -26,11 +26,11 @@ import javax.annotation.Nullable;
 
 /**
  * Spring flavor of {@link
- * io.opentelemetry.sdk.extension.incubator.fileconfig.YamlDeclarativeConfigProperties}, that tries
+ * io.opentelemetry.sdk.autoconfigure.declarativeconfig.YamlDeclarativeConfigProperties}, that tries
  * to coerce types, because spring doesn't tell what the original type was.
  *
  * <p>The entire class is a copy of <a
- * href="https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/incubator/src/main/java/io/opentelemetry/sdk/extension/incubator/fileconfig/YamlDeclarativeConfigProperties.java">YamlDeclarativeConfigProperties</a>
+ * href="https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/declarative-config/src/main/java/io/opentelemetry/sdk/autoconfigure/declarativeconfig/YamlDeclarativeConfigProperties.java">YamlDeclarativeConfigProperties</a>
  * with only minor modifications to type coercion logic.
  *
  * <p>TODO: Revisit after https://github.com/open-telemetry/opentelemetry-java/issues/8101 — if
@@ -41,8 +41,7 @@ import javax.annotation.Nullable;
 final class SpringDeclarativeConfigProperties implements DeclarativeConfigProperties {
 
   private static final Set<Class<?>> SUPPORTED_SCALAR_TYPES =
-      Collections.unmodifiableSet(
-          new LinkedHashSet<>(asList(String.class, Boolean.class, Long.class, Double.class)));
+      new LinkedHashSet<>(asList(String.class, Boolean.class, Long.class, Double.class));
 
   /** Values are {@link #isPrimitive(Object)}, {@link List} of scalars. */
   private final Map<String, Object> simpleEntries;

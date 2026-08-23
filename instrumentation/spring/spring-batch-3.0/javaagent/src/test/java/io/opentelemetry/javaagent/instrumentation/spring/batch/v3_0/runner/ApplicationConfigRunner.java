@@ -20,7 +20,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 public class ApplicationConfigRunner implements BeforeEachCallback, AfterEachCallback, JobRunner {
   private final Supplier<ConfigurableApplicationContext> applicationContextFactory;
   private final BiConsumer<String, Job> jobPostProcessor;
-  static JobLauncher jobLauncher;
+  private static JobLauncher jobLauncher;
   private ConfigurableApplicationContext applicationContext;
 
   public ApplicationConfigRunner(

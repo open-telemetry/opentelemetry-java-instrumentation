@@ -246,7 +246,7 @@ class SessionTest extends AbstractHibernateTest {
                                     trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))))));
   }
 
-  private static Stream<Arguments> provideArgumentsHibernateActionStateless() {
+  private Stream<Arguments> provideArgumentsHibernateActionStateless() {
     return Stream.of(
         Arguments.of(named("refresh", new Parameter("refresh", null, StatelessSession::refresh))),
         Arguments.of(
@@ -586,7 +586,7 @@ class SessionTest extends AbstractHibernateTest {
                                 emitStableDatabaseSemconv() ? null : "Value"))));
   }
 
-  private static Stream<Arguments> provideArgumentsHibernateCommitAction() {
+  private Stream<Arguments> provideArgumentsHibernateCommitAction() {
     return Stream.of(
         Arguments.of(
             named(
@@ -724,7 +724,7 @@ class SessionTest extends AbstractHibernateTest {
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @MethodSource("provideArgumentsStateQuery")
-  void testAttachesStateToQueryCreated(Consumer<Session> queryBuilder) {
+  void testAttachesStateToQueryCreated(String sessionSpanName, Consumer<Session> queryBuilder) {
 
     testing.runWithSpan(
         "parent",
@@ -741,7 +741,7 @@ class SessionTest extends AbstractHibernateTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("SELECT Value")
+                    span.hasName(sessionSpanName)
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -795,18 +795,14 @@ class SessionTest extends AbstractHibernateTest {
   private static Stream<Arguments> provideArgumentsStateQuery() {
     return Stream.of(
         Arguments.of(
-            named(
-                "createQuery",
-                ((Consumer<Session>) session -> session.createQuery("from Value").list()))),
+            named("createQuery", emitStableDatabaseSemconv() ? "select Value" : "SELECT Value"),
+            ((Consumer<Session>) session -> session.createQuery("from Value").list())),
         Arguments.of(
-            named(
-                "getNamedQuery",
-                ((Consumer<Session>) session -> session.getNamedQuery("TestNamedQuery").list()))),
+            named("getNamedQuery", emitStableDatabaseSemconv() ? "select Value" : "SELECT Value"),
+            ((Consumer<Session>) session -> session.getNamedQuery("TestNamedQuery").list())),
         Arguments.of(
-            named(
-                "createSQLQuery",
-                (Consumer<Session>)
-                    session -> session.createSQLQuery("SELECT * FROM Value").list())));
+            named("createSQLQuery", "SELECT Value"),
+            (Consumer<Session>) session -> session.createSQLQuery("SELECT * FROM Value").list()));
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
@@ -860,7 +856,7 @@ class SessionTest extends AbstractHibernateTest {
                   sessionId2.set(trace.getSpan(2).getAttributes().get(HIBERNATE_SESSION_ID));
                 },
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "INSERT Value" : "INSERT db1.Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "insert Value" : "INSERT db1.Value")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
@@ -873,7 +869,7 @@ class SessionTest extends AbstractHibernateTest {
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("insert")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "INSERT Value" : null),
+                                emitStableDatabaseSemconv() ? "insert Value" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "INSERT"),
@@ -903,7 +899,7 @@ class SessionTest extends AbstractHibernateTest {
                                 HIBERNATE_SESSION_ID,
                                 trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "INSERT Value" : "INSERT db1.Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "insert Value" : "INSERT db1.Value")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(6))
                         .hasAttributesSatisfyingExactly(
@@ -916,7 +912,7 @@ class SessionTest extends AbstractHibernateTest {
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("insert")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "INSERT Value" : null),
+                                emitStableDatabaseSemconv() ? "insert Value" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "INSERT"),
@@ -924,7 +920,7 @@ class SessionTest extends AbstractHibernateTest {
                                 maybeStable(DB_SQL_TABLE),
                                 emitStableDatabaseSemconv() ? null : "Value")),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "DELETE Value" : "DELETE db1.Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "delete Value" : "DELETE db1.Value")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(6))
                         .hasAttributesSatisfyingExactly(
@@ -937,7 +933,7 @@ class SessionTest extends AbstractHibernateTest {
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("delete")),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "DELETE Value" : null),
+                                emitStableDatabaseSemconv() ? "delete Value" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "DELETE"),

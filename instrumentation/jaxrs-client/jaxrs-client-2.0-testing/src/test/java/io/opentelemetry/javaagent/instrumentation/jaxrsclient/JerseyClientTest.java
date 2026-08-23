@@ -18,7 +18,7 @@ class JerseyClientTest extends AbstractJaxRsClientTest {
   public ClientBuilder builder(URI uri) {
     ClientConfig config = new ClientConfig();
     config.property(ClientProperties.CONNECT_TIMEOUT, (int) CONNECTION_TIMEOUT.toMillis());
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       config.property(ClientProperties.READ_TIMEOUT, (int) READ_TIMEOUT.toMillis());
     }
     return new JerseyClientBuilder().withConfig(config);

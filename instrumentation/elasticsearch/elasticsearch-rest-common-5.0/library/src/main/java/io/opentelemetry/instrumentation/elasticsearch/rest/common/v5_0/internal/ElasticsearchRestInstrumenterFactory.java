@@ -5,11 +5,14 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import java.util.List;
@@ -32,22 +35,25 @@ public final class ElasticsearchRestInstrumenterFactory {
               ? extends SpanNameExtractor<? super ElasticsearchRestRequest>>
           spanNameExtractorTransformer,
       Set<String> knownMethods,
+      Set<String> sensitiveQueryParameters,
       boolean captureSearchQuery) {
     ElasticsearchDbAttributesGetter dbClientAttributesGetter =
         new ElasticsearchDbAttributesGetter(captureSearchQuery);
     ElasticsearchClientAttributeExtractor esClientAttributesExtractor =
-        new ElasticsearchClientAttributeExtractor(knownMethods);
+        new ElasticsearchClientAttributeExtractor(knownMethods, sensitiveQueryParameters);
     SpanNameExtractor<? super ElasticsearchRestRequest> spanNameExtractor =
         spanNameExtractorTransformer.apply(
             new ElasticsearchSpanNameExtractor(dbClientAttributesGetter));
 
-    return Instrumenter.<ElasticsearchRestRequest, Response>builder(
-            openTelemetry, instrumentationName, spanNameExtractor)
-        .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
-        .addAttributesExtractor(esClientAttributesExtractor)
-        .addAttributesExtractors(attributesExtractors)
-        .addOperationMetrics(DbClientMetrics.get())
-        .buildInstrumenter(SpanKindExtractor.alwaysClient());
+    InstrumenterBuilder<ElasticsearchRestRequest, Response> builder =
+        Instrumenter.<ElasticsearchRestRequest, Response>builder(
+                openTelemetry, instrumentationName, spanNameExtractor)
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
+            .addAttributesExtractor(esClientAttributesExtractor)
+            .addAttributesExtractors(attributesExtractors)
+            .addOperationMetrics(DbClientMetrics.get());
+    setDbClientExceptionEventExtractor(builder);
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   private ElasticsearchRestInstrumenterFactory() {}

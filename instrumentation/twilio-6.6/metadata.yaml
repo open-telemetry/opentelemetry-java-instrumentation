@@ -7,7 +7,7 @@ configurations:
   - name: otel.instrumentation.twilio.experimental-span-attributes
     declarative_name: java.twilio.experimental_span_attributes/development
     description: >
-      Enables experimental span attributes `twilio.type`, `twilio.account`, `twilio.sid`, and
-      `twilio.status`.
+      Enables experimental span attributes `twilio.type`, `twilio.account`, `twilio.sid`,
+      `twilio.parentSid`, and `twilio.status`.
     type: boolean
     default: false

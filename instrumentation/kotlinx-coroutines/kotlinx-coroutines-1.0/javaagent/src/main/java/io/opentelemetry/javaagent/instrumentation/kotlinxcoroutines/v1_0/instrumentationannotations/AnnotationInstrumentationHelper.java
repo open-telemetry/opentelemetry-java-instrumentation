@@ -26,7 +26,7 @@ import kotlin.coroutines.intrinsics.IntrinsicsKt;
 @SuppressWarnings("unused") // methods calls injected through bytecode instrumentation
 public class AnnotationInstrumentationHelper {
 
-  private static final VirtualField<Continuation<?>, Context> contextField =
+  private static final VirtualField<Continuation<?>, Context> CONTEXT_FIELD =
       VirtualField.find(Continuation.class, Context.class);
 
   public static Object createMethodRequest(
@@ -55,11 +55,11 @@ public class AnnotationInstrumentationHelper {
       // null continuation means that this method is not going to be resumed, and we don't need to
       // store the context
       if (continuation != null) {
-        contextField.set(continuation, context);
+        CONTEXT_FIELD.set(continuation, context);
       }
       return context;
     } else {
-      return continuation != null ? contextField.get(continuation) : null;
+      return continuation != null ? CONTEXT_FIELD.get(continuation) : null;
     }
   }
 

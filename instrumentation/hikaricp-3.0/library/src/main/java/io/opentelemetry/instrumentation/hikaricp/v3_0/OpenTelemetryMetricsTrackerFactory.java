@@ -32,7 +32,7 @@ final class OpenTelemetryMetricsTrackerFactory implements MetricsTrackerFactory 
   public IMetricsTracker create(String poolName, PoolStats poolStats) {
     IMetricsTracker userMetricsTracker =
         userMetricsFactory == null
-            ? NoopMetricsTracker.INSTANCE
+            ? new NoopMetricsTracker()
             : userMetricsFactory.create(poolName, poolStats);
 
     DbConnectionPoolMetrics metrics =
@@ -71,7 +71,5 @@ final class OpenTelemetryMetricsTrackerFactory implements MetricsTrackerFactory 
         attributes);
   }
 
-  private enum NoopMetricsTracker implements IMetricsTracker {
-    INSTANCE
-  }
+  private static class NoopMetricsTracker implements IMetricsTracker {}
 }

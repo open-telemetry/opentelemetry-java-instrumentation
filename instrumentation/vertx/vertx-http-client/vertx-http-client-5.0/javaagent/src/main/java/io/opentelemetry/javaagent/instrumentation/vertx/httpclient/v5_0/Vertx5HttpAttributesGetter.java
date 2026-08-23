@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v5_0;
 import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.AbstractVertxHttpAttributesGetter;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpConnection;
 import io.vertx.core.http.HttpVersion;
 import io.vertx.core.net.HostAndPort;
 import io.vertx.core.net.SocketAddress;
@@ -79,7 +80,11 @@ final class Vertx5HttpAttributesGetter extends AbstractVertxHttpAttributesGetter
     if (response == null) {
       return null;
     }
-    SocketAddress socketAddress = response.netSocket().remoteAddress();
+    HttpConnection connection = VertxClientSingletons.getConnection(response);
+    if (connection == null) {
+      return null;
+    }
+    SocketAddress socketAddress = connection.remoteAddress();
     return socketAddress == null ? null : socketAddress.hostAddress();
   }
 
@@ -90,7 +95,11 @@ final class Vertx5HttpAttributesGetter extends AbstractVertxHttpAttributesGetter
     if (response == null) {
       return null;
     }
-    SocketAddress socketAddress = response.netSocket().remoteAddress();
+    HttpConnection connection = VertxClientSingletons.getConnection(response);
+    if (connection == null) {
+      return null;
+    }
+    SocketAddress socketAddress = connection.remoteAddress();
     return socketAddress == null ? null : socketAddress.port();
   }
 }

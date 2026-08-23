@@ -1,0 +1,56 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.quarkus.resteasy.reactive.v1_11;
+
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.common.JaxrsPathUtil.normalizePath;
+
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import javax.annotation.Nullable;
+import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
+import org.jboss.resteasy.reactive.server.mapping.RuntimeResource;
+import org.jboss.resteasy.reactive.server.mapping.URITemplate;
+
+final class ResteasyReactiveSpanName {
+  // remember previous path to handle sub path locators
+  private static final VirtualField<ResteasyReactiveRequestContext, String> PATH_FIELD =
+      VirtualField.find(ResteasyReactiveRequestContext.class, String.class);
+
+  static void updateServerSpanName(ResteasyReactiveRequestContext requestContext) {
+    Context context = Context.current();
+    String jaxRsName = calculateJaxRsName(requestContext);
+    HttpServerRoute.update(context, HttpServerRouteSource.NESTED_CONTROLLER, jaxRsName);
+    PATH_FIELD.set(requestContext, jaxRsName);
+  }
+
+  @Nullable
+  private static String calculateJaxRsName(ResteasyReactiveRequestContext requestContext) {
+    RuntimeResource target = requestContext.getTarget();
+    if (target == null) {
+      return null;
+    }
+    URITemplate classPath = target.getClassPath();
+    URITemplate path = target.getPath();
+    String name = normalize(classPath) + normalize(path);
+    if (name.isEmpty()) {
+      return null;
+    }
+    String existingPath = PATH_FIELD.get(requestContext);
+    return existingPath == null || existingPath.isEmpty() ? name : existingPath + name;
+  }
+
+  private static String normalize(URITemplate uriTemplate) {
+    if (uriTemplate == null) {
+      return "";
+    }
+
+    return normalizePath(uriTemplate.template);
+  }
+
+  private ResteasyReactiveSpanName() {}
+}

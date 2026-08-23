@@ -11,26 +11,24 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
 import java.util.Map;
 
 /**
- * Spring flavor of {@link io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider}
- * that tries to coerce types, because spring doesn't tell what the original type was.
+ * Spring flavor of {@code SdkConfigProvider} that tries to coerce types, because spring doesn't
+ * tell what the original type was.
  *
  * <p>The entire class is a copy of <a
- * href="https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/incubator/src/main/java/io/opentelemetry/sdk/extension/incubator/fileconfig/SdkConfigProvider.java">SdkConfigProvider</a>
+ * href="https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/declarative-config/src/main/java/io/opentelemetry/sdk/autoconfigure/declarativeconfig/SdkConfigProvider.java">SdkConfigProvider</a>
  * which uses {@link SpringDeclarativeConfigProperties} instead of {@link
- * io.opentelemetry.sdk.extension.incubator.fileconfig.YamlDeclarativeConfigProperties}.
+ * io.opentelemetry.sdk.autoconfigure.declarativeconfig.YamlDeclarativeConfigProperties}.
  */
 final class SpringConfigProvider implements ConfigProvider {
 
   private final DeclarativeConfigProperties instrumentationConfig;
 
-  private SpringConfigProvider(
-      OpenTelemetryConfigurationModel model, ComponentLoader componentLoader) {
-    DeclarativeConfigProperties configProperties = toConfigProperties(model, componentLoader);
-    this.instrumentationConfig = configProperties.get("instrumentation/development");
+  private SpringConfigProvider(DeclarativeConfigProperties instrumentationConfig) {
+    this.instrumentationConfig = instrumentationConfig;
   }
 
   private static DeclarativeConfigProperties toConfigProperties(
@@ -53,7 +51,15 @@ final class SpringConfigProvider implements ConfigProvider {
    */
   static SpringConfigProvider create(
       OpenTelemetryConfigurationModel model, ComponentLoader componentLoader) {
-    return new SpringConfigProvider(model, componentLoader);
+    DeclarativeConfigProperties configProperties = toConfigProperties(model, componentLoader);
+    return new SpringConfigProvider(configProperties.get("instrumentation/development"));
+  }
+
+  static SpringConfigProvider create(DeclarativeConfigProperties instrumentationConfig) {
+    return new SpringConfigProvider(
+        SpringDeclarativeConfigProperties.create(
+            DeclarativeConfigProperties.toMap(instrumentationConfig),
+            instrumentationConfig.getComponentLoader()));
   }
 
   @Override

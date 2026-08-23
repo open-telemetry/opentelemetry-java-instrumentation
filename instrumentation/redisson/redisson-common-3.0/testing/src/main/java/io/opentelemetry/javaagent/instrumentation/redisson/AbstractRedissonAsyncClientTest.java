@@ -11,39 +11,46 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
-import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.redisson.Redisson;
@@ -55,6 +62,7 @@ import org.redisson.api.RScheduledExecutorService;
 import org.redisson.api.RScheduledFuture;
 import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.StringCodec;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
 import org.testcontainers.containers.GenericContainer;
@@ -66,31 +74,35 @@ public abstract class AbstractRedissonAsyncClientTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final GenericContainer<?> redisServer =
+  private static final String TEST_RECONNECT = "testReconnect";
+  private static final String TEST_CANCELLED_ACQUISITION = "testCancelledAcquisition";
+  private static final Duration TIMEOUT = Duration.ofSeconds(30);
+
+  private final GenericContainer<?> redisServer =
       new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
 
-  private static String ip;
-
-  private static int port;
-
-  private static String address;
+  private String host;
+  private String ip;
+  private Long port;
+  private String address;
   private RedissonClient redisson;
 
   @BeforeAll
-  static void setupAll() throws UnknownHostException {
+  void setupAll() throws UnknownHostException {
     redisServer.start();
-    ip = InetAddress.getByName(redisServer.getHost()).getHostAddress();
-    port = redisServer.getMappedPort(6379);
-    address = redisServer.getHost() + ":" + port;
+    host = redisServer.getHost();
+    ip = InetAddress.getByName(host).getHostAddress();
+    port = redisServer.getMappedPort(6379).longValue();
+    address = host + ":" + port;
   }
 
   @AfterAll
-  static void cleanupAll() {
+  void cleanupAll() {
     redisServer.stop();
   }
 
   @BeforeEach
-  void setup() throws InvocationTargetException, IllegalAccessException {
+  void setup(TestInfo testInfo) throws InvocationTargetException, IllegalAccessException {
     String newAddress = address;
     if (useRedisProtocol()) {
       // Newer versions of redisson require scheme, older versions forbid it
@@ -100,6 +112,20 @@ public abstract class AbstractRedissonAsyncClientTest {
     SingleServerConfig singleServerConfig = config.useSingleServer();
     singleServerConfig.setAddress(newAddress);
     singleServerConfig.setTimeout(30_000);
+    if (testInfo.getTags().contains(TEST_RECONNECT)) {
+      // When verifying the futureCallback test case, simulate reconnection during Redis command
+      // execution.
+      singleServerConfig.setConnectionMinimumIdleSize(0);
+    }
+    if (testInfo.getTags().contains(TEST_CANCELLED_ACQUISITION)) {
+      // Use a stable wire format so redis-cli can release the blocking command.
+      config.setCodec(StringCodec.INSTANCE);
+      singleServerConfig
+          .setConnectionMinimumIdleSize(1)
+          .setConnectionPoolSize(1)
+          .setTimeout(5000)
+          .setRetryAttempts(0);
+    }
     try {
       // disable connection ping if it exists
       singleServerConfig
@@ -121,60 +147,111 @@ public abstract class AbstractRedissonAsyncClientTest {
   }
 
   @Test
-  void futureSet() throws ExecutionException, InterruptedException, TimeoutException {
+  void futureSet() {
     RBucket<String> keyObject = redisson.getBucket("foo");
     RFuture<Void> future = keyObject.setAsync("bar");
-    future.get(30, SECONDS);
+    assertThat(future.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + address : "SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))));
   }
 
   @Test
-  void futureWhenComplete() throws ExecutionException, InterruptedException, TimeoutException {
+  @Tag(TEST_RECONNECT)
+  void futureCallback() {
     RSet<String> set = redisson.getSet("set1");
     CompletionStage<Boolean> result =
         testing.runWithSpan(
             "parent",
             () -> {
               RFuture<Boolean> future = set.addAsync("s1");
-              return future.whenComplete(
-                  (res, throwable) -> {
+              return future.thenApply(
+                  res -> {
                     assertThat(Span.current().getSpanContext().isValid()).isTrue();
                     testing.runWithSpan("callback", () -> {});
+                    return res;
                   });
             });
-    result.toCompletableFuture().get(30, SECONDS);
+    assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("parent", "SADD", "callback"),
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("SADD")
+                    span.hasName(emitStableDatabaseSemconv() ? "SADD " + address : "SADD")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "SADD set1 ?"),
                             equalTo(maybeStable(DB_OPERATION), "SADD"))
                         .hasParent(trace.getSpan(0)),
                 span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
+  }
+
+  // regression test for
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/19332
+  @Test
+  @Tag(TEST_CANCELLED_ACQUISITION)
+  void cancelledConnectionAcquisitionReleasesPoolPermit() throws IOException, InterruptedException {
+    CompletableFuture<Object> blocker =
+        testing.runWithSpan(
+            "blocking-command",
+            () ->
+                redisson
+                    .<Object>getBlockingQueue("permit-leak-blocker")
+                    .pollAsync(10, SECONDS)
+                    .toCompletableFuture());
+    await()
+        .atMost(Duration.ofSeconds(5))
+        .untilAsserted(
+            () ->
+                assertThat(redisServer.execInContainer("redis-cli", "client", "list").getStdout())
+                    .contains("cmd=blpop"));
+
+    CompletableFuture<Object> cancelled =
+        testing.runWithSpan(
+            "cancelled-command",
+            () ->
+                redisson
+                    .<Object>getBucket("cancelled-while-waiting-for-connection")
+                    .getAsync()
+                    .toCompletableFuture());
+    assertThat(cancelled).isNotDone();
+    assertThat(cancelled.cancel(false)).isTrue();
+
+    assertThat(
+            redisServer
+                .execInContainer("redis-cli", "rpush", "permit-leak-blocker", "release")
+                .getExitCode())
+        .isZero();
+    assertThat(blocker).succeedsWithin(Duration.ofSeconds(5)).isEqualTo("release");
+
+    CompletableFuture<Object> probe =
+        redisson.<Object>getBucket("probe-after-cancellation").getAsync().toCompletableFuture();
+
+    assertThat(probe).succeedsWithin(Duration.ofSeconds(5));
   }
 
   // regression test for
@@ -203,7 +280,7 @@ public abstract class AbstractRedissonAsyncClientTest {
   }
 
   @Test
-  void atomicBatchCommand() throws ExecutionException, InterruptedException, TimeoutException {
+  void atomicBatchCommand() {
     try {
       // available since 3.7.2
       Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
@@ -229,42 +306,60 @@ public abstract class AbstractRedissonAsyncClientTest {
                     testing.runWithSpan("callback", () -> {});
                   });
             });
-    result.toCompletableFuture().get(30, SECONDS);
+    assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("parent", "SADD", "callback"),
+    testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "redis" : "DB Query")
+                    span.hasName(emitStableDatabaseSemconv() ? "MULTI SET " + address : "DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "MULTI;SET batch1 ?"))
+                            equalTo(DB_NAMESPACE, dbNamespace()),
+                            equalTo(
+                                DB_OPERATION_NAME,
+                                emitStableDatabaseSemconv() ? "MULTI SET" : null),
+                            // db.operation.batch.size is not emitted because MULTI transaction
+                            // telemetry is split across wrapper and command spans, so this span
+                            // does not represent the full logical batch.
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                emitStableDatabaseSemconv()
+                                    ? "MULTI; SET batch1 ?"
+                                    : "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName("SET")
+                    span.hasName(emitStableDatabaseSemconv() ? "SET " + address : "SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "SET batch2 ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"))
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName("EXEC")
+                    span.hasName(emitStableDatabaseSemconv() ? "EXEC " + address : "EXEC")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
                             equalTo(maybeStable(DB_SYSTEM), REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace()),
                             equalTo(maybeStable(DB_STATEMENT), "EXEC"),
                             equalTo(maybeStable(DB_OPERATION), "EXEC"))
                         .hasParent(trace.getSpan(0)),
@@ -273,6 +368,15 @@ public abstract class AbstractRedissonAsyncClientTest {
 
   protected boolean useRedisProtocol() {
     return testLatestDeps();
+  }
+
+  /** Whether the instrumented redisson version can report the Redis database index. */
+  protected boolean hasDatabaseIndex() {
+    return false;
+  }
+
+  private String dbNamespace() {
+    return emitStableDatabaseSemconv() && hasDatabaseIndex() ? "0" : null;
   }
 
   private static class MyCallable implements Serializable, Callable<Object> {

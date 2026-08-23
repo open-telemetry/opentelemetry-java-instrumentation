@@ -7,12 +7,18 @@ package io.opentelemetry.instrumentation.testing.junit.http;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_RESEND_COUNT;
@@ -25,7 +31,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_NAME;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.UrlIncubatingAttributes.URL_TEMPLATE;
@@ -39,11 +44,14 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -65,11 +73,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -80,6 +88,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   public static final Duration READ_TIMEOUT = Duration.ofSeconds(2);
   public static final String TEST_REQUEST_HEADER = "X-Test-Request";
   public static final String TEST_RESPONSE_HEADER = "X-Test-Response";
+
+  /**
+   * Header selector that the shared client tests configure. The wildcard pattern makes the tests
+   * exercise capturing headers by name enumeration.
+   */
+  public static final IncludeExclude TEST_HEADERS =
+      IncludeExclude.builder().setIncluded("X-Test-*").build();
 
   static final String BASIC_AUTH_KEY = "custom-authorization-header";
   static final String BASIC_AUTH_VAL = "plain text auth token";
@@ -399,12 +414,19 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                     assertClientSpan(
                             span, uri, method, options.getResponseCodeOnRedirectError(), null)
                         .hasNoParent()
-                        .hasException(clientError));
+                        .hasException(emitExceptionAsSpanEvents() ? clientError : null));
             for (int i = 0; i < options.getMaxRedirects(); i++) {
               assertions.add(span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
             }
             trace.hasSpansSatisfyingExactly(assertions);
           });
+    }
+
+    // For low-level instrumentation, individual redirect requests succeed (302) and the overall
+    // redirect-loop exception is thrown above the instrumentation layer, so no exception log is
+    // emitted by the instrumenter.
+    if (emitExceptionAsLogs() && !options.isLowLevelInstrumentation()) {
+      assertClientExceptionLog(clientError, "http.client.request.exception");
     }
   }
 
@@ -595,12 +617,17 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       .hasKind(SpanKind.INTERNAL)
                       .hasNoParent()
                       .hasStatus(StatusData.error())
-                      .hasException(ex),
+                      .hasException(emitExceptionAsSpanEvents() ? ex : null),
               span ->
                   assertClientSpan(span, uri, method, null, null)
                       .hasParent(trace.getSpan(0))
-                      .hasException(clientError));
+                      .hasException(emitExceptionAsSpanEvents() ? clientError : null));
         });
+
+    if (emitExceptionAsLogs()) {
+      assertParentExceptionLog(ex);
+      assertClientExceptionLog(clientError, "http.client.request.exception");
+    }
   }
 
   @Test
@@ -635,10 +662,14 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               span ->
                   assertClientSpan(span, uri, method, null, null)
                       .hasParent(trace.getSpan(0))
-                      .hasException(clientError),
+                      .hasException(emitExceptionAsSpanEvents() ? clientError : null),
               span ->
                   span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)));
         });
+
+    if (emitExceptionAsLogs()) {
+      assertClientExceptionLog(clientError, "http.client.request.exception");
+    }
   }
 
   @Test
@@ -667,12 +698,17 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       .hasKind(SpanKind.INTERNAL)
                       .hasNoParent()
                       .hasStatus(StatusData.error())
-                      .hasException(ex),
+                      .hasException(emitExceptionAsSpanEvents() ? ex : null),
               span ->
                   assertClientSpan(span, uri, method, null, null)
                       .hasParent(trace.getSpan(0))
-                      .hasException(clientError));
+                      .hasException(emitExceptionAsSpanEvents() ? clientError : null));
         });
+
+    if (emitExceptionAsLogs()) {
+      assertParentExceptionLog(ex);
+      assertClientExceptionLog(clientError, "http.client.request.exception");
+    }
   }
 
   @Test
@@ -701,19 +737,20 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                       .hasKind(SpanKind.INTERNAL)
                       .hasNoParent()
                       .hasStatus(StatusData.error())
-                      .hasException(ex),
+                      .hasException(emitExceptionAsSpanEvents() ? ex : null),
               span ->
                   assertClientSpan(span, uri, method, null, null)
                       .hasParent(trace.getSpan(0))
-                      .hasException(clientError),
+                      .hasException(emitExceptionAsSpanEvents() ? clientError : null),
               span -> assertServerSpan(span).hasParent(trace.getSpan(1)));
         });
+
+    if (emitExceptionAsLogs()) {
+      assertParentExceptionLog(ex);
+      assertClientExceptionLog(clientError, "http.client.request.exception");
+    }
   }
 
-  @DisabledIfSystemProperty(
-      named = "java.vm.name",
-      matches = ".*IBM J9 VM.*",
-      disabledReason = "IBM JVM has different protocol support for TLS")
   @Test
   void httpsRequest() throws Exception {
     assumeTrue(options.getTestRemoteConnection());
@@ -1072,14 +1109,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
             attrs -> {
-              // Check for service.peer.name when running with javaagent instrumentation
-              String distroName = span.actual().getResource().getAttribute(TELEMETRY_DISTRO_NAME);
-              if ("opentelemetry-java-instrumentation".equals(distroName)) {
-                String expectedServicePeerName = options.getExpectedServicePeerName().apply(uri);
-                if (expectedServicePeerName != null) {
-                  assertThat(attrs)
-                      .containsEntry(maybeStablePeerService(), expectedServicePeerName);
-                }
+              String expectedPeerService = testing.expectedPeerService();
+              if (expectedPeerService != null) {
+                assertThat(attrs).containsEntry(maybeStablePeerService(), expectedPeerService);
+              } else {
+                assertThat(attrs).doesNotContainKey(maybeStablePeerService());
               }
 
               // we're opting out of these attributes in the new semconv
@@ -1158,7 +1192,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         .satisfies(
             spanData ->
                 assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                    .isEqualTo(SchemaUrls.V1_37_0));
+                    .isEqualTo(SchemaUrls.V1_41_0));
   }
 
   protected static SpanDataAssert assertServerSpan(SpanDataAssert span) {
@@ -1215,5 +1249,63 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
       return 80;
     }
     throw new IllegalArgumentException("Unexpected URI scheme: " + scheme);
+  }
+
+  private void assertParentExceptionLog(Throwable exception) {
+    String exceptionType = exceptionType(exception);
+    Awaitility.await()
+        .untilAsserted(
+            () -> {
+              List<LogRecordData> logs =
+                  testing.getExportedLogRecords().stream()
+                      .filter(log -> "exception".equals(log.getEventName()))
+                      .filter(log -> exceptionType.equals(log.getAttributes().get(EXCEPTION_TYPE)))
+                      .collect(toList());
+
+              assertThat(logs).hasSize(1);
+              assertThat(logs.get(0))
+                  .hasSeverity(Severity.WARN)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, exceptionType),
+                      satisfies(
+                          EXCEPTION_MESSAGE,
+                          val -> {
+                            if (exception.getMessage() != null) {
+                              val.isEqualTo(exception.getMessage());
+                            }
+                          }),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
+            });
+  }
+
+  private void assertClientExceptionLog(Throwable exception, String eventName) {
+    String exceptionType = exceptionType(exception);
+    Awaitility.await()
+        .untilAsserted(
+            () -> {
+              List<LogRecordData> logs =
+                  testing.getExportedLogRecords().stream()
+                      .filter(log -> eventName.equals(log.getEventName()))
+                      .collect(toList());
+
+              assertThat(logs).hasSize(1);
+              assertThat(logs.get(0))
+                  .hasSeverity(Severity.WARN)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, exceptionType),
+                      satisfies(
+                          EXCEPTION_MESSAGE,
+                          val -> {
+                            if (exception.getMessage() != null) {
+                              val.isEqualTo(exception.getMessage());
+                            }
+                          }),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
+            });
+  }
+
+  private static String exceptionType(Throwable exception) {
+    String canonicalName = exception.getClass().getCanonicalName();
+    return canonicalName != null ? canonicalName : exception.getClass().getName();
   }
 }

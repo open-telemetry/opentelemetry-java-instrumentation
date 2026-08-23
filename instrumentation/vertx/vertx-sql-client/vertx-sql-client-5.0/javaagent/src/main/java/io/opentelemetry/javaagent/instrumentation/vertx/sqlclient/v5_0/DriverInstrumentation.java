@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0.VertxSqlClientUtil.getDbSystemNameFromClassName;
-import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.storePoolDbSystem;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -18,6 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.sqlclient.Pool;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -48,9 +48,9 @@ class DriverInstrumentation implements TypeInstrumentation {
   public static class NewPoolAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This Object driver, @Advice.Return Pool pool) {
+    public static void onExit(@Advice.This Object driver, @Advice.Return @Nullable Pool pool) {
       if (pool != null) {
-        storePoolDbSystem(pool, getDbSystemNameFromClassName(driver));
+        VertxSqlClientSingletons.storePoolDbSystem(pool, getDbSystemNameFromClassName(driver));
       }
     }
   }

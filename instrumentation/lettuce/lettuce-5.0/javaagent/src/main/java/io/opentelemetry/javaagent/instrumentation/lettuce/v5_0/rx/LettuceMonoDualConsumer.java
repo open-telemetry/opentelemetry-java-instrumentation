@@ -44,4 +44,18 @@ public class LettuceMonoDualConsumer<R, T> implements Consumer<R>, BiConsumer<T,
                   + "it probably wasn't started.");
     }
   }
+
+  /**
+   * Registers terminal callbacks that finish the span on completion or error. {@code
+   * doOnSuccessOrError} was removed in reactor 3.5, so {@code doOnSuccess} + {@code doOnError}
+   * (both available across the whole supported reactor range) are used instead. The wiring lives
+   * here, on an injected helper class, rather than inline in the advice, so the lambdas do not
+   * become private synthetic methods on the advice class (which the instrumented class cannot
+   * access).
+   */
+  public Mono<T> finishSpanOnTerminal(Mono<T> publisher) {
+    return publisher
+        .doOnSuccess(value -> accept(value, (Throwable) null))
+        .doOnError(error -> accept(null, error));
+  }
 }

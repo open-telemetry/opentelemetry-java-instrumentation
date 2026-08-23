@@ -20,24 +20,24 @@ dependencies {
   library("com.xuxueli:xxl-job-core:2.3.0") {
     exclude("org.codehaus.groovy", "groovy")
   }
-  implementation(project(":instrumentation:xxl-job:xxl-job-common:javaagent"))
+  implementation(project(":instrumentation:xxl-job:xxl-job-common-1.9.2:javaagent"))
 
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-1.9.2:javaagent"))
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-2.1.2:javaagent"))
   testImplementation("org.apache.groovy:groovy")
-  testImplementation(project(":instrumentation:xxl-job:xxl-job-common:testing"))
+  testImplementation(project(":instrumentation:xxl-job:xxl-job-common-1.9.2:testing"))
 
   // latest version is tested in a separate test suite
-  latestDepTestLibrary("com.xuxueli:xxl-job-core:3.2.+") // documented limitation
+  latestDepTestLibrary("com.xuxueli:xxl-job-core:3.2.+") // see test suite below
 }
 
 testing {
   suites {
-    val xxlJob33Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("xxlJob33Test") {
       dependencies {
         val version = baseVersion("3.3.0").orLatest()
         implementation("com.xuxueli:xxl-job-core:$version")
-        implementation(project(":instrumentation:xxl-job:xxl-job-common:testing"))
+        implementation(project(":instrumentation:xxl-job:xxl-job-common-1.9.2:testing"))
       }
     }
   }
@@ -51,7 +51,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

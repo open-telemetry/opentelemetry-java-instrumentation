@@ -102,7 +102,6 @@ class JerseyTest extends AbstractHttpServerUsingTest<Server> {
         Arguments.of("test3/nested", "/test3/nested", "Test3", "nested", "Test3 nested!"));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("provideArguments")
   void request(
@@ -112,7 +111,7 @@ class JerseyTest extends AbstractHttpServerUsingTest<Server> {
       String methodName,
       String expectedResponse) {
     AggregatedHttpResponse response =
-        client.post(address.resolve(resource).toString(), "bob").aggregate().join();
+        client.post(h1Address.resolve(resource).toString(), "bob").aggregate().join();
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo(expectedResponse);
 

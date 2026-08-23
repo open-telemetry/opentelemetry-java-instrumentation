@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
@@ -48,8 +49,14 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
     return new AsyncHttpClient(builder.build());
   }
 
+  @AfterAll
+  static void tearDown() {
+    client.close();
+    clientWithReadTimeout.close();
+  }
+
   private static AsyncHttpClient getClient(URI uri) {
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       return clientWithReadTimeout;
     }
     return client;

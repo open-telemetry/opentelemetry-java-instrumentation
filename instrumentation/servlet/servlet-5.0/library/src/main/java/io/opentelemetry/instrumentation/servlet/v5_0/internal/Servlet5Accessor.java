@@ -8,8 +8,9 @@ package io.opentelemetry.instrumentation.servlet.v5_0.internal;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
-import io.opentelemetry.instrumentation.servlet.internal.ServletAsyncListener;
+import io.opentelemetry.instrumentation.api.internal.EnumerationUtil;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletAccessor;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletAsyncListener;
 import jakarta.servlet.AsyncEvent;
 import jakarta.servlet.AsyncListener;
 import jakarta.servlet.ServletException;
@@ -108,7 +109,12 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
 
   @Override
   public Iterable<String> getRequestHeaderNames(HttpServletRequest httpServletRequest) {
-    Enumeration<String> names = httpServletRequest.getHeaderNames();
+    return () -> EnumerationUtil.asIterator(httpServletRequest.getHeaderNames());
+  }
+
+  @Override
+  public Iterable<String> getRequestParameterNames(HttpServletRequest httpServletRequest) {
+    Enumeration<String> names = httpServletRequest.getParameterNames();
     return names == null ? emptyList() : Collections.list(names);
   }
 
@@ -163,6 +169,12 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
       return (List<String>) values;
     }
     return new ArrayList<>(values);
+  }
+
+  @Override
+  public Collection<String> getResponseHeaderNames(HttpServletResponse response) {
+    Collection<String> names = response.getHeaderNames();
+    return names == null ? emptyList() : names;
   }
 
   @Override

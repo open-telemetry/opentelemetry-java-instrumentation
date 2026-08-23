@@ -87,7 +87,10 @@ public final class BedrockRuntimeImpl {
     private GenAiOperationNameIncubatingValues() {}
   }
 
+  // copied from EventIncubatingAttributes
   private static final AttributeKey<String> EVENT_NAME = stringKey("event.name");
+
+  // copied from GenAiIncubatingAttributes
   private static final AttributeKey<String> GEN_AI_PROVIDER_NAME =
       stringKey("gen_ai.provider.name");
 
@@ -1755,6 +1758,9 @@ public final class BedrockRuntimeImpl {
 
   private static Document deserializeDocument(String json) {
     JsonNode node = JSON_PARSER.parse(json);
+    if (node == null) {
+      return Document.mapBuilder().build();
+    }
     return node.visit(DOCUMENT_UNMARSHALLER);
   }
 

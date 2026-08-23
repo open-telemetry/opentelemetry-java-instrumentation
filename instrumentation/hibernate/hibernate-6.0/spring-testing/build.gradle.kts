@@ -2,10 +2,10 @@ plugins {
   id("otel.javaagent-testing")
 }
 
-val springAgent by configurations.creating
+val springAgent = configurations.create("springAgent")
 
 dependencies {
-  library("org.hibernate:hibernate-core:6.0.0.Final")
+  library("org.hibernate.orm:hibernate-core:6.0.0.Final")
 
   testInstrumentation(project(":instrumentation:hibernate:hibernate-6.0:javaagent"))
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
@@ -30,14 +30,14 @@ tasks {
     jvmArgs("-javaagent:" + springAgent.singleFile.absolutePath)
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

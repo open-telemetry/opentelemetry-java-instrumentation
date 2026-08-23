@@ -65,9 +65,6 @@ dependencies {
 
   // needed by S3
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
-
-  // last version that does not use json protocol
-  latestDepTestLibrary("com.amazonaws:aws-java-sdk-sqs:1.12.583") // documented limitation
 }
 
 testing {
@@ -78,7 +75,7 @@ testing {
     // in 1.11.106 than 1.11.84.
     // We test older version in separate test set to test newer version and latest deps in the 'default'
     // test dir. Otherwise we get strange warnings in Idea.
-    val test_before_1_11_106 by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("test_before_1_11_106") {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
@@ -97,16 +94,10 @@ testing {
     // We test SQS separately since we have special logic for it and want to make sure the presence of
     // SQS on the classpath doesn't conflict with tests for usage of the core SDK. This only affects
     // the agent.
-    val testSqs by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testSqs") {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
-
-        if (otelProps.testLatestDeps) {
-          // last version that does not use json protocol
-          implementation("com.amazonaws:aws-java-sdk-sqs:1.12.583")
-        } else {
-          implementation("com.amazonaws:aws-java-sdk-sqs:1.11.106")
-        }
+        implementation("com.amazonaws:aws-java-sdk-sqs:${baseVersion("1.11.106").orLatest()}")
       }
 
       targets {
@@ -118,16 +109,10 @@ testing {
       }
     }
 
-    val testSqsNoReceiveTelemetry by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testSqsNoReceiveTelemetry") {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
-
-        if (otelProps.testLatestDeps) {
-          // last version that does not use json protocol
-          implementation("com.amazonaws:aws-java-sdk-sqs:1.12.583")
-        } else {
-          implementation("com.amazonaws:aws-java-sdk-sqs:1.11.106")
-        }
+        implementation("com.amazonaws:aws-java-sdk-sqs:${baseVersion("1.11.106").orLatest()}")
       }
     }
   }
@@ -152,7 +137,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -160,8 +145,40 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
+    testClassesDirs = sourceSets["testSqs"].output.classesDirs
+    classpath = sourceSets["testSqs"].runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
+  val testMessagingPreviewNoReceiveTelemetry = register<Test>("testMessagingPreviewNoReceiveTelemetry") {
+    testClassesDirs = sourceSets["testSqsNoReceiveTelemetry"].output.classesDirs
+    classpath = sourceSets["testSqsNoReceiveTelemetry"].runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets["testSqs"].output.classesDirs
+    classpath = sourceSets["testSqs"].runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    // with the v3 preview off, the legacy opt-in flag selects the new messaging semconv too
+    jvmArgs("-Dotel.semconv-stability.opt-in=messaging/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging/dup")
+  }
+
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(
+      testStableSemconv,
+      testMessagingPreview,
+      testMessagingPreviewNoReceiveTelemetry,
+      testBothSemconv
+    )
   }
 
   if (otelProps.denyUnsafe) {

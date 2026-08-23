@@ -59,7 +59,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -74,6 +74,7 @@ tasks {
         classpath = suite.sources.runtimeClasspath
 
         jvmArgs("-Dotel.semconv-stability.opt-in=database")
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
       }
     }
 

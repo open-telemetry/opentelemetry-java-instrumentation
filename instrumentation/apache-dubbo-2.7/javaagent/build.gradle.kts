@@ -22,16 +22,12 @@ testing {
     // using a test suite to ensure that project(":instrumentation:apache-dubbo-2.7:library-autoconfigure")
     // is not available on test runtime class path, otherwise instrumentation from library-autoconfigure
     // module would be used instead of the javaagent instrumentation that we want to test
-    val testDubbo by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testDubbo") {
       dependencies {
         implementation(project(":instrumentation:apache-dubbo-2.7:testing"))
-        if (otelProps.testLatestDeps) {
-          implementation("org.apache.dubbo:dubbo:latest.release")
-          implementation("org.apache.dubbo:dubbo-config-api:latest.release")
-        } else {
-          implementation("org.apache.dubbo:dubbo:2.7.0")
-          implementation("org.apache.dubbo:dubbo-config-api:2.7.0")
-        }
+        val version = baseVersion("2.7.0").orLatest()
+        implementation("org.apache.dubbo:dubbo:$version")
+        implementation("org.apache.dubbo:dubbo-config-api:$version")
       }
     }
   }

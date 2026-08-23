@@ -32,7 +32,7 @@ class AsyncHttpClientCompletableFutureTest extends AsyncHttpClientTest {
       URI uri,
       Map<String, String> headers,
       HttpClientResult requestResult) {
-    client
+    getClient(uri)
         .executeRequest(request)
         .toCompletableFuture()
         .whenComplete(

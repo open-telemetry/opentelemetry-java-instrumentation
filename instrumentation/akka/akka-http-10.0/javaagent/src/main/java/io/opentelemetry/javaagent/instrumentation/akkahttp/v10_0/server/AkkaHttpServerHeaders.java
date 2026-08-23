@@ -19,7 +19,7 @@ import java.util.Optional;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
-final class AkkaHttpServerHeaders implements TextMapGetter<HttpRequest> {
+class AkkaHttpServerHeaders implements TextMapGetter<HttpRequest> {
 
   @Override
   public Iterable<String> keys(HttpRequest httpRequest) {

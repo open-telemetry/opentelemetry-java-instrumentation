@@ -6,9 +6,17 @@
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import java.util.HashMap;
+import java.util.Map;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.ApiVersions;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.record.RecordBatch;
@@ -19,8 +27,8 @@ import org.apache.kafka.common.record.RecordBatch;
  */
 public final class KafkaPropagation {
 
-  private static final KafkaHeadersSetter SETTER = KafkaHeadersSetter.INSTANCE;
-  private static final boolean hasMaxUsableProduceMagic = hasMaxUsableProduceMagic();
+  private static final KafkaHeadersSetter setter = KafkaHeadersSetter.INSTANCE;
+  private static final boolean HAS_MAX_USABLE_PRODUCE_MAGIC = hasMaxUsableProduceMagic();
 
   // Do not inject headers for batch versions below 2
   // This is how similar check is being done in Kafka client itself:
@@ -30,8 +38,38 @@ public final class KafkaPropagation {
   // headers attempt to read messages that were produced by clients > 0.11 and the magic
   // value of the broker(s) is >= 2
   public static boolean shouldPropagate(ApiVersions apiVersions) {
-    return !hasMaxUsableProduceMagic
+    return !HAS_MAX_USABLE_PRODUCE_MAGIC
         || maxUsableProduceMagic(apiVersions) >= RecordBatch.MAGIC_VALUE_V2;
+  }
+
+  public static boolean propagatesSpanContext(TextMapPropagator propagator) {
+    SpanContext expected =
+        SpanContext.create(
+            "00000000000000000000000000000001",
+            "0000000000000001",
+            TraceFlags.getSampled(),
+            TraceState.getDefault());
+    Map<String, String> carrier = new HashMap<>();
+    propagator.inject(Context.root().with(Span.wrap(expected)), carrier, Map::put);
+    Context extracted =
+        propagator.extract(
+            Context.root(),
+            carrier,
+            new TextMapGetter<Map<String, String>>() {
+              @Override
+              public Iterable<String> keys(Map<String, String> carrier) {
+                return carrier.keySet();
+              }
+
+              @Nullable
+              @Override
+              public String get(@Nullable Map<String, String> carrier, String key) {
+                return carrier == null ? null : carrier.get(key);
+              }
+            });
+    SpanContext actual = Span.fromContext(extracted).getSpanContext();
+    return expected.getTraceId().equals(actual.getTraceId())
+        && expected.getSpanId().equals(actual.getSpanId());
   }
 
   @NoMuzzle
@@ -44,7 +82,7 @@ public final class KafkaPropagation {
       // missing in kafka 4.x
       ApiVersions.class.getMethod("maxUsableProduceMagic");
       return true;
-    } catch (NoSuchMethodException e) {
+    } catch (NoSuchMethodException ignored) {
       return false;
     }
   }
@@ -59,7 +97,7 @@ public final class KafkaPropagation {
       TextMapPropagator propagator, Context context, ProducerRecord<K, V> record) {
     try {
       inject(propagator, context, record);
-    } catch (IllegalStateException e) {
+    } catch (IllegalStateException ignored) {
       // headers must be read-only from reused record. try again with new one.
       record =
           new ProducerRecord<>(
@@ -77,7 +115,7 @@ public final class KafkaPropagation {
 
   private static <K, V> void inject(
       TextMapPropagator propagator, Context context, ProducerRecord<K, V> record) {
-    propagator.inject(context, record.headers(), SETTER);
+    propagator.inject(context, record.headers(), setter);
   }
 
   private KafkaPropagation() {}

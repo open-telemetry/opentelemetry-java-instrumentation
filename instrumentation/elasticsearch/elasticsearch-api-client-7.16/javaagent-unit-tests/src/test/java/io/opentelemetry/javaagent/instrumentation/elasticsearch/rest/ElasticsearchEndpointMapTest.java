@@ -10,7 +10,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchEndpointDefinition;
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient.ElasticsearchEndpointMap;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.api.client.v7_16.ElasticsearchEndpointMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,28 +33,6 @@ class ElasticsearchEndpointMapTest {
               "search_template",
               "msearch_template",
               "render_search_template"));
-
-  private static List<String> getPathParts(String route) {
-    List<String> pathParts = new ArrayList<>();
-    String routeFragment = route;
-    int paramStartIndex = routeFragment.indexOf('{');
-    while (paramStartIndex >= 0) {
-      int paramEndIndex = routeFragment.indexOf('}');
-      if (paramEndIndex < 0 || paramEndIndex <= paramStartIndex + 1) {
-        throw new IllegalStateException("Invalid route syntax!");
-      }
-      pathParts.add(routeFragment.substring(paramStartIndex + 1, paramEndIndex));
-
-      int nextIdx = paramEndIndex + 1;
-      if (nextIdx >= routeFragment.length()) {
-        break;
-      }
-
-      routeFragment = routeFragment.substring(nextIdx);
-      paramStartIndex = routeFragment.indexOf('{');
-    }
-    return pathParts;
-  }
 
   @Test
   void testIsSearchEndpoint() {
@@ -88,6 +66,28 @@ class ElasticsearchEndpointMapTest {
         assertThat(observedParams).isEqualTo(expectedMap);
       }
     }
+  }
+
+  private static List<String> getPathParts(String route) {
+    List<String> pathParts = new ArrayList<>();
+    String routeFragment = route;
+    int paramStartIndex = routeFragment.indexOf('{');
+    while (paramStartIndex >= 0) {
+      int paramEndIndex = routeFragment.indexOf('}');
+      if (paramEndIndex < 0 || paramEndIndex <= paramStartIndex + 1) {
+        throw new IllegalStateException("Invalid route syntax!");
+      }
+      pathParts.add(routeFragment.substring(paramStartIndex + 1, paramEndIndex));
+
+      int nextIdx = paramEndIndex + 1;
+      if (nextIdx >= routeFragment.length()) {
+        break;
+      }
+
+      routeFragment = routeFragment.substring(nextIdx);
+      paramStartIndex = routeFragment.indexOf('{');
+    }
+    return pathParts;
   }
 
   @Test

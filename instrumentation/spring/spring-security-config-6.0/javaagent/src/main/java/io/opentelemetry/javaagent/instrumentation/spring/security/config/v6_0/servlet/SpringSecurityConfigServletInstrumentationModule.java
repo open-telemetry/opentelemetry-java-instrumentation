@@ -12,14 +12,12 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /** Instrumentation module for servlet-based applications that use spring-security-config. */
 @AutoService(InstrumentationModule.class)
-public class SpringSecurityConfigServletInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class SpringSecurityConfigServletInstrumentationModule extends InstrumentationModule {
   public SpringSecurityConfigServletInstrumentationModule() {
     super(
         "spring-security-config",
@@ -38,7 +36,7 @@ public class SpringSecurityConfigServletInstrumentationModule extends Instrument
          * If any functionality not related to enduser attributes is added to this module,
          * then this check will need to move elsewhere to only guard the enduser attributes logic.
          */
-        && AgentCommonConfig.get().getEnduserConfig().isAnyEnabled();
+        && AgentCommonConfig.get().getUserConfig().isAnyEnabled();
   }
 
   @Override
@@ -51,12 +49,6 @@ public class SpringSecurityConfigServletInstrumentationModule extends Instrument
     // added in 6.0
     return hasClassesNamed(
         "org.springframework.security.authentication.ObservationAuthenticationManager");
-  }
-
-  @Override
-  public String getModuleGroup() {
-    // depends on servlet instrumentation
-    return "servlet";
   }
 
   @Override

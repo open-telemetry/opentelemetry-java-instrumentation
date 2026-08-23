@@ -21,14 +21,10 @@ dependencies {
 
   // testLibrary("org.glassfish.grizzly:grizzly-http-server:2.3")
   testImplementation("org.glassfish.grizzly:grizzly-http-server:2.3")
-
-  // 5.0.0 depends on org.glassfish.grizzly:grizzly-bom:5.0.0-SNAPSHOT which is not available
-  latestDepTestLibrary("org.glassfish.grizzly:grizzly-http:4.+") // documented limitation
-  latestDepTestLibrary("org.glassfish.grizzly:grizzly-http-server:4.+") // documented limitation
 }
 
 tasks {
-  withType<Test>().configureEach {
+  test {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")

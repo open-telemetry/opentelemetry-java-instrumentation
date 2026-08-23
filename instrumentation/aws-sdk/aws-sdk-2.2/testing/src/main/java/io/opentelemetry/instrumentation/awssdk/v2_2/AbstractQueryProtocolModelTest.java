@@ -5,8 +5,19 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -32,6 +43,7 @@ import software.amazon.awssdk.services.ses.model.Message;
 import software.amazon.awssdk.services.ses.model.SendEmailRequest;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractQueryProtocolModelTest {
   private final MockWebServerExtension server = new MockWebServerExtension();
 
@@ -90,21 +102,29 @@ public abstract class AbstractQueryProtocolModelTest {
               trace.hasSpansSatisfyingExactly(
                   span -> {
                     span.hasKind(SpanKind.CLIENT);
-                    span.hasAttributesSatisfying(
-                        attributes -> {
-                          assertThat(attributes)
-                              .hasEntrySatisfying(
-                                  URL_FULL,
-                                  entry -> {
-                                    assertThat(entry)
-                                        .satisfies(
-                                            value -> {
-                                              URI uri = URI.create(value);
-                                              assertThat(uri.getQuery()).isNull();
-                                            });
-                                  });
-                        });
+                    span.hasAttributesSatisfyingExactly(
+                        equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                        equalTo(SERVER_PORT, server.httpPort()),
+                        equalTo(HTTP_REQUEST_METHOD, "POST"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(RPC_SYSTEM, "aws-api"),
+                        equalTo(RPC_SERVICE, "Ses"),
+                        equalTo(RPC_METHOD, "SendEmail"),
+                        equalTo(AWS_REQUEST_ID, "UNKNOWN"),
+                        equalTo(stringKey("aws.agent"), isJavaagentTest() ? "java-aws-sdk" : null),
+                        satisfies(
+                            URL_FULL,
+                            val ->
+                                val.satisfies(
+                                    value -> {
+                                      URI uri = URI.create(value);
+                                      assertThat(uri.getQuery()).isNull();
+                                    })));
                   });
             });
+  }
+
+  private boolean isJavaagentTest() {
+    return getClass().getName().startsWith("io.opentelemetry.javaagent.");
   }
 }

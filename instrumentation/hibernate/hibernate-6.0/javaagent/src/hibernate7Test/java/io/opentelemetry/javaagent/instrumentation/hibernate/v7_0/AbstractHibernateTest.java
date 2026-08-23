@@ -27,15 +27,15 @@ abstract class AbstractHibernateTest {
   protected static void setup() {
     sessionFactory = new Configuration().configure().buildSessionFactory();
     // Pre-populate the DB, so delete/update can be tested.
-    Session writer = sessionFactory.openSession();
-    writer.beginTransaction();
-    prepopulated = new ArrayList<>();
-    for (int i = 0; i < 5; i++) {
-      prepopulated.add(new Value("Hello :) " + i));
-      writer.persist(prepopulated.get(i));
+    try (Session writer = sessionFactory.openSession()) {
+      writer.beginTransaction();
+      prepopulated = new ArrayList<>();
+      for (int i = 0; i < 5; i++) {
+        prepopulated.add(new Value("Hello :) " + i));
+        writer.persist(prepopulated.get(i));
+      }
+      writer.getTransaction().commit();
     }
-    writer.getTransaction().commit();
-    writer.close();
   }
 
   @AfterAll

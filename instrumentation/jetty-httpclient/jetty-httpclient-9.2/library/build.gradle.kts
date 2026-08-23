@@ -16,7 +16,7 @@ dependencies {
 testing {
   suites {
     // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16405
-    val testDemandedContentListener by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testDemandedContentListener") {
       sources {
         java {
           setSrcDirs(listOf("src/test/java"))
@@ -25,7 +25,8 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:jetty-httpclient:jetty-httpclient-9.2:testing"))
-        val jettyVersion = if (otelProps.testLatestDeps) "9.4.43.v20210629" else "9.4.24.v20191120"
+        // Test the first and last Jetty versions affected by the DemandedContentListener bug.
+        val jettyVersion = baseVersion("9.4.24.v20191120").orLatest("9.4.43.v20210629")
         implementation("org.eclipse.jetty:jetty-client:$jettyVersion")
       }
     }
@@ -33,7 +34,7 @@ testing {
 }
 
 tasks {
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")

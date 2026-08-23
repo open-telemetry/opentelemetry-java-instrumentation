@@ -26,7 +26,6 @@ import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
-import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
@@ -34,14 +33,17 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 class WithSpanInstrumentation implements TypeInstrumentation {
 
-  private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;
+  private final ElementMatcher.Junction<MethodDescription> annotatedMethodMatcher;
   private final ElementMatcher.Junction<MethodDescription> annotatedParametersMatcher;
   // this matcher matches all methods that should be excluded from transformation
   private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
 
   WithSpanInstrumentation() {
     annotatedMethodMatcher =
-        isAnnotatedWith(named("application.io.opentelemetry.instrumentation.annotations.WithSpan"));
+        isMethod()
+            .and(
+                isAnnotatedWith(
+                    named("application.io.opentelemetry.instrumentation.annotations.WithSpan")));
     annotatedParametersMatcher =
         hasParameters(
             whereAny(
@@ -69,13 +71,12 @@ class WithSpanInstrumentation implements TypeInstrumentation {
         tracedMethods.and(not(annotatedParametersMatcher));
 
     transformer.applyAdviceToMethod(
-        tracedMethodsWithoutParameters.and(isMethod()), getClass().getName() + "$WithSpanAdvice");
+        tracedMethodsWithoutParameters, getClass().getName() + "$WithSpanAdvice");
 
     // Only apply advice for tracing parameters as attributes if any of the parameters are annotated
     // with @SpanAttribute to avoid unnecessarily copying the arguments into an array.
     transformer.applyAdviceToMethod(
-        tracedMethodsWithParameters.and(isMethod()),
-        getClass().getName() + "$WithSpanAttributesAdvice");
+        tracedMethodsWithParameters, getClass().getName() + "$WithSpanAttributesAdvice");
   }
 
   @SuppressWarnings("unused")

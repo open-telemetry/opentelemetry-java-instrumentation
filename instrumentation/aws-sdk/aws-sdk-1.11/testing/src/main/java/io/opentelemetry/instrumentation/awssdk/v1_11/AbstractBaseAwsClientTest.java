@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
@@ -38,20 +39,22 @@ import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInstance;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractBaseAwsClientTest {
   protected static final AWSStaticCredentialsProvider credentialsProvider =
       new AWSStaticCredentialsProvider(new AnonymousAWSCredentials());
-  protected static final MockWebServerExtension server = new MockWebServerExtension();
-  protected static AwsClientBuilder.EndpointConfiguration endpoint;
+  protected final MockWebServerExtension server = new MockWebServerExtension();
+  protected AwsClientBuilder.EndpointConfiguration endpoint;
 
   protected abstract InstrumentationExtension testing();
 
   protected abstract boolean hasRequestId();
 
   @BeforeAll
-  static void setUp() {
+  void setUp() {
     System.setProperty(SDKGlobalConfiguration.ACCESS_KEY_SYSTEM_PROPERTY, "my-access-key");
     System.setProperty(SDKGlobalConfiguration.SECRET_KEY_SYSTEM_PROPERTY, "my-secret-key");
     server.start();
@@ -64,7 +67,7 @@ public abstract class AbstractBaseAwsClientTest {
   }
 
   @AfterAll
-  static void cleanUp() {
+  void cleanUp() {
     System.clearProperty(SDKGlobalConfiguration.ACCESS_KEY_SYSTEM_PROPERTY);
     System.clearProperty(SDKGlobalConfiguration.SECRET_KEY_SYSTEM_PROPERTY);
     server.stop();
@@ -110,9 +113,7 @@ public abstract class AbstractBaseAwsClientTest {
 
                       if (hasRequestId()) {
                         attributes.add(
-                            satisfies(
-                                stringKey("aws.request_id"),
-                                val -> val.isInstanceOf(String.class)));
+                            satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
                       }
 
                       attributes.addAll(additionalAttributes);

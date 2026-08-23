@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.xxljob.v2_1_2;
 
 import com.xxl.job.core.biz.model.ReturnT;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobHelper;
-import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.xxljob.common.XxlJobProcessRequest;
+import io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9_2.XxlJobHelper;
+import io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9_2.XxlJobInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.xxljob.common.v1_9_2.XxlJobProcessRequest;
 
 public class XxlJobSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.xxl-job-2.1.2";

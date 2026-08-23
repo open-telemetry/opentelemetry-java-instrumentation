@@ -11,25 +11,25 @@ import jakarta.servlet.ServletOutputStream;
 import javax.annotation.Nullable;
 
 public class ServletOutputStreamInjectionState {
-  private static final VirtualField<ServletOutputStream, InjectionState> virtualField =
+  private static final VirtualField<ServletOutputStream, InjectionState> VIRTUAL_FIELD =
       VirtualField.find(ServletOutputStream.class, InjectionState.class);
 
   public static void initializeInjectionStateIfNeeded(
       ServletOutputStream servletOutputStream, Servlet5SnippetInjectingResponseWrapper wrapper) {
-    InjectionState state = virtualField.get(servletOutputStream);
+    InjectionState state = VIRTUAL_FIELD.get(servletOutputStream);
     if (!wrapper.isContentTypeTextHtml()) {
-      virtualField.set(servletOutputStream, null);
+      VIRTUAL_FIELD.set(servletOutputStream, null);
       return;
     }
     if (state == null || state.getWrapper() != wrapper) {
       state = new InjectionState(wrapper);
-      virtualField.set(servletOutputStream, state);
+      VIRTUAL_FIELD.set(servletOutputStream, state);
     }
   }
 
   @Nullable
   public static InjectionState getInjectionState(ServletOutputStream servletOutputStream) {
-    return virtualField.get(servletOutputStream);
+    return VIRTUAL_FIELD.get(servletOutputStream);
   }
 
   private ServletOutputStreamInjectionState() {}

@@ -45,11 +45,15 @@ public abstract class CouchbaseRequestInfo {
     return new AutoValue_CouchbaseRequestInfo(bucket, null, null, operation, true);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated old semconv operation
   public static CouchbaseRequestInfo create(@Nullable String bucket, Object query) {
     SqlQuery sqlQuery = emitOldDatabaseSemconv() ? CouchbaseQuerySanitizer.analyze(query) : null;
     SqlQuery sqlQueryWithSummary =
         emitStableDatabaseSemconv() ? CouchbaseQuerySanitizer.analyzeWithSummary(query) : null;
     String operation = sqlQuery != null ? sqlQuery.getOperationName() : null;
+    if (operation == null && sqlQueryWithSummary != null) {
+      operation = sqlQueryWithSummary.getOperationName();
+    }
     return new AutoValue_CouchbaseRequestInfo(
         bucket, sqlQuery, sqlQueryWithSummary, operation, false);
   }

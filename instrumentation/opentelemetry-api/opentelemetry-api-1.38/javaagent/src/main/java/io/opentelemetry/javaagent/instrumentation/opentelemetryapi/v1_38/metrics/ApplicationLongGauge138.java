@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_38.metrics;
 
 import io.opentelemetry.api.metrics.LongGauge;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.context.AgentContextStorage;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace.Bridging;
 
 public class ApplicationLongGauge138 implements application.io.opentelemetry.api.metrics.LongGauge {
 

@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-final class ActivejHttpServerRequestGetter implements TextMapGetter<HttpRequest> {
+class ActivejHttpServerRequestGetter implements TextMapGetter<HttpRequest> {
 
   @Override
   public Iterable<String> keys(HttpRequest httpRequest) {

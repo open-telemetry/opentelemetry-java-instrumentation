@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.transactionInstrumenter;
@@ -116,7 +115,7 @@ class ConnectionInstrumentation implements TypeInstrumentation {
     public static void addDbInfo(
         @Advice.Return @Nullable PreparedStatement statement,
         @Advice.Enter Object[] enterResult,
-        @Advice.Thrown Throwable error) {
+        @Advice.Thrown @Nullable Throwable error) {
       Context context = Java8BytecodeBridge.currentContext();
       PrepareContext prepareContext = PrepareContext.get(context);
       Scope scope = (Scope) enterResult[1];
@@ -156,7 +155,7 @@ class ConnectionInstrumentation implements TypeInstrumentation {
         if (request == null) {
           return null;
         }
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         if (!transactionInstrumenter().shouldStart(parentContext, request)) {
           return null;
         }

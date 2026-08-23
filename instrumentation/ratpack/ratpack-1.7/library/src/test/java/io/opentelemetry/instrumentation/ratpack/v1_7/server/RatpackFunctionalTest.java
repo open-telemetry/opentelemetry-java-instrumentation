@@ -18,7 +18,7 @@ class RatpackFunctionalTest extends MainClassApplicationUnderTest {
       EmbeddedApp.of(
           server -> server.handlers(chain -> chain.get("other", ctx -> ctx.render("hi-other"))));
 
-  public RatpackFunctionalTest(Class<?> mainClass) throws Exception {
+  RatpackFunctionalTest(Class<?> mainClass) throws Exception {
     super(mainClass);
     getAddress();
   }
@@ -31,7 +31,16 @@ class RatpackFunctionalTest extends MainClassApplicationUnderTest {
             bindings -> bindings.bindInstance(URI.class, app.getAddress().resolve("other"))));
   }
 
-  public int getAppPort() {
+  int getAppPort() {
     return app.getServer().getBindPort();
+  }
+
+  @Override
+  public void close() {
+    try {
+      super.close();
+    } finally {
+      app.close();
+    }
   }
 }

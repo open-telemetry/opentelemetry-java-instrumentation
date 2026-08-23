@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.gateway.v4_3;
 
-import io.opentelemetry.instrumentation.spring.gateway.common.GatewayTestApplication;
+import io.opentelemetry.instrumentation.spring.cloud.gateway.common.GatewayTestApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication

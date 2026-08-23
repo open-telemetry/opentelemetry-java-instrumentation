@@ -1,22 +1,28 @@
 # OpenTelemetry Java Instrumentation Versioning
 
-## Compatibility requirements
+## Compatibility and telemetry stability requirements
 
-Artifacts in this repository follow the same compatibility requirements described in
-<https://github.com/open-telemetry/opentelemetry-java/blob/main/VERSIONING.md#compatibility-requirements>
-.
+Artifacts in this repository follow the compatibility requirements described in the
+[OpenTelemetry Java versioning document](https://github.com/open-telemetry/opentelemetry-java/blob/main/VERSIONING.md#compatibility-requirements)
+and the OpenTelemetry specification
+[versioning and stability document](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/versioning-and-stability.md).
 
-EXCEPT for the following incompatible changes which are allowed in stable artifacts in this
-repository:
+For any stable artifact in this repository, public portions of the artifact must remain backward
+compatible, including public Java APIs and user-facing configuration. Backward-incompatible changes
+to stable artifacts are only allowed when incrementing the `MAJOR` version number, except for the
+following configuration changes:
 
-- Changes to configuration properties that contain the word `experimental`
-- Changes to configuration properties under the namespace `otel.javaagent.testing`
+- Changes to configuration properties that contain the word `experimental` or `preview`.
+- Changes to configuration properties under the namespace `otel.javaagent.testing`.
 
 This means that:
 
-- Changes to configuration properties (other than those that contain the word `experimental`
-  or are under the namespace `otel.javaagent.testing`) will be considered breaking changes
-  (unless they only affect telemetry produced by instrumentation)
+- Changes to all other configuration properties are considered breaking changes.
+- Changes to telemetry produced by stable instrumentation artifacts in this repository are
+  considered breaking unless they are allowed by the OpenTelemetry specification
+  [Semantic Conventions Stability](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/versioning-and-stability.md#semantic-conventions-stability)
+  requirements. This repository uses those requirements to define breaking and non-breaking
+  telemetry changes for stable instrumentation artifacts.
 
 ## Stable vs alpha
 

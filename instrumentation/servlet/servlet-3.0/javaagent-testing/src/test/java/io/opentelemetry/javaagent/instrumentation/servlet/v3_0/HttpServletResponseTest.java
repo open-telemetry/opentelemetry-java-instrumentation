@@ -34,7 +34,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class HttpServletResponseTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private final TestResponse response = new TestResponse();
   private final HttpServletRequest request = mock(HttpServletRequest.class);

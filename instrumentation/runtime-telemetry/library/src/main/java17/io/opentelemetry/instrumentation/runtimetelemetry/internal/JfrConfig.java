@@ -5,12 +5,15 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
+import static java.util.Collections.emptySet;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.metrics.Meter;
 import java.io.Closeable;
-import java.util.Arrays;
-import java.util.EnumMap;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
@@ -19,7 +22,7 @@ import jdk.jfr.FlightRecorder;
 import jdk.jfr.consumer.RecordingStream;
 
 /**
- * Configuration holder for JFR telemetry. On Java 17+, this implementation manages JFR features and
+ * Configuration holder for JFR telemetry. On Java 17+, this implementation manages JFR metrics and
  * creates JFR telemetry.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
@@ -27,74 +30,13 @@ import jdk.jfr.consumer.RecordingStream;
  */
 public class JfrConfig {
 
-  // Visible for testing
-  public final EnumMap<JfrFeature, Boolean> enabledFeatureMap;
-
   private boolean useLegacyCpuCountMetric = false;
 
-  /** Create a new JfrConfig with default feature settings. */
   public static JfrConfig create() {
     return new JfrConfig();
   }
 
-  protected JfrConfig() {
-    enabledFeatureMap = new EnumMap<>(JfrFeature.class);
-    // By default, enable JFR features that don't overlap with JMX and are not experimental
-    for (JfrFeature feature : JfrFeature.values()) {
-      enabledFeatureMap.put(feature, !feature.overlapsWithJmx() && !feature.isExperimental());
-    }
-  }
-
-  /** Enable all JFR features. */
-  @CanIgnoreReturnValue
-  public JfrConfig enableAllFeatures() {
-    Arrays.stream(JfrFeature.values()).forEach(feature -> enabledFeatureMap.put(feature, true));
-    return this;
-  }
-
-  /** Disable all JFR features. */
-  @CanIgnoreReturnValue
-  public JfrConfig disableAllFeatures() {
-    Arrays.stream(JfrFeature.values()).forEach(feature -> enabledFeatureMap.put(feature, false));
-    return this;
-  }
-
-  /** Enable experimental JFR features. */
-  @CanIgnoreReturnValue
-  public JfrConfig enableExperimentalFeatures() {
-    Arrays.stream(JfrFeature.values())
-        .filter(JfrFeature::isExperimental)
-        .forEach(feature -> enabledFeatureMap.put(feature, true));
-    return this;
-  }
-
-  /** Enable a specific JFR feature. */
-  @CanIgnoreReturnValue
-  public JfrConfig enableFeature(JfrFeature feature) {
-    enabledFeatureMap.put(feature, true);
-    return this;
-  }
-
-  /** Enable a specific JFR feature by name. */
-  @CanIgnoreReturnValue
-  public JfrConfig enableFeature(String featureName) {
-    enableFeature(JfrFeature.valueOf(featureName));
-    return this;
-  }
-
-  /** Disable a specific JFR feature. */
-  @CanIgnoreReturnValue
-  public JfrConfig disableFeature(JfrFeature feature) {
-    enabledFeatureMap.put(feature, false);
-    return this;
-  }
-
-  /** Disable a specific JFR feature by name. */
-  @CanIgnoreReturnValue
-  public JfrConfig disableFeature(String featureName) {
-    disableFeature(JfrFeature.valueOf(featureName));
-    return this;
-  }
+  private JfrConfig() {}
 
   /**
    * Sets whether to use the legacy metric name {@code jvm.cpu.limit} instead of the standard {@code
@@ -106,33 +48,47 @@ public class JfrConfig {
     return this;
   }
 
-  public boolean isJfrAvailable() {
-    return JfrRuntimeMetrics.isJfrAvailable();
+  public JfrTelemetry buildJfrTelemetry(
+      Predicate<String> metricNamePredicate,
+      Meter meter,
+      boolean requireCompleteJmxReplacement,
+      boolean emitExperimentalJmxMetrics) {
+    JfrRuntimeMetrics telemetry =
+        JfrRuntimeMetrics.build(
+            meter,
+            metricNamePredicate,
+            useLegacyCpuCountMetric,
+            requireCompleteJmxReplacement,
+            emitExperimentalJmxMetrics);
+    if (telemetry == null) {
+      return new JfrTelemetry(null, emptySet());
+    }
+    return new JfrTelemetry(telemetry, telemetry.getMetricNames());
   }
 
   /**
-   * Build JFR telemetry based on the current configuration.
+   * JFR telemetry and the metric names it registered.
    *
-   * @param preferJfrMetrics if true, enable JFR features that overlap with JMX
-   * @param meter the Meter to use for metrics
-   * @return the JFR telemetry closeable, or null if JFR is not available or all features are
-   *     disabled
+   * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+   * at any time.
    */
-  @Nullable
-  public AutoCloseable buildJfrTelemetry(boolean preferJfrMetrics, Meter meter) {
-    // If preferJfrMetrics is set, enable JFR features that overlap with JMX
-    if (preferJfrMetrics) {
-      for (JfrFeature feature : JfrFeature.values()) {
-        if (feature.overlapsWithJmx()) {
-          enabledFeatureMap.put(feature, true);
-        }
-      }
+  public static final class JfrTelemetry {
+    @Nullable private final AutoCloseable telemetry;
+    private final Set<String> metricNames;
+
+    public JfrTelemetry(@Nullable AutoCloseable telemetry, Set<String> metricNames) {
+      this.telemetry = telemetry;
+      this.metricNames = Collections.unmodifiableSet(new HashSet<>(metricNames));
     }
 
-    if (enabledFeatureMap.values().stream().noneMatch(isEnabled -> isEnabled)) {
-      return null;
+    @Nullable
+    public AutoCloseable getTelemetry() {
+      return telemetry;
     }
-    return JfrRuntimeMetrics.build(meter, enabledFeatureMap::get, useLegacyCpuCountMetric);
+
+    public Set<String> getMetricNames() {
+      return metricNames;
+    }
   }
 
   /**
@@ -141,14 +97,15 @@ public class JfrConfig {
    */
   public static class JfrRuntimeMetrics implements Closeable {
     private final List<RecordedEventHandler> recordedEventHandlers;
+    private final Set<String> metricNames;
     private final RecordingStream recordingStream;
     private final CountDownLatch startUpLatch = new CountDownLatch(1);
     private volatile boolean closed = false;
 
     private JfrRuntimeMetrics(
-        Meter meter, Predicate<JfrFeature> featurePredicate, boolean useLegacyCpuCountMetric) {
-      this.recordedEventHandlers =
-          HandlerRegistry.getHandlers(meter, featurePredicate, useLegacyCpuCountMetric);
+        List<RecordedEventHandler> recordedEventHandlers, Set<String> metricNames) {
+      this.recordedEventHandlers = recordedEventHandlers;
+      this.metricNames = Collections.unmodifiableSet(new HashSet<>(metricNames));
       recordingStream = new RecordingStream();
       recordedEventHandlers.forEach(
           handler -> {
@@ -182,11 +139,29 @@ public class JfrConfig {
 
     @Nullable
     static JfrRuntimeMetrics build(
-        Meter meter, Predicate<JfrFeature> featurePredicate, boolean useLegacyCpuCountMetric) {
+        Meter meter,
+        Predicate<String> metricNamePredicate,
+        boolean useLegacyCpuCountMetric,
+        boolean requireCompleteJmxReplacement,
+        boolean emitExperimentalJmxMetrics) {
       if (!isJfrAvailable()) {
         return null;
       }
-      return new JfrRuntimeMetrics(meter, featurePredicate, useLegacyCpuCountMetric);
+      List<RecordedEventHandler> handlers =
+          HandlerRegistry.getHandlers(
+              meter,
+              metricNamePredicate,
+              useLegacyCpuCountMetric,
+              requireCompleteJmxReplacement,
+              emitExperimentalJmxMetrics);
+      if (handlers.isEmpty()) {
+        return null;
+      }
+      Set<String> metricNames = new HashSet<>();
+      handlers.stream()
+          .flatMap(handler -> handler.getMetricNames().stream())
+          .forEach(metricNames::add);
+      return new JfrRuntimeMetrics(handlers, metricNames);
     }
 
     @Override
@@ -199,6 +174,10 @@ public class JfrConfig {
     // Visible for testing
     public List<RecordedEventHandler> getRecordedEventHandlers() {
       return recordedEventHandlers;
+    }
+
+    public Set<String> getMetricNames() {
+      return metricNames;
     }
 
     // Visible for testing
@@ -214,7 +193,7 @@ public class JfrConfig {
     private static boolean isJfrAvailable() {
       try {
         return FlightRecorder.isAvailable();
-      } catch (Throwable e) {
+      } catch (Throwable t) {
         // NoClassDefFoundError, UnsatisfiedLinkError (native images), or other issues
         return false;
       }

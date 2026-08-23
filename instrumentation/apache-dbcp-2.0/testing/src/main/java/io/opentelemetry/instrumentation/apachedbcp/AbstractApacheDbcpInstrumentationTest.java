@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.apachedbcp;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
@@ -32,25 +33,37 @@ public abstract class AbstractApacheDbcpInstrumentationTest {
   protected abstract void configure(BasicDataSource dataSource, String dataSourceName)
       throws Exception;
 
-  protected abstract void shutdown(BasicDataSource dataSource) throws Exception;
+  protected void shutdown(BasicDataSource dataSource) throws Exception {}
 
   @Test
   void shouldReportMetrics() throws Exception {
-    // given
+    String dataSourceName = "dataSourceName";
+    BasicDataSource dataSource = createDataSource();
+    try {
+      configure(dataSource, dataSourceName);
+
+      dataSource.getConnection().close();
+
+      assertDataSourceMetrics(dataSourceName);
+    } finally {
+      dataSource.close();
+      shutdown(dataSource);
+    }
+
+    assertNoMetrics();
+  }
+
+  protected BasicDataSource createDataSource() throws Exception {
     when(driverMock.connect(any(), any())).thenReturn(connectionMock);
     when(connectionMock.isValid(anyInt())).thenReturn(true);
 
-    String dataSourceName = "dataSourceName";
     BasicDataSource dataSource = new BasicDataSource();
     dataSource.setDriver(driverMock);
     dataSource.setUrl("db:///url");
-    dataSource.postDeregister();
-    configure(dataSource, dataSourceName);
+    return dataSource;
+  }
 
-    // when
-    dataSource.getConnection().close();
-
-    // then
+  protected void assertDataSourceMetrics(String dataSourceName) {
     DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, dataSourceName)
         .disableConnectionTimeouts()
         .disableCreateTime()
@@ -58,21 +71,21 @@ public abstract class AbstractApacheDbcpInstrumentationTest {
         .disableUseTime()
         .disablePendingRequests()
         .assertConnectionPoolEmitsMetrics();
+  }
 
-    // when
-    dataSource.close();
-    shutdown(dataSource);
-
-    // sleep exporter interval
-    Thread.sleep(100);
+  protected void assertNoMetrics() {
     testing().clearData();
-    Thread.sleep(100);
 
-    // then
-    assertThat(testing().metrics())
-        .filteredOn(
-            metricData ->
-                metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
-        .isEmpty();
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing().metrics())
+                    .filteredOn(
+                        metricData ->
+                            metricData
+                                .getInstrumentationScopeInfo()
+                                .getName()
+                                .equals(INSTRUMENTATION_NAME))
+                    .isEmpty());
   }
 }

@@ -17,8 +17,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JettyServletHandlerTest extends AbstractJettyServletHandlerTest {
   @RegisterExtension
-  protected static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forLibrary();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forLibrary();
 
   @Override
   protected void configureServer(ServletHandler handler) {

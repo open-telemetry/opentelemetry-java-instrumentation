@@ -7,8 +7,10 @@ package io.opentelemetry.instrumentation.hikaricp;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
@@ -18,13 +20,14 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.metrics.IMetricsTracker;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import java.sql.Connection;
 import java.sql.SQLException;
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
-import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -35,17 +38,23 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public abstract class AbstractHikariInstrumentationTest {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.hikaricp-3.0";
+  private static final AttributeKey<String> POOL_NAME_KEY =
+      AttributeKey.stringKey(
+          emitStableDatabaseSemconv() ? "db.client.connection.pool.name" : "pool.name");
+  private static final String CONNECTION_USAGE_METRIC_NAME =
+      emitStableDatabaseSemconv() ? "db.client.connection.count" : "db.client.connections.usage";
 
   @RegisterExtension
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  @Mock private DataSource dataSourceMock;
-  @Mock private Connection connectionMock;
+  @Mock protected DataSource dataSourceMock;
+  @Mock protected Connection connectionMock;
   @Mock private IMetricsTracker userMetricsMock;
 
   protected abstract InstrumentationExtension testing();
 
-  protected abstract void configure(HikariConfig poolConfig, MetricsTrackerFactory userTracker);
+  protected abstract void configure(
+      HikariConfig poolConfig, @Nullable MetricsTrackerFactory userTracker);
 
   @Test
   void shouldReportMetrics() throws SQLException, InterruptedException {
@@ -56,6 +65,7 @@ public abstract class AbstractHikariInstrumentationTest {
     hikariDataSource.setPoolName("testPool");
     hikariDataSource.setDataSource(dataSourceMock);
     configure(hikariDataSource, null);
+    cleanup.deferCleanup(hikariDataSource);
 
     // when
     Connection hikariConnection = hikariDataSource.getConnection();
@@ -72,32 +82,7 @@ public abstract class AbstractHikariInstrumentationTest {
     // when
     hikariDataSource.close();
 
-    // sleep exporter interval
-    Thread.sleep(100);
-    testing().clearData();
-    Thread.sleep(100);
-
-    // then
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            emitStableDatabaseSemconv()
-                ? "db.client.connection.count"
-                : "db.client.connections.usage",
-            AbstractIterableAssert::isEmpty);
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            "db.client.connections.idle.min",
-            AbstractIterableAssert::isEmpty);
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME, "db.client.connections.max", AbstractIterableAssert::isEmpty);
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME,
-            "db.client.connections.pending_requests",
-            AbstractIterableAssert::isEmpty);
+    assertNoConnectionPoolMetrics();
   }
 
   @Test
@@ -161,5 +146,36 @@ public abstract class AbstractHikariInstrumentationTest {
         // the connection is not even acquired
         .disableUseTime()
         .assertConnectionPoolEmitsMetrics();
+  }
+
+  protected void assertConnectionUsagePoolNames(String... poolNames) {
+    testing()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            CONNECTION_USAGE_METRIC_NAME,
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(
+                                metric.getLongSumData().getPoints().stream()
+                                    .map(point -> point.getAttributes().get(POOL_NAME_KEY))
+                                    .collect(toSet()))
+                            .containsExactlyInAnyOrder(poolNames)));
+  }
+
+  protected void assertNoConnectionPoolMetrics() {
+    testing().clearData();
+
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing().metrics())
+                    .filteredOn(
+                        metric ->
+                            metric
+                                .getInstrumentationScopeInfo()
+                                .getName()
+                                .equals(INSTRUMENTATION_NAME))
+                    .isEmpty());
   }
 }

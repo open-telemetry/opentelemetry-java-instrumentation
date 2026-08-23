@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchRestRequest;
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.ElasticsearchRestJavaagentInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0.ElasticsearchRestJavaagentInstrumenterFactory;
 import org.elasticsearch.client.Response;
 
 public class ElasticsearchRest5Singletons {

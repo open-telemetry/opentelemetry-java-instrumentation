@@ -1,0 +1,13 @@
+plugins {
+  id("otel.java-conventions")
+}
+
+dependencies {
+  compileOnly(project(":bootstrap"))
+  compileOnly("io.opentelemetry:opentelemetry-sdk")
+  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")
+  compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
+  compileOnly("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator")
+}

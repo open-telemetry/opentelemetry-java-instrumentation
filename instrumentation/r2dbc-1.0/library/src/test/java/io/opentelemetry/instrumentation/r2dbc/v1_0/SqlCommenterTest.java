@@ -49,7 +49,8 @@ class SqlCommenterTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static final ContextPropagationOperator tracingOperator =
       ContextPropagationOperator.create();

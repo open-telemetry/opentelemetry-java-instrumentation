@@ -5,13 +5,58 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataKeys.OTEL_CONTEXT_DATA_KEY;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal.ContextDataKeys;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.common.CompletableResultCode;
+import io.opentelemetry.sdk.logs.LogRecordProcessor;
+import io.opentelemetry.sdk.logs.ReadWriteLogRecord;
+import io.opentelemetry.sdk.logs.SdkLoggerProvider;
+import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
+import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
+import org.apache.logging.log4j.core.ContextDataInjector;
+import org.apache.logging.log4j.core.config.Property;
+import org.apache.logging.log4j.core.impl.ContextDataFactory;
+import org.apache.logging.log4j.core.impl.Log4jLogEvent;
+import org.apache.logging.log4j.message.FormattedMessage;
+import org.apache.logging.log4j.message.StringMapMessage;
+import org.apache.logging.log4j.status.StatusData;
+import org.apache.logging.log4j.status.StatusListener;
+import org.apache.logging.log4j.status.StatusLogger;
+import org.apache.logging.log4j.util.ReadOnlyStringMap;
+import org.apache.logging.log4j.util.StringMap;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junitpioneer.jupiter.SetSystemProperty;
 
 class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
+
+  private static final ContextKey<String> TEST_CONTEXT_KEY = ContextKey.named("test-context-key");
 
   @RegisterExtension
   private static final LibraryInstrumentationExtension testing =
@@ -31,5 +76,613 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
   @Override
   protected InstrumentationExtension getTesting() {
     return testing;
+  }
+
+  @Test
+  void logWithFullContext() {
+    ContextCapturingLogRecordProcessor logRecordProcessor =
+        new ContextCapturingLogRecordProcessor();
+    InMemoryLogRecordExporter logRecordExporter = InMemoryLogRecordExporter.create();
+    OpenTelemetrySdk openTelemetry =
+        OpenTelemetrySdk.builder()
+            .setLoggerProvider(
+                SdkLoggerProvider.builder()
+                    .addLogRecordProcessor(logRecordProcessor)
+                    .addLogRecordProcessor(SimpleLogRecordProcessor.create(logRecordExporter))
+                    .build())
+            .build();
+    OpenTelemetryAppender.resetForTest();
+    OpenTelemetryAppender.install(openTelemetry);
+
+    try {
+      Context context = Context.current().with(TEST_CONTEXT_KEY, "context-value");
+      try (Scope ignored = context.makeCurrent()) {
+        logger.info("log message 1");
+      }
+
+      executeAfterLogsExecution();
+
+      await()
+          .untilAsserted(
+              () -> assertThat(logRecordExporter.getFinishedLogRecordItems()).hasSize(1));
+      assertThat(logRecordProcessor.getContext().get(TEST_CONTEXT_KEY)).isEqualTo("context-value");
+    } finally {
+      openTelemetry.close();
+    }
+  }
+
+  @Test
+  void logWithCarriedContextFromContextData() {
+    ContextCapturingLogRecordProcessor logRecordProcessor =
+        new ContextCapturingLogRecordProcessor();
+    InMemoryLogRecordExporter logRecordExporter = InMemoryLogRecordExporter.create();
+    OpenTelemetrySdk openTelemetry =
+        OpenTelemetrySdk.builder()
+            .setLoggerProvider(
+                SdkLoggerProvider.builder()
+                    .addLogRecordProcessor(logRecordProcessor)
+                    .addLogRecordProcessor(SimpleLogRecordProcessor.create(logRecordExporter))
+                    .build())
+            .build();
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(openTelemetry)
+            .build();
+    appender.start();
+
+    try {
+      StringMap contextData = ContextDataFactory.createContextData();
+      contextData.putValue(
+          OTEL_CONTEXT_DATA_KEY, Context.current().with(TEST_CONTEXT_KEY, "context-value"));
+
+      appender.append(
+          Log4jLogEvent.newBuilder()
+              .setLoggerName("TestLogger")
+              .setLevel(Level.INFO)
+              .setMessage(new FormattedMessage("log message 1", (Object) null))
+              .setContextData(contextData)
+              .build());
+
+      await()
+          .untilAsserted(
+              () -> assertThat(logRecordExporter.getFinishedLogRecordItems()).hasSize(1));
+      assertThat(logRecordProcessor.getContext().get(TEST_CONTEXT_KEY)).isEqualTo("context-value");
+    } finally {
+      openTelemetry.close();
+    }
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void contextDataSelectorTakesPrecedenceOverDeprecatedAlias() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setContextDataAttributes(
+                IncludeExclude.builder().setIncluded(singletonList("new-?")).build())
+            .setCaptureContextDataAttributes("legacy")
+            .build();
+    appender.start();
+
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue("new-1", "captured");
+    contextData.putValue("legacy", "ignored");
+    contextData.putValue("otel.event.name", "MyEventName");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(new FormattedMessage("log message", (Object) null))
+            .setContextData(contextData)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasEventName("MyEventName")
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("new-1"), "captured")));
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void configurationFileContextDataSelectorTakesPrecedenceOverDeprecatedAlias() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setContextDataAttributesIncluded("request-*")
+            .setContextDataAttributesExcluded("*-secret")
+            .setCaptureContextDataAttributes("legacy")
+            .build();
+    appender.start();
+
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue("request-id", "captured");
+    contextData.putValue("request-secret", "ignored");
+    contextData.putValue("legacy", "ignored");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(new FormattedMessage("log message", (Object) null))
+            .setContextData(contextData)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("request-id"), "captured")));
+  }
+
+  @Test
+  void programmaticContextDataSelectorTakesPrecedenceOverConfigurationFileSelector() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setContextDataAttributes(
+                IncludeExclude.builder().setIncluded(singletonList("request-*")).build())
+            .setContextDataAttributesIncluded("other-*")
+            .setContextDataAttributesExcluded("*-secret")
+            .build();
+    appender.start();
+
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue("request-id", "captured");
+    // the configuration file exclusion is ignored, so this is captured
+    contextData.putValue("request-secret", "captured");
+    // the configuration file inclusion is ignored, so this is not captured
+    contextData.putValue("other-1", "ignored");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(new FormattedMessage("log message", (Object) null))
+            .setContextData(contextData)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("request-id"), "captured"),
+                equalTo(stringKey("request-secret"), "captured")));
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void deprecatedAliasMatchesKeysLiterally() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setCaptureContextDataAttributes("request.*,user?,*,userId")
+            .build();
+    appender.start();
+
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue("request.*", "captured");
+    contextData.putValue("request.secret", "ignored");
+    contextData.putValue("user?", "captured");
+    contextData.putValue("user1", "ignored");
+    contextData.putValue("*", "captured");
+    contextData.putValue("userId", "captured");
+    contextData.putValue("other", "ignored");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(new FormattedMessage("log message", (Object) null))
+            .setContextData(contextData)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("request.*"), "captured"),
+                equalTo(stringKey("user?"), "captured"),
+                equalTo(stringKey("*"), "captured"),
+                equalTo(stringKey("userId"), "captured")));
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void deprecatedAliasWithSoleWildcardCapturesEverything() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setCaptureContextDataAttributes("*")
+            .build();
+    appender.start();
+
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue("request.secret", "captured");
+    contextData.putValue("userId", "captured");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(new FormattedMessage("log message", (Object) null))
+            .setContextData(contextData)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("request.secret"), "captured"),
+                equalTo(stringKey("userId"), "captured")));
+  }
+
+  @Test
+  void emptySelectorCapturesNothing() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setContextDataAttributes(IncludeExclude.builder().build())
+            .build();
+    appender.start();
+
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue("userId", "ignored");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(new FormattedMessage("log message", (Object) null))
+            .setContextData(contextData)
+            .build());
+
+    testing.waitAndAssertLogRecords(logRecord -> logRecord.hasTotalAttributeCount(0));
+  }
+
+  @Test
+  void configurationFileContextDataSelector() {
+    Logger selectorLogger = LogManager.getLogger("ContextDataSelectorTestLogger");
+    ThreadContext.put("selector-included", "captured");
+    ThreadContext.put("selector-secret", "ignored");
+    ThreadContext.put("other", "ignored");
+    try {
+      selectorLogger.info("log message");
+    } finally {
+      ThreadContext.clearMap();
+    }
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("log message")
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("selector-included"), "captured")));
+  }
+
+  @Test
+  void mapMessageSelector() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setMapMessageAttributes(
+                IncludeExclude.builder()
+                    .setIncluded(singletonList("order-*"))
+                    .setExcluded(singletonList("*-secret"))
+                    .build())
+            .build();
+    appender.start();
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("order-id", "captured");
+    message.put("order-secret", "ignored");
+    message.put("other", "ignored");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(message)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured")));
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void deprecatedSetterDelegatesToMapMessageSelector() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setCaptureMapMessageAttributes(true)
+            .setMapMessageAttributes(
+                IncludeExclude.builder().setIncluded(singletonList("order-*")).build())
+            .build();
+    appender.start();
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("order-id", "captured");
+    message.put("other", "ignored");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(message)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured")));
+  }
+
+  @Test
+  void programmaticMapMessageSelectorTakesPrecedenceOverConfigurationFileSelector() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setMapMessageAttributes(
+                IncludeExclude.builder().setIncluded(singletonList("order-*")).build())
+            .setMapMessageAttributesIncluded("other-*")
+            .setMapMessageAttributesExcluded("*-secret")
+            .build();
+    appender.start();
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("order-id", "captured");
+    // the configuration file exclusion is ignored, so this is captured
+    message.put("order-secret", "captured");
+    // the configuration file inclusion is ignored, so this is not captured
+    message.put("other-1", "ignored");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(message)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured"),
+                equalTo(AbstractLog4j2Test.mapMessageKey("order-secret"), "captured")));
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  void deprecatedCaptureMapMessageAttributesCapturesEverything() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setCaptureMapMessageAttributes(true)
+            .build();
+    appender.start();
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("order-id", "captured");
+    message.put("other", "captured");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(message)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured"),
+                equalTo(AbstractLog4j2Test.mapMessageKey("other"), "captured")));
+  }
+
+  @Test
+  void emptyMapMessageSelectorCapturesNothing() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setMapMessageAttributes(IncludeExclude.builder().build())
+            .build();
+    appender.start();
+
+    StringMapMessage message = new StringMapMessage();
+    message.put("order-id", "ignored");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(message)
+            .build());
+
+    testing.waitAndAssertLogRecords(logRecord -> logRecord.hasTotalAttributeCount(0));
+  }
+
+  @Test
+  void configurationFileMapMessageSelector() {
+    Logger selectorLogger = LogManager.getLogger("MapMessageSelectorTestLogger");
+    StringMapMessage message = new StringMapMessage();
+    message.put("selector-included", "captured");
+    message.put("selector-secret", "ignored");
+    message.put("other", "ignored");
+    selectorLogger.info(message);
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(AbstractLog4j2Test.mapMessageKey("selector-included"), "captured")));
+  }
+
+  @Test
+  void configurationFileMapMessageSelectorTakesPrecedenceOverDeprecatedAlias() {
+    Logger selectorLogger = LogManager.getLogger("MapMessageSelectorPrecedenceTestLogger");
+    StringMapMessage message = new StringMapMessage();
+    message.put("selector-included", "captured");
+    message.put("selector-secret", "ignored");
+    message.put("other", "ignored");
+    selectorLogger.info(message);
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(AbstractLog4j2Test.mapMessageKey("selector-included"), "captured")));
+  }
+
+  @Test
+  void logWithSpanContextFromContextData() {
+    assumeFalse(Boolean.getBoolean("otel.instrumentation.common.v3-preview"));
+
+    OpenTelemetryAppender.resetForTest();
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .build();
+    appender.start();
+
+    String traceId = "ff000000000000000000000000000041";
+    String spanId = "ff00000000000041";
+    String traceFlags = "01";
+    ContextDataKeys contextDataKeys = ContextDataKeys.create(testing.getOpenTelemetry());
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue(contextDataKeys.getTraceIdKey(), traceId);
+    contextData.putValue(contextDataKeys.getSpanIdKey(), spanId);
+    contextData.putValue(contextDataKeys.getTraceFlagsKey(), traceFlags);
+
+    StatusMessageCollector statusMessages = new StatusMessageCollector();
+    StatusLogger.getLogger().registerListener(statusMessages);
+    try {
+      appender.append(
+          Log4jLogEvent.newBuilder()
+              .setLoggerName("TestLogger")
+              .setLevel(Level.INFO)
+              .setMessage(new FormattedMessage("log message 1", (Object) null))
+              .setContextData(contextData)
+              .setThreadId(Thread.currentThread().getId() + 1)
+              .setThreadName("application-thread")
+              .build());
+
+      SpanContext spanContext =
+          SpanContext.create(
+              traceId, spanId, TraceFlags.fromHex(traceFlags, 0), TraceState.getDefault());
+      testing.waitAndAssertLogRecords(
+          logRecord -> logRecord.hasBody("log message 1").hasSpanContext(spanContext));
+      assertThat(statusMessages.getMessages())
+          .anySatisfy(
+              message ->
+                  assertThat(message)
+                      .contains(
+                          "recovering span context from Log4j context data",
+                          OpenTelemetryAppenderContextDataInjector.class.getName()));
+    } finally {
+      StatusLogger.getLogger().removeListener(statusMessages);
+    }
+  }
+
+  @Test
+  @SetSystemProperty(
+      key = OpenTelemetryAppenderContextDataInjector.DELEGATE_CONTEXT_DATA_INJECTOR_PROPERTY,
+      value =
+          "io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppenderTest$TestContextDataInjector")
+  void contextDataInjectorDelegatesToConfiguredInjector() {
+    OpenTelemetryAppenderContextDataInjector injector =
+        new OpenTelemetryAppenderContextDataInjector();
+
+    StringMap rootContextData =
+        injector.injectContextData(emptyList(), ContextDataFactory.createContextData());
+    Object rootOtelContext = rootContextData.getValue(OTEL_CONTEXT_DATA_KEY);
+    assertThat(rootContextData).isSameAs(TestContextDataInjector.CONTEXT_DATA);
+    assertThat(rootOtelContext).isNull();
+
+    ReadOnlyStringMap rootRawContextData = injector.rawContextData();
+    Object rootRawOtelContext = rootRawContextData.getValue(OTEL_CONTEXT_DATA_KEY);
+    assertThat(rootRawContextData).isSameAs(TestContextDataInjector.RAW_CONTEXT_DATA);
+    assertThat(rootRawOtelContext).isNull();
+
+    Context context = Context.current().with(TEST_CONTEXT_KEY, "context-value");
+    try (Scope ignored = context.makeCurrent()) {
+      StringMap contextData =
+          injector.injectContextData(emptyList(), ContextDataFactory.createContextData());
+      Context otelContext = contextData.getValue(OTEL_CONTEXT_DATA_KEY);
+      ReadOnlyStringMap rawContextData = injector.rawContextData();
+      Context rawOtelContext = rawContextData.getValue(OTEL_CONTEXT_DATA_KEY);
+
+      assertThat((String) contextData.getValue("delegate-key")).isEqualTo("delegate-value");
+      assertThat(otelContext.get(TEST_CONTEXT_KEY)).isEqualTo("context-value");
+      assertThat((String) rawContextData.getValue("raw-delegate-key"))
+          .isEqualTo("raw-delegate-value");
+      assertThat(rawOtelContext.get(TEST_CONTEXT_KEY)).isEqualTo("context-value");
+    }
+  }
+
+  private static class ContextCapturingLogRecordProcessor implements LogRecordProcessor {
+
+    private volatile Context context = Context.root();
+
+    @Override
+    public void onEmit(Context context, ReadWriteLogRecord logRecord) {
+      this.context = context;
+    }
+
+    @Override
+    public CompletableResultCode forceFlush() {
+      return CompletableResultCode.ofSuccess();
+    }
+
+    @Override
+    public CompletableResultCode shutdown() {
+      return CompletableResultCode.ofSuccess();
+    }
+
+    private Context getContext() {
+      return context;
+    }
+  }
+
+  private static class StatusMessageCollector implements StatusListener {
+
+    private final List<String> messages = new CopyOnWriteArrayList<>();
+
+    @Override
+    public void log(StatusData data) {
+      messages.add(data.getMessage().getFormattedMessage());
+    }
+
+    @Override
+    public Level getStatusLevel() {
+      return Level.WARN;
+    }
+
+    @Override
+    public void close() {}
+
+    private List<String> getMessages() {
+      return messages;
+    }
+  }
+
+  public static class TestContextDataInjector implements ContextDataInjector {
+
+    private static final StringMap CONTEXT_DATA = ContextDataFactory.createContextData();
+    private static final StringMap RAW_CONTEXT_DATA = ContextDataFactory.createContextData();
+
+    static {
+      CONTEXT_DATA.putValue("delegate-key", "delegate-value");
+      CONTEXT_DATA.freeze();
+      RAW_CONTEXT_DATA.putValue("raw-delegate-key", "raw-delegate-value");
+      RAW_CONTEXT_DATA.freeze();
+    }
+
+    @Override
+    public StringMap injectContextData(List<Property> properties, StringMap reusable) {
+      return CONTEXT_DATA;
+    }
+
+    @Override
+    public ReadOnlyStringMap rawContextData() {
+      return RAW_CONTEXT_DATA;
+    }
   }
 }

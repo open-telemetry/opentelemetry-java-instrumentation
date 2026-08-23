@@ -13,11 +13,10 @@ import static io.opentelemetry.api.common.AttributeKey.valueKey;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.stream.Collectors.toList;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.common.Value;
-import io.opentelemetry.api.incubator.common.ExtendedAttributes;
-import io.opentelemetry.api.incubator.common.ExtendedAttributesBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
@@ -45,7 +44,6 @@ import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryPointData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableValueAtQuantile;
 import io.opentelemetry.sdk.testing.logs.TestLogRecordData;
-import io.opentelemetry.sdk.testing.logs.internal.TestExtendedLogRecordData;
 import io.opentelemetry.sdk.testing.trace.TestSpanData;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -71,10 +69,13 @@ import io.opentelemetry.testing.internal.proto.trace.v1.ResourceSpans;
 import io.opentelemetry.testing.internal.proto.trace.v1.ScopeSpans;
 import io.opentelemetry.testing.internal.proto.trace.v1.Span;
 import io.opentelemetry.testing.internal.proto.trace.v1.Status;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /**
@@ -86,16 +87,39 @@ public class TelemetryConverter {
   private static final char TRACESTATE_ENTRY_DELIMITER = ',';
   private static final Pattern TRACESTATE_ENTRY_DELIMITER_SPLIT_PATTERN =
       Pattern.compile("[ \t]*" + TRACESTATE_ENTRY_DELIMITER + "[ \t]*");
+  private static final String EXTENDED_ATTRIBUTES_CLASS_NAME =
+      "io.opentelemetry.api.incubator.common.ExtendedAttributes";
+  private static final String TEST_EXTENDED_LOG_RECORD_DATA_CLASS_NAME =
+      "io.opentelemetry.sdk.testing.logs.internal.TestExtendedLogRecordData";
 
   // opentelemetry-api-1.27:javaagent tests use an older version of opentelemetry-api where Value
   // class is missing
   private static final boolean canUseValue = classAvailable("io.opentelemetry.api.common.Value");
+  private static final boolean canUseValueKey =
+      methodAvailable("io.opentelemetry.api.common.AttributeKey", "valueKey", String.class);
+  private static final boolean canSetEventName =
+      canUseValue
+          && methodAvailable(
+              "io.opentelemetry.sdk.testing.logs.TestLogRecordData$Builder",
+              "setEventName",
+              String.class);
+  private static final boolean hasExtendedLogRecordData =
+      classAvailable("io.opentelemetry.sdk.logs.data.internal.ExtendedLogRecordData")
+          && classAvailable(TEST_EXTENDED_LOG_RECORD_DATA_CLASS_NAME);
+  private static final boolean canSetExtendedEventName =
+      hasExtendedLogRecordData
+          && canUseValue
+          && methodAvailable(
+              TEST_EXTENDED_LOG_RECORD_DATA_CLASS_NAME + "$Builder", "setEventName", String.class);
+  private static final boolean canSetExtendedBodyValue =
+      hasExtendedLogRecordData
+          && canUseValue
+          && methodAvailable(
+              TEST_EXTENDED_LOG_RECORD_DATA_CLASS_NAME + "$Builder", "setBodyValue", Value.class);
   // opentelemetry-api-1.50:javaagent tests use an older version where Value.empty() doesn't exist
   private static final Value<?> EMPTY_VALUE = computeEmptyValue();
-  private static final boolean hasExtendedLogRecordData =
-      classAvailable("io.opentelemetry.sdk.logs.data.internal.ExtendedLogRecordData");
   private static final boolean hasExtendedAttributes =
-      classAvailable("io.opentelemetry.api.incubator.common.ExtendedAttributes");
+      classAvailable(EXTENDED_ATTRIBUTES_CLASS_NAME);
 
   public static List<SpanData> getSpanData(Collection<ResourceSpans> allResourceSpans) {
     List<SpanData> spans = new ArrayList<>();
@@ -313,7 +337,12 @@ public class TelemetryConverter {
                     TraceState.getDefault())) // logs proto doesn't have trace state
             .setSeverity(fromProto(logRecord.getSeverityNumber()))
             .setSeverityText(logRecord.getSeverityText())
-            .setAttributes(fromProto(logRecord.getAttributesList()));
+            .setAttributes(fromProto(logRecord.getAttributesList()))
+            .setTotalAttributeCount(
+                logRecord.getAttributesCount() + logRecord.getDroppedAttributesCount());
+    if (canSetEventName) {
+      builder.setEventName(logRecord.getEventName());
+    }
     if (canUseValue) {
       builder.setBodyValue(getBodyValue(logRecord.getBody()));
     } else {
@@ -326,28 +355,86 @@ public class TelemetryConverter {
       LogRecord logRecord,
       io.opentelemetry.sdk.resources.Resource resource,
       InstrumentationScopeInfo instrumentationScopeInfo) {
-    TestExtendedLogRecordData.Builder builder =
-        TestExtendedLogRecordData.builder()
-            .setResource(resource)
-            .setInstrumentationScopeInfo(instrumentationScopeInfo)
-            .setTimestamp(logRecord.getTimeUnixNano(), NANOSECONDS)
-            .setSpanContext(
-                SpanContext.create(
-                    bytesToHex(logRecord.getTraceId().toByteArray()),
-                    bytesToHex(logRecord.getSpanId().toByteArray()),
-                    TraceFlags.fromByte((byte) logRecord.getFlags()),
-                    TraceState.getDefault())) // logs proto doesn't have trace state
-            .setSeverity(fromProto(logRecord.getSeverityNumber()))
-            .setSeverityText(logRecord.getSeverityText())
-            .setEventName(logRecord.getEventName())
-            .setBodyValue(getBodyValue(logRecord.getBody()));
-    if (hasExtendedAttributes) {
-      builder.setExtendedAttributes(fromProtoExtended(logRecord.getAttributesList()));
-    } else {
-      builder.setAttributes(fromProto(logRecord.getAttributesList()));
+    Object builder = invokeStatic(TEST_EXTENDED_LOG_RECORD_DATA_CLASS_NAME, "builder");
+    builder =
+        invoke(
+            builder,
+            "setResource",
+            new Class<?>[] {io.opentelemetry.sdk.resources.Resource.class},
+            resource);
+    builder =
+        invoke(
+            builder,
+            "setInstrumentationScopeInfo",
+            new Class<?>[] {InstrumentationScopeInfo.class},
+            instrumentationScopeInfo);
+    builder =
+        invoke(
+            builder,
+            "setTimestamp",
+            new Class<?>[] {long.class, TimeUnit.class},
+            logRecord.getTimeUnixNano(),
+            NANOSECONDS);
+    builder =
+        invoke(
+            builder,
+            "setSpanContext",
+            new Class<?>[] {SpanContext.class},
+            SpanContext.create(
+                bytesToHex(logRecord.getTraceId().toByteArray()),
+                bytesToHex(logRecord.getSpanId().toByteArray()),
+                TraceFlags.fromByte((byte) logRecord.getFlags()),
+                TraceState.getDefault())); // logs proto doesn't have trace state
+    builder =
+        invoke(
+            builder,
+            "setSeverity",
+            new Class<?>[] {Severity.class},
+            fromProto(logRecord.getSeverityNumber()));
+    builder =
+        invoke(
+            builder, "setSeverityText", new Class<?>[] {String.class}, logRecord.getSeverityText());
+    if (canSetExtendedEventName) {
+      builder =
+          invoke(builder, "setEventName", new Class<?>[] {String.class}, logRecord.getEventName());
     }
-
-    return builder.build();
+    if (canSetExtendedBodyValue) {
+      builder =
+          invoke(
+              builder,
+              "setBodyValue",
+              new Class<?>[] {Value.class},
+              getBodyValue(logRecord.getBody()));
+    } else {
+      builder =
+          invoke(
+              builder,
+              "setBody",
+              new Class<?>[] {String.class},
+              logRecord.getBody().getStringValue());
+    }
+    builder =
+        invoke(
+            builder,
+            "setTotalAttributeCount",
+            new Class<?>[] {int.class},
+            logRecord.getAttributesCount() + logRecord.getDroppedAttributesCount());
+    if (hasExtendedAttributes) {
+      builder =
+          invoke(
+              builder,
+              "setExtendedAttributes",
+              new Class<?>[] {classForName(EXTENDED_ATTRIBUTES_CLASS_NAME)},
+              fromProtoExtended(logRecord.getAttributesList()));
+    } else {
+      builder =
+          invoke(
+              builder,
+              "setAttributes",
+              new Class<?>[] {Attributes.class},
+              fromProto(logRecord.getAttributesList()));
+    }
+    return (LogRecordData) invoke(builder, "build", new Class<?>[] {});
   }
 
   private static Value<?> getBodyValue(AnyValue value) {
@@ -501,51 +588,91 @@ public class TelemetryConverter {
   }
 
   @SuppressWarnings("deprecation") // need to support deprecated EXTENDED_ATTRIBUTES type
-  private static ExtendedAttributes fromProtoExtended(List<KeyValue> attributes) {
-    ExtendedAttributesBuilder converted = ExtendedAttributes.builder();
+  private static Object fromProtoExtended(List<KeyValue> attributes) {
+    Object converted = invokeStatic(EXTENDED_ATTRIBUTES_CLASS_NAME, "builder");
     for (KeyValue attribute : attributes) {
       String key = attribute.getKey();
       AnyValue value = attribute.getValue();
       switch (value.getValueCase()) {
         case STRING_VALUE:
-          converted.put(key, value.getStringValue());
+          converted =
+              invoke(
+                  converted,
+                  "put",
+                  new Class<?>[] {String.class, String.class},
+                  key,
+                  value.getStringValue());
           break;
         case BOOL_VALUE:
-          converted.put(key, value.getBoolValue());
+          converted =
+              invoke(
+                  converted,
+                  "put",
+                  new Class<?>[] {String.class, boolean.class},
+                  key,
+                  value.getBoolValue());
           break;
         case INT_VALUE:
-          converted.put(key, value.getIntValue());
+          converted =
+              invoke(
+                  converted,
+                  "put",
+                  new Class<?>[] {String.class, long.class},
+                  key,
+                  value.getIntValue());
           break;
         case DOUBLE_VALUE:
-          converted.put(key, value.getDoubleValue());
+          converted =
+              invoke(
+                  converted,
+                  "put",
+                  new Class<?>[] {String.class, double.class},
+                  key,
+                  value.getDoubleValue());
           break;
         case ARRAY_VALUE:
           ArrayValue array = value.getArrayValue();
           AnyValue.ValueCase arrayType = homogeneousArrayType(array);
           if (arrayType == null) {
             // Heterogeneous arrays, arrays with complex types, or empty arrays
-            converted.put(valueKey(key), anyValueToValue(value));
+            converted = putExtendedValueAttribute(converted, key, anyValueToValue(value));
           } else {
             switch (arrayType) {
               case STRING_VALUE:
-                converted.put(
-                    stringArrayKey(key),
-                    array.getValuesList().stream().map(AnyValue::getStringValue).collect(toList()));
+                converted =
+                    putExtendedAttribute(
+                        converted,
+                        stringArrayKey(key),
+                        array.getValuesList().stream()
+                            .map(AnyValue::getStringValue)
+                            .collect(toList()));
                 break;
               case BOOL_VALUE:
-                converted.put(
-                    booleanArrayKey(key),
-                    array.getValuesList().stream().map(AnyValue::getBoolValue).collect(toList()));
+                converted =
+                    putExtendedAttribute(
+                        converted,
+                        booleanArrayKey(key),
+                        array.getValuesList().stream()
+                            .map(AnyValue::getBoolValue)
+                            .collect(toList()));
                 break;
               case INT_VALUE:
-                converted.put(
-                    longArrayKey(key),
-                    array.getValuesList().stream().map(AnyValue::getIntValue).collect(toList()));
+                converted =
+                    putExtendedAttribute(
+                        converted,
+                        longArrayKey(key),
+                        array.getValuesList().stream()
+                            .map(AnyValue::getIntValue)
+                            .collect(toList()));
                 break;
               case DOUBLE_VALUE:
-                converted.put(
-                    doubleArrayKey(key),
-                    array.getValuesList().stream().map(AnyValue::getDoubleValue).collect(toList()));
+                converted =
+                    putExtendedAttribute(
+                        converted,
+                        doubleArrayKey(key),
+                        array.getValuesList().stream()
+                            .map(AnyValue::getDoubleValue)
+                            .collect(toList()));
                 break;
               default:
                 // homogeneousArrayType only returns primitive types, this case won't be reached
@@ -554,21 +681,46 @@ public class TelemetryConverter {
           }
           break;
         case BYTES_VALUE:
-          converted.put(valueKey(key), Value.of(value.getBytesValue().toByteArray()));
+          converted =
+              putExtendedValueAttribute(
+                  converted, key, Value.of(value.getBytesValue().toByteArray()));
           break;
         case KVLIST_VALUE:
-          converted.put(key, fromProtoExtended(value.getKvlistValue().getValuesList()));
+          converted =
+              invoke(
+                  converted,
+                  "put",
+                  new Class<?>[] {String.class, classForName(EXTENDED_ATTRIBUTES_CLASS_NAME)},
+                  key,
+                  fromProtoExtended(value.getKvlistValue().getValuesList()));
           break;
         case VALUE_NOT_SET:
           if (EMPTY_VALUE != null) {
-            converted.put(valueKey(key), EMPTY_VALUE);
+            converted = putExtendedValueAttribute(converted, key, EMPTY_VALUE);
           }
           break;
         case STRING_VALUE_STRINDEX:
           throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
       }
     }
-    return converted.build();
+    return invoke(converted, "build", new Class<?>[] {});
+  }
+
+  private static Object putExtendedValueAttribute(Object converted, String key, Value<?> value) {
+    if (canUseValueKey) {
+      return putExtendedAttribute(converted, valueKey(key), value);
+    }
+    return converted;
+  }
+
+  private static Object putExtendedAttribute(Object converted, AttributeKey<?> key, Object value) {
+    return invoke(converted, "put", new Class<?>[] {AttributeKey.class, Object.class}, key, value);
+  }
+
+  private static void putValueAttribute(AttributesBuilder converted, String key, Value<?> value) {
+    if (canUseValueKey) {
+      converted.put(valueKey(key), value);
+    }
   }
 
   private static Attributes fromProto(List<KeyValue> attributes) {
@@ -594,7 +746,7 @@ public class TelemetryConverter {
           AnyValue.ValueCase arrayType = homogeneousArrayType(array);
           if (arrayType == null) {
             // Heterogeneous arrays, arrays with complex types, or empty arrays
-            converted.put(valueKey(key), anyValueToValue(value));
+            putValueAttribute(converted, key, anyValueToValue(value));
           } else {
             switch (arrayType) {
               case STRING_VALUE:
@@ -624,14 +776,14 @@ public class TelemetryConverter {
           }
           break;
         case BYTES_VALUE:
-          converted.put(valueKey(key), Value.of(value.getBytesValue().toByteArray()));
+          putValueAttribute(converted, key, Value.of(value.getBytesValue().toByteArray()));
           break;
         case KVLIST_VALUE:
-          converted.put(valueKey(key), anyValueToValue(value));
+          putValueAttribute(converted, key, anyValueToValue(value));
           break;
         case VALUE_NOT_SET:
           if (EMPTY_VALUE != null) {
-            converted.put(valueKey(key), EMPTY_VALUE);
+            putValueAttribute(converted, key, EMPTY_VALUE);
           }
           break;
         case STRING_VALUE_STRINDEX:
@@ -763,7 +915,63 @@ public class TelemetryConverter {
     try {
       Class.forName(className);
       return true;
+    } catch (ClassNotFoundException | LinkageError e) {
+      return false;
+    }
+  }
+
+  private static Class<?> classForName(String className) {
+    try {
+      return Class.forName(className);
     } catch (ClassNotFoundException e) {
+      throw new IllegalStateException("Class not found: " + className, e);
+    }
+  }
+
+  private static Object invokeStatic(String className, String methodName) {
+    try {
+      Method method = Class.forName(className).getMethod(methodName);
+      method.setAccessible(true);
+      return method.invoke(null);
+    } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException e) {
+      throw new IllegalStateException("Could not invoke " + className + "." + methodName, e);
+    } catch (InvocationTargetException e) {
+      throw rethrowInvocationCause(className + "." + methodName, e);
+    }
+  }
+
+  private static Object invoke(
+      Object target, String methodName, Class<?>[] parameterTypes, Object... args) {
+    try {
+      Method method = target.getClass().getMethod(methodName, parameterTypes);
+      method.setAccessible(true);
+      return method.invoke(target, args);
+    } catch (NoSuchMethodException | IllegalAccessException e) {
+      throw new IllegalStateException(
+          "Could not invoke " + target.getClass().getName() + "." + methodName, e);
+    } catch (InvocationTargetException e) {
+      throw rethrowInvocationCause(target.getClass().getName() + "." + methodName, e);
+    }
+  }
+
+  private static RuntimeException rethrowInvocationCause(
+      String methodDescription, InvocationTargetException e) {
+    Throwable cause = e.getCause();
+    if (cause instanceof RuntimeException) {
+      return (RuntimeException) cause;
+    }
+    if (cause instanceof Error) {
+      throw (Error) cause;
+    }
+    return new IllegalStateException("Could not invoke " + methodDescription, cause);
+  }
+
+  private static boolean methodAvailable(
+      String className, String methodName, Class<?>... parameterTypes) {
+    try {
+      Class.forName(className).getMethod(methodName, parameterTypes);
+      return true;
+    } catch (ClassNotFoundException | NoSuchMethodException | LinkageError e) {
       return false;
     }
   }

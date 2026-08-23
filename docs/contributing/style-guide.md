@@ -19,6 +19,15 @@ In addition to Google Java Style formatting, spotless applies
 [custom static importing rules](../../conventions/src/main/kotlin/io/opentelemetry/instrumentation/gradle/StaticImportFormatter.kt)
 (e.g. rewriting `Objects.requireNonNull` to a static import).
 
+Markdown files are formatted and linted separately through
+[flint](https://github.com/grafana/flint), run via [mise](https://mise.jdx.dev/):
+
+```bash
+mise run lint:fix
+```
+
+flint also checks that links in markdown files resolve.
+
 #### Pre-commit hook
 
 To completely delegate code style formatting to the machine,
@@ -202,6 +211,10 @@ affect end users.
 
 Prefer AssertJ assertions over JUnit assertions (assertEquals, assertTrue, etc.) for better
 error messages.
+
+In test files that use `io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat`,
+do not also statically import `org.assertj.core.api.Assertions.assertThat` — `OpenTelemetryAssertions`
+extends `Assertions`, so all AssertJ `assertThat` overloads are already in scope via inheritance.
 
 ### JUnit
 

@@ -39,9 +39,10 @@ public class LettuceInstrumentationUtil {
     String commandName = "Redis Command";
     if (command != null) {
 
-      // get the redis command name (i.e. GET, SET, HMSET, etc)
+      // get the redis command name (i.e. GET, SET, HMSET, etc); use toString() (not name()) so it
+      // stays compatible with lettuce 6.5+, where ProtocolKeyword no longer declares name()
       if (command.getType() != null) {
-        commandName = command.getType().name().trim();
+        commandName = command.getType().toString().trim();
       }
     }
     return commandName;

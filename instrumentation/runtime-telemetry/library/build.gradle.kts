@@ -9,13 +9,18 @@ dependencies {
   implementation(project(":instrumentation-api-incubator"))
 
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
-  testImplementation("io.github.netmikey.logunit:logunit-jul:1.1.3")
+  testImplementation("io.github.netmikey.logunit:logunit-jul")
 }
 
 sourceSets {
   create("testJava17") {
     java {
       setSrcDirs(listOf("src/testJava17/java"))
+    }
+  }
+  create("testJava21") {
+    java {
+      setSrcDirs(listOf("src/testJava21/java"))
     }
   }
 }
@@ -60,12 +65,23 @@ configurations {
   named("testJava17RuntimeOnly") {
     extendsFrom(configurations["testRuntimeOnly"])
   }
+  named("testJava21Implementation") {
+    extendsFrom(configurations["testImplementation"])
+  }
+  named("testJava21RuntimeOnly") {
+    extendsFrom(configurations["testRuntimeOnly"])
+  }
 }
 
 dependencies {
   add("testJava17Implementation", sourceSets.test.get().output)
   add("testJava17Implementation", sourceSets["java17"].output)
   add("testJava17Implementation", sourceSets.main.get().output)
+
+  add("testJava21Implementation", sourceSets.test.get().output)
+  add("testJava21Implementation", sourceSets["java17"].output)
+  add("testJava21Implementation", sourceSets["testJava17"].output)
+  add("testJava21Implementation", sourceSets.main.get().output)
 }
 
 tasks {
@@ -79,6 +95,14 @@ tasks {
     sourceCompatibility = "17"
     targetCompatibility = "17"
     options.release.set(17)
+  }
+
+  // Configure testJava21 compilation for Java 21
+  named<JavaCompile>("compileTestJava21Java") {
+    dependsOn("compileJava17Java", "compileTestJava17Java")
+    sourceCompatibility = "21"
+    targetCompatibility = "21"
+    options.release.set(21)
   }
 
   withType(Jar::class) {
@@ -101,7 +125,7 @@ tasks {
   }
 
   // GC-specific tests that require Java 17+
-  val testG1 by registering(Test::class) {
+  val testG1 = register<Test>("testG1") {
     dependsOn("compileTestJava17Java")
     testClassesDirs = sourceSets["testJava17"].output.classesDirs
     classpath = sourceSets["testJava17"].runtimeClasspath
@@ -113,7 +137,7 @@ tasks {
     systemProperty("metadataConfig", "Java17")
   }
 
-  val testPS by registering(Test::class) {
+  val testPS = register<Test>("testPS") {
     dependsOn("compileTestJava17Java")
     testClassesDirs = sourceSets["testJava17"].output.classesDirs
     classpath = sourceSets["testJava17"].runtimeClasspath
@@ -125,7 +149,7 @@ tasks {
     systemProperty("metadataConfig", "Java17")
   }
 
-  val testSerial by registering(Test::class) {
+  val testSerial = register<Test>("testSerial") {
     dependsOn("compileTestJava17Java")
     testClassesDirs = sourceSets["testJava17"].output.classesDirs
     classpath = sourceSets["testJava17"].runtimeClasspath
@@ -138,7 +162,7 @@ tasks {
   }
 
   // Run other Java 17 tests (not GC-specific)
-  val testJava17 by registering(Test::class) {
+  val testJava17 = register<Test>("testJava17") {
     dependsOn("compileTestJava17Java")
     testClassesDirs = sourceSets["testJava17"].output.classesDirs
     classpath = sourceSets["testJava17"].runtimeClasspath
@@ -152,6 +176,14 @@ tasks {
 
   test {
     // Java 8 tests only
+  }
+
+  // Run Java 21+ tests (virtual threads)
+  val testJava21 = register<Test>("testJava21") {
+    dependsOn("compileTestJava21Java")
+    testClassesDirs = sourceSets["testJava21"].output.classesDirs
+    classpath = sourceSets["testJava21"].runtimeClasspath
+    systemProperty("metadataConfig", "Java21")
   }
 
   val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
@@ -169,8 +201,13 @@ tasks {
       enabled = false
     }
   }
+  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_21)) {
+    named("testJava21", Test::class).configure {
+      enabled = false
+    }
+  }
 
   check {
-    dependsOn(testJava17, testG1, testPS, testSerial)
+    dependsOn(testJava17, testJava21, testG1, testPS, testSerial)
   }
 }

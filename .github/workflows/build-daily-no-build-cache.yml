@@ -45,3 +45,4 @@ jobs:
           needs.common.result == 'success' &&
           needs.test-latest-deps.result == 'success'
         }}
+      failure-notification-after-attempts: 2

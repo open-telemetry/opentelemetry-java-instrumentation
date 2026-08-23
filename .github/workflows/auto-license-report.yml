@@ -15,19 +15,21 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
           java-version-file: .java-version
 
       - name: Set up gradle
-        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
         with:
           cache-read-only: true
 
@@ -68,17 +70,20 @@ jobs:
             echo "exists=true" >> $GITHUB_OUTPUT
           fi
 
-      - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         if: steps.check-patch.outputs.exists == 'true'
         id: otelbot-token
         with:
-          app-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_APP_ID }}
+          client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+          permission-contents: write
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: steps.check-patch.outputs.exists == 'true'
         with:
           token: ${{ steps.otelbot-token.outputs.token }}
+          # zizmor: ignore[artipacked] App credentials are required by the push below.
+          persist-credentials: true
 
       - name: Use CLA approved bot
         if: steps.check-patch.outputs.exists == 'true'

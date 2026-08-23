@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.grails.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.grails.v3_0.GrailsServerSpanNaming.serverSpanName;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -49,7 +50,7 @@ class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrumentatio
         HttpServerRoute.update(
             parentContext,
             HttpServerRouteSource.CONTROLLER,
-            GrailsServerSpanNaming.serverSpanName(),
+            serverSpanName(),
             (GrailsControllerUrlMappingInfo) handler);
       }
     }

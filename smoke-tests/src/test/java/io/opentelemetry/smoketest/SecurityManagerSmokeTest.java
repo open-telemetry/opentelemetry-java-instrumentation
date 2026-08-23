@@ -5,6 +5,8 @@
 
 package io.opentelemetry.smoketest;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -26,8 +28,10 @@ class SecurityManagerSmokeTest extends AbstractSmokeTest<Integer> {
   @ParameterizedTest
   @ValueSource(ints = {8, 11, 17, 21}) // Security Manager removed in Java 25
   void securityManagerSmokeTest(int jdk) {
-    start(jdk);
+    SmokeTestOutput output = start(jdk);
     testing.waitAndAssertTraces(
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("test")));
+    // check whether output contains stack traces
+    assertThat(output.logLines().anyMatch(l -> l.startsWith("\tat "))).isFalse();
   }
 }

@@ -23,8 +23,9 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
+  test {
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.excluded=test-secret")
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
@@ -33,7 +34,7 @@ tasks {
 }
 
 // Servlet 3.0 in latest Jetty versions requires Java 11
-// However, projects that depend on this module are still be using Java 8 in testLatestDeps mode
+// However, projects that depend on this module may still be using Java 8 in testLatestDeps mode
 // Therefore, we need a separate project for servlet 3.0 tests
 if (otelProps.testLatestDeps) {
   otelJava {

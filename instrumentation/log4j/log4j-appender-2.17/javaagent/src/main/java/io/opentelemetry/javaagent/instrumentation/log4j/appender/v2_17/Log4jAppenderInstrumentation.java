@@ -81,14 +81,21 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
       // logging framework delegates to another
       CallDepth callDepth = CallDepth.forClass(LoggerProvider.class);
       if (callDepth.getAndIncrement() == 0) {
-        Log4jHelper.capture(logger, loggerClassName, location, level, marker, message, t);
+        try {
+          Log4jHelper.capture(logger, loggerClassName, location, level, marker, message, t);
+        } catch (Throwable throwable) {
+          callDepth.decrementAndGet();
+          throw throwable;
+        }
       }
       return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void methodExit(@Advice.Enter CallDepth callDepth) {
-      callDepth.decrementAndGet();
+    public static void methodExit(@Advice.Enter @Nullable CallDepth callDepth) {
+      if (callDepth != null) {
+        callDepth.decrementAndGet();
+      }
     }
   }
 
@@ -107,14 +114,21 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
       // logging framework delegates to another
       CallDepth callDepth = CallDepth.forClass(LoggerProvider.class);
       if (callDepth.getAndIncrement() == 0) {
-        Log4jHelper.capture(logger, loggerClassName, null, level, marker, message, t);
+        try {
+          Log4jHelper.capture(logger, loggerClassName, null, level, marker, message, t);
+        } catch (Throwable throwable) {
+          callDepth.decrementAndGet();
+          throw throwable;
+        }
       }
       return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void methodExit(@Advice.Enter CallDepth callDepth) {
-      callDepth.decrementAndGet();
+    public static void methodExit(@Advice.Enter @Nullable CallDepth callDepth) {
+      if (callDepth != null) {
+        callDepth.decrementAndGet();
+      }
     }
   }
 }

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v5_0;
 
 import static java.util.Objects.requireNonNull;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection;
 import io.vertx.core.Future;
@@ -19,6 +20,7 @@ import io.vertx.core.http.PoolOptions;
 import io.vertx.core.http.RequestOptions;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 class VertxSingleConnection implements SingleConnection {
 
@@ -37,14 +39,18 @@ class VertxSingleConnection implements SingleConnection {
 
   @Override
   public int doRequest(String path, Map<String, String> headers)
-      throws ExecutionException, InterruptedException {
+      throws ExecutionException, InterruptedException, TimeoutException {
     String requestId = requireNonNull(headers.get(REQUEST_ID_HEADER));
     RequestOptions requestOptions = new RequestOptions().setHost(host).setPort(port).setURI(path);
     headers.forEach(requestOptions::putHeader);
     Future<HttpClientRequest> request = httpClient.request(requestOptions);
 
     HttpClientResponse response =
-        request.compose(HttpClientRequest::send).toCompletionStage().toCompletableFuture().get();
+        request
+            .compose(HttpClientRequest::send)
+            .toCompletionStage()
+            .toCompletableFuture()
+            .get(10, SECONDS);
 
     String responseId = response.getHeader(REQUEST_ID_HEADER);
     if (!requestId.equals(responseId)) {

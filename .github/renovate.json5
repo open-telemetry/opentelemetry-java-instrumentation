@@ -1,26 +1,34 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    "github>grafana/flint#v0.21.0",
+    "github>grafana/flint#v0.22.10",
     'config:best-practices',
     'helpers:pinGitHubActionDigestsToSemver',
     ':semanticCommits',
   ],
   ignorePaths: [
-    'instrumentation/**',
+    // instrumentation modules intentionally pin old library versions in order to test the oldest
+    // supported version, so renovate must not update their build files
+    'instrumentation/**/*.gradle.kts',
   ],
   packageRules: [
 
     // ── Scheduling & grouping ──────────────────────────────────────────
 
     {
-      // group all patch updates into a single weekly PR
-      groupName: 'all patch versions',
+      // group all patch and minor updates into a single weekly PR
+      // (OpenTelemetry artifacts are excluded so that dogfooding and cascaded releases land individually)
+      groupName: 'all patch and minor versions',
       matchUpdateTypes: [
         'patch',
+        'minor',
       ],
       schedule: [
         '* 0-7 * * 2', // weekly, before 8am on Tuesday
+      ],
+      matchPackageNames: [
+        '!io.opentelemetry**',
+        '!open-telemetry/**',
       ],
     },
     {
@@ -35,6 +43,27 @@
         '* 0-7 * * 2', // weekly, before 8am on Tuesday
       ],
       groupName: 'weekly update',
+    },
+    {
+      // gh-aw updates need a dedicated branch so CI can regenerate their workflow lockfiles
+      matchPackageNames: [
+        'github/gh-aw',
+      ],
+      schedule: [
+        '* 0-7 * * 2', // weekly, before 8am on Tuesday
+      ],
+      groupName: 'gh-aw',
+    },
+    {
+      // do not update these workflow lockfiles
+      matchManagers: [
+        'github-actions',
+      ],
+      matchFileNames: [
+        '.github/workflows/module-cleanup.lock.yml',
+        '.github/workflows/pr-review.lock.yml',
+      ],
+      enabled: false,
     },
     {
       // keep Kotlin Gradle plugin updates out of the catch-all patch PR because CodeQL often
@@ -374,7 +403,7 @@
     {
       // pinned version to Jetty 8 (Servlet 3.0) for compatibility
       matchFileNames: [
-        'examples/distro/instrumentation/servlet-3/build.gradle',
+        'examples/distro/instrumentation/servlet-3/build.gradle.kts',
       ],
       matchUpdateTypes: [
         'major',
@@ -386,6 +415,18 @@
     },
   ],
   customManagers: [
+    {
+      customType: 'regex',
+      datasourceTemplate: 'github-releases',
+      depNameTemplate: 'github/gh-aw',
+      versioningTemplate: 'semver-coerced',
+      managerFilePatterns: [
+        '.github/scripts/compile-gh-aw-workflows.sh',
+      ],
+      matchStrings: [
+        'gh extension install github/gh-aw --pin (?<currentValue>v\\d+\\.\\d+\\.\\d+)',
+      ],
+    },
 // commented out to see whether weekly update passes without this block
 //    {
 //      customType: 'regex',
@@ -431,6 +472,16 @@
       ],
       matchStrings: [
         'npx (?<depName>[^@]+)@(?<currentValue>[^\\s]+)',
+      ],
+    },
+    {
+      customType: 'regex',
+      datasourceTemplate: 'docker',
+      managerFilePatterns: [
+        '**/*.java',
+      ],
+      matchStrings: [
+        '"(?<depName>otel/weaver):(?<currentValue>[^"]+)"',
       ],
     },
   ],

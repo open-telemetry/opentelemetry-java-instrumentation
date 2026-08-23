@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -90,8 +91,6 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   }
 
   protected abstract WebClient.Builder instrument(WebClient.Builder builder);
-
-  protected abstract boolean hasServicePeerName();
 
   @Override
   public int sendRequest(
@@ -197,7 +196,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(thrown),
+                        .hasException(emitExceptionAsSpanEvents() ? thrown : null),
                 span ->
                     span.hasName("GET")
                         .hasKind(CLIENT)
@@ -207,9 +206,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
                             equalTo(URL_FULL, uri.toString()),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(
-                                maybeStablePeerService(),
-                                hasServicePeerName() ? "test-peer-service" : null),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(ERROR_TYPE, "cancelled")),
                 span ->
                     span.hasName("test-http-server")

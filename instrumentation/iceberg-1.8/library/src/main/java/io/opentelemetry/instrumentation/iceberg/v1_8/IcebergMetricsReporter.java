@@ -15,6 +15,8 @@ import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.MeterBuilder;
+import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import java.util.List;
 import org.apache.iceberg.metrics.CounterResult;
 import org.apache.iceberg.metrics.MetricsReport;
@@ -48,7 +50,12 @@ final class IcebergMetricsReporter implements MetricsReporter {
   private final LongCounter deleteManifestsCount;
 
   IcebergMetricsReporter(OpenTelemetry openTelemetry) {
-    Meter meter = openTelemetry.getMeter(INSTRUMENTATION_NAME);
+    MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(INSTRUMENTATION_NAME);
+    String version = EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME);
+    if (version != null) {
+      meterBuilder.setInstrumentationVersion(version);
+    }
+    Meter meter = meterBuilder.build();
 
     planningDuration =
         applyAdvice(BASE_ADVICE, ScanMetricsBuilderFactory.totalPlanningDuration(meter, "s"))

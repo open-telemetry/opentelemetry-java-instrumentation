@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Method;
 
 final class InstrumentedChatCompletionService
-    extends DelegatingInvocationHandler<ChatCompletionService, InstrumentedChatCompletionService> {
+    extends DelegatingInvocationHandler<ChatCompletionService> {
 
   private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter;
   private final Logger eventLogger;

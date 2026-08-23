@@ -1,5 +1,14 @@
 plugins {
   id("otel.sdk-extension")
+  id("otel.osgi-conventions")
+}
+
+otelJava {
+  // opentelemetry-api-incubator is a compileOnly dependency used only by the declarative-config
+  // ComponentProvider (ResourceComponentProvider references DeclarativeConfigProperties). Mark the
+  // incubator package optional so the whole resources bundle - including its plain ResourceProviders
+  // - still resolves in an OSGi runtime that doesn't ship the optional declarative-config stack.
+  osgiOptionalPackages.add("io.opentelemetry.api.incubator")
 }
 
 val mrJarVersions = listOf(9, 11)
@@ -8,13 +17,13 @@ dependencies {
   compileOnly("io.opentelemetry:opentelemetry-api-incubator")
   implementation("io.opentelemetry:opentelemetry-sdk-common")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
-  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-incubator")
+  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-declarative-config")
   implementation("io.opentelemetry.semconv:opentelemetry-semconv")
 
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
   testCompileOnly("com.google.auto.service:auto-service-annotations")
-  testImplementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-extension-declarative-config")
 }
 
 for (version in mrJarVersions) {
@@ -73,7 +82,7 @@ tasks {
 testing {
   suites {
     // Security Manager tests involve setup that can poison the environment for other tests
-    val testSecurityManager by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testSecurityManager") {
       dependencies {
         implementation(project(":instrumentation:resources:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-common")
@@ -89,6 +98,7 @@ tasks {
     // use the final jar instead of directories with built classes to test the mrjar functionality
     classpath = project.files(jar) + classpath
     systemProperty("testSecret", "test")
+    systemProperty("testMultilineSecret", "test\nleaked")
     systemProperty("testPassword", "test")
     systemProperty("testNotRedacted", "test")
   }

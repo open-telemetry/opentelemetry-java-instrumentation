@@ -45,7 +45,7 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
-  private static final List<ServerEndpoint> serverEndpointsList =
+  private static final List<ServerEndpoint> SERVER_ENDPOINTS =
       asList(
           SUCCESS,
           REDIRECT,
@@ -77,7 +77,7 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
     Tomcat.addServlet(servletContext, "testServlet", new TestServlet());
 
     // Mapping servlet to /* will result in all requests have a name of just a context.
-    serverEndpointsList.stream()
+    SERVER_ENDPOINTS.stream()
         .filter(endpoint -> !endpoint.equals(NOT_FOUND))
         .forEach(
             endpoint -> servletContext.addServletMappingDecoded(endpoint.getPath(), "testServlet"));

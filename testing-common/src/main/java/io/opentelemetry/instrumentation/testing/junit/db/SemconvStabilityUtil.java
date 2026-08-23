@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit.db;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -36,7 +37,7 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.HashMap;
 import java.util.Map;
 
-// until old database semconv are dropped in 3.0
+// supports asserting on old database semconv, to be removed in 3.0
 public class SemconvStabilityUtil {
 
   private static final Map<AttributeKey<?>, AttributeKey<?>> oldToNewMap = buildMap();
@@ -49,6 +50,7 @@ public class SemconvStabilityUtil {
     map.put(DB_OPERATION, DB_OPERATION_NAME);
     map.put(DB_SQL_TABLE, DB_COLLECTION_NAME);
     map.put(DB_CASSANDRA_TABLE, DB_COLLECTION_NAME);
+    map.put(stringKey("db.couchbase.collection"), DB_COLLECTION_NAME);
     map.put(DB_MONGODB_COLLECTION, DB_COLLECTION_NAME);
     map.put(DB_SYSTEM, DB_SYSTEM_NAME);
 

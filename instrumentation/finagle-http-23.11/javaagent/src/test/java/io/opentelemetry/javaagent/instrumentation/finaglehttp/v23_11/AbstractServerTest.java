@@ -15,6 +15,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
+import com.twitter.finagle.Http;
 import com.twitter.finagle.ListeningServer;
 import com.twitter.finagle.Service;
 import com.twitter.finagle.http.Request;
@@ -41,6 +42,16 @@ abstract class AbstractServerTest extends AbstractHttpServerTest<ListeningServer
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   @Override
+  protected final ListeningServer setupServer() {
+    return configureServer(Http.server())
+        .serve(address.getHost() + ":" + port, new AbstractServerTest.TestService());
+  }
+
+  protected Http.Server configureServer(Http.Server in) {
+    return in;
+  }
+
+  @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setTestException(false);
@@ -51,7 +62,7 @@ abstract class AbstractServerTest extends AbstractHttpServerTest<ListeningServer
 
   @Override
   protected void stopServer(ListeningServer server) throws Exception {
-    Await.ready(server.close(), Duration.fromSeconds(2));
+    Await.ready(server.close(), Duration.fromSeconds(10));
   }
 
   static class TestService extends Service<Request, Response> implements Logging {

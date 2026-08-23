@@ -3,8 +3,8 @@ plugins {
 }
 
 muzzle {
-  // Cant assert fails because muzzle assumes all instrumentations will fail
-  // Instrumentations in jaxrs-2.0-common will pass
+  // Can't assert inverse because muzzle assumes all instrumentations will fail.
+  // Instrumentations in jaxrs-2.0-common will pass.
   pass {
     group.set("org.apache.cxf")
     module.set("cxf-rt-frontend-jaxrs")
@@ -60,7 +60,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

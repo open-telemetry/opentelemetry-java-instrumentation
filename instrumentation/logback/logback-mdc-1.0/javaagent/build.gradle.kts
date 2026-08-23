@@ -12,7 +12,7 @@ muzzle {
 
 testing {
   suites {
-    val addBaggageTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("addBaggageTest") {
       targets {
         all {
           testTask.configure {
@@ -22,13 +22,13 @@ testing {
       }
     }
 
-    val loggingKeysTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("loggingKeysTest") {
       targets {
         all {
           testTask.configure {
-            jvmArgs("-Dotel.instrumentation.common.logging.trace-id=trace_id_test")
-            jvmArgs("-Dotel.instrumentation.common.logging.span-id=span_id_test")
-            jvmArgs("-Dotel.instrumentation.common.logging.trace-flags=trace_flags_test")
+            jvmArgs("-Dotel.instrumentation.common.logging.trace-id-key=trace_id_test")
+            jvmArgs("-Dotel.instrumentation.common.logging.span-id-key=span_id_test")
+            jvmArgs("-Dotel.instrumentation.common.logging.trace-flags-key=trace_flags_test")
           }
         }
       }
@@ -36,14 +36,12 @@ testing {
 
     withType(JvmTestSuite::class) {
       dependencies {
-        if (otelProps.testLatestDeps) {
-          implementation("ch.qos.logback:logback-classic:latest.release")
-        } else {
-          implementation("ch.qos.logback:logback-classic") {
-            version {
-              strictly("1.0.0")
-            }
+        implementation("ch.qos.logback:logback-classic") {
+          version {
+            strictly(baseVersion("1.0.0").orLatest())
           }
+        }
+        if (!otelProps.testLatestDeps) {
           implementation("org.slf4j:slf4j-api") {
             version {
               strictly("1.6.4")

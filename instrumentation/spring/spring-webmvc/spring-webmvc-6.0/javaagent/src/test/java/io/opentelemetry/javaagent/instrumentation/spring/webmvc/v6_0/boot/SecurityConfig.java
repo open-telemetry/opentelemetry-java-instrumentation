@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.boot;
 
-import io.opentelemetry.instrumentation.spring.webmvc.boot.SavingAuthenticationProvider;
+import io.opentelemetry.instrumentation.spring.webmvc.v3_1.boot.SavingAuthenticationProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;

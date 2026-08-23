@@ -1,0 +1,52 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.oshi.v5_0;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.util.List;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+class ProcessMetricsTest extends AbstractProcessMetricsTest {
+
+  @RegisterExtension
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  private static List<AutoCloseable> observables;
+
+  @BeforeAll
+  static void setUp() {
+    observables = ProcessMetrics.registerObservers(GlobalOpenTelemetry.get());
+    observables.forEach(cleanup::deferAfterAll);
+  }
+
+  @Override
+  protected void registerMetrics() {}
+
+  @Override
+  protected InstrumentationExtension testing() {
+    return testing;
+  }
+
+  @Override
+  @SuppressWarnings("deprecation") // overriding a deprecated abstract method
+  protected String scopeName() {
+    return "io.opentelemetry.oshi-5.0";
+  }
+
+  @Test
+  void verifyObservablesAreNotEmpty() {
+    assertThat(observables).isNotEmpty();
+  }
+}

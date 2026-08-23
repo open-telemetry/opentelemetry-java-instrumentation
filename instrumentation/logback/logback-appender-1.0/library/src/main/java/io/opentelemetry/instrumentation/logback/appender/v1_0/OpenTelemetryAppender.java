@@ -5,8 +5,7 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
+import static io.opentelemetry.instrumentation.logback.appender.v1_0.internal.AttributeSelectors.split;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
@@ -15,9 +14,10 @@ import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.spi.AppenderAttachable;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.AttributeSelectors;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -26,6 +26,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -35,13 +37,34 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureExperimentalAttributes = false;
   private boolean captureCodeAttributes = false;
   private boolean captureMarkerAttribute = false;
-  private boolean captureKeyValuePairAttributes = false;
-  private boolean captureLoggerContext = false;
   private boolean captureTemplate = false;
   private boolean captureArguments = false;
-  private boolean captureLogstashMarkerAttributes = false;
-  private boolean captureLogstashStructuredArguments = false;
-  private List<String> captureMdcAttributes = emptyList();
+  @Nullable private IncludeExclude mdcAttributes;
+  @Nullable private String mdcAttributesIncluded;
+  @Nullable private String mdcAttributesExcluded;
+  @Nullable private String captureMdcAttributes;
+  private final AtomicBoolean deprecatedMdcAttributesWarningLogged = new AtomicBoolean();
+  @Nullable private IncludeExclude keyValuePairAttributes;
+  @Nullable private String keyValuePairAttributesIncluded;
+  @Nullable private String keyValuePairAttributesExcluded;
+  @Nullable private Boolean captureKeyValuePairAttributes;
+  private final AtomicBoolean deprecatedKeyValuePairAttributesWarningLogged = new AtomicBoolean();
+  @Nullable private IncludeExclude loggerContextAttributes;
+  @Nullable private String loggerContextAttributesIncluded;
+  @Nullable private String loggerContextAttributesExcluded;
+  @Nullable private Boolean captureLoggerContext;
+  private final AtomicBoolean deprecatedLoggerContextAttributesWarningLogged = new AtomicBoolean();
+  @Nullable private IncludeExclude logstashMarkerAttributes;
+  @Nullable private String logstashMarkerAttributesIncluded;
+  @Nullable private String logstashMarkerAttributesExcluded;
+  @Nullable private Boolean captureLogstashMarkerAttributes;
+  private final AtomicBoolean deprecatedLogstashMarkerAttributesWarningLogged = new AtomicBoolean();
+  @Nullable private IncludeExclude logstashStructuredArgumentAttributes;
+  @Nullable private String logstashStructuredArgumentAttributesIncluded;
+  @Nullable private String logstashStructuredArgumentAttributesExcluded;
+  @Nullable private Boolean captureLogstashStructuredArguments;
+  private final AtomicBoolean deprecatedLogstashStructuredArgumentsWarningLogged =
+      new AtomicBoolean();
 
   private volatile OpenTelemetry openTelemetry;
   private LoggingEventMapper mapper;
@@ -96,18 +119,156 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     mapper =
         LoggingEventMapper.builder()
             .setCaptureExperimentalAttributes(captureExperimentalAttributes)
-            .setCaptureMdcAttributes(captureMdcAttributes)
+            .setMdcAttributes(resolveMdcAttributes())
             .setCaptureCodeAttributes(captureCodeAttributes)
             .setCaptureMarkerAttribute(captureMarkerAttribute)
-            .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
-            .setCaptureLoggerContext(captureLoggerContext)
+            .setKeyValuePairAttributes(resolveKeyValuePairAttributes())
+            .setLoggerContextAttributes(resolveLoggerContextAttributes())
             .setCaptureTemplate(captureTemplate)
             .setCaptureArguments(captureArguments)
-            .setCaptureLogstashMarkerAttributes(captureLogstashMarkerAttributes)
-            .setCaptureLogstashStructuredArguments(captureLogstashStructuredArguments)
+            .setLogstashMarkerAttributes(resolveLogstashMarkerAttributes())
+            .setLogstashStructuredArgumentAttributes(resolveLogstashStructuredArgumentAttributes())
             .build();
     eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     super.start();
+  }
+
+  @Nullable
+  private Predicate<String> resolveMdcAttributes() {
+    Predicate<String> selector = AttributeSelectors.create(mdcAttributes);
+    if (selector == null) {
+      selector =
+          AttributeSelectors.create(
+              IncludeExclude.builder()
+                  .setIncluded(split(mdcAttributesIncluded))
+                  .setExcluded(split(mdcAttributesExcluded))
+                  .build());
+    }
+    if (selector != null) {
+      return selector;
+    }
+    Predicate<String> deprecatedSelector =
+        AttributeSelectors.createDeprecated(split(captureMdcAttributes));
+    if (deprecatedSelector != null
+        && deprecatedMdcAttributesWarningLogged.compareAndSet(false, true)) {
+      addWarn(
+          "The captureMdcAttributes setting of the OpenTelemetry appender and the"
+              + " otel.instrumentation.logback-appender.experimental.capture-mdc-attributes"
+              + " property are deprecated and may be removed in the next minor release. Use"
+              + " mdcAttributesIncluded, mdcAttributesExcluded, or"
+              + " otel.instrumentation.logback-appender.experimental.mdc-attributes.included"
+              + " instead.");
+    }
+    return deprecatedSelector;
+  }
+
+  @Nullable
+  private Predicate<String> resolveKeyValuePairAttributes() {
+    Predicate<String> selector = AttributeSelectors.create(keyValuePairAttributes);
+    if (selector == null) {
+      selector =
+          AttributeSelectors.create(
+              IncludeExclude.builder()
+                  .setIncluded(split(keyValuePairAttributesIncluded))
+                  .setExcluded(split(keyValuePairAttributesExcluded))
+                  .build());
+    }
+    if (selector != null) {
+      return selector;
+    }
+    if (captureKeyValuePairAttributes != null
+        && deprecatedKeyValuePairAttributesWarningLogged.compareAndSet(false, true)) {
+      addWarn(
+          "The captureKeyValuePairAttributes setting of the OpenTelemetry appender and the"
+              + " otel.instrumentation.logback-appender.experimental"
+              + ".capture-key-value-pair-attributes property are deprecated and may be removed in"
+              + " the next minor release. Use keyValuePairAttributesIncluded,"
+              + " keyValuePairAttributesExcluded, or otel.instrumentation.logback-appender"
+              + ".experimental.key-value-pair-attributes.included instead.");
+    }
+    return AttributeSelectors.createDeprecated(captureKeyValuePairAttributes);
+  }
+
+  @Nullable
+  private Predicate<String> resolveLoggerContextAttributes() {
+    Predicate<String> selector = AttributeSelectors.create(loggerContextAttributes);
+    if (selector == null) {
+      selector =
+          AttributeSelectors.create(
+              IncludeExclude.builder()
+                  .setIncluded(split(loggerContextAttributesIncluded))
+                  .setExcluded(split(loggerContextAttributesExcluded))
+                  .build());
+    }
+    if (selector != null) {
+      return selector;
+    }
+    if (captureLoggerContext != null
+        && deprecatedLoggerContextAttributesWarningLogged.compareAndSet(false, true)) {
+      addWarn(
+          "The captureLoggerContext setting of the OpenTelemetry appender and the"
+              + " otel.instrumentation.logback-appender.experimental"
+              + ".capture-logger-context-attributes property are deprecated and may be removed in"
+              + " the next minor release. Use loggerContextAttributesIncluded,"
+              + " loggerContextAttributesExcluded, or otel.instrumentation.logback-appender"
+              + ".experimental.logger-context-attributes.included instead.");
+    }
+    return AttributeSelectors.createDeprecated(captureLoggerContext);
+  }
+
+  @Nullable
+  private Predicate<String> resolveLogstashMarkerAttributes() {
+    Predicate<String> selector = AttributeSelectors.create(logstashMarkerAttributes);
+    if (selector == null) {
+      selector =
+          AttributeSelectors.create(
+              IncludeExclude.builder()
+                  .setIncluded(split(logstashMarkerAttributesIncluded))
+                  .setExcluded(split(logstashMarkerAttributesExcluded))
+                  .build());
+    }
+    if (selector != null) {
+      return selector;
+    }
+    if (captureLogstashMarkerAttributes != null
+        && deprecatedLogstashMarkerAttributesWarningLogged.compareAndSet(false, true)) {
+      addWarn(
+          "The captureLogstashMarkerAttributes setting of the OpenTelemetry appender and the"
+              + " otel.instrumentation.logback-appender.experimental"
+              + ".capture-logstash-marker-attributes property are deprecated and may be removed in"
+              + " the next minor release. Use logstashMarkerAttributesIncluded,"
+              + " logstashMarkerAttributesExcluded, or otel.instrumentation.logback-appender"
+              + ".experimental.logstash-marker-attributes.included instead.");
+    }
+    return AttributeSelectors.createDeprecated(captureLogstashMarkerAttributes);
+  }
+
+  @Nullable
+  private Predicate<String> resolveLogstashStructuredArgumentAttributes() {
+    Predicate<String> selector = AttributeSelectors.create(logstashStructuredArgumentAttributes);
+    if (selector == null) {
+      selector =
+          AttributeSelectors.create(
+              IncludeExclude.builder()
+                  .setIncluded(split(logstashStructuredArgumentAttributesIncluded))
+                  .setExcluded(split(logstashStructuredArgumentAttributesExcluded))
+                  .build());
+    }
+    if (selector != null) {
+      return selector;
+    }
+    if (captureLogstashStructuredArguments != null
+        && deprecatedLogstashStructuredArgumentsWarningLogged.compareAndSet(false, true)) {
+      addWarn(
+          "The captureLogstashStructuredArguments setting of the OpenTelemetry appender and the"
+              + " otel.instrumentation.logback-appender.experimental"
+              + ".capture-logstash-structured-arguments property are deprecated and may be removed"
+              + " in the next minor release. Use logstashStructuredArgumentAttributesIncluded,"
+              + " logstashStructuredArgumentAttributesExcluded, or"
+              + " otel.instrumentation.logback-appender.experimental"
+              + ".logstash-structured-argument-attributes.included instead.");
+    }
+    return AttributeSelectors.createDeprecated(captureLogstashStructuredArguments);
   }
 
   @SuppressWarnings("SystemOut")
@@ -175,19 +336,147 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   /**
    * Sets whether the key value pair attributes should be set to logs.
    *
+   * <p>This setter backs the {@code captureKeyValuePairAttributes} element in {@code logback.xml}.
+   *
    * @param captureKeyValuePairAttributes To enable or disable capturing key value pairs
+   * @deprecated Use {@link #setKeyValuePairAttributesIncluded(String)} and {@link
+   *     #setKeyValuePairAttributesExcluded(String)}, or {@link
+   *     #setKeyValuePairAttributes(IncludeExclude)}, which select key value pair keys by glob
+   *     pattern. May be removed in the next minor release.
    */
+  @Deprecated // may be removed in the next minor release
   public void setCaptureKeyValuePairAttributes(boolean captureKeyValuePairAttributes) {
     this.captureKeyValuePairAttributes = captureKeyValuePairAttributes;
+  }
+
+  /**
+   * Configures the key value pair attributes that will be copied to logs.
+   *
+   * <p>Key value pair keys and selector patterns are matched case-sensitively. {@code ?} matches
+   * any single character and {@code *} matches any number of characters, including none, so {@code
+   * *} captures all key value pair attributes. Excluded patterns take precedence over included
+   * patterns, so a selector with only excluded patterns captures every key value pair attribute
+   * that it does not exclude.
+   *
+   * <p>A {@code null} or empty selector leaves this appender without a programmatic selector, in
+   * which case the key value pair attributes are selected by {@link
+   * #setKeyValuePairAttributesIncluded(String)} and {@link
+   * #setKeyValuePairAttributesExcluded(String)}. When these are also absent or empty, the
+   * deprecated {@link #setCaptureKeyValuePairAttributes(boolean)} setting controls whether all key
+   * value pair attributes are captured. Only a non-empty selector configured with this method takes
+   * precedence over the other settings.
+   *
+   * <p>Captured key value pair attributes may contain sensitive information. Configure included and
+   * excluded patterns to limit the data exported as log attributes.
+   */
+  public void setKeyValuePairAttributes(@Nullable IncludeExclude keyValuePairAttributes) {
+    this.keyValuePairAttributes = keyValuePairAttributes;
+  }
+
+  /**
+   * Configures the comma-separated key value pair key patterns that will be copied to logs.
+   *
+   * <p>This setter backs the {@code keyValuePairAttributesIncluded} element in {@code logback.xml}.
+   * It is ignored when a non-empty selector is configured with {@link
+   * #setKeyValuePairAttributes(IncludeExclude)}, and it takes precedence over the deprecated {@link
+   * #setCaptureKeyValuePairAttributes(boolean)}.
+   *
+   * <p>Key value pair keys and patterns are matched case-sensitively. {@code ?} matches any single
+   * character and {@code *} matches any number of characters, including none, so {@code *} captures
+   * all key value pair attributes. Excluded patterns take precedence over included patterns.
+   */
+  public void setKeyValuePairAttributesIncluded(@Nullable String keyValuePairAttributesIncluded) {
+    this.keyValuePairAttributesIncluded = keyValuePairAttributesIncluded;
+  }
+
+  /**
+   * Configures the comma-separated key value pair key patterns that will not be copied to logs.
+   *
+   * <p>This setter backs the {@code keyValuePairAttributesExcluded} element in {@code logback.xml}.
+   * It is ignored when a non-empty selector is configured with {@link
+   * #setKeyValuePairAttributes(IncludeExclude)}, and it takes precedence over the deprecated {@link
+   * #setCaptureKeyValuePairAttributes(boolean)}.
+   *
+   * <p>Key value pair keys and patterns are matched case-sensitively. {@code ?} matches any single
+   * character and {@code *} matches any number of characters, including none. Excluded patterns
+   * take precedence over included patterns, so configuring only excluded patterns captures every
+   * key value pair attribute that they do not exclude.
+   */
+  public void setKeyValuePairAttributesExcluded(@Nullable String keyValuePairAttributesExcluded) {
+    this.keyValuePairAttributesExcluded = keyValuePairAttributesExcluded;
   }
 
   /**
    * Sets whether the logger context properties should be set to logs.
    *
    * @param captureLoggerContext To enable or disable capturing logger context properties
+   * @deprecated Use {@link #setLoggerContextAttributesIncluded(String)} and {@link
+   *     #setLoggerContextAttributesExcluded(String)}, or {@link
+   *     #setLoggerContextAttributes(IncludeExclude)}, which select logger context property keys by
+   *     glob pattern. May be removed in the next minor release.
    */
+  @Deprecated // may be removed in the next minor release
   public void setCaptureLoggerContext(boolean captureLoggerContext) {
     this.captureLoggerContext = captureLoggerContext;
+  }
+
+  /**
+   * Configures the logger context properties that will be copied to logs.
+   *
+   * <p>Logger context property keys and selector patterns are matched case-sensitively. {@code ?}
+   * matches any single character and {@code *} matches any number of characters, including none, so
+   * {@code *} captures all logger context properties. Excluded patterns take precedence over
+   * included patterns, so a selector with only excluded patterns captures every logger context
+   * property that it does not exclude.
+   *
+   * <p>A {@code null} or empty selector leaves this appender without a programmatic selector, in
+   * which case the logger context properties are selected by {@link
+   * #setLoggerContextAttributesIncluded(String)} and {@link
+   * #setLoggerContextAttributesExcluded(String)}, and then by the deprecated {@link
+   * #setCaptureLoggerContext(boolean)}. No logger context properties are captured when all of these
+   * are absent or empty.
+   *
+   * <p>Captured logger context properties may contain sensitive information. Configure included and
+   * excluded patterns to limit the data exported as log attributes.
+   */
+  public void setLoggerContextAttributes(@Nullable IncludeExclude loggerContextAttributes) {
+    this.loggerContextAttributes = loggerContextAttributes;
+  }
+
+  /**
+   * Configures the comma-separated logger context property key patterns that will be copied to
+   * logs.
+   *
+   * <p>This setter backs the {@code loggerContextAttributesIncluded} element in {@code
+   * logback.xml}. It is ignored when a non-empty selector is configured with {@link
+   * #setLoggerContextAttributes(IncludeExclude)}, and it takes precedence over the deprecated
+   * {@link #setCaptureLoggerContext(boolean)}.
+   *
+   * <p>Logger context property keys and patterns are matched case-sensitively. {@code ?} matches
+   * any single character and {@code *} matches any number of characters, including none, so {@code
+   * *} captures all logger context properties. Excluded patterns take precedence over included
+   * patterns.
+   */
+  public void setLoggerContextAttributesIncluded(@Nullable String loggerContextAttributesIncluded) {
+    this.loggerContextAttributesIncluded = loggerContextAttributesIncluded;
+  }
+
+  /**
+   * Configures the comma-separated logger context property key patterns that will not be copied to
+   * logs.
+   *
+   * <p>This setter backs the {@code loggerContextAttributesExcluded} element in {@code
+   * logback.xml}. It is ignored when a non-empty selector is configured with {@link
+   * #setLoggerContextAttributes(IncludeExclude)}, and it takes precedence over the deprecated
+   * {@link #setCaptureLoggerContext(boolean)}.
+   *
+   * <p>Logger context property keys and patterns are matched case-sensitively. {@code ?} matches
+   * any single character and {@code *} matches any number of characters, including none. Excluded
+   * patterns take precedence over included patterns, so configuring only excluded patterns captures
+   * every logger context property that they do not exclude.
+   */
+  public void setLoggerContextAttributesExcluded(@Nullable String loggerContextAttributesExcluded) {
+    this.loggerContextAttributesExcluded = loggerContextAttributesExcluded;
   }
 
   /**
@@ -209,23 +498,224 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     this.captureArguments = captureArguments;
   }
 
-  /** Sets whether the Logstash marker attributes should be captured. */
+  /**
+   * Sets whether the Logstash marker attributes should be captured.
+   *
+   * @param captureLogstashMarkerAttributes To enable or disable capturing Logstash marker
+   *     attributes
+   * @deprecated Use {@link #setLogstashMarkerAttributesIncluded(String)} and {@link
+   *     #setLogstashMarkerAttributesExcluded(String)}, or {@link
+   *     #setLogstashMarkerAttributes(IncludeExclude)}, which select Logstash marker keys by glob
+   *     pattern. May be removed in the next minor release.
+   */
+  @Deprecated // may be removed in the next minor release
   public void setCaptureLogstashMarkerAttributes(boolean captureLogstashMarkerAttributes) {
     this.captureLogstashMarkerAttributes = captureLogstashMarkerAttributes;
   }
 
-  /** Sets whether the Logstash StructuredArguments should be captured. */
+  /**
+   * Configures the Logstash marker attributes that will be copied to logs.
+   *
+   * <p>Logstash marker keys and selector patterns are matched case-sensitively. {@code ?} matches
+   * any single character and {@code *} matches any number of characters, including none, so {@code
+   * *} captures all Logstash marker attributes. Excluded patterns take precedence over included
+   * patterns, so a selector with only excluded patterns captures every Logstash marker attribute
+   * that it does not exclude.
+   *
+   * <p>A {@code null} or empty selector leaves this appender without a programmatic selector, in
+   * which case the Logstash marker attributes are selected by {@link
+   * #setLogstashMarkerAttributesIncluded(String)} and {@link
+   * #setLogstashMarkerAttributesExcluded(String)}, and then by the deprecated {@link
+   * #setCaptureLogstashMarkerAttributes(boolean)}. No Logstash marker attributes are captured when
+   * all of these are absent or empty.
+   *
+   * <p>Captured Logstash marker attributes may contain sensitive information. Configure included
+   * and excluded patterns to limit the data exported as log attributes.
+   */
+  public void setLogstashMarkerAttributes(@Nullable IncludeExclude logstashMarkerAttributes) {
+    this.logstashMarkerAttributes = logstashMarkerAttributes;
+  }
+
+  /**
+   * Configures the comma-separated Logstash marker key patterns that will be copied to logs.
+   *
+   * <p>This setter backs the {@code logstashMarkerAttributesIncluded} element in {@code
+   * logback.xml}. It is ignored when a non-empty selector is configured with {@link
+   * #setLogstashMarkerAttributes(IncludeExclude)}, and it takes precedence over the deprecated
+   * {@link #setCaptureLogstashMarkerAttributes(boolean)}.
+   *
+   * <p>Logstash marker keys and patterns are matched case-sensitively. {@code ?} matches any single
+   * character and {@code *} matches any number of characters, including none, so {@code *} captures
+   * all Logstash marker attributes. Excluded patterns take precedence over included patterns.
+   */
+  public void setLogstashMarkerAttributesIncluded(
+      @Nullable String logstashMarkerAttributesIncluded) {
+    this.logstashMarkerAttributesIncluded = logstashMarkerAttributesIncluded;
+  }
+
+  /**
+   * Configures the comma-separated Logstash marker key patterns that will not be copied to logs.
+   *
+   * <p>This setter backs the {@code logstashMarkerAttributesExcluded} element in {@code
+   * logback.xml}. It is ignored when a non-empty selector is configured with {@link
+   * #setLogstashMarkerAttributes(IncludeExclude)}, and it takes precedence over the deprecated
+   * {@link #setCaptureLogstashMarkerAttributes(boolean)}.
+   *
+   * <p>Logstash marker keys and patterns are matched case-sensitively. {@code ?} matches any single
+   * character and {@code *} matches any number of characters, including none. Excluded patterns
+   * take precedence over included patterns, so configuring only excluded patterns captures every
+   * Logstash marker attribute that they do not exclude.
+   */
+  public void setLogstashMarkerAttributesExcluded(
+      @Nullable String logstashMarkerAttributesExcluded) {
+    this.logstashMarkerAttributesExcluded = logstashMarkerAttributesExcluded;
+  }
+
+  /**
+   * Sets whether the Logstash StructuredArguments should be captured.
+   *
+   * @deprecated Use {@link #setLogstashStructuredArgumentAttributesIncluded(String)} and {@link
+   *     #setLogstashStructuredArgumentAttributesExcluded(String)}, or {@link
+   *     #setLogstashStructuredArgumentAttributes(IncludeExclude)}, which select Logstash structured
+   *     argument keys by glob pattern. May be removed in the next minor release.
+   */
+  @Deprecated // may be removed in the next minor release
   public void setCaptureLogstashStructuredArguments(boolean captureLogstashStructuredArguments) {
     this.captureLogstashStructuredArguments = captureLogstashStructuredArguments;
   }
 
-  /** Configures the {@link MDC} attributes that will be copied to logs. */
-  public void setCaptureMdcAttributes(String attributes) {
-    if (attributes != null) {
-      captureMdcAttributes = filterBlanksAndNulls(attributes.split(","));
-    } else {
-      captureMdcAttributes = emptyList();
-    }
+  /**
+   * Configures the Logstash structured argument attributes that will be copied to logs.
+   *
+   * <p>Logstash structured argument keys and selector patterns are matched case-sensitively. {@code
+   * ?} matches any single character and {@code *} matches any number of characters, including none,
+   * so {@code *} captures all Logstash structured argument attributes. Excluded patterns take
+   * precedence over included patterns, so a selector with only excluded patterns captures every
+   * Logstash structured argument attribute that it does not exclude.
+   *
+   * <p>A {@code null} or empty selector leaves this appender without a programmatic selector, in
+   * which case the Logstash structured argument attributes are selected by {@link
+   * #setLogstashStructuredArgumentAttributesIncluded(String)} and {@link
+   * #setLogstashStructuredArgumentAttributesExcluded(String)}, and then by the deprecated {@link
+   * #setCaptureLogstashStructuredArguments(boolean)}. No Logstash structured argument attributes
+   * are captured when all of these are absent or empty.
+   *
+   * <p>Captured Logstash structured argument attributes may contain sensitive information.
+   * Configure included and excluded patterns to limit the data exported as log attributes.
+   */
+  public void setLogstashStructuredArgumentAttributes(
+      @Nullable IncludeExclude logstashStructuredArgumentAttributes) {
+    this.logstashStructuredArgumentAttributes = logstashStructuredArgumentAttributes;
+  }
+
+  /**
+   * Configures the comma-separated Logstash structured argument key patterns that will be copied to
+   * logs.
+   *
+   * <p>This setter backs the {@code logstashStructuredArgumentAttributesIncluded} element in {@code
+   * logback.xml}. It is ignored when a non-empty selector is configured with {@link
+   * #setLogstashStructuredArgumentAttributes(IncludeExclude)}, and it takes precedence over the
+   * deprecated {@link #setCaptureLogstashStructuredArguments(boolean)}.
+   *
+   * <p>Logstash structured argument keys and patterns are matched case-sensitively. {@code ?}
+   * matches any single character and {@code *} matches any number of characters, including none, so
+   * {@code *} captures all Logstash structured argument attributes. Excluded patterns take
+   * precedence over included patterns.
+   */
+  public void setLogstashStructuredArgumentAttributesIncluded(
+      @Nullable String logstashStructuredArgumentAttributesIncluded) {
+    this.logstashStructuredArgumentAttributesIncluded =
+        logstashStructuredArgumentAttributesIncluded;
+  }
+
+  /**
+   * Configures the comma-separated Logstash structured argument key patterns that will not be
+   * copied to logs.
+   *
+   * <p>This setter backs the {@code logstashStructuredArgumentAttributesExcluded} element in {@code
+   * logback.xml}. It is ignored when a non-empty selector is configured with {@link
+   * #setLogstashStructuredArgumentAttributes(IncludeExclude)}, and it takes precedence over the
+   * deprecated {@link #setCaptureLogstashStructuredArguments(boolean)}.
+   *
+   * <p>Logstash structured argument keys and patterns are matched case-sensitively. {@code ?}
+   * matches any single character and {@code *} matches any number of characters, including none.
+   * Excluded patterns take precedence over included patterns, so configuring only excluded patterns
+   * captures every Logstash structured argument attribute that they do not exclude.
+   */
+  public void setLogstashStructuredArgumentAttributesExcluded(
+      @Nullable String logstashStructuredArgumentAttributesExcluded) {
+    this.logstashStructuredArgumentAttributesExcluded =
+        logstashStructuredArgumentAttributesExcluded;
+  }
+
+  /**
+   * Configures the {@link MDC} attributes that will be copied to logs.
+   *
+   * <p>MDC keys and selector patterns are matched case-sensitively. {@code ?} matches any single
+   * character and {@code *} matches any number of characters, including none, so {@code *} captures
+   * all MDC attributes. Excluded patterns take precedence over included patterns, so a selector
+   * with only excluded patterns captures every MDC attribute that it does not exclude.
+   *
+   * <p>A {@code null} or empty selector leaves this appender without a programmatic selector, in
+   * which case the MDC attributes are selected by {@link #setMdcAttributesIncluded(String)} and
+   * {@link #setMdcAttributesExcluded(String)}, or, when those are absent or empty too, by the
+   * deprecated {@link #setCaptureMdcAttributes(String)}. No MDC attributes are captured when all of
+   * these are absent or empty. Only a non-empty selector configured with this method takes
+   * precedence over the other settings.
+   *
+   * <p>Captured MDC attributes may contain sensitive information. Configure included and excluded
+   * patterns to limit the data exported as log attributes.
+   */
+  public void setMdcAttributes(@Nullable IncludeExclude mdcAttributes) {
+    this.mdcAttributes = mdcAttributes == null || mdcAttributes.isEmpty() ? null : mdcAttributes;
+  }
+
+  /**
+   * Configures the comma-separated {@link MDC} key patterns that will be copied to logs.
+   *
+   * <p>This setter backs the {@code mdcAttributesIncluded} element in {@code logback.xml}. It is
+   * ignored when a non-empty selector is configured with {@link #setMdcAttributes(IncludeExclude)},
+   * and it takes precedence over the deprecated {@link #setCaptureMdcAttributes(String)}.
+   *
+   * <p>MDC keys and patterns are matched case-sensitively. {@code ?} matches any single character
+   * and {@code *} matches any number of characters, including none, so {@code *} captures all MDC
+   * attributes. Excluded patterns take precedence over included patterns.
+   */
+  public void setMdcAttributesIncluded(@Nullable String mdcAttributesIncluded) {
+    this.mdcAttributesIncluded = mdcAttributesIncluded;
+  }
+
+  /**
+   * Configures the comma-separated {@link MDC} key patterns that will not be copied to logs.
+   *
+   * <p>This setter backs the {@code mdcAttributesExcluded} element in {@code logback.xml}. It is
+   * ignored when a non-empty selector is configured with {@link #setMdcAttributes(IncludeExclude)},
+   * and it takes precedence over the deprecated {@link #setCaptureMdcAttributes(String)}.
+   *
+   * <p>MDC keys and patterns are matched case-sensitively. {@code ?} matches any single character
+   * and {@code *} matches any number of characters, including none. Excluded patterns take
+   * precedence over included patterns, so configuring only excluded patterns captures every MDC
+   * attribute that they do not exclude.
+   */
+  public void setMdcAttributesExcluded(@Nullable String mdcAttributesExcluded) {
+    this.mdcAttributesExcluded = mdcAttributesExcluded;
+  }
+
+  /**
+   * Configures the comma-separated {@link MDC} keys that will be copied to logs.
+   *
+   * <p>Keys are matched by exact, case-sensitive equality, except that the single value {@code *}
+   * captures all MDC attributes. This setting is ignored when a non-empty selector is configured
+   * with {@link #setMdcAttributes(IncludeExclude)}, {@link #setMdcAttributesIncluded(String)} or
+   * {@link #setMdcAttributesExcluded(String)}.
+   *
+   * @deprecated Use {@link #setMdcAttributesIncluded(String)} and {@link
+   *     #setMdcAttributesExcluded(String)}, or {@link #setMdcAttributes(IncludeExclude)}, which
+   *     select MDC keys by glob pattern. May be removed in the next minor release.
+   */
+  @Deprecated // may be removed in the next minor release
+  public void setCaptureMdcAttributes(@Nullable String captureMdcAttributes) {
+    this.captureMdcAttributes = captureMdcAttributes;
   }
 
   /**
@@ -275,10 +765,5 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
   private void emit(OpenTelemetry openTelemetry, ILoggingEvent event) {
     mapper.emit(openTelemetry.getLogsBridge(), event, -1);
-  }
-
-  // copied from SDK's DefaultConfigProperties
-  private static List<String> filterBlanksAndNulls(String[] values) {
-    return Arrays.stream(values).map(String::trim).filter(s -> !s.isEmpty()).collect(toList());
   }
 }

@@ -47,7 +47,7 @@ dependencies {
 
 testing {
   suites {
-    val version8Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("version8Test") {
       dependencies {
         sources {
           java {
@@ -61,12 +61,8 @@ testing {
         implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
         implementation("org.testcontainers:testcontainers-elasticsearch")
 
-        if (otelProps.testLatestDeps) {
-          // 8.10+ has native, on-by-default opentelemetry instrumentation
-          implementation("co.elastic.clients:elasticsearch-java:8.9.+")
-        } else {
-          implementation("co.elastic.clients:elasticsearch-java:8.0.0")
-        }
+        // 8.10+ has native, on-by-default opentelemetry instrumentation
+        implementation("co.elastic.clients:elasticsearch-java:${baseVersion("8.0.0").orLatest("8.9.+")}")
       }
     }
   }
@@ -79,7 +75,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

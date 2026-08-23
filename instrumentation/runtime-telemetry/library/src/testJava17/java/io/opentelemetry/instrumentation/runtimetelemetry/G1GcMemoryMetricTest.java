@@ -7,8 +7,6 @@ package io.opentelemetry.instrumentation.runtimetelemetry;
 
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.ATTR_G1_EDEN_SPACE;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.ATTR_G1_SURVIVOR_SPACE;
-import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.ATTR_GC_ACTION;
-import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.ATTR_GC_NAME;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.BYTES;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.END_OF_MAJOR_GC;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.END_OF_MINOR_GC;
@@ -21,24 +19,19 @@ import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constan
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.METRIC_NAME_MEMORY;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.METRIC_NAME_MEMORY_AFTER;
 import static io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants.SECONDS;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_ACTION;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
-import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.LongSumAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class G1GcMemoryMetricTest {
 
   @RegisterExtension
-  JfrExtension jfrExtension =
-      new JfrExtension(
-          jfrConfig -> {
-            jfrConfig.disableAllFeatures();
-            jfrConfig.enableFeature(JfrFeature.GC_DURATION_METRICS);
-            jfrConfig.enableFeature(JfrFeature.MEMORY_POOL_METRICS);
-          });
+  JfrExtension jfrExtension = new JfrExtension("jvm.gc.duration", "jvm.memory.*");
 
   @Test
   void shouldHaveMemoryMetrics() {
@@ -52,29 +45,29 @@ class G1GcMemoryMetricTest {
                 .hasName(METRIC_NAME_MEMORY)
                 .hasUnit(BYTES)
                 .hasDescription(METRIC_DESCRIPTION_MEMORY)
-                .satisfies(G1GcMemoryMetricTest::hasGcAttributes),
+                .hasLongSumSatisfying(G1GcMemoryMetricTest::hasGcAttributes),
         metric ->
             metric
                 .hasName(METRIC_NAME_COMMITTED)
                 .hasUnit(BYTES)
                 .hasDescription(METRIC_DESCRIPTION_COMMITTED)
                 // TODO: need JFR support for the other G1 pools
-                .satisfies(
-                    data ->
-                        assertThat(data.getLongSumData().getPoints())
-                            .anyMatch(p -> p.getAttributes().equals(ATTR_G1_EDEN_SPACE))),
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.containsPointsSatisfying(
+                            point -> point.hasAttributes(ATTR_G1_EDEN_SPACE))),
         metric ->
             metric
                 .hasName(METRIC_NAME_MEMORY_AFTER)
                 .hasUnit(BYTES)
                 .hasDescription(METRIC_DESCRIPTION_MEMORY_AFTER)
-                .satisfies(G1GcMemoryMetricTest::hasGcAttributes));
+                .hasLongSumSatisfying(G1GcMemoryMetricTest::hasGcAttributes));
   }
 
-  private static void hasGcAttributes(MetricData data) {
-    assertThat(data.getLongSumData().getPoints())
-        .anyMatch(p -> p.getAttributes().equals(ATTR_G1_EDEN_SPACE))
-        .anyMatch(p -> p.getAttributes().equals(ATTR_G1_SURVIVOR_SPACE));
+  private static void hasGcAttributes(LongSumAssert sum) {
+    sum.containsPointsSatisfying(
+        point -> point.hasAttributes(ATTR_G1_EDEN_SPACE),
+        point -> point.hasAttributes(ATTR_G1_SURVIVOR_SPACE));
   }
 
   @Test
@@ -82,9 +75,9 @@ class G1GcMemoryMetricTest {
     // TODO: Need a reliable way to test old and young gen GC in isolation.
     System.gc();
     Attributes minorGcAttributes =
-        Attributes.of(ATTR_GC_NAME, "G1 Young Generation", ATTR_GC_ACTION, END_OF_MINOR_GC);
+        Attributes.of(JVM_GC_NAME, "G1 Young Generation", JVM_GC_ACTION, END_OF_MINOR_GC);
     Attributes majorGcAttributes =
-        Attributes.of(ATTR_GC_NAME, "G1 Old Generation", ATTR_GC_ACTION, END_OF_MAJOR_GC);
+        Attributes.of(JVM_GC_NAME, "G1 Old Generation", JVM_GC_ACTION, END_OF_MAJOR_GC);
     jfrExtension.waitAndAssertMetrics(
         metric ->
             metric

@@ -134,6 +134,14 @@ class WithSpanInstrumentationTest {
   }
 
   @Test
+  void annotatedConstructorDoesNotCreateSpan() throws InterruptedException {
+    new TracedWithSpan("unused");
+
+    Thread.sleep(500); // sleep a bit just to make sure no span is captured
+    assertThat(testing.waitForTraces(0)).isEmpty();
+  }
+
+  @Test
   void completedCompletionStage() {
     CompletableFuture<String> future = CompletableFuture.completedFuture("Done");
     new TracedWithSpan().completionStage(future);

@@ -21,28 +21,28 @@ public class TracingSubscriber<T> implements Subscriber<T> {
 
   @Override
   public void onSubscribe(Subscription subscription) {
-    try (Scope ignore = context.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       delegate.onSubscribe(subscription);
     }
   }
 
   @Override
   public void onNext(T t) {
-    try (Scope ignore = context.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       delegate.onNext(t);
     }
   }
 
   @Override
   public void onError(Throwable throwable) {
-    try (Scope ignore = context.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       delegate.onError(throwable);
     }
   }
 
   @Override
   public void onComplete() {
-    try (Scope ignore = context.makeCurrent()) {
+    try (Scope ignored = context.makeCurrent()) {
       delegate.onComplete();
     }
   }

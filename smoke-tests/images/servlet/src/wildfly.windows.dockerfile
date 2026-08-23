@@ -2,7 +2,7 @@ ARG jdkImageName
 ARG jdkImageHash
 
 # Unzip in a separate container so that zip file layer is not part of final image
-FROM mcr.microsoft.com/windows/servercore:ltsc2022@sha256:e000e9a1712065a0218447c20ae19984b447fa741d11cf64696b8a1172fcd7da as builder
+FROM mcr.microsoft.com/windows/servercore:ltsc2022@sha256:b841bb042e13a079f68fc82461f15abcefe8063fb9a3072120348252f13a6ce3 as builder
 ARG version
 ARG baseDownloadUrl
 

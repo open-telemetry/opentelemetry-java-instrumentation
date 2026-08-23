@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v6_0;
 
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticTransportRequest;
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticsearchTransportAttributesGetter;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticTransportRequest;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.elasticsearch.action.ActionResponse;

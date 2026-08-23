@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.core.Completable;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
@@ -34,7 +35,8 @@ class TransactionImplInstrumentation implements TypeInstrumentation {
   public static class WrapHandlerAdvice {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static Completable<?> wrapHandler(@Advice.Return Completable<?> handler) {
+    @Nullable
+    public static Completable<?> wrapHandler(@Advice.Return @Nullable Completable<?> handler) {
       return CompletableWrapper.wrap(handler);
     }
   }

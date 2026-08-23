@@ -15,7 +15,7 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:tomcat:tomcat-common:javaagent"))
+  implementation(project(":instrumentation:tomcat:tomcat-common-7.0:javaagent"))
   implementation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
@@ -34,8 +34,8 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-parameters=test-parameter")
+  test {
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-parameter")
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")

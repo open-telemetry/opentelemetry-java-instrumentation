@@ -16,11 +16,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
-public class BatchRecordsHandler implements Handler<KafkaConsumerRecords<String, String>> {
+class BatchRecordsHandler implements Handler<KafkaConsumerRecords<String, String>> {
 
-  public static final BatchRecordsHandler INSTANCE = new BatchRecordsHandler();
+  static final BatchRecordsHandler INSTANCE = new BatchRecordsHandler();
 
   private static final AtomicInteger lastBatchSize = new AtomicInteger();
+  private static final AtomicInteger remainingRecords = new AtomicInteger();
   private static volatile CountDownLatch messageReceived = new CountDownLatch(0);
 
   private BatchRecordsHandler() {}
@@ -39,16 +40,21 @@ public class BatchRecordsHandler implements Handler<KafkaConsumerRecords<String,
     }
   }
 
-  public static void reset(int expectedBatchSize) {
+  static void reset(int expectedBatchSize) {
     messageReceived = new CountDownLatch(expectedBatchSize);
     lastBatchSize.set(0);
+    remainingRecords.set(expectedBatchSize);
   }
 
-  public static void waitForMessages() throws InterruptedException {
+  static void waitForMessages() throws InterruptedException {
     assertThat(messageReceived.await(30, SECONDS)).isTrue();
   }
 
-  public static int getLastBatchSize() {
+  static int getLastBatchSize() {
     return lastBatchSize.get();
+  }
+
+  static boolean recordProcessed() {
+    return remainingRecords.decrementAndGet() == 0;
   }
 }

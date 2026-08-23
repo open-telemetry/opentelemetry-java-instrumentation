@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.resources.internal;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.as;
@@ -15,13 +15,12 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.ByteArrayInputStream;
 import java.util.Set;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ResourceDeclarativeConfigTest {
@@ -33,7 +32,7 @@ class ResourceDeclarativeConfigTest {
   @Test
   void endToEnd() {
     String yaml =
-        "file_format: \"1.0\"\n"
+        "file_format: \"1.1\"\n"
             + "tracer_provider:\n"
             + "resource:\n"
             + "  attributes:\n"
@@ -44,7 +43,6 @@ class ResourceDeclarativeConfigTest {
             + "      - host:\n"
             + "      - process:\n";
 
-    boolean java8 = "1.8".equals(System.getProperty("java.specification.version"));
     OpenTelemetrySdk openTelemetrySdk =
         DeclarativeConfiguration.parseAndCreate(new ByteArrayInputStream(yaml.getBytes(UTF_8)))
             .getSdk();
@@ -53,7 +51,7 @@ class ResourceDeclarativeConfigTest {
         .satisfies(
             resource -> {
               // From .resource.attributes
-              assertThat(resource.getAttribute(stringKey("service.name"))).isEqualTo("my-service");
+              assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo("my-service");
 
               // From ComponentProvider SPI
               Set<String> attributeKeys =
@@ -63,23 +61,16 @@ class ResourceDeclarativeConfigTest {
               // ContainerResourceComponentProvider - no container attributes reliably provided
               // HostIdResourceComponentProvider - host.id attribute not reliably provided
               // HostResourceComponentProvider
-              assertThat(attributeKeys).contains("host.arch");
-              assertThat(attributeKeys).contains("host.name");
+              assertThat(attributeKeys).contains("host.arch", "host.name");
               // OsResourceComponentProvider
-              assertThat(attributeKeys).contains("os.description");
-              assertThat(attributeKeys).contains("os.type");
+              assertThat(attributeKeys).contains("os.description", "os.type");
               // ProcessResourceComponentProvider
+              assertThat(attributeKeys).contains("process.executable.path", "process.pid");
               assertThat(attributeKeys)
-                  .contains(
-                      java8 || OS.WINDOWS.isCurrentOs()
-                          ? "process.command_line"
-                          : "process.command_args");
-              assertThat(attributeKeys).contains("process.executable.path");
-              assertThat(attributeKeys).contains("process.pid");
+                  .doesNotContain("process.command_args", "process.command_line");
               // ProcessRuntimeResourceComponentProvider
               assertThat(attributeKeys).contains("process.runtime.description");
-              assertThat(attributeKeys).contains("process.runtime.name");
-              assertThat(attributeKeys).contains("process.runtime.version");
+              assertThat(attributeKeys).contains("process.runtime.name", "process.runtime.version");
             });
   }
 }

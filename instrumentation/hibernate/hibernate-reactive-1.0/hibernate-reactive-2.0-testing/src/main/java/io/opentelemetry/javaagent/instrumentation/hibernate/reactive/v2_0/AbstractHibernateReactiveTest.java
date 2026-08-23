@@ -56,10 +56,8 @@ public abstract class AbstractHibernateReactiveTest {
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected final Vertx vertx = Vertx.vertx();
-  private GenericContainer<?> container;
   private String host;
   private int port;
-  private EntityManagerFactory entityManagerFactory;
   private Mutiny.SessionFactory mutinySessionFactory;
   private Stage.SessionFactory stageSessionFactory;
 
@@ -68,7 +66,7 @@ public abstract class AbstractHibernateReactiveTest {
   @BeforeAll
   void setUp() throws Exception {
     cleanup.deferAfterAll(vertx::close);
-    container =
+    GenericContainer<?> container =
         new GenericContainer<>("postgres:9.6.8")
             .withEnv("POSTGRES_USER", USER_DB)
             .withEnv("POSTGRES_PASSWORD", PW_DB)
@@ -84,7 +82,7 @@ public abstract class AbstractHibernateReactiveTest {
     System.setProperty("db.host", host);
     System.setProperty("db.port", String.valueOf(port));
 
-    entityManagerFactory = createEntityManagerFactory();
+    EntityManagerFactory entityManagerFactory = createEntityManagerFactory();
     cleanup.deferAfterAll(entityManagerFactory);
 
     Value value = new Value("name");
@@ -289,7 +287,7 @@ public abstract class AbstractHibernateReactiveTest {
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT tempdb.Value")
+                            emitStableDatabaseSemconv() ? "select Value" : "SELECT tempdb.Value")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -303,7 +301,7 @@ public abstract class AbstractHibernateReactiveTest {
                                 "select v1_0.id,v1_0.name from Value v1_0 where v1_0.id=$1"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT Value" : null),
+                                emitStableDatabaseSemconv() ? "select Value" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "SELECT"),

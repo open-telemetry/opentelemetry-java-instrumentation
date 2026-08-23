@@ -30,9 +30,9 @@ public class Servlet2InstrumentationModule extends InstrumentationModule {
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return not(
         hasClassesNamed(
-            // added in 3.0
+            // added in Servlet 3.0
             "javax.servlet.AsyncEvent",
-            // added in 3.0
+            // added in Servlet 3.0
             "javax.servlet.AsyncListener"));
   }
 

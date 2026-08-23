@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.java.impl.producer.SendReceiptImpl;
@@ -17,13 +18,11 @@ import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 class RocketMqProducerAttributeGetter
     implements MessagingAttributesGetter<PublishingMessageImpl, SendReceiptImpl> {
 
-  @Nullable
   @Override
   public String getSystem(PublishingMessageImpl message) {
     return "rocketmq";
   }
 
-  @Nullable
   @Override
   public String getDestination(PublishingMessageImpl message) {
     return message.getTopic();
@@ -62,7 +61,6 @@ class RocketMqProducerAttributeGetter
     return null;
   }
 
-  @Nullable
   @Override
   public String getMessageId(PublishingMessageImpl message, @Nullable SendReceiptImpl sendReceipt) {
     return message.getMessageId().toString();
@@ -88,5 +86,10 @@ class RocketMqProducerAttributeGetter
       return singletonList(value);
     }
     return emptyList();
+  }
+
+  @Override
+  public Collection<String> getMessageHeaderNames(PublishingMessageImpl message) {
+    return message.getProperties().keySet();
   }
 }

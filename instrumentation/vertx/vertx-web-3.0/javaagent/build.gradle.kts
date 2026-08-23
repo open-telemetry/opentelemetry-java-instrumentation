@@ -22,11 +22,11 @@ dependencies {
 
 testing {
   suites {
-    val version3Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("version3Test") {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
 
-        val version = if (otelProps.testLatestDeps) "3.+" else "3.0.0"
+        val version = baseVersion("3.0.0").orLatest("3.+")
         implementation("io.vertx:vertx-web:$version")
         implementation("io.vertx:vertx-jdbc-client:$version")
         implementation("io.vertx:vertx-codegen:$version")
@@ -34,18 +34,18 @@ testing {
       }
     }
 
-    val version41Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("version41Test") {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
 
-        val version = if (otelProps.testLatestDeps) "4.+" else "4.1.0"
+        val version = baseVersion("4.1.0").orLatest("4.+")
         implementation("io.vertx:vertx-web:$version")
         implementation("io.vertx:vertx-jdbc-client:$version")
         implementation("io.vertx:vertx-codegen:$version")
       }
     }
 
-    val version5Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("version5Test") {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
 

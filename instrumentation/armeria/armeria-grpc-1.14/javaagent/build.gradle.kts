@@ -68,14 +68,14 @@ tasks {
     jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
   }
 
-  val testBothSemconv by registering(Test::class) {
+  val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")

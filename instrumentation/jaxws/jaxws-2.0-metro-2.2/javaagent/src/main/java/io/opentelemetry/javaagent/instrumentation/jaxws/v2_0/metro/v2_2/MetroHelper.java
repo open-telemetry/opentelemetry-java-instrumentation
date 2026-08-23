@@ -11,6 +11,7 @@ import com.sun.xml.ws.api.message.Packet;
 import com.sun.xml.ws.api.server.WSEndpoint;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import javax.annotation.Nullable;
 
 public class MetroHelper {
   private static final String REQUEST_KEY = MetroHelper.class.getName() + ".Request";
@@ -46,7 +47,7 @@ public class MetroHelper {
     end(packet, null);
   }
 
-  public static void end(Packet packet, Throwable throwable) {
+  public static void end(Packet packet, @Nullable Throwable throwable) {
     Scope scope = (Scope) packet.invocationProperties.remove(SCOPE_KEY);
     if (scope == null) {
       return;

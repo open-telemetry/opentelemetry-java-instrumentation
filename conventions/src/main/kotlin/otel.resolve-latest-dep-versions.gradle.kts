@@ -3,7 +3,7 @@ import io.opentelemetry.javaagent.muzzle.MuzzleExtension
 import org.eclipse.aether.util.version.GenericVersionScheme
 
 tasks {
-  val resolveLatestDepVersions by registering {
+  register<DefaultTask>("resolveLatestDepVersions") {
     group = "help"
     description = "Resolve latest dependency versions and write to .github/config/latest-dep-versions.json"
 
@@ -22,10 +22,14 @@ tasks {
       // Seed the versions map with the existing JSON so that entries which fail to resolve
       // (broken transitive deps, missing repos, etc.) are preserved rather than deleted.
       val outputFile = file(".github/config/latest-dep-versions.json")
+
       @Suppress("UNCHECKED_CAST")
       val existingVersions: Map<String, String> =
-        if (outputFile.exists()) groovy.json.JsonSlurper().parse(outputFile) as Map<String, String>
-        else emptyMap()
+        if (outputFile.exists()) {
+          groovy.json.JsonSlurper().parse(outputFile) as Map<String, String>
+        } else {
+          emptyMap()
+        }
 
       val versions = sortedMapOf<String, String>()
       versions.putAll(existingVersions)
@@ -52,33 +56,35 @@ tasks {
 
       // Resolve an artifact with a stability filter, rejecting pre-release versions.
       // Results are cached to avoid repeated Maven Central lookups for the same artifact.
-      fun resolveStableVersion(project: Project, group: String, module: String, version: String): String? {
-        return stableVersionCache.getOrPut(Triple(group, module, version)) {
-          val detached = project.configurations.detachedConfiguration(
-            project.dependencies.create("$group:$module:$version")
-          )
-          // Disable transitive resolution: we only need to know the latest stable version of
-          // this artifact itself, not its full dependency graph. Transitive resolution can fail
-          // on classifier-specific native JARs or other platform-specific artifacts, causing
-          // resolveStableVersion() to return null and fall back to a pre-release version.
-          detached.isTransitive = false
-          detached.resolutionStrategy.componentSelection.all {
-            if (!AcceptableVersions.isStable(candidate.version)) {
-              reject("pre-release version")
-            }
+      fun resolveStableVersion(project: Project, group: String, module: String, version: String): String? = stableVersionCache.getOrPut(Triple(group, module, version)) {
+        val detached = project.configurations.detachedConfiguration(
+          project.dependencies.create("$group:$module:$version")
+        )
+        // Disable transitive resolution: we only need to know the latest stable version of
+        // this artifact itself, not its full dependency graph. Transitive resolution can fail
+        // on classifier-specific native JARs or other platform-specific artifacts, causing
+        // resolveStableVersion() to return null and fall back to a pre-release version.
+        detached.isTransitive = false
+        detached.resolutionStrategy.componentSelection.all {
+          if (!AcceptableVersions.isStable(candidate.version)) {
+            reject("pre-release version")
           }
-          val resolutionResult = detached.incoming.resolutionResult
-          resolutionResult.rootComponent.get()
-            .dependencies
-            .filterIsInstance<org.gradle.api.artifacts.result.ResolvedDependencyResult>()
-            .firstOrNull()
-            ?.selected?.moduleVersion?.version
         }
+        val resolutionResult = detached.incoming.resolutionResult
+        resolutionResult.rootComponent.get()
+          .dependencies
+          .filterIsInstance<org.gradle.api.artifacts.result.ResolvedDependencyResult>()
+          .firstOrNull()
+          ?.selected?.moduleVersion?.version
       }
 
       subprojects {
         configurations
-          .filter { it.isCanBeResolved && it.name.contains("test", ignoreCase = true) && it.name.endsWith("RuntimeClasspath") }
+          .filter {
+            it.isCanBeResolved &&
+              ((it.name.contains("test", ignoreCase = true) && it.name.endsWith("RuntimeClasspath")) ||
+                it.name == "compileClasspath")
+          }
           .forEach { config ->
             config.incoming.resolutionResult.allDependencies.forEach { dep ->
               if (dep is org.gradle.api.artifacts.result.ResolvedDependencyResult) {
@@ -86,9 +92,12 @@ tasks {
                 if (requested is org.gradle.api.artifacts.component.ModuleComponentSelector) {
                   val reqVersion = requested.version
                   val selectedVersion = dep.selected.moduleVersion?.version ?: return@forEach
-                  val version = if (AcceptableVersions.isStable(selectedVersion)) selectedVersion
-                    else resolveStableVersion(this@subprojects, requested.group, requested.module, reqVersion)
-                    ?: selectedVersion // Fall back to pre-release if no stable version exists in range
+                  val version = if (AcceptableVersions.isStable(selectedVersion)) {
+                    selectedVersion
+                  } else {
+                    resolveStableVersion(this@subprojects, requested.group, requested.module, reqVersion)
+                      ?: selectedVersion // Fall back to pre-release if no stable version exists in range
+                  }
                   if (reqVersion == "latest.release") {
                     recordVersion("${requested.group}:${requested.module}#+", version)
                   } else if (reqVersion.contains("+")) {

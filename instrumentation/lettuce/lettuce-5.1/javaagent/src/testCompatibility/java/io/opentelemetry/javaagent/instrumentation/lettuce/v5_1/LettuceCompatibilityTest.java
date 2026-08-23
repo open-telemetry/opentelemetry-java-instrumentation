@@ -34,7 +34,7 @@ class LettuceCompatibilityTest extends AbstractLettuceClientTest {
     return RedisClient.create(uri);
   }
 
-  private static RedisCommands<String, String> syncCommands;
+  private RedisCommands<String, String> syncCommands;
 
   @BeforeAll
   void setUp() throws UnknownHostException {
@@ -54,7 +54,7 @@ class LettuceCompatibilityTest extends AbstractLettuceClientTest {
   }
 
   @AfterAll
-  static void cleanUp() {
+  void cleanUp() {
     connection.close();
     redisClient.shutdown();
     redisServer.stop();

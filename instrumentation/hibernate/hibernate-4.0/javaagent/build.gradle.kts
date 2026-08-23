@@ -40,7 +40,7 @@ dependencies {
 
 testing {
   suites {
-    val version5Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("version5Test") {
       targets.all {
         testTask.configure {
           jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
@@ -65,15 +65,10 @@ testing {
         implementation("org.hsqldb:hsqldb:2.0.0")
         implementation(project(":instrumentation:hibernate:testing"))
 
-        if (otelProps.testLatestDeps) {
-          implementation("org.hibernate:hibernate-core:5.0.0.Final")
-          implementation("org.hibernate:hibernate-entitymanager:5.0.0.Final")
-          implementation("org.springframework.data:spring-data-jpa:2.3.0.RELEASE")
-        } else {
-          implementation("org.hibernate:hibernate-core:5.+")
-          implementation("org.hibernate:hibernate-entitymanager:5.+")
-          implementation("org.springframework.data:spring-data-jpa:(2.4.0,3)")
-        }
+        val hibernateVersion = baseVersion("5.+").orLatest("5.0.0.Final")
+        implementation("org.hibernate:hibernate-core:$hibernateVersion")
+        implementation("org.hibernate:hibernate-entitymanager:$hibernateVersion")
+        implementation("org.springframework.data:spring-data-jpa:${baseVersion("(2.4.0,3)").orLatest("2.3.0.RELEASE")}")
       }
     }
   }
@@ -89,7 +84,7 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

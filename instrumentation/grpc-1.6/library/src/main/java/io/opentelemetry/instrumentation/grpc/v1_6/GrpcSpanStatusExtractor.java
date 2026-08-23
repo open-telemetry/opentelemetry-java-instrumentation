@@ -46,7 +46,7 @@ enum GrpcSpanStatusExtractor implements SpanStatusExtractor<GrpcRequest, Status>
   public void extract(
       SpanStatusBuilder spanStatusBuilder,
       GrpcRequest request,
-      Status status,
+      @Nullable Status status,
       @Nullable Throwable error) {
     if (status == null) {
       if (error instanceof StatusRuntimeException) {

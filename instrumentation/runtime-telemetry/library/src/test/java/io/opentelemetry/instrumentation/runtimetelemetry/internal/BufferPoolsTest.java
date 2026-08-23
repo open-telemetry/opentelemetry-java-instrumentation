@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.semconv.incubating.JvmIncubatingAttributes.JVM_BUFFER_POOL_NAME;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -65,8 +65,7 @@ class BufferPoolsTest {
                             point ->
                                 point
                                     .hasValue(10)
-                                    .hasAttribute(
-                                        stringKey("jvm.buffer.pool.name"), "buffer_pool_1"))));
+                                    .hasAttribute(JVM_BUFFER_POOL_NAME, "buffer_pool_1"))));
     testing.waitAndAssertMetrics(
         "test",
         metric ->
@@ -80,8 +79,7 @@ class BufferPoolsTest {
                             point ->
                                 point
                                     .hasValue(11)
-                                    .hasAttribute(
-                                        stringKey("jvm.buffer.pool.name"), "buffer_pool_1"))));
+                                    .hasAttribute(JVM_BUFFER_POOL_NAME, "buffer_pool_1"))));
     testing.waitAndAssertMetrics(
         "test",
         metric ->
@@ -95,8 +93,7 @@ class BufferPoolsTest {
                             point ->
                                 point
                                     .hasValue(12)
-                                    .hasAttribute(
-                                        stringKey("jvm.buffer.pool.name"), "buffer_pool_1"))));
+                                    .hasAttribute(JVM_BUFFER_POOL_NAME, "buffer_pool_1"))));
   }
 
   @Test

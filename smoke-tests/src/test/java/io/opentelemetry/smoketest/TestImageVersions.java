@@ -27,7 +27,7 @@ public class TestImageVersions {
   public static final String ZULU_OPENJDK_8U31_VERSION = "20251117.19421579350";
 
   // smoke-test-servlet-* (all servlet variants)
-  public static final String SERVLET_VERSION = "20260429.25096195273";
+  public static final String SERVLET_VERSION = "20260502.25257829980";
 
   private TestImageVersions() {}
 }

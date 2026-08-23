@@ -63,7 +63,7 @@ abstract class AbstractHttpServerInstrumentationTest
   @Test def testTimeout(): Unit = {
     val request = AggregatedHttpRequest.of(
       HttpMethod.GET,
-      address.resolve(TIMEOUT.rawPath()).toString
+      h1Address.resolve(TIMEOUT.rawPath()).toString
     )
     val response = client.execute(request).aggregate.join
     assertThat(response.status.code).isEqualTo(TIMEOUT.getStatus)

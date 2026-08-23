@@ -18,18 +18,16 @@ dependencies {
   testLibrary("com.amazonaws:aws-java-sdk-dynamodb:1.11.106")
   testLibrary("com.amazonaws:aws-java-sdk-sns:1.11.106")
   testLibrary("com.amazonaws:aws-java-sdk-sqs:1.11.106")
-
-  // last version that does not use json protocol
-  latestDepTestLibrary("com.amazonaws:aws-java-sdk-sqs:1.12.583") // documented limitation
 }
 
 tasks {
   withType<Test>().configureEach {
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "Test-Message-Header")
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testReceiveSpansDisabled by registering(Test::class) {
+  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
@@ -37,6 +35,19 @@ tasks {
       includeTestsMatching("SqsSuppressReceiveSpansTest")
     }
     include("**/SqsSuppressReceiveSpansTest.*")
+  }
+
+  val testStableSemconv = register<Test>("testStableSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      excludeTestsMatching("SqsSuppressReceiveSpansTest")
+    }
+    jvmArgs(
+      "-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
+      "-Dotel.semconv-stability.opt-in=database",
+    )
   }
 
   test {
@@ -47,7 +58,7 @@ tasks {
   }
 
   check {
-    dependsOn(testReceiveSpansDisabled)
+    dependsOn(testReceiveSpansDisabled, testStableSemconv)
   }
 }
 

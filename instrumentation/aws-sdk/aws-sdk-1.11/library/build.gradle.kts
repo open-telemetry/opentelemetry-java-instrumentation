@@ -19,9 +19,6 @@ dependencies {
   testLibrary("com.amazonaws:aws-java-sdk-s3:1.11.106")
   testLibrary("com.amazonaws:aws-java-sdk-sns:1.11.106")
   testLibrary("com.amazonaws:aws-java-sdk-stepfunctions:1.11.106")
-
-  // last version that does not use json protocol
-  latestDepTestLibrary("com.amazonaws:aws-java-sdk-sqs:1.12.583") // documented limitation
 }
 
 if (!otelProps.testLatestDeps) {
@@ -39,7 +36,7 @@ if (!otelProps.testLatestDeps) {
 
 testing {
   suites {
-    val testSecretsManager by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("testSecretsManager") {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
@@ -51,13 +48,41 @@ testing {
 }
 
 tasks {
-  val testStableSemconv by registering(Test::class) {
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+  }
+
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
+  val testMessagingPreview = register<Test>("testMessagingPreview") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*Sqs*")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+  }
+
+  val testBothSemconv = register<Test>("testBothSemconv") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*Sqs*")
+    }
+    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
+  }
+
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+  }
+
   check {
-    dependsOn(testing.suites, testStableSemconv)
+    dependsOn(testing.suites, testStableSemconv, testMessagingPreview, testBothSemconv, testExceptionSignalLogs)
   }
 }

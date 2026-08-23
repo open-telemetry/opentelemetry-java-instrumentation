@@ -22,7 +22,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
       ContextPropagationOperator.create();
 
   @Override
-  public InstrumentationExtension testing() {
+  protected InstrumentationExtension testing() {
     return testing;
   }
 

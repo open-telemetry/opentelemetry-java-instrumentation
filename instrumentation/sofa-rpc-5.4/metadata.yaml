@@ -1,0 +1,12 @@
+display_name: SOFARPC
+description: >
+  The SOFARPC instrumentation provides RPC client spans and metrics, and RPC server spans and
+  metrics for SOFARPC RPC calls.
+semantic_conventions:
+  - RPC_CLIENT_SPANS
+  - RPC_CLIENT_METRICS
+  - RPC_SERVER_SPANS
+  - RPC_SERVER_METRICS
+library_link: https://github.com/sofastack/sofa-rpc/
+configurations:
+  - ref: common.peer-service-mapping

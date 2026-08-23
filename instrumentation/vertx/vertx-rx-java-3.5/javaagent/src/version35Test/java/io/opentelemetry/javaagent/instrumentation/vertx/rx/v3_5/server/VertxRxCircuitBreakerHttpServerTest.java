@@ -38,7 +38,7 @@ class VertxRxCircuitBreakerHttpServerTest extends AbstractVertxRxHttpServerTest 
   }
 
   public static class VertxRxCircuitBreakerWebTestServer extends AbstractVertxRxVerticle {
-    CircuitBreaker breaker;
+    private CircuitBreaker breaker;
 
     @Override
     void handle(RoutingContext ctx, ServerEndpoint endpoint, Runnable action) {

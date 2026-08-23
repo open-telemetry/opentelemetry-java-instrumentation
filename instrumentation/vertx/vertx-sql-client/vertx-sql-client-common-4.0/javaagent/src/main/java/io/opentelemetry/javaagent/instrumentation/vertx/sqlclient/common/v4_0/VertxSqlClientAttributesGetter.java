@@ -5,13 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
-import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MICROSOFT_SQL_SERVER;
-import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
-import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -43,21 +37,7 @@ class VertxSqlClientAttributesGetter
 
   @Override
   public SqlDialect getSqlDialect(VertxSqlClientRequest request) {
-    switch (request.getDbSystemName()) {
-      case MYSQL:
-        // MySQL treats double-quoted fragments as string literals by default
-        return DOUBLE_QUOTES_ARE_STRING_LITERALS;
-      case MICROSOFT_SQL_SERVER:
-        // SQL Server can treat double quotes as string literals when QUOTED_IDENTIFIER is OFF.
-        return DOUBLE_QUOTES_ARE_STRING_LITERALS;
-      case POSTGRESQL:
-      case ORACLE_DB:
-      case IBM_DB2:
-        // These databases treat double-quoted fragments as identifiers
-        return DOUBLE_QUOTES_ARE_IDENTIFIERS;
-      default:
-        return DOUBLE_QUOTES_ARE_STRING_LITERALS;
-    }
+    return fromDbSystemName(request.getDbSystemName());
   }
 
   @Deprecated // to be removed in 3.0
@@ -92,13 +72,20 @@ class VertxSqlClientAttributesGetter
 
   @Nullable
   @Override
+  public Long getDbOperationBatchSize(VertxSqlClientRequest request) {
+    return request.getOperationBatchSize();
+  }
+
+  @Nullable
+  @Override
   public String getErrorType(
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
     return responseStatusExtractor.apply(error);
   }
 
   @Override
-  public boolean isParameterizedQuery(VertxSqlClientRequest request) {
+  public boolean isParameterizedQuery(VertxSqlClientRequest request, int queryIndex) {
+    // Vert.x SQL client does not support mixed parameterization within a single request.
     return request.isParameterizedQuery();
   }
 

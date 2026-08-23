@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
@@ -29,15 +28,10 @@ public abstract class AbstractWebClientCustomizerAutoConfigurationTest<T> {
 
   protected abstract void customizeWebClient(T customizer, WebClient.Builder builder);
 
-  protected ApplicationContextRunner contextRunner;
-
-  @BeforeEach
-  void setUp() {
-    contextRunner =
-        new ApplicationContextRunner()
-            .withBean(OpenTelemetry.class, OpenTelemetry::noop)
-            .withConfiguration(autoConfigurations());
-  }
+  protected final ApplicationContextRunner contextRunner =
+      new ApplicationContextRunner()
+          .withBean(OpenTelemetry.class, OpenTelemetry::noop)
+          .withConfiguration(autoConfigurations());
 
   @Test
   void shouldCreateCustomizerWhenEnabled() {
@@ -46,7 +40,6 @@ public abstract class AbstractWebClientCustomizerAutoConfigurationTest<T> {
         .run(
             context ->
                 assertThat(context.getBean("otelWebClientCustomizer"))
-                    .isNotNull()
                     .isInstanceOf(webClientCustomizerClass()));
   }
 
@@ -62,7 +55,6 @@ public abstract class AbstractWebClientCustomizerAutoConfigurationTest<T> {
     contextRunner.run(
         context ->
             assertThat(context.getBean("otelWebClientCustomizer"))
-                .isNotNull()
                 .isInstanceOf(webClientCustomizerClass()));
   }
 

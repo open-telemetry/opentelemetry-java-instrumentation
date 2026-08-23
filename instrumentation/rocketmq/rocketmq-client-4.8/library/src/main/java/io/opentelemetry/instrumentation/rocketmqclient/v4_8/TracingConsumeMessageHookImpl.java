@@ -12,8 +12,9 @@ import org.apache.rocketmq.client.hook.ConsumeMessageHook;
 
 final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
 
-  private static final VirtualField<ConsumeMessageContext, ContextAndScope> contextAndScopeField =
-      VirtualField.find(ConsumeMessageContext.class, ContextAndScope.class);
+  private static final VirtualField<ConsumeMessageContext, ContextAndScope>
+      CONTEXT_AND_SCOPE_FIELD =
+          VirtualField.find(ConsumeMessageContext.class, ContextAndScope.class);
 
   private final RocketMqConsumerInstrumenter instrumenter;
 
@@ -32,15 +33,21 @@ final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
       return;
     }
     Context parentContext = Context.current();
-    Context newContext = instrumenter.start(parentContext, context.getMsgList());
+    RocketMqConsumerInstrumenter.ConsumerContext consumerContext =
+        instrumenter.start(
+            parentContext,
+            context.getMsgList(),
+            context.getConsumerGroup(),
+            RocketMqNamespaceUtil.getNamespace(context));
 
     // it's safe to store the scope in the rocketMq message context, both before() and after()
     // methods are always called from the same thread; see:
     // - ConsumeMessageConcurrentlyService$ConsumeRequest#run()
     // - ConsumeMessageOrderlyService$ConsumeRequest#run()
-    if (newContext != parentContext) {
-      contextAndScopeField.set(
-          context, ContextAndScope.create(newContext, newContext.makeCurrent()));
+    if (consumerContext != null) {
+      Context newContext = consumerContext.getContext();
+      CONTEXT_AND_SCOPE_FIELD.set(
+          context, ContextAndScope.create(consumerContext, newContext.makeCurrent()));
     }
   }
 
@@ -49,10 +56,10 @@ final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
     if (context == null || context.getMsgList() == null || context.getMsgList().isEmpty()) {
       return;
     }
-    ContextAndScope contextAndScope = contextAndScopeField.get(context);
+    ContextAndScope contextAndScope = CONTEXT_AND_SCOPE_FIELD.get(context);
     if (contextAndScope != null) {
       contextAndScope.close();
-      instrumenter.end(contextAndScope.getContext(), context.getMsgList());
+      instrumenter.end(contextAndScope.getConsumerContext(), context);
     }
   }
 }

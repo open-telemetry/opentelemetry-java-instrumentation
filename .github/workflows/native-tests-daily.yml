@@ -25,3 +25,4 @@ jobs:
     uses: ./.github/workflows/reusable-workflow-notification.yml
     with:
       success: ${{ needs.graalvm-native-tests.result == 'success' }}
+      failure-notification-after-attempts: 2

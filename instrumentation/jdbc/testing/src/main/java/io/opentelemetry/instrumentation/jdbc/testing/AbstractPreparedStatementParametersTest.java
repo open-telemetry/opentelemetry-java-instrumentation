@@ -20,12 +20,14 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
@@ -48,6 +50,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.sqlite.JDBC;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractPreparedStatementParametersTest {
@@ -63,11 +66,12 @@ public abstract class AbstractPreparedStatementParametersTest {
   private static final String DATABASE_NAME = "jdbcUnitTest";
   private static final String DATABASE_NAME_LOWER = DATABASE_NAME.toLowerCase(Locale.ROOT);
 
-  private static final Map<String, String> jdbcUrls =
+  private static final Map<String, String> JDBC_URLS =
       ImmutableMap.of(
           "h2", "jdbc:h2:mem:" + DATABASE_NAME,
           "derby", "jdbc:derby:memory:" + DATABASE_NAME,
-          "hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME);
+          "hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME,
+          "sqlite", "jdbc:sqlite:file:" + DATABASE_NAME + "?mode=memory");
   private static final Map<String, String> jdbcUserNames = Maps.newHashMap();
   private static final Properties connectionProps = new Properties();
 
@@ -75,6 +79,7 @@ public abstract class AbstractPreparedStatementParametersTest {
     jdbcUserNames.put("derby", "APP");
     jdbcUserNames.put("h2", null);
     jdbcUserNames.put("hsqldb", "SA");
+    jdbcUserNames.put("sqlite", null);
 
     connectionProps.put("databaseName", "someDb");
     connectionProps.put("OPEN_NEW", "true"); // So H2 doesn't complain about username/password.
@@ -85,7 +90,7 @@ public abstract class AbstractPreparedStatementParametersTest {
     return Stream.of(
         Arguments.of(
             "h2",
-            new Driver().connect(jdbcUrls.get("h2"), null),
+            new Driver().connect(JDBC_URLS.get("h2"), null),
             null,
             "SELECT 3, ?",
             "SELECT 3, ?",
@@ -94,7 +99,7 @@ public abstract class AbstractPreparedStatementParametersTest {
             null),
         Arguments.of(
             "derby",
-            new EmbeddedDriver().connect(jdbcUrls.get("derby"), connectionProps),
+            new EmbeddedDriver().connect(JDBC_URLS.get("derby"), connectionProps),
             "APP",
             "SELECT 3 FROM SYSIBM.SYSDUMMY1 WHERE IBMREQD=? OR 1=1",
             "SELECT 3 FROM SYSIBM.SYSDUMMY1 WHERE IBMREQD=? OR 1=1",
@@ -103,13 +108,22 @@ public abstract class AbstractPreparedStatementParametersTest {
             "SYSIBM.SYSDUMMY1"),
         Arguments.of(
             "hsqldb",
-            new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null),
+            new JDBCDriver().connect(JDBC_URLS.get("hsqldb"), null),
             "SA",
             "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS WHERE USER_NAME=? OR 1=1",
             "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS WHERE USER_NAME=? OR 1=1",
             "SELECT INFORMATION_SCHEMA.SYSTEM_USERS",
             "hsqldb:mem:",
-            "INFORMATION_SCHEMA.SYSTEM_USERS"));
+            "INFORMATION_SCHEMA.SYSTEM_USERS"),
+        Arguments.of(
+            "sqlite",
+            new JDBC().connect(JDBC_URLS.get("sqlite"), new Properties()),
+            null,
+            "SELECT 3, ?",
+            "SELECT 3, ?",
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "sqlite:memory:",
+            null));
   }
 
   @ParameterizedTest
@@ -364,6 +378,35 @@ public abstract class AbstractPreparedStatementParametersTest {
 
   @ParameterizedTest
   @MethodSource("preparedStatementStream")
+  void testCustomObjectPreparedStatementParameter(
+      String system,
+      Connection connection,
+      String username,
+      String query,
+      String sanitizedQuery,
+      String spanName,
+      String url,
+      String table)
+      throws SQLException {
+    // Derby and HSQLDB reject setObject() with an unknown custom type at execution time
+    Assumptions.assumeFalse(system.equalsIgnoreCase("derby"));
+    Assumptions.assumeFalse(system.equalsIgnoreCase("hsqldb"));
+
+    test(
+        system,
+        connection,
+        username,
+        query,
+        sanitizedQuery,
+        spanName,
+        url,
+        table,
+        statement -> statement.setObject(1, new IdType()),
+        "id");
+  }
+
+  @ParameterizedTest
+  @MethodSource("preparedStatementStream")
   void testObjectWithTypePreparedStatementParameter(
       String system,
       Connection connection,
@@ -573,6 +616,7 @@ public abstract class AbstractPreparedStatementParametersTest {
       String table)
       throws SQLException {
     Assumptions.assumeFalse(system.equalsIgnoreCase("derby"));
+    Assumptions.assumeFalse(system.equalsIgnoreCase("sqlite"));
 
     test(
         system,
@@ -643,6 +687,13 @@ public abstract class AbstractPreparedStatementParametersTest {
                                 equalTo(
                                     DB_QUERY_PARAMETER.getAttributeKey("0"),
                                     expectedParameterValue))));
+  }
+
+  private static class IdType implements Serializable {
+    @Override
+    public String toString() {
+      return "id";
+    }
   }
 
   private interface ThrowingConsumer<T, E extends Throwable> {

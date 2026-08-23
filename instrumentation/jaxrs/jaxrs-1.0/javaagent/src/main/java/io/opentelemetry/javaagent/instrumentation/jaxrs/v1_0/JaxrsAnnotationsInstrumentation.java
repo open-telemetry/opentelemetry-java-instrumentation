@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.JaxrsServerSpanNaming.serverSpanName;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.JaxrsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -68,10 +69,10 @@ class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
   public static class JaxRsAnnotationsAdvice {
 
     public static class AdviceScope {
-      private final HandlerData handlerData;
+      @Nullable private final HandlerData handlerData;
       private final CallDepth callDepth;
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
 
       public AdviceScope(CallDepth callDepth, Class<?> type, Method method) {
         this.callDepth = callDepth;
@@ -86,10 +87,7 @@ class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         handlerData = new HandlerData(type, method);
 
         HttpServerRoute.update(
-            parentContext,
-            HttpServerRouteSource.CONTROLLER,
-            JaxrsServerSpanNaming.serverSpanName(),
-            handlerData);
+            parentContext, HttpServerRouteSource.CONTROLLER, serverSpanName(), handlerData);
 
         if (!instrumenter().shouldStart(parentContext, handlerData)) {
           scope = null;

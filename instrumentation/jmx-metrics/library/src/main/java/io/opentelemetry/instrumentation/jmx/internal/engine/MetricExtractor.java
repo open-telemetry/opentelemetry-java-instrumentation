@@ -51,8 +51,10 @@ public class MetricExtractor {
     return attributes;
   }
 
-  void setStatus(DetectionStatus status) {
+  synchronized boolean setStatus(DetectionStatus status) {
+    boolean first = this.status == null;
     this.status = status;
+    return first;
   }
 
   @Nullable

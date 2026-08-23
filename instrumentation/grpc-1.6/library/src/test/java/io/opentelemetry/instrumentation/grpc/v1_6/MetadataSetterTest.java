@@ -18,7 +18,6 @@ import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 class MetadataSetterTest {
@@ -53,9 +52,8 @@ class MetadataSetterTest {
                 return metadata.keys();
               }
 
-              @Nullable
               @Override
-              public String get(@Nullable Metadata metadata, String key) {
+              public String get(Metadata metadata, String key) {
                 if (metadata == null) {
                   return null;
                 }

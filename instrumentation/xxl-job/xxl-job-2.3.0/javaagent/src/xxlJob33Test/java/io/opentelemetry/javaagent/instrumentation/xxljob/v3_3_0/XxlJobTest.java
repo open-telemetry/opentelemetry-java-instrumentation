@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.xxljob.v3_3_0;
 
-import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.DEFAULT_GLUE_UPDATE_TIME;
-import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.GLUE_JOB_GROOVY_SOURCE;
-import static io.opentelemetry.instrumentation.xxljob.XxlJobTestingConstants.GLUE_JOB_SHELL_SCRIPT;
+import static io.opentelemetry.instrumentation.xxljob.common.v1_9_2.XxlJobTestingConstants.DEFAULT_GLUE_UPDATE_TIME;
+import static io.opentelemetry.instrumentation.xxljob.common.v1_9_2.XxlJobTestingConstants.GLUE_JOB_GROOVY_SOURCE;
+import static io.opentelemetry.instrumentation.xxljob.common.v1_9_2.XxlJobTestingConstants.GLUE_JOB_SHELL_SCRIPT;
 
+import com.xxl.job.core.executor.XxlJobExecutor;
 import com.xxl.job.core.glue.GlueFactory;
 import com.xxl.job.core.glue.GlueTypeEnum;
 import com.xxl.job.core.handler.IJobHandler;
@@ -17,7 +18,9 @@ import com.xxl.job.core.handler.impl.MethodJobHandler;
 import com.xxl.job.core.handler.impl.ScriptJobHandler;
 import com.xxl.job.core.openapi.model.TriggerRequest;
 import com.xxl.job.core.thread.JobThread;
-import io.opentelemetry.instrumentation.xxljob.AbstractXxlJobTest;
+import io.opentelemetry.instrumentation.xxljob.common.v1_9_2.AbstractXxlJobTest;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 
 class XxlJobTest extends AbstractXxlJobTest {
 
@@ -34,6 +37,7 @@ class XxlJobTest extends AbstractXxlJobTest {
   private static final ScriptJobHandler scriptJobHandler =
       new ScriptJobHandler(
           2, DEFAULT_GLUE_UPDATE_TIME, GLUE_JOB_SHELL_SCRIPT, GlueTypeEnum.GLUE_SHELL);
+  private static final XxlJobExecutor xxlJobExecutor = new XxlJobExecutor();
 
   private static IJobHandler createGroovyHandler() {
     try {
@@ -41,6 +45,16 @@ class XxlJobTest extends AbstractXxlJobTest {
     } catch (Exception e) {
       throw new IllegalStateException(e);
     }
+  }
+
+  @BeforeAll
+  static void start() throws Exception {
+    xxlJobExecutor.start();
+  }
+
+  @AfterAll
+  static void stop() {
+    xxlJobExecutor.destroy();
   }
 
   @Override

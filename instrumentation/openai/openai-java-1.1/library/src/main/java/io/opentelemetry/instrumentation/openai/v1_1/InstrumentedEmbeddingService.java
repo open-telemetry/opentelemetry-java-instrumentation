@@ -14,8 +14,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Method;
 
-final class InstrumentedEmbeddingService
-    extends DelegatingInvocationHandler<EmbeddingService, InstrumentedEmbeddingService> {
+final class InstrumentedEmbeddingService extends DelegatingInvocationHandler<EmbeddingService> {
 
   private final Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> instrumenter;
 

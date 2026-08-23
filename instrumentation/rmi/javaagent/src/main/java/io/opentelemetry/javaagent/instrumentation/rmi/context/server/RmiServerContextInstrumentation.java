@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
@@ -39,7 +40,8 @@ public class RmiServerContextInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static Target methodExit(@Advice.Argument(0) Object oe, @Advice.Return Target result) {
+    public static Target methodExit(
+        @Advice.Argument(0) Object oe, @Advice.Return @Nullable Target result) {
       // comparing toString() output allows us to avoid using reflection to be able to compare
       // ObjID and ObjectEndpoint objects
       // ObjectEndpoint#toString() only returns this.objId.toString() value which is exactly

@@ -24,7 +24,7 @@ public final class KafkaClientsConsumerProcessTracing {
     return wrappingEnabled.get();
   }
 
-  public static BooleanSupplier wrappingEnabledSupplier() {
+  public static BooleanSupplier getWrappingEnabledSupplier() {
     return KafkaClientsConsumerProcessTracing::isWrappingEnabled;
   }
 

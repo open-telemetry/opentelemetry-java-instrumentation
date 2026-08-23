@@ -19,7 +19,7 @@ class ResteasyClientTest extends AbstractJaxRsClientTest {
     ResteasyClientBuilder builder =
         new ResteasyClientBuilder()
             .establishConnectionTimeout(CONNECTION_TIMEOUT.toMillis(), MILLISECONDS);
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       builder.socketTimeout(READ_TIMEOUT.toMillis(), MILLISECONDS);
     }
     return builder;

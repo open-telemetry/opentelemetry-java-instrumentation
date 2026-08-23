@@ -16,7 +16,7 @@ public class AwsLambdaSingletons {
 
   private static final AwsLambdaFunctionInstrumenter functionInstrumenter =
       AwsLambdaFunctionInstrumenterFactory.createInstrumenter(GlobalOpenTelemetry.get());
-  private static final Duration FLUSH_TIMEOUT =
+  public static final Duration FLUSH_TIMEOUT =
       Duration.ofMillis(
           DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "aws_lambda")
               .getLong(
@@ -25,10 +25,6 @@ public class AwsLambdaSingletons {
 
   public static AwsLambdaFunctionInstrumenter functionInstrumenter() {
     return functionInstrumenter;
-  }
-
-  public static Duration flushTimeout() {
-    return FLUSH_TIMEOUT;
   }
 
   private AwsLambdaSingletons() {}

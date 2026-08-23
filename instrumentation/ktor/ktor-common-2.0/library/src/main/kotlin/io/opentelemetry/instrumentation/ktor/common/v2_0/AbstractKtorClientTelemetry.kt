@@ -17,8 +17,7 @@ abstract class AbstractKtorClientTelemetry(
   private val propagators: ContextPropagators,
 ) {
 
-  internal fun createSpan(requestBuilder: HttpRequestBuilder): Context? {
-    val parentContext = Context.current()
+  internal fun createSpan(requestBuilder: HttpRequestBuilder, parentContext: Context): Context? {
     val requestData = requestBuilder.build()
 
     return if (instrumenter.shouldStart(parentContext, requestData)) {

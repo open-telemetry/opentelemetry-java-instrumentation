@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class VertxHttpClientTest extends AbstractHttpClientTest<HttpClientRequest> {
@@ -36,13 +37,18 @@ class VertxHttpClientTest extends AbstractHttpClientTest<HttpClientRequest> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  private final HttpClient httpClient = buildClient();
+  private final Vertx vertx = Vertx.vertx(new VertxOptions());
+  private final HttpClient httpClient = buildClient(vertx);
 
-  private static HttpClient buildClient() {
-    Vertx vertx = Vertx.vertx(new VertxOptions());
+  private static HttpClient buildClient(Vertx vertx) {
     HttpClientOptions clientOptions =
         new HttpClientOptions().setConnectTimeout(Math.toIntExact(CONNECTION_TIMEOUT.toMillis()));
     return vertx.createHttpClient(clientOptions);
+  }
+
+  @AfterAll
+  void closeVertx() {
+    vertx.close();
   }
 
   @Override

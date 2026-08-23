@@ -57,7 +57,7 @@ class ElasticsearchRest6Test {
   @BeforeAll
   static void setUp() {
     elasticsearch =
-        new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.16");
+        new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:6.8.16");
     // limit memory usage
     elasticsearch.withEnv(
         "ES_JAVA_OPTS",

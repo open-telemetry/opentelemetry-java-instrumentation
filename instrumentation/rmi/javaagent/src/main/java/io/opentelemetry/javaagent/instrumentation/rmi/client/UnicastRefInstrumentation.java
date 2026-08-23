@@ -42,9 +42,9 @@ class UnicastRefInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      private AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context) {
         this.context = context;
-        this.scope = scope;
+        this.scope = context.makeCurrent();
       }
 
       @Nullable
@@ -54,7 +54,7 @@ class UnicastRefInstrumentation implements TypeInstrumentation {
           return null;
         }
         Context context = instrumenter().start(parentContext, method);
-        return new AdviceScope(context, context.makeCurrent());
+        return new AdviceScope(context);
       }
 
       public void end(Method method, @Nullable Throwable throwable) {

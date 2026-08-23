@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_0.server;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.HttpServerRequestTracingHandler.HTTP_SERVER_REQUEST;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_0.server.NettyServerSingletons.instrumenter;
 
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
@@ -33,19 +32,23 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
 
     customizeResponse(context, (HttpResponse) msg);
 
+    ctx.channel().attr(AttributeKeys.SERVER_CONTEXT).remove();
+    NettyCommonRequest request = ctx.channel().attr(HTTP_SERVER_REQUEST).getAndRemove();
     try (Scope ignored = context.makeCurrent()) {
       ctx.write(msg, prm);
     } catch (Throwable t) {
-      end(ctx.channel(), (HttpResponse) msg, t);
+      end(context, request, (HttpResponse) msg, t);
       throw t;
     }
-    end(ctx.channel(), (HttpResponse) msg, null);
+    end(context, request, (HttpResponse) msg, null);
   }
 
   // make sure to remove the server context on end() call
-  private static void end(Channel channel, HttpResponse response, @Nullable Throwable error) {
-    Context context = channel.attr(AttributeKeys.SERVER_CONTEXT).getAndRemove();
-    NettyCommonRequest request = channel.attr(HTTP_SERVER_REQUEST).getAndRemove();
+  private static void end(
+      Context context,
+      NettyCommonRequest request,
+      HttpResponse response,
+      @Nullable Throwable error) {
     error = NettyErrorHolder.getOrDefault(context, error);
     instrumenter().end(context, request, response, error);
   }

@@ -10,12 +10,10 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class FinagleHttpInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class FinagleHttpInstrumentationModule extends InstrumentationModule {
 
   public FinagleHttpInstrumentationModule() {
     super("finagle-http", "finagle-http-23.11");
@@ -24,15 +22,10 @@ public class FinagleHttpInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new BijectionsNettyInstrumentation(),
         new GenStreamingServerDispatcherInstrumentation(),
         new ChannelTransportInstrumentation(),
         new H2StreamChannelInitInstrumentation());
-  }
-
-  @Override
-  public String getModuleGroup() {
-    // relies on netty and needs access to common netty instrumentation classes
-    return "netty";
   }
 
   @Override
@@ -40,12 +33,14 @@ public class FinagleHttpInstrumentationModule extends InstrumentationModule
     // these are injected so that they can access package-private members
     return asList(
         "com.twitter.finagle.ChannelTransportHelpers",
+        "com.twitter.finagle.Netty4HttpPackageHelpers",
         "io.netty.channel.OpenTelemetryChannelInitializerDelegate");
   }
 
   @Override
   public boolean isHelperClass(String className) {
     return className.equals("com.twitter.finagle.ChannelTransportHelpers")
+        || className.equals("com.twitter.finagle.Netty4HttpPackageHelpers")
         || className.equals("io.netty.channel.OpenTelemetryChannelInitializerDelegate");
   }
 }

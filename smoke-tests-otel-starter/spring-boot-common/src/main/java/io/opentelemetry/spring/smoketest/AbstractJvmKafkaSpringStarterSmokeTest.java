@@ -13,7 +13,6 @@ import java.time.Duration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -72,13 +71,13 @@ public abstract class AbstractJvmKafkaSpringStarterSmokeTest
 
   @SuppressWarnings("unchecked") // we lose parameter types for the KafkaTemplate
   @Override
-  @Test
-  void shouldInstrumentProducerAndConsumer() {
+  protected void runProducerTest(Runnable runnable) {
     contextRunner.run(
         applicationContext -> {
           testing = new SpringSmokeTestRunner(applicationContext.getBean(OpenTelemetry.class));
           kafkaTemplate = applicationContext.getBean(KafkaTemplate.class);
-          super.shouldInstrumentProducerAndConsumer();
+
+          runnable.run();
         });
   }
 }

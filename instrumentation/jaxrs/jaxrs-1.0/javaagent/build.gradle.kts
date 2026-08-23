@@ -38,4 +38,5 @@ tasks.test {
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
   systemProperty("collectMetadata", otelProps.collectMetadata)
+  systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

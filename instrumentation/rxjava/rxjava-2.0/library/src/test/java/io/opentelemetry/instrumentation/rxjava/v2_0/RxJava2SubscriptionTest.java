@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.rxjava.v2_0;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -24,5 +25,10 @@ class RxJava2SubscriptionTest extends AbstractRxJava2SubscriptionTest {
   @BeforeAll
   static void setup() {
     tracingAssembly.enable();
+  }
+
+  @AfterAll
+  static void cleanup() {
+    tracingAssembly.disable();
   }
 }

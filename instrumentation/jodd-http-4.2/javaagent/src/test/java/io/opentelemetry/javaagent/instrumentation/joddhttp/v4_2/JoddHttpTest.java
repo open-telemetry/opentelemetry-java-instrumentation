@@ -32,7 +32,7 @@ class JoddHttpTest extends AbstractHttpClientTest<HttpRequest> {
     for (Map.Entry<String, String> header : headers.entrySet()) {
       request.headerOverwrite(header.getKey(), header.getValue());
     }
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       request.timeout((int) READ_TIMEOUT.toMillis());
     }
     return request;

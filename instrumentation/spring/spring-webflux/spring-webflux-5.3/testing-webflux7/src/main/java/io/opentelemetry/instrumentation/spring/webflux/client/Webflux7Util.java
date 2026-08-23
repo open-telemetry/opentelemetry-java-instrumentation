@@ -27,13 +27,13 @@ public class Webflux7Util {
     return request.exchangeToMono(Mono::just);
   }
 
+  static int doRequest(WebClient.RequestBodySpec request) {
+    return doRequest(request, response -> Mono.just(response.statusCode().value()));
+  }
+
   static <T> T doRequest(
       WebClient.RequestBodySpec request, Function<ClientResponse, Mono<T>> handler) {
     return request.exchangeToMono(handler).block();
-  }
-
-  static int doRequest(WebClient.RequestBodySpec request) {
-    return doRequest(request, response -> Mono.just(response.statusCode().value()));
   }
 
   static int getStatusCode(ClientResponse response) {

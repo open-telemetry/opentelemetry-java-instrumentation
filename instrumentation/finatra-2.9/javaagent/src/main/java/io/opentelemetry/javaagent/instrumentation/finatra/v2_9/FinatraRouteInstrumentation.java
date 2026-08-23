@@ -5,10 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.finatra.v2_9;
 
-import static io.opentelemetry.javaagent.instrumentation.finatra.v2_9.FinatraSingletons.getCallbackClass;
 import static io.opentelemetry.javaagent.instrumentation.finatra.v2_9.FinatraSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.finatra.v2_9.FinatraSingletons.setCallbackClass;
-import static io.opentelemetry.javaagent.instrumentation.finatra.v2_9.FinatraSingletons.updateServerSpanName;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -65,9 +62,9 @@ class FinatraRouteInstrumentation implements TypeInstrumentation {
       public static AdviceScope start(Route route, RouteInfo routeInfo, Class<?> controllerClass) {
 
         Context parentContext = Context.current();
-        updateServerSpanName(parentContext, routeInfo);
+        FinatraSingletons.updateServerSpanName(parentContext, routeInfo);
 
-        Class<?> callbackClass = getCallbackClass(route);
+        Class<?> callbackClass = FinatraSingletons.getCallbackClass(route);
         // We expect callback to be an inner class of the controller class. If it is not we are not
         // going to record it at all.
         FinatraRequest request;
@@ -120,7 +117,7 @@ class FinatraRouteInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Route route, @Advice.Return Route result) {
-      setCallbackClass(result, getCallbackClass(route));
+      FinatraSingletons.setCallbackClass(result, FinatraSingletons.getCallbackClass(route));
     }
   }
 }

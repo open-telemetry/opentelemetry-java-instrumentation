@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0.SpringJmsSingletons.isReceiveTelemetryEnabled;
+import static io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0.SpringJmsSingletons.RECEIVE_TELEMETRY_ENABLED;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
@@ -37,7 +37,7 @@ class AbstractPollingMessageListenerContainerInstrumentation implements TypeInst
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope onEnter() {
-      if (isReceiveTelemetryEnabled()) {
+      if (RECEIVE_TELEMETRY_ENABLED) {
         Context context = JmsReceiveContextHolder.init(Java8BytecodeBridge.currentContext());
         return context.makeCurrent();
       }

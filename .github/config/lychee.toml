@@ -7,7 +7,7 @@ max_retries = 6
 max_concurrency = 4
 
 # Check link anchors
-include_fragments = true
+include_fragments = "full"
 
 remap = [
   "https://docs.oracle.com/(.*)#.*$ https://docs.oracle.com/$1"

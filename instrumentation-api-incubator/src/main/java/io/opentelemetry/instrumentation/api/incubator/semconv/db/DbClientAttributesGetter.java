@@ -38,6 +38,17 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   @Nullable
   String getDbOperationName(REQUEST request);
 
+  /**
+   * Returns the old db.operation value. This is only used for old semantic conventions.
+   *
+   * @deprecated Use {@link #getDbOperationName(Object)} instead.
+   */
+  @Deprecated // to be removed in 3.0
+  @Nullable
+  default String getDbOperation(REQUEST request) {
+    return getDbOperationName(request);
+  }
+
   // TODO: make this required to implement
   String getDbSystemName(REQUEST request);
 
@@ -58,6 +69,12 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
 
   @Nullable
   String getDbNamespace(REQUEST request);
+
+  // TODO: make this required to implement?
+  @Nullable
+  default String getDbCollectionName(REQUEST request) {
+    return null;
+  }
 
   /**
    * Returns the old db.name value. This is only used for old semantic conventions.

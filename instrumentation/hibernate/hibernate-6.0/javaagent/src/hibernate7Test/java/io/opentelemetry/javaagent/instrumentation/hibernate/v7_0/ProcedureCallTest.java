@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v7_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.HIBERNATE_SESSION_ID;
@@ -14,6 +13,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_STORED_PROCEDURE_NAME;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -56,23 +58,22 @@ class ProcedureCallTest {
     sessionFactory =
         new Configuration().configure("procedure-call-hibernate.cfg.xml").buildSessionFactory();
     // Pre-populate the DB, so delete/update can be tested.
-    Session writer = sessionFactory.openSession();
-    writer.beginTransaction();
-    prepopulated = new ArrayList<>();
-    for (int i = 0; i < 2; i++) {
-      prepopulated.add(new Value("Hello :) " + i));
-      writer.persist(prepopulated.get(i));
+    try (Session writer = sessionFactory.openSession()) {
+      writer.beginTransaction();
+      prepopulated = new ArrayList<>();
+      for (int i = 0; i < 2; i++) {
+        prepopulated.add(new Value("Hello :) " + i));
+        writer.persist(prepopulated.get(i));
+      }
+      writer.getTransaction().commit();
     }
-    writer.getTransaction().commit();
-    writer.close();
 
     // Create a stored procedure.
-    Connection conn = DriverManager.getConnection("jdbc:hsqldb:mem:test", "sa", "1");
-    Statement stmt = conn.createStatement();
-    stmt.execute(
-        "CREATE PROCEDURE TEST_PROC() MODIFIES SQL DATA BEGIN ATOMIC INSERT INTO Value VALUES (420, 'fred'); END");
-    stmt.close();
-    conn.close();
+    try (Connection conn = DriverManager.getConnection("jdbc:hsqldb:mem:test", "sa", "1");
+        Statement stmt = conn.createStatement()) {
+      stmt.execute(
+          "CREATE PROCEDURE TEST_PROC() MODIFIES SQL DATA BEGIN ATOMIC INSERT INTO Value VALUES (420, 'fred'); END");
+    }
   }
 
   @AfterAll
@@ -112,7 +113,7 @@ class ProcedureCallTest {
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
                     span.hasName(
-                            emitStableDatabaseSemconv() ? "CALL TEST_PROC" : "CALL test.TEST_PROC")
+                            emitStableDatabaseSemconv() ? "call TEST_PROC" : "CALL test.TEST_PROC")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -125,7 +126,7 @@ class ProcedureCallTest {
                             equalTo(maybeStable(DB_STATEMENT), "{call TEST_PROC()}"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "CALL TEST_PROC" : null),
+                                emitStableDatabaseSemconv() ? "call TEST_PROC" : null),
                             equalTo(
                                 maybeStable(DB_OPERATION),
                                 emitStableDatabaseSemconv() ? null : "CALL"),
@@ -184,16 +185,14 @@ class ProcedureCallTest {
                                     .hasName("exception")
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(
-                                            stringKey("exception.type"),
+                                            EXCEPTION_TYPE,
                                             "org.hibernate.exception.AuthException"),
                                         satisfies(
-                                            stringKey("exception.message"),
+                                            EXCEPTION_MESSAGE,
                                             val ->
                                                 val.startsWithIgnoringCase(
                                                     "could not prepare statement")),
-                                        satisfies(
-                                            stringKey("exception.stacktrace"),
-                                            val -> val.isNotNull())))
+                                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())))
                         .hasAttributesSatisfyingExactly(
                             experimentalSatisfies(
                                 HIBERNATE_SESSION_ID,

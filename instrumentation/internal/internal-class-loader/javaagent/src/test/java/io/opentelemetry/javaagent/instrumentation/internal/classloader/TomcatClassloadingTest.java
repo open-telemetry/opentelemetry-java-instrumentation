@@ -60,6 +60,7 @@ class TomcatClassloadingTest {
     classloader.setResources(resources);
     classloader.init();
     classloader.start();
+    cleanup.deferAfterAll(classloader);
   }
 
   @Test
@@ -72,7 +73,7 @@ class TomcatClassloadingTest {
   @Test
   void testResourceInjection() throws IOException {
     Path tmpFile = Files.createTempFile("hello", "tmp");
-    tmpFile.toFile().deleteOnExit();
+    cleanup.deferCleanup(() -> Files.deleteIfExists(tmpFile));
 
     Files.write(tmpFile, "hello".getBytes(UTF_8));
     URL url = tmpFile.toUri().toURL();
@@ -86,9 +87,8 @@ class TomcatClassloadingTest {
     assertThat(Collections.list(resources)).isNotEmpty();
 
     InputStream inputStream = classloader.getResourceAsStream("hello.txt");
-    cleanup.deferCleanup(inputStream);
-
     assertThat(inputStream).isNotNull();
+    cleanup.deferCleanup(inputStream);
 
     String text =
         new BufferedReader(new InputStreamReader(inputStream, UTF_8))

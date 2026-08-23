@@ -33,7 +33,7 @@ public abstract class AbstractJaxWs3Test extends AbstractHttpServerUsingTest<Ser
       HttpServerInstrumentationExtension.forAgent();
 
   private final Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
-  protected final WebServiceTemplate webServiceTemplate = new WebServiceTemplate(marshaller);
+  private final WebServiceTemplate webServiceTemplate = new WebServiceTemplate(marshaller);
 
   @BeforeAll
   protected void setUp() throws Exception {

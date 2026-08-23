@@ -47,18 +47,18 @@ class ElasticsearchRest7Test {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  static ElasticsearchContainer elasticsearch;
+  private static final ObjectMapper objectMapper = new ObjectMapper();
 
-  static HttpHost httpHost;
+  private static ElasticsearchContainer elasticsearch;
 
-  static RestClient client;
+  private static HttpHost httpHost;
 
-  static ObjectMapper objectMapper;
+  private static RestClient client;
 
   @BeforeAll
   static void setUp() {
     elasticsearch =
-        new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.2");
+        new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.10.2");
     cleanup.deferAfterAll(elasticsearch::stop);
     // limit memory usage
     elasticsearch.withEnv(
@@ -77,8 +77,6 @@ class ElasticsearchRest7Test {
                         .setSocketTimeout(Integer.MAX_VALUE))
             .build();
     cleanup.deferAfterAll(client);
-
-    objectMapper = new ObjectMapper();
   }
 
   @Test

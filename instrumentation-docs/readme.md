@@ -17,7 +17,7 @@ will enable metric and span collection:
 ```kotlin
 tasks {
   test {
-    systemProperty("collectMetadata", findProperty("collectMetadata"))
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     ...
   }
 }
@@ -32,18 +32,16 @@ For example, to collect and write metadata for the `otel.semconv-stability.opt-i
 set for an instrumentation:
 
 ```kotlin
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
-
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", otelProps.collectMetadata)
+  }
+
   val testStableSemconv by registering(Test::class) {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
 
-    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  test {
-    systemProperty("collectMetadata", collectMetadata)
   }
 
   check {
@@ -88,12 +86,12 @@ Using these structures as examples:
 
 Results in the following:
 
-* Name - the full name of the instrumentation module
-  * `clickhouse-client-05`, `jaxrs-1.0`, `spring-cloud-gateway-2.0`
-* Namespace - direct parent. if none, use name and strip version
-  * `clickhouse-client`, `jaxrs`, `spring-cloud-gateway`
-* Group - top most parent
-  * `clickhouse-client`, `jaxrs`, `spring`
+- Name - the full name of the instrumentation module
+  - `clickhouse-client-05`, `jaxrs-1.0`, `spring-cloud-gateway-2.0`
+- Namespace - direct parent. if none, use name and strip version
+  - `clickhouse-client`, `jaxrs`, `spring-cloud-gateway`
+- Group - top most parent
+  - `clickhouse-client`, `jaxrs`, `spring`
 
 This information is also referenced in `InstrumentationModule` code for each module:
 
@@ -107,75 +105,125 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 
 ## Instrumentation metadata
 
-* classification
-  * `library` - Instrumentation that targets a library
-  * `internal` - Instrumentation that is used internally by the OpenTelemetry Java Agent
-  * `custom` - Utilities that are used to create custom instrumentation
-* name
-  * Identifier for instrumentation module, used to enable/disable
-  * Configured in `InstrumentationModule` code for each module
-* semantic_conventions
-  * The semantic conventions that the instrumentation module adheres to
-  * Options are:
-    * HTTP_CLIENT_SPANS
-    * HTTP_CLIENT_METRICS
-    * HTTP_SERVER_SPANS
-    * HTTP_SERVER_METRICS
-    * RPC_CLIENT_SPANS
-    * RPC_CLIENT_METRICS
-    * RPC_SERVER_SPANS
-    * RPC_SERVER_METRICS
-    * MESSAGING_SPANS
-    * DATABASE_CLIENT_SPANS
-    * DATABASE_CLIENT_METRICS
-    * DATABASE_POOL_METRICS
-    * JVM_RUNTIME_METRICS
-    * GRAPHQL_SERVER_SPANS
-    * FAAS_SERVER_SPANS
-    * GENAI_CLIENT_SPANS
-    * GENAI_CLIENT_METRIC
-* features
-  * The specific functionality that the instrumentation provides
-  * Options are:
-    * HTTP_ROUTE
-    * CONTEXT_PROPAGATION
-    * AUTO_INSTRUMENTATION_SHIM
-    * CONTROLLER_SPANS
-    * VIEW_SPANS
-    * LOGGING_BRIDGE
-    * RESOURCE_DETECTOR
-* library_link
-  * URL to the library or framework's main website or documentation, or if those don't exist, the
-  GitHub repository.
-* source_path
-  * Path to the source code of the instrumentation module
-* minimum_java_version
-  * Minimum Java version required by the instrumentation module. If not specified, it is assumed to
+- classification
+  - `library` - Instrumentation that targets a library
+  - `internal` - Instrumentation that is used internally by the OpenTelemetry Java Agent
+  - `custom` - Utilities that are used to create custom instrumentation
+- name
+  - Identifier for instrumentation module, used to enable/disable
+  - Configured in `InstrumentationModule` code for each module
+- semantic_conventions
+  - The semantic conventions that the instrumentation module adheres to
+  - Options are:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
+    - RPC_CLIENT_SPANS
+    - RPC_CLIENT_METRICS
+    - RPC_SERVER_SPANS
+    - RPC_SERVER_METRICS
+    - MESSAGING_SPANS
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    - DATABASE_POOL_METRICS
+    - JVM_RUNTIME_METRICS
+    - GRAPHQL_SERVER_SPANS
+    - FAAS_SERVER_SPANS
+    - GENAI_CLIENT_SPANS
+    - GENAI_CLIENT_METRIC
+- features
+  - The specific functionality that the instrumentation provides
+  - Options are:
+    - HTTP_ROUTE
+    - CONTEXT_PROPAGATION
+    - AUTO_INSTRUMENTATION_SHIM
+    - CONTROLLER_SPANS
+    - VIEW_SPANS
+    - LOGGING_BRIDGE
+    - RESOURCE_DETECTOR
+- library_link
+  - URL to the library or framework's main website or documentation, or if those don't exist, the
+    GitHub repository.
+- source_path
+  - Path to the source code of the instrumentation module
+- minimum_java_version
+  - Minimum Java version required by the instrumentation module. If not specified, it is assumed to
     be Java 8
-* description
-  * Short description of what the instrumentation does
-* has_standalone_library
-  * Whether the instrumentation module has a standalone library that can be used outside of the agent
-* has_javaagent
-  * Whether the instrumentation module has a javaagent component that can be used with the OpenTelemetry Java Agent
-* target_versions
-  * List of supported versions by the module, broken down by `library` or `javaagent` support
-* scope (See [instrumentation-scope](https://opentelemetry.io/docs/specs/otel/common/instrumentation-scope/)
+- description
+  - Short description of what the instrumentation does
+- has_standalone_library
+  - Whether the instrumentation module has a standalone library that can be used outside of the agent
+- has_javaagent
+  - Whether the instrumentation module has a javaagent component that can be used with the OpenTelemetry Java Agent
+- target_versions
+  - List of supported versions by the module, broken down by `library` or `javaagent` support
+- scope (See [instrumentation-scope](https://opentelemetry.io/docs/specs/otel/common/instrumentation-scope/)
   docs)
-  * name: The scope name of the instrumentation, `io.opentelemetry.{instrumentation name}`
-  * schema_url: Location of the telemetry schema that the instrumentation’s emitted telemetry
+  - name: The scope name of the instrumentation, `io.opentelemetry.{instrumentation name}`
+  - schema_url: Location of the telemetry schema that the instrumentation’s emitted telemetry
     conforms to. (See [telemetry schema docs](https://opentelemetry.io/docs/specs/otel/schemas/#schema-url))
-  * attributes: The instrumentation scope’s optional attributes provide additional information
+  - attributes: The instrumentation scope’s optional attributes provide additional information
     about the scope.
-* configuration settings
-  * List of settings that are available for the instrumentation module
-  * Each setting has a name (flat property format), optional declarative_name (YAML path format), description, type, default value, and optional examples
-* metrics
-  * List of metrics that the instrumentation module collects, including the metric name, description, type, and attributes.
-  * Separate lists for the metrics emitted by default vs via configuration options.
-* spans
-  * List of spans kinds the instrumentation module generates, including the attributes and their types.
-  * Separate lists for the spans emitted by default vs via configuration options.
+- configuration_refs
+  - List of configuration definition ids the instrumentation module exposes.
+  - Each id resolves to an entry in the top-level `definitions.configurations` catalog (see below).
+  - This is the _generated_ representation. In a module's `metadata.yaml` you still author each
+    configuration either inline or as a shared `ref` (see "metadata.yaml file" and "Shared
+    configuration definitions" below); the generator collects both forms into the catalog and emits
+    the ids here.
+- metrics (referenced via `metric_refs`)
+  - Each telemetry `when` block lists `metric_refs`: the ids of metric definitions the module emits.
+  - Each id resolves to an entry in the top-level `definitions.metrics` catalog.
+  - Separate `when` blocks distinguish metrics emitted by default vs via configuration options.
+  - This is the _generated_ representation, produced automatically from collected telemetry (and any
+    inline `additional_telemetry`). Metrics are always authored inline (or auto-collected from
+    tests) — there is no author-time shared metric catalog; the generator does the de-duplication
+    into `definitions.metrics` for you.
+- spans
+  - List of span kinds the instrumentation module generates, including the attributes and their types.
+  - Emitted inline under each telemetry `when` block (spans are not yet part of the definitions catalog).
+  - Separate `when` blocks distinguish spans emitted by default vs via configuration options.
+
+### Definitions catalog
+
+To avoid inlining the same metric or configuration block into every instrumentation entry, common
+definitions are collected once into a top-level `definitions` section and referenced by id:
+
+```yaml
+definitions:
+  configurations:
+    http.known-methods:          # id, reused as the configuration_refs value
+      name: otel.instrumentation.http.known-methods
+      declarative_name: java.common.http.known_methods
+      description: ...
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+  metrics:
+    http.client.request.duration-1a2b3c4d:   # <metric name>-<short content hash>
+      name: http.client.request.duration
+      description: Duration of HTTP client requests.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes: [...]
+libraries:
+- name: java-http-client
+  configuration_refs:
+  - http.known-methods
+  telemetry:
+  - when: default
+    metric_refs:
+    - http.client.request.duration-1a2b3c4d
+```
+
+Configuration ids are the curated ids from the shared registry (see below) for shared options, or the
+config `name` for module-specific options. If two module-specific options share the same `name` but
+have different content, their ids are disambiguated as `<config name>-<short content hash>`. Metric
+ids are `<metric name>-<short content hash>`; the
+hash disambiguates metrics that share a name but have different attribute sets. Any consumer of
+`instrumentation-list.yaml` must resolve `configuration_refs` / `metric_refs` against `definitions`
+before reading the underlying config/metric content.
 
 ## Methodology
 
@@ -199,14 +247,42 @@ disabled_by_default: true                         # Defaults to `false`
 classification: internal                          # instrumentation classification: library | internal | custom
 library_link: https://...                         # URL to the library or framework's main website or documentation
 configurations:
-  - name: otel.instrumentation.common.db.query-sanitization.enabled
-    declarative_name: java.common.db.query_sanitization.enabled    # Optional: YAML config path
-    description: Enables query sanitization for database queries.
-    type: boolean               # boolean | string | list | map
+  # Reference a shared definition instead of hand-copying a common config block. The id must exist
+  # in instrumentation-docs/src/main/resources/shared-config-definitions.yaml (an unknown ref fails
+  # the build). See "Shared configuration definitions" below.
+  - ref: common.db.query-sanitization.enabled
+  # Module-specific configs are still defined inline:
+  - name: otel.instrumentation.my-module.enabled
+    declarative_name: java.my_module.enabled    # Optional: YAML config path
+    description: Enables the my-module feature.
+    type: boolean               # boolean | string | list | map (the flat form)
     default: true
     examples:                   # Optional: Example values for this configuration
       - "true"
       - "false"
+  # Structured-list config: a list of objects in declarative config. `name` may be omitted for
+  # declarative-only settings (identified solely by `declarative_name`).
+  - declarative_name: java.common.http.client.url_template_rules
+    description: Rules for deriving low-cardinality URL templates from HTTP client request URLs.
+    type: list
+    default: ""
+    declarative_type: structured_list      # Optional: overrides the declarative-form shape
+    declarative_schema:                     # Required when declarative_type is structured_list
+      type: object
+      required: [pattern, template]
+      properties:
+        pattern:
+          type: string
+          description: Regular expression matched against the request URL.
+          example: '/users/\d+'
+        template:
+          type: string
+          description: Template used to derive the low-cardinality route.
+          example: '/users/{id}'
+        override:
+          type: boolean
+          default: false
+          description: Whether this rule overrides an already-applied template.
 override_telemetry: false                         # Set to true to ignore auto-generated .telemetry files
 additional_telemetry:                             # Manually document telemetry metadata
   - when: "default"
@@ -224,6 +300,28 @@ additional_telemetry:                             # Manually document telemetry 
           - name: "span.attribute"
             type: "STRING"
 ```
+
+### Shared configuration definitions
+
+Many instrumentations expose the same configuration options (for example `http.known-methods` or
+`common.peer-service-mapping`). Instead of hand-copying an identical block into every `metadata.yaml`,
+these are defined once in
+[`src/main/resources/shared-config-definitions.yaml`](src/main/resources/shared-config-definitions.yaml)
+under a stable id, and each module references them:
+
+```yaml
+configurations:
+  - ref: http.known-methods
+  - ref: common.peer-service-mapping
+```
+
+At metadata-parse time (`SharedConfigurationRegistry`) each `ref` is expanded into the full
+configuration option; an unknown id fails the build. The same ids are reused as the keys in the
+generated `definitions.configurations` catalog, so editing a description in the registry once updates
+every module that references it.
+
+To add a new shared option, add an entry to `shared-config-definitions.yaml` and reference it by id.
+To change an option for a single module only, define it inline instead of using a `ref`.
 
 ### Gradle File Derived Information
 

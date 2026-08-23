@@ -1,6 +1,23 @@
 plugins {
   id("otel.library-instrumentation")
+  id("otel.osgi-conventions")
   id("org.graalvm.buildtools.native")
+}
+
+otelJava {
+  // Logstash support is optional; the encoder is a compileOnly dependency and may be absent at
+  // runtime in an OSGi container.
+  osgiOptionalPackages.add("net.logstash.logback")
+  // The appender is compiled against Logback 1.3 / SLF4J 2.0 but supports Logback 1.0 / SLF4J 1.6.4
+  // at runtime (newer APIs are guarded via reflection - see LoggingEventMapper). Widen the version
+  // ranges bnd infers from the compile-time dependencies so the bundle also resolves against those
+  // older versions, and make org.slf4j.event (SLF4J 2.0+ only, used only behind Class.forName)
+  // optional so its absence on older SLF4J does not block resolution.
+  osgiImportPackages.addAll(
+    "ch.qos.logback.*;version=\"[1.0,2)\"",
+    "org.slf4j.event;version=\"[2.0,3)\";resolution:=optional",
+    "org.slf4j;version=\"[1.6,3)\"",
+  )
 }
 
 dependencies {
@@ -66,102 +83,83 @@ tasks.named("collectReachabilityMetadata").configure {
 
 testing {
   suites {
-    val slf4j2ApiTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("slf4j2ApiTest") {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
 
-        if (otelProps.testLatestDeps) {
-          implementation("ch.qos.logback:logback-classic:latest.release")
-          implementation("org.slf4j:slf4j-api:latest.release")
-        } else {
-          implementation("ch.qos.logback:logback-classic") {
-            version {
-              strictly("1.3.0")
-            }
+        implementation("ch.qos.logback:logback-classic") {
+          version {
+            strictly(baseVersion("1.3.0").orLatest())
           }
-          implementation("org.slf4j:slf4j-api") {
-            version {
-              strictly("2.0.0")
-            }
+        }
+        implementation("org.slf4j:slf4j-api") {
+          version {
+            strictly(baseVersion("2.0.0").orLatest())
           }
         }
       }
     }
 
-    val logstashMarkerTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("logstashMarkerTest") {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
 
-        if (otelProps.testLatestDeps) {
-          implementation("ch.qos.logback:logback-classic:latest.release")
-          implementation("org.slf4j:slf4j-api:latest.release")
-          implementation("net.logstash.logback:logstash-logback-encoder:latest.release")
-        } else {
-          implementation("ch.qos.logback:logback-classic") {
-            version {
-              strictly("1.3.0")
-            }
+        implementation("ch.qos.logback:logback-classic") {
+          version {
+            strictly(baseVersion("1.3.0").orLatest())
           }
-          implementation("org.slf4j:slf4j-api") {
-            version {
-              strictly("2.0.0")
-            }
+        }
+        implementation("org.slf4j:slf4j-api") {
+          version {
+            strictly(baseVersion("2.0.0").orLatest())
           }
-          implementation("net.logstash.logback:logstash-logback-encoder") {
-            version {
-              strictly("3.0")
-            }
+        }
+        implementation("net.logstash.logback:logstash-logback-encoder") {
+          version {
+            strictly(baseVersion("3.0").orLatest())
           }
         }
       }
     }
 
-    val logstashStructuredArgsTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("logstashStructuredArgsTest") {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
 
-        if (otelProps.testLatestDeps) {
-          implementation("ch.qos.logback:logback-classic:latest.release")
-          implementation("org.slf4j:slf4j-api:latest.release")
-          implementation("net.logstash.logback:logstash-logback-encoder:latest.release")
-        } else {
-          implementation("ch.qos.logback:logback-classic") {
-            version {
-              strictly("1.3.0")
-            }
+        implementation("ch.qos.logback:logback-classic") {
+          version {
+            strictly(baseVersion("1.3.0").orLatest())
           }
-          implementation("org.slf4j:slf4j-api") {
-            version {
-              strictly("2.0.0")
-            }
+        }
+        implementation("org.slf4j:slf4j-api") {
+          version {
+            strictly(baseVersion("2.0.0").orLatest())
           }
-          implementation("net.logstash.logback:logstash-logback-encoder") {
-            version {
-              strictly("6.6")
-            }
+        }
+        implementation("net.logstash.logback:logstash-logback-encoder") {
+          version {
+            strictly(baseVersion("6.6").orLatest())
           }
         }
       }
     }
 
-    val asyncAppenderTest by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("asyncAppenderTest") {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
 
-        if (otelProps.testLatestDeps) {
-          implementation("ch.qos.logback:logback-classic:latest.release")
-        } else {
-          implementation("ch.qos.logback:logback-classic") {
-            version {
-              // 1.0.4 is the first version that has ch.qos.logback.classic.AsyncAppender
-              // we are using 1.0.7 because of https://jira.qos.ch/browse/LOGBACK-720
-              strictly("1.0.7")
-            }
+        implementation("ch.qos.logback:logback-classic") {
+          version {
+            // 1.0.4 is the first version that has ch.qos.logback.classic.AsyncAppender
+            // we are using 1.0.7 because of https://jira.qos.ch/browse/LOGBACK-720
+            strictly(baseVersion("1.0.7").orLatest())
           }
+        }
+        if (!otelProps.testLatestDeps) {
           implementation("org.slf4j:slf4j-api") {
             version {
               strictly("1.6.4")
@@ -175,13 +173,13 @@ testing {
 
 tasks {
 
-  val testStableSemconv by registering(Test::class) {
+  val testStableSemconv = register<Test>("testStableSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=code")
   }
 
-  val testBothSemconv by registering(Test::class) {
+  val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")

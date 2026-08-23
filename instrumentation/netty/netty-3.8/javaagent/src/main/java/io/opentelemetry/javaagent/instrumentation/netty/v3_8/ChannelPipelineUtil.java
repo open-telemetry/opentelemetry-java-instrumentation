@@ -37,9 +37,7 @@ public class ChannelPipelineUtil {
     } else if (handler instanceof HttpResponseEncoder) {
       pipeline.addLast(
           HttpServerResponseTracingHandler.class.getName(), new HttpServerResponseTracingHandler());
-    } else
-    // Client pipeline handlers
-    if (handler instanceof HttpClientCodec) {
+    } else if (handler instanceof HttpClientCodec) {
       pipeline.addLast(HttpClientTracingHandler.class.getName(), new HttpClientTracingHandler());
     } else if (handler instanceof HttpRequestEncoder) {
       pipeline.addLast(

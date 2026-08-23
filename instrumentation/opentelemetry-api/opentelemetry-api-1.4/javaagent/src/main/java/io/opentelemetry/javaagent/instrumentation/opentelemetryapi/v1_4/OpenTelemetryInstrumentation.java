@@ -27,8 +27,9 @@ class OpenTelemetryInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(none(), getClass().getName() + "$InitAdvice");
   }
 
-  @SuppressWarnings({"ReturnValueIgnored", "unused"})
+  @SuppressWarnings("unused")
   public static class InitAdvice {
+    @SuppressWarnings("ReturnValueIgnored")
     @Advice.OnMethodEnter(inline = false)
     public static void init() {
       // the sole purpose of this advice is to ensure that ApplicationTracerProvider14 is recognized

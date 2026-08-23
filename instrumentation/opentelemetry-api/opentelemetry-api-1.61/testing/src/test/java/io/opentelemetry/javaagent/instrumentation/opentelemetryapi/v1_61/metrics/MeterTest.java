@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_61.metrics;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.metrics.DoubleCounter;
 import io.opentelemetry.api.metrics.DoubleGauge;

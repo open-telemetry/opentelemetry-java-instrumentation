@@ -6,27 +6,34 @@
 package io.opentelemetry.javaagent.instrumentation.nats.v2_17;
 
 import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory.createConsumerProcessInstrumenter;
-import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory.createProducerInstrumenter;
+import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory.createPublishInstrumenter;
+import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory.createRequestInstrumenter;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import java.util.List;
 
 class NatsSingletons {
 
-  private static final List<String> capturedHeaders =
-      ExperimentalConfig.get().getMessagingHeaders();
+  private static final IncludeExclude headers = ExperimentalConfig.get().getMessagingHeaders();
 
-  private static final Instrumenter<NatsRequest, NatsRequest> producerInstrumenter =
-      createProducerInstrumenter(GlobalOpenTelemetry.get(), capturedHeaders);
+  private static final Instrumenter<NatsRequest, NatsRequest> publishInstrumenter =
+      createPublishInstrumenter(GlobalOpenTelemetry.get(), headers);
+
+  private static final Instrumenter<NatsRequest, NatsRequest> requestInstrumenter =
+      createRequestInstrumenter(GlobalOpenTelemetry.get(), headers);
 
   private static final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter =
-      createConsumerProcessInstrumenter(GlobalOpenTelemetry.get(), capturedHeaders);
+      createConsumerProcessInstrumenter(GlobalOpenTelemetry.get(), headers);
 
-  static Instrumenter<NatsRequest, NatsRequest> producerInstrumenter() {
-    return producerInstrumenter;
+  static Instrumenter<NatsRequest, NatsRequest> publishInstrumenter() {
+    return publishInstrumenter;
+  }
+
+  static Instrumenter<NatsRequest, NatsRequest> requestInstrumenter() {
+    return requestInstrumenter;
   }
 
   static Instrumenter<NatsRequest, Void> consumerProcessInstrumenter() {

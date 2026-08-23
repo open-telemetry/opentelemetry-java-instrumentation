@@ -99,11 +99,8 @@ class CallbackGcCloseTest {
     GcUtils.awaitGc(clRef, Duration.ofSeconds(10));
     assertThat(clRef.get()).isNull();
 
-    // 6. Force a metric collection so the SDK invokes WeakRefConsumer.accept(),
-    //    which detects the cleared WeakReference and closes the instrument.
-    Thread.sleep(100);
+    // 6. Clear previous points before collecting metrics from the closed instrument.
     testing.clearData();
-    Thread.sleep(100);
 
     // 7. The gauge should no longer produce metrics.
     testing.waitAndAssertMetrics(

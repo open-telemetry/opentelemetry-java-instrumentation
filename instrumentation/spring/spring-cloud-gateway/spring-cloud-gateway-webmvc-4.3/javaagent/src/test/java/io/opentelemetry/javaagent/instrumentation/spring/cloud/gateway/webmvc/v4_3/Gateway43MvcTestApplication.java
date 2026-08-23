@@ -28,7 +28,7 @@ class Gateway43MvcTestApplication {
             return ServerResponse.status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(body);
-          } catch (IOException e) {
+          } catch (IOException ignored) {
             return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
           }
         };

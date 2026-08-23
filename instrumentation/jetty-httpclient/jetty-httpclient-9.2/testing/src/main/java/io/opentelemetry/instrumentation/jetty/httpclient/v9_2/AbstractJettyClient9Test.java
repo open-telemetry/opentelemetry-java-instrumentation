@@ -31,6 +31,10 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
   private HttpClient client;
   private HttpClient httpsClient;
 
+  protected abstract HttpClient createStandardClient();
+
+  protected abstract HttpClient createHttpsClient(SslContextFactory sslContextFactory);
+
   @BeforeEach
   void before() throws Exception {
     // Start the main Jetty HttpClient and a https client
@@ -58,7 +62,7 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
     Request request = theClient.newRequest(uri).method(method).agent("Jetty");
     headers.forEach(request::header);
 
-    if (uri.toString().contains("/read-timeout")) {
+    if (uri.getPath().endsWith("/read-timeout")) {
       request.timeout(READ_TIMEOUT.toMillis(), MILLISECONDS);
     } else if (uri.toString().contains("192.0.2.1")) {
       request.timeout(CONNECTION_TIMEOUT.toMillis(), MILLISECONDS);
@@ -107,8 +111,4 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
       this.failure = failure;
     }
   }
-
-  protected abstract HttpClient createStandardClient();
-
-  protected abstract HttpClient createHttpsClient(SslContextFactory sslContextFactory);
 }

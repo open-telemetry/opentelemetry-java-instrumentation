@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.playws.common.v1_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -20,7 +21,9 @@ import org.reactivestreams.Subscriber;
 public class HandlerPublisherInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("play.shaded.ahc.com.typesafe.netty.HandlerPublisher");
+    return namedOneOf(
+        "play.shaded.ahc.com.typesafe.netty.HandlerPublisher",
+        "com.typesafe.netty.HandlerPublisher");
   }
 
   @Override

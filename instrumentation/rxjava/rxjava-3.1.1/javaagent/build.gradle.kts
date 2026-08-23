@@ -25,12 +25,11 @@ dependencies {
 }
 
 tasks {
-  val testExperimental by registering(Test::class) {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.rxjava.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.rxjava.experimental-span-attributes=true")
   }
 
   check {

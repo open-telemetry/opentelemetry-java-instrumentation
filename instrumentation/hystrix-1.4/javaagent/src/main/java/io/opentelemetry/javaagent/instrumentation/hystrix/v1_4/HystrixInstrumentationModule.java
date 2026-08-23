@@ -10,12 +10,10 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class HystrixInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class HystrixInstrumentationModule extends InstrumentationModule {
 
   public HystrixInstrumentationModule() {
     super("hystrix", "hystrix-1.4");

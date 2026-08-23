@@ -74,7 +74,7 @@ class AkkaHttpClientInstrumentationTest
           MILLISECONDS
         )
       )
-    if (uri.toString.contains("/read-timeout")) {
+    if (uri.getPath.endsWith("/read-timeout")) {
       clientConnectionSettings = clientConnectionSettings.withIdleTimeout(
         FiniteDuration(
           AbstractHttpClientTest.READ_TIMEOUT.toMillis,

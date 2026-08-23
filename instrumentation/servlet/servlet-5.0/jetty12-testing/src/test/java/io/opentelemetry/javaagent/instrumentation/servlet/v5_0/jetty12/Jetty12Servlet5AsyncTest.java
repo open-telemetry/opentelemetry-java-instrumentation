@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.TestServlet5;
+import io.opentelemetry.instrumentation.servlet.v5_0.TestServlet5;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod;

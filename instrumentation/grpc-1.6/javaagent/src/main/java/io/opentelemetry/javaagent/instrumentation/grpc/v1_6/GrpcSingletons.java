@@ -5,19 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.grpc.v1_6;
 
-import static java.util.Collections.emptyList;
-
 import io.grpc.ClientInterceptor;
 import io.grpc.Context;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.ServerBuilder;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
+import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetryBuilder;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
-import java.util.List;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcConfig;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
@@ -38,31 +39,28 @@ public class GrpcSingletons {
   private static final AtomicReference<Context.Storage> storageReference = new AtomicReference<>();
 
   static {
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     DeclarativeConfigProperties config =
-        DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "grpc");
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "grpc");
+    GrpcConfig grpcConfig = GrpcConfig.create(openTelemetry);
     boolean emitMessageEvents = config.getBoolean("emit_message_events", true);
 
     boolean experimentalSpanAttributes =
         config.getBoolean("experimental_span_attributes/development", false);
 
-    List<String> clientRequestMetadata =
-        config
-            .get("capture_metadata")
-            .get("client")
-            .getScalarList("request", String.class, emptyList());
-    List<String> serverRequestMetadata =
-        config
-            .get("capture_metadata")
-            .get("server")
-            .getScalarList("request", String.class, emptyList());
-
-    grpcTelemetry =
-        GrpcTelemetry.builder(GlobalOpenTelemetry.get())
+    GrpcTelemetryBuilder telemetryBuilder =
+        GrpcTelemetry.builder(openTelemetry)
             .setEmitMessageEvents(emitMessageEvents)
-            .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes)
-            .setCapturedClientRequestMetadata(clientRequestMetadata)
-            .setCapturedServerRequestMetadata(serverRequestMetadata)
-            .build();
+            .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes);
+    IncludeExclude clientRequestMetadata = grpcConfig.getClientRequestMetadata();
+    if (clientRequestMetadata != null) {
+      telemetryBuilder.setClientRequestMetadata(clientRequestMetadata);
+    }
+    IncludeExclude serverRequestMetadata = grpcConfig.getServerRequestMetadata();
+    if (serverRequestMetadata != null) {
+      telemetryBuilder.setServerRequestMetadata(serverRequestMetadata);
+    }
+    grpcTelemetry = telemetryBuilder.build();
 
     clientInterceptor = grpcTelemetry.createClientInterceptor();
   }

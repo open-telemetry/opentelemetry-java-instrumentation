@@ -6,78 +6,61 @@
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient.v7_0;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import java.util.stream.Stream;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class KubernetesRequestUtilsTest {
 
-  @Test
-  void isResourceRequest() {
-    assertThat(KubernetesRequestDigest.isResourceRequest("/api")).isFalse();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/apis")).isFalse();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/apis/v1")).isFalse();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/healthz")).isFalse();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/swagger.json")).isFalse();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/api/v1")).isFalse();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/api/v1/")).isFalse();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/apis/apps/v1")).isFalse();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/apis/apps/v1/")).isFalse();
+  @ParameterizedTest
+  @MethodSource("isResourceRequestArguments")
+  void isResourceRequest(String urlPath, boolean expected) {
+    assertThat(KubernetesRequestDigest.isResourceRequest(urlPath)).isEqualTo(expected);
+  }
 
-    assertThat(KubernetesRequestDigest.isResourceRequest("/apis/example.io/v1/foos")).isTrue();
-    assertThat(
-            KubernetesRequestDigest.isResourceRequest(
-                "/apis/example.io/v1/namespaces/default/foos"))
-        .isTrue();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/api/v1/namespaces")).isTrue();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/api/v1/pods")).isTrue();
-    assertThat(KubernetesRequestDigest.isResourceRequest("/api/v1/namespaces/default/pods"))
-        .isTrue();
+  private static Stream<Arguments> isResourceRequestArguments() {
+    return Stream.of(
+        argumentSet("api root", "/api", false),
+        argumentSet("apis root", "/apis", false),
+        argumentSet("apis version only", "/apis/v1", false),
+        argumentSet("healthz", "/healthz", false),
+        argumentSet("swagger", "/swagger.json", false),
+        argumentSet("core api version", "/api/v1", false),
+        argumentSet("core api version trailing slash", "/api/v1/", false),
+        argumentSet("group api version", "/apis/apps/v1", false),
+        argumentSet("group api version trailing slash", "/apis/apps/v1/", false),
+        argumentSet("custom resource list", "/apis/example.io/v1/foos", true),
+        argumentSet(
+            "custom resource namespaced list", "/apis/example.io/v1/namespaces/default/foos", true),
+        argumentSet("core namespaces list", "/api/v1/namespaces", true),
+        argumentSet("core pods list", "/api/v1/pods", true),
+        argumentSet("core namespaced pods list", "/api/v1/namespaces/default/pods", true));
   }
 
   @ParameterizedTest
   @MethodSource("parseCoreResourceArguments")
-  void parseCoreResource(
-      String urlPath,
-      String apiGroup,
-      String apiVersion,
-      String resource,
-      String subResource,
-      String namespace,
-      String name)
+  void parseCoreResource(String urlPath, KubernetesResource expected)
       throws ParseKubernetesResourceException {
-    assertThat(KubernetesResource.parseCoreResource(urlPath).getApiGroup()).isEqualTo(apiGroup);
-    assertThat(KubernetesResource.parseCoreResource(urlPath).getApiVersion()).isEqualTo(apiVersion);
-    assertThat(KubernetesResource.parseCoreResource(urlPath).getResource()).isEqualTo(resource);
-    assertThat(KubernetesResource.parseCoreResource(urlPath).getSubResource())
-        .isEqualTo(subResource);
-    assertThat(KubernetesResource.parseCoreResource(urlPath).getNamespace()).isEqualTo(namespace);
-    assertThat(KubernetesResource.parseCoreResource(urlPath).getName()).isEqualTo(name);
+    assertResourceEquals(KubernetesResource.parseCoreResource(urlPath), expected);
   }
 
   @ParameterizedTest
   @MethodSource("parseRegularResourceArguments")
-  void parseRegularResource(
-      String urlPath,
-      String apiGroup,
-      String apiVersion,
-      String resource,
-      String subResource,
-      String namespace,
-      String name)
+  void parseRegularResource(String urlPath, KubernetesResource expected)
       throws ParseKubernetesResourceException {
-    assertThat(KubernetesResource.parseRegularResource(urlPath).getApiGroup()).isEqualTo(apiGroup);
-    assertThat(KubernetesResource.parseRegularResource(urlPath).getApiVersion())
-        .isEqualTo(apiVersion);
-    assertThat(KubernetesResource.parseRegularResource(urlPath).getResource()).isEqualTo(resource);
-    assertThat(KubernetesResource.parseRegularResource(urlPath).getSubResource())
-        .isEqualTo(subResource);
-    assertThat(KubernetesResource.parseRegularResource(urlPath).getNamespace())
-        .isEqualTo(namespace);
-    assertThat(KubernetesResource.parseRegularResource(urlPath).getName()).isEqualTo(name);
+    assertResourceEquals(KubernetesResource.parseRegularResource(urlPath), expected);
+  }
+
+  private static void assertResourceEquals(KubernetesResource actual, KubernetesResource expected) {
+    assertThat(actual.getApiGroup()).isEqualTo(expected.getApiGroup());
+    assertThat(actual.getApiVersion()).isEqualTo(expected.getApiVersion());
+    assertThat(actual.getResource()).isEqualTo(expected.getResource());
+    assertThat(actual.getSubResource()).isEqualTo(expected.getSubResource());
+    assertThat(actual.getNamespace()).isEqualTo(expected.getNamespace());
+    assertThat(actual.getName()).isEqualTo(expected.getName());
   }
 
   @ParameterizedTest
@@ -93,84 +76,77 @@ class KubernetesRequestUtilsTest {
 
   private static Stream<Arguments> k8sRequestVerbsArguments() {
     return Stream.of(
-        Arguments.of("GET", true, false, KubernetesVerb.GET),
-        Arguments.of("GET", false, true, KubernetesVerb.WATCH),
-        Arguments.of("GET", false, false, KubernetesVerb.LIST),
-        Arguments.of("POST", false, false, KubernetesVerb.CREATE),
-        Arguments.of("PUT", false, false, KubernetesVerb.UPDATE),
-        Arguments.of("PATCH", false, false, KubernetesVerb.PATCH),
-        Arguments.of("DELETE", true, false, KubernetesVerb.DELETE),
-        Arguments.of("DELETE", false, false, KubernetesVerb.DELETE_COLLECTION));
+        argumentSet("GET named", "GET", true, false, KubernetesVerb.GET),
+        argumentSet("GET watch", "GET", false, true, KubernetesVerb.WATCH),
+        argumentSet("GET list", "GET", false, false, KubernetesVerb.LIST),
+        argumentSet("POST create", "POST", false, false, KubernetesVerb.CREATE),
+        argumentSet("PUT update", "PUT", false, false, KubernetesVerb.UPDATE),
+        argumentSet("PATCH", "PATCH", false, false, KubernetesVerb.PATCH),
+        argumentSet("DELETE named", "DELETE", true, false, KubernetesVerb.DELETE),
+        argumentSet("DELETE collection", "DELETE", false, false, KubernetesVerb.DELETE_COLLECTION));
   }
 
   private static Stream<Arguments> parseRegularResourceArguments() {
+    KubernetesResource deploymentsList =
+        new KubernetesResource("apps", "v1", "deployments", null, null, null);
+    KubernetesResource namespacedDeployments =
+        new KubernetesResource("apps", "v1", "deployments", null, "default", null);
+    KubernetesResource namedDeployment =
+        new KubernetesResource("apps", "v1", "deployments", null, "default", "foo");
+    KubernetesResource namedDeploymentStatus =
+        new KubernetesResource("apps", "v1", "deployments", "status", "default", "foo");
+    KubernetesResource foosList =
+        new KubernetesResource("example.io", "v1alpha1", "foos", null, null, null);
+    KubernetesResource namespacedFoos =
+        new KubernetesResource("example.io", "v1alpha1", "foos", null, "default", null);
+    KubernetesResource namedFoo =
+        new KubernetesResource("example.io", "v1alpha1", "foos", null, "default", "foo");
+    KubernetesResource namedFooStatus =
+        new KubernetesResource("example.io", "v1alpha1", "foos", "status", "default", "foo");
     return Stream.of(
-        Arguments.of("/apis/apps/v1/deployments", "apps", "v1", "deployments", null, null, null),
-        Arguments.of(
+        argumentSet("cluster-scoped list", "/apis/apps/v1/deployments", deploymentsList),
+        argumentSet(
+            "namespaced list",
             "/apis/apps/v1/namespaces/default/deployments",
-            "apps",
-            "v1",
-            "deployments",
-            null,
-            "default",
-            null),
-        Arguments.of(
+            namespacedDeployments),
+        argumentSet(
+            "namespaced named",
             "/apis/apps/v1/namespaces/default/deployments/foo",
-            "apps",
-            "v1",
-            "deployments",
-            null,
-            "default",
-            "foo"),
-        Arguments.of(
+            namedDeployment),
+        argumentSet(
+            "namespaced named subresource",
             "/apis/apps/v1/namespaces/default/deployments/foo/status",
-            "apps",
-            "v1",
-            "deployments",
-            "status",
-            "default",
-            "foo"),
-        Arguments.of(
-            "/apis/example.io/v1alpha1/foos", "example.io", "v1alpha1", "foos", null, null, null),
-        Arguments.of(
+            namedDeploymentStatus),
+        argumentSet(
+            "custom resource cluster-scoped list", "/apis/example.io/v1alpha1/foos", foosList),
+        argumentSet(
+            "custom resource namespaced list",
             "/apis/example.io/v1alpha1/namespaces/default/foos",
-            "example.io",
-            "v1alpha1",
-            "foos",
-            null,
-            "default",
-            null),
-        Arguments.of(
+            namespacedFoos),
+        argumentSet(
+            "custom resource namespaced named",
             "/apis/example.io/v1alpha1/namespaces/default/foos/foo",
-            "example.io",
-            "v1alpha1",
-            "foos",
-            null,
-            "default",
-            "foo"),
-        Arguments.of(
+            namedFoo),
+        argumentSet(
+            "custom resource namespaced named subresource",
             "/apis/example.io/v1alpha1/namespaces/default/foos/foo/status",
-            "example.io",
-            "v1alpha1",
-            "foos",
-            "status",
-            "default",
-            "foo"));
+            namedFooStatus));
   }
 
   private static Stream<Arguments> parseCoreResourceArguments() {
+    KubernetesResource podsList = new KubernetesResource("", "v1", "pods", null, null, null);
+    KubernetesResource namespacedPods =
+        new KubernetesResource("", "v1", "pods", null, "default", null);
+    KubernetesResource namedPod = new KubernetesResource("", "v1", "pods", null, "default", "foo");
+    KubernetesResource namedPodExec =
+        new KubernetesResource("", "v1", "pods", "exec", "default", "foo");
     return Stream.of(
-        Arguments.of("/api/v1/pods", "", "v1", "pods", null, null, null),
-        Arguments.of("/api/v1/namespaces/default/pods", "", "v1", "pods", null, "default", null),
-        Arguments.of(
-            "/api/v1/namespaces/default/pods/foo", "", "v1", "pods", null, "default", "foo"),
-        Arguments.of(
+        argumentSet("cluster-scoped list", "/api/v1/pods", podsList),
+        argumentSet("namespaced list", "/api/v1/namespaces/default/pods", namespacedPods),
+        argumentSet("namespaced named", "/api/v1/namespaces/default/pods/foo", namedPod),
+        argumentSet(
+            "namespaced named subresource",
             "/api/v1/namespaces/default/pods/foo/exec",
-            "",
-            "v1",
-            "pods",
-            "exec",
-            "default",
-            "foo"));
+            namedPodExec));
   }
 }

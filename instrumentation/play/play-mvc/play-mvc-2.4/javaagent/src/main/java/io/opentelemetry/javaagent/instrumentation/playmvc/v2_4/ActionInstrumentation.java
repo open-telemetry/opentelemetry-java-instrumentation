@@ -89,7 +89,7 @@ class ActionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static AdviceScope onEnter(@Advice.Argument(0) Request<?> req) {
+    public static AdviceScope onEnter() {
       return AdviceScope.start(currentContext());
     }
 

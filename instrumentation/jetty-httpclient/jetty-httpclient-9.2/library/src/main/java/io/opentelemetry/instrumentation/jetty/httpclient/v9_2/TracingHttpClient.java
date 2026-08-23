@@ -40,22 +40,6 @@ class TracingHttpClient extends HttpClient {
     this.instrumenter = instrumenter;
   }
 
-  static TracingHttpClient buildNew(
-      Instrumenter<Request, Response> instrumenter,
-      SslContextFactory sslContextFactory,
-      HttpClientTransport httpClientTransport) {
-    TracingHttpClient tracingHttpClient = null;
-    if (sslContextFactory != null && httpClientTransport != null) {
-      tracingHttpClient =
-          new TracingHttpClient(instrumenter, httpClientTransport, sslContextFactory);
-    } else if (sslContextFactory != null) {
-      tracingHttpClient = new TracingHttpClient(instrumenter, sslContextFactory);
-    } else {
-      tracingHttpClient = new TracingHttpClient(instrumenter);
-    }
-    return tracingHttpClient;
-  }
-
   @Override
   protected void send(HttpRequest request, List<Response.ResponseListener> listeners) {
     Context parentContext = Context.current();

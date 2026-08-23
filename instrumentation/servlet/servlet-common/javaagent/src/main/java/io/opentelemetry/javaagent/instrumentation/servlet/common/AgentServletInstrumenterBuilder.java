@@ -1,0 +1,87 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.servlet.common;
+
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletAccessor;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletHttpAttributesGetter;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletInstrumenterBuilder;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import java.util.ArrayList;
+import java.util.List;
+
+public class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
+
+  private static final ServletConfig servletConfig = ServletConfig.get();
+
+  private final List<ContextCustomizer<? super ServletRequestContext<REQUEST>>> contextCustomizers =
+      new ArrayList<>();
+
+  private boolean propagateOperationListenersToOnEnd;
+
+  public static <REQUEST, RESPONSE> AgentServletInstrumenterBuilder<REQUEST, RESPONSE> create() {
+    return new AgentServletInstrumenterBuilder<>();
+  }
+
+  private AgentServletInstrumenterBuilder() {}
+
+  @CanIgnoreReturnValue
+  public AgentServletInstrumenterBuilder<REQUEST, RESPONSE> addContextCustomizer(
+      ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer) {
+    contextCustomizers.add(contextCustomizer);
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public AgentServletInstrumenterBuilder<REQUEST, RESPONSE> propagateOperationListenersToOnEnd() {
+    propagateOperationListenersToOnEnd = true;
+    return this;
+  }
+
+  public Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> build(
+      String instrumentationName,
+      ServletAccessor<REQUEST, RESPONSE> accessor,
+      SpanNameExtractor<ServletRequestContext<REQUEST>> spanNameExtractor,
+      HttpServerAttributesGetter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
+          httpAttributesGetter) {
+    ServletInstrumenterBuilder<REQUEST, RESPONSE> builder =
+        ServletInstrumenterBuilder.create(
+                instrumentationName, GlobalOpenTelemetry.get(), httpAttributesGetter, accessor)
+            .setRequestParameters(servletConfig.getRequestParameters())
+            .setCaptureExperimentalAttributes(servletConfig.getCaptureExperimentalAttributes())
+            .setCaptureEnduserId(AgentCommonConfig.get().getUserConfig().isNameEnabled());
+    for (ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer :
+        contextCustomizers) {
+      builder.addContextCustomizer(contextCustomizer);
+    }
+    if (propagateOperationListenersToOnEnd) {
+      builder.propagateOperationListenersToOnEnd();
+    }
+    builder.getBuilder().configure(AgentCommonConfig.get());
+
+    return builder.build(spanNameExtractor);
+  }
+
+  public Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> build(
+      String instrumentationName, ServletAccessor<REQUEST, RESPONSE> accessor) {
+    HttpServerAttributesGetter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
+        httpAttributesGetter = new ServletHttpAttributesGetter<>(accessor);
+    SpanNameExtractor<ServletRequestContext<REQUEST>> spanNameExtractor =
+        HttpSpanNameExtractor.builder(httpAttributesGetter)
+            .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
+            .build();
+
+    return build(instrumentationName, accessor, spanNameExtractor, httpAttributesGetter);
+  }
+}
