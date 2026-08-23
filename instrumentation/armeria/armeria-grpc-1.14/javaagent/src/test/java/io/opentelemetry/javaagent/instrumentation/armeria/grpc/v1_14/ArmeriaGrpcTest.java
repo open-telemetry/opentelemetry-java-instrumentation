@@ -149,7 +149,7 @@ class ArmeriaGrpcTest {
                             equalTo(SERVER_PORT, server.httpPort()),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, port -> port.isInstanceOf(Long.class)),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NETWORK_PROTOCOL_VERSION, "2"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.startsWith("armeria/"))),
                 span ->
@@ -245,7 +245,7 @@ class ArmeriaGrpcTest {
                             equalTo(SERVER_PORT, serverWithoutGreeter.httpPort()),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, port -> port.isInstanceOf(Long.class)),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(NETWORK_PROTOCOL_VERSION, "2"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.startsWith("armeria/")))));
   }
