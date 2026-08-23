@@ -113,6 +113,20 @@ class ServicePeerAttributesExtractorTest {
     }
   }
 
+  @Test
+  void shouldMatchConfiguredTargetExactly() {
+    String target = "postgresql://db1.example:5432,db2.example:5432";
+    ServicePeerResolver resolver = createResolver(mapping(target, "myService", null));
+    AttributesExtractor<String, String> underTest =
+        new ServicePeerAttributesExtractor<>(attributesGetter, resolver);
+    when(attributesGetter.getServerAddress(any())).thenReturn(target);
+
+    AttributesBuilder attributes = Attributes.builder();
+    underTest.onEnd(attributes, Context.root(), "request", "response", null);
+
+    assertThat(attributes.build()).containsOnly(entry(maybeStablePeerService(), "myService"));
+  }
+
   private static ServicePeerResolver createResolver(DeclarativeConfigProperties... entries) {
     ExtendedOpenTelemetry otel = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);

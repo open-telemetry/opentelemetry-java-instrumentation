@@ -33,6 +33,20 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // see vertx-sql-client-5.0 module
 }
 
+testing {
+  suites {
+    // pools over a list of servers were added in 4.2, and the module's own tests run against 4.0
+    register<JvmTestSuite>("test42") {
+      dependencies {
+        implementation("io.vertx:vertx-sql-client:4.2.0")
+        implementation("io.vertx:vertx-pg-client:4.2.0")
+        implementation("io.vertx:vertx-codegen:4.2.0")
+        implementation("org.testcontainers:testcontainers")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
@@ -46,8 +60,19 @@ tasks {
     systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
   }
 
+  val test42StableSemconv = register<Test>("test42StableSemconv") {
+    val test42 = sourceSets.named("test42")
+    testClassesDirs = files(test42.map { it.output.classesDirs })
+    classpath = files(test42.map { it.runtimeClasspath })
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
+  }
+
   check {
     dependsOn(testStableSemconv)
+    if (!otelProps.testLatestDeps) {
+      dependsOn(testing.suites.named("test42"), test42StableSemconv)
+    }
   }
 }
 

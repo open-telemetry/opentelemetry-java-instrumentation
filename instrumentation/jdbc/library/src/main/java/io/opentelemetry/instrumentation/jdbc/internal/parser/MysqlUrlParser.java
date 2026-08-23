@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractSubtype;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.sanitizeHostList;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -99,6 +100,21 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     return -1;
   }
 
+  /**
+   * Keep the whole host list of a sub-protocol URL, e.g. {@code failover://h1:3306,h2:3306/db},
+   * when it routes to more than one host.
+   *
+   * @param jdbcUrl the part of the URL that follows {@code ://}
+   */
+  private static void applyHostGroup(String jdbcUrl, ParseContext ctx) {
+    int authorityEnd = indexOf(jdbcUrl, 0, '/', '?', '#');
+    String authority = authorityEnd == -1 ? jdbcUrl : jdbcUrl.substring(0, authorityEnd);
+    String hostList = sanitizeHostList(authority);
+    if (hostList != null) {
+      ctx.serverAddressGroup("//" + hostList);
+    }
+  }
+
   private static void parseNonStandardUrl(String jdbcUrl, ParseContext ctx) {
     int typeEndLoc = jdbcUrl.indexOf(':');
     int sectionEnd = indexOf(jdbcUrl, typeEndLoc + 1, ':', '/', '?');
@@ -145,6 +161,8 @@ public final class MysqlUrlParser implements JdbcUrlParser {
   }
 
   private static void parseMariaSubProtocol(String jdbcUrl, ParseContext ctx) {
+    applyHostGroup(jdbcUrl, ctx);
+
     int hostEndLoc;
     int ipv6End = jdbcUrl.startsWith("[") ? jdbcUrl.indexOf("]") : -1;
     int sectionEnd = indexOf(jdbcUrl, Math.max(0, ipv6End), ':', '/', '?', ',');

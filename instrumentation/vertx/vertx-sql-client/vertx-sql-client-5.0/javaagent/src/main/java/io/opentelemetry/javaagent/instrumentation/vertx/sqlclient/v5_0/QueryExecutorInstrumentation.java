@@ -51,7 +51,9 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
     public static void onExit(@Advice.This Object queryExecutor) {
       // copy client data from ThreadLocal to VirtualField
       VertxSqlClientUtil.setQueryExecutorData(
-          queryExecutor, new VertxSqlClientData(getSqlConnectOptions(), getDbSystem()));
+          queryExecutor,
+          new VertxSqlClientData(
+              getSqlConnectOptions(), getDbSystem(), VertxSqlClientUtil.getAddressGroup()));
     }
   }
 
@@ -127,7 +129,13 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
           dbSystem = VertxSqlClientUtil.getDbSystemNameFromClassName(connectOptions);
         }
         VertxSqlClientRequest otelRequest =
-            new VertxSqlClientRequest(sql, connectOptions, parameterizedQuery, dbSystem, batchSize);
+            new VertxSqlClientRequest(
+                sql,
+                connectOptions,
+                parameterizedQuery,
+                dbSystem,
+                batchSize,
+                data.getAddressGroup());
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
           return new AdviceScope(callDepth);

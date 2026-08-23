@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MARIADB;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MICROSOFT_SQL_SERVER;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
@@ -22,6 +24,7 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -83,5 +86,36 @@ class JdbcAttributesGetterTest {
         argumentSet("positive", 42, "42"),
         argumentSet("negative", -42, "-42"),
         argumentSet("zero is unavailable", 0, null));
+  }
+
+  @Test
+  void groupTargetReplacesHostAndPortOnlyInStableSemconv() {
+    DbInfo dbInfo =
+        DbInfo.builder()
+            .dbSystemName(MARIADB)
+            .serverAddress("h1")
+            .serverPort(3306)
+            .serverAddressGroup("mariadb:failover://h1:3306,h2:3306")
+            .build();
+    DbRequest request = DbRequest.create(dbInfo, "SELECT 1", false);
+
+    if (emitStableDatabaseSemconv()) {
+      assertThat(attributesGetter.getServerAddress(request))
+          .isEqualTo("mariadb:failover://h1:3306,h2:3306");
+      assertThat(attributesGetter.getServerPort(request)).isNull();
+    } else {
+      assertThat(attributesGetter.getServerAddress(request)).isEqualTo("h1");
+      assertThat(attributesGetter.getServerPort(request)).isEqualTo(3306);
+    }
+  }
+
+  @Test
+  void singularTargetKeepsHostAndPortInEveryMode() {
+    DbInfo dbInfo =
+        DbInfo.builder().dbSystemName(MARIADB).serverAddress("h1").serverPort(3306).build();
+    DbRequest request = DbRequest.create(dbInfo, "SELECT 1", false);
+
+    assertThat(attributesGetter.getServerAddress(request)).isEqualTo("h1");
+    assertThat(attributesGetter.getServerPort(request)).isEqualTo(3306);
   }
 }

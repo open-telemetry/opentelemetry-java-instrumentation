@@ -10,7 +10,9 @@ import static java.util.logging.Level.FINE;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -119,27 +121,45 @@ public final class UrlParsingUtils {
    */
   public static String buildShortUrl(
       String type, @Nullable String subtype, @Nullable String host, @Nullable Integer port) {
-    StringBuilder url = new StringBuilder(type);
-    url.append(':');
-    if (subtype != null) {
-      url.append(subtype);
-      url.append(':');
-    }
+    StringBuilder url = new StringBuilder();
+    appendTypePrefix(url, type, subtype);
     if (host != null) {
       url.append("//");
-      if (host.contains(":") && !host.startsWith("[")) {
-        url.append('[');
-        url.append(host);
-        url.append(']');
-      } else {
-        url.append(host);
-      }
-      if (port != null) {
-        url.append(':');
-        url.append(port);
-      }
+      appendHostPort(url, host, port);
     }
     return url.toString();
+  }
+
+  /**
+   * Append the {@code type:[subtype:]} prefix that starts a JDBC connection string, without the
+   * {@code jdbc:} scheme.
+   */
+  public static void appendTypePrefix(
+      StringBuilder builder, String type, @Nullable String subtype) {
+    builder.append(type);
+    builder.append(':');
+    if (subtype != null) {
+      builder.append(subtype);
+      builder.append(':');
+    }
+  }
+
+  /**
+   * Append {@code host[:port]}, enclosing a literal IPv6 address in brackets so that the port stays
+   * unambiguous.
+   */
+  public static void appendHostPort(StringBuilder builder, String host, @Nullable Integer port) {
+    if (host.contains(":") && !host.startsWith("[")) {
+      builder.append('[');
+      builder.append(host);
+      builder.append(']');
+    } else {
+      builder.append(host);
+    }
+    if (port != null) {
+      builder.append(':');
+      builder.append(port);
+    }
   }
 
   /**
@@ -207,14 +227,158 @@ public final class UrlParsingUtils {
    * @return the index of the first occurrence, or -1 if none found
    */
   public static int indexOfAny(String str, char... chars) {
-    int minIndex = -1;
-    for (char c : chars) {
-      int idx = str.indexOf(c);
-      if (idx >= 0 && (minIndex < 0 || idx < minIndex)) {
-        minIndex = idx;
+    return indexOfAny(str, 0, chars);
+  }
+
+  /**
+   * Find the index of the first occurrence of any of the specified characters at or after {@code
+   * fromIndex}.
+   *
+   * @param str the string to search
+   * @param fromIndex the index to start searching from
+   * @param chars the characters to search for
+   * @return the index of the first occurrence, or -1 if none found
+   */
+  public static int indexOfAny(String str, int fromIndex, char... chars) {
+    for (int i = Math.max(fromIndex, 0); i < str.length(); i++) {
+      char c = str.charAt(i);
+      for (char match : chars) {
+        if (c == match) {
+          return i;
+        }
       }
     }
-    return minIndex;
+    return -1;
+  }
+
+  /**
+   * Extract the authority of a URL-shaped connection string, i.e. everything between {@code ://}
+   * and the database path, the query string or the fragment.
+   *
+   * @param url the connection string, with the {@code jdbc:} scheme already removed
+   * @return the authority, or null when the connection string has no {@code ://} separator
+   */
+  @Nullable
+  public static String extractAuthority(String url) {
+    int protoLoc = url.indexOf("://");
+    if (protoLoc < 0) {
+      return null;
+    }
+    int start = protoLoc + 3;
+    int end = indexOfAny(url, start, '/', '?', '#');
+    int lastAt = url.lastIndexOf('@');
+    if (lastAt >= start && end >= 0 && lastAt > end) {
+      // A delimiter before the user-info terminator is ambiguous: it may be part of a malformed
+      // password. Dropping the group is safer than reporting credential text as a host.
+      return null;
+    }
+    return end < 0 ? url.substring(start) : url.substring(start, end);
+  }
+
+  /**
+   * Remove the {@code user[:password]@} prefix of an authority.
+   *
+   * <p>Only an authority that has the URL shape carries user info that way. A driver specific
+   * {@code key=value} block, such as the MySQL and MariaDB {@code address=(...)} syntax, spells its
+   * credentials out as attributes, and an {@code @} inside one of them belongs to the value rather
+   * than to a user info separator. Such an authority is returned unchanged, so that cutting at the
+   * last {@code @} cannot leave the tail of a password behind.
+   *
+   * @param authority the authority to strip
+   * @return the authority without user info
+   */
+  private static String stripUserInfo(String authority) {
+    if (!isUrlShapedAuthority(authority)) {
+      return authority;
+    }
+    int at = authority.lastIndexOf('@');
+    return at < 0 ? authority : authority.substring(at + 1);
+  }
+
+  /**
+   * Whether an authority is written as {@code [user[:password]@]host[:port]}, as opposed to a
+   * driver specific block of {@code key=value} attributes.
+   */
+  private static boolean isUrlShapedAuthority(String authority) {
+    return authority.indexOf('(') < 0;
+  }
+
+  /**
+   * Split a comma-separated host list into its entries. Commas inside square brackets (literal IPv6
+   * addresses) and inside parentheses (MySQL and MariaDB {@code address=(...)} blocks) are part of
+   * an entry rather than separators.
+   *
+   * @param hostList the host list, without user info
+   * @return the individual entries, in the order they appear
+   */
+  private static List<String> splitHostList(String hostList) {
+    List<String> entries = new ArrayList<>();
+    int depth = 0;
+    int start = 0;
+    for (int i = 0; i < hostList.length(); i++) {
+      char c = hostList.charAt(i);
+      if (c == '[' || c == '(') {
+        depth++;
+      } else if (c == ']' || c == ')') {
+        depth--;
+      } else if (c == ',' && depth <= 0) {
+        entries.add(hostList.substring(start, i));
+        start = i + 1;
+      }
+    }
+    entries.add(hostList.substring(start));
+    return entries;
+  }
+
+  private static final Pattern ADDRESS_CREDENTIAL_PATTERN =
+      Pattern.compile("\\(\\s*(?:user|password)\\s*=[^)]*\\)");
+
+  /**
+   * Remove the credential attributes of the MySQL and MariaDB {@code address=(...)} syntax, e.g.
+   * {@code (user=root)} and {@code (password=secret)}.
+   *
+   * @param authority the authority to sanitize
+   * @return the authority without credential attributes
+   */
+  private static String stripAddressCredentials(String authority) {
+    return ADDRESS_CREDENTIAL_PATTERN.matcher(authority).replaceAll("");
+  }
+
+  /**
+   * Render the sanitized host list of an authority that routes to more than one host.
+   *
+   * <p>User info and the credentials of MySQL and MariaDB {@code address=(...)} blocks are removed;
+   * everything else is kept as configured so that the routing identity survives.
+   *
+   * <p>Whole credential attributes are removed before any user info is looked for, because a
+   * password may hold an {@code @} of its own and cutting the authority at the last {@code @} would
+   * otherwise carry the rest of that password into the result.
+   *
+   * @param authority the authority to sanitize
+   * @return the sanitized host list, or null when the authority routes to a single host or still
+   *     holds credential material that cannot be told apart from a host
+   */
+  @Nullable
+  public static String sanitizeHostList(String authority) {
+    String hostList = stripUserInfo(stripAddressCredentials(authority));
+    List<String> entries = splitHostList(hostList);
+    if (entries.size() < 2) {
+      return null;
+    }
+    StringBuilder group = new StringBuilder();
+    for (String entry : entries) {
+      String host = entry.trim();
+      if (host.indexOf('@') >= 0) {
+        // a host never holds an '@', so an entry that still carries one holds part of a credential
+        // that neither of the two steps above recognized, and the whole target is dropped
+        return null;
+      }
+      if (group.length() > 0) {
+        group.append(',');
+      }
+      group.append(host);
+    }
+    return group.toString();
   }
 
   /**

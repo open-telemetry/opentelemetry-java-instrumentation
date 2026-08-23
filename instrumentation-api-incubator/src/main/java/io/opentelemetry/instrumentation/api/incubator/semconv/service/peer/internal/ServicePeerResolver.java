@@ -48,6 +48,7 @@ public class ServicePeerResolver {
               .thenComparing(ServiceMatcher::getPath, nullsFirst(naturalOrder())));
 
   private final Map<String, Map<ServiceMatcher, ServicePeer>> servicePeerMapping = new HashMap<>();
+  private final Map<String, ServicePeer> exactServicePeerMapping = new HashMap<>();
 
   public ServicePeerResolver(OpenTelemetry openTelemetry) {
     DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
@@ -84,6 +85,9 @@ public class ServicePeerResolver {
     String host = UrlParser.getHost(url);
     Integer port = UrlParser.getPort(url);
     String path = UrlParser.getPath(url);
+    if (!peer.equals(host)) {
+      exactServicePeerMapping.putIfAbsent(peer, info);
+    }
     Map<ServiceMatcher, ServicePeer> matchers =
         servicePeerMapping.computeIfAbsent(host, x -> new HashMap<>());
     matchers.putIfAbsent(ServiceMatcher.create(port, path), info);
@@ -124,6 +128,10 @@ public class ServicePeerResolver {
   @Nullable
   private ServicePeer resolveServicePeer(
       String host, @Nullable Integer port, Supplier<String> pathSupplier) {
+    ServicePeer exactMatch = exactServicePeerMapping.get(host);
+    if (exactMatch != null) {
+      return exactMatch;
+    }
     Map<ServiceMatcher, ServicePeer> matchers = servicePeerMapping.get(host);
     if (matchers == null) {
       return null;

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.appendTypePrefix;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.buildShortUrl;
 
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -28,6 +29,7 @@ public final class ParseContext {
   @Nullable private String subtype;
   @Nullable private String host;
   @Nullable private Integer port;
+  @Nullable private String serverAddressGroup;
   @Nullable private String user;
   @Nullable private String databaseName;
   @Nullable private String namespace;
@@ -110,6 +112,23 @@ public final class ParseContext {
   /** Set the port value. */
   public void port(@Nullable Integer port) {
     this.port = port;
+  }
+
+  /**
+   * The configured target of a connection that routes to more than one host, in the driver's own
+   * syntax and without the {@code type:[subtype:]} prefix, e.g. {@code //h1:3306,h2:3306}.
+   */
+  @Nullable
+  public String serverAddressGroup() {
+    return serverAddressGroup;
+  }
+
+  /**
+   * Set the configured target of a connection that routes to more than one host. The value is the
+   * part that follows the {@code type:[subtype:]} prefix, which {@link #toDbInfo()} prepends.
+   */
+  public void serverAddressGroup(@Nullable String serverAddressGroup) {
+    this.serverAddressGroup = serverAddressGroup;
   }
 
   /** The user value accumulated so far. */
@@ -338,6 +357,12 @@ public final class ParseContext {
       builder.dbName(namespace);
     }
     builder.dbConnectionString(buildShortUrl(type, subtype, host, port));
+    if (serverAddressGroup != null) {
+      StringBuilder groupAddress = new StringBuilder();
+      appendTypePrefix(groupAddress, type, subtype);
+      groupAddress.append(serverAddressGroup);
+      builder.serverAddressGroup(groupAddress.toString());
+    }
     return builder.build();
   }
 }

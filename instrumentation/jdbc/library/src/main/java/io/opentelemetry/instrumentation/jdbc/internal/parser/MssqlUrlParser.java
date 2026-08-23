@@ -69,6 +69,27 @@ public final class MssqlUrlParser implements JdbcUrlParser {
 
     // Namespace depends on the effective databaseName, so derive it after DataSource overrides.
     setNamespace(ctx, instanceName);
+
+    // The failover partner is only known once the principal host and port are final.
+    applyFailoverPartnerGroup(ctx, urlParams);
+  }
+
+  /**
+   * Keep the principal host together with its failover partner, e.g. {@code
+   * //h1:1433;failoverpartner=h2}, so that a mirrored pair is not reported as a single host.
+   */
+  private static void applyFailoverPartnerGroup(ParseContext ctx, Map<String, String> params) {
+    String failoverPartner = params.get("failoverpartner");
+    if ((failoverPartner == null || failoverPartner.isEmpty()) && ctx.props() != null) {
+      failoverPartner = ctx.props().getProperty("failoverPartner");
+    }
+    if (failoverPartner == null || failoverPartner.isEmpty() || ctx.host() == null) {
+      return;
+    }
+    StringBuilder group = new StringBuilder("//");
+    UrlParsingUtils.appendHostPort(group, ctx.host(), ctx.port());
+    group.append(";failoverpartner=").append(failoverPartner);
+    ctx.serverAddressGroup(group.toString());
   }
 
   /**
