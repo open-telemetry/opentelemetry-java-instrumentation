@@ -44,6 +44,15 @@
   driver 2.6 or later that the agent did not see being built falls back to the node that answered.
   Clients using driver 3.1 to 3.5 that connect from seed nodes rather than a connection string
   report no target, because those drivers never see one.
+- Geode spans record the target their client pool was configured with, again only when stable
+  database semantic conventions are enabled; they carried no server attributes before. A pool
+  configured with a single cache server keeps that server's host and port, a pool configured with
+  several carries all of them in `server.address` as `host:port,host:port` and omits `server.port`,
+  and a pool configured with a server group is named by that group and omits `server.port` as well.
+  Locators are never part of the target, because a locator hands a client the cache servers it may
+  talk to rather than serving operations itself, so a pool given locators and no server group
+  reports no target. The target is read while the pool is being created, so a pool keeps reporting
+  what it was pointed at rather than the servers it later discovers.
 
 ## Version 2.31.0 (2026-08-20)
 

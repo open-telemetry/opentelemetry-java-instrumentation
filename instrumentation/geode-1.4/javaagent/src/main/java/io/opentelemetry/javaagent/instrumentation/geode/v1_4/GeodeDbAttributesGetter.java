@@ -80,4 +80,26 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   public String getDbOperationName(GeodeRequest request) {
     return request.getOperationName();
   }
+
+  @Override
+  @Nullable
+  public String getServerAddress(GeodeRequest request) {
+    // the old conventions never described a server for Geode, and they are frozen
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    GeodeServerTarget target = request.getServerTarget();
+    return target == null ? null : target.getAddress();
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(GeodeRequest request) {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    GeodeServerTarget target = request.getServerTarget();
+    // a target naming a server group or several servers carries no port of its own
+    return target == null ? null : target.getPort();
+  }
 }

@@ -14,7 +14,8 @@ abstract class GeodeRequest {
 
   static GeodeRequest create(
       Region<?, ?> region, String operationName, @Nullable String queryText) {
-    return new AutoValue_GeodeRequest(region, operationName, queryText);
+    return new AutoValue_GeodeRequest(
+        region, operationName, queryText, GeodeServerTargets.get(region));
   }
 
   abstract Region<?, ?> getRegion();
@@ -23,4 +24,7 @@ abstract class GeodeRequest {
 
   @Nullable
   abstract String getQueryText();
+
+  @Nullable
+  abstract GeodeServerTarget getServerTarget();
 }
