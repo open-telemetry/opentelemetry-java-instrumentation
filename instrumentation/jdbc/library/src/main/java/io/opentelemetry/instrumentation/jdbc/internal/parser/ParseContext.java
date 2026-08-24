@@ -115,20 +115,25 @@ public final class ParseContext {
   }
 
   /**
-   * The configured target of a connection that routes to more than one host, in the driver's own
-   * syntax and without the {@code type:[subtype:]} prefix, e.g. {@code //h1:3306,h2:3306}.
+   * The configured target of a connection that routes to more than one host, e.g. {@code
+   * h1:3306,h2:3306}.
    */
   @Nullable
   public String serverAddressGroup() {
     return serverAddressGroup;
   }
 
-  /**
-   * Set the configured target of a connection that routes to more than one host. The value is the
-   * part that follows the {@code type:[subtype:]} prefix, which {@link #toDbInfo()} prepends.
-   */
+  /** Set the configured target of a connection that routes to more than one parsed host. */
   public void serverAddressGroup(@Nullable String serverAddressGroup) {
     this.serverAddressGroup = serverAddressGroup;
+  }
+
+  /** Set an opaque configured target, preserving the driver's type and subtype prefix. */
+  public void opaqueServerAddressGroup(String target) {
+    StringBuilder groupAddress = new StringBuilder();
+    appendTypePrefix(groupAddress, type, subtype);
+    groupAddress.append(target);
+    serverAddressGroup = groupAddress.toString();
   }
 
   /** The user value accumulated so far. */
@@ -358,10 +363,7 @@ public final class ParseContext {
     }
     builder.dbConnectionString(buildShortUrl(type, subtype, host, port));
     if (serverAddressGroup != null) {
-      StringBuilder groupAddress = new StringBuilder();
-      appendTypePrefix(groupAddress, type, subtype);
-      groupAddress.append(serverAddressGroup);
-      builder.serverAddressGroup(groupAddress.toString());
+      builder.serverAddressGroup(serverAddressGroup);
     }
     return builder.build();
   }

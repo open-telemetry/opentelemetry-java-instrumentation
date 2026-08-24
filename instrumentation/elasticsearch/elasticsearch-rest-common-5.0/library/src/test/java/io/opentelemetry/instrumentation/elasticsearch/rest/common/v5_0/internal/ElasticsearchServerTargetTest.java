@@ -43,25 +43,25 @@ class ElasticsearchServerTargetTest {
   }
 
   @Test
-  void severalHostsSharingASchemeSpellItOutOnce() {
+  void severalHostsOmitTheirSharedScheme() {
     ElasticsearchServerTarget target =
         ElasticsearchServerTarget.of(
             asList(new HttpHost("h1", 9200, "http"), new HttpHost("h2", 9201, "http")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("http://h1:9200,h2:9201");
+    assertThat(target.getAddress()).isEqualTo("h1:9200,h2:9201");
     // the target already carries the port of every host it names
     assertThat(target.getPort()).isNull();
   }
 
   @Test
-  void severalHostsWithDifferentSchemesKeepTheirOwn() {
+  void severalHostsWithDifferentSchemesOmitThem() {
     ElasticsearchServerTarget target =
         ElasticsearchServerTarget.of(
             asList(new HttpHost("h1", 9200, "http"), new HttpHost("h2", 9200, "https")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("http://h1:9200,https://h2:9200");
+    assertThat(target.getAddress()).isEqualTo("h1:9200,h2:9200");
   }
 
   @Test
@@ -71,7 +71,7 @@ class ElasticsearchServerTargetTest {
             asList(new HttpHost("::1", 9200, "http"), new HttpHost("[fe80::1]", 9200, "http")));
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("http://[::1]:9200,[fe80::1]:9200");
+    assertThat(target.getAddress()).isEqualTo("[::1]:9200,[fe80::1]:9200");
   }
 
   @Test
@@ -86,7 +86,7 @@ class ElasticsearchServerTargetTest {
     ElasticsearchServerTarget target = ElasticsearchServerTarget.of(hosts);
 
     assertThat(target).isNotNull();
-    assertThat(target.getAddress()).isEqualTo("https://h1:9200,h2:9200,h3:9200,h4:9200");
+    assertThat(target.getAddress()).isEqualTo("h1:9200,h2:9200,h3:9200,h4:9200");
     assertThat(target.getAddress()).doesNotContain("secret");
   }
 
@@ -101,7 +101,7 @@ class ElasticsearchServerTargetTest {
   }
 
   @Test
-  void aHostThatIsOnlyCredentialsHasNoTarget() {
+  void hostThatIsOnlyCredentialsHasNoTarget() {
     assertThat(ElasticsearchServerTarget.of(singletonList(new HttpHost("user:secret@", 9200))))
         .isNull();
     assertThat(

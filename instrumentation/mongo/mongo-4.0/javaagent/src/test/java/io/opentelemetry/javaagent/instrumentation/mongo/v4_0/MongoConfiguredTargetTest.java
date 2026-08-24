@@ -82,7 +82,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
       runCommand(client);
     }
 
-    assertFindSpan("mongodb://db1.example:27017,db2.example:27018", null);
+    assertFindSpan("db1.example:27017,db2.example:27018", null);
     assertDurationMetric(
         testing,
         "io.opentelemetry.mongo-4.0",

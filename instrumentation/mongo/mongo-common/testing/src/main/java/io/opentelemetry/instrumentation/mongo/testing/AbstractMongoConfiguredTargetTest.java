@@ -93,7 +93,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
       runCommand(client);
     }
 
-    assertFindSpan("mongodb://db1.example:27017,db2.example:27018", null);
+    assertFindSpan("db1.example:27017,db2.example:27018", null);
   }
 
   @Test
@@ -116,7 +116,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
       runCommand(client);
     }
 
-    assertFindSpan("mongodb://[::1]:27017,[fe80::1]:27018", null);
+    assertFindSpan("[::1]:27017,[fe80::1]:27018", null);
   }
 
   @Test
@@ -137,7 +137,7 @@ public abstract class AbstractMongoConfiguredTargetTest {
                     span ->
                         span.hasName(
                                 emitStableDatabaseSemconv()
-                                    ? "listDatabases mongodb://db1.example:27017,db2.example:27018"
+                                    ? "listDatabases db1.example:27017,db2.example:27018"
                                     : "listDatabases")
                             .hasKind(CLIENT)));
   }

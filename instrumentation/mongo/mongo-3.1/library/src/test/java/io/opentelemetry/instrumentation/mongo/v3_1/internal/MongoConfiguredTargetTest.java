@@ -37,9 +37,7 @@ class MongoConfiguredTargetTest {
 
     assertThat(getter.getServerAddress(event))
         .isEqualTo(
-            emitStableDatabaseSemconv()
-                ? "mongodb://db1.example:27017,db2.example:27018"
-                : "db2.example");
+            emitStableDatabaseSemconv() ? "db1.example:27017,db2.example:27018" : "db2.example");
     assertThat(getter.getServerPort(event)).isEqualTo(emitStableDatabaseSemconv() ? null : 27018);
   }
 
@@ -98,7 +96,7 @@ class MongoConfiguredTargetTest {
     assertThat(spanName)
         .isEqualTo(
             emitStableDatabaseSemconv()
-                ? "listDatabases mongodb://db1.example:27017,db2.example:27018"
+                ? "listDatabases db1.example:27017,db2.example:27018"
                 : "listDatabases");
   }
 

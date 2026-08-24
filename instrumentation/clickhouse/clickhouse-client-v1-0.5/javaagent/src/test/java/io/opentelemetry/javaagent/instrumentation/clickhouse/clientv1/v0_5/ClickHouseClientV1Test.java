@@ -569,6 +569,7 @@ class ClickHouseClientV1Test {
   void testNodeListReportsTheWholeConfiguredTarget() throws ClickHouseException {
     // the first node is the running server, the second one is only there to make the target a group
     String nodeList = "http://" + host + ":" + port + "," + host + ":" + (port + 1);
+    String addressGroup = host + ":" + port + "," + host + ":" + (port + 1);
     ClickHouseNodes nodes = ClickHouseNodes.of(nodeList + "/" + DATABASE_NAME + "?compress=0");
 
     ClickHouseResponse response =
@@ -585,7 +586,8 @@ class ClickHouseClientV1Test {
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? nodeList : host),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : Long.valueOf(port)))));
@@ -595,6 +597,7 @@ class ClickHouseClientV1Test {
   void testFaultyNodeStaysInTheConfiguredTarget() throws ClickHouseException {
     // a second node list, so that the health state of this one does not reach the test above
     String nodeList = "http://" + host + ":" + port + "," + host + ":" + (port + 2);
+    String addressGroup = host + ":" + port + "," + host + ":" + (port + 2);
     ClickHouseNodes nodes = ClickHouseNodes.of(nodeList + "/" + DATABASE_NAME + "?compress=0");
 
     for (ClickHouseNode node : nodes.getNodes()) {
@@ -620,7 +623,8 @@ class ClickHouseClientV1Test {
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfying(
-                            equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? nodeList : host),
+                            equalTo(
+                                SERVER_ADDRESS, emitStableDatabaseSemconv() ? addressGroup : host),
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : Long.valueOf(port)))));

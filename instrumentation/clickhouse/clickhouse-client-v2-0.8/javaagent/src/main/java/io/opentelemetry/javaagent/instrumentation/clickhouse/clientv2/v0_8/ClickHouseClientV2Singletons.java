@@ -97,28 +97,62 @@ public class ClickHouseClientV2Singletons {
         addressGroup.append(endpoint);
       }
       String first = sanitized.get(0);
-      return new ServerInfo(
-          UrlParser.getHost(first), UrlParser.getPort(first), addressGroup.toString());
+      return new ServerInfo(endpointAddress(first), endpointPort(first), addressGroup.toString());
     }
 
-    /**
-     * An endpoint reduced to {@code scheme://host[:port]}, keeping the scheme of each endpoint. The
-     * client normalizes every endpoint it is given to a scheme, a host, a port and a path, so this
-     * only has to drop what follows the authority.
-     */
+    private static String endpointAddress(String endpoint) {
+      if (endpoint.startsWith("[")) {
+        int bracketEnd = endpoint.indexOf(']');
+        if (bracketEnd > 0) {
+          return endpoint.substring(1, bracketEnd);
+        }
+      }
+      int colon = endpoint.lastIndexOf(':');
+      return colon >= 0 && colon == endpoint.indexOf(':') ? endpoint.substring(0, colon) : endpoint;
+    }
+
+    @Nullable
+    private static Integer endpointPort(String endpoint) {
+      int portStart;
+      if (endpoint.startsWith("[")) {
+        int bracketEnd = endpoint.indexOf(']');
+        portStart =
+            bracketEnd >= 0
+                    && bracketEnd + 1 < endpoint.length()
+                    && endpoint.charAt(bracketEnd + 1) == ':'
+                ? bracketEnd + 2
+                : -1;
+      } else {
+        int colon = endpoint.lastIndexOf(':');
+        portStart = colon >= 0 && colon == endpoint.indexOf(':') ? colon + 1 : -1;
+      }
+      if (portStart < 0 || portStart == endpoint.length()) {
+        return null;
+      }
+      try {
+        return Integer.valueOf(endpoint.substring(portStart));
+      } catch (NumberFormatException ignored) {
+        return null;
+      }
+    }
+
+    /** An endpoint reduced to {@code host[:port]}. */
     private static String sanitizeEndpoint(String endpoint) {
       int authorityStart = endpoint.indexOf("://");
-      if (authorityStart < 0) {
-        return endpoint;
-      }
-      authorityStart += 3;
+      authorityStart = authorityStart < 0 ? 0 : authorityStart + 3;
+      int authorityEnd = endpoint.length();
       for (int i = authorityStart; i < endpoint.length(); i++) {
         char c = endpoint.charAt(i);
         if (c == '/' || c == '?' || c == '#') {
-          return endpoint.substring(0, i);
+          authorityEnd = i;
+          break;
         }
       }
-      return endpoint;
+      int userInfoEnd = endpoint.lastIndexOf('@', authorityEnd - 1);
+      if (userInfoEnd >= authorityStart) {
+        authorityStart = userInfoEnd + 1;
+      }
+      return endpoint.substring(authorityStart, authorityEnd);
     }
 
     @Nullable

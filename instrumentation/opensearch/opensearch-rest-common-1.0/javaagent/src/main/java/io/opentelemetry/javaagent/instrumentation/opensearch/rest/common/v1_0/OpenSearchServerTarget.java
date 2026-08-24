@@ -13,8 +13,8 @@ import javax.annotation.Nullable;
  * with.
  *
  * <p>A client configured with a single node keeps that host and its port. A client configured with
- * several nodes carries all of them in the address, in the client's own {@code
- * scheme://host:port,host:port} syntax, and has no port of its own.
+ * several nodes carries all of them in the address as {@code host:port,host:port}, and has no port
+ * of its own.
  */
 public final class OpenSearchServerTarget {
 
@@ -45,18 +45,7 @@ public final class OpenSearchServerTarget {
 
   @Nullable
   private static String renderGroup(List<Endpoint> endpoints) {
-    String sharedScheme = endpoints.get(0).scheme;
-    for (Endpoint endpoint : endpoints) {
-      if (sharedScheme == null || !sharedScheme.equals(endpoint.scheme)) {
-        sharedScheme = null;
-        break;
-      }
-    }
-
     StringBuilder group = new StringBuilder();
-    if (sharedScheme != null) {
-      group.append(sharedScheme).append("://");
-    }
     for (int i = 0; i < endpoints.size(); i++) {
       Endpoint endpoint = endpoints.get(i);
       if (endpoint.host == null) {
@@ -64,9 +53,6 @@ public final class OpenSearchServerTarget {
       }
       if (i > 0) {
         group.append(',');
-      }
-      if (sharedScheme == null && endpoint.scheme != null) {
-        group.append(endpoint.scheme).append("://");
       }
       // a literal IPv6 address is bracketed so that the port stays unambiguous
       if (endpoint.host.indexOf(':') >= 0 && !endpoint.host.startsWith("[")) {
@@ -94,12 +80,10 @@ public final class OpenSearchServerTarget {
   /** A single configured endpoint, with credentials, path, query and fragment already removed. */
   public static final class Endpoint {
 
-    @Nullable private final String scheme;
     @Nullable private final String host;
     private final int port;
 
     public Endpoint(@Nullable String scheme, @Nullable String host, int port) {
-      this.scheme = scheme;
       this.host = sanitizeHost(host);
       this.port = port;
     }

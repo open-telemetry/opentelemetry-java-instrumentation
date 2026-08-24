@@ -14,8 +14,8 @@ import org.apache.http.HttpHost;
  * with.
  *
  * <p>A client configured with a single host keeps that host and its port. A client configured with
- * several hosts carries all of them in the address, in the client's own {@code
- * scheme://host:port,host:port} syntax, and has no port of its own.
+ * several hosts carries all of them in the address as {@code host:port,host:port}, and has no port
+ * of its own.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
@@ -50,18 +50,7 @@ public final class ElasticsearchServerTarget {
 
   @Nullable
   private static String renderGroup(List<HttpHost> hosts) {
-    String sharedScheme = hosts.get(0).getSchemeName();
-    for (HttpHost host : hosts) {
-      if (sharedScheme == null || !sharedScheme.equals(host.getSchemeName())) {
-        sharedScheme = null;
-        break;
-      }
-    }
-
     StringBuilder group = new StringBuilder();
-    if (sharedScheme != null) {
-      group.append(sharedScheme).append("://");
-    }
     for (int i = 0; i < hosts.size(); i++) {
       HttpHost httpHost = hosts.get(i);
       String host = sanitizeHost(httpHost.getHostName());
@@ -70,9 +59,6 @@ public final class ElasticsearchServerTarget {
       }
       if (i > 0) {
         group.append(',');
-      }
-      if (sharedScheme == null && httpHost.getSchemeName() != null) {
-        group.append(httpHost.getSchemeName()).append("://");
       }
       appendHostAndPort(group, host, httpHost.getPort());
     }

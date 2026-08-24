@@ -106,7 +106,7 @@ class CouchbaseAttributesGetterTest {
   }
 
   private static CouchbaseServerTarget target(String host, int port) {
-    CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder("couchbase");
+    CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder();
     builder.addSeed(host, port);
     return builder.build();
   }

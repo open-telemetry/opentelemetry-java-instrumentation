@@ -101,7 +101,7 @@ public final class GenericUrlParser implements JdbcUrlParser {
     }
     String hostList = sanitizeHostList(authority);
     if (hostList != null) {
-      ctx.serverAddressGroup("//" + hostList);
+      ctx.serverAddressGroup(hostList);
     }
   }
 }

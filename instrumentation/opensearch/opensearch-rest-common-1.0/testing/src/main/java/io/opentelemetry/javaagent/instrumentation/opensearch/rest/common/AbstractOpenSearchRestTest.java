@@ -232,9 +232,7 @@ public abstract class AbstractOpenSearchRestTest {
   }
 
   private String nodeList() {
-    return httpHost.getScheme()
-        + "://"
-        + httpHost.getHost()
+    return httpHost.getHost()
         + ":"
         + httpHost.getPort()
         + ","

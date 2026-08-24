@@ -23,7 +23,7 @@ class CouchbaseRequestTracerTest {
     RequestTracer tracer =
         CouchbaseRequestTracer.create(OpenTelemetry.noop().getTracer("test-couchbase"));
     RequestSpan span = tracer.requestSpan("test", null);
-    CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder("couchbase");
+    CouchbaseServerTarget.Builder builder = CouchbaseServerTarget.builder();
     builder.addSeed("db.example", 11210);
     CouchbaseServerTarget target = builder.build();
     assertThat(target).isNotNull();

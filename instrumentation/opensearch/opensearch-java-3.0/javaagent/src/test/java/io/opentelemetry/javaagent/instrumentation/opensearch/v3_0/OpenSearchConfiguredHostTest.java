@@ -19,7 +19,7 @@ class OpenSearchConfiguredHostTest {
   }
 
   @Test
-  void aBareHostKeepsItsNameAndHasNoPort() {
+  void bareHostKeepsItsNameAndHasNoPort() {
     OpenSearchServerTarget target =
         OpenSearchConfiguredHost.parse("search-domain.us-east-1.es.amazonaws.com");
 
@@ -29,7 +29,7 @@ class OpenSearchConfiguredHostTest {
   }
 
   @Test
-  void aSchemeAndPortAreRead() {
+  void schemeAndPortAreRead() {
     OpenSearchServerTarget target = OpenSearchConfiguredHost.parse("https://os.example:9200");
 
     assertThat(target).isNotNull();
@@ -48,7 +48,7 @@ class OpenSearchConfiguredHostTest {
   }
 
   @Test
-  void aPathPrefixWithoutAPortIsRemoved() {
+  void pathPrefixWithoutAPortIsRemoved() {
     OpenSearchServerTarget target = OpenSearchConfiguredHost.parse("os.example/prefix");
 
     assertThat(target).isNotNull();
@@ -57,7 +57,7 @@ class OpenSearchConfiguredHostTest {
   }
 
   @Test
-  void aLiteralIpv6AddressKeepsItsBrackets() {
+  void literalIpv6AddressKeepsItsBrackets() {
     OpenSearchServerTarget target = OpenSearchConfiguredHost.parse("https://[::1]:9200");
 
     assertThat(target).isNotNull();
@@ -66,7 +66,7 @@ class OpenSearchConfiguredHostTest {
   }
 
   @Test
-  void aLiteralIpv6AddressWithoutAPortHasNoPort() {
+  void literalIpv6AddressWithoutAPortHasNoPort() {
     OpenSearchServerTarget target = OpenSearchConfiguredHost.parse("https://[::1]");
 
     assertThat(target).isNotNull();
@@ -75,7 +75,7 @@ class OpenSearchConfiguredHostTest {
   }
 
   @Test
-  void aHostThatIsOnlyCredentialsIsNoTarget() {
+  void hostThatIsOnlyCredentialsIsNoTarget() {
     assertThat(OpenSearchConfiguredHost.parse("https://user:secret@")).isNull();
   }
 }

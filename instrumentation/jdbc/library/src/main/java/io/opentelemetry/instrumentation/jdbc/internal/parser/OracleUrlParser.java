@@ -73,14 +73,13 @@ public final class OracleUrlParser implements JdbcUrlParser {
     int typeEndIndex = jdbcUrl.indexOf(":", subtypeStart);
     String subtype = jdbcUrl.substring(subtypeStart, typeEndIndex);
     String remainder = jdbcUrl.substring(typeEndIndex + 1);
+    ctx.subtype(subtype);
 
     if (remainder.contains("@")) {
       parseAtFormat(remainder, ctx);
     } else {
       parseConnectInfo(remainder, ctx);
     }
-
-    ctx.subtype(subtype);
   }
 
   private static void parseAtFormat(String jdbcUrl, ParseContext ctx) {
@@ -184,7 +183,7 @@ public final class OracleUrlParser implements JdbcUrlParser {
       group.append(')');
     }
     group.append(')');
-    ctx.serverAddressGroup(group.toString());
+    ctx.opaqueServerAddressGroup(group.toString());
   }
 
   private static int findClosingParen(String text, int openParen) {

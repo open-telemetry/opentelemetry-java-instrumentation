@@ -45,8 +45,7 @@ public final class CouchbaseConnectionStrings {
       if (seeds == null) {
         return null;
       }
-      CouchbaseServerTarget.Builder target =
-          CouchbaseServerTarget.builder(scheme(type, connectionString));
+      CouchbaseServerTarget.Builder target = CouchbaseServerTarget.builder();
       for (Object seed : seeds) {
         addSeed(target, seed);
       }
@@ -55,17 +54,6 @@ public final class CouchbaseConnectionStrings {
       // an unknown connection string shape leaves the client without a configured target
       return null;
     }
-  }
-
-  @Nullable
-  private static String scheme(Class<?> type, Object connectionString)
-      throws ReflectiveOperationException {
-    Method scheme = method(type, "scheme");
-    if (scheme == null) {
-      return null;
-    }
-    Object value = scheme.invoke(connectionString);
-    return value == null ? null : value.toString();
   }
 
   @Nullable

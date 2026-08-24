@@ -95,13 +95,12 @@ class JdbcAttributesGetterTest {
             .dbSystemName(MARIADB)
             .serverAddress("h1")
             .serverPort(3306)
-            .serverAddressGroup("mariadb:failover://h1:3306,h2:3306")
+            .serverAddressGroup("h1:3306,h2:3306")
             .build();
     DbRequest request = DbRequest.create(dbInfo, "SELECT 1", false);
 
     if (emitStableDatabaseSemconv()) {
-      assertThat(attributesGetter.getServerAddress(request))
-          .isEqualTo("mariadb:failover://h1:3306,h2:3306");
+      assertThat(attributesGetter.getServerAddress(request)).isEqualTo("h1:3306,h2:3306");
       assertThat(attributesGetter.getServerPort(request)).isNull();
     } else {
       assertThat(attributesGetter.getServerAddress(request)).isEqualTo("h1");

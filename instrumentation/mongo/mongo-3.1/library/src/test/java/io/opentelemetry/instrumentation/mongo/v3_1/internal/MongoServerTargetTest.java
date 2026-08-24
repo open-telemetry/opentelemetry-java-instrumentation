@@ -35,7 +35,7 @@ class MongoServerTargetTest {
             asList(
                 new ServerAddress("db1.example", 27017), new ServerAddress("db2.example", 27018)));
 
-    assertThat(target.getAddress()).isEqualTo("mongodb://db1.example:27017,db2.example:27018");
+    assertThat(target.getAddress()).isEqualTo("db1.example:27017,db2.example:27018");
     assertThat(target.getPort()).isNull();
   }
 
@@ -54,7 +54,7 @@ class MongoServerTargetTest {
         MongoServerTarget.seeds(
             asList(new ServerAddress("[::1]", 27017), new ServerAddress("[fe80::1]", 27018)));
 
-    assertThat(target.getAddress()).isEqualTo("mongodb://[::1]:27017,[fe80::1]:27018");
+    assertThat(target.getAddress()).isEqualTo("[::1]:27017,[fe80::1]:27018");
     assertThat(target.getPort()).isNull();
   }
 
@@ -67,7 +67,7 @@ class MongoServerTargetTest {
 
     assertThat(single.getAddress()).isEqualTo("::1");
     assertThat(single.getPort()).isEqualTo(27017);
-    assertThat(group.getAddress()).isEqualTo("mongodb://[::1]:27017,[fe80::1]:27018");
+    assertThat(group.getAddress()).isEqualTo("[::1]:27017,[fe80::1]:27018");
   }
 
   @Test
@@ -82,7 +82,7 @@ class MongoServerTargetTest {
 
     assertThat(single.getAddress()).isEqualTo("/tmp/mongodb-27017.sock");
     assertThat(single.getPort()).isNull();
-    assertThat(group.getAddress()).isEqualTo("mongodb:///tmp/mongodb-27017.sock,db2.example:27018");
+    assertThat(group.getAddress()).isEqualTo("/tmp/mongodb-27017.sock,db2.example:27018");
   }
 
   @Test
@@ -112,7 +112,7 @@ class MongoServerTargetTest {
     seeds.clear();
     seeds.add(new ServerAddress("other.example", 27017));
 
-    assertThat(target.getAddress()).isEqualTo("mongodb://db1.example:27017,db2.example:27017");
+    assertThat(target.getAddress()).isEqualTo("db1.example:27017,db2.example:27017");
   }
 
   @Test
@@ -128,7 +128,7 @@ class MongoServerTargetTest {
     MongoServerTarget target = MongoServerTarget.seeds(settings.getHosts());
 
     assertThat(settings.getRequiredReplicaSetName()).isEqualTo("rs0");
-    assertThat(target.getAddress()).isEqualTo("mongodb://db1.example:27017,db2.example:27018");
+    assertThat(target.getAddress()).isEqualTo("db1.example:27017,db2.example:27018");
     assertThat(target.getPort()).isNull();
   }
 

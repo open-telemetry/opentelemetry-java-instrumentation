@@ -101,7 +101,7 @@ class JdbcTelemetryTest {
                         equalTo(
                             SERVER_ADDRESS,
                             emitStableDatabaseSemconv()
-                                ? "postgresql://pg.host1:5432,pg.host2:5433"
+                                ? "pg.host1:5432,pg.host2:5433"
                                 : "localhost"),
                         equalTo(SERVER_PORT, emitStableDatabaseSemconv() ? null : 5432L))));
   }
@@ -123,9 +123,7 @@ class JdbcTelemetryTest {
                 span -> span.hasName("parent"),
                 span ->
                     span.hasName(
-                        emitStableDatabaseSemconv()
-                            ? "postgresql://pg.host1:5432,pg.host2:5433"
-                            : "DB Query")));
+                        emitStableDatabaseSemconv() ? "pg.host1:5432,pg.host2:5433" : "DB Query")));
   }
 
   @ParameterizedTest

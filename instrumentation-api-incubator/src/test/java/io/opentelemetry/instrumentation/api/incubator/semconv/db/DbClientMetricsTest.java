@@ -53,7 +53,7 @@ class DbClientMetricsTest {
             .put(DB_NAMESPACE, "potatoes")
             .put(DB_OPERATION_NAME, "SELECT")
             .put(DB_QUERY_SUMMARY, "SELECT table")
-            .put(SERVER_ADDRESS, "postgresql://db1.example:5432,db2.example:5432")
+            .put(SERVER_ADDRESS, "db1.example:5432,db2.example:5432")
             .build();
 
     Attributes responseAttributes =
@@ -100,7 +100,7 @@ class DbClientMetricsTest {
                                             equalTo(DB_QUERY_SUMMARY, "SELECT table"),
                                             equalTo(
                                                 SERVER_ADDRESS,
-                                                "postgresql://db1.example:5432,db2.example:5432"),
+                                                "db1.example:5432,db2.example:5432"),
                                             equalTo(ERROR_TYPE, "400"),
                                             equalTo(NETWORK_PEER_ADDRESS, "1.2.3.4"),
                                             equalTo(NETWORK_PEER_PORT, 8080))

@@ -36,7 +36,7 @@ class CouchbaseConnectionStringsTest {
     CouchbaseServerTarget target =
         CouchbaseConnectionStrings.target("couchbase://two.example,one.example:11210");
 
-    assertThat(target.getAddress()).isEqualTo("couchbase://two.example,one.example:11210");
+    assertThat(target.getAddress()).isEqualTo("two.example,one.example:11210");
     assertThat(target.getPort()).isNull();
   }
 
@@ -45,7 +45,7 @@ class CouchbaseConnectionStringsTest {
     CouchbaseServerTarget target =
         CouchbaseConnectionStrings.target("couchbases://one.example,two.example");
 
-    assertThat(target.getAddress()).isEqualTo("couchbases://one.example,two.example");
+    assertThat(target.getAddress()).isEqualTo("one.example,two.example");
   }
 
   @Test
@@ -64,7 +64,7 @@ class CouchbaseConnectionStringsTest {
         .isEqualTo("192.0.2.1");
     assertThat(
             CouchbaseConnectionStrings.target("couchbase://192.0.2.1,192.0.2.2:11210").getAddress())
-        .isEqualTo("couchbase://192.0.2.1,192.0.2.2:11210");
+        .isEqualTo("192.0.2.1,192.0.2.2:11210");
   }
 
   @Test
@@ -74,7 +74,7 @@ class CouchbaseConnectionStringsTest {
     assertThat(
             CouchbaseConnectionStrings.target("couchbase://[2001:db8::1]:11210,[2001:db8::2]")
                 .getAddress())
-        .isEqualTo("couchbase://[2001:db8::1]:11210,[2001:db8::2]");
+        .isEqualTo("[2001:db8::1]:11210,[2001:db8::2]");
   }
 
   @Test

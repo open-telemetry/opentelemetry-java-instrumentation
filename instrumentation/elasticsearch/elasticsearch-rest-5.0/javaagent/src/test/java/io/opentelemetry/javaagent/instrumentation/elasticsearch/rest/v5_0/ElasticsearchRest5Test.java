@@ -239,7 +239,7 @@ class ElasticsearchRest5Test {
 
   private static String hostList() {
     String endpoint = httpHost.getHostName() + ":" + httpHost.getPort();
-    return httpHost.getSchemeName() + "://" + endpoint + "," + endpoint;
+    return endpoint + "," + endpoint;
   }
 
   /**

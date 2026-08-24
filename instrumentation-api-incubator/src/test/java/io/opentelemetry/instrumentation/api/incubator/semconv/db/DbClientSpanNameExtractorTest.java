@@ -193,17 +193,14 @@ class DbClientSpanNameExtractorTest {
     DbRequest dbRequest = new DbRequest();
     if (emitStableDatabaseSemconv()) {
       when(dbAttributesGetter.getServerAddress(dbRequest))
-          .thenReturn("postgresql://db1.example:5432,db2.example:5432");
+          .thenReturn("db1.example:5432,db2.example:5432");
       when(dbAttributesGetter.getServerPort(dbRequest)).thenReturn(null);
     }
 
     String spanName = DbClientSpanNameExtractor.create(dbAttributesGetter).extract(dbRequest);
 
     assertThat(spanName)
-        .isEqualTo(
-            emitStableDatabaseSemconv()
-                ? "postgresql://db1.example:5432,db2.example:5432"
-                : "DB Query");
+        .isEqualTo(emitStableDatabaseSemconv() ? "db1.example:5432,db2.example:5432" : "DB Query");
   }
 
   @Test

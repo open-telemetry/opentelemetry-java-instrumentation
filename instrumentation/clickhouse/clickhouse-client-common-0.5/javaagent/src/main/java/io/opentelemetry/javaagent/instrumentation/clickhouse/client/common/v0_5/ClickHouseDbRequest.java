@@ -27,9 +27,8 @@ public abstract class ClickHouseDbRequest {
   public abstract Integer getPort();
 
   /**
-   * The complete configured target of a client that was given more than one endpoint, in the
-   * client's own syntax, e.g. {@code http://h1:8123,http://h2:8123}. {@code null} when the client
-   * targets a single endpoint.
+   * The complete configured target of a client that was given more than one endpoint, e.g. {@code
+   * h1:8123,h2:8123}. {@code null} when the client targets a single endpoint.
    */
   @Nullable
   public abstract String getServerAddressGroup();

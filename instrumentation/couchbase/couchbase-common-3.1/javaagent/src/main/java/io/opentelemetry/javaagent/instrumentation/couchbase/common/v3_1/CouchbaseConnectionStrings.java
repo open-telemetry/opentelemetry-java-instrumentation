@@ -41,9 +41,7 @@ public final class CouchbaseConnectionStrings {
       return null;
     }
     try {
-      ConnectionString.Scheme scheme = connectionString.scheme();
-      CouchbaseServerTarget.Builder target =
-          CouchbaseServerTarget.builder(scheme == null ? null : scheme.toString());
+      CouchbaseServerTarget.Builder target = CouchbaseServerTarget.builder();
       for (ConnectionString.UnresolvedSocket seed : connectionString.hosts()) {
         if (seed == null) {
           target.addSeed(null, 0);

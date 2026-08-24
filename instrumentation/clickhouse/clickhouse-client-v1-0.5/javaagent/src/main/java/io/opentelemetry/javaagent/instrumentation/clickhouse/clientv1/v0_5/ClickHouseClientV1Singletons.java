@@ -14,9 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseInstrumenterFactory;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import javax.annotation.Nullable;
 
 public class ClickHouseClientV1Singletons {
@@ -49,7 +47,7 @@ public class ClickHouseClientV1Singletons {
 
   /**
    * The complete configured target of a request that was given more than one node, e.g. {@code
-   * http://h1:8123,h2:8123}.
+   * h1:8123,h2:8123}.
    *
    * <p>The target is rendered once, from the nodes the list was built with, and kept on that list.
    * The nodes a list hands out at query time are only those that are currently healthy and that its
@@ -76,47 +74,20 @@ public class ClickHouseClientV1Singletons {
       return NO_GROUP;
     }
 
-    List<String> endpoints = new ArrayList<>(nodes.size());
+    StringBuilder addressGroup = new StringBuilder();
     for (ClickHouseNode node : nodes) {
-      endpoints.add(endpoint(node));
-    }
-
-    // a node list spells the scheme out once when every node shares it, and wraps each node in
-    // parentheses when they do not
-    String scheme = scheme(endpoints.get(0));
-    boolean sharedScheme = true;
-    for (String endpoint : endpoints) {
-      if (!scheme.equals(scheme(endpoint))) {
-        sharedScheme = false;
-        break;
-      }
-    }
-
-    StringBuilder addressGroup = new StringBuilder(sharedScheme ? scheme : "");
-    for (int i = 0; i < endpoints.size(); i++) {
-      if (i > 0) {
+      if (addressGroup.length() > 0) {
         addressGroup.append(',');
       }
-      String endpoint = endpoints.get(i);
-      if (sharedScheme) {
-        addressGroup.append(endpoint.substring(scheme.length()));
+      String host = node.getHost();
+      if (host.indexOf(':') >= 0 && !host.startsWith("[")) {
+        addressGroup.append('[').append(host).append(']');
       } else {
-        addressGroup.append('(').append(endpoint).append(')');
+        addressGroup.append(host);
       }
+      addressGroup.append(':').append(node.getPort());
     }
     return addressGroup.toString();
-  }
-
-  /** The {@code scheme://} prefix of an endpoint, e.g. {@code https://}. */
-  private static String scheme(String endpoint) {
-    int authorityStart = endpoint.indexOf("://");
-    return authorityStart < 0 ? "" : endpoint.substring(0, authorityStart + 3);
-  }
-
-  /** A node's endpoint without the trailing slash, the database, the credentials or the options. */
-  private static String endpoint(ClickHouseNode node) {
-    String baseUri = node.getBaseUri();
-    return baseUri.endsWith("/") ? baseUri.substring(0, baseUri.length() - 1) : baseUri;
   }
 
   private ClickHouseClientV1Singletons() {}

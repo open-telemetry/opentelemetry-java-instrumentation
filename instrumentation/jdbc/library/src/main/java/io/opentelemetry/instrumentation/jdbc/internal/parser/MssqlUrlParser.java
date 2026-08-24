@@ -75,8 +75,8 @@ public final class MssqlUrlParser implements JdbcUrlParser {
   }
 
   /**
-   * Keep the principal host together with its failover partner, e.g. {@code
-   * //h1:1433;failoverpartner=h2}, so that a mirrored pair is not reported as a single host.
+   * Keep the principal host together with its failover partner, e.g. {@code h1:1433,h2}, so that a
+   * mirrored pair is not reported as a single host.
    */
   private static void applyFailoverPartnerGroup(ParseContext ctx, Map<String, String> params) {
     String failoverPartner = params.get("failoverpartner");
@@ -86,10 +86,27 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     if (failoverPartner == null || failoverPartner.isEmpty() || ctx.host() == null) {
       return;
     }
-    StringBuilder group = new StringBuilder("//");
+    StringBuilder group = new StringBuilder();
     UrlParsingUtils.appendHostPort(group, ctx.host(), ctx.port());
-    group.append(";failoverpartner=").append(failoverPartner);
+    group.append(',');
+    appendFailoverPartner(group, failoverPartner);
     ctx.serverAddressGroup(group.toString());
+  }
+
+  private static void appendFailoverPartner(StringBuilder group, String failoverPartner) {
+    int instanceStart = failoverPartner.indexOf('\\');
+    String hostPort =
+        instanceStart < 0 ? failoverPartner : failoverPartner.substring(0, instanceStart);
+    boolean unbracketedIpv6 =
+        !hostPort.startsWith("[") && hostPort.indexOf(':') != hostPort.lastIndexOf(':');
+    if (unbracketedIpv6) {
+      group.append('[').append(hostPort).append(']');
+    } else {
+      group.append(hostPort);
+    }
+    if (instanceStart >= 0) {
+      group.append(failoverPartner, instanceStart, failoverPartner.length());
+    }
   }
 
   /**

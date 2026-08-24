@@ -213,8 +213,7 @@ abstract class AbstractOpenSearchTest {
    */
   void assertNodeListTarget() {
     String nodeList =
-        "https://"
-            + httpHost.getHost()
+        httpHost.getHost()
             + ":"
             + httpHost.getPort()
             + ","

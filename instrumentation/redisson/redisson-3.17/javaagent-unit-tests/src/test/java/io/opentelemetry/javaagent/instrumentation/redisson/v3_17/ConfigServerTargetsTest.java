@@ -39,7 +39,7 @@ class ConfigServerTargetsTest {
 
     RedisServerTarget target = ConfigServerTargetsSince317.of(config);
 
-    assertThat(target.getAddress()).isEqualTo("redis://node1:7000,redis://node2:7001");
+    assertThat(target.getAddress()).isEqualTo("node1:7000,node2:7001");
     assertThat(target.getPort()).isNull();
   }
 
@@ -64,7 +64,7 @@ class ConfigServerTargetsTest {
 
     RedisServerTarget target = ConfigServerTargetsSince317.of(config);
 
-    assertThat(target.getAddress()).isEqualTo("redis://node1:6379,redis://node2:6380");
+    assertThat(target.getAddress()).isEqualTo("node1:6379,node2:6380");
     assertThat(target.getPort()).isNull();
   }
 

@@ -230,9 +230,7 @@ class ElasticsearchRest6Test {
   }
 
   private static String hostList(HttpHost deadHost) {
-    return httpHost.getSchemeName()
-        + "://"
-        + httpHost.getHostName()
+    return httpHost.getHostName()
         + ":"
         + httpHost.getPort()
         + ","

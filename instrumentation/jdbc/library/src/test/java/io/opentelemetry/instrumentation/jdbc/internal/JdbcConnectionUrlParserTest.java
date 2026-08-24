@@ -111,7 +111,7 @@ class JdbcConnectionUrlParserTest {
 
     DbInfo dbInfo = parse(url, null);
 
-    assertThat(dbInfo.getServerAddressGroup()).isEqualTo("mariadb:failover://h1:3306,h2:3306");
+    assertThat(dbInfo.getServerAddressGroup()).isEqualTo("h1:3306,h2:3306");
     assertThat(dbInfo.getHost()).isEqualTo("h1");
     assertThat(dbInfo.getName()).isEqualTo("db");
     assertThat(dbInfo.getDbUser()).isEqualTo("admin@corp.com");
@@ -213,7 +213,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("127.0.0.1")
             .setPort(3306)
             .setName("mdbdb")
-            .setServerAddressGroup("mysql:loadbalance://127.0.0.1,127.0.0.1:3306")
+            .setServerAddressGroup("127.0.0.1,127.0.0.1:3306")
             .build(),
         arg("jdbc:mysql:replication://address=(HOST=127.0.0.1)(port=33)(user=mdbuser)(password=PW),address=(host=mdb.host)(port=3306)(user=otheruser)(password=PW)/mdbdb?user=wrong&password=PW")
             .setShortUrl("mysql:replication://127.0.0.1:33")
@@ -224,7 +224,7 @@ class JdbcConnectionUrlParserTest {
             .setPort(33)
             .setName("mdbdb")
             .setServerAddressGroup(
-                "mysql:replication://address=(host=127.0.0.1)(port=33),address=(host=mdb.host)(port=3306)")
+                "address=(host=127.0.0.1)(port=33),address=(host=mdb.host)(port=3306)")
             .build(),
         arg("jdbc:mysql:replication://address=(HOST=mdb.host),address=(host=anotherhost)(port=3306)(user=wrong)(password=PW)/mdbdb?user=mdbuser&password=PW")
             .setShortUrl("mysql:replication://mdb.host:3306")
@@ -234,8 +234,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("mdb.host")
             .setPort(3306)
             .setName("mdbdb")
-            .setServerAddressGroup(
-                "mysql:replication://address=(host=mdb.host),address=(host=anotherhost)(port=3306)")
+            .setServerAddressGroup("address=(host=mdb.host),address=(host=anotherhost)(port=3306)")
             .build(),
         arg("jdbc:mysql:replication://address=(host=::1)(port=33)/mydb")
             .setShortUrl("mysql:replication://[::1]:33")
@@ -514,7 +513,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("mdb.host1")
             .setPort(33)
             .setName("mdbdb")
-            .setServerAddressGroup("mariadb:failover://mdb.host1:33,mdb.host")
+            .setServerAddressGroup("mdb.host1:33,mdb.host")
             .build(),
         arg("jdbc:mariadb:sequential://mdb.host1,mdb.host2:33/mdbdb")
             .setShortUrl("mariadb:sequential://mdb.host1:3306")
@@ -523,7 +522,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("mdb.host1")
             .setPort(3306)
             .setName("mdbdb")
-            .setServerAddressGroup("mariadb:sequential://mdb.host1,mdb.host2:33")
+            .setServerAddressGroup("mdb.host1,mdb.host2:33")
             .build(),
         arg("jdbc:mariadb:loadbalance://127.0.0.1:33,mdb.host/mdbdb")
             .setShortUrl("mariadb:loadbalance://127.0.0.1:33")
@@ -532,7 +531,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("127.0.0.1")
             .setPort(33)
             .setName("mdbdb")
-            .setServerAddressGroup("mariadb:loadbalance://127.0.0.1:33,mdb.host")
+            .setServerAddressGroup("127.0.0.1:33,mdb.host")
             .build(),
         arg("jdbc:mariadb:loadbalance://127.0.0.1:33/mdbdb")
             .setShortUrl("mariadb:loadbalance://127.0.0.1:33")
@@ -549,8 +548,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("2001:0660:7401:0200:0000:0000:0edf:bdd7")
             .setPort(33)
             .setName("mdbdb")
-            .setServerAddressGroup(
-                "mariadb:loadbalance://[2001:0660:7401:0200:0000:0000:0edf:bdd7]:33,mdb.host")
+            .setServerAddressGroup("[2001:0660:7401:0200:0000:0000:0edf:bdd7]:33,mdb.host")
             .build(),
         arg("jdbc:mariadb:replication://localhost:33,anotherhost:3306/mdbdb")
             .setShortUrl("mariadb:replication://localhost:33")
@@ -559,7 +557,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("localhost")
             .setPort(33)
             .setName("mdbdb")
-            .setServerAddressGroup("mariadb:replication://localhost:33,anotherhost:3306")
+            .setServerAddressGroup("localhost:33,anotherhost:3306")
             .build(),
         arg("jdbc:mariadb:loadbalance://localhost")
             .setShortUrl("mariadb:loadbalance://localhost:3306")
@@ -1921,7 +1919,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("localhost")
             .setPort(5432)
             .setName("pgdb")
-            .setServerAddressGroup("postgresql://pg.host1:5432,pg.host2:5433")
+            .setServerAddressGroup("pg.host1:5432,pg.host2:5433")
             .build(),
         arg("jdbc:postgresql://pg.host1,pg.host2/pgdb")
             .setShortUrl("postgresql://localhost:5432")
@@ -1929,7 +1927,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("localhost")
             .setPort(5432)
             .setName("pgdb")
-            .setServerAddressGroup("postgresql://pg.host1,pg.host2")
+            .setServerAddressGroup("pg.host1,pg.host2")
             .build(),
         // a bracketed ipv6 host list is not a legal registry-based authority either, so the uri
         // parse fails and the database name is not read
@@ -1938,7 +1936,7 @@ class JdbcConnectionUrlParserTest {
             .setSystem(POSTGRESQL)
             .setHost("localhost")
             .setPort(5432)
-            .setServerAddressGroup("postgresql://[2001:db8::1]:5432,[2001:db8::2]:5433")
+            .setServerAddressGroup("[2001:db8::1]:5432,[2001:db8::2]:5433")
             .build(),
         arg("jdbc:postgresql://pguser:pgpass@pg.host1:5432,pg.host2:5432/pgdb?ssl=true#frag")
             .setShortUrl("postgresql://localhost:5432")
@@ -1946,7 +1944,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("localhost")
             .setPort(5432)
             .setName("pgdb")
-            .setServerAddressGroup("postgresql://pg.host1:5432,pg.host2:5432")
+            .setServerAddressGroup("pg.host1:5432,pg.host2:5432")
             .build(),
         // the user info of a url shaped authority ends at its last '@', so a password that holds a
         // comma cannot leave a fragment of itself among the hosts
@@ -1956,7 +1954,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("localhost")
             .setPort(5432)
             .setName("pgdb")
-            .setServerAddressGroup("postgresql://pg.host1:5432,pg.host2:5433")
+            .setServerAddressGroup("pg.host1:5432,pg.host2:5433")
             .build(),
         // a password that holds a parenthesis makes the authority look like an address block, and
         // an entry that still carries an '@' is dropped rather than reported
@@ -1974,7 +1972,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("localhost")
             .setPort(3306)
             .setName("mydb")
-            .setServerAddressGroup("mysql://mysql.host1:3306,mysql.host2:3307")
+            .setServerAddressGroup("mysql.host1:3306,mysql.host2:3307")
             .build(),
         // an address block spells its credentials out as attributes, so a password may hold an '@'
         // and characters that look like delimiters; none of it may reach the group target
@@ -1988,8 +1986,7 @@ class JdbcConnectionUrlParserTest {
             .setPort(33)
             .setName("mdbdb")
             .setServerAddressGroup(
-                "mysql:replication://address=(host=mdb.host1)(port=33),"
-                    + "address=(host=mdb.host2)(port=3306)")
+                "address=(host=mdb.host1)(port=33)," + "address=(host=mdb.host2)(port=3306)")
             .build(),
         // https://learn.microsoft.com/en-us/sql/connect/jdbc/setting-the-connection-properties
         arg("jdbc:sqlserver://ss.host1:1433;databaseName=ssdb;failoverPartner=ss.host2")
@@ -1999,7 +1996,15 @@ class JdbcConnectionUrlParserTest {
             .setHost("ss.host1")
             .setPort(1433)
             .setName("ssdb")
-            .setServerAddressGroup("sqlserver://ss.host1:1433;failoverpartner=ss.host2")
+            .setServerAddressGroup("ss.host1:1433,ss.host2")
+            .build(),
+        arg("jdbc:sqlserver://[2001:db8::1]:1433;failoverPartner=2001:db8::2")
+            .setShortUrl("sqlserver://[2001:db8::1]:1433")
+            .setSystem("microsoft.sql_server")
+            .setOldSystem("mssql")
+            .setHost("2001:db8::1")
+            .setPort(1433)
+            .setServerAddressGroup("[2001:db8::1]:1433,[2001:db8::2]")
             .build(),
         // an ADDRESS_LIST is optional, a DESCRIPTION may hold the addresses directly
         arg("jdbc:oracle:thin:@(description=(address=(protocol=tcp)(host=orcl.host1)(port=1521))"

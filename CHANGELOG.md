@@ -26,24 +26,24 @@
   contact points it was configured with.
 - MongoDB spans record the target their client was configured with instead of the server that
   answered a command, again only when stable database semantic conventions are enabled. A client
-  configured with several seeds carries all of them in `server.address`, in the driver's own
-  `mongodb://host:port,host:port` syntax, and omits `server.port`; a client configured with an SRV
-  host is named by that host. Credentials, the selected database and connection string options are
-  never part of the target, and the required replica set name is left out because it names a set of
-  servers rather than an address. Clients using a driver before 3.10 resolve an SRV host into seeds
-  while parsing their connection string, so they report the hosts it resolved to.
+  configured with several seeds carries all of them in `server.address` as
+  `host:port,host:port` and omits `server.port`; a client configured with an SRV host is named by
+  that host. Credentials, the selected database and connection string options are never part of the
+  target, and the required replica set name is left out because it names a set of servers rather
+  than an address. Clients using a driver before 3.10 resolve an SRV host into seeds while parsing
+  their connection string, so they report the hosts it resolved to.
 - Couchbase spans record the target their client was configured with instead of the node an
   operation was dispatched to, again only when stable database semantic conventions are enabled. A
-  client configured with several seeds carries all of them in `server.address`, in the driver's own
-  `couchbase://host,host:port` syntax, and omits `server.port`; a client configured with a host that
-  resolves through DNS SRV is named by that host. Credentials, the selected bucket and connection
-  string parameters are never part of the target, and a seed the connection string left without a
-  port carries none, because Couchbase reaches every service on a node through a different default
-  port. Operations that name no bucket, such as `Cluster.openBucket`, now carry `server.address` in
-  their stable span name, because there is no namespace or collection to name. A client using
-  driver 2.6 or later that the agent did not see being built falls back to the node that answered.
-  Clients using driver 3.1 to 3.5 that connect from seed nodes rather than a connection string
-  report no target, because those drivers never see one.
+  client configured with several seeds carries all of them in `server.address` as
+  `host,host:port` and omits `server.port`; a client configured with a host that resolves through DNS
+  SRV is named by that host. Credentials, the selected bucket and connection string parameters are
+  never part of the target, and a seed the connection string left without a port carries none,
+  because Couchbase reaches every service on a node through a different default port. Operations
+  that name no bucket, such as `Cluster.openBucket`, now carry `server.address` in their stable span
+  name, because there is no namespace or collection to name. A client using driver 2.6 or later that
+  the agent did not see being built falls back to the node that answered. Clients using driver 3.1
+  to 3.5 that connect from seed nodes rather than a connection string report no target, because
+  those drivers never see one.
 - Geode spans record the target their client pool was configured with, again only when stable
   database semantic conventions are enabled; they carried no server attributes before. A pool
   configured with a single cache server keeps that server's host and port, a pool configured with

@@ -68,11 +68,11 @@ class RedisServerTargetTest {
   }
 
   @Test
-  void endpointListKeepsEachScheme() {
+  void endpointListOmitsSchemes() {
     RedisServerTarget target =
         RedisServerTarget.ofEndpoints(asList("redis://node1:6379", "rediss://node2:6380"));
 
-    assertThat(target.getAddress()).isEqualTo("redis://node1:6379,rediss://node2:6380");
+    assertThat(target.getAddress()).isEqualTo("node1:6379,node2:6380");
     assertThat(target.getPort()).isNull();
   }
 
@@ -213,8 +213,7 @@ class RedisServerTargetTest {
         RedisServerTarget.ofEndpoints(
             asList("redis-socket:///var/run/redis1.sock", "redis-socket:///var/run/redis2.sock"));
 
-    assertThat(target.getAddress())
-        .isEqualTo("redis-socket:///var/run/redis1.sock,redis-socket:///var/run/redis2.sock");
+    assertThat(target.getAddress()).isEqualTo("/var/run/redis1.sock,/var/run/redis2.sock");
     assertThat(target.getPort()).isNull();
   }
 
@@ -242,7 +241,7 @@ class RedisServerTargetTest {
         RedisServerTarget.ofEndpoints(
             asList("redis://user:password@node1:6379/1", "redis://user:password@node2:6380/1"));
 
-    assertThat(target.getAddress()).isEqualTo("redis://node1:6379,redis://node2:6380");
+    assertThat(target.getAddress()).isEqualTo("node1:6379,node2:6380");
   }
 
   @Test

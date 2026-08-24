@@ -41,6 +41,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
@@ -494,7 +495,7 @@ class ClickHouseClientV2Test {
     cleanup.deferCleanup(client);
 
     // the endpoints are reported in a fixed order, whatever order the client keeps them in
-    List<String> endpoints = new ArrayList<>(asList("http://" + host + ":" + port, secondEndpoint));
+    List<String> endpoints = new ArrayList<>(asList(host + ":" + port, host + ":" + (port + 1)));
     Collections.sort(endpoints);
     String addressGroup = String.join(",", endpoints);
 
@@ -517,5 +518,19 @@ class ClickHouseClientV2Test {
                             equalTo(
                                 SERVER_PORT,
                                 emitStableDatabaseSemconv() ? null : Long.valueOf(port)))));
+  }
+
+  @Test
+  void testMultipleEndpointsExcludeCredentialsAndUrlComponents() {
+    ClickHouseClientV2Singletons.ServerInfo serverInfo =
+        ClickHouseClientV2Singletons.ServerInfo.of(
+            new HashSet<>(
+                asList(
+                    "https://user:secret@[2001:db8::1]:8443/database?option=value#fragment",
+                    "http://host.example:8123")));
+
+    assertThat(serverInfo.getAddressGroup()).isEqualTo("[2001:db8::1]:8443,host.example:8123");
+    assertThat(serverInfo.getAddress()).isEqualTo("2001:db8::1");
+    assertThat(serverInfo.getPort()).isEqualTo(8443);
   }
 }

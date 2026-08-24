@@ -14,9 +14,9 @@ import javax.annotation.Nullable;
  * built from.
  *
  * <p>A client configured with a single seed keeps that host and its port. A client configured with
- * several seeds carries all of them in the address, in the driver's own {@code
- * mongodb://host:port,host:port} connection string syntax, and has no port of its own. A client
- * configured with an SRV host is named by that host, a single name that carries no port.
+ * several seeds carries all of them in the address as {@code host:port,host:port}, and has no port
+ * of its own. A client configured with an SRV host is named by that host, a single name that
+ * carries no port.
  *
  * <p>Cluster settings hold the hosts the driver has already parsed out of a connection string, so
  * the rendered text never contains credentials, a database, a path, query parameters, options or a
@@ -28,10 +28,6 @@ import javax.annotation.Nullable;
  * at any time.
  */
 public final class MongoServerTarget {
-
-  // the scheme of a connection string that lists its hosts, see
-  // https://www.mongodb.com/docs/manual/reference/connection-string/
-  private static final String SEED_LIST_SCHEME = "mongodb://";
 
   // a unix domain socket is configured as a path rather than a host, and the driver reports the
   // default port next to it; that port is not part of the address, so it is left out
@@ -70,12 +66,12 @@ public final class MongoServerTarget {
     if (seeds.size() == 1) {
       return single(seeds.get(0));
     }
-    StringBuilder group = new StringBuilder(SEED_LIST_SCHEME);
+    StringBuilder group = new StringBuilder();
     for (ServerAddress seed : seeds) {
       if (seed == null || seed.getHost() == null || seed.getHost().isEmpty()) {
         return null;
       }
-      if (group.length() > SEED_LIST_SCHEME.length()) {
+      if (group.length() > 0) {
         group.append(',');
       }
       appendHostAndPort(group, seed);

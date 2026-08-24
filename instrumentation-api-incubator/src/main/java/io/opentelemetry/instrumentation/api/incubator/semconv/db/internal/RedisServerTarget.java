@@ -136,13 +136,11 @@ public final class RedisServerTarget {
 
   private static final class Endpoint {
 
-    @Nullable private final String scheme;
     private final String host;
     @Nullable private final Integer port;
     private final boolean socket;
 
-    private Endpoint(@Nullable String scheme, String host, @Nullable Integer port, boolean socket) {
-      this.scheme = scheme;
+    private Endpoint(String host, @Nullable Integer port, boolean socket) {
       this.host = host;
       this.port = port;
       this.socket = socket;
@@ -187,7 +185,7 @@ public final class RedisServerTarget {
       }
       if (socket) {
         String path = stripSocketCredentials(value);
-        return path.isEmpty() ? null : new Endpoint(scheme, path, null, true);
+        return path.isEmpty() ? null : new Endpoint(path, null, true);
       }
 
       // everything from the first slash on is the selected database, not part of the endpoint
@@ -199,10 +197,10 @@ public final class RedisServerTarget {
       if (authority.isEmpty()) {
         return null;
       }
-      return hostAndPort(scheme, authority);
+      return hostAndPort(authority);
     }
 
-    private static Endpoint hostAndPort(@Nullable String scheme, String authority) {
+    private static Endpoint hostAndPort(String authority) {
       if (authority.startsWith("[")) {
         int hostEnd = authority.indexOf(']');
         if (hostEnd > 0) {
@@ -210,10 +208,10 @@ public final class RedisServerTarget {
           String rest = authority.substring(hostEnd + 1);
           Integer port = rest.startsWith(":") ? parsePort(rest.substring(1)) : null;
           if (!host.isEmpty()) {
-            return new Endpoint(scheme, host, port, false);
+            return new Endpoint(host, port, false);
           }
         }
-        return new Endpoint(scheme, authority, null, false);
+        return new Endpoint(authority, null, false);
       }
 
       int portStart = authority.indexOf(':');
@@ -221,10 +219,10 @@ public final class RedisServerTarget {
       if (portStart > 0 && authority.indexOf(':', portStart + 1) < 0) {
         Integer port = parsePort(authority.substring(portStart + 1));
         if (port != null) {
-          return new Endpoint(scheme, authority.substring(0, portStart), port, false);
+          return new Endpoint(authority.substring(0, portStart), port, false);
         }
       }
-      return new Endpoint(scheme, authority, null, false);
+      return new Endpoint(authority, null, false);
     }
 
     private static boolean isSocket(@Nullable String scheme, String value) {
@@ -280,9 +278,6 @@ public final class RedisServerTarget {
 
     String render() {
       StringBuilder builder = new StringBuilder();
-      if (scheme != null) {
-        builder.append(scheme).append("://");
-      }
       if (socket) {
         builder.append(host);
         return builder.toString();

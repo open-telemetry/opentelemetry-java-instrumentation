@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.common;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import javax.annotation.Nullable;
 
 /**
@@ -15,10 +14,10 @@ import javax.annotation.Nullable;
  * was built from.
  *
  * <p>A client configured with a single seed keeps that seed as its address, together with the port
- * the seed named. A client configured with several seeds carries all of them in the address, in the
- * driver's own {@code couchbase://host,host:port} connection string syntax, and has no port of its
- * own. A client configured with a host that resolves through DNS SRV names that host, which is a
- * single seed without a port, so it is rendered the same way as any other lone seed.
+ * the seed named. A client configured with several seeds carries all of them in the address as
+ * {@code host,host:port}, and has no port of its own. A client configured with a host that resolves
+ * through DNS SRV names that host, which is a single seed without a port, so it is rendered the
+ * same way as any other lone seed.
  *
  * <p>A port is reported only when the connection string named one. Couchbase reaches a single node
  * through a different default port for every service, so there is no one port that describes a seed
@@ -32,12 +31,9 @@ public final class CouchbaseServerTarget {
   private final String address;
   @Nullable private final Integer port;
 
-  /**
-   * A builder rendering seeds reachable through {@code scheme}, falling back to the scheme the
-   * Couchbase drivers themselves default to when it is unknown.
-   */
-  public static Builder builder(@Nullable String scheme) {
-    return new Builder(scheme);
+  /** A builder rendering the seeds from a connection string without its transport scheme. */
+  public static Builder builder() {
+    return new Builder();
   }
 
   private CouchbaseServerTarget(String address, @Nullable Integer port) {
@@ -58,23 +54,11 @@ public final class CouchbaseServerTarget {
   /** Collects the seeds a client was configured with into a {@link CouchbaseServerTarget}. */
   public static final class Builder {
 
-    // the scheme every Couchbase driver falls back to, see
-    // https://docs.couchbase.com/java-sdk/current/howtos/managing-connections.html
-    private static final String DEFAULT_SCHEME = "couchbase";
-
-    private final String scheme;
     private final List<String> hosts = new ArrayList<>();
     private final List<Integer> ports = new ArrayList<>();
     private boolean complete = true;
 
-    private Builder(@Nullable String scheme) {
-      String normalized = scheme == null ? "" : scheme.trim().toLowerCase(Locale.ROOT);
-      int schemeEnd = normalized.indexOf("://");
-      if (schemeEnd >= 0) {
-        normalized = normalized.substring(0, schemeEnd);
-      }
-      this.scheme = normalized.isEmpty() ? DEFAULT_SCHEME : normalized;
-    }
+    private Builder() {}
 
     /**
      * Adds a configured seed, where a {@code port} of zero means the connection string left the
@@ -103,7 +87,7 @@ public final class CouchbaseServerTarget {
         int port = ports.get(0);
         return new CouchbaseServerTarget(hosts.get(0), port > 0 ? port : null);
       }
-      StringBuilder group = new StringBuilder(scheme).append("://");
+      StringBuilder group = new StringBuilder();
       for (int i = 0; i < hosts.size(); i++) {
         if (i > 0) {
           group.append(',');
