@@ -15,8 +15,8 @@ plugins {
   id("com.gradleup.shadow") version "9.6.1"
   id("com.diffplug.spotless") version "8.10.0"
 
-  id("io.opentelemetry.instrumentation.muzzle-generation") version "2.31.0-alpha-SNAPSHOT"
-  id("io.opentelemetry.instrumentation.muzzle-check") version "2.31.0-alpha-SNAPSHOT"
+  id("io.opentelemetry.instrumentation.muzzle-generation") version "2.32.0-alpha-SNAPSHOT"
+  id("io.opentelemetry.instrumentation.muzzle-check") version "2.32.0-alpha-SNAPSHOT"
 }
 
 group = "io.opentelemetry.example"
@@ -27,8 +27,8 @@ val versions = mapOf(
   "opentelemetrySdk" to "1.65.0",
 
   // these lines are managed by .github/scripts/update-version.sh
-  "opentelemetryJavaagent" to "2.31.0-SNAPSHOT",
-  "opentelemetryJavaagentAlpha" to "2.31.0-alpha-SNAPSHOT"
+  "opentelemetryJavaagent" to "2.32.0-SNAPSHOT",
+  "opentelemetryJavaagentAlpha" to "2.32.0-alpha-SNAPSHOT"
 )
 
 val deps = mapOf(
@@ -101,7 +101,7 @@ dependencies {
 
   //All dependencies below are only for tests
   testImplementation("org.testcontainers:testcontainers:2.0.5")
-  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.2")
   testImplementation("com.google.protobuf:protobuf-java-util:4.35.1")
   testImplementation("com.squareup.okhttp3:okhttp:5.5.0")
   testImplementation("io.opentelemetry:opentelemetry-api")
@@ -113,7 +113,7 @@ dependencies {
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-  testRuntimeOnly("ch.qos.logback:logback-classic:1.6.1")
+  testRuntimeOnly("ch.qos.logback:logback-classic:1.6.3")
 
   //Otel Java instrumentation that we use and extend during integration tests
   add("otel", "io.opentelemetry.javaagent:opentelemetry-javaagent:${versions["opentelemetryJavaagent"]}")

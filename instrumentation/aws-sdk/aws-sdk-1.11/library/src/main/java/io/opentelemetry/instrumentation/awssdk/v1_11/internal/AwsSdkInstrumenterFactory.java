@@ -29,7 +29,10 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessContextCustomizer;
@@ -136,6 +139,7 @@ public final class AwsSdkInstrumenterFactory {
         toSqsRequestExtractors(attributesExtractors()),
         singletonList(messagingAttributeExtractor),
         builder -> {
+          builder.addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
           setMessagingReceiveExceptionEventExtractor(builder);
           if (emitStableMessagingSemconv()) {
             builder.addSpanLinksExtractor(
@@ -165,7 +169,11 @@ public final class AwsSdkInstrumenterFactory {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractors(toSqsRequestExtractors(attributesExtractors()))
-            .addAttributesExtractor(messagingAttributeExtractor);
+            .addAttributesExtractor(messagingAttributeExtractor)
+            .addOperationMetrics(MessagingProcessMetrics.get());
+    if (!messagingReceiveInstrumentationEnabled && emitStableMessagingSemconv()) {
+      builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
+    }
     setMessagingProcessExceptionEventExtractor(builder);
 
     if (emitStableMessagingSemconv() || messagingReceiveInstrumentationEnabled) {
@@ -239,7 +247,10 @@ public final class AwsSdkInstrumenterFactory {
         SpanKindExtractor.alwaysProducer(),
         attributesExtractors(),
         singletonList(messagingAttributeExtractor),
-        builder -> setMessagingSendExceptionEventExtractor(builder),
+        builder -> {
+          builder.addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+          setMessagingSendExceptionEventExtractor(builder);
+        },
         true);
   }
 
@@ -255,7 +266,10 @@ public final class AwsSdkInstrumenterFactory {
         MessagingSpanKindExtractor.create(operationType),
         attributesExtractors(),
         singletonList(messagingAttributeExtractor),
-        builder -> setMessagingSettleExceptionEventExtractor(builder),
+        builder -> {
+          builder.addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
+          setMessagingSettleExceptionEventExtractor(builder);
+        },
         true);
   }
 

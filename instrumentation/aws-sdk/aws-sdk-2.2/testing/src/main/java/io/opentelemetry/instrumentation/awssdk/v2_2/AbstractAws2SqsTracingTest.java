@@ -71,6 +71,8 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest {
 
+  private static final int WITH_PARENT_SPAN_COUNT = 5;
+
   @Override
   protected void assertSqsTraces(boolean withParent, boolean captureHeaders) {
     // without an ambient span the process span is parented to the message creation context, which
@@ -104,74 +106,92 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
               trace.hasSpansSatisfyingExactly(spanAsserts);
             },
             trace -> {
-              List<Consumer<SpanDataAssert>> spanAsserts = new ArrayList<>();
-              int offset = withParent ? 2 : 0;
               if (withParent) {
-                spanAsserts.addAll(
-                    asList(
-                        span -> span.hasName("parent").hasNoParent(),
-                        /*
-                         * This span represents HTTP "sending of receive message" operation. It's always single,
-                         * while there can be multiple CONSUMER spans (one per consumed message).
-                         * This one could be suppressed (by IF in TracingRequestHandler#beforeRequest but then
-                         * HTTP instrumentation span would appear)
-                         */
-                        span ->
-                            span.hasName("Sqs.ReceiveMessage")
-                                .hasKind(SpanKind.CLIENT)
-                                .hasParent(trace.getSpan(0))
-                                .hasTotalRecordedLinks(0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                    equalTo(
-                                        AWS_SQS_QUEUE_URL,
-                                        "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                    satisfies(
-                                        AWS_REQUEST_ID,
-                                        val ->
-                                            val.matches(
-                                                "\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
-                                    equalTo(RPC_SYSTEM, "aws-api"),
-                                    equalTo(RPC_SERVICE, "Sqs"),
-                                    equalTo(RPC_METHOD, "ReceiveMessage"),
-                                    equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                    satisfies(
-                                        URL_FULL,
-                                        val -> val.startsWith("http://localhost:" + sqsPort)),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, sqsPort))));
+                SpanData parentSpan = findSpan(trace, "parent");
+                SpanData receiveSpan =
+                    findSpan(
+                        trace,
+                        emitStableMessagingSemconv() ? "receive testSdkSqs" : "testSdkSqs receive");
+                SpanData processSpan =
+                    findSpan(
+                        trace,
+                        emitStableMessagingSemconv() ? "process testSdkSqs" : "testSdkSqs process");
+                trace.hasSpansSatisfyingExactlyInAnyOrder(
+                    span -> span.hasName("parent").hasNoParent(),
+                    span ->
+                        span.hasName("Sqs.ReceiveMessage")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(parentSpan)
+                            .hasTotalRecordedLinks(0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                equalTo(
+                                    AWS_SQS_QUEUE_URL,
+                                    "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
+                                satisfies(
+                                    AWS_REQUEST_ID,
+                                    val ->
+                                        val.matches(
+                                            "\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
+                                equalTo(RPC_SYSTEM, "aws-api"),
+                                equalTo(RPC_SERVICE, "Sqs"),
+                                equalTo(RPC_METHOD, "ReceiveMessage"),
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                satisfies(
+                                    URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, sqsPort)),
+                    span -> {
+                      span.hasParent(parentSpan);
+                      assertReceiveSpan(span, publishSpan.get(), captureHeaders);
+                    },
+                    span ->
+                        assertProcessSpan(
+                            span,
+                            emitStableMessagingSemconv() ? parentSpan : receiveSpan,
+                            publishSpan.get(),
+                            captureHeaders),
+                    span -> {
+                      span.hasName("process child")
+                          .hasParent(processSpan)
+                          .hasTotalAttributeCount(0);
+                    });
+                return;
               }
 
+              List<Consumer<SpanDataAssert>> spanAsserts = new ArrayList<>();
               spanAsserts.add(
                   span -> {
-                    if (withParent) {
-                      span.hasParent(trace.getSpan(0));
-                    } else {
-                      span.hasNoParent();
-                    }
+                    span.hasNoParent();
                     assertReceiveSpan(span, publishSpan.get(), captureHeaders);
                   });
-
               if (!processInPublishTrace) {
                 spanAsserts.add(
                     span ->
                         assertProcessSpan(
-                            span,
-                            emitStableMessagingSemconv() && withParent
-                                ? trace.getSpan(0)
-                                : trace.getSpan(offset),
-                            publishSpan.get(),
-                            captureHeaders));
+                            span, trace.getSpan(0), publishSpan.get(), captureHeaders));
                 spanAsserts.add(
                     span ->
                         span.hasName("process child")
-                            .hasParent(trace.getSpan(1 + offset))
+                            .hasParent(trace.getSpan(1))
                             .hasTotalAttributeCount(0));
               }
 
               trace.hasSpansSatisfyingExactly(spanAsserts);
             });
+  }
+
+  // the receive span now covers the whole poll, so it starts at the same time as the http client
+  // span and the two cannot be asserted in a fixed order
+  private static SpanData findSpan(TraceAssert trace, String name) {
+    for (int i = 0; i < WITH_PARENT_SPAN_COUNT; i++) {
+      SpanData span = trace.getSpan(i);
+      if (name.equals(span.getName())) {
+        return span;
+      }
+    }
+    throw new AssertionError("Span not found: " + name);
   }
 
   private void assertPublishSpan(SpanDataAssert span, boolean captureHeaders) {
@@ -894,6 +914,70 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
     }
 
     getTesting().waitAndAssertTraces(traceAsserts);
+  }
+
+  @Test
+  void testProducerMetrics() {
+    SqsClientBuilder builder = SqsClient.builder();
+    configureSdkClient(builder);
+    SqsClient client = configureSqsClient(builder.build());
+    client.createQueue(createQueueRequest);
+    getTesting().clearData();
+
+    client.sendMessage(sendMessageRequest);
+    client.sendMessageBatch(sendMessageBatchRequest);
+
+    SqsMetricsAssertions.assertProducerMetrics(getTesting(), sqsPort, 2, 4);
+  }
+
+  @Test
+  void testReceiveAndProcessMetrics() {
+    SqsClientBuilder builder = SqsClient.builder();
+    configureSdkClient(builder);
+    SqsClient client = configureSqsClient(builder.build());
+    client.createQueue(createQueueRequest);
+    client.sendMessageBatch(sendMessageBatchRequest);
+    getTesting().clearData();
+
+    ReceiveMessageResponse response =
+        client.receiveMessage(
+            receiveMessageBatchRequest.toBuilder().maxNumberOfMessages(10).build());
+    response.messages().forEach(message -> {});
+    ReceiveMessageResponse emptyResponse =
+        client.receiveMessage(
+            receiveMessageBatchRequest.toBuilder().maxNumberOfMessages(10).build());
+
+    assertThat(response.messages()).hasSize(3);
+    assertThat(emptyResponse.messages()).isEmpty();
+    // the poll that returned no messages is not instrumented, so only one receive operation is
+    // recorded
+    SqsMetricsAssertions.assertReceiveAndProcessMetrics(getTesting(), sqsPort, 1, 3);
+  }
+
+  @Test
+  void testSettleMetrics() {
+    SqsClientBuilder builder = SqsClient.builder();
+    configureSdkClient(builder);
+    SqsClient client = configureSqsClient(builder.build());
+    List<String> receiptHandles = createMessages(client, 2);
+    getTesting().clearData();
+
+    client.deleteMessage(
+        DeleteMessageRequest.builder()
+            .queueUrl(queueUrl)
+            .receiptHandle(receiptHandles.get(0))
+            .build());
+    client.deleteMessageBatch(
+        DeleteMessageBatchRequest.builder()
+            .queueUrl(queueUrl)
+            .entries(
+                DeleteMessageBatchRequestEntry.builder()
+                    .id("0")
+                    .receiptHandle(receiptHandles.get(1))
+                    .build())
+            .build());
+
+    SqsMetricsAssertions.assertSettleMetrics(getTesting(), sqsPort, 2);
   }
 
   private static void assertMessageLink(LinkData link, SpanData creationContext, String messageId) {

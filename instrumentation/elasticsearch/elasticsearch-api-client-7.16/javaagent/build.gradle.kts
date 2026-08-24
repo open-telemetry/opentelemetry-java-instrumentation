@@ -75,13 +75,16 @@ tasks {
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+    .map { suite ->
+      register<Test>("${suite.name}StableSemconv") {
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
+        jvmArgs("-Dotel.semconv-stability.opt-in=database")
+        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+      }
+    }
 
   // exercises capturing the sanitized search query, which is on by default under v3-preview
   val testV3Preview = register<Test>("testV3Preview") {
@@ -93,6 +96,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testStableSemconv, testV3Preview)
+    dependsOn(testing.suites, stableSemconvSuites, testV3Preview)
   }
 }

@@ -481,7 +481,11 @@ def _is_candidate_fresh(candidate_dir: Path, candidate: Candidate) -> bool:
     existing = _load_existing_meta(meta_path)
     if not isinstance(existing, dict):
         return False
-    return existing.get("commit_hash") == candidate.commit_hash
+    return (
+        existing.get("commit_hash") == candidate.commit_hash
+        and "deprecated_added" in existing
+        and "deprecated_removed" in existing
+    )
 
 
 def prepare_bundle(

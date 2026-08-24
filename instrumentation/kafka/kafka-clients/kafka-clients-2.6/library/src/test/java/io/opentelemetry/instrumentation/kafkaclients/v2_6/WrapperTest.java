@@ -11,6 +11,10 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSign
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertSendMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -36,6 +40,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
@@ -90,8 +95,7 @@ class WrapperTest extends AbstractWrapperTest {
                     span.hasName("producer callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0)));
-            SpanContext spanContext = trace.getSpan(1).getSpanContext();
-            producerSpanContext.set(asRemote(spanContext));
+            producerSpanContext.set(asRemote(trace.getSpan(1).getSpanContext()));
           },
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -99,8 +103,9 @@ class WrapperTest extends AbstractWrapperTest {
                       span.hasName("poll " + SHARED_TOPIC)
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
-                          .hasLinks(LinkData.create(producerSpanContext.get()))
+                          .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
                           .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
+      assertMessagingMetrics();
       return;
     }
 
@@ -118,8 +123,7 @@ class WrapperTest extends AbstractWrapperTest {
                   span.hasName("producer callback")
                       .hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0)));
-          SpanContext spanContext = trace.getSpan(1).getSpanContext();
-          producerSpanContext.set(asRemote(spanContext));
+          producerSpanContext.set(asRemote(trace.getSpan(1).getSpanContext()));
         },
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -140,6 +144,15 @@ class WrapperTest extends AbstractWrapperTest {
                     span.hasName("process child")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(1))));
+    assertMessagingMetrics();
+  }
+
+  private static void assertMessagingMetrics() {
+    String instrumentationName = "io.opentelemetry.kafka-clients-2.6";
+    assertSendMetrics(testing, instrumentationName, SHARED_TOPIC, "0", 1, null);
+    assertReceiveMetrics(testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, 1, null);
+    assertProcessMetrics(testing, instrumentationName, SHARED_TOPIC, "test", "0", 1, null);
+    assertTotalConsumedMessages(testing, instrumentationName, 1);
   }
 
   private static SpanContext asRemote(SpanContext spanContext) {
@@ -148,6 +161,10 @@ class WrapperTest extends AbstractWrapperTest {
         spanContext.getSpanId(),
         spanContext.getTraceFlags(),
         spanContext.getTraceState());
+  }
+
+  private static LinkData batchRecordLink(SpanContext producerSpanContext, long offset) {
+    return LinkData.create(producerSpanContext, Attributes.of(MESSAGING_KAFKA_OFFSET, offset));
   }
 
   protected static List<AttributeAssertion> sendAttributes(
@@ -222,6 +239,10 @@ class WrapperTest extends AbstractWrapperTest {
                     MESSAGING_CONSUMER_GROUP_NAME, emitStableMessagingSemconv() ? "test" : null),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     addClientIdAssertions(assertions, "consumer");
+    if (emitStableMessagingSemconv()) {
+      assertions.add(
+          satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
+    }
     if (testHeaders) {
       assertions.add(
           equalTo(

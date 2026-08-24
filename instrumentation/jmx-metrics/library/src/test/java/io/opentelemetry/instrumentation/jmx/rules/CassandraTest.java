@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.jmx.rules;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
@@ -58,6 +60,37 @@ class CassandraTest extends TargetSystemTest {
 
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
+
+    startWeaverValidation(
+        "cassandra.yaml",
+        result ->
+            result
+                .checkNothingUnregisteredWithPrefix("cassandra.")
+                .checkRegisteredMetrics(
+                    "cassandra.",
+                    asList(
+                        "cassandra.compaction.tasks.completed",
+                        "cassandra.compaction.tasks.pending",
+                        "cassandra.storage.load",
+                        "cassandra.storage.hints.count",
+                        "cassandra.storage.hints.in_progress",
+                        "cassandra.client.request.latency.p50",
+                        "cassandra.client.request.latency.p99",
+                        "cassandra.client.request.latency.max",
+                        "cassandra.client.request.count",
+                        "cassandra.client.request.error",
+                        "cassandra.compaction.progress.completed",
+                        "cassandra.compaction.progress.size"),
+                    emptyList())
+                .checkRegisteredAttributes(
+                    "cassandra.",
+                    asList(
+                        "cassandra.operation",
+                        "cassandra.status",
+                        "cassandra.keyspace",
+                        "cassandra.table",
+                        "cassandra.compaction.task_type"),
+                    emptyList()));
 
     startTarget(target);
 

@@ -104,7 +104,7 @@ class LoggingEventMapperTest {
     LoggingEventMapper mapper =
         LoggingEventMapper.builder()
             .setMdcAttributes(
-                MdcAttributeSelectors.create(
+                AttributeSelectors.create(
                     IncludeExclude.builder().setExcluded(singletonList("*secret*")).build()))
             .build();
     Map<String, String> contextData = new HashMap<>();
@@ -123,7 +123,7 @@ class LoggingEventMapperTest {
     LoggingEventMapper mapper =
         LoggingEventMapper.builder()
             .setMdcAttributes(
-                MdcAttributeSelectors.create(
+                AttributeSelectors.create(
                     IncludeExclude.builder()
                         .setIncluded(singletonList("request-*"))
                         .setExcluded(singletonList("*-secret"))
@@ -144,7 +144,7 @@ class LoggingEventMapperTest {
   void testEmptySelectorCapturesNothing() {
     LoggingEventMapper mapper =
         LoggingEventMapper.builder()
-            .setMdcAttributes(MdcAttributeSelectors.create(IncludeExclude.builder().build()))
+            .setMdcAttributes(AttributeSelectors.create(IncludeExclude.builder().build()))
             .build();
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
@@ -258,7 +258,7 @@ class LoggingEventMapperTest {
   }
 
   private static Predicate<String> include(String... patterns) {
-    return MdcAttributeSelectors.create(
+    return AttributeSelectors.create(
         IncludeExclude.builder().setIncluded(asList(patterns)).build());
   }
 }

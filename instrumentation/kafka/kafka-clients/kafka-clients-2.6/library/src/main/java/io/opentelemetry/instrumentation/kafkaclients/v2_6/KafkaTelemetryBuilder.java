@@ -35,7 +35,6 @@ public final class KafkaTelemetryBuilder {
   private boolean captureExperimentalSpanAttributes = false;
   private boolean propagationEnabled = true;
   private boolean messagingReceiveInstrumentationEnabled = false;
-  private boolean messagingReceiveInstrumentationConfigured = false;
 
   KafkaTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = requireNonNull(openTelemetry);
@@ -136,7 +135,6 @@ public final class KafkaTelemetryBuilder {
   public KafkaTelemetryBuilder setMessagingReceiveTelemetryEnabled(
       boolean messagingReceiveInstrumentationEnabled) {
     this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
-    this.messagingReceiveInstrumentationConfigured = true;
     return this;
   }
 
@@ -144,17 +142,17 @@ public final class KafkaTelemetryBuilder {
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
             .setHeaders(headers)
-            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes);
-    if (messagingReceiveInstrumentationConfigured) {
-      instrumenterFactory.setMessagingReceiveTelemetryEnabled(
-          messagingReceiveInstrumentationEnabled);
-    }
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
+            .setMessagingReceiveTelemetryEnabled(messagingReceiveInstrumentationEnabled);
 
     return new KafkaTelemetry(
         openTelemetry,
         instrumenterFactory.createProducerInstrumenter(producerAttributesExtractors),
         instrumenterFactory.createConsumerReceiveInstrumenter(consumerReceiveAttributesExtractors),
         instrumenterFactory.createConsumerProcessInstrumenter(consumerProcessAttributesExtractors),
+        instrumenterFactory.createProducerInterceptorInstrumenter(producerAttributesExtractors),
+        instrumenterFactory.createConsumerReceiveInterceptorInstrumenter(
+            consumerReceiveAttributesExtractors),
         propagationEnabled);
   }
 }

@@ -73,7 +73,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArguments(2))
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, byte[].class))
-            .and(returns(named("java.util.concurrent.CompletableFuture"))),
+            .and(returns(CompletableFuture.class)),
         getClass().getName() + "$RequestFutureBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
@@ -82,14 +82,14 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, named("io.nats.client.impl.Headers")))
             .and(takesArgument(2, byte[].class))
-            .and(returns(named("java.util.concurrent.CompletableFuture"))),
+            .and(returns(CompletableFuture.class)),
         getClass().getName() + "$RequestFutureHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("request"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("io.nats.client.Message")))
-            .and(returns(named("java.util.concurrent.CompletableFuture"))),
+            .and(returns(CompletableFuture.class)),
         getClass().getName() + "$RequestFutureMessageAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
@@ -98,7 +98,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, byte[].class))
             .and(takesArgument(2, Duration.class))
-            .and(returns(named("java.util.concurrent.CompletableFuture"))),
+            .and(returns(CompletableFuture.class)),
         getClass().getName() + "$RequestTimeoutFutureBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
@@ -108,7 +108,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named("io.nats.client.impl.Headers")))
             .and(takesArgument(2, byte[].class))
             .and(takesArgument(3, Duration.class))
-            .and(returns(named("java.util.concurrent.CompletableFuture"))),
+            .and(returns(CompletableFuture.class)),
         getClass().getName() + "$RequestTimeoutFutureHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
@@ -116,7 +116,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArguments(2))
             .and(takesArgument(0, named("io.nats.client.Message")))
             .and(takesArgument(1, Duration.class))
-            .and(returns(named("java.util.concurrent.CompletableFuture"))),
+            .and(returns(CompletableFuture.class)),
         getClass().getName() + "$RequestTimeoutFutureMessageAdvice");
   }
 
