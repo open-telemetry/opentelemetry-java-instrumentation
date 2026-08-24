@@ -34,13 +34,15 @@ same accessor and call-site rules when these classes expose stored singleton fie
   - `CONTEXT` stays `CONTEXT`
   - `REQUEST_INFO` stays `REQUEST_INFO`
   - `RESPONSE_STATUS` stays `RESPONSE_STATUS`
-- `VirtualField` fields must be `SCREAMING_SNAKE_CASE` whether the field is `private` or `public`.
-  Visibility only decides whether the field is exposed directly (per the previous bullet) or kept
-  private and used only inside the holder class — it never justifies a lower camel case name. This
-  also applies when the value is created by a runtime factory method such as
-  `VirtualField.find(...)`; the runtime-created origin does not make it a collaborator object.
-  Other semantic key/handle types (`ContextKey`, `AttributeKey`, `MethodHandle`, `Pattern`) are good
-  candidates for the same treatment, but this repository does not yet require it for them.
+- A `static final VirtualField` field must be `SCREAMING_SNAKE_CASE` whether the field is `private`
+  or `public`. Visibility only decides whether the field is exposed directly (per the previous
+  bullet) or kept private and used only inside the holder class — it never justifies a lower camel
+  case name. This also applies when the value is created by a runtime factory method such as
+  `VirtualField.find(...)`; the runtime-created origin does not make it a collaborator object. This
+  does not apply to non-static `VirtualField` fields, such as one passed into a constructor and
+  stored as an instance field. Other semantic key/handle types (`ContextKey`, `AttributeKey`,
+  `MethodHandle`, `Pattern`) are good candidates for the same treatment, but this repository does not
+  yet require it for them.
 - Callers should static import only exported singleton accessors and uppercase constant-like
   fields, and use those members unqualified: accessors for lower camel collaborators, fields for
   uppercase constant-like members. This includes route/span naming accessors such as
@@ -117,9 +119,11 @@ class MyInstrumentation implements TypeInstrumentation {
 ## What to Flag in Review
 
 - Exposed lower camel collaborator fields such as `public static final Instrumenter ...`.
-- Private or public `VirtualField` fields named in lower camel case, including ones created via a
-  runtime factory such as `VirtualField.find(...)`. This rule is mandatory for `VirtualField` only —
-  do not flag existing camelCase `MethodHandle` or `Pattern` fields on this basis.
+- Private or public `static final VirtualField` fields named in lower camel case, including ones
+  created via a runtime factory such as `VirtualField.find(...)`. This rule is mandatory for
+  `VirtualField` only — do not flag existing camelCase `MethodHandle` or `Pattern` fields on this
+  basis, and do not flag a non-static `VirtualField` field, such as one passed into a constructor and
+  stored as an instance field.
 - Private + accessor wrappers around uppercase constant-like fields when a direct
   `public static final` field would be clearer and matches the naming guidance, including semantic
   keys/handles and immutable value constants.
