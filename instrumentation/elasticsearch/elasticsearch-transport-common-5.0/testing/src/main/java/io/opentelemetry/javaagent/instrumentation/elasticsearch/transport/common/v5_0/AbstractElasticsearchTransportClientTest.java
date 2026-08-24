@@ -143,7 +143,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                     stringKey("elasticsearch.request.indices"), experimental("invalid-index"))));
 
     if (emitStableDatabaseSemconv()) {
-      assertions.add(equalTo(ERROR_TYPE, "org.elasticsearch.transport.RemoteTransportException"));
+      assertions.add(equalTo(ERROR_TYPE, "org.elasticsearch.index.IndexNotFoundException"));
     }
 
     testing.waitAndAssertTraces(
