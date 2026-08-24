@@ -14,7 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Source: https://github.com/apache/geode/blob/1685bb49297e2c8f1c0d436f11f93bfb6209686b/docker/Dockerfile
+# Release: https://github.com/apache/geode/releases/tag/rel/v2.0.2
+# Dockerfile source: https://github.com/apache/geode/blob/1685bb49297e2c8f1c0d436f11f93bfb6209686b/docker/Dockerfile
 
 FROM bellsoft/liberica-openjdk-alpine:17
 
