@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes to non-stable APIs
+
+- Remove the deprecated `HostIdResource.REGISTRY_QUERY` in favor of the absolute-path `reg.exe` lookup used by
+  `HostIdResource`.
+
 ## Version 2.31.1 (2026-08-23)
 
 This release targets the OpenTelemetry SDK 1.65.0.
