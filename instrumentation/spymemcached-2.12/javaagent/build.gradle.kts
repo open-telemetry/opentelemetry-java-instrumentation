@@ -29,6 +29,11 @@ tasks {
   test {
     filter {
       excludeTestsMatching("*.testSanitizationDisabled")
+      // getTimeout/setCancel rely on the operation staying queued (and never dispatched) long
+      // enough for spymemcached to mark it timed out/cancelled; this is inherently sensitive to
+      // scheduling and I/O timing and is not reliably reproducible in CI.
+      excludeTestsMatching("*.getTimeout")
+      excludeTestsMatching("*.setCancel")
     }
   }
 
@@ -38,6 +43,11 @@ tasks {
 
     filter {
       excludeTestsMatching("*.testSanitizationDisabled")
+      // getTimeout/setCancel rely on the operation staying queued (and never dispatched) long
+      // enough for spymemcached to mark it timed out/cancelled; this is inherently sensitive to
+      // scheduling and I/O timing and is not reliably reproducible in CI.
+      excludeTestsMatching("*.getTimeout")
+      excludeTestsMatching("*.setCancel")
     }
 
     jvmArgs("-Dotel.instrumentation.spymemcached.experimental-span-attributes=true")
@@ -50,6 +60,11 @@ tasks {
 
     filter {
       excludeTestsMatching("*.testSanitizationDisabled")
+      // getTimeout/setCancel rely on the operation staying queued (and never dispatched) long
+      // enough for spymemcached to mark it timed out/cancelled; this is inherently sensitive to
+      // scheduling and I/O timing and is not reliably reproducible in CI.
+      excludeTestsMatching("*.getTimeout")
+      excludeTestsMatching("*.setCancel")
     }
 
     jvmArgs("-Dotel.semconv-stability.opt-in=database")

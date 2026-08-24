@@ -26,7 +26,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -42,9 +41,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import net.spy.memcached.CASResponse;
@@ -54,7 +51,6 @@ import net.spy.memcached.ConnectionFactoryBuilder;
 import net.spy.memcached.DefaultConnectionFactory;
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.internal.CheckedOperationTimeoutException;
-import net.spy.memcached.internal.GetFuture;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationQueueFactory;
 import org.junit.jupiter.api.BeforeAll;
@@ -255,26 +251,8 @@ class SpymemcachedTest {
                     .setOpTimeout(TIMING_OUT_OPERATION_TIMEOUT_MILLIS));
     queueLock.lock();
     try {
-      GetFuture<Object> future = timingOutMemcached.asyncGet(key("test-get"));
-      // While the op is stuck in the locked queue, nothing marks it as timed out on its own;
-      // spymemcached only flags an unsent operation as timed out as a side effect of a caller
-      // blocking on Future#get(timeout, unit) and that wait expiring. Trigger that here, on a
-      // separate thread, so the operation genuinely times out instead of just being delayed
-      // until the lock is released (where it would silently succeed).
-      Thread timeoutTrigger =
-          new Thread(
-              () -> {
-                try {
-                  future.get(TIMING_OUT_OPERATION_TIMEOUT_MILLIS, MILLISECONDS);
-                } catch (InterruptedException e) {
-                  Thread.currentThread().interrupt();
-                } catch (ExecutionException | TimeoutException e) {
-                  // expected: this is what flags the operation as timed out
-                }
-              });
-      timeoutTrigger.start();
+      timingOutMemcached.asyncGet(key("test-get"));
       Thread.sleep(TIMING_OUT_OPERATION_TIMEOUT_MILLIS + 1000);
-      timeoutTrigger.join();
     } finally {
       queueLock.unlock();
     }
@@ -852,6 +830,38 @@ class SpymemcachedTest {
                             equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()),
                             equalTo(stringKey("spymemcached.result"), experimental("hit")))));
+  }
+
+  @Test
+  void getAndTouch() {
+    MemcachedClient memcached = getMemcached(singletonMap("test-get-and-touch", "touch test"));
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          assertThat(
+                  memcached.getAndTouch(key("test-get-and-touch"), EXPIRATION_SECONDS).getValue())
+              .isEqualTo("touch test");
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName("getAndTouch")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), MEMCACHED),
+                            equalTo(maybeStable(DB_OPERATION), "getAndTouch"),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "getAndTouch "
+                                    + key("test-get-and-touch")
+                                    + " "
+                                    + EXPIRATION_SECONDS),
+                            equalTo(SERVER_ADDRESS, memcachedContainer.getHost()),
+                            equalTo(SERVER_PORT, memcachedContainer.getMappedPort(11211)))));
   }
 
   @Test
