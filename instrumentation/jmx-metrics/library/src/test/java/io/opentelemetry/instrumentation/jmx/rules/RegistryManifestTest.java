@@ -30,10 +30,10 @@ class RegistryManifestTest {
     ProtectionDomain protectionDomain = OtelAttributes.class.getProtectionDomain();
     CodeSource codeSource = protectionDomain.getCodeSource();
     assertThat(codeSource).isNotNull();
-    String jarPath = codeSource.getLocation().toURI().getPath();
+    Path jarPath = Paths.get(codeSource.getLocation().toURI());
 
     String semconvLibraryVersion;
-    try (JarFile jarFile = new JarFile(jarPath)) {
+    try (JarFile jarFile = new JarFile(jarPath.toFile())) {
       Manifest jarManifest = jarFile.getManifest();
       Attributes mainAttributes = jarManifest.getMainAttributes();
       assertThat(mainAttributes.getValue("Implementation-Title"))
