@@ -45,6 +45,13 @@
       groupName: 'weekly update',
     },
     {
+      // keep the Gradle semconv dep and manifest.yaml updates in the same group
+      matchPackageNames: [
+        'io.opentelemetry.semconv:opentelemetry-semconv',
+      ],
+      groupName: 'opentelemetry semconv',
+    },
+    {
       // gh-aw updates need a dedicated branch so CI can regenerate their workflow lockfiles
       matchPackageNames: [
         'github/gh-aw',
