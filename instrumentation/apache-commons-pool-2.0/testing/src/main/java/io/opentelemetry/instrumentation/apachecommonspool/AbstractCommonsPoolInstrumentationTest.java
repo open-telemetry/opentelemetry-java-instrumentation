@@ -126,31 +126,6 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
     assertNoMetrics();
   }
 
-  @Test
-  void shouldRegisterSamePoolInstanceIdempotently() throws Exception {
-    String poolName = "duplicateRegistrationPool";
-    String ignoredPoolName = "ignoredDuplicateRegistrationPool";
-    GenericObjectPool<Object> pool = createGenericObjectPool(poolName, false);
-    Object borrowed = null;
-    try {
-      configure(pool, poolName);
-      configure(pool, ignoredPoolName);
-
-      borrowed = pool.borrowObject();
-
-      assertGenericObjectPoolMetrics(poolName);
-      verifyPoolNameNotReported(ignoredPoolName);
-    } finally {
-      if (borrowed != null) {
-        pool.returnObject(borrowed);
-      }
-      shutdown(pool);
-      pool.close();
-    }
-
-    assertNoMetrics();
-  }
-
   private void testGenericObjectPoolMetrics(boolean jmxEnabled) throws Exception {
     String poolName = jmxEnabled ? "objectPool" : "pool";
     GenericObjectPool<Object> pool = createGenericObjectPool(poolName, jmxEnabled);
@@ -257,7 +232,7 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
     return new GenericKeyedObjectPool<>(new TestKeyedObjectFactory(), config);
   }
 
-  private void assertGenericObjectPoolMetrics(String poolName) {
+  protected void assertGenericObjectPoolMetrics(String poolName) {
     verifyCommonPoolMetrics(poolName);
     verifyMinIdleObjects(poolName);
     verifyMaxIdleObjects(poolName);
@@ -287,7 +262,7 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
         .noneMatch(metricData -> metricData.getName().equals(metricName));
   }
 
-  private void verifyPoolNameNotReported(String poolName) {
+  protected void verifyPoolNameNotReported(String poolName) {
     assertThat(testing().metrics())
         .filteredOn(
             metricData ->
