@@ -73,6 +73,10 @@ dependencies {
 }
 ```
 
+When the javaagent project sets `otelJava.minJavaVersionSupported`, set the same minimum in the
+unit-test project. Otherwise, Java matrix jobs below that minimum can try to load the javaagent
+classes and fail with `UnsupportedClassVersionError`.
+
 Keep tests that exercise the instrumented library with the test agent in the `javaagent` project.
 Use `javaagent-unit-tests` only for direct unit tests of javaagent implementation classes.
 
