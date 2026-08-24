@@ -47,7 +47,7 @@ jobs:
               ;;
           esac
 
-  workflow-notification:
+  documentation-notification:
     permissions:
       contents: read
       issues: write
@@ -57,3 +57,14 @@ jobs:
     with:
       success: ${{ needs.crawl.outputs.success == 'true' }}
       title: "Documentation sync needed: opentelemetry.io site out of sync"
+
+  workflow-notification:
+    permissions:
+      contents: read
+      issues: write
+    needs:
+      - crawl
+    if: always()
+    uses: ./.github/workflows/reusable-workflow-notification.yml
+    with:
+      success: ${{ needs.crawl.result == 'success' }}
