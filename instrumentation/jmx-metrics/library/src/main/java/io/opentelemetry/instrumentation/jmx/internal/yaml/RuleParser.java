@@ -9,8 +9,9 @@ import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 import static java.util.stream.Collectors.toList;
 
-import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
+import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -177,15 +178,19 @@ public class RuleParser {
    * Parse the YAML rules from the specified input stream and add them, after converting to the
    * internal representation, to the provided metric configuration.
    *
-   * @param conf the metric configuration
    * @param is the InputStream with the YAML rules
+   * @return metric names that were added to the configuration
    * @throws IllegalArgumentException when unable to parse YAML
    */
-  public void addMetricDefsTo(MetricConfiguration conf, InputStream is) {
+  public List<MetricDef> parseMetricDefs(InputStream is) {
     try {
       JmxConfig config = loadConfig(is);
       logger.log(FINE, "Found {0} metric rules", config.getRules().size());
-      config.addMetricDefsTo(conf);
+      List<MetricDef> metricDefs = new ArrayList<>();
+      for (JmxRule rule : config.getRules()) {
+        metricDefs.add(rule.buildMetricDef());
+      }
+      return metricDefs;
     } catch (Exception e) {
       // It is essential that the parser exception is made visible to the user.
       // It contains contextual information about any syntax issues found by the parser.
