@@ -167,14 +167,25 @@ public final class RedisServerTarget {
         scheme = value.substring(0, schemeEnd);
         value = value.substring(schemeEnd + 3);
       }
+      if (value.isEmpty()) {
+        return null;
+      }
+
+      boolean socket = isSocket(scheme, value);
+      if (!socket || value.charAt(0) != '/') {
+        int authorityEnd = firstIndexOf(value, '/', '?', '#');
+        int credentialsEnd = value.lastIndexOf('@');
+        if (credentialsEnd >= 0 && authorityEnd >= 0 && credentialsEnd > authorityEnd) {
+          return null;
+        }
+      }
 
       value = cutAt(value, '#');
       value = cutAt(value, '?');
       if (value.isEmpty()) {
         return null;
       }
-
-      if (isSocket(scheme, value)) {
+      if (socket) {
         String path = stripSocketCredentials(value);
         return path.isEmpty() ? null : new Endpoint(scheme, path, null, true);
       }
@@ -224,17 +235,31 @@ public final class RedisServerTarget {
     }
 
     private static String stripSocketCredentials(String value) {
-      int credentialsEnd = value.indexOf('@');
+      if (value.charAt(0) == '/') {
+        return value;
+      }
+      int credentialsEnd = value.lastIndexOf('@');
       int pathStart = value.indexOf('/');
       if (credentialsEnd >= 0 && (pathStart < 0 || credentialsEnd < pathStart)) {
         return value.substring(credentialsEnd + 1);
       }
-      return value;
+      return credentialsEnd < 0 ? value : "";
     }
 
     private static String cutAt(String value, char separator) {
       int index = value.indexOf(separator);
       return index < 0 ? value : value.substring(0, index);
+    }
+
+    private static int firstIndexOf(String value, char... separators) {
+      int result = -1;
+      for (char separator : separators) {
+        int index = value.indexOf(separator);
+        if (index >= 0 && (result < 0 || index < result)) {
+          result = index;
+        }
+      }
+      return result;
     }
 
     @Nullable

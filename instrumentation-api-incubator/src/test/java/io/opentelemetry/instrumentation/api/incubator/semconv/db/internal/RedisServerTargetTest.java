@@ -163,9 +163,33 @@ class RedisServerTargetTest {
 
   @ParameterizedTest
   @NullAndEmptySource
-  @ValueSource(strings = {"  ", "://localhost:6379", "redis://", "redis://?timeout=5s"})
+  @ValueSource(
+      strings = {
+        "  ",
+        "://localhost:6379",
+        "redis://",
+        "redis-socket://",
+        "unix://",
+        "redis://?timeout=5s",
+        "redis-socket://?db=1",
+        "unix://#fragment",
+        "redis://default:sec/ret@localhost:6379",
+        "redis://default:sec?ret@localhost:6379",
+        "redis://default:sec#ret@localhost:6379"
+      })
   void unusableEndpoint(String endpoint) {
     assertThat(RedisServerTarget.ofEndpoint(endpoint)).isNull();
+  }
+
+  @Test
+  void endpointListDropsAmbiguousCredentials() {
+    assertThat(
+            RedisServerTarget.ofEndpoints(
+                asList(
+                    "redis://user:sec/ret@node1:6379",
+                    "redis://user:sec?ret@node2:6379",
+                    "redis://user:sec#ret@node3:6379")))
+        .isNull();
   }
 
   @ParameterizedTest
@@ -192,6 +216,24 @@ class RedisServerTargetTest {
     assertThat(target.getAddress())
         .isEqualTo("redis-socket:///var/run/redis1.sock,redis-socket:///var/run/redis2.sock");
     assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void socketEndpointCredentialsFailClosedWhenAmbiguous() {
+    assertThat(RedisServerTarget.ofEndpoint("redis-socket://user:pa/ss@/var/run/redis.sock"))
+        .isNull();
+    assertThat(RedisServerTarget.ofEndpoint("redis-socket://user:pa?ss@/var/run/redis.sock"))
+        .isNull();
+    assertThat(RedisServerTarget.ofEndpoint("redis-socket://user:pa#ss@/var/run/redis.sock"))
+        .isNull();
+    String passwordContainingAt =
+        "redis-socket://" + "user:pa" + "@" + "ss" + "@" + "/var/run/redis.sock";
+    assertThat(RedisServerTarget.ofEndpoint(passwordContainingAt))
+        .extracting(RedisServerTarget::getAddress)
+        .isEqualTo("/var/run/redis.sock");
+    assertThat(RedisServerTarget.ofEndpoint("redis-socket:///var/run/user@redis.sock"))
+        .extracting(RedisServerTarget::getAddress)
+        .isEqualTo("/var/run/user@redis.sock");
   }
 
   @Test

@@ -80,6 +80,43 @@ class JdbcConnectionUrlParserTest {
             .build());
   }
 
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "jdbc:mariadb:failover://user:p,a/ss@h1:3306,h2:3306/db",
+        "jdbc:mariadb:failover://user:p,a?ss@h1:3306,h2:3306/db",
+        "jdbc:mariadb:failover://user:p,a#ss@h1:3306,h2:3306/db"
+      })
+  void ambiguousMariaDbCredentialsDoNotBecomeAConfiguredTarget(String url) {
+    DbInfo dbInfo = parse(url, null);
+    assertThat(dbInfo.getServerAddressGroup()).isNull();
+    assertThat(dbInfo.getHost()).isNull();
+    assertThat(dbInfo.getName()).isNull();
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "",
+        "&serverSslCert=/etc/ssl/ca.pem",
+        "&sessionVariables=sql_mode=ANSI,time_zone=UTC"
+      })
+  void atInMariaDbQueryDoesNotDisableConfiguredTargetParsing(String trailingParameters) {
+    String url =
+        "jdbc:mariadb:failover://h1:3306,h2:3306/db?user="
+            + "admin"
+            + "@"
+            + "corp.com"
+            + trailingParameters;
+
+    DbInfo dbInfo = parse(url, null);
+
+    assertThat(dbInfo.getServerAddressGroup()).isEqualTo("mariadb:failover://h1:3306,h2:3306");
+    assertThat(dbInfo.getHost()).isEqualTo("h1");
+    assertThat(dbInfo.getName()).isEqualTo("db");
+    assertThat(dbInfo.getDbUser()).isEqualTo("admin@corp.com");
+  }
+
   private static Stream<Arguments> mySqlArguments() {
     return args(
         // https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-jdbc-url-format.html
