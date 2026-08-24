@@ -15,6 +15,7 @@ When a "Knowledge File" is listed, load it from `knowledge/` before reviewing th
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
 | General      | Logic, correctness, reliability, safety, copy/paste mistakes, incorrect comments                                                                                                                                                                                                                                                                                                                              | Always                                                                                                                                                          | —                                  |
 | Style        | Style guide                                                                                                                                                                                                                                                                                                                                                                                                   | Always                                                                                                                                                          | —                                  |
+| Style        | Reflow avoidable short lines that Spotless creates between consecutive `//` prose-comment lines; allow short lines when the line-length limit requires them                                                                                                                                                                                                                                                   | Multi-line `//` prose comments                                                                                                                                  | —                                  |
 | Style        | Uppercase field names should reflect semantic constants or immutable value constants such as `Duration` timeouts/intervals, not simply `static final`                                                                                                                                                                                                                                                         | Always                                                                                                                                                          | —                                  |
 | Style        | Non-private collection constants and escaping private collection constants must be unmodifiable; source sets target Java 8 by default, so use `Collections.unmodifiableList`/`unmodifiableSet`/`unmodifiableMap` there, and prefer `List.of`/`Set.of`/`Map.of` only in source sets targeting Java 9 or later; do not add unmodifiable wrappers to private non-escaping constants                              | Static final collection fields                                                                                                                                  | —                                  |
 | Naming       | Getter naming (`get` / `is`)                                                                                                                                                                                                                                                                                                                                                                                  | Always                                                                                                                                                          | —                                  |
@@ -74,6 +75,24 @@ application, do not silently swallow it unless the failure is an expected option
 ## [Style] Style Guide
 
 Read and apply `docs/contributing/style-guide.md`.
+
+### Reflow avoidable short lines in prose comments
+
+Spotless may wrap overflow from one `//` line onto a short intermediate line without reflowing that
+text into the following `//` line. When the following line has room, move the short fragment to its
+start and reflow the remainder. A single-word line is acceptable when the line-length limit requires
+it.
+
+```java
+// BAD
+// Elasticsearch does not implement ElasticsearchWrapperException, so Elasticsearch does
+// not
+// treat this exception as a wrapper.
+
+// GOOD
+// Elasticsearch does not implement ElasticsearchWrapperException, so Elasticsearch does
+// not treat this exception as a wrapper.
+```
 
 Do not flag the following patterns (common false positives):
 
