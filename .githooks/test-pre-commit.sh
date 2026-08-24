@@ -16,7 +16,7 @@
 #   failed (7)  clean                7
 #   failed (7)  changed              7
 #   failed (7)  failed (status 3)    7
-#   no relevant files (Flint 1)      1 (Spotless skipped)
+#   no relevant files (Flint clean)  0 (Spotless skipped)
 #   changed-files discovery failure  1 (both formatters skipped)
 #
 # Spotless must still run when Flint returns nonzero, but Flint's status has
@@ -27,15 +27,16 @@ IFS=$'\n\t'
 hook=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/pre-commit
 
 run_case() {
-  local name=$1
-  local changed_files_status=$2
-  local flint_status=$3
-  local spotless_status=$4
-  local spotless_changed=$5
-  local spotless_relevant=$6
-  local expected=$7
-  local expected_flint_calls=$8
-  local expected_spotless_calls=$9
+  local name
+  local changed_files_status
+  local flint_status
+  local spotless_status
+  local spotless_changed
+  local spotless_relevant
+  local expected_status
+  local expected_flint_calls
+  local expected_spotless_calls
+  local "$@"
 
   local repo
   repo=$(mktemp -d "${TMPDIR:-/tmp}/otel-pre-commit-test.XXXXXX")
@@ -105,8 +106,8 @@ EOF
   actual=$?
   set -e
 
-  if [[ "$actual" -ne "$expected" ]]; then
-    printf '%s: expected status %s, got %s\n' "$name" "$expected" "$actual" >&2
+  if [[ "$actual" -ne "$expected_status" ]]; then
+    printf '%s: expected status %s, got %s\n' "$name" "$expected_status" "$actual" >&2
     return 1
   fi
 
@@ -129,15 +130,123 @@ EOF
   printf 'ok: %s\n' "$name"
 }
 
-run_case 'clean/clean' 0 0 0 0 1 0 1 1
-run_case 'clean/spotless-changed' 0 0 0 1 1 1 1 1
-run_case 'clean/spotless-failed' 0 0 7 0 1 7 1 1
-run_case 'clean/spotless-failed-after-change' 0 0 7 1 1 7 1 1
-run_case 'flint-fixed/clean' 0 1 0 0 1 1 1 1
-run_case 'flint-fixed/spotless-changed' 0 1 0 1 1 1 1 1
-run_case 'flint-fixed/spotless-failed' 0 1 7 0 1 1 1 1
-run_case 'flint-failed/clean' 0 7 0 0 1 7 1 1
-run_case 'flint-failed/spotless-changed' 0 7 0 1 1 7 1 1
-run_case 'flint-failed/spotless-failed' 0 7 3 0 1 7 1 1
-run_case 'no-relevant-files' 0 1 0 0 0 1 1 0
-run_case 'changed-files-failed' 7 0 0 0 1 1 0 0
+run_case \
+  name='clean/clean' \
+  changed_files_status=0 \
+  flint_status=0 \
+  spotless_status=0 \
+  spotless_changed=0 \
+  spotless_relevant=1 \
+  expected_status=0 \
+  expected_flint_calls=1 \
+  expected_spotless_calls=1
+run_case \
+  name='clean/spotless-changed' \
+  changed_files_status=0 \
+  flint_status=0 \
+  spotless_status=0 \
+  spotless_changed=1 \
+  spotless_relevant=1 \
+  expected_status=1 \
+  expected_flint_calls=1 \
+  expected_spotless_calls=1
+run_case \
+  name='clean/spotless-failed' \
+  changed_files_status=0 \
+  flint_status=0 \
+  spotless_status=7 \
+  spotless_changed=0 \
+  spotless_relevant=1 \
+  expected_status=7 \
+  expected_flint_calls=1 \
+  expected_spotless_calls=1
+run_case \
+  name='clean/spotless-failed-after-change' \
+  changed_files_status=0 \
+  flint_status=0 \
+  spotless_status=7 \
+  spotless_changed=1 \
+  spotless_relevant=1 \
+  expected_status=7 \
+  expected_flint_calls=1 \
+  expected_spotless_calls=1
+run_case \
+  name='flint-fixed/clean' \
+  changed_files_status=0 \
+  flint_status=1 \
+  spotless_status=0 \
+  spotless_changed=0 \
+  spotless_relevant=1 \
+  expected_status=1 \
+  expected_flint_calls=1 \
+  expected_spotless_calls=1
+run_case \
+  name='flint-fixed/spotless-changed' \
+  changed_files_status=0 \
+  flint_status=1 \
+  spotless_status=0 \
+  spotless_changed=1 \
+  spotless_relevant=1 \
+  expected_status=1 \
+  expected_flint_calls=1 \
+  expected_spotless_calls=1
+run_case \
+  name='flint-fixed/spotless-failed' \
+  changed_files_status=0 \
+  flint_status=1 \
+  spotless_status=7 \
+  spotless_changed=0 \
+  spotless_relevant=1 \
+  expected_status=1 \
+  expected_flint_calls=1 \
+  expected_spotless_calls=1
+run_case \
+  name='flint-failed/clean' \
+  changed_files_status=0 \
+  flint_status=7 \
+  spotless_status=0 \
+  spotless_changed=0 \
+  spotless_relevant=1 \
+  expected_status=7 \
+  expected_flint_calls=1 \
+  expected_spotless_calls=1
+run_case \
+  name='flint-failed/spotless-changed' \
+  changed_files_status=0 \
+  flint_status=7 \
+  spotless_status=0 \
+  spotless_changed=1 \
+  spotless_relevant=1 \
+  expected_status=7 \
+  expected_flint_calls=1 \
+  expected_spotless_calls=1
+run_case \
+  name='flint-failed/spotless-failed' \
+  changed_files_status=0 \
+  flint_status=7 \
+  spotless_status=3 \
+  spotless_changed=0 \
+  spotless_relevant=1 \
+  expected_status=7 \
+  expected_flint_calls=1 \
+  expected_spotless_calls=1
+run_case \
+  name='no-relevant-files' \
+  changed_files_status=0 \
+  flint_status=0 \
+  spotless_status=0 \
+  spotless_changed=0 \
+  spotless_relevant=0 \
+  expected_status=0 \
+  expected_flint_calls=1 \
+  expected_spotless_calls=0
+run_case \
+  name='changed-files-failed' \
+  changed_files_status=7 \
+  flint_status=0 \
+  spotless_status=0 \
+  spotless_changed=0 \
+  spotless_relevant=1 \
+  expected_status=1 \
+  expected_flint_calls=0 \
+  expected_spotless_calls=0

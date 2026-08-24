@@ -22,6 +22,9 @@ jobs:
 
       - uses: jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654 # v4.2.4
 
+      - name: Test pre-commit hook
+        run: .githooks/test-pre-commit.sh
+
       - name: Lint for pull requests
         if: github.event_name == 'pull_request'
         env:
