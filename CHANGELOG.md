@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### ⚠️ Breaking changes to non-stable APIs
+
+- Remove the deprecated `HostIdResource.REGISTRY_QUERY` in favor of the absolute-path `reg.exe` lookup used by
+  `HostIdResource`. ([#19778](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/19778))
+
 ### 🚫 Deprecations
 
 - Deprecate `GrpcRequest.getLogicalHost()` and `getLogicalPort()` in favor of
