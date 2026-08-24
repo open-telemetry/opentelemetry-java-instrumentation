@@ -9,50 +9,49 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import jakarta.jms.Message;
 import javax.annotation.Nullable;
-import javax.jms.MessageListener;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * Captures the queue manager identifier when an application registers an asynchronous {@link
- * MessageListener} on an IBM MQ consumer. This is the only point at which both the consumer (which
- * knows the QMID) and the listener (which is in scope during delivery) are available together.
+ * Jakarta namespace counterpart of {@link IbmMqJmsReceiveInstrumentation}. See that class and
+ * {@link IbmMqInstrumentationModule} for why this never touches the receive span itself.
  */
-public class IbmMqJmsSetListenerInstrumentation implements TypeInstrumentation {
+public class IbmMqJakartaJmsReceiveInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("com.ibm.msg.client.jms.JmsMessageConsumer");
+    return hasClassesNamed("com.ibm.msg.client.jakarta.jms.JmsMessageConsumer");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("com.ibm.msg.client.jms.JmsMessageConsumer"));
+    return implementsInterface(named("com.ibm.msg.client.jakarta.jms.JmsMessageConsumer"));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("setMessageListener")
-            .and(takesArgument(0, named("javax.jms.MessageListener")))
+        named("receive")
+            .or(named("receiveNoWait"))
+            .and(returns(named("jakarta.jms.Message")))
             .and(isPublic()),
-        this.getClass().getName() + "$SetListenerAdvice");
+        this.getClass().getName() + "$ReceiveAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class SetListenerAdvice {
+  public static class ReceiveAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
-        @Advice.This Object consumer, @Advice.Argument(0) @Nullable MessageListener listener) {
-      // On exit, so the listener is only remembered once registration actually succeeded.
-      IbmMqJmsListenerQmid.associate(consumer, listener);
+        @Advice.This Object consumer, @Advice.Return @Nullable Message message) {
+      IbmMqJakartaJmsListenerQmid.captureFromReceive(consumer, message);
     }
   }
 }

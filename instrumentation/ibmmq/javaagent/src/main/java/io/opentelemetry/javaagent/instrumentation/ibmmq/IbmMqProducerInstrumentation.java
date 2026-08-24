@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -35,7 +34,6 @@ class IbmMqProducerInstrumentation implements TypeInstrumentation {
         isMethod()
             .and(named("put"))
             .and(isPublic())
-            .and(takesArguments(1))
             .and(takesArgument(0, named("com.ibm.mq.MQMessage"))),
         IbmMqProducerAdvice.class.getName());
   }

@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageO
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 
@@ -38,16 +39,14 @@ class IbmMqSingletons {
   private static Instrumenter<IbmMqRequest, IbmMqResponse> buildInstrumenter() {
     InstrumenterBuilder<IbmMqRequest, IbmMqResponse> builder =
         Instrumenter.builder(
-            GlobalOpenTelemetry.get(),
-            "io.opentelemetry.ibmmq",
-            IbmMqRequest::spanName);
+            GlobalOpenTelemetry.get(), "io.opentelemetry.ibmmq", IbmMqRequest::spanName);
 
     return builder
         .addAttributesExtractor(
             MessagingAttributesExtractor.create(
                 new IbmMqMessagingAttributesGetter(), MessageOperation.PUBLISH))
         .addAttributesExtractor(new IbmMqAttributesExtractor())
-        .buildInstrumenter();
+        .buildInstrumenter(SpanKindExtractor.alwaysProducer());
   }
 
   private IbmMqSingletons() {}

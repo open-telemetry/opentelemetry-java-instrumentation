@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.ibmmq;
 
 import static io.opentelemetry.javaagent.instrumentation.ibmmq.IbmMqSingletons.queueManagerIdVirtualField;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.ibm.mq.MQQueueManager;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 
@@ -48,7 +48,7 @@ public class IbmMqConnectionAdvice {
           queueManager.getClass().getMethod("inquire", int[].class, int[].class, byte[].class);
       inquireMethod.invoke(queueManager, selectors, intAttrs, charAttrs);
 
-      String qmId = new String(charAttrs, StandardCharsets.UTF_8).trim();
+      String qmId = new String(charAttrs, UTF_8).trim();
       return qmId.isEmpty() ? null : qmId;
     } catch (Throwable t) {
       return null;

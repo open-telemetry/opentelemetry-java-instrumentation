@@ -1,21 +1,66 @@
 # IBM MQ Instrumentation
 
-This instrumentation enables tracing of IBM MQ message producers and captures the Queue Manager ID for distributed trace correlation.
+Adds IBM MQ's Queue Manager Identifier (QMID) to messaging spans, as the opt-in attribute
+`messaging.ibmmq.queue_manager.id`. Queue manager *names* are not globally unique across hosts or
+customers, so a monitoring backend cannot use them to reliably join an application's spans to the
+queue manager infrastructure it talked to; QMID is IBM's own globally-unique identifier for the queue
+manager, generated at creation time.
 
 ## Supported libraries
 
-- IBM MQ: 9.x+
+- IBM MQ classic base API and javax JMS provider: `com.ibm.mq:com.ibm.mq.allclient` 9.0.4.0+
+- IBM MQ jakarta JMS provider: `com.ibm.mq:com.ibm.mq.jakarta.client` 9.3.0.0+
+
+The javax and jakarta providers are handled by two independent `InstrumentationModule`s
+(`IbmMqInstrumentationModule` / `IbmMqJakartaInstrumentationModule`) sharing the primary
+instrumentation name `ibmmq`, so configuration (including the opt-in flag below) applies to both.
+They are kept separate because the two client jars are mutually exclusive artifacts whose type
+references must never land in the same muzzle reference set.
+
+## Opt-in
+
+The QMID attribute is disabled by default. Enable it with:
+
+```
+-Dotel.instrumentation.ibmmq.experimental-span-attributes=true
+```
 
 ## How it works
 
-The instrumentation hooks into the IBM MQ client to capture the Queue Manager Identifier (QMID) on the first connection and attaches it to all subsequent message send operations. This allows correlating messages across different queue managers in a distributed MQ deployment.
+There are two independent enrichment paths, depending on how the application talks to MQ.
 
-### VirtualField Caching
+### JMS provider (the common case)
 
-The QMID is retrieved via a single `MQINQ` (Queue Manager Inquire) operation with selector `2016` (`MQCA_Q_MGR_IDENTIFIER`) on the first connection and cached in a `VirtualField` to avoid repeated expensive network calls.
+Applications using `javax.jms`/`jakarta.jms` already get a messaging span from the generic JMS
+instrumentation (`messaging.system=jms`). This module additively enriches that span -- it never
+creates, ends, or otherwise alters it:
 
-### Captured Attributes
+- **Producer**: the QMID is read directly off the producer/connection's already-cached, resolved
+  connection property (populated locally by IBM's client during `MQCONN`) -- a local `Map` lookup,
+  not an `MQINQ` round trip -- and added to the producer span.
+- **Asynchronous consumer via `setMessageListener`**: the QMID-bearing consumer is associated with
+  the registered listener at registration time, then re-read fresh and added to the `onMessage`
+  process span on every delivery (never cached across deliveries, since an automatic client
+  reconnect can resolve to a different queue manager).
+- **Consumers driven by `receive()` + direct listener invocation, without ever calling
+  `setMessageListener`** (e.g. Spring's default `JmsListenerContainerFactory`, which polls with
+  `receive()` and hands the message straight to the listener): the QMID is captured at `receive()`
+  exit and carried forward on the returned message, so the `onMessage` process span can still be
+  enriched even though no `setMessageListener` registration ever happened. This never touches the
+  synchronous `receive()` call's own span, which remains unreachable by design -- the generic JMS
+  instrumentation creates and ends that span in one call, never making it current, so no advice can
+  write to it.
 
-- `messaging.ibmmq.queue_manager.id` - The 48-byte Queue Manager Identifier
-- `messaging.destination` - The queue name
-- `messaging.system` - Always set to "ibm_mq"
+### Classic base API (`com.ibm.mq.MQQueueManager`/`MQQueue`)
+
+Applications calling the base API directly (not through a JMS provider) get their own producer span
+from this module, with `messaging.system=ibmmq`. The QMID here genuinely requires an `MQINQ` network
+round trip (selector `2032`, `MQCA_Q_MGR_IDENTIFIER`), so it is read once per connection and cached on
+a `VirtualField` keyed on the `MQQueueManager` instance, rather than re-read per message. In practice,
+JMS applications never exercise this path at all -- IBM's JMS provider does not call these classes
+internally.
+
+## Captured attributes
+
+- `messaging.ibmmq.queue_manager.id` -- the QMID, trimmed (IBM's `MQCA_Q_MGR_IDENTIFIER` is a fixed
+  48-byte, space-padded field). Opt-in; absent unless the flag above is set.

@@ -7,60 +7,44 @@ package io.opentelemetry.javaagent.instrumentation.ibmmq;
 
 import com.ibm.msg.client.jms.JmsReadablePropertyContext;
 import com.ibm.msg.client.wmq.common.CommonConstants;
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.trace.Span;
 import javax.annotation.Nullable;
 
 /**
- * Stamps the IBM MQ Queue Manager Identifier (QMID) onto the span that is already current.
+ * Reads the IBM MQ Queue Manager Identifier (QMID) and adds it to the messaging span created by the
+ * generic JMS instrumentation, for applications on IBM's javax MQ client ({@code
+ * com.ibm.mq.allclient}). See {@link IbmMqJakartaJmsQmid} for the jakarta namespace counterpart,
+ * and {@link IbmMqQmidSupport} for the logic shared between them.
  *
- * <p>This is purely additive enrichment: it never creates, ends or otherwise alters a span, and it
- * never propagates a failure into the application. It exists because queue manager <i>names</i> are
- * not globally unique in federated architectures, whereas the QMID is.
+ * <p>Purely additive: it never creates, ends or otherwise alters a span, and never propagates a
+ * failure into the application. It exists because queue manager <i>names</i> are not globally
+ * unique in federated architectures, whereas the QMID is.
  *
  * <p>The value is read from IBM's own resolved-connection property, which the MQ client populates
  * locally during {@code MQCONN}. {@code JmsPropertyContext} extends {@code Map}, so this is a local
- * lookup rather than an MQI round trip — safe to do on the message path.
+ * lookup rather than an MQI round trip, and is safe on the message path.
+ *
+ * <p>This class must never be referenced from {@link IbmMqJakartaJmsQmid} or any other jakarta
+ * namespace class: its {@link #readQmid} references {@code com.ibm.msg.client.jms.*} types, and
+ * muzzle collects references per class, from the whole class file. A jakarta class referencing this
+ * one would drag that javax reference into the jakarta {@code InstrumentationModule}'s reference
+ * set and fail muzzle validation on every jakarta-only classpath.
  */
 public final class IbmMqJmsQmid {
 
-  // Registered in the OpenTelemetry semantic conventions messaging registry as opt_in.
-  private static final AttributeKey<String> MESSAGING_IBMMQ_QUEUE_MANAGER_ID =
-      AttributeKey.stringKey("messaging.ibmmq.queue_manager.id");
-
-  // opt_in attribute, so it is off unless explicitly enabled.
-  private static final boolean ENABLED =
-      Boolean.getBoolean("otel.instrumentation.ibmmq.experimental-span-attributes");
-
-  /**
-   * Reads the QMID from the supplied IBM MQ JMS object (a producer, consumer or session) and adds
-   * it to the current span. Silently does nothing if the attribute is disabled, the object is not
-   * an IBM MQ JMS object, no QMID is available, or no span is recording.
-   */
-  public static void stamp(Object jmsObject) {
-    if (!ENABLED) {
-      return;
-    }
-    String qmid = readQmid(jmsObject);
-    if (qmid != null) {
-      stampCurrentSpan(qmid);
-    }
-  }
-
   /** True when the opt_in attribute has been explicitly enabled. */
-  static boolean enabled() {
-    return ENABLED;
+  public static boolean enabled() {
+    return IbmMqQmidSupport.enabled();
   }
 
   /**
    * Reads the QMID from an IBM MQ JMS object (connection, session, producer or consumer). Returns
    * null for a non-IBM object, when no QMID is available, or on any failure.
    *
-   * <p>Deliberately not cached: {@code WMQConnection}/{@code WMQSession} refresh the resolved
+   * <p>Deliberately never cached: {@code WMQConnection}/{@code WMQSession} refresh their resolved
    * properties after an automatic client reconnect, which may land on a different queue manager.
    */
   @Nullable
-  static String readQmid(Object jmsObject) {
+  public static String readQmid(Object jmsObject) {
     if (!(jmsObject instanceof JmsReadablePropertyContext)) {
       return null;
     }
@@ -80,16 +64,20 @@ public final class IbmMqJmsQmid {
     }
   }
 
-  /** Adds the QMID to the current span, if one is recording. */
-  static void stampCurrentSpan(String qmid) {
-    try {
-      Span span = Span.current();
-      if (span.isRecording()) {
-        span.setAttribute(MESSAGING_IBMMQ_QUEUE_MANAGER_ID, qmid);
-      }
-    } catch (Throwable t) {
-      // best-effort
+  /** Reads the QMID from the given IBM MQ JMS object and adds it to the current messaging span. */
+  public static void stampMessagingSpan(Object jmsObject) {
+    if (!IbmMqQmidSupport.enabled()) {
+      return;
     }
+    String qmid = readQmid(jmsObject);
+    if (qmid != null) {
+      IbmMqQmidSupport.stampMessagingSpan(qmid);
+    }
+  }
+
+  /** Adds the QMID to the messaging span in the current context, if there is one. */
+  public static void stampMessagingSpan(String qmid) {
+    IbmMqQmidSupport.stampMessagingSpan(qmid);
   }
 
   private IbmMqJmsQmid() {}

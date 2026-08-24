@@ -5,25 +5,57 @@
 
 package io.opentelemetry.javaagent.instrumentation.ibmmq;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+/**
+ * Covers the opt-in default and the safety of the QMID helpers for the javax namespace. See {@code
+ * IbmMqJakartaTest} (in the sibling {@code instrumentation:ibmmq:ibmmq-jakarta:javaagent} module,
+ * which is where the jakarta client and API dependencies live) for the jakarta namespace
+ * equivalent; it cannot live here because this module deliberately has no jakarta dependency.
+ *
+ * <p>NOTE: broker-backed coverage (span kind on classic {@code MQQueue.put}, both {@code put}
+ * overloads with call-depth suppression, JMS producer and asynchronous listener enrichment, the
+ * message-keyed fallback, and re-reading the identifier after a client reconnect) still needs a
+ * testcontainers integration test against a real queue manager. That is not covered here -- see
+ * {@code IbmMqJmsTest} (javax) and {@code IbmMqJakartaJmsTest} (jakarta).
+ */
 class IbmMqTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
-  void testInstrumentationIsLoaded() {
-    assertThat(testing).isNotNull();
+  void attributeIsOptInAndOffUnlessEnabled() {
+    // Runs under both the default test task (flag absent -> false) and testExperimental (flag set
+    // -> true), so the opt_in default is asserted rather than assumed.
+    assertThat(IbmMqJmsQmid.enabled())
+        .isEqualTo(Boolean.getBoolean("otel.instrumentation.ibmmq.experimental-span-attributes"));
+  }
+
+  @Test
+  void readQmidReturnsNullForNonIbmObject() {
+    // Both the JMS and listener paths funnel through this, and it must never throw for a foreign
+    // JMS provider or an unexpected argument.
+    assertThat(IbmMqJmsQmid.readQmid(new Object())).isNull();
+    assertThat(IbmMqJmsQmid.readQmid("not a consumer")).isNull();
+  }
+
+  @Test
+  void enrichmentHelpersNeverThrow() {
+    assertThatCode(
+            () -> {
+              IbmMqJmsQmid.stampMessagingSpan(new Object());
+              IbmMqJmsListenerQmid.associate(new Object(), null);
+              IbmMqJmsListenerQmid.stamp(null);
+              IbmMqJmsListenerQmid.stamp(null, null);
+              IbmMqJmsListenerQmid.captureFromReceive(new Object(), null);
+            })
+        .doesNotThrowAnyException();
   }
 }

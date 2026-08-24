@@ -28,7 +28,6 @@ class IbmMqConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isConstructor(), IbmMqConnectionAdvice.class.getName());
+    transformer.applyAdviceToMethod(isConstructor(), IbmMqConnectionAdvice.class.getName());
   }
 }

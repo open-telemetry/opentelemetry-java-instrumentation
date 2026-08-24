@@ -17,22 +17,20 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * Adds the IBM MQ queue manager identifier to the producer span created by the generic JMS
- * instrumentation.
- *
- * <p>Matching IBM's own {@code com.ibm.msg.client.jms.JmsMessageProducer} interface rather than
- * {@code com.ibm.msg.client.wmq.internal} keeps this on IBM's supported client API surface.
+ * Jakarta namespace counterpart of {@link IbmMqJmsProducerInstrumentation}. Matches IBM's own
+ * {@code com.ibm.msg.client.jakarta.jms.JmsMessageProducer}, the package-renamed but otherwise
+ * identical mirror of the {@code javax.jms} interface of the same simple name.
  */
-public class IbmMqJmsProducerInstrumentation implements TypeInstrumentation {
+public class IbmMqJakartaJmsProducerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("com.ibm.msg.client.jms.JmsMessageProducer");
+    return hasClassesNamed("com.ibm.msg.client.jakarta.jms.JmsMessageProducer");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("com.ibm.msg.client.jms.JmsMessageProducer"));
+    return implementsInterface(named("com.ibm.msg.client.jakarta.jms.JmsMessageProducer"));
   }
 
   @Override
@@ -44,17 +42,14 @@ public class IbmMqJmsProducerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SendAdvice {
 
-    // Stamped on both enter and exit so that the attribute lands regardless of how this module's
-    // advice is ordered relative to the generic JMS instrumentation that opens the span. Both are
-    // no-ops when no span is recording, and setAttribute is idempotent.
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.This Object producer) {
-      IbmMqJmsQmid.stampMessagingSpan(producer);
+      IbmMqJakartaJmsQmid.stampMessagingSpan(producer);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(@Advice.This Object producer) {
-      IbmMqJmsQmid.stampMessagingSpan(producer);
+      IbmMqJakartaJmsQmid.stampMessagingSpan(producer);
     }
   }
 }
