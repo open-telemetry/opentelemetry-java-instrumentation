@@ -68,6 +68,37 @@ abstract class AbstractOpenSearchTest {
         : operation;
   }
 
+  protected void assertMultiNodeClient(OpenSearchClient client) throws IOException {
+    HealthResponse healthResponse = client.cluster().health();
+    assertThat(healthResponse).isNotNull();
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("GET")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+                                equalTo(maybeStable(DB_OPERATION), "GET"),
+                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"),
+                                equalTo(SERVER_ADDRESS, null),
+                                equalTo(SERVER_PORT, null)),
+                    span ->
+                        span.hasName("GET")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, httpHost.getPort()),
+                                equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                equalTo(URL_FULL, httpHost + "/_cluster/health"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                                equalTo(maybeStablePeerService(), "test-peer-service"))));
+  }
+
   @BeforeAll
   void setUp() throws Exception {
     opensearch =
