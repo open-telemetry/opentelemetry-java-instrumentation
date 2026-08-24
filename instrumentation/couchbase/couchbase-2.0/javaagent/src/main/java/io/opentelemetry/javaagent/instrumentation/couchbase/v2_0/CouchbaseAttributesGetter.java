@@ -5,15 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
+import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo.Endpoint;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class CouchbaseAttributesGetter
-    implements DbClientAttributesGetter<CouchbaseRequestInfo, Void> {
+    implements DbClientAttributesGetter<CouchbaseRequestInfo, Void>,
+        AttributesExtractor<CouchbaseRequestInfo, Void> {
 
   @Override
   public String getDbSystemName(CouchbaseRequestInfo couchbaseRequest) {
@@ -57,10 +65,37 @@ final class CouchbaseAttributesGetter
   @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       CouchbaseRequestInfo request, @Nullable Void unused) {
-    SocketAddress address = request.getPeerAddress();
+    Endpoint endpoint = request.getEndpoint();
+    if (endpoint == null) {
+      return null;
+    }
+    SocketAddress address = endpoint.getPeerAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
     }
     return null;
+  }
+
+  @Override
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, CouchbaseRequestInfo request) {}
+
+  @Override
+  public void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      CouchbaseRequestInfo request,
+      @Nullable Void unused,
+      @Nullable Throwable error) {
+    Endpoint endpoint = request.getEndpoint();
+    if (endpoint == null) {
+      return;
+    }
+
+    attributes.put(SERVER_ADDRESS, endpoint.getServerAddress());
+    int serverPort = endpoint.getServerPort();
+    if (serverPort > 0) {
+      attributes.put(SERVER_PORT, serverPort);
+    }
   }
 }
