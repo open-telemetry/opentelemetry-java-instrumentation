@@ -28,25 +28,21 @@ import org.springframework.ai.chat.model.Generation;
 
 public class SpringAiMessageEvents {
   public static void emitPromptEvents(Context context, SpringAiRequest request) {
-    try {
-      for (Message message : request.prompt().getInstructions()) {
-        String eventName = eventName(message.getMessageType());
-        if (eventName == null) {
-          continue;
-        }
-        Map<String, Value<?>> body = new LinkedHashMap<>();
-        if (captureMessageContent()) {
-          String content = message.getText();
-          if (content != null && (!content.isEmpty() || !hasToolContent(message))) {
-            body.put("content", Value.of(content));
-          }
-        }
-        addToolCalls(body, message);
-        addToolResponses(body, message);
-        newEvent(request, eventName).setContext(context).setBody(Value.of(body)).emit();
+    for (Message message : request.prompt().getInstructions()) {
+      String eventName = eventName(message.getMessageType());
+      if (eventName == null) {
+        continue;
       }
-    } catch (Throwable ignored) {
-      // This helper can run outside of Byte Buddy advice for streaming calls.
+      Map<String, Value<?>> body = new LinkedHashMap<>();
+      if (captureMessageContent()) {
+        String content = message.getText();
+        if (content != null && (!content.isEmpty() || !hasToolContent(message))) {
+          body.put("content", Value.of(content));
+        }
+      }
+      addToolCalls(body, message);
+      addToolResponses(body, message);
+      newEvent(request, eventName).setContext(context).setBody(Value.of(body)).emit();
     }
   }
 
@@ -59,32 +55,28 @@ public class SpringAiMessageEvents {
       return;
     }
 
-    try {
-      List<Generation> results = response.getResults();
-      for (int index = 0; index < results.size(); index++) {
-        Generation generation = results.get(index);
-        Map<String, Value<?>> body = new LinkedHashMap<>();
-        String finishReason = finishReason(generation);
-        if (finishReason != null) {
-          body.put("finish_reason", Value.of(finishReason));
-        }
-        body.put("index", Value.of(index));
-        Map<String, Value<?>> message = new LinkedHashMap<>();
-        if (captureMessageContent()) {
-          String content =
-              streamedContents != null && index < streamedContents.size()
-                  ? streamedContents.get(index)
-                  : generation.getOutput().getText();
-          if (content != null) {
-            message.put("content", Value.of(content));
-          }
-        }
-        addToolCalls(message, generation.getOutput());
-        body.put("message", Value.of(message));
-        newEvent(request, "gen_ai.choice").setContext(context).setBody(Value.of(body)).emit();
+    List<Generation> results = response.getResults();
+    for (int index = 0; index < results.size(); index++) {
+      Generation generation = results.get(index);
+      Map<String, Value<?>> body = new LinkedHashMap<>();
+      String finishReason = finishReason(generation);
+      if (finishReason != null) {
+        body.put("finish_reason", Value.of(finishReason));
       }
-    } catch (Throwable ignored) {
-      // This helper can run outside of Byte Buddy advice for streaming calls.
+      body.put("index", Value.of(index));
+      Map<String, Value<?>> message = new LinkedHashMap<>();
+      if (captureMessageContent()) {
+        String content =
+            streamedContents != null && index < streamedContents.size()
+                ? streamedContents.get(index)
+                : generation.getOutput().getText();
+        if (content != null) {
+          message.put("content", Value.of(content));
+        }
+      }
+      addToolCalls(message, generation.getOutput());
+      body.put("message", Value.of(message));
+      newEvent(request, "gen_ai.choice").setContext(context).setBody(Value.of(body)).emit();
     }
   }
 

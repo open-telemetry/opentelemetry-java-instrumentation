@@ -766,6 +766,41 @@ class ChatModelTest {
                 "[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\"line\\n\\\"quoted\\\"\"}]}]"));
   }
 
+  @Test
+  void messageSpanAttributeDropsRelativeUriMedia() {
+    Prompt prompt =
+        new Prompt(
+            singletonList(
+                UserMessage.builder()
+                    .text(PROMPT)
+                    .media(
+                        Media.builder()
+                            .mimeType(Media.Format.IMAGE_PNG)
+                            .data(URI.create("/relative/path.png"))
+                            .build())
+                    .build()));
+
+    testing.runWithSpan("parent", () -> chatModel.call(prompt));
+
+    String inputMessages =
+        testing
+            .waitForTraces(1)
+            .get(0)
+            .get(1)
+            .getAttributes()
+            .get(stringKey("gen_ai.input.messages"));
+    if (!EXPERIMENTAL_ATTRIBUTES) {
+      assertThat(inputMessages).isNull();
+      return;
+    }
+
+    assertThat(inputMessages)
+        .contains("\"type\":\"media\"")
+        .contains("\"mime_type\":\"image/png\"")
+        .contains("\"modality\":\"image\"")
+        .doesNotContain("\"type\":\"uri\"");
+  }
+
   private static void assertTraces(String provider) {
     testing.waitAndAssertTraces(
         trace ->

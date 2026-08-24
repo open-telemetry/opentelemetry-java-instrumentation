@@ -38,15 +38,11 @@ public class SpringAiSingletons {
           .get("capture_message_content_as_span_attributes/development")
           .getBoolean("enabled", false);
   private static final int messageContentSpanAttributeMaxLength =
-      (int)
-          Math.min(
-              Integer.MAX_VALUE,
-              Math.max(
-                  0,
-                  DeclarativeConfigUtil.getInstrumentationConfig(
-                          GlobalOpenTelemetry.get(), "spring_ai")
-                      .get("message_content_span_attribute/development")
-                      .getLong("max_length", DEFAULT_MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH)));
+      Math.max(
+          0,
+          DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "spring_ai")
+              .get("message_content_span_attribute/development")
+              .getInt("max_length", DEFAULT_MESSAGE_CONTENT_SPAN_ATTRIBUTE_MAX_LENGTH));
 
   static {
     SpringAiAttributesGetter getter = new SpringAiAttributesGetter();
@@ -56,7 +52,6 @@ public class SpringAiSingletons {
                 INSTRUMENTATION_NAME,
                 GenAiSpanNameExtractor.create(getter))
             .addAttributesExtractor(GenAiAttributesExtractor.create(getter))
-            .addAttributesExtractor(new SpringAiErrorAttributesExtractor())
             .addOperationMetrics(GenAiClientMetrics.get());
     setGenAiClientExceptionEventExtractor(builder);
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());

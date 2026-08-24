@@ -119,8 +119,12 @@ public class SpringAiStreamTracing {
       // Telemetry state must not affect the instrumented publisher.
     }
 
-    SpringAiMessageAttributes.setOutputMessages(context, response, streamedContents);
-    SpringAiMessageEvents.emitResponseEvents(context, request, response, streamedContents);
+    try {
+      SpringAiMessageAttributes.setOutputMessages(context, response, streamedContents);
+      SpringAiMessageEvents.emitResponseEvents(context, request, response, streamedContents);
+    } catch (Throwable ignored) {
+      // best effort
+    }
     try {
       instrumenter.end(context, request, response, error);
     } catch (Throwable ignored) {
@@ -461,13 +465,7 @@ public class SpringAiStreamTracing {
         truncated = true;
         return;
       }
-      int end = Math.min(value.length(), remaining);
-      if (end < value.length()
-          && end > 0
-          && Character.isHighSurrogate(value.charAt(end - 1))
-          && Character.isLowSurrogate(value.charAt(end))) {
-        end--;
-      }
+      int end = SpringAiStringUtil.safeEndIndex(value, remaining);
       content.append(value, 0, end);
       truncated = end < value.length();
     }

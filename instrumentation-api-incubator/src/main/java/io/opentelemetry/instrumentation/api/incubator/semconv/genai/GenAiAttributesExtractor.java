@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.doubleKey;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -99,5 +100,8 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(GEN_AI_RESPONSE_MODEL, getter.getResponseModel(request, response));
     attributes.put(GEN_AI_USAGE_INPUT_TOKENS, getter.getUsageInputTokens(request, response));
     attributes.put(GEN_AI_USAGE_OUTPUT_TOKENS, getter.getUsageOutputTokens(request, response));
+    if (error != null) {
+      attributes.put(ERROR_TYPE, error.getClass().getName());
+    }
   }
 }

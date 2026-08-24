@@ -8,7 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.springai.v1_0;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.captureMessageContentAsSpanAttributes;
 import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiSingletons.messageContentSpanAttributeMaxLength;
+import static io.opentelemetry.javaagent.instrumentation.springai.v1_0.SpringAiStringUtil.truncate;
 
+import com.fasterxml.jackson.core.io.JsonStringEncoder;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -36,15 +38,11 @@ public class SpringAiMessageAttributes {
     if (!captureMessageContentAsSpanAttributes()) {
       return;
     }
-    try {
-      Span.fromContext(context)
-          .setAttribute(
-              GEN_AI_INPUT_MESSAGES,
-              serializeMessages(
-                  request.prompt().getInstructions(), messageContentSpanAttributeMaxLength()));
-    } catch (Throwable ignored) {
-      // This helper can run outside of Byte Buddy advice for streaming calls.
-    }
+    Span.fromContext(context)
+        .setAttribute(
+            GEN_AI_INPUT_MESSAGES,
+            serializeMessages(
+                request.prompt().getInstructions(), messageContentSpanAttributeMaxLength()));
   }
 
   public static void setOutputMessages(
@@ -52,15 +50,10 @@ public class SpringAiMessageAttributes {
     if (!captureMessageContentAsSpanAttributes() || response == null) {
       return;
     }
-    try {
-      Span.fromContext(context)
-          .setAttribute(
-              GEN_AI_OUTPUT_MESSAGES,
-              serializeResponses(
-                  response, streamedContents, messageContentSpanAttributeMaxLength()));
-    } catch (Throwable ignored) {
-      // This helper can run outside of Byte Buddy advice for streaming calls.
-    }
+    Span.fromContext(context)
+        .setAttribute(
+            GEN_AI_OUTPUT_MESSAGES,
+            serializeResponses(response, streamedContents, messageContentSpanAttributeMaxLength()));
   }
 
   static String serializeMessages(List<Message> messages, int maxContentLength) {
@@ -254,18 +247,16 @@ public class SpringAiMessageAttributes {
   @Nullable
   private static String uriString(Object data) {
     if (data instanceof URI uri) {
-      return uri.toString();
+      return uri.isAbsolute() ? uri.toString() : null;
     }
-    if (data instanceof String string) {
-      try {
-        if (URI.create(string).isAbsolute()) {
-          return string;
-        }
-      } catch (IllegalArgumentException ignored) {
-        // Not a URI string.
-      }
+    if (!(data instanceof String string)) {
+      return null;
     }
-    return null;
+    try {
+      return URI.create(string).isAbsolute() ? string : null;
+    } catch (IllegalArgumentException ignored) {
+      return null;
+    }
   }
 
   private static void appendMediaMetadata(StringBuilder result, @Nullable MimeType mimeType) {
@@ -308,49 +299,9 @@ public class SpringAiMessageAttributes {
     return generation.getMetadata() == null ? null : generation.getMetadata().getFinishReason();
   }
 
-  @Nullable
-  private static String truncate(@Nullable String content, int maxContentLength) {
-    if (content == null || content.length() <= maxContentLength) {
-      return content;
-    }
-    int end = maxContentLength;
-    if (end > 0
-        && end < content.length()
-        && Character.isHighSurrogate(content.charAt(end - 1))
-        && Character.isLowSurrogate(content.charAt(end))) {
-      end--;
-    }
-    return content.substring(0, end);
-  }
-
   private static void appendJsonString(StringBuilder result, @Nullable String value) {
     result.append('"');
-    String text = value == null ? "" : value;
-    for (int index = 0; index < text.length(); index++) {
-      char character = text.charAt(index);
-      if (character == '"' || character == '\\') {
-        result.append('\\').append(character);
-      } else if (character == '\b') {
-        result.append("\\b");
-      } else if (character == '\f') {
-        result.append("\\f");
-      } else if (character == '\n') {
-        result.append("\\n");
-      } else if (character == '\r') {
-        result.append("\\r");
-      } else if (character == '\t') {
-        result.append("\\t");
-      } else if (character < 0x20) {
-        result.append("\\u");
-        String hex = Integer.toHexString(character);
-        for (int zeroes = hex.length(); zeroes < 4; zeroes++) {
-          result.append('0');
-        }
-        result.append(hex);
-      } else {
-        result.append(character);
-      }
-    }
+    JsonStringEncoder.getInstance().quoteAsString(value == null ? "" : value, result);
     result.append('"');
   }
 
