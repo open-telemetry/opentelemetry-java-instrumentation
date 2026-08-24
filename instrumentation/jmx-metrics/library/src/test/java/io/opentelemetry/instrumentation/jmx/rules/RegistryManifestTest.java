@@ -57,7 +57,7 @@ class RegistryManifestTest {
     @SuppressWarnings("unchecked")
     List<Map<String, Object>> dependencies =
         (List<Map<String, Object>>) registryManifest.get("dependencies");
-    assertThat(dependencies).isNotNull().isNotEmpty();
+    assertThat(dependencies).isNotEmpty();
 
     Map<String, Object> otelDep =
         dependencies.stream().filter(d -> "otel".equals(d.get("name"))).findFirst().orElse(null);

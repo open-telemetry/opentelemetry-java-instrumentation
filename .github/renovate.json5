@@ -45,11 +45,13 @@
       groupName: 'weekly update',
     },
     {
-      // keep the Gradle semconv dep and manifest.yaml updates in the same group
+      // keep the Gradle semconv dep and manifest.yaml updates in the same group,
+      // without the weekly schedule inherited from the custom.regex rule above
       matchPackageNames: [
         'io.opentelemetry.semconv:opentelemetry-semconv',
       ],
       groupName: 'opentelemetry semconv',
+      schedule: [],
     },
     {
       // gh-aw updates need a dedicated branch so CI can regenerate their workflow lockfiles
