@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
@@ -100,7 +101,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("ClusterManager.hasBucket")
+                    span.hasName(spanName("ClusterManager.hasBucket"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -109,6 +110,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(SERVER_ADDRESS, serverAddress()),
                             satisfies(
                                 stringKey("couchbase.local.address"), experimentalAttribute()))));
   }
@@ -142,12 +144,13 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("Cluster.openBucket")
+                    span.hasName(spanName("Cluster.openBucket"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"))),
+                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
+                            equalTo(SERVER_ADDRESS, serverAddress()))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -165,6 +168,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(SERVER_ADDRESS, serverAddress()),
                             satisfies(
                                 stringKey("couchbase.local.address"), experimentalAttribute()),
                             satisfies(
@@ -183,6 +187,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(SERVER_ADDRESS, serverAddress()),
                             satisfies(
                                 stringKey("couchbase.local.address"), experimentalAttribute()),
                             satisfies(
@@ -207,12 +212,13 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("Cluster.openBucket")
+                    span.hasName(spanName("Cluster.openBucket"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), COUCHBASE),
-                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"))),
+                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"),
+                            equalTo(SERVER_ADDRESS, serverAddress()))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -233,6 +239,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             equalTo(NETWORK_TYPE, networkType()),
                             equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
                             satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                            equalTo(SERVER_ADDRESS, serverAddress()),
                             satisfies(
                                 stringKey("couchbase.local.address"), experimentalAttribute()),
                             satisfies(

@@ -9,9 +9,12 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -50,6 +53,7 @@ class CouchbaseClient32Test {
   private static final Logger logger = LoggerFactory.getLogger("couchbase-container");
 
   private static CouchbaseContainer couchbase;
+  private static String connectionString;
   private static Cluster cluster;
   private static Collection collection;
 
@@ -64,10 +68,9 @@ class CouchbaseClient32Test {
             .withStartupTimeout(Duration.ofMinutes(2));
     couchbase.start();
     cleanup.deferAfterAll(couchbase::stop);
+    connectionString = couchbase.getConnectionString();
 
-    cluster =
-        Cluster.connect(
-            couchbase.getConnectionString(), couchbase.getUsername(), couchbase.getPassword());
+    cluster = Cluster.connect(connectionString, couchbase.getUsername(), couchbase.getPassword());
     cleanup.deferAfterAll(cluster::disconnect);
     Bucket bucket = cluster.bucket("test");
     collection = bucket.defaultCollection();
@@ -99,9 +102,26 @@ class CouchbaseClient32Test {
                       equalTo(stringKey("db.couchbase.document_id"), oldOrExperimental("id")),
                       equalTo(stringKey("db.couchbase.scope"), oldOrExperimental("_default")),
                       equalTo(longKey("db.couchbase.retries"), oldOrExperimental(0L)),
-                      equalTo(stringKey("db.couchbase.service"), oldOrExperimental("kv")));
+                      equalTo(stringKey("db.couchbase.service"), oldOrExperimental("kv")),
+                      equalTo(SERVER_ADDRESS, serverAddress()),
+                      equalTo(SERVER_PORT, serverPort()));
                 },
                 span -> span.hasName("dispatch_to_server")));
+  }
+
+  private static String serverAddress() {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    String seed = connectionString.substring(connectionString.indexOf("://") + 3);
+    return seed.substring(0, seed.lastIndexOf(':'));
+  }
+
+  private static Long serverPort() {
+    if (!emitStableDatabaseSemconv()) {
+      return null;
+    }
+    return Long.valueOf(connectionString.substring(connectionString.lastIndexOf(':') + 1));
   }
 
   private static <T> T oldOrExperimental(T value) {

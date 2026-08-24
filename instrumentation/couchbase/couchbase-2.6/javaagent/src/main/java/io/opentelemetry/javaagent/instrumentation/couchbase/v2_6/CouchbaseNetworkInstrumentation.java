@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import com.couchbase.client.core.endpoint.AbstractEndpoint;
 import com.couchbase.client.core.message.CouchbaseRequest;
 import com.couchbase.client.deps.io.netty.channel.ChannelHandlerContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -45,13 +46,17 @@ class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void addNetworkTagsToSpan(
+        @Advice.FieldValue("endpoint") AbstractEndpoint endpoint,
         @Advice.FieldValue("localSocket") String localSocket,
         @Advice.Argument(0) ChannelHandlerContext channelHandlerContext,
         @Advice.Argument(1) CouchbaseRequest request) {
 
       CouchbaseRequestInfo requestInfo = COUCHBASE_REQUEST_INFO.get(request);
       if (requestInfo != null) {
-        requestInfo.setPeerAddress(channelHandlerContext.channel().remoteAddress());
+        // the socket and the address the driver opened this endpoint to describe the same node, and
+        // only stay consistent with each other when they are recorded together
+        requestInfo.setNode(
+            channelHandlerContext.channel().remoteAddress(), endpoint.remoteAddress());
         requestInfo.setLocalAddress(localSocket);
       }
     }

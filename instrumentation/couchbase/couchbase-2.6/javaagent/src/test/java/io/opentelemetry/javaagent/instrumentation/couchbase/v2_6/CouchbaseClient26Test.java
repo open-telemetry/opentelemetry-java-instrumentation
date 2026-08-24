@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.couchbase.client.java.CouchbaseCluster;
@@ -50,6 +51,7 @@ class CouchbaseClient26Test extends AbstractCouchbaseClientTest {
         DB_SYSTEM_NAME,
         DB_OPERATION_NAME,
         NETWORK_PEER_ADDRESS,
-        NETWORK_PEER_PORT);
+        NETWORK_PEER_PORT,
+        SERVER_ADDRESS);
   }
 }

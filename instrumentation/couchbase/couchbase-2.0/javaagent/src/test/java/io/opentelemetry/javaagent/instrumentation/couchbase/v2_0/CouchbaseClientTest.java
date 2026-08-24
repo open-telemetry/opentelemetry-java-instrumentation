@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.couchbase.client.java.CouchbaseCluster;
@@ -37,6 +38,10 @@ class CouchbaseClientTest extends AbstractCouchbaseClientTest {
     assertThat(hasBucket).isTrue();
 
     assertDurationMetric(
-        testing, "io.opentelemetry.couchbase-2.0", DB_SYSTEM_NAME, DB_OPERATION_NAME);
+        testing,
+        "io.opentelemetry.couchbase-2.0",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        SERVER_ADDRESS);
   }
 }

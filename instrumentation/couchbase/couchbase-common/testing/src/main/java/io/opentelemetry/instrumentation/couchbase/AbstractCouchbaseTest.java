@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.couchbase;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.BucketSettings;
@@ -124,6 +125,23 @@ public abstract class AbstractCouchbaseTest {
 
   protected LongAssertConsumer networkPeerPort() {
     return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
+  }
+
+  /**
+   * The target the tests configure their clusters with, which is a bare host with no port. Every
+   * Couchbase service has a default port of its own, so a seed the connection string leaves
+   * unqualified carries no port, whichever service an operation reaches.
+   */
+  protected String serverAddress() {
+    return emitStableDatabaseSemconv() ? "127.0.0.1" : null;
+  }
+
+  /**
+   * The name of a span whose operation names no bucket, which the stable conventions round out with
+   * the server the client was configured with because there is nothing else to name.
+   */
+  protected String spanName(String operation) {
+    return emitStableDatabaseSemconv() ? operation + " " + serverAddress() : operation;
   }
 
   protected StringAssertConsumer experimentalAttribute() {
