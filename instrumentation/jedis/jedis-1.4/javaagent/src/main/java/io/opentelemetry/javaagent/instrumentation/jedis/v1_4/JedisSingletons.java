@@ -11,15 +11,26 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import javax.annotation.Nullable;
+import redis.clients.jedis.Connection;
+import redis.clients.util.Sharded;
 
-class JedisSingletons {
+public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-1.4";
 
   private static final Instrumenter<JedisRequest, Void> instrumenter;
+
+  private static final VirtualField<Sharded<?, ?>, RedisServerTarget> SHARDED_TARGET =
+      VirtualField.find(Sharded.class, RedisServerTarget.class);
+
+  private static final VirtualField<Connection, RedisServerTarget> CONNECTION_TARGET =
+      VirtualField.find(Connection.class, RedisServerTarget.class);
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
@@ -41,6 +52,27 @@ class JedisSingletons {
 
   static Instrumenter<JedisRequest, Void> instrumenter() {
     return instrumenter;
+  }
+
+  public static void setShardedTarget(Sharded<?, ?> sharded, @Nullable RedisServerTarget target) {
+    SHARDED_TARGET.set(sharded, target);
+  }
+
+  @Nullable
+  public static RedisServerTarget shardedTarget(Sharded<?, ?> sharded) {
+    return SHARDED_TARGET.get(sharded);
+  }
+
+  public static void setConnectionTarget(
+      @Nullable Connection connection, RedisServerTarget target) {
+    if (connection != null) {
+      CONNECTION_TARGET.set(connection, target);
+    }
+  }
+
+  @Nullable
+  static RedisServerTarget connectionTarget(Connection connection) {
+    return CONNECTION_TARGET.get(connection);
   }
 
   private JedisSingletons() {}

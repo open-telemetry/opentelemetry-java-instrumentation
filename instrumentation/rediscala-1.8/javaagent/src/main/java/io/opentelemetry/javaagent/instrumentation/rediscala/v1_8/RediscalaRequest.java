@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
 import static java.util.Arrays.asList;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -37,15 +38,20 @@ class RediscalaRequest {
   @Nullable private final Long batchSize;
   @Nullable private final String host;
   @Nullable private final Integer port;
+  @Nullable private final RedisServerTarget serverTarget;
 
   static RediscalaRequest create(
-      RedisCommand<?, ?> command, @Nullable String host, @Nullable Integer port) {
+      RedisCommand<?, ?> command,
+      @Nullable String host,
+      @Nullable Integer port,
+      @Nullable RedisServerTarget serverTarget) {
     return new RediscalaRequest(
         operationName(command, /* stable= */ false),
         operationName(command, /* stable= */ true),
         null,
         host,
-        port);
+        port,
+        serverTarget);
   }
 
   static RediscalaRequest createTransaction(
@@ -55,7 +61,8 @@ class RediscalaRequest {
         transactionOperationName(operations, /* stable= */ true),
         batchSize(operations),
         host,
-        port);
+        port,
+        host == null ? null : RedisServerTarget.ofHostAndPort(host, port == null ? -1 : port));
   }
 
   private RediscalaRequest(
@@ -63,12 +70,14 @@ class RediscalaRequest {
       String stableOperationName,
       @Nullable Long batchSize,
       @Nullable String host,
-      @Nullable Integer port) {
+      @Nullable Integer port,
+      @Nullable RedisServerTarget serverTarget) {
     this.operationName = operationName;
     this.stableOperationName = stableOperationName;
     this.batchSize = batchSize;
     this.host = host;
     this.port = port;
+    this.serverTarget = serverTarget;
   }
 
   String getOperationName() {
@@ -92,6 +101,11 @@ class RediscalaRequest {
   @Nullable
   Integer getPort() {
     return port;
+  }
+
+  @Nullable
+  RedisServerTarget getServerTarget() {
+    return serverTarget;
   }
 
   private static String transactionOperationName(

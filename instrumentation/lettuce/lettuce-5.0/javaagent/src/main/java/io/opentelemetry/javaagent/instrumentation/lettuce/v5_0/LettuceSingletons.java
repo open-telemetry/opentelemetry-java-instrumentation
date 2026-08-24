@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -53,6 +54,12 @@ public class LettuceSingletons {
 
   public static final VirtualField<RedisCommand<?, ?, ?>, Integer> COMMAND_DATABASE_INDEX =
       VirtualField.find(RedisCommand.class, Integer.class);
+
+  public static final VirtualField<DefaultEndpoint, RedisServerTarget> ENDPOINT_TARGET =
+      VirtualField.find(DefaultEndpoint.class, RedisServerTarget.class);
+
+  public static final VirtualField<RedisCommand<?, ?, ?>, RedisServerTarget> COMMAND_TARGET =
+      VirtualField.find(RedisCommand.class, RedisServerTarget.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
@@ -136,6 +143,7 @@ public class LettuceSingletons {
         DefaultEndpoint endpoint = (DefaultEndpoint) channelWriter;
         COMMAND_ADDRESS.set(command, ENDPOINT_ADDRESS.get(endpoint));
         COMMAND_DATABASE_INDEX.set(command, ENDPOINT_DATABASE_INDEX.get(endpoint));
+        COMMAND_TARGET.set(command, ENDPOINT_TARGET.get(endpoint));
       }
     }
   }

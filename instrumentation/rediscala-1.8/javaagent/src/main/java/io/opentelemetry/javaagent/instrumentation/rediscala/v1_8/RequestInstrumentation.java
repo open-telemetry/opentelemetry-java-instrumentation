@@ -85,7 +85,8 @@ class RequestInstrumentation implements TypeInstrumentation {
           host = client.host();
           port = client.port();
         }
-        RediscalaRequest request = RediscalaRequest.create(cmd, host, port);
+        RediscalaRequest request =
+            RediscalaRequest.create(cmd, host, port, RediscalaServerTargets.of(action));
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;

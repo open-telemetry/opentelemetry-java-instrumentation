@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -56,6 +57,12 @@ public class LettuceSingletons {
 
   public static final VirtualField<RedisCommand<?, ?, ?>, Integer> COMMAND_DATABASE_INDEX =
       VirtualField.find(RedisCommand.class, Integer.class);
+
+  public static final VirtualField<RedisChannelHandler<?, ?>, RedisServerTarget> CONNECTION_TARGET =
+      VirtualField.find(RedisChannelHandler.class, RedisServerTarget.class);
+
+  public static final VirtualField<RedisCommand<?, ?, ?>, RedisServerTarget> COMMAND_TARGET =
+      VirtualField.find(RedisCommand.class, RedisServerTarget.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
@@ -134,12 +141,20 @@ public class LettuceSingletons {
       RedisCommand<?, ?, ?> command, StatefulConnection<?, ?> connection) {
     COMMAND_ADDRESS.set(command, serverAddress(connection));
     COMMAND_DATABASE_INDEX.set(command, databaseIndex(connection));
+    COMMAND_TARGET.set(command, serverTarget(connection));
   }
 
   @Nullable
   static InetSocketAddress serverAddress(StatefulConnection<?, ?> connection) {
     return connection instanceof RedisChannelHandler
         ? CONNECTION_ADDRESS.get((RedisChannelHandler<?, ?>) connection)
+        : null;
+  }
+
+  @Nullable
+  static RedisServerTarget serverTarget(StatefulConnection<?, ?> connection) {
+    return connection instanceof RedisChannelHandler
+        ? CONNECTION_TARGET.get((RedisChannelHandler<?, ?>) connection)
         : null;
   }
 
