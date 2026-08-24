@@ -40,8 +40,8 @@ class GeodeServerAddress {
     // for the lifetime of the pool, and servers that the pool discovers through locators are not
     // part of it, so the result is stable for a given region.
     //
-    // On Geode 2.x this call re-creates each InetSocketAddress from its host name, which resolves
-    // the name, so it must not run on every operation.
+    // Geode 2.x Pool.getServers() re-creates each InetSocketAddress from its host name, which
+    // resolves the name. The per-region cache in get() avoids doing this on every operation.
     List<InetSocketAddress> servers = pool.getServers();
     if (servers.size() != 1) {
       return NONE;
