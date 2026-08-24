@@ -31,7 +31,7 @@ class OpenSearchRestTest extends AbstractOpenSearchRestTest {
   }
 
   @Override
-  protected RestClient buildRestClient() throws Exception {
+  protected RestClient buildRestClient(String hostAddress) throws Exception {
     CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
     credentialsProvider.setCredentials(
         AuthScope.ANY,
@@ -40,7 +40,7 @@ class OpenSearchRestTest extends AbstractOpenSearchRestTest {
     SSLContext sslContext =
         SSLContextBuilder.create().loadTrustMaterial(null, new TrustAllStrategy()).build();
 
-    HttpHost httpHost = HttpHost.create(opensearch.getHttpHostAddress());
+    HttpHost httpHost = HttpHost.create(hostAddress);
     return RestClient.builder(httpHost)
         .setHttpClientConfigCallback(
             httpClientBuilder ->

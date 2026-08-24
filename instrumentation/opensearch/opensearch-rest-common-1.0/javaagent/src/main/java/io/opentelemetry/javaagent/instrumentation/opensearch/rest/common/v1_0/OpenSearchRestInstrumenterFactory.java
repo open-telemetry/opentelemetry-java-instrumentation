@@ -27,6 +27,7 @@ public class OpenSearchRestInstrumenterFactory {
                 instrumentationName,
                 DbClientSpanNameExtractor.create(dbClientAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
+            .addAttributesExtractor(dbClientAttributesGetter)
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());

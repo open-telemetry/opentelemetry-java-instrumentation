@@ -177,13 +177,15 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("GET")
+                        span.hasName(databaseSpanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health")),
+                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, httpHost.getPort())),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)

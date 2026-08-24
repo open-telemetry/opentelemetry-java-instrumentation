@@ -72,7 +72,10 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
 
     @Nullable
     public static AdviceScope start(
-        Object request, Endpoint<Object, Object, Object> endpoint, JsonpMapper jsonpMapper) {
+        OpenSearchTransport transport,
+        Object request,
+        Endpoint<Object, Object, Object> endpoint,
+        JsonpMapper jsonpMapper) {
       Context parentContext = Context.current();
 
       String queryBody = null;
@@ -82,9 +85,14 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
         queryBody = OpenSearchBodyExtractor.extractSanitized(jsonpMapper, request);
       }
 
+      OpenSearchServerAddress server = OpenSearchServerAddress.get(transport);
       OpenSearchRequest otelRequest =
           OpenSearchRequest.create(
-              endpoint.method(request), endpoint.requestUrl(request), queryBody);
+              endpoint.method(request),
+              endpoint.requestUrl(request),
+              queryBody,
+              server == null ? null : server.address(),
+              server == null ? null : server.port());
 
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return null;
@@ -138,7 +146,8 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
         @Advice.This OpenSearchTransport openSearchTransport,
         @Advice.Argument(0) Object request,
         @Advice.Argument(1) Endpoint<Object, Object, Object> endpoint) {
-      return AdviceScope.start(request, endpoint, openSearchTransport.jsonpMapper());
+      return AdviceScope.start(
+          openSearchTransport, request, endpoint, openSearchTransport.jsonpMapper());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -160,7 +169,8 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
         @Advice.This OpenSearchTransport openSearchTransport,
         @Advice.Argument(0) Object request,
         @Advice.Argument(1) Endpoint<Object, Object, Object> endpoint) {
-      return AdviceScope.start(request, endpoint, openSearchTransport.jsonpMapper());
+      return AdviceScope.start(
+          openSearchTransport, request, endpoint, openSearchTransport.jsonpMapper());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

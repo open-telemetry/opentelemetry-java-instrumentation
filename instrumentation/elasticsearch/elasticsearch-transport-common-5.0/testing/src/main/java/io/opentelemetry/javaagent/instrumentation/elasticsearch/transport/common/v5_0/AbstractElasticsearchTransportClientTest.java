@@ -19,6 +19,8 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ELASTICSEARCH;
@@ -82,13 +84,15 @@ public abstract class AbstractElasticsearchTransportClientTest
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("ClusterHealthAction")
+                    span.hasName(databaseSpanName("ClusterHealthAction"))
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             addNetworkTypeAttribute(
                                 equalTo(NETWORK_PEER_ADDRESS, getAddress()),
                                 equalTo(NETWORK_PEER_PORT, getPort()),
+                                equalTo(SERVER_ADDRESS, getAddress()),
+                                equalTo(SERVER_PORT, getPort()),
                                 equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "ClusterHealthAction"),
                                 equalTo(
@@ -109,6 +113,12 @@ public abstract class AbstractElasticsearchTransportClientTest
       result.add(satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6")));
     }
     return result;
+  }
+
+  protected String databaseSpanName(String operation) {
+    return emitStableDatabaseSemconv()
+        ? operation + " " + getAddress() + ":" + getPort()
+        : operation;
   }
 
   private Stream<Arguments> errorArguments() {
@@ -218,17 +228,22 @@ public abstract class AbstractElasticsearchTransportClientTest
     // PutMappingAction and IndexAction run in separate threads so their order can vary
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName(
-            "CreateIndexAction", getPutMappingActionName(), "IndexAction", "GetAction"),
+            databaseSpanName("CreateIndexAction"),
+            getPutMappingActionName(),
+            databaseSpanName("IndexAction"),
+            databaseSpanName("GetAction")),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("CreateIndexAction")
+                    span.hasName(databaseSpanName("CreateIndexAction"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             addNetworkTypeAttribute(
                                 equalTo(NETWORK_PEER_ADDRESS, getAddress()),
                                 equalTo(NETWORK_PEER_PORT, getPort()),
+                                equalTo(SERVER_ADDRESS, getAddress()),
+                                equalTo(SERVER_PORT, getPort()),
                                 equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "CreateIndexAction"),
                                 equalTo(
@@ -258,13 +273,15 @@ public abstract class AbstractElasticsearchTransportClientTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("IndexAction")
+                    span.hasName(databaseSpanName("IndexAction"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             addNetworkTypeAttribute(
                                 equalTo(NETWORK_PEER_ADDRESS, getAddress()),
                                 equalTo(NETWORK_PEER_PORT, getPort()),
+                                equalTo(SERVER_ADDRESS, getAddress()),
+                                equalTo(SERVER_PORT, getPort()),
                                 equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "IndexAction"),
                                 equalTo(
@@ -296,7 +313,7 @@ public abstract class AbstractElasticsearchTransportClientTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GetAction")
+                    span.hasName(databaseSpanName("GetAction"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -304,7 +321,7 @@ public abstract class AbstractElasticsearchTransportClientTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GetAction")
+                    span.hasName(databaseSpanName("GetAction"))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -317,6 +334,8 @@ public abstract class AbstractElasticsearchTransportClientTest
         addNetworkTypeAttribute(
             equalTo(NETWORK_PEER_ADDRESS, getAddress()),
             equalTo(NETWORK_PEER_PORT, getPort()),
+            equalTo(SERVER_ADDRESS, getAddress()),
+            equalTo(SERVER_PORT, getPort()),
             equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH),
             equalTo(maybeStable(DB_OPERATION), "GetAction"),
             equalTo(stringKey("elasticsearch.action"), experimental("GetAction")),

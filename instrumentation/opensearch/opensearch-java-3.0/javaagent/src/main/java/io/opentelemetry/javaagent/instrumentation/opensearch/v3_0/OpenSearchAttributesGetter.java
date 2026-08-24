@@ -57,4 +57,16 @@ final class OpenSearchAttributesGetter
     }
     return null;
   }
+
+  @Override
+  @Nullable
+  public String getServerAddress(OpenSearchRequest request) {
+    return request.getServerAddress();
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(OpenSearchRequest request) {
+    return request.getServerPort();
+  }
 }

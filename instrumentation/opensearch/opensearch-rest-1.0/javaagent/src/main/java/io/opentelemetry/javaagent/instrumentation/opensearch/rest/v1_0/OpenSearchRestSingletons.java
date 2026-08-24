@@ -35,6 +35,16 @@ class OpenSearchRestSingletons {
       }
 
       @Override
+      public String getServerAddress() {
+        return response.getHost().getHostName();
+      }
+
+      @Override
+      public int getServerPort() {
+        return response.getHost().getPort();
+      }
+
+      @Override
       @Nullable
       public InetAddress getAddress() {
         return response.getHost().getAddress();
