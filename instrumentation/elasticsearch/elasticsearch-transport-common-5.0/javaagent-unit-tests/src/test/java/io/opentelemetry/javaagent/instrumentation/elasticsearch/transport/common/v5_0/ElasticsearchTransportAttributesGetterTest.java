@@ -58,9 +58,8 @@ class ElasticsearchTransportAttributesGetterTest {
         new TransportException("transport error", new IOException("connection refused"));
 
     // TransportException does not implement ElasticsearchWrapperException, so Elasticsearch does
-    // not
-    // treat it as a wrapper and unwrapCause() leaves it alone. The transport failure itself is the
-    // most specific description of what went wrong here, so it is reported as-is.
+    // not treat it as a wrapper and unwrapCause() leaves it alone. The transport failure itself is
+    // the most specific description of what went wrong here, so it is reported as-is.
     assertThat(extractEndAttributes(error).get(ERROR_TYPE))
         .isEqualTo(emitStableDatabaseSemconv() ? TransportException.class.getName() : null);
   }
