@@ -24,6 +24,14 @@
   `network.peer.*` is left unset because reading the proxy socket would resolve it on every span.
   Sessions using driver 3.x keep reporting the coordinator, because that driver never exposes the
   contact points it was configured with.
+- MongoDB spans record the target their client was configured with instead of the server that
+  answered a command, again only when stable database semantic conventions are enabled. A client
+  configured with several seeds carries all of them in `server.address`, in the driver's own
+  `mongodb://host:port,host:port` syntax, and omits `server.port`; a client configured with an SRV
+  host is named by that host. Credentials, the selected database and connection string options are
+  never part of the target, and the required replica set name is left out because it names a set of
+  servers rather than an address. Clients using a driver before 3.10 resolve an SRV host into seeds
+  while parsing their connection string, so they report the hosts it resolved to.
 
 ## Version 2.31.0 (2026-08-20)
 
