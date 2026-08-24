@@ -47,12 +47,13 @@ jobs:
               ;;
           esac
 
-  documentation-notification:
+  documentation-drift-notification:
     permissions:
       contents: read
       issues: write
     needs:
       - crawl
+    if: ${{ needs.crawl.result == 'success' }}
     uses: ./.github/workflows/reusable-workflow-notification.yml
     with:
       success: ${{ needs.crawl.outputs.success == 'true' }}
