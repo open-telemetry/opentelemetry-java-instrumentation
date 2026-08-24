@@ -26,6 +26,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -41,8 +42,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import net.spy.memcached.CASResponse;
@@ -263,8 +265,10 @@ class SpymemcachedTest {
           new Thread(
               () -> {
                 try {
-                  future.get(TIMING_OUT_OPERATION_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-                } catch (Exception e) {
+                  future.get(TIMING_OUT_OPERATION_TIMEOUT_MILLIS, MILLISECONDS);
+                } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                } catch (ExecutionException | TimeoutException e) {
                   // expected: this is what flags the operation as timed out
                 }
               });
