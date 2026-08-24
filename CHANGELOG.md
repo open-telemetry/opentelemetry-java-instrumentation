@@ -53,6 +53,16 @@
   talk to rather than serving operations itself, so a pool given locators and no server group
   reports no target. The target is read while the pool is being created, so a pool keeps reporting
   what it was pointed at rather than the servers it later discovers.
+- Spymemcached spans record the target their client was configured with instead of the node that
+  answered an operation, again only when stable database semantic conventions are enabled. A client
+  configured with a single node keeps that node's host and port, and a client configured with
+  several carries all of them in `server.address` as `host:port,host:port` and omits `server.port`.
+  A memcached span has no namespace or collection to name, so its stable span name now ends with
+  that target, and operations that fail before reaching a node at all, such as one given a key that
+  is too long, carry the target where they previously carried no server. The target is read while
+  the client's connection is being created, so a client keeps reporting what it was pointed at
+  rather than the node a key happened to hash to; a client whose connection the agent did not see
+  being created falls back to the node that answered.
 
 ## Version 2.31.0 (2026-08-20)
 
