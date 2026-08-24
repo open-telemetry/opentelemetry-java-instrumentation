@@ -10,7 +10,7 @@ import javax.annotation.Nullable;
 
 /**
  * Resolves the Elasticsearch wire action name, such as {@code indices:data/read/search}, of a
- * transport action.
+ * transport action, or returns {@code null} when a valid wire name is unavailable.
  *
  * <p>The {@code name()} accessor is declared on three unrelated types over the supported version
  * range: {@code org.elasticsearch.action.GenericAction} up to 6.5, {@code
@@ -33,9 +33,9 @@ final class ElasticsearchActionNames {
         }
       };
 
+  @Nullable
   static String wireName(Object action) {
-    Class<?> actionClass = action.getClass();
-    Method method = nameMethod.get(actionClass);
+    Method method = nameMethod.get(action.getClass());
     if (method != null) {
       try {
         Object name = method.invoke(action);
@@ -43,10 +43,10 @@ final class ElasticsearchActionNames {
           return (String) name;
         }
       } catch (ReflectiveOperationException ignored) {
-        // fall through to the class name
+        // fall through
       }
     }
-    return actionClass.getSimpleName();
+    return null;
   }
 
   private ElasticsearchActionNames() {}

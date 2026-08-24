@@ -31,6 +31,7 @@ public class ElasticsearchTransportAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getDbOperationName(ElasticTransportRequest request) {
     return ElasticsearchActionNames.wireName(request.getAction());
   }
