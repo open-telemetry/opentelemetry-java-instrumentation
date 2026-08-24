@@ -66,6 +66,8 @@ tasks {
       register<Test>("${suite.name}ExceptionSignalLogs") {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
+        isEnabled = project.tasks.named(suite.name).get().enabled
+
         jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
         systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
       }
