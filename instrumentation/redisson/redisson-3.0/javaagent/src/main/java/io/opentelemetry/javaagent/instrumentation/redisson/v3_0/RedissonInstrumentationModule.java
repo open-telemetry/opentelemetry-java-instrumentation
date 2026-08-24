@@ -40,11 +40,11 @@ public class RedissonInstrumentationModule extends InstrumentationModule {
 
   @Override
   public boolean isHelperClass(String className) {
-    return "org.redisson.config.ConfigServerTargets".equals(className);
+    return "org.redisson.config.ConfigServerTargetsBefore317".equals(className);
   }
 
   @Override
   public List<String> injectedClassNames() {
-    return singletonList("org.redisson.config.ConfigServerTargets");
+    return singletonList("org.redisson.config.ConfigServerTargetsBefore317");
   }
 }

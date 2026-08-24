@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 
 // This helper is in the Redisson package in order to read the per mode configuration, which Config
 // only exposes to its own package.
-public final class ConfigServerTargets {
+public final class ConfigServerTargetsBefore317 {
 
   /**
    * The target the configuration names, which is the Sentinel master when there is one, and the
@@ -61,5 +61,5 @@ public final class ConfigServerTargets {
     return RedisServerTarget.ofEndpoints(endpoints);
   }
 
-  private ConfigServerTargets() {}
+  private ConfigServerTargetsBefore317() {}
 }

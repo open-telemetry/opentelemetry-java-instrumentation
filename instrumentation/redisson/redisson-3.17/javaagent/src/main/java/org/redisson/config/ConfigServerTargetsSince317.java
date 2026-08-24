@@ -18,9 +18,10 @@ import javax.annotation.Nullable;
 
 // This helper is in the Redisson package in order to read the per mode configuration, which Config
 // only exposes to its own package.
-public final class ConfigServerTargets {
+public final class ConfigServerTargetsSince317 {
 
-  private static final Logger logger = Logger.getLogger(ConfigServerTargets.class.getName());
+  private static final Logger logger =
+      Logger.getLogger(ConfigServerTargetsSince317.class.getName());
 
   @Nullable private static final MethodHandle SERVICE_MANAGER_GET_CFG = findServiceManagerGetCfg();
 
@@ -31,7 +32,7 @@ public final class ConfigServerTargets {
           Class.forName(
               "org.redisson.connection.ServiceManager",
               false,
-              ConfigServerTargets.class.getClassLoader());
+              ConfigServerTargetsSince317.class.getClassLoader());
       return MethodHandles.publicLookup()
           .findVirtual(serviceManagerClass, "getCfg", MethodType.methodType(Config.class));
     } catch (ReflectiveOperationException e) {
@@ -97,5 +98,5 @@ public final class ConfigServerTargets {
     return RedisServerTarget.ofEndpoints(new ArrayList<>(addresses));
   }
 
-  private ConfigServerTargets() {}
+  private ConfigServerTargetsSince317() {}
 }
