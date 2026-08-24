@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.jmx.rules;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.semconv.OtelAttributes;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,11 +26,11 @@ import org.snakeyaml.engine.v2.api.LoadSettings;
 public class RegistryManifestTest {
 
   @Test
-  void semconvVersion() throws IOException {
+  void semconvVersion() throws Exception {
     ProtectionDomain protectionDomain = OtelAttributes.class.getProtectionDomain();
     CodeSource codeSource = protectionDomain.getCodeSource();
     assertThat(codeSource).isNotNull();
-    String jarPath = codeSource.getLocation().getPath();
+    String jarPath = codeSource.getLocation().toURI().getPath();
 
     String semconvLibraryVersion;
     try (JarFile jarFile = new JarFile(jarPath)) {
