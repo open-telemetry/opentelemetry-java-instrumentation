@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.GEODE;
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -32,6 +33,8 @@ import org.apache.geode.cache.client.ClientCache;
 import org.apache.geode.cache.client.ClientCacheFactory;
 import org.apache.geode.cache.client.ClientRegionFactory;
 import org.apache.geode.cache.client.ClientRegionShortcut;
+import org.apache.geode.cache.client.PoolFactory;
+import org.apache.geode.cache.client.PoolManager;
 import org.apache.geode.cache.query.QueryException;
 import org.apache.geode.cache.query.SelectResults;
 import org.apache.geode.pdx.PdxReader;
@@ -43,6 +46,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.utility.MountableFile;
@@ -117,6 +121,52 @@ class PutGetTest {
         DB_OPERATION_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {0, 2})
+  void testEndpointAttributesRequireExactlyOneConfiguredServer(int serverCount) {
+    PoolFactory poolFactory = PoolManager.createFactory();
+    if (serverCount == 0) {
+      poolFactory.addLocator(geodeServer.getHost(), 1);
+    }
+    for (int i = 0; i < serverCount; i++) {
+      poolFactory.addServer(geodeServer.getHost(), geodeServer.getMappedPort(GEODE_PORT) + i);
+    }
+    String suffix = Integer.toString(serverCount);
+    poolFactory.create("test-pool-" + suffix);
+
+    ClientRegionFactory<Object, Object> regionFactory =
+        cache.createClientRegionFactory(ClientRegionShortcut.PROXY);
+    regionFactory.setPoolName("test-pool-" + suffix);
+    Region<Object, Object> testRegion = regionFactory.create("test-region-" + suffix);
+
+    testRegion.putAll(emptyMap());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("putAll test-region-" + suffix)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), GEODE),
+                            equalTo(
+                                DB_COLLECTION_NAME,
+                                emitStableDatabaseSemconv() ? "test-region-" + suffix : null),
+                            equalTo(
+                                DB_NAME,
+                                emitStableDatabaseSemconv() ? null : "test-region-" + suffix),
+                            equalTo(maybeStable(DB_OPERATION), "putAll"),
+                            equalTo(SERVER_ADDRESS, null),
+                            equalTo(SERVER_PORT, null))));
+
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.geode-1.4",
+        DB_SYSTEM_NAME,
+        DB_COLLECTION_NAME,
+        DB_OPERATION_NAME);
   }
 
   @ParameterizedTest
