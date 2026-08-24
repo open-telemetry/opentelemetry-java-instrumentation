@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import net.spy.memcached.CASResponse;
@@ -51,6 +52,7 @@ import net.spy.memcached.ConnectionFactoryBuilder;
 import net.spy.memcached.DefaultConnectionFactory;
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.internal.CheckedOperationTimeoutException;
+import net.spy.memcached.internal.GetFuture;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationQueueFactory;
 import org.junit.jupiter.api.BeforeAll;
@@ -251,8 +253,24 @@ class SpymemcachedTest {
                     .setOpTimeout(TIMING_OUT_OPERATION_TIMEOUT_MILLIS));
     queueLock.lock();
     try {
-      timingOutMemcached.asyncGet(key("test-get"));
+      GetFuture<Object> future = timingOutMemcached.asyncGet(key("test-get"));
+      // While the op is stuck in the locked queue, nothing marks it as timed out on its own;
+      // spymemcached only flags an unsent operation as timed out as a side effect of a caller
+      // blocking on Future#get(timeout, unit) and that wait expiring. Trigger that here, on a
+      // separate thread, so the operation genuinely times out instead of just being delayed
+      // until the lock is released (where it would silently succeed).
+      Thread timeoutTrigger =
+          new Thread(
+              () -> {
+                try {
+                  future.get(TIMING_OUT_OPERATION_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+                } catch (Exception e) {
+                  // expected: this is what flags the operation as timed out
+                }
+              });
+      timeoutTrigger.start();
       Thread.sleep(TIMING_OUT_OPERATION_TIMEOUT_MILLIS + 1000);
+      timeoutTrigger.join();
     } finally {
       queueLock.unlock();
     }

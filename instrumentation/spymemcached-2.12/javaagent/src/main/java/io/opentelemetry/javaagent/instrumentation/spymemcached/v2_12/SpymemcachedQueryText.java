@@ -137,12 +137,19 @@ final class SpymemcachedQueryText {
 
   /** Returns {@code false} when the limit was reached and the query text was truncated. */
   private static boolean append(StringBuilder queryText, String value) {
-    queryText.append(' ').append(value);
-    if (queryText.length() > LIMIT) {
+    queryText.append(' ');
+    int remaining = LIMIT - queryText.length();
+    if (remaining <= 0) {
       queryText.setLength(LIMIT);
       return false;
     }
-    return true;
+    if (value.length() <= remaining) {
+      queryText.append(value);
+      return true;
+    }
+    // append only the remaining prefix instead of copying the full (potentially large) value
+    queryText.append(value, 0, remaining);
+    return false;
   }
 
   static class DescriptorInfo {
