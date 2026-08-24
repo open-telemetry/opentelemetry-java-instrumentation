@@ -216,6 +216,62 @@ class CassandraClientTest {
                                     : null))));
   }
 
+  @Test
+  void severalConfiguredContactPointsStillReportTheCoordinator() {
+    // Sibling instrumentations report the target a client was configured with once the stable
+    // conventions are enabled. Driver 3.x never hands its contact points back, so the coordinator
+    // stays the target here, in every mode. CassandraConfiguredContactPointsTest in the
+    // javaagent-unit-tests module holds the reasons.
+    Cluster multiContactPointCluster =
+        Cluster.builder()
+            .addContactPointsWithPorts(
+                new InetSocketAddress(cassandra.getHost(), cassandraPort),
+                // unreachable on purpose: only the configuration is under test
+                new InetSocketAddress("127.0.0.2", 9042))
+            .build();
+    cleanup.deferCleanup(multiContactPointCluster);
+    Session session = multiContactPointCluster.connect();
+    cleanup.deferCleanup(session);
+
+    session.execute("DROP KEYSPACE IF EXISTS contact_points_test");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(emitStableDatabaseSemconv() ? "DROP KEYSPACE" : "DROP")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TYPE, emitStableDatabaseSemconv() ? null : "ipv4"),
+                            equalTo(SERVER_ADDRESS, cassandraHost),
+                            equalTo(SERVER_PORT, cassandraPort),
+                            equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                            equalTo(NETWORK_PEER_PORT, cassandraPort),
+                            equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "DROP KEYSPACE IF EXISTS contact_points_test"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "DROP KEYSPACE" : null),
+                            equalTo(maybeStable(DB_OPERATION), "DROP"),
+                            equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
+                            equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
+                            satisfies(
+                                maybeStable(DB_CASSANDRA_COORDINATOR_ID),
+                                coordinatorIdAvailable
+                                    ? val -> val.isInstanceOf(String.class)
+                                    : val -> val.isNull()),
+                            equalTo(maybeStable(DB_CASSANDRA_IDEMPOTENCE), false),
+                            equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                            satisfies(
+                                maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT),
+                                speculativeExecutionCountAvailable
+                                    ? val -> val.isEqualTo(0)
+                                    : val -> val.isNull()))));
+  }
+
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideSyncParameters")
   void syncTest(Parameter parameter) {

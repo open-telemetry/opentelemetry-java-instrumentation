@@ -28,6 +28,9 @@ final class TracingCqlSession {
   private TracingCqlSession() {}
 
   static CqlSession wrapSession(CqlSession session) {
+    // the driver configuration can be reloaded, so read the configured target once, here, and keep
+    // that snapshot for the life of the session
+    CassandraServerTarget serverTarget = CassandraServerTarget.of(session);
     List<Class<?>> interfaces = new ArrayList<>();
     Class<?> clazz = session.getClass();
     while (clazz != Object.class) {
@@ -42,21 +45,21 @@ final class TracingCqlSession {
               if ("execute".equals(method.getName()) && method.getParameterCount() == 1) {
                 if (method.getParameterTypes()[0] == String.class) {
                   String query = (String) args[0];
-                  return execute(session, query);
+                  return execute(session, serverTarget, query);
                 }
                 if (method.getParameterTypes()[0] == Statement.class) {
                   Statement<?> statement = (Statement<?>) args[0];
-                  return execute(session, statement);
+                  return execute(session, serverTarget, statement);
                 }
               } else if ("executeAsync".equals(method.getName())
                   && method.getParameterCount() == 1) {
                 if (method.getParameterTypes()[0] == String.class) {
                   String query = (String) args[0];
-                  return executeAsync(session, query);
+                  return executeAsync(session, serverTarget, query);
                 }
                 if (method.getParameterTypes()[0] == Statement.class) {
                   Statement<?> statement = (Statement<?>) args[0];
-                  return executeAsync(session, statement);
+                  return executeAsync(session, serverTarget, statement);
                 }
               }
 
@@ -64,8 +67,9 @@ final class TracingCqlSession {
             });
   }
 
-  private static ResultSet execute(CqlSession session, String query) {
-    CassandraRequest request = CassandraRequest.create(session, query);
+  private static ResultSet execute(
+      CqlSession session, @Nullable CassandraServerTarget serverTarget, String query) {
+    CassandraRequest request = CassandraRequest.create(session, serverTarget, query);
     Context context = instrumenter().start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
@@ -78,8 +82,9 @@ final class TracingCqlSession {
     return resultSet;
   }
 
-  private static ResultSet execute(CqlSession session, Statement<?> statement) {
-    CassandraRequest request = CassandraRequest.create(session, statement);
+  private static ResultSet execute(
+      CqlSession session, @Nullable CassandraServerTarget serverTarget, Statement<?> statement) {
+    CassandraRequest request = CassandraRequest.create(session, serverTarget, statement);
     Context context = instrumenter().start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
@@ -93,13 +98,14 @@ final class TracingCqlSession {
   }
 
   private static CompletionStage<AsyncResultSet> executeAsync(
-      CqlSession session, Statement<?> statement) {
-    CassandraRequest request = CassandraRequest.create(session, statement);
+      CqlSession session, @Nullable CassandraServerTarget serverTarget, Statement<?> statement) {
+    CassandraRequest request = CassandraRequest.create(session, serverTarget, statement);
     return executeAsync(request, () -> session.executeAsync(statement));
   }
 
-  private static CompletionStage<AsyncResultSet> executeAsync(CqlSession session, String query) {
-    CassandraRequest request = CassandraRequest.create(session, query);
+  private static CompletionStage<AsyncResultSet> executeAsync(
+      CqlSession session, @Nullable CassandraServerTarget serverTarget, String query) {
+    CassandraRequest request = CassandraRequest.create(session, serverTarget, query);
     return executeAsync(request, () -> session.executeAsync(query));
   }
 

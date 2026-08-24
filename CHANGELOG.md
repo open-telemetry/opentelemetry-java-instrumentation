@@ -16,6 +16,14 @@
   client is named by its master, a clustered, sharded or pooled client carries every configured
   endpoint in `server.address` and omits `server.port`, and credentials, the selected database, query
   parameters and fragments are removed from every endpoint.
+- Cassandra spans record the contact points their session was configured with instead of the
+  coordinator that answered, again only when stable database semantic conventions are enabled. A
+  session that names several contact points carries all of them in `server.address` and omits
+  `server.port`. Under SNI (proxied deployments such as DataStax Astra) `server.address` and
+  `server.port` describe the node behind the proxy rather than the proxy itself, and
+  `network.peer.*` is left unset because reading the proxy socket would resolve it on every span.
+  Sessions using driver 3.x keep reporting the coordinator, because that driver never exposes the
+  contact points it was configured with.
 
 ## Version 2.31.0 (2026-08-20)
 
