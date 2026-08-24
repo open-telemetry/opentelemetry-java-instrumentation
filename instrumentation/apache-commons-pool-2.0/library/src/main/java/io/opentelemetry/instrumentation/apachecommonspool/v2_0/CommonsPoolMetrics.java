@@ -20,8 +20,9 @@ final class CommonsPoolMetrics {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-commons-pool-2.0";
 
   // a weak map does not make sense here because each Meter holds a reference to the pool
-  // use identity comparison because pools are mutable lifecycle objects
-  private static final Map<IdentityPoolKey, BatchCallback> poolMetrics = new ConcurrentHashMap<>();
+  // GenericObjectPool and GenericKeyedObjectPool do not implement equals()/hashCode(), so it's
+  // safe to keep them in a plain ConcurrentHashMap
+  private static final Map<Object, BatchCallback> poolMetrics = new ConcurrentHashMap<>();
 
   static void registerMetrics(
       OpenTelemetry openTelemetry, GenericObjectPoolMXBean pool, String poolName) {
@@ -62,7 +63,7 @@ final class CommonsPoolMetrics {
       IntSupplier maxTotal,
       IntSupplier waiters) {
     poolMetrics.computeIfAbsent(
-        new IdentityPoolKey(pool),
+        pool,
         unused ->
             createCallback(
                 openTelemetry, poolName, active, idle, minIdle, maxIdle, maxTotal, waiters));
@@ -117,28 +118,9 @@ final class CommonsPoolMetrics {
   }
 
   static void unregisterMetrics(Object pool) {
-    BatchCallback callback = poolMetrics.remove(new IdentityPoolKey(pool));
+    BatchCallback callback = poolMetrics.remove(pool);
     if (callback != null) {
       callback.close();
-    }
-  }
-
-  private static final class IdentityPoolKey {
-    private final Object pool;
-
-    private IdentityPoolKey(Object pool) {
-      this.pool = pool;
-    }
-
-    @Override
-    @SuppressWarnings("ReferenceEquality")
-    public boolean equals(@Nullable Object other) {
-      return other instanceof IdentityPoolKey && pool == ((IdentityPoolKey) other).pool;
-    }
-
-    @Override
-    public int hashCode() {
-      return System.identityHashCode(pool);
     }
   }
 

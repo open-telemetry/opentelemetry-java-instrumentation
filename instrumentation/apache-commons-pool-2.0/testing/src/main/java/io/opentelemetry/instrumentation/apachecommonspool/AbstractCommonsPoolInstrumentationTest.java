@@ -126,6 +126,31 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
     assertNoMetrics();
   }
 
+  @Test
+  void shouldRegisterSamePoolInstanceIdempotently() throws Exception {
+    String poolName = "duplicateRegistrationPool";
+    GenericObjectPool<Object> pool = createGenericObjectPool(poolName, false);
+    Object borrowed = null;
+    try {
+      // registering the same pool instance twice must not create a second callback: otherwise
+      // the metrics below would be reported twice (once per callback) and fail the assertion
+      configure(pool, poolName);
+      configure(pool, poolName);
+
+      borrowed = pool.borrowObject();
+
+      assertGenericObjectPoolMetrics(poolName);
+    } finally {
+      if (borrowed != null) {
+        pool.returnObject(borrowed);
+      }
+      shutdown(pool);
+      pool.close();
+    }
+
+    assertNoMetrics();
+  }
+
   private void testGenericObjectPoolMetrics(boolean jmxEnabled) throws Exception {
     String poolName = jmxEnabled ? "objectPool" : "pool";
     GenericObjectPool<Object> pool = createGenericObjectPool(poolName, jmxEnabled);
