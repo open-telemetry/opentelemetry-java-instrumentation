@@ -46,7 +46,6 @@ import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
  * MultipleParentClassLoader}.
  */
 // TODO find a way to initialize logging before using this class
-@SuppressWarnings("SystemOut")
 public class ExtensionClassLoader extends URLClassLoader {
 
   // this class is used early, and must not use logging in most of its methods
@@ -96,6 +95,7 @@ public class ExtensionClassLoader extends URLClassLoader {
     deferredLogs.add(new SimpleImmutableEntry<>(level, message));
   }
 
+  @SuppressWarnings("SystemOut")
   private static void includeEmbeddedExtensionsIfFound(List<URL> extensions, File javaagentFile) {
     try (JarFile jarFile = new JarFile(javaagentFile, false)) {
       Enumeration<JarEntry> entryEnumeration = jarFile.entries();
@@ -198,7 +198,7 @@ public class ExtensionClassLoader extends URLClassLoader {
     return f.isFile() && f.getName().endsWith(".jar");
   }
 
-  private static boolean addFileUrl(List<URL> result, File file) {
+  private static void addFileUrl(List<URL> result, File file) {
     try {
       // skip shading extension classes if opentelemetry-api is not shaded (happens when using
       // disableShadowRelocate=true)
@@ -209,10 +209,8 @@ public class ExtensionClassLoader extends URLClassLoader {
         result.add(file.toURI().toURL());
       }
       addLog(FINE, "Loaded extension jar file \"" + file + "\"");
-      return true;
     } catch (IOException e) {
       addLog(WARNING, "Failed to load extension jar file \"" + file + "\": " + e.getMessage());
-      return false;
     }
   }
 
