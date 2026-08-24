@@ -88,6 +88,8 @@ public abstract class CouchbaseRequestInfo {
 
   public abstract boolean isMethodCall();
 
+  // Network instrumentation adds mutable endpoint and operation state to the request, so each
+  // subscription must receive its own copy.
   public Supplier<CouchbaseRequestInfo> copySupplier() {
     return new Supplier<CouchbaseRequestInfo>() {
       @Override
