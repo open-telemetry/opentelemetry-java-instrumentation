@@ -45,11 +45,36 @@ broken/incompatible versions.
 
 Verify `build.gradle.kts` applies the correct plugin for the module type:
 
-| Module type  | Required plugin                  |
-| ------------ | -------------------------------- |
-| `javaagent/` | `otel.javaagent-instrumentation` |
-| `library/`   | `otel.library-instrumentation`   |
-| `testing/`   | `otel.java-conventions`          |
+| Module type             | Required plugin                  |
+| ----------------------- | -------------------------------- |
+| `javaagent/`            | `otel.javaagent-instrumentation` |
+| `javaagent-unit-tests/` | `otel.java-conventions`          |
+| `library/`              | `otel.library-instrumentation`   |
+| `testing/`              | `otel.java-conventions`          |
+
+## Java Agent Unit Test Modules
+
+Tests in a `javaagent` project use the `javaagent-testing` conventions and cannot directly access
+the project's instrumentation classes because those classes are isolated in the test agent. When a
+unit test needs to instantiate or call a javaagent instrumentation class directly, create a sibling
+`javaagent-unit-tests` project instead of using reflection, a custom class loader, or a test that
+duplicates the production logic.
+
+Register the project in `settings.gradle.kts`, apply `otel.java-conventions`, and depend on the
+javaagent project:
+
+```kotlin
+plugins {
+  id("otel.java-conventions")
+}
+
+dependencies {
+  testImplementation(project(":instrumentation:example:example-1.0:javaagent"))
+}
+```
+
+Keep tests that exercise the instrumented library with the test agent in the `javaagent` project.
+Use `javaagent-unit-tests` only for direct unit tests of javaagent implementation classes.
 
 ## Shared Gradle Project Properties
 

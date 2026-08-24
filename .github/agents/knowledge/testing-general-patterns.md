@@ -3,7 +3,17 @@
 ## Quick Reference
 
 - Use when: test files (`**/src/test/**`) are in scope
-- Review focus: assertion style, test class visibility, test method signatures and throws clauses, resource cleanup patterns, attribute assertion patterns
+- Review focus: test-module placement, assertion style, test class visibility, test method signatures and throws clauses, resource cleanup patterns, attribute assertion patterns
+
+## Javaagent Test Placement
+
+Tests in a `javaagent` project run with the test agent and cannot directly access the project's
+instrumentation classes because of class loader isolation. Put a direct unit test of a javaagent
+implementation class in a sibling `javaagent-unit-tests` project. Do not bypass the isolation with
+reflection or a custom class loader, and do not copy production logic into the test.
+
+Keep tests that verify instrumentation behavior against the instrumented library in the `javaagent`
+project. See `gradle-conventions.md` for `javaagent-unit-tests` project wiring.
 
 ## Assertion Framework
 

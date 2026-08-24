@@ -35,8 +35,12 @@ include(":instrumentation:yarpc:yarpc-2.0:javaagent")
 
 ## Submodule leaf names
 
-Standard leaves are `library`, `javaagent`, `testing`.
+Standard leaves are `library`, `javaagent`, `javaagent-unit-tests`, and `testing`.
 Special leaves: `bootstrap` (classes needed in the bootstrap class loader).
+
+Use `javaagent-unit-tests` only for direct unit tests of javaagent implementation classes that
+cannot be accessed from the classloader-isolated tests in `javaagent`. See `gradle-conventions.md`
+for project wiring.
 
 ## `InstrumentationModule` name
 
