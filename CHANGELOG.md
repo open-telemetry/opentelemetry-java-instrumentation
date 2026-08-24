@@ -13,8 +13,8 @@
   names include because there is no namespace or collection to name.
 - Redis spans record the target their client was configured with instead of the node a command was
   routed to, again only when stable database semantic conventions are enabled. A Sentinel backed
-  client is named by its master, a sharded or pooled client carries every configured endpoint in
-  `server.address` and omits `server.port`, and credentials, the selected database, query
+  client is named by its master, a clustered, sharded or pooled client carries every configured
+  endpoint in `server.address` and omits `server.port`, and credentials, the selected database, query
   parameters and fragments are removed from every endpoint.
 
 ## Version 2.31.0 (2026-08-20)

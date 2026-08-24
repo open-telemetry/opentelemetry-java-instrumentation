@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.lettuce.core.RedisURI;
@@ -78,5 +81,55 @@ class LettuceServerTargetsTest {
   @Test
   void noUri() {
     assertThat(LettuceServerTargets.of(null)).isNull();
+  }
+
+  @Test
+  void clusterKeepsEveryConfiguredEndpoint() {
+    RedisServerTarget target =
+        LettuceServerTargets.ofUris(
+            asList(RedisURI.create("redis://node1:7000"), RedisURI.create("redis://node2:7001")));
+
+    assertThat(target.getAddress()).isEqualTo("node1:7000,node2:7001");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void clusterWithOneEndpointKeepsItsPort() {
+    RedisServerTarget target =
+        LettuceServerTargets.ofUris(singletonList(RedisURI.create("redis://node1:7000")));
+
+    assertThat(target.getAddress()).isEqualTo("node1");
+    assertThat(target.getPort()).isEqualTo(7000);
+  }
+
+  @Test
+  void clusterDropsCredentialsAndDatabase() {
+    RedisServerTarget target =
+        LettuceServerTargets.ofUris(
+            asList(
+                RedisURI.create("redis://user:pass@node1:7000/2"),
+                RedisURI.create("redis://node2:7001")));
+
+    assertThat(target.getAddress()).isEqualTo("node1:7000,node2:7001");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void laterClusterUriChangesDoNotChangeTheTarget() {
+    RedisURI first = RedisURI.create("redis://node1:7000");
+    RedisURI second = RedisURI.create("redis://node2:7001");
+    RedisServerTarget target = LettuceServerTargets.ofUris(asList(first, second));
+
+    first.setHost("other");
+    second.setPort(7002);
+
+    assertThat(target.getAddress()).isEqualTo("node1:7000,node2:7001");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void noClusterUris() {
+    assertThat(LettuceServerTargets.ofUris(null)).isNull();
+    assertThat(LettuceServerTargets.ofUris(emptyList())).isNull();
   }
 }

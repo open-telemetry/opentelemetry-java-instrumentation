@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal
 import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulConnection;
+import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.DefaultEndpoint;
 import io.lettuce.core.protocol.RedisCommand;
@@ -60,6 +61,9 @@ public class LettuceSingletons {
 
   public static final VirtualField<RedisCommand<?, ?, ?>, RedisServerTarget> COMMAND_TARGET =
       VirtualField.find(RedisCommand.class, RedisServerTarget.class);
+
+  public static final VirtualField<RedisClusterClient, RedisServerTarget> CLUSTER_CLIENT_TARGET =
+      VirtualField.find(RedisClusterClient.class, RedisServerTarget.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();

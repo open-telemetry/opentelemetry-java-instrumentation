@@ -11,6 +11,7 @@ import com.lambdaworks.redis.ReactiveCommandDispatcher;
 import com.lambdaworks.redis.RedisChannelHandler;
 import com.lambdaworks.redis.RedisURI;
 import com.lambdaworks.redis.api.StatefulConnection;
+import com.lambdaworks.redis.cluster.RedisClusterClient;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -63,6 +64,9 @@ public class LettuceSingletons {
 
   public static final VirtualField<RedisCommand<?, ?, ?>, RedisServerTarget> COMMAND_TARGET =
       VirtualField.find(RedisCommand.class, RedisServerTarget.class);
+
+  public static final VirtualField<RedisClusterClient, RedisServerTarget> CLUSTER_CLIENT_TARGET =
+      VirtualField.find(RedisClusterClient.class, RedisServerTarget.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();

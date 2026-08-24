@@ -38,6 +38,36 @@ public final class LettuceServerTargets {
     return RedisServerTarget.ofHostAndPort(redisUri.getHost(), redisUri.getPort());
   }
 
+  /**
+   * Renders the target a cluster client was configured with from the URIs it was seeded with. The
+   * seed URIs are the client's own view of the cluster, so they are kept even after the client has
+   * discovered the nodes that actually serve a command.
+   */
+  @Nullable
+  public static RedisServerTarget ofUris(@Nullable Iterable<RedisURI> redisUris) {
+    if (redisUris == null) {
+      return null;
+    }
+    List<String> endpoints = new ArrayList<>();
+    for (RedisURI redisUri : redisUris) {
+      if (redisUri == null) {
+        continue;
+      }
+      RedisServerTarget target = of(redisUri);
+      if (target != null) {
+        endpoints.add(render(target));
+      }
+    }
+    return RedisServerTarget.ofEndpoints(endpoints);
+  }
+
+  private static String render(RedisServerTarget target) {
+    Integer port = target.getPort();
+    return port == null
+        ? target.getAddress()
+        : RedisServerTarget.endpoint(target.getAddress(), port);
+  }
+
   @Nullable
   private static RedisServerTarget ofSentinel(RedisURI redisUri) {
     RedisServerTarget masterTarget =
