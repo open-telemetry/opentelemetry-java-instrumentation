@@ -107,6 +107,7 @@ tasks {
   val testJms2BothSemconv = register<Test>("testJms2BothSemconv") {
     testClassesDirs = sourceSets["jms2Test"].output.classesDirs
     classpath = sourceSets["jms2Test"].runtimeClasspath
+    isEnabled = project.tasks.named("jms2Test").get().enabled
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")

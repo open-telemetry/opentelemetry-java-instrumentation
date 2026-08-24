@@ -89,6 +89,7 @@ tasks {
   val testBothSemconvNoReceiveTelemetry = register<Test>("testBothSemconvNoReceiveTelemetry") {
     testClassesDirs = sourceSets["testNoReceiveTelemetry"].output.classesDirs
     classpath = sourceSets["testNoReceiveTelemetry"].runtimeClasspath
+    isEnabled = project.tasks.named("testNoReceiveTelemetry").get().enabled
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")

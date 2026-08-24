@@ -77,6 +77,7 @@ tasks {
     register<Test>("testBothSemconvReceiveSpansDisabled") {
       testClassesDirs = sourceSets["testReceiveSpansDisabled"].output.classesDirs
       classpath = sourceSets["testReceiveSpansDisabled"].runtimeClasspath
+      isEnabled = project.tasks.named("testReceiveSpansDisabled").get().enabled
       jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
       systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
     }

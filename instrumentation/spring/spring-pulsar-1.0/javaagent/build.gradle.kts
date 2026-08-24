@@ -107,6 +107,7 @@ tasks {
   val testBothSemconvReceiveSpansDisabled = register<Test>("testBothSemconvReceiveSpansDisabled") {
     testClassesDirs = sourceSets["testReceiveSpansDisabled"].output.classesDirs
     classpath = sourceSets["testReceiveSpansDisabled"].runtimeClasspath
+    isEnabled = project.tasks.named("testReceiveSpansDisabled").get().enabled
     jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")

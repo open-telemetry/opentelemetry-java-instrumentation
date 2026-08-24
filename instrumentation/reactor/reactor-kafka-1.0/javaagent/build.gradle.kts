@@ -140,6 +140,7 @@ tasks {
   val testV1_3_3ReceiveSpansDisabled = register<Test>("testV1_3_3ReceiveSpansDisabled") {
     testClassesDirs = sourceSets["testV1_3_3"].output.classesDirs
     classpath = sourceSets["testV1_3_3"].runtimeClasspath
+    isEnabled = project.tasks.named("testV1_3_3").get().enabled
     systemProperty("hasConsumerGroup", true)
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
   }
@@ -147,6 +148,7 @@ tasks {
   val testV1_3_3MessagingPreview = register<Test>("testV1_3_3MessagingPreview") {
     testClassesDirs = sourceSets["testV1_3_3"].output.classesDirs
     classpath = sourceSets["testV1_3_3"].runtimeClasspath
+    isEnabled = project.tasks.named("testV1_3_3").get().enabled
     systemProperty("hasConsumerGroup", true)
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
@@ -156,6 +158,7 @@ tasks {
   val testV1_3_3BothSemconv = register<Test>("testV1_3_3BothSemconv") {
     testClassesDirs = sourceSets["testV1_3_3"].output.classesDirs
     classpath = sourceSets["testV1_3_3"].runtimeClasspath
+    isEnabled = project.tasks.named("testV1_3_3").get().enabled
     systemProperty("hasConsumerGroup", true)
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
@@ -166,6 +169,7 @@ tasks {
     register<Test>("testV1_3_3MessagingPreviewReceiveSpansDisabled") {
       testClassesDirs = sourceSets["testV1_3_3"].output.classesDirs
       classpath = sourceSets["testV1_3_3"].runtimeClasspath
+      isEnabled = project.tasks.named("testV1_3_3").get().enabled
       systemProperty("hasConsumerGroup", true)
       jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
       jvmArgs("-Dotel.semconv-stability.preview=messaging")
@@ -175,6 +179,7 @@ tasks {
   val testV1_3_21ReceiveSpansDisabled = register<Test>("testV1_3_21ReceiveSpansDisabled") {
     testClassesDirs = sourceSets["testV1_3_21"].output.classesDirs
     classpath = sourceSets["testV1_3_21"].runtimeClasspath
+    isEnabled = project.tasks.named("testV1_3_21").get().enabled
     systemProperty("hasConsumerGroup", true)
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
   }
@@ -182,6 +187,7 @@ tasks {
   val testV1_3_21MessagingPreview = register<Test>("testV1_3_21MessagingPreview") {
     testClassesDirs = sourceSets["testV1_3_21"].output.classesDirs
     classpath = sourceSets["testV1_3_21"].runtimeClasspath
+    isEnabled = project.tasks.named("testV1_3_21").get().enabled
     systemProperty("hasConsumerGroup", true)
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
@@ -191,6 +197,7 @@ tasks {
   val testV1_3_21BothSemconv = register<Test>("testV1_3_21BothSemconv") {
     testClassesDirs = sourceSets["testV1_3_21"].output.classesDirs
     classpath = sourceSets["testV1_3_21"].runtimeClasspath
+    isEnabled = project.tasks.named("testV1_3_21").get().enabled
     systemProperty("hasConsumerGroup", true)
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
@@ -201,6 +208,7 @@ tasks {
     register<Test>("testV1_3_21MessagingPreviewReceiveSpansDisabled") {
       testClassesDirs = sourceSets["testV1_3_21"].output.classesDirs
       classpath = sourceSets["testV1_3_21"].runtimeClasspath
+      isEnabled = project.tasks.named("testV1_3_21").get().enabled
       systemProperty("hasConsumerGroup", true)
       jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
       jvmArgs("-Dotel.semconv-stability.preview=messaging")
