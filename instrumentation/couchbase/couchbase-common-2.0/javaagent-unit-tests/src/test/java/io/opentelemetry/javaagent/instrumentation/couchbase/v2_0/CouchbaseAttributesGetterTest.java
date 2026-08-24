@@ -69,7 +69,7 @@ class CouchbaseAttributesGetterTest {
 
   private static Attributes extractServerAttributes(CouchbaseRequestInfo request) {
     AttributesBuilder attributes = Attributes.builder();
-    new CouchbaseAttributesGetter().onEnd(attributes, Context.root(), request, null, null);
+    new CouchbaseServerAttributesExtractor().onEnd(attributes, Context.root(), request, null, null);
     return attributes.build();
   }
 }
