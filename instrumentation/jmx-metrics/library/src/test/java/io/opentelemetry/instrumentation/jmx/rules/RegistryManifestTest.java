@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.snakeyaml.engine.v2.api.Load;
 import org.snakeyaml.engine.v2.api.LoadSettings;
 
-public class RegistryManifestTest {
+class RegistryManifestTest {
 
   @Test
   void semconvVersion() throws Exception {
