@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.net.URI;
@@ -48,12 +46,6 @@ abstract class AbstractOpenSearchQueryTest {
 
   protected InstrumentationExtension getTesting() {
     return testing;
-  }
-
-  protected String databaseSpanName(String operation) {
-    return emitStableDatabaseSemconv()
-        ? operation + " " + httpHost.getHost() + ":" + httpHost.getPort()
-        : operation;
   }
 
   @BeforeAll

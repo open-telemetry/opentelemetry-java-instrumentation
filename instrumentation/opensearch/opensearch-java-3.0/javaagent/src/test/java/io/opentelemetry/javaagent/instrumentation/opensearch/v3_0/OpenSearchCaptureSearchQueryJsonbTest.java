@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -82,7 +83,10 @@ class OpenSearchCaptureSearchQueryJsonbTest extends AbstractOpenSearchQueryTest 
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName(databaseSpanName("POST"))
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "POST " + httpHost.getHost() + ":" + httpHost.getPort()
+                                    : "POST")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), "opensearch"),

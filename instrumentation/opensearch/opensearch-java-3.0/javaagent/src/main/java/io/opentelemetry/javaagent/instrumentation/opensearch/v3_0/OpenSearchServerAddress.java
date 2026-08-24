@@ -23,9 +23,9 @@ public class OpenSearchServerAddress {
     if (stored != null) {
       return stored;
     }
-    Object rc = restClient(transport);
-    if (rc != null) {
-      return OpenSearchNodeServerAddress.fromRestClientNodes(rc);
+    Object restClient = restClient(transport);
+    if (restClient != null) {
+      return OpenSearchNodeServerAddress.fromRestClientNodes(restClient);
     }
     return null;
   }

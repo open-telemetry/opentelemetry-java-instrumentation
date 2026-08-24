@@ -62,12 +62,6 @@ abstract class AbstractOpenSearchTest {
     return testing;
   }
 
-  protected String databaseSpanName(String operation) {
-    return emitStableDatabaseSemconv()
-        ? operation + " " + httpHost.getHost() + ":" + httpHost.getPort()
-        : operation;
-  }
-
   protected void assertMultiNodeClient(OpenSearchClient client) throws IOException {
     HealthResponse healthResponse = client.cluster().health();
     assertThat(healthResponse).isNotNull();
@@ -129,7 +123,10 @@ abstract class AbstractOpenSearchTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName(databaseSpanName("GET"))
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
+                                    : "GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
@@ -177,7 +174,10 @@ abstract class AbstractOpenSearchTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName(databaseSpanName("GET"))
+                        span.hasName(
+                                emitStableDatabaseSemconv()
+                                    ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
+                                    : "GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(

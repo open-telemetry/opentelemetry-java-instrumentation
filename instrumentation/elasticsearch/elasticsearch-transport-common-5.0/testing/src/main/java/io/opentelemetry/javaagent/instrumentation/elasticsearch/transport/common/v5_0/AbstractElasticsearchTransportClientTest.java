@@ -84,7 +84,10 @@ public abstract class AbstractElasticsearchTransportClientTest
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(databaseSpanName("ClusterHealthAction"))
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "ClusterHealthAction " + getAddress() + ":" + getPort()
+                                : "ClusterHealthAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -113,12 +116,6 @@ public abstract class AbstractElasticsearchTransportClientTest
       result.add(satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6")));
     }
     return result;
-  }
-
-  protected String databaseSpanName(String operation) {
-    return emitStableDatabaseSemconv()
-        ? operation + " " + getAddress() + ":" + getPort()
-        : operation;
   }
 
   private Stream<Arguments> errorArguments() {
@@ -228,14 +225,23 @@ public abstract class AbstractElasticsearchTransportClientTest
     // PutMappingAction and IndexAction run in separate threads so their order can vary
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName(
-            databaseSpanName("CreateIndexAction"),
+            emitStableDatabaseSemconv()
+                ? "CreateIndexAction " + getAddress() + ":" + getPort()
+                : "CreateIndexAction",
             getPutMappingActionName(),
-            databaseSpanName("IndexAction"),
-            databaseSpanName("GetAction")),
+            emitStableDatabaseSemconv()
+                ? "IndexAction " + getAddress() + ":" + getPort()
+                : "IndexAction",
+            emitStableDatabaseSemconv()
+                ? "GetAction " + getAddress() + ":" + getPort()
+                : "GetAction"),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(databaseSpanName("CreateIndexAction"))
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "CreateIndexAction " + getAddress() + ":" + getPort()
+                                : "CreateIndexAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -273,7 +279,10 @@ public abstract class AbstractElasticsearchTransportClientTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(databaseSpanName("IndexAction"))
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "IndexAction " + getAddress() + ":" + getPort()
+                                : "IndexAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -313,7 +322,10 @@ public abstract class AbstractElasticsearchTransportClientTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(databaseSpanName("GetAction"))
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "GetAction " + getAddress() + ":" + getPort()
+                                : "GetAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -321,7 +333,10 @@ public abstract class AbstractElasticsearchTransportClientTest
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(databaseSpanName("GetAction"))
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "GetAction " + getAddress() + ":" + getPort()
+                                : "GetAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(

@@ -127,11 +127,17 @@ public abstract class AbstractCouchbaseTest {
   }
 
   protected StringAssertConsumer serverAddress() {
-    return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
+    return includesNetworkAttributes() ? val -> val.isEqualTo("127.0.0.1") : val -> val.isNull();
   }
 
   protected LongAssertConsumer serverPort() {
-    return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
+    return includesNetworkAttributes()
+        ? val ->
+            val.isIn(
+                (long) mock.getCarrierPort(bucketCouchbase.name()),
+                (long) mock.getCarrierPort(bucketMemcache.name()),
+                (long) port)
+        : val -> val.isNull();
   }
 
   protected StringAssertConsumer experimentalAttribute() {
