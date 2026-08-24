@@ -89,8 +89,16 @@ tasks {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
 
+        val receiveTelemetryEnabled = suite.name == "test"
+        jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=$receiveTelemetryEnabled")
         jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-        systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
+        val metadataConfig =
+          if (receiveTelemetryEnabled) {
+            "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true"
+          } else {
+            "otel.instrumentation.kafka.experimental-span-attributes=true"
+          }
+        systemProperty("metadataConfig", metadataConfig)
         systemProperty(
           "hasConsumerGroup",
           if (suite.name == "test") otelProps.testLatestDeps else true,
