@@ -11,6 +11,7 @@ import static java.util.logging.Level.FINE;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.common.ComponentLoader;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
 import io.opentelemetry.instrumentation.jmx.internal.handler.HandlerRegistry;
@@ -20,7 +21,9 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /** Builder for {@link JmxTelemetry} */
@@ -33,6 +36,8 @@ public final class JmxTelemetryBuilder {
   private long discoveryDelayMs;
   private ComponentLoader componentLoader =
       ComponentLoader.forClassLoader(JmxTelemetryBuilder.class.getClassLoader());
+  private final Set<String> registeredMetrics = new HashSet<>();
+  private IncludeExclude metrics = IncludeExclude.builder().build();
 
   JmxTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -56,7 +61,8 @@ public final class JmxTelemetryBuilder {
   }
 
   /**
-   * Adds JMX rules from input stream
+   * Adds JMX rules from input stream, all metrics are included unless filtered out by the {@link
+   * #setMetrics(IncludeExclude)} method.
    *
    * @param input input to read rules from
    * @throws IllegalArgumentException when input is {@literal null} or can't be parsed
@@ -71,12 +77,26 @@ public final class JmxTelemetryBuilder {
 
     for (MetricDef metricDef : metricDefs) {
       metricConfiguration.addMetricDef(metricDef);
+      registeredMetrics.addAll(metricDef.getMetricNames());
     }
     return this;
   }
 
+
   /**
-   * Adds JMX rules from file system path
+   * Set metrics to include and exclude
+   *
+   * @param metrics metrics to include/exclude
+   * @return this
+   */
+  public JmxTelemetryBuilder setMetrics(IncludeExclude metrics) {
+    this.metrics = metrics;
+    return this;
+  }
+
+  /**
+   * Adds JMX rules from file system path, all metrics are included unless filtered out by the
+   * {@link #setMetrics(IncludeExclude)} method.
    *
    * @param path path to yaml file
    * @return builder instance
@@ -105,7 +125,19 @@ public final class JmxTelemetryBuilder {
 
   public JmxTelemetry build() {
     HandlerRegistry handlerRegistry = new HandlerRegistry();
-    handlerRegistry.load(componentLoader);
-    return new JmxTelemetry(openTelemetry, discoveryDelayMs, metricConfiguration, handlerRegistry);
+    registeredMetrics.addAll(handlerRegistry.load(componentLoader));
+
+    IncludeExclude effectiveMetrics = metrics;
+    if (metrics.getIncluded().isEmpty()) {
+      // no explict 'included' metrics, so we include everything that has been registered
+      effectiveMetrics =
+          IncludeExclude.builder()
+              .setIncluded(registeredMetrics)
+              .setExcluded(metrics.getExcluded())
+              .build();
+    }
+
+    return new JmxTelemetry(
+        openTelemetry, discoveryDelayMs, metricConfiguration, handlerRegistry, effectiveMetrics);
   }
 }
