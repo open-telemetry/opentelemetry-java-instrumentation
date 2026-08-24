@@ -80,7 +80,7 @@ class Lettuce60CommandNameTest extends AbstractLettuceClientTest {
                 // server.address / network.* are absent on 6.0.0-6.0.2 (#3952)
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName(spanName("SET"))
+                        span.hasName("SET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), REDIS),
