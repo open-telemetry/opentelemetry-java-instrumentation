@@ -129,17 +129,17 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
   @Test
   void shouldRegisterSamePoolInstanceIdempotently() throws Exception {
     String poolName = "duplicateRegistrationPool";
+    String ignoredPoolName = "ignoredDuplicateRegistrationPool";
     GenericObjectPool<Object> pool = createGenericObjectPool(poolName, false);
     Object borrowed = null;
     try {
-      // registering the same pool instance twice must not create a second callback: otherwise
-      // the metrics below would be reported twice (once per callback) and fail the assertion
       configure(pool, poolName);
-      configure(pool, poolName);
+      configure(pool, ignoredPoolName);
 
       borrowed = pool.borrowObject();
 
       assertGenericObjectPoolMetrics(poolName);
+      verifyPoolNameNotReported(ignoredPoolName);
     } finally {
       if (borrowed != null) {
         pool.returnObject(borrowed);
@@ -285,6 +285,17 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
             metricData ->
                 metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
         .noneMatch(metricData -> metricData.getName().equals(metricName));
+  }
+
+  private void verifyPoolNameNotReported(String poolName) {
+    assertThat(testing().metrics())
+        .filteredOn(
+            metricData ->
+                metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
+        .noneMatch(
+            metricData ->
+                metricData.getLongSumData().getPoints().stream()
+                    .anyMatch(point -> poolName.equals(point.getAttributes().get(POOL_NAME))));
   }
 
   private void verifyObjectCount(String poolName) {
