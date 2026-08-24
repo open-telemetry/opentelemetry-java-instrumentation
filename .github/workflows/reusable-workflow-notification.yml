@@ -8,6 +8,10 @@ on:
       success:
         type: boolean
         required: true
+      title:
+        type: string
+        required: false
+        description: "Custom title for the issue (defaults to 'Workflow failed: $GITHUB_WORKFLOW')"
       failure-notification-after-attempts:
         type: number
         required: false
@@ -33,8 +37,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           INPUT_SUCCESS: ${{ inputs.success }}
+          INPUT_TITLE: ${{ inputs.title }}
         run: |
-          issue_title="Workflow failed: $GITHUB_WORKFLOW"
+          # Use custom title if provided, otherwise use default
+          if [[ -n "$INPUT_TITLE" ]]; then
+            issue_title="$INPUT_TITLE"
+          else
+            issue_title="Workflow failed: $GITHUB_WORKFLOW"
+          fi
 
           # TODO (trask) search doesn't support exact phrases, so it's possible that this could grab the wrong issue
           number=$(gh issue list --search "in:title $issue_title" --limit 1 --json number -q .[].number)

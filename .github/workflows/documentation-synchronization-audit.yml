@@ -9,9 +9,8 @@ permissions:
 
 jobs:
   crawl:
-    permissions:
-      contents: read
-      issues: write
+    outputs:
+      success: ${{ steps.doc-site-audit.outputs.success }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -48,31 +47,13 @@ jobs:
               ;;
           esac
 
-      - name: Open or close documentation sync issue
-        env:
-          GH_REPO: ${{ github.repository }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          AUDIT_SUCCESS: ${{ steps.doc-site-audit.outputs.success }}
-        run: |
-          set -euo pipefail
-
-          issue_title="Documentation sync needed: opentelemetry.io site out of sync"
-          number=$(
-            gh issue list \
-              --state open \
-              --search "in:title $issue_title" \
-              --limit 100 \
-              --json number,title \
-              --jq "map(select(.title | startswith(\"$issue_title (#\")))[0].number // empty"
-          )
-          issue_body="See [$GITHUB_WORKFLOW #$GITHUB_RUN_NUMBER](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."
-
-          if [[ -n "$number" ]]; then
-            if [[ "$AUDIT_SUCCESS" == "true" ]]; then
-              gh issue close "$number"
-            else
-              gh issue comment "$number" --body "$issue_body"
-            fi
-          elif [[ "$AUDIT_SUCCESS" == "false" ]]; then
-            gh issue create --title "$issue_title (#$GITHUB_RUN_NUMBER)" --body "$issue_body"
-          fi
+  workflow-notification:
+    permissions:
+      contents: read
+      issues: write
+    needs:
+      - crawl
+    uses: ./.github/workflows/reusable-workflow-notification.yml
+    with:
+      success: ${{ needs.crawl.outputs.success == 'true' }}
+      title: "Documentation sync needed: opentelemetry.io site out of sync"
