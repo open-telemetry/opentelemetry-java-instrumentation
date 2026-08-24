@@ -63,6 +63,12 @@ targets:
       target: ':instrumentation:alibaba-druid-1.0:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:apache-commons-pool-2.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:apache-commons-pool-2.0:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:apache-dbcp-2.0:javaagent'
     - type: gradle
       path: ./
@@ -876,6 +882,9 @@ targets:
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.63:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.65:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:opentelemetry-instrumentation-api:opentelemetry-instrumentation-api-1.14:javaagent'
     - type: gradle
       path: ./
@@ -916,6 +925,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:redisson:redisson-common-3.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:redisson:redisson-metrics-3.26:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:restlet:restlet-1.1:javaagent'
@@ -1063,6 +1075,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:tomcat:tomcat-common-7.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:tomcat:tomcat-dbcp-8.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:tomcat:tomcat-jdbc-8.5:javaagent'

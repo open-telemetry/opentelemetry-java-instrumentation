@@ -11,8 +11,10 @@ import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.DurationUtil;
-import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrFeature;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
+import java.util.Set;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import jdk.jfr.consumer.RecordedEvent;
 
 // jdk.SocketWrite {
@@ -41,24 +43,40 @@ public final class NetworkWriteHandler implements RecordedEventHandler {
   private static final String EVENT_NAME = "jdk.SocketWrite";
   private static final String BYTES_WRITTEN = "bytesWritten";
 
-  private final LongHistogram bytesHistogram;
-  private final DoubleHistogram durationHistogram;
+  private final Set<String> metricNames;
+  @Nullable private final LongHistogram bytesHistogram;
+  @Nullable private final DoubleHistogram durationHistogram;
   private final Attributes attributes;
 
-  public NetworkWriteHandler(Meter meter) {
+  @Nullable
+  public static NetworkWriteHandler create(Meter meter, Predicate<String> metricNamePredicate) {
+    Set<String> metricNames =
+        RecordedEventHandler.selectMetricNames(
+            metricNamePredicate,
+            Constants.METRIC_NAME_NETWORK_BYTES,
+            Constants.METRIC_NAME_NETWORK_DURATION);
+    return metricNames.isEmpty() ? null : new NetworkWriteHandler(meter, metricNames);
+  }
+
+  private NetworkWriteHandler(Meter meter, Set<String> metricNames) {
+    this.metricNames = metricNames;
     bytesHistogram =
-        meter
-            .histogramBuilder(Constants.METRIC_NAME_NETWORK_BYTES)
-            .setDescription(Constants.METRIC_DESCRIPTION_NETWORK_BYTES)
-            .setUnit(Constants.BYTES)
-            .ofLongs()
-            .build();
+        metricNames.contains(Constants.METRIC_NAME_NETWORK_BYTES)
+            ? meter
+                .histogramBuilder(Constants.METRIC_NAME_NETWORK_BYTES)
+                .setDescription(Constants.METRIC_DESCRIPTION_NETWORK_BYTES)
+                .setUnit(Constants.BYTES)
+                .ofLongs()
+                .build()
+            : null;
     durationHistogram =
-        meter
-            .histogramBuilder(Constants.METRIC_NAME_NETWORK_DURATION)
-            .setDescription(Constants.METRIC_DESCRIPTION_NETWORK_DURATION)
-            .setUnit(Constants.SECONDS)
-            .build();
+        metricNames.contains(Constants.METRIC_NAME_NETWORK_DURATION)
+            ? meter
+                .histogramBuilder(Constants.METRIC_NAME_NETWORK_DURATION)
+                .setDescription(Constants.METRIC_DESCRIPTION_NETWORK_DURATION)
+                .setUnit(Constants.SECONDS)
+                .build()
+            : null;
     attributes = Attributes.of(Constants.ATTR_NETWORK_MODE, Constants.NETWORK_MODE_WRITE);
   }
 
@@ -68,13 +86,17 @@ public final class NetworkWriteHandler implements RecordedEventHandler {
   }
 
   @Override
-  public JfrFeature getFeature() {
-    return JfrFeature.NETWORK_IO_METRICS;
+  public Set<String> getMetricNames() {
+    return metricNames;
   }
 
   @Override
   public void accept(RecordedEvent ev) {
-    bytesHistogram.record(ev.getLong(BYTES_WRITTEN), attributes);
-    durationHistogram.record(DurationUtil.toSeconds(ev.getDuration()), attributes);
+    if (bytesHistogram != null) {
+      bytesHistogram.record(ev.getLong(BYTES_WRITTEN), attributes);
+    }
+    if (durationHistogram != null) {
+      durationHistogram.record(DurationUtil.toSeconds(ev.getDuration()), attributes);
+    }
   }
 }

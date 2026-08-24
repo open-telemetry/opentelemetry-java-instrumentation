@@ -54,6 +54,20 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.spring-rabbit.enabled=true")
   }
 
+  val testWithRabbitInstrumentationMessagingPreview =
+    register<Test>("testWithRabbitInstrumentationMessagingPreview") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        includeTestsMatching("SpringIntegrationAndRabbitTest")
+      }
+      include("**/SpringIntegrationAndRabbitTest.*")
+      jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=true")
+      jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
+      jvmArgs("-Dotel.semconv-stability.preview=messaging")
+      systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+    }
+
   val testWithProducerInstrumentation = register<Test>("testWithProducerInstrumentation") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -105,7 +119,7 @@ tasks {
   }
 
   check {
-    dependsOn(testWithRabbitInstrumentation, testWithProducerInstrumentation, testMessagingPreview, testBothSemconv)
+    dependsOn(testWithRabbitInstrumentation, testWithRabbitInstrumentationMessagingPreview, testWithProducerInstrumentation, testMessagingPreview, testBothSemconv)
   }
 
   withType<Test>().configureEach {

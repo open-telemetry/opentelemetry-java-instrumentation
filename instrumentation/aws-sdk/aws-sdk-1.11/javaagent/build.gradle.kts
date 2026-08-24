@@ -167,8 +167,9 @@ tasks {
     classpath = sourceSets["testSqs"].runtimeClasspath
 
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+    // with the v3 preview off, the legacy opt-in flag selects the new messaging semconv too
+    jvmArgs("-Dotel.semconv-stability.opt-in=messaging/dup")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging/dup")
   }
 
   check {

@@ -74,14 +74,22 @@ public abstract class RedissonRequest {
     }
   }
 
-  public static RedissonRequest create(@Nullable InetSocketAddress address, Object command) {
-    return new AutoValue_RedissonRequest(address, command);
+  /**
+   * Creates a request. The database index is resolved by the version specific instrumentation,
+   * because the redisson 3.0 client API does not expose it.
+   */
+  public static RedissonRequest create(
+      @Nullable InetSocketAddress address, Object command, @Nullable Long databaseIndex) {
+    return new AutoValue_RedissonRequest(address, command, databaseIndex);
   }
 
   @Nullable
   public abstract InetSocketAddress getAddress();
 
   public abstract Object getCommand();
+
+  @Nullable
+  public abstract Long getDatabaseIndex();
 
   @Nullable
   public String getOperationName() {

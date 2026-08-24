@@ -9,12 +9,15 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
@@ -22,9 +25,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 public class JmsInstrumenterFactory {
 
@@ -35,7 +35,7 @@ public class JmsInstrumenterFactory {
 
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
-  private List<String> capturedHeaders = emptyList();
+  private IncludeExclude headers = IncludeExclude.builder().build();
   private boolean messagingReceiveInstrumentationEnabled = false;
 
   public JmsInstrumenterFactory(OpenTelemetry openTelemetry, String instrumentationName) {
@@ -44,8 +44,8 @@ public class JmsInstrumenterFactory {
   }
 
   @CanIgnoreReturnValue
-  public JmsInstrumenterFactory setCapturedHeaders(Collection<String> capturedHeaders) {
-    this.capturedHeaders = new ArrayList<>(capturedHeaders);
+  public JmsInstrumenterFactory setHeaders(IncludeExclude headers) {
+    this.headers = headers;
     return this;
   }
 
@@ -66,7 +66,8 @@ public class JmsInstrumenterFactory {
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(operationType, SEND_OPERATION_NAME));
+                createMessagingAttributesExtractor(operationType, SEND_OPERATION_NAME))
+            .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
     setMessagingSendExceptionEventExtractor(builder);
     return builder.buildProducerInstrumenter(new MessagePropertySetter());
   }
@@ -81,7 +82,8 @@ public class JmsInstrumenterFactory {
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, RECEIVE_OPERATION_NAME))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(operationType, RECEIVE_OPERATION_NAME));
+                createMessagingAttributesExtractor(operationType, RECEIVE_OPERATION_NAME))
+            .addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
     setMessagingReceiveExceptionEventExtractor(builder);
     // with the stable messaging semantic conventions the producer is always linked, since it is
     // never used as the parent of the receive span
@@ -95,7 +97,7 @@ public class JmsInstrumenterFactory {
   }
 
   public Instrumenter<MessageWithDestination, Void> createConsumerProcessInstrumenter(
-      boolean canHaveReceiveInstrumentation) {
+      boolean canHaveReceiveInstrumentation, boolean recordConsumedMessages) {
     JmsMessageAttributesGetter getter = new JmsMessageAttributesGetter();
     MessagingOperationType operationType = MessagingOperationType.PROCESS;
 
@@ -105,20 +107,26 @@ public class JmsInstrumenterFactory {
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(operationType, PROCESS_OPERATION_NAME));
+                createMessagingAttributesExtractor(operationType, PROCESS_OPERATION_NAME))
+            .addOperationMetrics(MessagingProcessMetrics.get());
+    boolean receiveOperationExists =
+        canHaveReceiveInstrumentation && messagingReceiveInstrumentationEnabled;
+    if (recordConsumedMessages && emitStableMessagingSemconv()) {
+      builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
+    }
     setMessagingProcessExceptionEventExtractor(builder);
     return MessagingProcessInstrumenterFactory.create(
         builder,
         openTelemetry.getPropagators().getTextMapPropagator(),
         MessagePropertyGetter.INSTANCE,
-        canHaveReceiveInstrumentation && messagingReceiveInstrumentationEnabled);
+        receiveOperationExists);
   }
 
   private AttributesExtractor<MessageWithDestination, Void> createMessagingAttributesExtractor(
       MessagingOperationType operationType, String operationName) {
     return MessagingAttributesExtractor.builder(
             new JmsMessageAttributesGetter(), operationType, operationName)
-        .setCapturedHeaders(capturedHeaders)
+        .setHeaders(headers)
         .build();
   }
 }

@@ -51,6 +51,9 @@ public abstract class CouchbaseRequestInfo {
     SqlQuery sqlQueryWithSummary =
         emitStableDatabaseSemconv() ? CouchbaseQuerySanitizer.analyzeWithSummary(query) : null;
     String operation = sqlQuery != null ? sqlQuery.getOperationName() : null;
+    if (operation == null && sqlQueryWithSummary != null) {
+      operation = sqlQueryWithSummary.getOperationName();
+    }
     return new AutoValue_CouchbaseRequestInfo(
         bucket, sqlQuery, sqlQueryWithSummary, operation, false);
   }

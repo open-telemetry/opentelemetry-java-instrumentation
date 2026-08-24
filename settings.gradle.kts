@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.4.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.1"
-    id("org.graalvm.buildtools.native") version "1.1.7"
+    id("org.graalvm.buildtools.native") version "1.1.9"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
@@ -71,6 +71,9 @@ dependencyResolutionManagement {
 val develocityServer = "https://develocity.opentelemetry.io"
 val isCI = System.getenv("CI") != null
 val develocityAccessKey = System.getenv("DEVELOCITY_ACCESS_KEY") ?: ""
+val isRemoteBuildCachePushEnabled = isCI && develocityAccessKey.isNotEmpty()
+val shouldDisableLocalBuildCache =
+  isRemoteBuildCachePushEnabled && System.getenv("GITHUB_REF_NAME") == "main"
 
 develocity {
   if (develocityAccessKey.isNotEmpty()) {
@@ -106,9 +109,16 @@ develocity {
 }
 
 buildCache {
+  // a task loaded from the local build cache is never pushed to the remote build cache, so on main
+  // builds that write the remote cache the local cache is disabled, otherwise everything that
+  // doesn't change is served locally, never re-executed, and never reaches the remote cache
+  local {
+    isEnabled = !shouldDisableLocalBuildCache
+  }
+
   remote(develocity.buildCache) {
     server = develocityServer
-    isPush = isCI && develocityAccessKey.isNotEmpty()
+    isPush = isRemoteBuildCachePushEnabled
   }
 }
 
@@ -171,6 +181,8 @@ include(":smoke-tests:images:spring-boot")
 include(":smoke-tests:extensions:testapp")
 include(":smoke-tests:extensions:extension")
 
+include(":smoke-tests-osgi")
+
 include(":smoke-tests-otel-starter:spring-smoke-testing")
 include(":smoke-tests-otel-starter:spring-boot-2")
 include(":smoke-tests-otel-starter:spring-boot-3")
@@ -188,6 +200,9 @@ include(":instrumentation:akka:akka-http-10.0:javaagent")
 include(":instrumentation:alibaba-druid-1.0:javaagent")
 include(":instrumentation:alibaba-druid-1.0:library")
 include(":instrumentation:alibaba-druid-1.0:testing")
+include(":instrumentation:apache-commons-pool-2.0:javaagent")
+include(":instrumentation:apache-commons-pool-2.0:library")
+include(":instrumentation:apache-commons-pool-2.0:testing")
 include(":instrumentation:apache-dbcp-2.0:javaagent")
 include(":instrumentation:apache-dbcp-2.0:library")
 include(":instrumentation:apache-dbcp-2.0:testing")
@@ -440,6 +455,7 @@ include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:testing")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library")
 include(":instrumentation:kafka:kafka-connect-2.6:javaagent")
+include(":instrumentation:kafka:kafka-connect-2.6:javaagent-unit-tests")
 include(":instrumentation:kafka:kafka-connect-2.6:testing")
 include(":instrumentation:kafka:kafka-streams-0.11:javaagent")
 include(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent")
@@ -536,6 +552,7 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.57:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.59:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.61:testing")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.63:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.65:javaagent")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")
@@ -595,6 +612,7 @@ include(":instrumentation:redisson:redisson-3.0:javaagent")
 include(":instrumentation:redisson:redisson-3.17:javaagent")
 include(":instrumentation:redisson:redisson-common-3.0:javaagent")
 include(":instrumentation:redisson:redisson-common-3.0:testing")
+include(":instrumentation:redisson:redisson-metrics-3.26:javaagent")
 include(":instrumentation:resources:library")
 include(":instrumentation:restlet:restlet-1.1:javaagent")
 include(":instrumentation:restlet:restlet-1.1:library")
@@ -608,6 +626,7 @@ include(":instrumentation:rocketmq:rocketmq-client-4.8:javaagent")
 include(":instrumentation:rocketmq:rocketmq-client-4.8:library")
 include(":instrumentation:rocketmq:rocketmq-client-4.8:testing")
 include(":instrumentation:rocketmq:rocketmq-client-5.0:javaagent")
+include(":instrumentation:rocketmq:rocketmq-client-5.0:javaagent-unit-tests")
 include(":instrumentation:runtime-telemetry:javaagent")
 include(":instrumentation:runtime-telemetry:library")
 include(":instrumentation:runtime-telemetry:testing")
@@ -711,6 +730,7 @@ include(":instrumentation:thrift-0.13:testing")
 include(":instrumentation:tomcat:tomcat-7.0:javaagent")
 include(":instrumentation:tomcat:tomcat-10.0:javaagent")
 include(":instrumentation:tomcat:tomcat-common-7.0:javaagent")
+include(":instrumentation:tomcat:tomcat-dbcp-8.0:javaagent")
 include(":instrumentation:tomcat:tomcat-jdbc-8.5:javaagent")
 include(":instrumentation:twilio-6.6:javaagent")
 include(":instrumentation:undertow-1.4:bootstrap")

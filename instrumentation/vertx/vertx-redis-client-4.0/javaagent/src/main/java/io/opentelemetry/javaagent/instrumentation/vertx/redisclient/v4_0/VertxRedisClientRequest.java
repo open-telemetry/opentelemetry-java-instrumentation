@@ -98,6 +98,18 @@ class VertxRedisClientRequest {
   }
 
   @Nullable
+  String getDatabaseNamespace() {
+    if (redisUri == null) {
+      return null;
+    }
+    // A connection string without an explicit database connects to Redis database 0, the server
+    // default. The Vert.x client itself reports "0" in this case (see its CommandReporter), so we
+    // report 0 for the stable db.namespace rather than dropping the attribute.
+    Integer select = redisUri.select();
+    return select != null ? String.valueOf(select) : "0";
+  }
+
+  @Nullable
   String getConnectionString() {
     return null;
   }

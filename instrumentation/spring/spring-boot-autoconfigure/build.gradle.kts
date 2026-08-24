@@ -32,11 +32,13 @@ sourceSets {
 }
 
 configurations {
+  // the javaSpring3 and javaSpring4 source sets are bundled into the main jar, so they need to see
+  // the same dependencies as the main source set
   named("javaSpring3CompileOnly") {
-    extendsFrom(configurations["compileOnly"])
+    extendsFrom(configurations["compileOnly"], configurations["implementation"])
   }
   named("javaSpring4CompileOnly") {
-    extendsFrom(configurations["compileOnly"])
+    extendsFrom(configurations["compileOnly"], configurations["implementation"])
   }
 }
 
@@ -78,6 +80,8 @@ dependencies {
   library("org.springframework.boot:spring-boot-starter-data-r2dbc:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-data-jdbc:$springBootVersion")
 
+  // TODO: Remove in 3.0.0; retained for compatibility with the 2.x Spring artifacts.
+  api("io.opentelemetry.semconv:opentelemetry-semconv")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-declarative-config")
   implementation(project(":sdk-autoconfigure-support"))

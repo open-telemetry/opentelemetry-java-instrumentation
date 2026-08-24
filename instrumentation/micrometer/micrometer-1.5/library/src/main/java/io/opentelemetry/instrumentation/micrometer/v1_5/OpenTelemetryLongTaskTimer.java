@@ -34,7 +34,8 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer
       Clock clock,
       TimeUnit baseTimeUnit,
       DistributionStatisticConfig distributionStatisticConfig,
-      Meter otelMeter) {
+      Meter otelMeter,
+      Bridging bridging) {
     super(id, clock, baseTimeUnit, distributionStatisticConfig, false);
 
     this.distributionStatisticConfig = distributionStatisticConfig;
@@ -45,7 +46,7 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer
     this.observableActiveTasks =
         otelMeter
             .upDownCounterBuilder(name + ".active")
-            .setDescription(Bridging.description(id))
+            .setDescription(bridging.description(name + ".active", id))
             .setUnit("{tasks}")
             .buildWithCallback(
                 new LongMeasurementRecorder<>(this, DefaultLongTaskTimer::activeTasks, attributes));
@@ -53,7 +54,7 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer
         otelMeter
             .upDownCounterBuilder(name + ".duration")
             .ofDoubles()
-            .setDescription(Bridging.description(id))
+            .setDescription(bridging.description(name + ".duration", id))
             .setUnit(TimeUnitHelper.getUnitString(baseTimeUnit))
             .buildWithCallback(
                 new DoubleMeasurementRecorder<>(

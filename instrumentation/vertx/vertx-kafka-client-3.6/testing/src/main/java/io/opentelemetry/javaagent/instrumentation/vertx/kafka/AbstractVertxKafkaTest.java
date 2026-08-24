@@ -13,6 +13,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CLIENT_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
@@ -31,10 +32,13 @@ import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.trace.data.LinkData;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -143,6 +147,7 @@ public abstract class AbstractVertxKafkaTest {
 
       // wait a bit to ensure that the consumer has really paused
       Thread.sleep(1000);
+      testing().clearData();
 
       CountDownLatch sent = new CountDownLatch(records.length);
       testing()
@@ -211,7 +216,27 @@ public abstract class AbstractVertxKafkaTest {
     if (hasConsumerGroup()) {
       addGroupAssertions(assertions);
     }
+    if (emitStableMessagingSemconv()) {
+      assertions.add(
+          satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
+    }
     return assertions;
+  }
+
+  // the offset and the message key stay on the links even when the batch carries a single record,
+  // because they are only recommended on spans that describe a single message operation
+  protected static LinkData batchRecordLink(SpanData producerSpan) {
+    if (!emitStableMessagingSemconv()) {
+      return LinkData.create(producerSpan.getSpanContext());
+    }
+    return LinkData.create(
+        producerSpan.getSpanContext(),
+        Attributes.builder()
+            .put(MESSAGING_KAFKA_OFFSET, producerSpan.getAttributes().get(MESSAGING_KAFKA_OFFSET))
+            .put(
+                MESSAGING_KAFKA_MESSAGE_KEY,
+                producerSpan.getAttributes().get(MESSAGING_KAFKA_MESSAGE_KEY))
+            .build());
   }
 
   protected List<AttributeAssertion> processAttributes(KafkaProducerRecord<String, String> record) {
@@ -260,8 +285,7 @@ public abstract class AbstractVertxKafkaTest {
           satisfies(stringKey("messaging.client_id"), val -> val.startsWith(clientIdPrefix)));
     }
     if (emitStableMessagingSemconv()) {
-      assertions.add(
-          satisfies(stringKey("messaging.client.id"), val -> val.startsWith(clientIdPrefix)));
+      assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith(clientIdPrefix)));
     }
     return assertions;
   }

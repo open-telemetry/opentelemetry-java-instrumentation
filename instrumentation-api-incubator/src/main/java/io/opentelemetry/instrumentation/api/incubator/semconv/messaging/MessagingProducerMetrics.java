@@ -47,6 +47,7 @@ public final class MessagingProducerMetrics implements OperationListener {
   private static final Logger logger = Logger.getLogger(MessagingProducerMetrics.class.getName());
 
   private final boolean supportsStableSemconv;
+  private final boolean sentMessagesOnly;
   private final boolean enabled;
   @Nullable private final DoubleHistogram publishDurationHistogram;
   @Nullable private final DoubleHistogram clientOperationDurationHistogram;
@@ -54,13 +55,17 @@ public final class MessagingProducerMetrics implements OperationListener {
 
   private MessagingProducerMetrics(Meter meter, Variant variant) {
     supportsStableSemconv = variant != Variant.LEGACY;
+    sentMessagesOnly = variant == Variant.SENT_MESSAGES_ONLY;
     boolean emitOldSemconv =
         variant == Variant.LEGACY
             || (variant == Variant.STABLE_AND_OLD && emitOldMessagingSemconv());
     boolean emitStableSemconv = supportsStableSemconv && emitStableMessagingSemconv();
-    publishDurationHistogram = emitOldSemconv ? buildPublishDuration(meter) : null;
+    publishDurationHistogram =
+        !sentMessagesOnly && emitOldSemconv ? buildPublishDuration(meter) : null;
     clientOperationDurationHistogram =
-        emitStableSemconv ? MessagingMetricsAdvice.buildClientOperationDuration(meter) : null;
+        !sentMessagesOnly && emitStableSemconv
+            ? MessagingMetricsAdvice.buildClientOperationDuration(meter)
+            : null;
     sentMessagesCounter = emitStableSemconv ? buildSentMessages(meter) : null;
     enabled =
         publishDurationHistogram != null
@@ -68,7 +73,16 @@ public final class MessagingProducerMetrics implements OperationListener {
             || sentMessagesCounter != null;
   }
 
-  /** Returns metrics for extractors configured with {@link MessageOperation}. */
+  /**
+   * Returns metrics for extractors configured with {@link MessageOperation}.
+   *
+   * <p>In 3.0 this method name will be reused for {@link #getForOperationType()}, which emits
+   * different instruments, so callers must migrate rather than rely on this name continuing to
+   * behave the same way.
+   *
+   * @deprecated Use {@link #getForOperationType()}. May be removed in the next minor release.
+   */
+  @Deprecated // may be removed in the next minor release
   public static OperationMetrics get() {
     return OperationMetricsUtil.create(
         "messaging producer", meter -> new MessagingProducerMetrics(meter, Variant.LEGACY));
@@ -95,6 +109,13 @@ public final class MessagingProducerMetrics implements OperationListener {
   public static OperationMetrics getForOperationTypeWithOldMetrics() { // to be removed in 3.0
     return OperationMetricsUtil.create(
         "messaging producer", meter -> new MessagingProducerMetrics(meter, Variant.STABLE_AND_OLD));
+  }
+
+  /** Returns only the stable sent-messages metric. */
+  public static OperationMetrics getSentMessages() {
+    return OperationMetricsUtil.create(
+        "messaging sent messages",
+        meter -> new MessagingProducerMetrics(meter, Variant.SENT_MESSAGES_ONLY));
   }
 
   @Override
@@ -188,6 +209,8 @@ public final class MessagingProducerMetrics implements OperationListener {
      * Extractors configured with {@link MessagingOperationType} that also keep emitting the
      * deprecated instruments.
      */
-    STABLE_AND_OLD
+    STABLE_AND_OLD,
+    /** Only the stable sent-messages counter. */
+    SENT_MESSAGES_ONLY
   }
 }

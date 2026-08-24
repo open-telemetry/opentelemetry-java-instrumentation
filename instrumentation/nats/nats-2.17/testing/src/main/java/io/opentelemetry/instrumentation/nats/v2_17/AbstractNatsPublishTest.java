@@ -37,6 +37,7 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
     // then
     assertPublishSpan();
     assertTraceparentHeader(subscription);
+    assertProducerMetrics("publish", "sub", null);
   }
 
   @Test

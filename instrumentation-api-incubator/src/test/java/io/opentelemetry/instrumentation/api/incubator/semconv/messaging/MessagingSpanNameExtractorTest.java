@@ -27,6 +27,7 @@ class MessagingSpanNameExtractorTest {
 
   @Mock MessagingAttributesGetter<Message, Void> getter;
 
+  @SuppressWarnings("deprecation")
   @Test
   void shouldKeepLegacyNameForMessageOperation() {
     Message message = new Message();

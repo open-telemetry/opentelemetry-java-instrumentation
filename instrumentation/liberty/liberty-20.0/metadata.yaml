@@ -16,8 +16,38 @@ configurations:
     description: Enables capturing the experimental `servlet.timeout` span attribute.
     type: boolean
     default: false
+  - name: otel.instrumentation.servlet.experimental.request-parameters.included
+    declarative_name: java.servlet.request_parameters/development.included
+    description: >
+      A comma-separated list of case-sensitive request parameter name patterns to capture as span
+      attributes. `?` matches one character and `*` matches zero or more characters. Excluded
+      patterns take precedence over included patterns. No request parameters are captured unless an
+      included or excluded pattern is configured; configuring only excluded patterns captures all
+      request parameters that do not match them, which may expose sensitive information.
+    type: list
+    default: ""
+    examples:
+      - "request-id"
+      - "user-*,search-?"
+  - name: otel.instrumentation.servlet.experimental.request-parameters.excluded
+    declarative_name: java.servlet.request_parameters/development.excluded
+    description: >
+      A comma-separated list of case-sensitive request parameter name patterns to exclude from span
+      attributes. `?` matches one character and `*` matches zero or more characters. Excluded
+      patterns take precedence over included patterns. No request parameters are captured unless an
+      included or excluded pattern is configured; configuring only excluded patterns captures all
+      request parameters that do not match them, which may expose sensitive information.
+    type: list
+    default: ""
+    examples:
+      - "password,*-token"
   - name: otel.instrumentation.servlet.experimental.capture-request-parameters
     declarative_name: java.servlet.capture_request_parameters/development
-    description: List of request parameter names to capture as span attributes.
+    description: >
+      Deprecated include-only alias for
+      `otel.instrumentation.servlet.experimental.request-parameters.included`. It does not support
+      glob patterns: an entry containing `*` or `?` is ignored with a warning, and every other
+      entry is matched as a literal request parameter name. It may be removed in the next minor
+      release.
     type: list
     default: ""

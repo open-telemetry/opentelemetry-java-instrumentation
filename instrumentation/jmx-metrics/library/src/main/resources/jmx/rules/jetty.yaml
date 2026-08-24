@@ -15,23 +15,24 @@ rules:
       # jetty.thread.count
       threads:
         metric: count
-        desc: The current number of threads
+        desc: The current number of threads.
       # jetty.thread.limit
       maxThreads:
         metric: limit
-        desc: The configured maximum number of threads in the pool
+        desc: The configured maximum number of threads in the pool.
       # jetty.thread.idle.count
       idleThreads:
         metric: idle.count
-        desc: The current number of idle threads
+        desc: The current number of idle threads.
       # jetty.thread.busy.count
       busyThreads:
         metric: busy.count
-        desc: The current number of busy threads
+        desc: The current number of busy threads.
       # jetty.thread.queue.size
       queueSize:
         metric: queue.size
-        desc: The current job queue size
+        desc: The current job queue size.
+        unit: "{job}"
 
   - bean: org.eclipse.jetty.io:context=*,type=managedselector,id=*
     mapping:
@@ -40,7 +41,7 @@ rules:
         metric: jetty.select.count
         type: counter
         unit: "{operation}"
-        desc: The number of select calls
+        desc: The number of select calls.
 
   # Session metrics for Jetty 12
   - bean: org.eclipse.jetty.session:context=*,type=defaultsessioncache,id=*
@@ -57,7 +58,7 @@ rules:
       sessionsCurrent:
         metric: count
         type: updowncounter
-        desc: Current number of active sessions
+        desc: Current number of active sessions.
 
   # Session metrics for Jetty 9 to 11
   - bean: org.eclipse.jetty.server.session:context=*,type=sessionhandler,id=*
@@ -74,10 +75,10 @@ rules:
         metric: created.count
         unit: "{session}"
         type: counter
-        desc: The total number of created sessions
+        desc: The total number of created sessions.
       # jetty.session.duration.sum
       sessionTimeTotal:
         metric: duration.sum
         unit: s
         type: counter
-        desc: The cumulated session duration
+        desc: The cumulated session duration.
