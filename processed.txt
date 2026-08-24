@@ -592,3 +592,4 @@ kafka-connect-2.6:javaagent-unit-tests
 apache-commons-pool-2.0:javaagent
 apache-commons-pool-2.0:library
 apache-commons-pool-2.0:testing
+elasticsearch-transport-common-5.0:javaagent-unit-tests
