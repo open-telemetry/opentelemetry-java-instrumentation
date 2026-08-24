@@ -42,6 +42,7 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.apache.hadoop.conf.Configuration;
@@ -283,6 +284,26 @@ public abstract class AbstractHbaseTest {
       assertThat(value(result, "col2")).isEqualTo("col2_val_1");
     }
     testing().waitAndAssertTraces(traceAssertConsumer(TABLE_NAME, GET, REGION_SERVER_PORT, true));
+  }
+
+  @Test
+  void zookeeperQuorumIsNotReportedAsTheServerTarget() throws IOException {
+    String host = hbaseContainer.getHost();
+    String quorumHost = host.equals(hostname) ? host.toUpperCase(Locale.ROOT) : host;
+    String resolvedHost = InetAddress.getByName(host).getHostAddress();
+    Configuration config = HBaseConfiguration.create();
+    config.set("hbase.zookeeper.quorum", quorumHost + "," + resolvedHost);
+    config.set("hbase.zookeeper.property.clientPort", "2181");
+
+    try (Connection quorumConnection = ConnectionFactory.createConnection(config);
+        Table table = quorumConnection.getTable(TABLE_NAME)) {
+      table.get(new Get(Bytes.toBytes(ROW_1)));
+    }
+
+    testing()
+        .waitAndAssertTraces(
+            traceAssertConsumer(META, SCAN, REGION_SERVER_PORT, true),
+            traceAssertConsumer(TABLE_NAME, GET, REGION_SERVER_PORT, true));
   }
 
   private static String value(Result result, String column) {
