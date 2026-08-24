@@ -53,15 +53,7 @@ tasks {
       }
     }
 
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
-  }
-
   val exceptionSignalLogsSuites = testing.suites.withType(JvmTestSuite::class)
-    .matching { it.name == "http2Test" }
     .map { suite ->
       register<Test>("${suite.name}ExceptionSignalLogs") {
         testClassesDirs = suite.sources.output.classesDirs
@@ -73,6 +65,6 @@ tasks {
     }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites, testExceptionSignalLogs, exceptionSignalLogsSuites)
+    dependsOn(testing.suites, stableSemconvSuites, exceptionSignalLogsSuites)
   }
 }
