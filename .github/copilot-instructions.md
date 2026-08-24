@@ -39,16 +39,21 @@ In **catch clauses only** (not method/lambda parameters or fields):
 
 Public API getters use `get*` (or `is*` for booleans).
 
-## [Naming] Semantic Key/Handle Field Names
+## [Naming] VirtualField Handle Field Names
 
-Semantic key/handle types — `AttributeKey`, `ContextKey`, `VirtualField`,
-`MethodHandle`, and `Pattern` — must use `SCREAMING_SNAKE_CASE` for `static
-final` fields, regardless of visibility (`private` or `public`) and regardless
-of whether the value is created by a runtime factory method (e.g.
-`VirtualField.find(...)`). Flag a camelCase `static final` field of one of
-these types. Runtime collaborator objects (loggers, instrumenters, helpers,
-caches, and similar service objects) keep lower camel case even when `static
-final` — do not flag those.
+A `static final VirtualField` field must use `SCREAMING_SNAKE_CASE`, regardless
+of visibility (`private` or `public`) and regardless of the fact that
+`VirtualField.find(...)` creates the handle at runtime rather than at compile
+time. Flag a camelCase `static final VirtualField` field.
+
+Other semantic key/handle types (`AttributeKey`, `ContextKey`, `MethodHandle`,
+`Pattern`) are good candidates for uppercase names too, but this repository
+does not yet treat that as mandatory — do not flag existing camelCase
+`MethodHandle` or `Pattern` fields on this basis alone.
+
+Runtime collaborator objects (loggers, instrumenters, helpers, caches, and
+similar service objects) keep lower camel case even when `static final` — do
+not flag those.
 
 ## [Style] No Redundant Null Guards on Attribute Puts
 

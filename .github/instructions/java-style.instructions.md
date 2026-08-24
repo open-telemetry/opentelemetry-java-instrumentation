@@ -28,13 +28,14 @@ Follow `docs/contributing/style-guide.md`.
 - **Static utility classes**: place the private no-arg constructor after all
   methods.
 - **Uppercase field names**: use `SCREAMING_SNAKE_CASE` only for constant-like
-  values — literals, immutable value constants (e.g. `Duration` timeouts), and
-  canonical singletons (`INSTANCE`, `EMPTY`, `NOOP`). Semantic key/handle types
-  (`AttributeKey`, `ContextKey`, `VirtualField`, `MethodHandle`, `Pattern`)
-  **must** be `SCREAMING_SNAKE_CASE`, regardless of visibility and regardless
-  of whether the value is created by a runtime factory (e.g.
-  `VirtualField.find(...)`). Use lower camel case for runtime collaborators
-  (loggers, instrumenters, helpers, caches), even when `static final`.
+  values — literals, immutable value constants (e.g. `Duration` timeouts),
+  canonical singletons (`INSTANCE`, `EMPTY`, `NOOP`), and semantic key/handle
+  types (`AttributeKey`, `ContextKey`, `VirtualField`, `MethodHandle`,
+  `Pattern`). A `static final VirtualField` field **must** be
+  `SCREAMING_SNAKE_CASE` regardless of visibility and regardless of the fact
+  that `VirtualField.find(...)` creates the handle at runtime rather than at
+  compile time. Use lower camel case for runtime collaborators (loggers,
+  instrumenters, helpers, caches), even when `static final`.
 - **Collection constants**: public, protected, and package-private collection
   constants must be unmodifiable. Private collection constants must also be
   unmodifiable when their collection reference escapes the declaring class.
