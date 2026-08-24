@@ -17,14 +17,11 @@ dependencies {
   }
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
-
-  // A Geode client cannot connect to an older server. The apachegeode/geode image publishes
-  // nothing newer than 1.15.1, so the client cannot be tested past that version either.
-  latestDepTestLibrary("org.apache.geode:geode-core:1.15.1") // documented limitation
 }
 
 tasks {
   withType<Test>().configureEach {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", otelProps.collectMetadata)
   }

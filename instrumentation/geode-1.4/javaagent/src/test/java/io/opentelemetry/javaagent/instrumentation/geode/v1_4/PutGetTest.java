@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -41,6 +42,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.utility.MountableFile;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -48,7 +50,7 @@ class PutGetTest {
   private static final int GEODE_PORT = 40404;
 
   private static final GenericContainer<?> geodeServer =
-      new GenericContainer<>("apachegeode/geode:1.15.1")
+      createGeodeServer()
           .withExposedPorts(GEODE_PORT)
           .withCopyFileToContainer(
               MountableFile.forClasspathResource("geode-cache.xml"), "/geode-cache.xml")
@@ -68,6 +70,14 @@ class PutGetTest {
 
   private static ClientCache cache;
   private static Region<Object, Object> region;
+
+  private static GenericContainer<?> createGeodeServer() {
+    if (testLatestDeps()) {
+      return new GenericContainer<>(
+          new ImageFromDockerfile().withFileFromClasspath("Dockerfile", "geode-2.0.2.Dockerfile"));
+    }
+    return new GenericContainer<>("apachegeode/geode:1.4.0");
+  }
 
   @BeforeAll
   static void setUp() {
