@@ -10,7 +10,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.builder.Transferable;
 
-public class KafkaContainer extends GenericContainer<KafkaContainer> {
+class KafkaContainer extends GenericContainer<KafkaContainer> {
 
   private static final int KAFKA_CONTROLLER_PORT = 9093;
 
