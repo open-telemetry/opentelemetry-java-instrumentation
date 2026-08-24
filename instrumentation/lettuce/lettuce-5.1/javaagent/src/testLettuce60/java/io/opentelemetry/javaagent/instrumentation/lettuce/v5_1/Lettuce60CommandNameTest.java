@@ -19,8 +19,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.lettuce.v5_1.AbstractLettuceClientTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -43,11 +41,10 @@ class Lettuce60CommandNameTest extends AbstractLettuceClientTest {
   private RedisCommands<String, String> syncCommands;
 
   @BeforeAll
-  void setUp() throws UnknownHostException {
+  void setUp() {
     redisServer.start();
 
     host = redisServer.getHost();
-    ip = InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
 
