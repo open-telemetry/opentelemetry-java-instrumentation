@@ -19,6 +19,7 @@ import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.nio.ssl.TlsStrategy;
 import org.apache.hc.core5.ssl.SSLContexts;
 import org.apache.hc.core5.ssl.TrustStrategy;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.opensearch.client.RestClient;
 import org.opensearch.client.json.jackson.JacksonJsonpMapper;
@@ -41,39 +42,16 @@ class OpenSearchRestClientTransportTest extends AbstractOpenSearchTest {
 
   @Override
   protected OpenSearchClient buildOpenSearchClient() throws Exception {
-    TrustStrategy acceptingTrustStrategy = (certificate, authType) -> true;
-    SSLContext sslContext =
-        SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build();
-    TlsStrategy tlsStrategy =
-        ClientTlsStrategyBuilder.create()
-            .setHostnameVerifier(NoopHostnameVerifier.INSTANCE)
-            .setSslContext(sslContext)
-            .build();
-    PoolingAsyncClientConnectionManager connectionManager =
-        PoolingAsyncClientConnectionManagerBuilder.create().setTlsStrategy(tlsStrategy).build();
-
-    BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-    credentialsProvider.setCredentials(
-        new AuthScope(null, -1),
-        new UsernamePasswordCredentials(
-            opensearch.getUsername(), opensearch.getPassword().toCharArray()));
-
-    HttpHost httpHost = HttpHost.create(opensearch.getHttpHostAddress());
-    RestClient restClient =
-        RestClient.builder(httpHost)
-            .setHttpClientConfigCallback(
-                httpClientBuilder ->
-                    httpClientBuilder
-                        .setConnectionManager(connectionManager)
-                        .setDefaultCredentialsProvider(credentialsProvider))
-            .build();
-
-    OpenSearchTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
-    return new OpenSearchClient(transport);
+    return new OpenSearchClient(buildTransport(HttpHost.create(opensearch.getHttpHostAddress())));
   }
 
   @Override
   protected OpenSearchAsyncClient buildOpenSearchAsyncClient() throws Exception {
+    return new OpenSearchAsyncClient(
+        buildTransport(HttpHost.create(opensearch.getHttpHostAddress())));
+  }
+
+  private OpenSearchTransport buildTransport(HttpHost... hosts) throws Exception {
     TrustStrategy acceptingTrustStrategy = (certificate, authType) -> true;
     SSLContext sslContext =
         SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build();
@@ -91,9 +69,8 @@ class OpenSearchRestClientTransportTest extends AbstractOpenSearchTest {
         new UsernamePasswordCredentials(
             opensearch.getUsername(), opensearch.getPassword().toCharArray()));
 
-    HttpHost httpHost = HttpHost.create(opensearch.getHttpHostAddress());
     RestClient restClient =
-        RestClient.builder(httpHost)
+        RestClient.builder(hosts)
             .setHttpClientConfigCallback(
                 httpClientBuilder ->
                     httpClientBuilder
@@ -101,7 +78,15 @@ class OpenSearchRestClientTransportTest extends AbstractOpenSearchTest {
                         .setDefaultCredentialsProvider(credentialsProvider))
             .build();
 
-    OpenSearchTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
-    return new OpenSearchAsyncClient(transport);
+    return new RestClientTransport(restClient, new JacksonJsonpMapper());
+  }
+
+  @Test
+  void shouldOmitServerAttributesForMultipleNodes() throws Exception {
+    HttpHost host = HttpHost.create(opensearch.getHttpHostAddress());
+    HttpHost alternateHost = new HttpHost("https", "127.0.0.1", httpHost.getPort());
+    try (OpenSearchTransport transport = buildTransport(host, alternateHost)) {
+      assertMultiNodeClient(new OpenSearchClient(transport));
+    }
   }
 }
