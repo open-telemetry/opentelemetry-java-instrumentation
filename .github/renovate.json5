@@ -484,5 +484,17 @@
         '"(?<depName>otel/weaver):(?<currentValue>[^"]+)"',
       ],
     },
+    {
+      customType: 'regex',
+      datasourceTemplate: 'maven',
+      depNameTemplate: 'io.opentelemetry.semconv:opentelemetry-semconv',
+      managerFilePatterns: [
+        'instrumentation/jmx-metrics/model/manifest.yaml',
+      ],
+      matchStrings: [
+        'registry_path: https://github\\.com/open-telemetry/semantic-conventions@v(?<currentValue>[^\\[]+)\\[model\\]',
+        'schema_url: https://opentelemetry\\.io/schemas/(?<currentValue>[^\\s]+)',
+      ],
+    },
   ],
 }
