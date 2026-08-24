@@ -19,8 +19,13 @@ public class OperationCompletionListener extends CompletionListener<OperationFut
 
   @Nullable
   public static OperationCompletionListener create(
-      Context parentContext, MemcachedConnection connection, String methodName) {
-    SpymemcachedRequest request = SpymemcachedRequest.create(connection, methodName);
+      Context parentContext,
+      MemcachedConnection connection,
+      String methodName,
+      String methodDescriptor,
+      Object[] args) {
+    SpymemcachedRequest request =
+        SpymemcachedRequest.create(connection, methodName, methodDescriptor, args);
     if (!instrumenter().shouldStart(parentContext, request)) {
       return null;
     }
