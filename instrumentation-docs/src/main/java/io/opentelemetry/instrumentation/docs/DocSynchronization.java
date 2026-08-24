@@ -6,12 +6,15 @@
 package io.opentelemetry.instrumentation.docs;
 
 import static java.lang.System.exit;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.opentelemetry.instrumentation.docs.auditors.DocumentationAuditor;
 import io.opentelemetry.instrumentation.docs.auditors.SupportedLibrariesAuditor;
 import io.opentelemetry.instrumentation.docs.auditors.SuppressionListAuditor;
 import java.io.IOException;
 import java.net.http.HttpClient;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -27,12 +30,12 @@ public class DocSynchronization {
   private static final List<DocumentationAuditor> AUDITORS =
       List.of(new SuppressionListAuditor(), new SupportedLibrariesAuditor());
 
-  // Reserved exit code that means "audit ran to completion and found drift".
-  // Any other nonzero exit is treated as an execution error.
-  private static final int DRIFT_EXIT_CODE = 42;
+  private static final String CLEAN_RESULT = "clean";
+  private static final String DRIFT_RESULT = "drift";
 
   public static void main(String[] args) {
     try {
+      Path auditResultPath = Path.of(args[0]);
       HttpClient client = HttpClient.newHttpClient();
       boolean hasDrift = false;
       boolean hasErrors = false;
@@ -82,16 +85,25 @@ public class DocSynchronization {
         finalMessage.append("\n=== AUDIT_FAILURE_END ===");
 
         logger.severe(finalMessage.toString());
-        exit(DRIFT_EXIT_CODE);
+        writeAuditResult(auditResultPath, DRIFT_RESULT);
       } else {
         logger.info("All documentation audits passed successfully.");
+        writeAuditResult(auditResultPath, CLEAN_RESULT);
       }
 
-    } catch (RuntimeException e) {
+    } catch (IOException | RuntimeException e) {
       logger.severe("Error running documentation audits: " + e.getMessage());
       logger.severe(Arrays.toString(e.getStackTrace()));
       exit(1);
     }
+  }
+
+  private static void writeAuditResult(Path auditResultPath, String result) throws IOException {
+    Path parent = auditResultPath.getParent();
+    if (parent != null) {
+      Files.createDirectories(parent);
+    }
+    Files.writeString(auditResultPath, result, UTF_8);
   }
 
   private DocSynchronization() {}

@@ -32,19 +32,21 @@ jobs:
       - name: Run doc site audit
         id: doc-site-audit
         run: |
-          set +e
+          set -euo pipefail
           ./gradlew :instrumentation-docs:docSiteAudit
-          gradle_exit=$?
-          set -e
-          if [[ $gradle_exit -ne 0 ]]; then
-            exit $gradle_exit
-          fi
-          audit_exit=$(cat instrumentation-docs/build/audit-exit-code)
-          if [[ "$audit_exit" -eq 42 ]]; then
-            echo "success=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "success=true" >> "$GITHUB_OUTPUT"
-          fi
+          audit_result=$(cat instrumentation-docs/build/audit-result)
+          case "$audit_result" in
+            clean)
+              echo "success=true" >> "$GITHUB_OUTPUT"
+              ;;
+            drift)
+              echo "success=false" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unexpected documentation audit result: $audit_result" >&2
+              exit 1
+              ;;
+          esac
 
       - name: Open or close documentation sync issue
         env:
