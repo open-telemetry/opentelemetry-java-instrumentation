@@ -7,6 +7,10 @@
 - Prefer the original configured logical or server-group target for `server.address` when stable
   database semantic conventions are enabled. Multi-server targets include their endpoints in
   `server.address` and omit `server.port`; default legacy telemetry is unchanged.
+- Elasticsearch and OpenSearch spans record the target their client was built with instead of the
+  node that answered, again only when stable database semantic conventions are enabled. OpenSearch
+  spans and Elasticsearch transport client spans now carry `server.address`, which their stable span
+  names include because there is no namespace or collection to name.
 
 ## Version 2.31.0 (2026-08-20)
 

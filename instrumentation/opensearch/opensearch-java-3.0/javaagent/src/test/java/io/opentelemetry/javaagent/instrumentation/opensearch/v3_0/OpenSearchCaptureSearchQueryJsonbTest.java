@@ -82,14 +82,15 @@ class OpenSearchCaptureSearchQueryJsonbTest extends AbstractOpenSearchQueryTest 
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName(openSearchSpanName("POST"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
-                                equalTo(maybeStable(DB_OPERATION), "POST"),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}")),
+                                withServer(
+                                    equalTo(maybeStable(DB_SYSTEM), "opensearch"),
+                                    equalTo(maybeStable(DB_OPERATION), "POST"),
+                                    equalTo(
+                                        maybeStable(DB_STATEMENT),
+                                        "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}"))),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)

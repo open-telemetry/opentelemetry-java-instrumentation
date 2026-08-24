@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -21,13 +23,17 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.AfterAll;
@@ -91,12 +97,13 @@ abstract class AbstractOpenSearchTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("GET")
+                        span.hasName(openSearchSpanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                                equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health")),
+                                withServer(
+                                    equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+                                    equalTo(maybeStable(DB_OPERATION), "GET"),
+                                    equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"))),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -137,13 +144,14 @@ abstract class AbstractOpenSearchTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("GET")
+                        span.hasName(openSearchSpanName("GET"))
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                                equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health")),
+                                withServer(
+                                    equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
+                                    equalTo(maybeStable(DB_OPERATION), "GET"),
+                                    equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"))),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -170,6 +178,57 @@ abstract class AbstractOpenSearchTest {
     getTesting().waitForTraces(1);
 
     assertDurationMetric(
-        getTesting(), "io.opentelemetry.opensearch-java-3.0", DB_OPERATION_NAME, DB_SYSTEM_NAME);
+        getTesting(),
+        "io.opentelemetry.opensearch-java-3.0",
+        DB_OPERATION_NAME,
+        DB_SYSTEM_NAME,
+        SERVER_ADDRESS,
+        SERVER_PORT);
+  }
+
+  /**
+   * The stable span name falls back to the target, because opensearch has no namespace or
+   * collection to name.
+   */
+  String openSearchSpanName(String method) {
+    return emitStableDatabaseSemconv()
+        ? method + " " + httpHost.getHost() + ":" + httpHost.getPort()
+        : method;
+  }
+
+  /** Adds the server the transport was configured with, which only stable semconv records. */
+  List<AttributeAssertion> withServer(AttributeAssertion... assertions) {
+    List<AttributeAssertion> result = new ArrayList<>(asList(assertions));
+    if (emitStableDatabaseSemconv()) {
+      result.add(equalTo(SERVER_ADDRESS, httpHost.getHost()));
+      result.add(equalTo(SERVER_PORT, (long) httpHost.getPort()));
+    }
+    return result;
+  }
+
+  /**
+   * Asserts that the target of a transport configured with the running server and a host that is
+   * down names both. Only the opensearch span is asserted, because a request that first reaches the
+   * host that is down is retried and reports a second http span.
+   */
+  void assertNodeListTarget() {
+    String nodeList =
+        "https://"
+            + httpHost.getHost()
+            + ":"
+            + httpHost.getPort()
+            + ","
+            + httpHost.getHost()
+            + ":"
+            + (httpHost.getPort() + 1);
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                assertThat(trace.getSpan(0))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfying(
+                        // old semantic conventions record no server at all
+                        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? nodeList : null),
+                        equalTo(SERVER_PORT, null)));
   }
 }

@@ -25,7 +25,17 @@ public abstract class ElasticsearchRestRequest {
       String endpoint,
       @Nullable ElasticsearchEndpointDefinition endpointDefinition,
       @Nullable HttpEntity httpEntity) {
-    return new AutoValue_ElasticsearchRestRequest(method, endpoint, endpointDefinition, httpEntity);
+    return create(method, endpoint, endpointDefinition, httpEntity, null);
+  }
+
+  public static ElasticsearchRestRequest create(
+      String method,
+      String endpoint,
+      @Nullable ElasticsearchEndpointDefinition endpointDefinition,
+      @Nullable HttpEntity httpEntity,
+      @Nullable ElasticsearchServerTarget serverTarget) {
+    return new AutoValue_ElasticsearchRestRequest(
+        method, endpoint, endpointDefinition, httpEntity, serverTarget);
   }
 
   public abstract String getMethod();
@@ -37,4 +47,10 @@ public abstract class ElasticsearchRestRequest {
 
   @Nullable
   public abstract HttpEntity getHttpEntity();
+
+  /**
+   * The target the rest client was configured with, or {@code null} when it could not be captured.
+   */
+  @Nullable
+  public abstract ElasticsearchServerTarget getServerTarget();
 }

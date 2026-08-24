@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v1_0;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.AbstractOpenSearchRestTest;
+import java.util.ArrayList;
+import java.util.List;
 import javax.net.ssl.SSLContext;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
@@ -18,6 +20,7 @@ import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.opensearch.client.Node;
 import org.opensearch.client.Response;
 import org.opensearch.client.RestClient;
 
@@ -31,7 +34,7 @@ class OpenSearchRestTest extends AbstractOpenSearchRestTest {
   }
 
   @Override
-  protected RestClient buildRestClient() throws Exception {
+  protected RestClient buildRestClient(String... hostAddresses) throws Exception {
     CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
     credentialsProvider.setCredentials(
         AuthScope.ANY,
@@ -40,8 +43,7 @@ class OpenSearchRestTest extends AbstractOpenSearchRestTest {
     SSLContext sslContext =
         SSLContextBuilder.create().loadTrustMaterial(null, new TrustAllStrategy()).build();
 
-    HttpHost httpHost = HttpHost.create(opensearch.getHttpHostAddress());
-    return RestClient.builder(httpHost)
+    return RestClient.builder(httpHosts(hostAddresses))
         .setHttpClientConfigCallback(
             httpClientBuilder ->
                 httpClientBuilder
@@ -51,6 +53,23 @@ class OpenSearchRestTest extends AbstractOpenSearchRestTest {
                     .setSSLHostnameVerifier(new NoopHostnameVerifier())
                     .setDefaultCredentialsProvider(credentialsProvider))
         .build();
+  }
+
+  @Override
+  protected void resetNodes(RestClient client, String... hostAddresses) {
+    List<Node> nodes = new ArrayList<>();
+    for (HttpHost httpHost : httpHosts(hostAddresses)) {
+      nodes.add(new Node(httpHost));
+    }
+    client.setNodes(nodes);
+  }
+
+  private static HttpHost[] httpHosts(String... hostAddresses) {
+    HttpHost[] httpHosts = new HttpHost[hostAddresses.length];
+    for (int i = 0; i < hostAddresses.length; i++) {
+      httpHosts[i] = HttpHost.create(hostAddresses[i]);
+    }
+    return httpHosts;
   }
 
   @Override

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import javax.net.ssl.SSLContext;
@@ -19,9 +21,11 @@ import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.nio.ssl.TlsStrategy;
 import org.apache.hc.core5.ssl.SSLContexts;
 import org.apache.hc.core5.ssl.TrustStrategy;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch.cluster.HealthResponse;
 import org.opensearch.client.transport.OpenSearchTransport;
 import org.opensearch.client.transport.httpclient5.ApacheHttpClient5TransportBuilder;
 
@@ -37,40 +41,35 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
 
   @Override
   protected OpenSearchClient buildOpenSearchClient() throws Exception {
-    HttpHost host = new HttpHost("https", httpHost.getHost(), httpHost.getPort());
-
-    TrustStrategy acceptingTrustStrategy = (certificate, authType) -> true;
-    SSLContext sslContext =
-        SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build();
-    TlsStrategy tlsStrategy =
-        ClientTlsStrategyBuilder.create()
-            .setHostnameVerifier(NoopHostnameVerifier.INSTANCE)
-            .setSslContext(sslContext)
-            .build();
-    PoolingAsyncClientConnectionManager connectionManager =
-        PoolingAsyncClientConnectionManagerBuilder.create().setTlsStrategy(tlsStrategy).build();
-
-    BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-    credentialsProvider.setCredentials(
-        new AuthScope(null, -1),
-        new UsernamePasswordCredentials(
-            opensearch.getUsername(), opensearch.getPassword().toCharArray()));
-
-    OpenSearchTransport apacheHttpClient5Transport =
-        ApacheHttpClient5TransportBuilder.builder(host)
-            .setHttpClientConfigCallback(
-                httpClientBuilder ->
-                    httpClientBuilder
-                        .setConnectionManager(connectionManager)
-                        .setDefaultCredentialsProvider(credentialsProvider))
-            .build();
-    return new OpenSearchClient(apacheHttpClient5Transport);
+    return new OpenSearchClient(buildTransport(configuredHost()));
   }
 
   @Override
   protected OpenSearchAsyncClient buildOpenSearchAsyncClient() throws Exception {
-    HttpHost host = new HttpHost("https", httpHost.getHost(), httpHost.getPort());
+    return new OpenSearchAsyncClient(buildTransport(configuredHost()));
+  }
 
+  @Test
+  void configuredNodeListIsTheWholeTarget() throws Exception {
+    OpenSearchClient nodeListClient =
+        new OpenSearchClient(buildTransport(configuredHost(), hostThatIsDown()));
+
+    HealthResponse healthResponse = nodeListClient.cluster().health();
+    assertThat(healthResponse).isNotNull();
+
+    assertNodeListTarget();
+  }
+
+  private HttpHost configuredHost() {
+    return new HttpHost("https", httpHost.getHost(), httpHost.getPort());
+  }
+
+  private HttpHost hostThatIsDown() {
+    // nothing listens on this port, so the request is served by the running server after a retry
+    return new HttpHost("https", httpHost.getHost(), httpHost.getPort() + 1);
+  }
+
+  private OpenSearchTransport buildTransport(HttpHost... hosts) throws Exception {
     TrustStrategy acceptingTrustStrategy = (certificate, authType) -> true;
     SSLContext sslContext =
         SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build();
@@ -88,14 +87,12 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
         new UsernamePasswordCredentials(
             opensearch.getUsername(), opensearch.getPassword().toCharArray()));
 
-    OpenSearchTransport apacheHttpClient5Transport =
-        ApacheHttpClient5TransportBuilder.builder(host)
-            .setHttpClientConfigCallback(
-                httpClientBuilder ->
-                    httpClientBuilder
-                        .setConnectionManager(connectionManager)
-                        .setDefaultCredentialsProvider(credentialsProvider))
-            .build();
-    return new OpenSearchAsyncClient(apacheHttpClient5Transport);
+    return ApacheHttpClient5TransportBuilder.builder(hosts)
+        .setHttpClientConfigCallback(
+            httpClientBuilder ->
+                httpClientBuilder
+                    .setConnectionManager(connectionManager)
+                    .setDefaultCredentialsProvider(credentialsProvider))
+        .build();
   }
 }

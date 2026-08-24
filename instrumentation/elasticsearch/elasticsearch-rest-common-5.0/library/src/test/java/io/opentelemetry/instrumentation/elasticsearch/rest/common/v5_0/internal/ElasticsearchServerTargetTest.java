@@ -1,0 +1,112 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
+import org.apache.http.HttpHost;
+import org.junit.jupiter.api.Test;
+
+class ElasticsearchServerTargetTest {
+
+  @Test
+  void noHostsHasNoTarget() {
+    assertThat(ElasticsearchServerTarget.of(null)).isNull();
+    assertThat(ElasticsearchServerTarget.of(emptyList())).isNull();
+  }
+
+  @Test
+  void singleHostKeepsItsHostAndPort() {
+    ElasticsearchServerTarget target =
+        ElasticsearchServerTarget.of(singletonList(new HttpHost("es.example", 9200, "https")));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("es.example");
+    assertThat(target.getPort()).isEqualTo(9200);
+  }
+
+  @Test
+  void singleHostWithoutPortHasNoPort() {
+    ElasticsearchServerTarget target =
+        ElasticsearchServerTarget.of(singletonList(new HttpHost("es.example")));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("es.example");
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void severalHostsSharingASchemeSpellItOutOnce() {
+    ElasticsearchServerTarget target =
+        ElasticsearchServerTarget.of(
+            asList(new HttpHost("h1", 9200, "http"), new HttpHost("h2", 9201, "http")));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("http://h1:9200,h2:9201");
+    // the target already carries the port of every host it names
+    assertThat(target.getPort()).isNull();
+  }
+
+  @Test
+  void severalHostsWithDifferentSchemesKeepTheirOwn() {
+    ElasticsearchServerTarget target =
+        ElasticsearchServerTarget.of(
+            asList(new HttpHost("h1", 9200, "http"), new HttpHost("h2", 9200, "https")));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("http://h1:9200,https://h2:9200");
+  }
+
+  @Test
+  void literalIpv6AddressesAreBracketed() {
+    ElasticsearchServerTarget target =
+        ElasticsearchServerTarget.of(
+            asList(new HttpHost("::1", 9200, "http"), new HttpHost("[fe80::1]", 9200, "http")));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("http://[::1]:9200,[fe80::1]:9200");
+  }
+
+  @Test
+  void credentialsPathQueryAndFragmentAreRemoved() {
+    List<HttpHost> hosts =
+        asList(
+            new HttpHost("user:secret@h1", 9200, "https"),
+            new HttpHost("h2/prefix", 9200, "https"),
+            new HttpHost("h3?token=secret", 9200, "https"),
+            new HttpHost("h4#secret", 9200, "https"));
+
+    ElasticsearchServerTarget target = ElasticsearchServerTarget.of(hosts);
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("https://h1:9200,h2:9200,h3:9200,h4:9200");
+    assertThat(target.getAddress()).doesNotContain("secret");
+  }
+
+  @Test
+  void credentialsAreRemovedFromASingleHost() {
+    ElasticsearchServerTarget target =
+        ElasticsearchServerTarget.of(
+            singletonList(new HttpHost("user:secret@es.example", 9200, "https")));
+
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo("es.example");
+  }
+
+  @Test
+  void aHostThatIsOnlyCredentialsHasNoTarget() {
+    assertThat(ElasticsearchServerTarget.of(singletonList(new HttpHost("user:secret@", 9200))))
+        .isNull();
+    assertThat(
+            ElasticsearchServerTarget.of(
+                asList(new HttpHost("h1", 9200), new HttpHost("user:secret@", 9200))))
+        .isNull();
+  }
+}

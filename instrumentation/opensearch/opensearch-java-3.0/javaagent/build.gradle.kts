@@ -16,6 +16,9 @@ otelJava {
 
 dependencies {
   library("org.opensearch.client:opensearch-java:3.0.0")
+
+  implementation(project(":instrumentation:opensearch:opensearch-rest-common-1.0:javaagent"))
+
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
   compileOnly("com.fasterxml.jackson.core:jackson-core")

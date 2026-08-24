@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
@@ -38,5 +40,19 @@ final class OpenSearchAttributesGetter
   @Nullable
   public String getDbOperationName(OpenSearchRequest request) {
     return request.getMethod();
+  }
+
+  @Override
+  @Nullable
+  public String getServerAddress(OpenSearchRequest request) {
+    // old semantic conventions do not record the server at all
+    return emitStableDatabaseSemconv() ? request.getServerAddress() : null;
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(OpenSearchRequest request) {
+    // a target that names several endpoints already carries the port of each of them
+    return emitStableDatabaseSemconv() ? request.getServerPort() : null;
   }
 }
