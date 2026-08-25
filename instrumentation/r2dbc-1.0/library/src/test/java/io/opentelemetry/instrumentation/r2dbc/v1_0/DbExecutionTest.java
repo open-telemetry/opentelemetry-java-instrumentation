@@ -197,6 +197,21 @@ class DbExecutionTest {
         .isEqualTo("host1:3307,[2001:db8::1]:3308,host3:3306,[2001:db8::2]:3306");
   }
 
+  @Test
+  void dbExecutionBracketsUnbracketedIpv6HostsBeforeAddingThePort() {
+    ConnectionFactoryOptions factoryOptions =
+        ConnectionFactoryOptions.builder()
+            .option(ConnectionFactoryOptions.DRIVER, "postgresql")
+            .option(ConnectionFactoryOptions.HOST, "2001:db8::1,2001:db8::2")
+            .option(ConnectionFactoryOptions.PORT, 5432)
+            .build();
+
+    DbExecution dbExecution = new DbExecution(queryExecutionInfo(), factoryOptions);
+
+    assertThat(dbExecution.getServerAddressGroup())
+        .isEqualTo("[2001:db8::1]:5432,[2001:db8::2]:5432");
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {"host1", "/var/run/postgresql", "[2001:db8::1]"})
   void dbExecutionTreatsSingleHostAsSingular(String host) {

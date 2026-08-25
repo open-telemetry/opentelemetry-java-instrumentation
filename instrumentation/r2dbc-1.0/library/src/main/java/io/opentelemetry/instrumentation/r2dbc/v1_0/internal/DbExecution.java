@@ -164,12 +164,20 @@ public final class DbExecution {
         group.append(',');
       }
       String trimmed = host.trim();
-      group.append(trimmed);
-      if (!hasPort(trimmed)) {
-        group.append(':').append(serverPort);
+      if (isUnbracketedIpv6(trimmed)) {
+        group.append('[').append(trimmed).append("]:").append(serverPort);
+      } else {
+        group.append(trimmed);
+        if (!hasPort(trimmed)) {
+          group.append(':').append(serverPort);
+        }
       }
     }
     return group.toString();
+  }
+
+  private static boolean isUnbracketedIpv6(String host) {
+    return !host.startsWith("[") && host.indexOf(':') != host.lastIndexOf(':');
   }
 
   private static boolean hasPort(String host) {
