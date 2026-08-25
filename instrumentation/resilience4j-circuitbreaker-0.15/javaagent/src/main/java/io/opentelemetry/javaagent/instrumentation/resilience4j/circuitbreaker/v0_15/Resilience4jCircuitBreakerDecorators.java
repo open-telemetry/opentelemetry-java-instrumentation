@@ -375,7 +375,12 @@ public class Resilience4jCircuitBreakerDecorators {
       try {
         return method.invoke(delegate, invokedArgs);
       } catch (InvocationTargetException e) {
-        throw e.getCause();
+        Throwable cause = e.getCause();
+        pendingSpan.end("failure", cause);
+        throw cause;
+      } catch (Throwable t) {
+        pendingSpan.end("failure", t);
+        throw t;
       }
     }
 
@@ -384,6 +389,9 @@ public class Resilience4jCircuitBreakerDecorators {
         Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
         try {
           invokeWhenComplete(callback, result, throwable);
+        } catch (Throwable t) {
+          pendingSpan.end("failure", t);
+          throw t;
         } finally {
           Resilience4jCircuitBreakerSpans.detachPendingSpan(pendingSpan);
         }
