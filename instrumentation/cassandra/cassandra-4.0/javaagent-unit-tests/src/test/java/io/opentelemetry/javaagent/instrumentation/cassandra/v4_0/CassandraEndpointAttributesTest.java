@@ -27,7 +27,6 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -210,14 +209,13 @@ class CassandraEndpointAttributesTest {
     assertThat(peer.getPort()).isEqualTo(9042);
   }
 
-  private Attributes serverAttributes(@Nullable CassandraServerTarget serverTarget) {
+  private Attributes serverAttributes(CassandraServerTarget serverTarget) {
     AttributesBuilder builder = Attributes.builder();
     CassandraAttributesExtractor.updateServerAddressAndPort(
         builder, CassandraRequest.create(session, serverTarget, "SELECT 1"), coordinator);
     return builder.build();
   }
 
-  @Nullable
   private static CassandraServerTarget target(List<String> contactPoints) {
     return CassandraServerTarget.of(contactPoints);
   }
