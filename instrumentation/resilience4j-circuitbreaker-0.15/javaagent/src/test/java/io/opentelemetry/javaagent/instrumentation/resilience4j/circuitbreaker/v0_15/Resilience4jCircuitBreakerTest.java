@@ -228,6 +228,65 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
+  void decoratedSupplierDoesNotEndNestedRawAttempt() throws Exception {
+    CircuitBreaker outer = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    CircuitBreaker nested = CircuitBreaker.ofDefaults("nested-circuit-breaker");
+    IllegalStateException exception = new IllegalStateException("boom");
+    Supplier<String> decorated =
+        CircuitBreaker.decorateSupplier(
+            outer,
+            () -> {
+              nested.acquirePermission();
+              return "ok";
+            });
+
+    String result =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              String value = decorated.get();
+              invokeOnError(nested, exception);
+              return value;
+            });
+
+    assertThat(result).isEqualTo("ok");
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("CircuitBreaker test-circuit-breaker")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("resilience.policy.name"),
+                                experimental("test-circuit-breaker")),
+                            equalTo(
+                                stringKey("resilience.circuit_breaker.state"),
+                                experimental("closed")),
+                            equalTo(
+                                stringKey("resilience.circuit_breaker.outcome"),
+                                experimental("success"))),
+                span ->
+                    span.hasName("CircuitBreaker nested-circuit-breaker")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())
+                        .hasException(exception)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                stringKey("resilience.policy.name"),
+                                experimental("nested-circuit-breaker")),
+                            equalTo(
+                                stringKey("resilience.circuit_breaker.state"),
+                                experimental("closed")),
+                            equalTo(
+                                stringKey("resilience.circuit_breaker.outcome"),
+                                experimental("failure")))));
+  }
+
+  @Test
   void createsCircuitBreakerSpanWhenDecoratedSupplierSucceeds() {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
     Supplier<String> supplier = CircuitBreaker.decorateSupplier(circuitBreaker, () -> "ok");

@@ -75,8 +75,9 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <T> Supplier<T> onExit(@Advice.Return Supplier<T> result) {
-      return Resilience4jCircuitBreakerDecorators.wrapSupplier(result);
+    public static <T> Supplier<T> onExit(
+        @Advice.Argument(0) CircuitBreaker circuitBreaker, @Advice.Return Supplier<T> result) {
+      return Resilience4jCircuitBreakerDecorators.wrapSupplier(circuitBreaker, result);
     }
   }
 
@@ -85,8 +86,9 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <T> Callable<T> onExit(@Advice.Return Callable<T> result) {
-      return Resilience4jCircuitBreakerDecorators.wrapCallable(result);
+    public static <T> Callable<T> onExit(
+        @Advice.Argument(0) CircuitBreaker circuitBreaker, @Advice.Return Callable<T> result) {
+      return Resilience4jCircuitBreakerDecorators.wrapCallable(circuitBreaker, result);
     }
   }
 
@@ -95,8 +97,9 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static Runnable onExit(@Advice.Return Runnable result) {
-      return Resilience4jCircuitBreakerDecorators.wrapRunnable(result);
+    public static Runnable onExit(
+        @Advice.Argument(0) CircuitBreaker circuitBreaker, @Advice.Return Runnable result) {
+      return Resilience4jCircuitBreakerDecorators.wrapRunnable(circuitBreaker, result);
     }
   }
 
@@ -130,8 +133,9 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <T, R> Function<T, R> onExit(@Advice.Return Function<T, R> result) {
-      return Resilience4jCircuitBreakerDecorators.wrapFunction(result);
+    public static <T, R> Function<T, R> onExit(
+        @Advice.Argument(0) CircuitBreaker circuitBreaker, @Advice.Return Function<T, R> result) {
+      return Resilience4jCircuitBreakerDecorators.wrapFunction(circuitBreaker, result);
     }
   }
 
@@ -140,8 +144,9 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <T> Consumer<T> onExit(@Advice.Return Consumer<T> result) {
-      return Resilience4jCircuitBreakerDecorators.wrapConsumer(result);
+    public static <T> Consumer<T> onExit(
+        @Advice.Argument(0) CircuitBreaker circuitBreaker, @Advice.Return Consumer<T> result) {
+      return Resilience4jCircuitBreakerDecorators.wrapConsumer(circuitBreaker, result);
     }
   }
 
@@ -150,8 +155,9 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static Object onExit(@Advice.Return Object result) {
-      return Resilience4jCircuitBreakerDecorators.wrapChecked(result);
+    public static Object onExit(
+        @Advice.Argument(0) CircuitBreaker circuitBreaker, @Advice.Return Object result) {
+      return Resilience4jCircuitBreakerDecorators.wrapChecked(circuitBreaker, result);
     }
   }
 }

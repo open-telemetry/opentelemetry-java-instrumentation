@@ -258,24 +258,6 @@ public class Resilience4jCircuitBreakerSpans {
     }
   }
 
-  public static void endAfter(
-      @Nullable PendingSpan baseline, String outcome, @Nullable Throwable throwable) {
-    PendingSpan pendingSpan = pollPendingSpanAfter(baseline);
-    if (pendingSpan != null) {
-      pendingSpan.end(outcome, throwable);
-    }
-  }
-
-  @Nullable
-  public static PendingSpan currentPendingSpan() {
-    Deque<PendingSpan> spans = pendingSpans.get();
-    if (spans == null) {
-      return null;
-    }
-    removeEnded(spans);
-    return spans.peek();
-  }
-
   public static void attachPendingSpan(PendingSpan pendingSpan) {
     Deque<PendingSpan> spans = pendingSpans.get();
     if (spans == null) {
@@ -300,27 +282,6 @@ public class Resilience4jCircuitBreakerSpans {
     if (spans.isEmpty()) {
       pendingSpans.remove();
     }
-  }
-
-  @Nullable
-  public static PendingSpan pollPendingSpanAfter(@Nullable PendingSpan baseline) {
-    Deque<PendingSpan> spans = pendingSpans.get();
-    if (spans == null) {
-      return null;
-    }
-    removeEnded(spans);
-    PendingSpan span = spans.peek();
-    if (span == null || span == baseline) {
-      if (spans.isEmpty()) {
-        pendingSpans.remove();
-      }
-      return null;
-    }
-    span = spans.poll();
-    if (spans.isEmpty()) {
-      pendingSpans.remove();
-    }
-    return span;
   }
 
   @Nullable

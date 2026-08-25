@@ -25,16 +25,16 @@ import javax.annotation.Nullable;
 
 public class Resilience4jCircuitBreakerDecorators {
 
-  public static <T> Supplier<T> wrapSupplier(Supplier<T> delegate) {
-    return new SupplierWrapper<>(delegate);
+  public static <T> Supplier<T> wrapSupplier(CircuitBreaker circuitBreaker, Supplier<T> delegate) {
+    return new SupplierWrapper<>(circuitBreaker, delegate);
   }
 
-  public static <T> Callable<T> wrapCallable(Callable<T> delegate) {
-    return new CallableWrapper<>(delegate);
+  public static <T> Callable<T> wrapCallable(CircuitBreaker circuitBreaker, Callable<T> delegate) {
+    return new CallableWrapper<>(circuitBreaker, delegate);
   }
 
-  public static Runnable wrapRunnable(Runnable delegate) {
-    return new RunnableWrapper(delegate);
+  public static Runnable wrapRunnable(CircuitBreaker circuitBreaker, Runnable delegate) {
+    return new RunnableWrapper(circuitBreaker, delegate);
   }
 
   public static <T> Supplier<CompletionStage<T>> wrapCompletionStageSupplier(
@@ -47,40 +47,51 @@ public class Resilience4jCircuitBreakerDecorators {
     return new FutureSupplierWrapper<>(circuitBreaker, delegate);
   }
 
-  public static <T, R> Function<T, R> wrapFunction(Function<T, R> delegate) {
-    return new FunctionWrapper<>(delegate);
+  public static <T, R> Function<T, R> wrapFunction(
+      CircuitBreaker circuitBreaker, Function<T, R> delegate) {
+    return new FunctionWrapper<>(circuitBreaker, delegate);
   }
 
-  public static <T> Consumer<T> wrapConsumer(Consumer<T> delegate) {
-    return new ConsumerWrapper<>(delegate);
+  public static <T> Consumer<T> wrapConsumer(CircuitBreaker circuitBreaker, Consumer<T> delegate) {
+    return new ConsumerWrapper<>(circuitBreaker, delegate);
   }
 
-  public static Object wrapChecked(Object delegate) {
+  public static Object wrapChecked(CircuitBreaker circuitBreaker, Object delegate) {
     Class<?> delegateClass = delegate.getClass();
     return Proxy.newProxyInstance(
         delegateClass.getClassLoader(),
         delegateClass.getInterfaces(),
-        new CheckedInvocationHandler(delegate));
+        new CheckedInvocationHandler(circuitBreaker, delegate));
   }
 
   private static final class SupplierWrapper<T> implements Supplier<T> {
 
+    private final CircuitBreaker circuitBreaker;
     private final Supplier<T> delegate;
 
-    private SupplierWrapper(Supplier<T> delegate) {
+    private SupplierWrapper(CircuitBreaker circuitBreaker, Supplier<T> delegate) {
+      this.circuitBreaker = circuitBreaker;
       this.delegate = delegate;
     }
 
     @Override
     public T get() {
-      Resilience4jCircuitBreakerSpans.PendingSpan baseline =
-          Resilience4jCircuitBreakerSpans.currentPendingSpan();
+      Resilience4jCircuitBreakerSpans.Capture capture =
+          Resilience4jCircuitBreakerSpans.beginCapture(circuitBreaker);
       try {
         T result = delegate.get();
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "success", null);
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("success", null);
+        }
         return result;
       } catch (Throwable t) {
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("failure", t);
+        }
         throw t;
       }
     }
@@ -88,25 +99,39 @@ public class Resilience4jCircuitBreakerDecorators {
 
   private static final class CallableWrapper<T> implements Callable<T> {
 
+    private final CircuitBreaker circuitBreaker;
     private final Callable<T> delegate;
 
-    private CallableWrapper(Callable<T> delegate) {
+    private CallableWrapper(CircuitBreaker circuitBreaker, Callable<T> delegate) {
+      this.circuitBreaker = circuitBreaker;
       this.delegate = delegate;
     }
 
     @Override
     public T call() throws Exception {
-      Resilience4jCircuitBreakerSpans.PendingSpan baseline =
-          Resilience4jCircuitBreakerSpans.currentPendingSpan();
+      Resilience4jCircuitBreakerSpans.Capture capture =
+          Resilience4jCircuitBreakerSpans.beginCapture(circuitBreaker);
       try {
         T result = delegate.call();
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "success", null);
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("success", null);
+        }
         return result;
       } catch (Exception e) {
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", e);
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("failure", e);
+        }
         throw e;
       } catch (Error error) {
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", error);
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("failure", error);
+        }
         throw error;
       }
     }
@@ -114,21 +139,31 @@ public class Resilience4jCircuitBreakerDecorators {
 
   private static final class RunnableWrapper implements Runnable {
 
+    private final CircuitBreaker circuitBreaker;
     private final Runnable delegate;
 
-    private RunnableWrapper(Runnable delegate) {
+    private RunnableWrapper(CircuitBreaker circuitBreaker, Runnable delegate) {
+      this.circuitBreaker = circuitBreaker;
       this.delegate = delegate;
     }
 
     @Override
     public void run() {
-      Resilience4jCircuitBreakerSpans.PendingSpan baseline =
-          Resilience4jCircuitBreakerSpans.currentPendingSpan();
+      Resilience4jCircuitBreakerSpans.Capture capture =
+          Resilience4jCircuitBreakerSpans.beginCapture(circuitBreaker);
       try {
         delegate.run();
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "success", null);
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("success", null);
+        }
       } catch (Throwable t) {
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("failure", t);
+        }
         throw t;
       }
     }
@@ -153,10 +188,6 @@ public class Resilience4jCircuitBreakerDecorators {
       // that acquisition before invoking user code, which may perform nested acquisitions.
       Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
           Resilience4jCircuitBreakerSpans.claimRecentAcquisition(circuitBreaker);
-      // Use the ambient baseline after claiming the completion-stage attempt so error handling does
-      // not accidentally end the detached, owned span through thread-local stack lookup.
-      Resilience4jCircuitBreakerSpans.PendingSpan postClaimBaseline =
-          Resilience4jCircuitBreakerSpans.currentPendingSpan();
       try {
         CompletionStage<T> result = delegate.get();
         if (pendingSpan == null) {
@@ -169,7 +200,6 @@ public class Resilience4jCircuitBreakerDecorators {
           throw t;
         }
       } catch (Throwable t) {
-        Resilience4jCircuitBreakerSpans.endAfter(postClaimBaseline, "failure", t);
         if (pendingSpan != null) {
           pendingSpan.end("failure", t);
         }
@@ -190,8 +220,6 @@ public class Resilience4jCircuitBreakerDecorators {
 
     @Override
     public Future<T> get() {
-      Resilience4jCircuitBreakerSpans.PendingSpan baseline =
-          Resilience4jCircuitBreakerSpans.currentPendingSpan();
       Resilience4jCircuitBreakerSpans.Capture capture =
           Resilience4jCircuitBreakerSpans.beginCapture(circuitBreaker);
       try {
@@ -216,7 +244,6 @@ public class Resilience4jCircuitBreakerDecorators {
         if (pendingSpan != null) {
           pendingSpan.end("failure", t);
         }
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
         throw t;
       }
     }
@@ -295,22 +322,32 @@ public class Resilience4jCircuitBreakerDecorators {
 
   private static final class FunctionWrapper<T, R> implements Function<T, R> {
 
+    private final CircuitBreaker circuitBreaker;
     private final Function<T, R> delegate;
 
-    private FunctionWrapper(Function<T, R> delegate) {
+    private FunctionWrapper(CircuitBreaker circuitBreaker, Function<T, R> delegate) {
+      this.circuitBreaker = circuitBreaker;
       this.delegate = delegate;
     }
 
     @Override
     public R apply(T value) {
-      Resilience4jCircuitBreakerSpans.PendingSpan baseline =
-          Resilience4jCircuitBreakerSpans.currentPendingSpan();
+      Resilience4jCircuitBreakerSpans.Capture capture =
+          Resilience4jCircuitBreakerSpans.beginCapture(circuitBreaker);
       try {
         R result = delegate.apply(value);
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "success", null);
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("success", null);
+        }
         return result;
       } catch (Throwable t) {
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("failure", t);
+        }
         throw t;
       }
     }
@@ -318,21 +355,31 @@ public class Resilience4jCircuitBreakerDecorators {
 
   private static final class ConsumerWrapper<T> implements Consumer<T> {
 
+    private final CircuitBreaker circuitBreaker;
     private final Consumer<T> delegate;
 
-    private ConsumerWrapper(Consumer<T> delegate) {
+    private ConsumerWrapper(CircuitBreaker circuitBreaker, Consumer<T> delegate) {
+      this.circuitBreaker = circuitBreaker;
       this.delegate = delegate;
     }
 
     @Override
     public void accept(T value) {
-      Resilience4jCircuitBreakerSpans.PendingSpan baseline =
-          Resilience4jCircuitBreakerSpans.currentPendingSpan();
+      Resilience4jCircuitBreakerSpans.Capture capture =
+          Resilience4jCircuitBreakerSpans.beginCapture(circuitBreaker);
       try {
         delegate.accept(value);
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "success", null);
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("success", null);
+        }
       } catch (Throwable t) {
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("failure", t);
+        }
         throw t;
       }
     }
@@ -340,9 +387,11 @@ public class Resilience4jCircuitBreakerDecorators {
 
   private static final class CheckedInvocationHandler implements InvocationHandler {
 
+    private final CircuitBreaker circuitBreaker;
     private final Object delegate;
 
-    private CheckedInvocationHandler(Object delegate) {
+    private CheckedInvocationHandler(CircuitBreaker circuitBreaker, Object delegate) {
+      this.circuitBreaker = circuitBreaker;
       this.delegate = delegate;
     }
 
@@ -357,36 +406,49 @@ public class Resilience4jCircuitBreakerDecorators {
         }
         return method.invoke(delegate, args);
       }
-      Resilience4jCircuitBreakerSpans.PendingSpan baseline =
-          Resilience4jCircuitBreakerSpans.currentPendingSpan();
+      Resilience4jCircuitBreakerSpans.Capture capture =
+          Resilience4jCircuitBreakerSpans.beginCapture(circuitBreaker);
       try {
         Object result = method.invoke(delegate, args);
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "success", null);
-        return wrapCheckedAdapterResult(method, result);
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("success", null);
+        }
+        return wrapCheckedAdapterResult(circuitBreaker, method, result);
       } catch (InvocationTargetException e) {
         Throwable cause = e.getCause();
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", cause);
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("failure", cause);
+        }
         throw cause;
       } catch (Throwable t) {
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("failure", t);
+        }
         throw t;
       }
     }
   }
 
-  private static Object wrapCheckedAdapterResult(Method method, @Nullable Object result) {
+  private static Object wrapCheckedAdapterResult(
+      CircuitBreaker circuitBreaker, Method method, @Nullable Object result) {
     if (result == null) {
       return null;
     }
     String methodName = method.getName();
     if ("unchecked".equals(methodName)) {
-      return wrapFunctionalAdapter(result);
+      return wrapFunctionalAdapter(circuitBreaker, result);
     } else if (("andThen".equals(methodName) || "compose".equals(methodName))
         && isCheckedFunctionType(method.getReturnType())) {
-      return wrapChecked(result);
+      return wrapChecked(circuitBreaker, result);
     } else if (("andThen".equals(methodName) || "compose".equals(methodName))
         && isFunctionalInterface(result)) {
-      return wrapFunctionalAdapter(result);
+      return wrapFunctionalAdapter(circuitBreaker, result);
     }
     return result;
   }
@@ -399,19 +461,20 @@ public class Resilience4jCircuitBreakerDecorators {
         || value instanceof Consumer;
   }
 
-  private static Object wrapFunctionalAdapterResult(Method method, @Nullable Object result) {
+  private static Object wrapFunctionalAdapterResult(
+      CircuitBreaker circuitBreaker, Method method, @Nullable Object result) {
     if (result == null) {
       return null;
     }
     String methodName = method.getName();
     if (("andThen".equals(methodName) || "compose".equals(methodName))
         && isFunctionalInterface(result)) {
-      return wrapFunctionalAdapter(result);
+      return wrapFunctionalAdapter(circuitBreaker, result);
     }
     return result;
   }
 
-  private static Object wrapFunctionalAdapter(Object delegate) {
+  private static Object wrapFunctionalAdapter(CircuitBreaker circuitBreaker, Object delegate) {
     Class<?>[] interfaces = delegate.getClass().getInterfaces();
     if (interfaces.length == 0) {
       return delegate;
@@ -419,7 +482,7 @@ public class Resilience4jCircuitBreakerDecorators {
     return Proxy.newProxyInstance(
         delegate.getClass().getClassLoader(),
         interfaces,
-        new FunctionalAdapterInvocationHandler(delegate));
+        new FunctionalAdapterInvocationHandler(circuitBreaker, delegate));
   }
 
   private static boolean isCheckedFunctionType(Class<?> type) {
@@ -429,9 +492,11 @@ public class Resilience4jCircuitBreakerDecorators {
 
   private static final class FunctionalAdapterInvocationHandler implements InvocationHandler {
 
+    private final CircuitBreaker circuitBreaker;
     private final Object delegate;
 
-    private FunctionalAdapterInvocationHandler(Object delegate) {
+    private FunctionalAdapterInvocationHandler(CircuitBreaker circuitBreaker, Object delegate) {
+      this.circuitBreaker = circuitBreaker;
       this.delegate = delegate;
     }
 
@@ -446,18 +511,30 @@ public class Resilience4jCircuitBreakerDecorators {
         }
         return method.invoke(delegate, args);
       }
-      Resilience4jCircuitBreakerSpans.PendingSpan baseline =
-          Resilience4jCircuitBreakerSpans.currentPendingSpan();
+      Resilience4jCircuitBreakerSpans.Capture capture =
+          Resilience4jCircuitBreakerSpans.beginCapture(circuitBreaker);
       try {
         Object result = method.invoke(delegate, args);
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "success", null);
-        return wrapFunctionalAdapterResult(method, result);
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("success", null);
+        }
+        return wrapFunctionalAdapterResult(circuitBreaker, method, result);
       } catch (InvocationTargetException e) {
         Throwable cause = e.getCause();
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", cause);
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("failure", cause);
+        }
         throw cause;
       } catch (Throwable t) {
-        Resilience4jCircuitBreakerSpans.endAfter(baseline, "failure", t);
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan =
+            Resilience4jCircuitBreakerSpans.endCapture(capture);
+        if (pendingSpan != null) {
+          pendingSpan.end("failure", t);
+        }
         throw t;
       }
     }
