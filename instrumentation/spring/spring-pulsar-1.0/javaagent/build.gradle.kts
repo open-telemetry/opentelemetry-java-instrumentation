@@ -101,7 +101,13 @@ tasks {
     jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
     jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+    systemProperty(
+      "metadataConfig",
+      listOf(
+        "otel.instrumentation.pulsar.experimental-span-attributes=true",
+        "otel.semconv-stability.preview=messaging",
+      ).joinToString(","),
+    )
   }
 
   val testBothSemconvReceiveSpansDisabled = register<Test>("testBothSemconvReceiveSpansDisabled") {
@@ -111,7 +117,13 @@ tasks {
     jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
     jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
+    systemProperty(
+      "metadataConfig",
+      listOf(
+        "otel.instrumentation.pulsar.experimental-span-attributes=true",
+        "otel.semconv-stability.preview=messaging/dup",
+      ).joinToString(","),
+    )
   }
 
   check {
