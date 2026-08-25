@@ -8,9 +8,7 @@ package io.opentelemetry.instrumentation.jmx.internal.handler;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -30,10 +28,8 @@ public class HandlerRegistry {
    * Loads all available jmx metric handlers
    *
    * @param componentLoader component loader
-   * @return metric names produced by handlers
    */
-  public Set<String> load(ComponentLoader componentLoader) {
-    Set<String> metricNames = new HashSet<>();
+  public void load(ComponentLoader componentLoader) {
     for (ExperimentalJmxMetricHandler handler :
         componentLoader.load(ExperimentalJmxMetricHandler.class)) {
 
@@ -43,11 +39,8 @@ public class HandlerRegistry {
             "Multiple JmxMetricHandlers with the same name found: "
                 + name
                 + ". Only one will be used.");
-      } else {
-        metricNames.addAll(handler.getMetricNames());
       }
     }
-    return metricNames;
   }
 
   @Nullable
