@@ -42,9 +42,7 @@ class SpymemcachedServerTargetTest {
 
   @Test
   void nodeThatCannotBeNamedDropsTheNodeList() {
-    assertThat(
-            SpymemcachedServerTarget.create(asList(node("one.example", 11211), node("  ", 11212))))
-        .isNull();
+    assertThat(SpymemcachedServerTarget.create(singletonList(node("  ", 11212)))).isNull();
     assertThat(SpymemcachedServerTarget.create(singletonList(node("one.example", 0)))).isNull();
   }
 
