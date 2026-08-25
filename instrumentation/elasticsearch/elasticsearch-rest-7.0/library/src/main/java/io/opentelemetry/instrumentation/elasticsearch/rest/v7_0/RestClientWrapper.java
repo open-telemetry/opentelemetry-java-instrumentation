@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchRestRequest;
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchServerTarget;
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.RestResponseListener;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -33,6 +34,7 @@ import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestClientPackageAccess;
 
 class RestClientWrapper {
@@ -212,11 +214,31 @@ class RestClientWrapper {
   }
 
   static RestClient wrap(
+      RestClientBuilder restClientBuilder,
+      Instrumenter<ElasticsearchRestRequest, Response> instrumenter) {
+    RestClient restClient = restClientBuilder.build();
+    try {
+      return wrap(restClient, instrumenter, serverTarget(restClient));
+    } catch (RuntimeException | Error e) {
+      try {
+        restClient.close();
+      } catch (IOException f) {
+        e.addSuppressed(f);
+      }
+      throw e;
+    }
+  }
+
+  static RestClient wrap(
       RestClient restClient, Instrumenter<ElasticsearchRestRequest, Response> instrumenter) {
+    return wrap(restClient, instrumenter, null);
+  }
+
+  private static RestClient wrap(
+      RestClient restClient,
+      Instrumenter<ElasticsearchRestRequest, Response> instrumenter,
+      @Nullable ElasticsearchServerTarget serverTarget) {
     RestClient wrapped = proxyFactory.apply(restClient);
-    // the nodes a rest client reports are the ones it currently routes to, so the target is read
-    // once, while wrapping, and never follows sniffing or setNodes afterwards
-    ElasticsearchServerTarget serverTarget = serverTarget(restClient);
     try {
       // set wrapped RestClient instance and the instrumenter on the proxy
       targetField.set(wrapped, restClient);

@@ -68,15 +68,15 @@ class ElasticsearchRest7Test {
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress());
 
     client =
-        RestClient.builder(httpHost)
-            .setRequestConfigCallback(
-                builder ->
-                    builder
-                        .setConnectTimeout(Integer.MAX_VALUE)
-                        .setSocketTimeout(Integer.MAX_VALUE))
-            .build();
+        ElasticsearchRest7Telemetry.create(testing.getOpenTelemetry())
+            .wrap(
+                RestClient.builder(httpHost)
+                    .setRequestConfigCallback(
+                        builder ->
+                            builder
+                                .setConnectTimeout(Integer.MAX_VALUE)
+                                .setSocketTimeout(Integer.MAX_VALUE)));
     cleanup.deferAfterAll(client);
-    client = ElasticsearchRest7Telemetry.create(testing.getOpenTelemetry()).wrap(client);
 
     objectMapper = new ObjectMapper();
   }
@@ -194,7 +194,7 @@ class ElasticsearchRest7Test {
     HttpHost deadHost = deadHost();
     RestClient nodeListClient =
         ElasticsearchRest7Telemetry.create(testing.getOpenTelemetry())
-            .wrap(RestClient.builder(httpHost, deadHost).build());
+            .wrap(RestClient.builder(httpHost, deadHost));
     cleanup.deferCleanup(nodeListClient);
 
     nodeListClient.performRequest(new Request("GET", "_cluster/health"));
@@ -204,12 +204,12 @@ class ElasticsearchRest7Test {
 
   @Test
   void theTargetDoesNotFollowLaterNodeChanges() throws IOException {
-    RestClient restClient = RestClient.builder(httpHost).build();
-    cleanup.deferCleanup(restClient);
     RestClient singleNodeClient =
-        ElasticsearchRest7Telemetry.create(testing.getOpenTelemetry()).wrap(restClient);
+        ElasticsearchRest7Telemetry.create(testing.getOpenTelemetry())
+            .wrap(RestClient.builder(httpHost));
+    cleanup.deferCleanup(singleNodeClient);
     // a client is given new nodes when it is sniffed; the configured target must not follow them
-    restClient.setNodes(asList(new Node(httpHost), new Node(deadHost())));
+    singleNodeClient.setNodes(asList(new Node(httpHost), new Node(deadHost())));
 
     singleNodeClient.performRequest(new Request("GET", "_cluster/health"));
 
