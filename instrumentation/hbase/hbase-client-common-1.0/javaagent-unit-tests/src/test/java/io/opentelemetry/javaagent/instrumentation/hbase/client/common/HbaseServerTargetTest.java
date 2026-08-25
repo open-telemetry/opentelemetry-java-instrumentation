@@ -32,6 +32,16 @@ class HbaseServerTargetTest {
   }
 
   @Test
+  void ignoresZooCfgFlagWhenUnsupported() {
+    Configuration configuration = new Configuration(false);
+    configuration.setBoolean("hbase.config.read.zookeeper.config", true);
+    configuration.set("hbase.zookeeper.quorum", "active-zk");
+
+    assertThat(HbaseServerTarget.from(configuration, false, false, false, false))
+        .isEqualTo("active-zk:2181:/hbase");
+  }
+
+  @Test
   void rendersCanonicalZooKeeperClusterKey() {
     Configuration configuration = new Configuration(false);
     configuration.set(REGISTRY_KEY, ZK_REGISTRY);

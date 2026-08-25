@@ -38,6 +38,8 @@ public class HbaseServerTarget {
       hasHbaseConstant("CLIENT_ZOOKEEPER_QUORUM");
   private static final boolean SUPPORTS_REGISTRY_CONFIG =
       hasHbaseConstant("CLIENT_CONNECTION_REGISTRY_IMPL_CONF_KEY");
+  private static final boolean SUPPORTS_ZK_CONFIG_FILE =
+      hasHbaseConstant("HBASE_CONFIG_READ_ZOOKEEPER_CONFIG");
   private static final boolean USES_CONFIGURED_MASTER_PORT = usesConfiguredMasterPort();
 
   /**
@@ -49,6 +51,7 @@ public class HbaseServerTarget {
         configuration,
         SUPPORTS_CLIENT_ZK_CONFIG,
         SUPPORTS_REGISTRY_CONFIG,
+        SUPPORTS_ZK_CONFIG_FILE,
         USES_CONFIGURED_MASTER_PORT);
   }
 
@@ -58,14 +61,29 @@ public class HbaseServerTarget {
       boolean supportsClientZkConfig,
       boolean supportsRegistryConfig,
       boolean usesConfiguredMasterPort) {
+    return from(
+        configuration,
+        supportsClientZkConfig,
+        supportsRegistryConfig,
+        true,
+        usesConfiguredMasterPort);
+  }
+
+  @Nullable
+  static String from(
+      Configuration configuration,
+      boolean supportsClientZkConfig,
+      boolean supportsRegistryConfig,
+      boolean supportsZkConfigFile,
+      boolean usesConfiguredMasterPort) {
     String registry = supportsRegistryConfig ? configuration.get(REGISTRY_KEY) : null;
     if (registry == null) {
-      return zkTarget(configuration, supportsClientZkConfig);
+      return zkTarget(configuration, supportsClientZkConfig, supportsZkConfigFile);
     }
 
     registry = registry.trim();
     if (registry.equals(ZK_ASYNC_REGISTRY) || registry.equals(ZK_REGISTRY)) {
-      return zkTarget(configuration, supportsClientZkConfig);
+      return zkTarget(configuration, supportsClientZkConfig, supportsZkConfigFile);
     }
     if (registry.equals(MASTER_REGISTRY)) {
       return masterTarget(configuration, usesConfiguredMasterPort);
@@ -74,8 +92,9 @@ public class HbaseServerTarget {
   }
 
   @Nullable
-  private static String zkTarget(Configuration configuration, boolean supportsClientZkConfig) {
-    if (configuration.getBoolean(READ_ZK_CONFIG_KEY, false)) {
+  private static String zkTarget(
+      Configuration configuration, boolean supportsClientZkConfig, boolean supportsZkConfigFile) {
+    if (supportsZkConfigFile && configuration.getBoolean(READ_ZK_CONFIG_KEY, false)) {
       return null;
     }
 
