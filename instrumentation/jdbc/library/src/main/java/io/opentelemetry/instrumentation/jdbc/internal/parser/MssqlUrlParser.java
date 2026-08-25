@@ -79,9 +79,12 @@ public final class MssqlUrlParser implements JdbcUrlParser {
    * mirrored pair is not reported as a single host.
    */
   private static void applyFailoverPartnerGroup(ParseContext ctx, Map<String, String> params) {
-    String failoverPartner = params.get("failoverpartner");
-    if ((failoverPartner == null || failoverPartner.isEmpty()) && ctx.props() != null) {
+    String failoverPartner = null;
+    if (ctx.props() != null) {
       failoverPartner = ctx.props().getProperty("failoverPartner");
+    }
+    if (failoverPartner == null || failoverPartner.isEmpty()) {
+      failoverPartner = params.get("failoverpartner");
     }
     if (failoverPartner == null || failoverPartner.isEmpty() || ctx.host() == null) {
       return;

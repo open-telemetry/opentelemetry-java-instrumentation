@@ -862,6 +862,20 @@ class JdbcConnectionUrlParserTest {
     testVerifySystemSubtypeParsingOfUrl(argument);
   }
 
+  @Test
+  void sqlServerDataSourceFailoverPartnerOverridesUrlPartner() {
+    Properties properties = new Properties();
+    properties.setProperty("serverName", "property.host1");
+    properties.setProperty("portNumber", "1444");
+    properties.setProperty("failoverPartner", "property.host2");
+
+    DbInfo info = parse("jdbc:sqlserver://url.host1:1433;failoverPartner=url.host2", properties);
+
+    assertThat(info.getServerAddress()).isEqualTo("property.host1");
+    assertThat(info.getServerPort()).isEqualTo(1444);
+    assertThat(info.getServerAddressGroup()).isEqualTo("property.host1:1444,property.host2");
+  }
+
   private static Stream<Arguments> oracleArguments() {
     return args(
         // https://docs.oracle.com/cd/B28359_01/java.111/b31224/urls.htm
